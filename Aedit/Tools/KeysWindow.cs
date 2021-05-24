@@ -45,7 +45,7 @@ namespace Au.Tools
 				InsertCode.TextSimplyInControl(sci, s);
 			}
 
-			if (s.Length == 2 && s[0] != '#' && !AChar.IsAsciiAlpha(s[0])) s = s[0] == '\\' ? "|" : s[..1]; //eg 2@ or /? or \|
+			if (s.Length == 2 && s[0] != '#' && !s[0].IsAsciiAlpha()) s = s[0] == '\\' ? "|" : s[..1]; //eg 2@ or /? or \|
 
 			char _CharAt(int pos) => (char)sci.Call(Sci.SCI_GETCHARAT, pos);
 

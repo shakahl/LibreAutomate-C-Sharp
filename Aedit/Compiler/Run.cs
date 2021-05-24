@@ -114,7 +114,7 @@ static class CompileRun
 				if (action == 2) {
 					text.text = "//Class1.Function1();\r\n";
 				} else {
-					text.meta = $"/*/ {(isProject ? "pr" : "c")} {f.ItemPath}; /*/ ";
+					text.meta = $"{(isProject ? "pr" : "c")} {f.ItemPath};";
 					text.text = $"//{(isProject ? "Library." : "")}Class1.Function1();\r\n";
 				}
 
@@ -440,17 +440,16 @@ class RunningTasks
 		if(!ignoreLimits && !_CanRunNow(f, r, out var running, runFromEditor)) {
 			var ifRunning = r.ifRunning;
 			bool same = running.f == f;
-			if(!same) {
-				ifRunning = r.ifRunning2 switch
-				{
+			if (!same) {
+				ifRunning = r.ifRunning2 switch {
 					EIfRunning2.cancel => EIfRunning.cancel,
 					EIfRunning2.wait => EIfRunning.wait,
 					EIfRunning2.warn => EIfRunning.warn,
-					_ => (ifRunning & ~EIfRunning._restartFlag) switch { EIfRunning.cancel => EIfRunning.cancel, EIfRunning.wait => EIfRunning.wait, _ => EIfRunning.warn }
+					_ => (ifRunning | EIfRunning._norestartFlag) switch { EIfRunning.cancel => EIfRunning.cancel, EIfRunning.wait => EIfRunning.wait, _ => EIfRunning.warn }
 				};
-			} else if(ifRunning.Has(EIfRunning._restartFlag)) {
-				if(runFromEditor) ifRunning = EIfRunning.restart;
-				else ifRunning &= ~EIfRunning._restartFlag;
+			} else if (!ifRunning.Has(EIfRunning._norestartFlag) && ifRunning != EIfRunning.restart) {
+				if (runFromEditor) ifRunning = EIfRunning.restart;
+				else ifRunning |= EIfRunning._norestartFlag;
 			}
 			//AOutput.Write(same, ifRunning);
 			switch(ifRunning) {
@@ -601,11 +600,11 @@ class RunningTasks
 					EIfRunning2.cancel => EIfRunning.cancel,
 					EIfRunning2.wait => EIfRunning.wait,
 					EIfRunning2.warn => EIfRunning.warn,
-					_ => (ifRunning & ~EIfRunning._restartFlag) switch { EIfRunning.cancel => EIfRunning.cancel, EIfRunning.wait => EIfRunning.wait, _ => EIfRunning.warn }
+					_ => (ifRunning | EIfRunning._norestartFlag) switch { EIfRunning.cancel => EIfRunning.cancel, EIfRunning.wait => EIfRunning.wait, _ => EIfRunning.warn }
 				};
-			} else if (ifRunning.Has(EIfRunning._restartFlag)) {
+			} else if (!ifRunning.Has(EIfRunning._norestartFlag) && ifRunning != EIfRunning.restart) {
 				if (runFromEditor) ifRunning = EIfRunning.restart;
-				else ifRunning &= ~EIfRunning._restartFlag;
+				else ifRunning |= EIfRunning._norestartFlag;
 			}
 			//AOutput.Write(same, ifRunning);
 			switch (ifRunning) {

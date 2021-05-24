@@ -888,7 +888,7 @@ namespace Au.Types
 			public unsafe struct CBT_CREATEWND
 			{
 				///
-				public Native.CREATESTRUCT* lpcs;
+				public CREATESTRUCT* lpcs;
 				///
 				public AWnd hwndInsertAfter;
 			}
@@ -978,12 +978,12 @@ namespace Au.Types
 			/// Message parameters.
 			/// API <msdn>MSG</msdn>.
 			/// </summary>
-			public readonly Native.MSG* msg;
+			public readonly MSG* msg;
 
 			internal ThreadGetMessage(AHookWin hook, LPARAM wParam, LPARAM lParam) {
 				this.hook = hook;
 				PM_NOREMOVE = (uint)wParam == Api.PM_NOREMOVE;
-				msg = (Native.MSG*)lParam;
+				msg = (MSG*)lParam;
 			}
 		}
 

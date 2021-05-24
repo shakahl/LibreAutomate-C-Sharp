@@ -1,10 +1,4 @@
-﻿//Small extension classes for .NET classes. Except those that have own files.
-//Naming:
-//	Class name: related .NET class name with _ suffix.
-//	Extension method name: related .NET method name with _ suffix. Or new name with _ suffix.
-//	Static method name: any name without _ suffix.
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -16,20 +10,16 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using System.Linq;
-using System.Security; //for XML comments
 using System.Globalization;
-using Au.Types;
-
 
 //note: be careful when adding functions to this class. Eg something may load winforms dlls although it seems not used.
 
-namespace Au
+namespace Au.Types
 {
 	/// <summary>
-	/// Adds extension methods for some .NET classes.
+	/// Adds extension methods for some .NET types.
 	/// </summary>
-	[EditorBrowsable(EditorBrowsableState.Never)]
-	public static unsafe partial class AExt
+	public static unsafe partial class ExtMisc
 	{
 		#region value types
 
@@ -344,123 +334,142 @@ namespace Au
 
 		//rejected. Rarely used. Adds many garbage in compiled documentation for enums.
 		//	Can istead write: if(e is EnumX.Val1 or EnumX.Val2 ...). But currently problems with intellisense; works better with (): if(e is (EnumX.Val1 or EnumX.Val2 ...)).
-//		/// <summary>Returns true if this is equal to a value in list.</summary>
-//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-//		public static bool IsIn<T>(this T t, T v1, T v2) where T : unmanaged, Enum //could be IConvertible, it includes int etc, but also double, float, bool, DateTime and any IConvertible struct of any size. Types other than enum and int actually are not useful.
-//		{
-//			var a = _ToLong(t);
-//			return a == _ToLong(v1) || a == _ToLong(v2);
-//		}
+		//		/// <summary>Returns true if this is equal to a value in list.</summary>
+		//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+		//		public static bool IsIn<T>(this T t, T v1, T v2) where T : unmanaged, Enum //could be IConvertible, it includes int etc, but also double, float, bool, DateTime and any IConvertible struct of any size. Types other than enum and int actually are not useful.
+		//		{
+		//			var a = _ToLong(t);
+		//			return a == _ToLong(v1) || a == _ToLong(v2);
+		//		}
 
-//		/// <summary>Returns true if this is equal to a value in list.</summary>
-//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-//		public static bool IsIn<T>(this T t, T v1, T v2, T v3) where T : unmanaged, Enum {
-//			var a = _ToLong(t);
-//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3);
-//		}
+		//		/// <summary>Returns true if this is equal to a value in list.</summary>
+		//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+		//		public static bool IsIn<T>(this T t, T v1, T v2, T v3) where T : unmanaged, Enum {
+		//			var a = _ToLong(t);
+		//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3);
+		//		}
 
-//		/// <summary>Returns true if this is equal to a value in list.</summary>
-//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-//		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4) where T : unmanaged, Enum {
-//			//return t.Equals(v1) || t.Equals(v2) || t.Equals(v3) || t.Equals(v4); //very slow, slower than with params
-//			var a = _ToLong(t);
-//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4);
-//		}
+		//		/// <summary>Returns true if this is equal to a value in list.</summary>
+		//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+		//		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4) where T : unmanaged, Enum {
+		//			//return t.Equals(v1) || t.Equals(v2) || t.Equals(v3) || t.Equals(v4); //very slow, slower than with params
+		//			var a = _ToLong(t);
+		//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4);
+		//		}
 
-//		/// <summary>Returns true if this is equal to a value in list.</summary>
-//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-//		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5) where T : unmanaged, Enum {
-//			var a = _ToLong(t);
-//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4) || a == _ToLong(v5);
-//		}
+		//		/// <summary>Returns true if this is equal to a value in list.</summary>
+		//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		//		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5) where T : unmanaged, Enum {
+		//			var a = _ToLong(t);
+		//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4) || a == _ToLong(v5);
+		//		}
 
-//		/// <summary>Returns true if this is equal to a value in list.</summary>
-//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-//		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5, T v6) where T : unmanaged, Enum {
-//			var a = _ToLong(t);
-//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4) || a == _ToLong(v5) || a == _ToLong(v6);
-//		}
+		//		/// <summary>Returns true if this is equal to a value in list.</summary>
+		//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		//		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5, T v6) where T : unmanaged, Enum {
+		//			var a = _ToLong(t);
+		//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4) || a == _ToLong(v5) || a == _ToLong(v6);
+		//		}
 
-//		/// <summary>Returns true if this is equal to a value in list.</summary>
-//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-//		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5, T v6, T v7) where T : unmanaged, Enum {
-//			var a = _ToLong(t);
-//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4) || a == _ToLong(v5) || a == _ToLong(v6) || a == _ToLong(v7);
-//		}
+		//		/// <summary>Returns true if this is equal to a value in list.</summary>
+		//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		//		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5, T v6, T v7) where T : unmanaged, Enum {
+		//			var a = _ToLong(t);
+		//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4) || a == _ToLong(v5) || a == _ToLong(v6) || a == _ToLong(v7);
+		//		}
 
-//		/// <summary>Returns true if this is equal to a value in list.</summary>
-//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-//		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5, T v6, T v7, T v8) where T : unmanaged, Enum {
-//			var a = _ToLong(t);
-//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4) || a == _ToLong(v5) || a == _ToLong(v6) || a == _ToLong(v7) || a == _ToLong(v8);
-//		}
+		//		/// <summary>Returns true if this is equal to a value in list.</summary>
+		//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		//		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5, T v6, T v7, T v8) where T : unmanaged, Enum {
+		//			var a = _ToLong(t);
+		//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4) || a == _ToLong(v5) || a == _ToLong(v6) || a == _ToLong(v7) || a == _ToLong(v8);
+		//		}
 
-//		/// <summary>Returns true if this is equal to a value in list.</summary>
-//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-//		public static bool IsIn<T>(this T t, params T[] values) where T : unmanaged, Enum {
-//#if true //slightly faster, especially with multitiered JIT. The slow part is creating the params array.
-//			var a = _ToLong(t);
-//			for (int i = 0; i < values.Length; i++) {
-//				if (a == _ToLong(values[i])) return true;
-//			}
-//			return false;
-//#else
-//        return values.Contains(t);
-//#endif
-//		}
+		//		/// <summary>Returns true if this is equal to a value in list.</summary>
+		//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		//		public static bool IsIn<T>(this T t, params T[] values) where T : unmanaged, Enum {
+		//#if true //slightly faster, especially with multitiered JIT. The slow part is creating the params array.
+		//			var a = _ToLong(t);
+		//			for (int i = 0; i < values.Length; i++) {
+		//				if (a == _ToLong(values[i])) return true;
+		//			}
+		//			return false;
+		//#else
+		//        return values.Contains(t);
+		//#endif
+		//		}
 
-//		//same for int
+		//		//same for int
 
-//		/// <summary>Returns true if this is equal to a value in list.</summary>
-//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-//		public static bool IsIn(int t, int v1, int v2) {
-//			return t == v1 || t == v2;
-//		}
+		//		/// <summary>Returns true if this is equal to a value in list.</summary>
+		//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+		//		public static bool IsIn(int t, int v1, int v2) {
+		//			return t == v1 || t == v2;
+		//		}
 
-//		/// <summary>Returns true if this is equal to a value in list.</summary>
-//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-//		public static bool IsIn(int t, int v1, int v2, int v3) {
-//			return t == v1 || t == v2 || t == v3;
-//		}
+		//		/// <summary>Returns true if this is equal to a value in list.</summary>
+		//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+		//		public static bool IsIn(int t, int v1, int v2, int v3) {
+		//			return t == v1 || t == v2 || t == v3;
+		//		}
 
-//		/// <summary>Returns true if this is equal to a value in list.</summary>
-//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-//		public static bool IsIn(int t, int v1, int v2, int v3, int v4) {
-//			return t == v1 || t == v2 || t == v3 || t == v4;
-//		}
+		//		/// <summary>Returns true if this is equal to a value in list.</summary>
+		//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+		//		public static bool IsIn(int t, int v1, int v2, int v3, int v4) {
+		//			return t == v1 || t == v2 || t == v3 || t == v4;
+		//		}
 
-//		/// <summary>Returns true if this is equal to a value in list.</summary>
-//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-//		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5) {
-//			return t == v1 || t == v2 || t == v3 || t == v4 || t == v5;
-//		}
+		//		/// <summary>Returns true if this is equal to a value in list.</summary>
+		//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		//		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5) {
+		//			return t == v1 || t == v2 || t == v3 || t == v4 || t == v5;
+		//		}
 
-//		/// <summary>Returns true if this is equal to a value in list.</summary>
-//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-//		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5, int v6) {
-//			return t == v1 || t == v2 || t == v3 || t == v4 || t == v5 || t == v6;
-//		}
+		//		/// <summary>Returns true if this is equal to a value in list.</summary>
+		//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		//		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5, int v6) {
+		//			return t == v1 || t == v2 || t == v3 || t == v4 || t == v5 || t == v6;
+		//		}
 
-//		/// <summary>Returns true if this is equal to a value in list.</summary>
-//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-//		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5, int v6, int v7) {
-//			return t == v1 || t == v2 || t == v3 || t == v4 || t == v5 || t == v6 || t == v7;
-//		}
+		//		/// <summary>Returns true if this is equal to a value in list.</summary>
+		//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		//		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5, int v6, int v7) {
+		//			return t == v1 || t == v2 || t == v3 || t == v4 || t == v5 || t == v6 || t == v7;
+		//		}
 
-//		/// <summary>Returns true if this is equal to a value in list.</summary>
-//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-//		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5, int v6, int v7, int v8) {
-//			return t == v1 || t == v2 || t == v3 || t == v4 || t == v5 || t == v6 || t == v7 || t == v8;
-//		}
+		//		/// <summary>Returns true if this is equal to a value in list.</summary>
+		//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		//		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5, int v6, int v7, int v8) {
+		//			return t == v1 || t == v2 || t == v3 || t == v4 || t == v5 || t == v6 || t == v7 || t == v8;
+		//		}
 
-//		/// <summary>Returns true if this is equal to a value in list.</summary>
-//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-//		public static bool IsIn(int t, params int[] values) {
-//			for (int i = 0; i < values.Length; i++) {
-//				if (t == values[i]) return true;
-//			}
-//			return false;
-//		}
+		//		/// <summary>Returns true if this is equal to a value in list.</summary>
+		//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		//		public static bool IsIn(int t, params int[] values) {
+		//			for (int i = 0; i < values.Length; i++) {
+		//				if (t == values[i]) return true;
+		//			}
+		//			return false;
+		//		}
+
+		#endregion
+
+		#region char
+
+		/// <summary>
+		/// Returns true if character is ASCII '0' to '9'.
+		/// </summary>
+		public static bool IsAsciiDigit(this char c) => c <= '9' && c >= '0';
+
+		/// <summary>
+		/// Returns true if character is ASCII 'A' to 'Z' or 'a' to 'z'.
+		/// </summary>
+		public static bool IsAsciiAlpha(this char c) => (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+
+		/// <summary>
+		/// Returns true if character is ASCII 'A' to 'Z' or 'a' to 'z' or '0' to '9'.
+		/// </summary>
+		public static bool IsAsciiAlphaDigit(this char c) => IsAsciiAlpha(c) || IsAsciiDigit(c);
 
 		#endregion
 
@@ -488,10 +497,11 @@ namespace Au
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="t"></param>
-		/// <param name="index"></param>
+		/// <param name="index">Where to insert. If -1, adds to the end.</param>
 		/// <param name="value"></param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public static T[] InsertAt<T>(this T[] t, int index, T value = default) {
+			if (index == -1) index = t.Length;
 			if ((uint)index > t.Length) throw new ArgumentOutOfRangeException();
 			var r = new T[t.Length + 1];
 			for (int i = 0; i < index; i++) r[i] = t[i];

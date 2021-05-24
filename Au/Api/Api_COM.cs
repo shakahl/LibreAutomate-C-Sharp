@@ -48,7 +48,7 @@ namespace Au.Types
 		{
 			[PreserveSig] int BindToHandler(IntPtr pbc, in Guid bhid, in Guid riid, out IntPtr ppv); //IBindCtx
 			[PreserveSig] int GetParent(out IShellItem ppsi);
-			[PreserveSig] int GetDisplayName(Native.SIGDN sigdnName, [MarshalAs(UnmanagedType.LPWStr)] out string ppszName);
+			[PreserveSig] int GetDisplayName(SIGDN sigdnName, [MarshalAs(UnmanagedType.LPWStr)] out string ppszName);
 			[PreserveSig] int GetAttributes(uint sfgaoMask, out uint psfgaoAttribs);
 			[PreserveSig] int Compare(IShellItem psi, uint hint, out int piOrder);
 		}
@@ -88,20 +88,20 @@ namespace Au.Types
 		[ComImport, Guid("000214F9-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 		internal interface IShellLink
 		{
-			[PreserveSig] int GetPath([MarshalAs(UnmanagedType.LPArray)][Out] char[] pszFile, int cch, IntPtr pfd = default, uint fFlags = 0);
+			[PreserveSig] int GetPath(char* pszFile, int cch, IntPtr pfd = default, uint fFlags = 0);
 			[PreserveSig] int GetIDList(out IntPtr ppidl);
 			[PreserveSig] int SetIDList(IntPtr pidl);
-			[PreserveSig] int GetDescription([MarshalAs(UnmanagedType.LPArray)][Out] char[] pszName, int cch);
+			[PreserveSig] int GetDescription(char* pszName, int cch);
 			[PreserveSig] int SetDescription([MarshalAs(UnmanagedType.LPWStr)] string pszName);
-			[PreserveSig] int GetWorkingDirectory([MarshalAs(UnmanagedType.LPArray)][Out] char[] pszDir, int cch);
+			[PreserveSig] int GetWorkingDirectory(char* pszDir, int cch);
 			[PreserveSig] int SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string pszDir);
-			[PreserveSig] int GetArguments([MarshalAs(UnmanagedType.LPArray)][Out] char[] pszArgs, int cch);
+			[PreserveSig] int GetArguments(char* pszArgs, int cch);
 			[PreserveSig] int SetArguments([MarshalAs(UnmanagedType.LPWStr)] string pszArgs);
 			[PreserveSig] int GetHotkey(out ushort pwHotkey);
 			[PreserveSig] int SetHotkey(ushort wHotkey);
 			[PreserveSig] int GetShowCmd(out int piShowCmd);
 			[PreserveSig] int SetShowCmd(int iShowCmd);
-			[PreserveSig] int GetIconLocation([MarshalAs(UnmanagedType.LPArray)][Out] char[] pszIconPath, int cch, out int piIcon);
+			[PreserveSig] int GetIconLocation(char* pszIconPath, int cch, out int piIcon);
 			[PreserveSig] int SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string pszIconPath, int iIcon);
 			[PreserveSig] int SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string pszPathRel, uint dwReserved = 0);
 			[PreserveSig] int Resolve(AWnd hwnd, uint fFlags);

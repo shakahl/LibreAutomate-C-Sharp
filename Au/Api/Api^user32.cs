@@ -1,8 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-
 
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
@@ -14,7 +12,7 @@ namespace Au.Types
 		internal static extern LPARAM SendMessage(AWnd hWnd, int msg, LPARAM wParam, LPARAM lParam);
 
 		[DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW", SetLastError = true)]
-		internal static extern LPARAM SendMessageTimeout(AWnd hWnd, int Msg, LPARAM wParam, LPARAM lParam, Native.SMTO flags, int uTimeout, out LPARAM lpdwResult);
+		internal static extern LPARAM SendMessageTimeout(AWnd hWnd, int Msg, LPARAM wParam, LPARAM lParam, SMTFlags flags, int uTimeout, out LPARAM lpdwResult);
 
 		[DllImport("user32.dll", EntryPoint = "SendNotifyMessageW", SetLastError = true)]
 		internal static extern bool SendNotifyMessage(AWnd hWnd, int Msg, LPARAM wParam, LPARAM lParam);
@@ -66,7 +64,7 @@ namespace Au.Types
 		internal static extern int GetClassName(AWnd hWnd, char* lpClassName, int nMaxCount);
 
 		[DllImport("user32.dll", EntryPoint = "InternalGetWindowText", SetLastError = true)]
-		internal static extern int InternalGetWindowText(AWnd hWnd, [Out] char[] pString, int cchMaxCount);
+		internal static extern int InternalGetWindowText(AWnd hWnd, char* pString, int cchMaxCount);
 
 		[DllImport("user32.dll")]
 		internal static extern bool IsWindow(AWnd hWnd);
@@ -159,7 +157,7 @@ namespace Au.Types
 		internal static extern bool UnregisterClass(uint classAtom, IntPtr hInstance);
 
 		[DllImport("user32.dll", EntryPoint = "CreateWindowExW", SetLastError = true)]
-		internal static extern AWnd CreateWindowEx(WS2 dwExStyle, string lpClassName, string lpWindowName, WS dwStyle, int x, int y, int nWidth, int nHeight, AWnd hWndParent = default, LPARAM hMenu = default, IntPtr hInstance = default, LPARAM lpParam = default);
+		internal static extern AWnd CreateWindowEx(WSE dwExStyle, string lpClassName, string lpWindowName, WS dwStyle, int x, int y, int nWidth, int nHeight, AWnd hWndParent = default, LPARAM hMenu = default, IntPtr hInstance = default, LPARAM lpParam = default);
 
 		internal const int CW_USEDEFAULT = 1 << 31;
 
@@ -176,13 +174,13 @@ namespace Au.Types
 		internal static extern void PostQuitMessage(int nExitCode);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern int GetMessage(out Native.MSG lpMsg, AWnd hWnd = default, int wMsgFilterMin = 0, int wMsgFilterMax = 0);
+		internal static extern int GetMessage(out MSG lpMsg, AWnd hWnd = default, int wMsgFilterMin = 0, int wMsgFilterMax = 0);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool TranslateMessage(in Native.MSG lpMsg);
+		internal static extern bool TranslateMessage(in MSG lpMsg);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern LPARAM DispatchMessage(in Native.MSG lpmsg);
+		internal static extern LPARAM DispatchMessage(in MSG lpmsg);
 
 		internal const uint PM_NOREMOVE = 0x0;
 		internal const uint PM_REMOVE = 0x1;
@@ -193,7 +191,7 @@ namespace Au.Types
 		internal const uint PM_QS_INPUT = 0x1C070000;
 
 		[DllImport("user32.dll", EntryPoint = "PeekMessageW", SetLastError = true)]
-		internal static extern bool PeekMessage(out Native.MSG lpMsg, AWnd hWnd, int wMsgFilterMin, int wMsgFilterMax, uint wRemoveMsg);
+		internal static extern bool PeekMessage(out MSG lpMsg, AWnd hWnd, int wMsgFilterMin, int wMsgFilterMax, uint wRemoveMsg);
 
 		[DllImport("user32.dll")]
 		internal static extern bool WaitMessage();
@@ -245,11 +243,11 @@ namespace Au.Types
 			public int y;
 			public int cx;
 			public int cy;
-			public Native.SWP flags;
+			public SWPFlags flags;
 		}
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool SetWindowPos(AWnd hWnd, AWnd hWndInsertAfter, int X, int Y, int cx, int cy, Native.SWP swpFlags);
+		internal static extern bool SetWindowPos(AWnd hWnd, AWnd hWndInsertAfter, int X, int Y, int cx, int cy, SWPFlags swpFlags);
 
 		internal struct FLASHWINFO
 		{
@@ -792,7 +790,7 @@ namespace Au.Types
 
 		//internal static bool ClientToScreenIgnoreRtl(AWnd w, ref POINT p)
 		//{
-		//	if(!w.HasExStyle(WS2.LAYOUTRTL)) return ClientToScreen(w, ref p);
+		//	if(!w.HasExStyle(WSE.LAYOUTRTL)) return ClientToScreen(w, ref p);
 		//	if(!GetClientRect(w, out var r) || !MapWindowPoints(w, default, ref r, out _)) return false;
 		//	p.Offset(r.left, r.top);
 		//	return true;
@@ -816,7 +814,7 @@ namespace Au.Types
 		}
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool GetGUIThreadInfo(int idThread, ref Native.GUITHREADINFO pgui);
+		internal static extern bool GetGUIThreadInfo(int idThread, ref GUITHREADINFO pgui);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool AttachThreadInput(int idAttach, int idAttachTo, bool fAttach);
@@ -940,10 +938,10 @@ namespace Au.Types
 		internal static extern AWnd SetParent(AWnd hWndChild, AWnd hWndNewParent);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool AdjustWindowRectEx(ref RECT lpRect, WS dwStyle, bool bMenu, WS2 dwExStyle);
+		internal static extern bool AdjustWindowRectEx(ref RECT lpRect, WS dwStyle, bool bMenu, WSE dwExStyle);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool AdjustWindowRectExForDpi(ref RECT lpRect, WS dwStyle, bool bMenu, WS2 dwExStyle, int dpi);
+		internal static extern bool AdjustWindowRectExForDpi(ref RECT lpRect, WS dwStyle, bool bMenu, WSE dwExStyle, int dpi);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool ChangeWindowMessageFilter(int message, uint dwFlag);
@@ -1043,7 +1041,7 @@ namespace Au.Types
 			public RECT rcPaint;
 			public bool fRestore;
 			public bool fIncUpdate;
-			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)] public byte[] rgbReserved;
+			fixed byte rgbReserved[32];
 		}
 
 		[DllImport("user32.dll")]
@@ -1438,7 +1436,7 @@ namespace Au.Types
 		//	public int xyThumbTop;
 		//	public int xyThumbBottom;
 		//	public int reserved;
-		//	//public unsafe fixed uint rgstate[6];
+		//	//public fixed uint rgstate[6];
 		//	public uint stateScrollbar, stateArrowTopRight, statePageUpRight, stateThumb, statePageDownLeft, stateArrowBottomLeft;
 		//}
 		//internal const uint STATE_SYSTEM_INVISIBLE = 0x8000;
@@ -1494,13 +1492,13 @@ namespace Au.Types
 		//}
 
 		//[DllImport("user32.dll", SetLastError = true)]
-		//static extern int DrawTextExW(IntPtr hdc, char* lpchText, int cchText, ref RECT lprc, Native.DT format, DRAWTEXTPARAMS* lpdtp);
+		//static extern int DrawTextExW(IntPtr hdc, char* lpchText, int cchText, ref RECT lprc, TFFlags format, DRAWTEXTPARAMS* lpdtp);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		static extern int DrawTextExW(IntPtr hdc, string lpchText, int cchText, ref RECT lprc, Native.DT format, void* lpdtp);
+		static extern int DrawTextExW(IntPtr hdc, string lpchText, int cchText, ref RECT lprc, TFFlags format, void* lpdtp);
 
-		internal static int DrawText(IntPtr hdc, string lpchText, int cchText, ref RECT lprc, Native.DT format) {
-			if (format.Has(Native.DT.MODIFYSTRING)) throw new NotSupportedException("MODIFYSTRING");
+		internal static int DrawText(IntPtr hdc, string lpchText, int cchText, ref RECT lprc, TFFlags format) {
+			if (format.Has(TFFlags.MODIFYSTRING)) throw new NotSupportedException("MODIFYSTRING");
 			return DrawTextExW(hdc, lpchText, cchText, ref lprc, format, null);
 
 			//DRAWTEXTPARAMS doc incorrect. Left nad right margin fields are in pixels, not average char widths. Not tested tab width.

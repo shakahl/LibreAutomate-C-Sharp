@@ -34,6 +34,7 @@ namespace Au
 	/// 
 	/// To add an image resource in Visual Studio, use build action "Resource" for the image file.
 	/// </remarks>
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public abstract partial class MTBase
 	{
 		private protected readonly string _name;
@@ -199,7 +200,7 @@ namespace Au
 				_tt.rect = r;
 				_tt.item = b;
 				if (!_tt.tt.IsAlive) {
-					_tt.tt = Api.CreateWindowEx(WS2.TOPMOST | WS2.TRANSPARENT, "tooltips_class32", null, Api.TTS_ALWAYSTIP | Api.TTS_NOPREFIX, 0, 0, 0, 0, _w);
+					_tt.tt = Api.CreateWindowEx(WSE.TOPMOST | WSE.TRANSPARENT, "tooltips_class32", null, Api.TTS_ALWAYSTIP | Api.TTS_NOPREFIX, 0, 0, 0, 0, _w);
 					_tt.tt.Send(Api.TTM_ACTIVATE, true);
 					_tt.tt.Send(Api.TTM_SETMAXTIPWIDTH, 0, AScreen.Of(_w).WorkArea.Width / 3);
 				}
@@ -220,7 +221,7 @@ namespace Au
 			}
 
 			if (_tt.item != null) {
-				var v = new Native.MSG { hwnd = _w, message = Api.WM_MOUSEMOVE, lParam = lParam };
+				var v = new MSG { hwnd = _w, message = Api.WM_MOUSEMOVE, lParam = lParam };
 				_tt.tt.Send(Api.TTM_RELAYEVENT, 0, &v);
 			}
 		}

@@ -252,8 +252,9 @@ partial class FilesModel
 
 	/// <summary>
 	/// Calls <see cref="Find(string, bool?)"/>(name, false).
+	/// If not found and name does not end with ".cs", tries to find name + ".cs".
 	/// </summary>
-	public FileNode FindScript(string name) {
+	public FileNode FindFile(string name) {
 		var f = Find(name, false);
 		if (f == null && !name.Ends(".cs", true)) f = Find(name + ".cs", false);
 		return f;
@@ -430,9 +431,9 @@ partial class FilesModel
 	/// Selects the node and opens its file in the code editor.
 	/// Returns false if failed to select, for example if f is a folder.
 	/// </summary>
-	public bool SetCurrentFile(FileNode f, bool dontChangeSelection = false, bool newFile = false, bool? focusEditor = true) {
+	public bool SetCurrentFile(FileNode f, bool dontChangeTreeSelection = false, bool newFile = false, bool? focusEditor = true) {
 		if (IsAlien(f)) return false;
-		if (!dontChangeSelection) f.SelectSingle();
+		if (!dontChangeTreeSelection) f.SelectSingle();
 		if (_currentFile != f) _SetCurrentFile(f, newFile, focusEditor);
 		return _currentFile == f;
 	}
@@ -530,7 +531,7 @@ partial class FilesModel
 	/// Finds file and calls <see cref="OpenAndGoTo(FileNode, int, int)"/>. Does nothing if not found.
 	/// </summary>
 	public bool OpenAndGoTo(string file, int line = -1, int columnOrPos = -1) {
-		var f = FindScript(file); if (f == null) return false;
+		var f = FindFile(file); if (f == null) return false;
 		return OpenAndGoTo(f, line, columnOrPos);
 	}
 
@@ -545,7 +546,7 @@ partial class FilesModel
 	/// If column1BasedOrPos or line1Based not empty, searches only files, not folders.
 	/// </remarks>
 	public bool OpenAndGoTo2(string fileOrFolder, string line1Based = null, string column1BasedOrPos = null) {
-		var f = line1Based.NE() && column1BasedOrPos.NE() ? Find(fileOrFolder, null) : FindScript(fileOrFolder);
+		var f = line1Based.NE() && column1BasedOrPos.NE() ? Find(fileOrFolder, null) : FindFile(fileOrFolder);
 		if (f == null) return false;
 		if (f.IsFolder) {
 			f.SelectSingle();
@@ -790,17 +791,20 @@ partial class FilesModel
 		if (text != null && f == CurrentFile) {
 			string s;
 			if (text.replaceTemplate) {
-				s = text.meta + text.text;
+				s = text.meta.NE() ? text.text : _MetaPlusText(text.text);
 			} else {
 				Debug.Assert(f.IsScript);
 				s = f.GetText();
-				if (text.meta != null) {
-					if (0 == Au.Compiler.MetaComments.FindMetaComments(s)) s = text.meta + s;
-					else s = text.meta[..^4] + s[3..];
+				var me = Au.Compiler.MetaComments.FindMetaComments(s).end;
+				if (!text.meta.NE()) {
+					if (me == 0) s = _MetaPlusText(s); //never mind: should skip script doc comments at start. Rare and not important.
+					else s = s.Insert(me - 3, (s[me - 4] == ' ' ? "" : " ") + text.meta + " ");
 				}
-				s = s.RegexReplace(@"(?m)\R\R\K", text.text, 1);
+				if (!text.text.NE()) s = s.RegexReplace(@"\R\R\K", text.text, 1, 0, me..);
 			}
 			Panels.Editor.ZActiveDoc.zSetText(s);
+
+			string _MetaPlusText(string t) => $"/*/ {text.meta} /*/{(f.IsScript && t.Starts("//.") ? " " : "\r\n")}{t}";
 		}
 
 		if (beginRenaming && f.IsSelected) RenameSelected(newFile: true);
@@ -1388,7 +1392,7 @@ partial class FilesModel
 			foreach (var row in x.Data) {
 				string script = row[0];
 				if (script.Starts("//")) continue;
-				var f = FindScript(script);
+				var f = FindFile(script);
 				if (f == null) { AOutput.Write("Startup script not found: " + script + ". Please edit Options -> Run scripts..."); continue; }
 				int delay = 10;
 				if (x.ColumnCount > 1) {
@@ -1423,7 +1427,7 @@ partial class FilesModel
 		case FileDir.Directory:
 			string xmlFile = path + @"\files.xml";
 			if (AFile.ExistsAsFile(xmlFile) && AFile.ExistsAsDirectory(path + @"\files")) {
-				try { return AExtXml.LoadElem(xmlFile).Name == "files"; } catch { }
+				try { return AXml.LoadElem(xmlFile).Name == "files"; } catch { }
 			}
 			break;
 		case FileDir.File when path.Ends(".zip", true):

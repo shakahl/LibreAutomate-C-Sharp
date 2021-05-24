@@ -132,7 +132,7 @@ namespace Au.Controls
 
 			protected override Size MeasureOverride(Size constraint) => _Measure();
 
-			Native.WNDPROC _wndProc;
+			WNDPROC _wndProc;
 			LPARAM _WndProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
 				//var pmo = new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
 				//if (AWnd.More.PrintMsg(out string s, _w, msg, wParam, lParam, pmo)) AOutput.Write("<><c green>" + s + "<>");

@@ -115,7 +115,7 @@ class CiPopupList
 		}
 		if (kindsChecked == 0) kindsChecked = kindsVisible;
 		foreach (var v in _a) {
-			if (0 != (kindsChecked & (1 << (int)v.kind))) v.hidden &= ~CiItemHiddenBy.Kind; else v.hidden |= CiItemHiddenBy.Kind;
+			if (0 != (kindsChecked & (1 << (int)v.kind))) v.hidden &= ~CiComplItemHiddenBy.Kind; else v.hidden |= CiComplItemHiddenBy.Kind;
 		}
 		UpdateVisibleItems();
 	}
@@ -174,7 +174,12 @@ class CiPopupList
 				}
 			}
 
-			return string.Compare(c1.ci.DisplayText, c2.ci.DisplayText, StringComparison.OrdinalIgnoreCase);
+			int r = string.Compare(c1.ci.SortText, c2.ci.SortText, StringComparison.OrdinalIgnoreCase);
+			if (r == 0) {
+				r = CiSnippets.Compare(c1, c2);
+				//if (r == 0) r = string.Compare(c1.Text, c2.Text, StringComparison.OrdinalIgnoreCase);
+			}
+			return r;
 		});
 
 		CiComplItem prev = null;
@@ -204,7 +209,7 @@ class CiPopupList
 		_compl.SelectBestMatch(_av.Select(o => o.ci)); //pass items sorted like in the visible list
 
 		int kinds = 0;
-		foreach (var v in _a) if ((v.hidden & ~CiItemHiddenBy.Kind) == 0) kinds |= 1 << (int)v.kind;
+		foreach (var v in _a) if ((v.hidden & ~CiComplItemHiddenBy.Kind) == 0) kinds |= 1 << (int)v.kind;
 		for (int i = 0; i < _kindButtons.Length; i++) _kindButtons[i].Visibility = 0 != (kinds & (1 << i)) ? Visibility.Visible : Visibility.Collapsed;
 	}
 
@@ -308,7 +313,7 @@ class CiPopupList
 
 			ADebug.PrintIf(!ci.ci.DisplayTextPrefix.NE(), s); //we don't support prefix; never seen.
 			int xEndOfText = 0;
-			int color = ci.moveDown.HasAny(CiItemMoveDownBy.Name | CiItemMoveDownBy.FilterText) ? 0x808080 : _textColor;
+			int color = ci.moveDown.HasAny(CiComplItemMoveDownBy.Name | CiComplItemMoveDownBy.FilterText) ? 0x808080 : _textColor;
 			_tr.MoveTo(_cd.xText, _cd.yText);
 			if (ci.hilite != 0) {
 				ulong h = ci.hilite;
@@ -323,12 +328,12 @@ class CiPopupList
 				_tr.DrawText(s, color, black);
 			}
 
-			if (ci.moveDown.Has(CiItemMoveDownBy.Obsolete)) xEndOfText = _tr.GetCurrentPosition().x;
+			if (ci.moveDown.Has(CiComplItemMoveDownBy.Obsolete)) xEndOfText = _tr.GetCurrentPosition().x;
 
 			if (ci.commentOffset > 0) _tr.DrawText(s, 0x00A040, green);
 
 			//draw red line over obsolete items
-			if (ci.moveDown.Has(CiItemMoveDownBy.Obsolete)) {
+			if (ci.moveDown.Has(CiComplItemMoveDownBy.Obsolete)) {
 				int vCenter = _cd.rect.top + _cd.rect.Height / 2;
 				_cd.graphics.DrawLine(System.Drawing.Pens.OrangeRed, _cd.xText, vCenter, xEndOfText, vCenter);
 			}
@@ -344,15 +349,8 @@ class CiPopupList
 			//draw images: access, static/abstract
 			var cxy = _cd.imageRect.Width;
 			var ri = new System.Drawing.Rectangle(_cd.imageRect.left - cxy, _cd.imageRect.top + cxy / 4, cxy, cxy);
-			var s = ci.AccessImageSource;
-			if (s != null) g.DrawImage(App.ImageCache.Get(s, _cd.dpi, true), ri);
-			var sym = ci.FirstSymbol;
-			if (sym != null) {
-				s = null;
-				if (sym.IsStatic && ci.kind != CiItemKind.Constant && ci.kind != CiItemKind.EnumMember && ci.kind != CiItemKind.Namespace) s = "resources/ci/overlaystatic.xaml";
-				else if (ci.kind == CiItemKind.Class && sym.IsAbstract) s = "resources/ci/overlayabstract.xaml";
-				if (s != null) g.DrawImage(App.ImageCache.Get(s, _cd.dpi, true), ri);
-			}
+			if (ci.AccessImageSource is string s1) g.DrawImage(App.ImageCache.Get(s1, _cd.dpi, true), ri);
+			if (ci.ModifierImageSource is string s2) g.DrawImage(App.ImageCache.Get(s2, _cd.dpi, true), ri);
 
 			//draw group separator
 			if (_cd.index > 0) {

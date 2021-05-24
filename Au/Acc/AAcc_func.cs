@@ -352,7 +352,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
-		/// Fails if the object does not have a default action. Then you can use <see cref="AExtAu.MouseClick(AAcc, Coord, Coord, MButton)"/>, or try <see cref="VirtualClick"/>, <see cref="Select"/>, <see cref="Focus"/> and keyboard functions.
+		/// Fails if the object does not have a default action. Then you can use <see cref="ExtAu.MouseClick(AAcc, Coord, Coord, MButton)"/>, or try <see cref="VirtualClick"/>, <see cref="Select"/>, <see cref="Focus"/> and keyboard functions.
 		/// The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="DoJavaAction"/> or one of the above functions (MouseClick etc).
 		/// Uses <msdn>IAccessible.accDoDefaultAction</msdn>.
 		/// </remarks>
@@ -484,7 +484,7 @@ namespace Au
 			if (action == null) DoAction(); else action(this);
 
 			//wait until window name and document name both are changed. They can change in any order, especially in Chrome.
-			var to = new AWaitFor.Loop(secondsTimeout, new AOptWaitFor(period: 25));
+			var to = new AWaitFor.Loop(secondsTimeout, new OWaitFor(period: 25));
 			while (to.Sleep()) {
 				w.ThrowIfInvalid();
 				if (!wndOK) {

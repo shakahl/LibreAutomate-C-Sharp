@@ -22,6 +22,7 @@ using Au.Controls;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System.Windows.Input;
+using static Menus;
 
 static class CodeInfo
 {
@@ -32,6 +33,7 @@ static class CodeInfo
 	internal static readonly CiStyling _styling = new();
 	internal static readonly CiErrors _diag = new();
 	internal static readonly CiTools _tools = new();
+	internal static readonly CiFavorite _favorite = new();
 
 	static Solution _solution;
 	static ProjectId _projectId;
@@ -217,7 +219,7 @@ AOutput.Write(""t"" + 'c' + 1);
 		_document = null;
 		_compl.SciModified(doc, in n);
 		_styling.SciModified(doc, in n);
-		_diag.SciModified();
+		_diag.SciModified(doc, in n);
 	}
 
 	public static void SciCharAdded(SciCode doc, char ch) {
@@ -279,16 +281,18 @@ AOutput.Write(""t"" + 'c' + 1);
 	}
 
 	/// <summary>
-	/// Show or hides quick info or/and error info.
+	/// Shows or hides quick info or/and error info.
 	/// </summary>
 	public static async void SciMouseDwellStarted(SciCode doc, int pos8) {
 		if (!_CanWork(doc) || pos8 < 0) return;
 
 		var pi = Panels.Info; if (!pi.IsVisible) pi = null;
 
+		var text0 = doc.zText;
 		int pos16 = doc.zPos16(pos8);
 		var diag = _diag.GetPopupTextAt(doc, pos8, pos16, out var onLinkClick);
 		var quick = await _quickInfo.GetTextAt(pos16);
+		if(doc != Panels.Editor.ZActiveDoc || (object)text0 != doc.zText) return; //changed while awaiting
 
 		if (quick == null) pi?.ZSetAboutInfo();
 		if (diag == null && quick == null) {
@@ -319,13 +323,22 @@ AOutput.Write(""t"" + 'c' + 1);
 	//	_quickInfo.SciMouseMoved(x, y);
 	//}
 
-	public struct Context
+	/// <summary>
+	/// Call this before pasting or inserting text when may need special processing, eg auto-inserting 'using' directives.
+	/// </summary>
+	public static void Pasting(SciCode doc) {
+		if (!_CanWork(doc)) return;
+		_diag.Pasting(doc);
+	}
+
+	public class Context
 	{
-		public Document document;
-		public SciCode sciDoc;
-		public string code;
-		public int metaEnd;
+		public Document document { get; private set; }
+		public readonly SciCode sciDoc;
+		public readonly string code;
+		public readonly (int start, int end) meta;
 		public int pos16;
+		public readonly bool isCodeFile;
 
 		/// <summary>
 		/// Initializes all fields except document.
@@ -339,7 +352,7 @@ AOutput.Write(""t"" + 'c' + 1);
 			code = sciDoc.zText;
 			if (pos == -1) pos = sciDoc.zCurrentPos16; else if (pos == -2) pos = sciDoc.zSelectionStar16;
 			pos16 = pos;
-			metaEnd = MetaComments.FindMetaComments(code);
+			if (isCodeFile = sciDoc.ZFile.IsCodeFile) meta = MetaComments.FindMetaComments(code);
 		}
 
 		/// <summary>
@@ -353,11 +366,11 @@ AOutput.Write(""t"" + 'c' + 1);
 				return true;
 			}
 
-			if (_solution != null && !(metaEnd == _metaText.Length && code.Starts(_metaText))) {
+			if (_solution != null && !code.Eq(meta.start..meta.end, _metaText)) {
 				_Uncache();
 				_styling.Update();
 			}
-			if (_solution == null) _metaText = metaEnd > 0 ? code.Remove(metaEnd) : "";
+			if (_solution == null) _metaText = code[meta.start..meta.end];
 
 			try {
 				if (_solution == null) {
@@ -372,7 +385,11 @@ AOutput.Write(""t"" + 'c' + 1);
 			}
 
 			document = _document = _solution.GetDocument(_documentId);
-			return document != null;
+			if (document == null) return false;
+
+			_ModifySource();
+
+			return true;
 		}
 
 		//public bool GetDocumentAndSyntaxRoot(out SyntaxNode root)
@@ -388,6 +405,59 @@ AOutput.Write(""t"" + 'c' + 1);
 		//	node = document.GetSyntaxRootAsync().Result.FindToken(position).Parent;
 		//	return true;
 		//}
+
+		//TODO
+		void _ModifySource() {
+			//var r = document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
+
+			//AOutput.Write("Externs:", r.Externs);
+			//AOutput.Write("Usings:", r.Usings);
+			//AOutput.Write("Members:", r.Members);
+			//AOutput.Write("AttributeLists:", r.AttributeLists);
+
+			//var st = SyntaxFactory.ParseCompilationUnit("using Microsoft.Win32;\n");
+			//root = root.AddUsings(st.ChildNodes().Cast<UsingDirectiveSyntax>().ToArray());
+			//_document = document = document.WithSyntaxRoot(root);
+
+			//return;
+
+			//SyntaxNode lastUsing = null;
+
+			//foreach (var v in root.ChildNodes()) {
+			//	switch (v) {
+			//	case ExternAliasDirectiveSyntax ea:
+			//		lastUsing = ea;
+			//		break;
+			//	case UsingDirectiveSyntax u:
+			//		lastUsing = u;
+			//		if(u.Alias == null && u.StaticKeyword.RawKind == 0) {
+			//			var span = u.Name.Span;
+			//			var s = code[span.Start..span.End];
+			//			//AOutput.Write(s);
+
+			//		}
+			//		//APerf.First();
+			//		//APerf.Next();
+			//		//APerf.NW();
+			//		break;
+			//	//case AttributeListSyntax als when als.Target.Identifier.Text is "module" or "assembly":
+			//	//	break;
+			//	//case GlobalStatementSyntax:
+			//	//	if (start < 0) start = v.FullSpan.Start;
+			//	//	break;
+			//	default:
+			//		//CiUtil.PrintNode(v);
+			//		//end = v.FullSpan.Start;
+			//		goto g1;
+			//	}
+			//}
+			//g1:;
+			//if (lastUsing != null) {
+			//	var st = SyntaxFactory.ParseCompilationUnit("using Microsoft.Win32;\n");
+			//	root = root.InsertNodesAfter(lastUsing, st.ChildNodes());
+			//	_document = document = document.WithSyntaxRoot(root);
+			//}
+		}
 	}
 
 	/// <summary>
@@ -411,8 +481,9 @@ AOutput.Write(""t"" + 'c' + 1);
 	/// <param name="metaToo">Don't return false if position is in meta comments.</param>
 	public static bool GetContextWithoutDocument(out Context r, int position = -1, bool metaToo = false) {
 		r = new Context(position);
-		if (!r.sciDoc.ZFile.IsCodeFile) { r.metaEnd = 0; return false; }
-		return r.pos16 >= r.metaEnd || metaToo;
+		if (!r.isCodeFile) return false;
+		if (!metaToo && r.pos16 < r.meta.end && r.pos16 > r.meta.start) return false;
+		return true;
 	}
 
 	/// <summary>

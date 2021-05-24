@@ -154,8 +154,8 @@ namespace Au
 			lock (this) {
 				if (_w.Is0) {
 					if (_disposeOnExit) AProcess.Exit += _ => _Delete();
-					if (lockExit_) _hookDesktopSwitch = new AHookAcc(AccEVENT.SYSTEM_DESKTOPSWITCH, 0, k => { k.hook.Dispose(); ATask.ExitOnSleepOrDesktopSwitch(sleep: false); });
-					_w = AWnd.More.CreateWindow(WndProc, true, "ATrayIcon", ATask.Name, WS.POPUP, WS2.NOACTIVATE);
+					if (lockExit_) _hookDesktopSwitch = ATask.HookDesktopSwitch_();
+					_w = AWnd.More.CreateWindow(WndProc, true, "ATrayIcon", ATask.Name, WS.POPUP, WSE.NOACTIVATE);
 				}
 
 				if (taskbarCreated) _visible = false;

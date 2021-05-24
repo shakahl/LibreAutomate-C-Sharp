@@ -14,9 +14,11 @@ using System.Reflection;
 //using System.Linq;
 using System.Text.RegularExpressions;
 
+//TODO: test System.IO.Enumeration.FileSystemName. Has functions to match wildcard expressions.
+
 namespace Au
 {
-	public static unsafe partial class AExtString
+	public static unsafe partial class ExtString
 	{
 		#region Like
 
@@ -398,7 +400,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Wildcard (has *? characters and no t r R options).
-		/// <b>Match</b> calls <see cref="AExtString.Like(string, string, bool)"/>.
+		/// <b>Match</b> calls <see cref="ExtString.Like(string, string, bool)"/>.
 		/// </summary>
 		Wildcard,
 

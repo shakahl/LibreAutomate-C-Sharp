@@ -11,27 +11,29 @@ using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
 //using System.Xml.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
+//using System.Runtime;
+
+//using System.Windows;
+//using System.Windows.Controls;
+//using System.Windows.Media;
+//using System.Windows.Interop;
+//using System.Windows.Input;
 
 using Au;
 using Au.Types;
 using Au.Util;
 using Au.Tools;
-using System.Runtime;
-using System.Windows.Input;
-using Au.Controls;
-using System.Windows.Interop;
 //using Au.Controls;
 //using static Au.Controls.Sci;
-//using Au.Compiler;
-//using System.Collections.Immutable;
-//using Microsoft.CodeAnalysis;
-//using Microsoft.CodeAnalysis.CSharp;
-//using Microsoft.CodeAnalysis.CSharp.Syntax;
-//using Microsoft.CodeAnalysis.Completion;
-//using Microsoft.CodeAnalysis.Text;
+using Au.Compiler;
+
+using System.Collections.Immutable;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Completion;
+using Microsoft.CodeAnalysis.Text;
+using Au.Controls;
 //using Microsoft.CodeAnalysis.Host.Mef;
 
 //using DiffMatchPatch;
@@ -47,6 +49,47 @@ static unsafe class Test
 {
 
 	public static void FromMenubar() {
+		//Cpp.Cpp_Test();
+
+		//var s = Panels.Editor.ZActiveDoc.zGetString0Terminated(Sci.SCI_GETSELTEXT, 0, 1000);
+		//AOutput.Write(s);
+		//var s2 = Panels.Editor.ZActiveDoc.zGetStringGetLength(Sci.SCI_GETSELTEXT, 0);
+		//AOutput.Write(s2);
+		//var s3 = Panels.Editor.ZActiveDoc.zGetStringOfLength(Sci.SCI_GETSELTEXT, 0, 5);
+		//AOutput.Write(s2);
+
+		//InsertCode.UsingDirective("Test.Usings");
+
+		//EdDatabases.CreateWinapi();
+
+		//var code = App.Settings.ci_usings.RegexReplace(@"(?m)^.+$", "using $0;");
+		////var code = "using Au.Types;";
+		////AOutput.Write(code);
+
+		//var tree = CSharpSyntaxTree.ParseText(code, encoding: Encoding.UTF8);
+		//var comp = CSharpCompilation.Create("f", new SyntaxTree[] { tree }, new MetaReferences().Refs);
+		//var m = comp.GetSemanticModel(tree, false) as SyntaxTreeSemanticModel;
+		//APerf.First();
+		//foreach (var v in m.LookupNamespacesAndTypes(code.Length)) {
+		//	//AOutput.Write(v.Kind, v);
+		//	if (v.Kind != SymbolKind.NamedType) continue;
+		//	AOutput.Write(v);
+
+		//}
+
+		//foreach (var v in m.LookupStaticMembers(code.Length)) {
+		//	if (v.Kind == SymbolKind.Namespace) continue;
+		//	//AOutput.Write(v.Kind, v);
+
+		//}
+		//foreach (var v in m.LookupSymbols(code.Length)) {
+		//	if (v.Kind == SymbolKind.Namespace) continue;
+		//	//AOutput.Write(v.Kind, v);
+
+		//}
+
+
+
 		//for (int i = 0; i < 30; i++) {
 		//	Menus.Run.Compile();
 		//	Menus.Run.Start();

@@ -497,7 +497,7 @@ namespace Au
 		/// <remarks>
 		/// With this function use physical pixels, not WPF logical device-independent units.
 		/// Call this function before showing the window. Don't change location/size-related window properties after that.
-		/// Calls <see cref="AExtWpf.SetXY"/>.
+		/// Calls <see cref="ExtWpf.SetXY"/>.
 		/// </remarks>
 		/// <seealso cref="WinSaved"/>
 		public AWpfBuilder WinXY(int x, int y) {
@@ -518,7 +518,7 @@ namespace Au
 		/// <remarks>
 		/// With this function use physical pixels, not WPF logical device-independent units.
 		/// Call this function before showing the window. Don't change location/size-related window properties after that.
-		/// Calls <see cref="AExtWpf.SetRect"/>.
+		/// Calls <see cref="ExtWpf.SetRect"/>.
 		/// </remarks>
 		/// <seealso cref="WinSaved"/>
 		public AWpfBuilder WinRect(RECT r) {

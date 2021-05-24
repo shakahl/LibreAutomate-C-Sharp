@@ -37,7 +37,7 @@ namespace Au
 			/// <param name="wndProc">
 			/// Delegate of a window procedure. See <msdn>Window Procedures</msdn>.
 			/// 
-			/// Use null when you need a different delegate (method or target object) for each window instance; create windows with <see cref="CreateWindow(Native.WNDPROC, bool, string, string, WS, WS2, int, int, int, int, AWnd, LPARAM, IntPtr, LPARAM)"/> or <see cref="CreateMessageOnlyWindow(Native.WNDPROC, string)"/>.
+			/// Use null when you need a different delegate (method or target object) for each window instance; create windows with <see cref="CreateWindow(WNDPROC, bool, string, string, WS, WSE, int, int, int, int, AWnd, LPARAM, IntPtr, LPARAM)"/> or <see cref="CreateMessageOnlyWindow(WNDPROC, string)"/>.
 			/// If not null, it must be a static method; create windows with any other function, including API <msdn>CreateWindowEx</msdn>.
 			/// </param>
 			/// <param name="etc">
@@ -55,7 +55,7 @@ namespace Au
 			/// Thread-safe.
 			/// Protects the <i>wndProc</i> delegate from GC.
 			/// </remarks>
-			public static unsafe void RegisterWindowClass(string className, Native.WNDPROC wndProc = null, RWCEtc etc = null) {
+			public static unsafe void RegisterWindowClass(string className, WNDPROC wndProc = null, RWCEtc etc = null) {
 				if (wndProc?.Target != null) throw new ArgumentException("wndProc must be static method or null. Use non-static wndProc with CreateWindow.");
 
 				lock (s_classes) {
@@ -82,14 +82,14 @@ namespace Au
 				}
 			}
 
-			internal static bool IsClassRegistered_(string name, out Native.WNDPROC wndProc) {
+			internal static bool IsClassRegistered_(string name, out WNDPROC wndProc) {
 				lock (s_classes) {
 					return s_classes.TryGetValue(name, out wndProc);
 				}
 			}
 
-			static Dictionary<string, Native.WNDPROC> s_classes = new(StringComparer.OrdinalIgnoreCase); //allows to find registered classes and protects their wndProc delegates from GC
-			[ThreadStatic] static Dictionary<AWnd, Native.WNDPROC> t_windows; //allows to dispatch messages and protects wndProc delegates of windows created in this thread from GC
+			static Dictionary<string, WNDPROC> s_classes = new(StringComparer.OrdinalIgnoreCase); //allows to find registered classes and protects their wndProc delegates from GC
+			[ThreadStatic] static Dictionary<AWnd, WNDPROC> t_windows; //allows to dispatch messages and protects wndProc delegates of windows created in this thread from GC
 
 			static LPARAM _CWProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
 				//PrintMsg(w, msg, wParam, lParam);
@@ -97,7 +97,7 @@ namespace Au
 					t_cwUnsafe = false;
 					var wndProc = t_cwProc;
 					t_cwProc = null;
-					Api.SetWindowLongPtr(w, Native.GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
+					Api.SetWindowLongPtr(w, GWLong.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
 					//AOutput.Write("subclassed", w);
 					return wndProc(w, msg, wParam, lParam);
 				} else {
@@ -123,9 +123,9 @@ namespace Au
 					return R;
 				}
 			}
-			static Native.WNDPROC s_cwProc; //GC
+			static WNDPROC s_cwProc; //GC
 			static IntPtr s_cwProcFP = Marshal.GetFunctionPointerForDelegate(s_cwProc = _CWProc);
-			[ThreadStatic] static Native.WNDPROC t_cwProc;
+			[ThreadStatic] static WNDPROC t_cwProc;
 			[ThreadStatic] static bool t_cwUnsafe;
 
 			/// <summary>
@@ -143,7 +143,7 @@ namespace Au
 			/// To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="DestroyWindow"/>, <see cref="Close"/>, API <msdn>WM_CLOSE</msdn>.
 			/// </remarks>
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-			public static AWnd CreateWindow(Native.WNDPROC wndProc, bool keepAlive, string className, string name = null, WS style = 0, WS2 exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default) {
+			public static AWnd CreateWindow(WNDPROC wndProc, bool keepAlive, string className, string name = null, WS style = 0, WSE exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default) {
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 				if (wndProc is null || className is null) throw new ArgumentNullException();
 
@@ -163,9 +163,9 @@ namespace Au
 					if (w.Is0) throw new AuException(0);
 					if (keepAlive) {
 						t_windows[w] = wndProc;
-						Api.SetWindowLongPtr(w, Native.GWL.WNDPROC, s_cwProcFP);
+						Api.SetWindowLongPtr(w, GWLong.WNDPROC, s_cwProcFP);
 					} else {
-						Api.SetWindowLongPtr(w, Native.GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
+						Api.SetWindowLongPtr(w, GWLong.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
 					}
 				}
 
@@ -181,7 +181,7 @@ namespace Au
 			/// To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="DestroyWindow"/>, <see cref="Close"/>, API <msdn>WM_CLOSE</msdn>.
 			/// </remarks>
 			/// <seealso cref="RegisterWindowClass"/>
-			public static AWnd CreateWindow(string className, string name = null, WS style = 0, WS2 exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default) {
+			public static AWnd CreateWindow(string className, string name = null, WS style = 0, WSE exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default) {
 				var w = Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
 				if (w.Is0) throw new AuException(0);
 				return w;
@@ -197,7 +197,7 @@ namespace Au
 			/// To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="DestroyWindow"/>, <see cref="Close"/>, API <msdn>WM_CLOSE</msdn>.
 			/// </remarks>
 			public static AWnd CreateMessageOnlyWindow(string className) {
-				return CreateWindow(className, null, WS.POPUP, WS2.NOACTIVATE, parent: Native.HWND.MESSAGE);
+				return CreateWindow(className, null, WS.POPUP, WSE.NOACTIVATE, parent: SpecHWND.MESSAGE);
 				//note: WS_EX_NOACTIVATE is important.
 			}
 
@@ -209,10 +209,10 @@ namespace Au
 			/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 			/// <remarks>
 			/// Styles: WS_POPUP, WS_EX_NOACTIVATE.
-			/// Calls <see cref="CreateWindow(Native.WNDPROC, bool, string, string, WS, WS2, int, int, int, int, AWnd, LPARAM, IntPtr, LPARAM)"/> with <i>keepAlive</i>=true.
+			/// Calls <see cref="CreateWindow(WNDPROC, bool, string, string, WS, WSE, int, int, int, int, AWnd, LPARAM, IntPtr, LPARAM)"/> with <i>keepAlive</i>=true.
 			/// </remarks>
-			public static AWnd CreateMessageOnlyWindow(Native.WNDPROC wndProc, string className) {
-				return CreateWindow(wndProc, true, className, null, WS.POPUP, WS2.NOACTIVATE, parent: Native.HWND.MESSAGE);
+			public static AWnd CreateMessageOnlyWindow(WNDPROC wndProc, string className) {
+				return CreateWindow(wndProc, true, className, null, WS.POPUP, WSE.NOACTIVATE, parent: SpecHWND.MESSAGE);
 				//note: WS_EX_NOACTIVATE is important.
 			}
 
@@ -296,7 +296,7 @@ namespace Au
 			/// </summary>
 			/// <remarks>
 			/// Supports <see cref="ALastError"/>.
-			/// For index can be used constants from <see cref="Native.GCL"/>. All values are the same in 32-bit and 64-bit process.
+			/// For index can be used constants from <see cref="GCLong"/>. All values are the same in 32-bit and 64-bit process.
 			/// In 32-bit process actually calls <b>GetClassLong</b>, because <b>GetClassLongPtr</b> is unavailable.
 			/// </remarks>
 			public static LPARAM GetClassLong(AWnd w, int index) => Api.GetClassLongPtr(w, index);
@@ -317,7 +317,7 @@ namespace Au
 			//Rejected. Does not work with many windows. Unreliable. Rarely used.
 			///// <summary>
 			///// Gets atom of a window class.
-			///// To get class atom when you have a window w, use <c>AWnd.More.GetClassLong(w, Native.GCL.ATOM)</c>.
+			///// To get class atom when you have a window w, use <c>AWnd.More.GetClassLong(w, GCLong.ATOM)</c>.
 			///// </summary>
 			///// <param name="className">Class name.</param>
 			///// <param name="moduleHandle">Native module handle of the exe or dll that registered the class. Don't use if it is a global class (CS_GLOBALCLASS style).</param>
@@ -702,7 +702,7 @@ void _WmDeclTextToCode() {
 			/// <remarks>
 			/// The <i>m</i> parameter also accepts <b>System.Windows.Interop.MSG</b> (WPF) and <b>System.Windows.Forms.Message</b>.
 			/// </remarks>
-			public static bool PrintMsg(out string s, in Native.MSG m, PrintMsgOptions options = null, [CallerMemberName] string m_ = null) {
+			public static bool PrintMsg(out string s, in MSG m, PrintMsgOptions options = null, [CallerMemberName] string m_ = null) {
 				return PrintMsg(out s, m.hwnd, m.message, m.wParam, m.lParam, options, m_);
 			}
 
@@ -712,7 +712,7 @@ void _WmDeclTextToCode() {
 			/// <remarks>
 			/// The <i>m</i> parameter also accepts <b>System.Windows.Interop.MSG</b> (WPF) and <b>System.Windows.Forms.Message</b>.
 			/// </remarks>
-			public static void PrintMsg(in Native.MSG m, PrintMsgOptions options = null, [CallerMemberName] string m_ = null) {
+			public static void PrintMsg(in MSG m, PrintMsgOptions options = null, [CallerMemberName] string m_ = null) {
 				PrintMsg(m.hwnd, m.message, m.wParam, m.lParam, options, m_);
 			}
 

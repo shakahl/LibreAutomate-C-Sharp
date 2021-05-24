@@ -37,7 +37,7 @@ namespace Au.Controls
 					_isToolbar = _node._IsToolbarsNode;
 
 					var style = WS.THICKFRAME | WS.POPUP | WS.CLIPCHILDREN; if (node._IsStack) style |= WS.CAPTION;
-					var estyle = WS2.TOOLWINDOW | WS2.WINDOWEDGE; if (_isToolbar) estyle |= WS2.NOACTIVATE;
+					var estyle = WSE.TOOLWINDOW | WSE.WINDOWEDGE; if (_isToolbar) estyle |= WSE.NOACTIVATE;
 					RECT rect = default;
 					bool defaultRect = onDrag | (_node._floatSavedRect == null);
 					if (defaultRect) {

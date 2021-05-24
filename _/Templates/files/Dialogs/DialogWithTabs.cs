@@ -1,8 +1,7 @@
-using Au; using Au.Types; using System; using System.Collections.Generic; using System.IO; using System.Linq;
+using Au;
+using Au.Types;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Media;
 
 /*
 This class file can be used in scripts etc like any class file. One of:
@@ -78,7 +77,7 @@ public class DialogWithTabs : Window {
 //			if (!loaded) return;
 			
 			AOutput.Write($"Combo index: {combo1.SelectedIndex}");
-			AOutput.Write($"Check: {c1.IsCheck()}");
+			AOutput.Write($"Check: {c1.True()}");
 		};
 	}
 	

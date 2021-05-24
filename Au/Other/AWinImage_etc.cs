@@ -335,7 +335,7 @@ namespace Au
 				_flags = flags;
 				_cursor = ACursor.Load(AResources.GetBytes("<Au>resources/red_cross_cursor.cur"), 32);
 				_dpi = AScreen.Primary.Dpi;
-				_w = AWnd.More.CreateWindow(_WndProc, true, "#32770", "Au.AWinImage.CaptureUI", WS.POPUP | WS.VISIBLE, WS2.TOOLWINDOW | WS2.TOPMOST, r.left, r.top, r.Width, r.Height);
+				_w = AWnd.More.CreateWindow(_WndProc, true, "#32770", "Au.AWinImage.CaptureUI", WS.POPUP | WS.VISIBLE, WSE.TOOLWINDOW | WSE.TOPMOST, r.left, r.top, r.Width, r.Height);
 				_w.ActivateL();
 
 				try {
@@ -431,7 +431,7 @@ namespace Au
 
 				var font = NativeFont_.RegularCached(_dpi);
 				int magnWH = ADpi.Scale(200, _dpi) / 10 * 10; //width and height of the magnified image without borders etc
-				if (_textSize == default) using (var tr = new FontDC_(font)) _textSize = tr.Measure(text, Native.DT.NOPREFIX);
+				if (_textSize == default) using (var tr = new FontDC_(font)) _textSize = tr.Measure(text, TFFlags.NOPREFIX);
 				int width = Math.Max(magnWH, _textSize.width) + 2, height = magnWH + 4 + _textSize.height;
 				using var mb = new AMemoryBitmap(width, height);
 				var dc = mb.Hdc;
@@ -456,7 +456,7 @@ namespace Au
 				Api.SetTextColor(dc, 0x32CD9A); //Color.YellowGreen
 				Api.SetBkMode(dc, 1);
 				var oldFont = Api.SelectObject(dc, font);
-				Api.DrawText(dc, text, text.Length, ref rc, Native.DT.NOPREFIX);
+				Api.DrawText(dc, text, text.Length, ref rc, TFFlags.NOPREFIX);
 				Api.SelectObject(dc, oldFont);
 
 				//set magninifier position far from cursor

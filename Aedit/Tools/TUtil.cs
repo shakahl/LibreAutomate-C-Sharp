@@ -345,7 +345,7 @@ namespace Au.Tools
 						string target = g.TargetAnyType;
 						if (target.Starts("::")) {
 							using var pidl = APidl.FromString(target);
-							_name2 = pidl.ToShellString(Native.SIGDN.NORMALDISPLAY);
+							_name2 = pidl.ToShellString(SIGDN.NORMALDISPLAY);
 						} else {
 							_args = g.Arguments;
 							if (!target.Ends(".exe", true) || _name.Contains("Shortcut"))

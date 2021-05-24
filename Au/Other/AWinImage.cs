@@ -357,7 +357,7 @@ namespace Au
 				{
 					if(mb != null) { //null if WIArea.AreaType.Bitmap
 						mb.Dispose();
-						AVirtualMemory_.Free(pixels);
+						AVirtualMemory.Free(pixels);
 					}
 				}
 			}
@@ -970,8 +970,8 @@ namespace Au
 					_images.Add(im);
 				} else {
 					if(memSize > _ad.memSize) { //while waiting, we reuse the memory, it makes slightly faster.
-						AVirtualMemory_.Free(_ad.pixels);
-						_ad.pixels = (uint*)AVirtualMemory_.Alloc(memSize);
+						AVirtualMemory.Free(_ad.pixels);
+						_ad.pixels = (uint*)AVirtualMemory.Alloc(memSize);
 						_ad.memSize = memSize;
 					}
 					_GetBits(_ad.pixels);

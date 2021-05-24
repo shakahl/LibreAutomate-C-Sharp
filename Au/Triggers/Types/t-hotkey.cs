@@ -47,7 +47,7 @@ namespace Au.Triggers
 		/// <summary>
 		/// Don't release modifier keys.
 		/// Without this flag, for example if trigger is ["Ctrl+K"], when the user presses Ctrl and K down, the trigger sends Ctrl key-up event, making the key logically released, although it is still physically pressed. Then modifier keys don't interfer with the action. However functions like <see cref="AKeys.GetMod"/> and <see cref="AKeys.WaitForKey"/> (and any such functions in any app) will not know that the key is physically pressed; there is no API to get physical key state.
-		/// <note>Unreleased modifier keys will interfere with mouse functions like <see cref="AMouse.Click"/>. Will not interfere with keyboard and clipboard functions of this library, because they release modifier keys, unless <b>AOpt.Key.NoModOff</b> is true. Will not interfere with functions that send text, unless <b>AOpt.Key.NoModOff</b> is true and <b>AOpt.Key.TextHow</b> is <b>KTextHow.KeysX</b>.</note>.
+		/// <note>Unreleased modifier keys will interfere with mouse functions like <see cref="AMouse.Click"/>. Will not interfere with keyboard and clipboard functions of this library, because they release modifier keys, unless <b>AOpt.Key.NoModOff</b> is true. Will not interfere with functions that send text, unless <b>AOpt.Key.NoModOff</b> is true and <b>AOpt.Key.TextHow</b> is <b>OKeyText.KeysX</b>.</note>.
 		/// Other flags that prevent releasing modifier keys: <b>KeyUp</b>, <b>ShareEvent</b>. Then don't need this flag.
 		/// </summary>
 		NoModOff = 16,
@@ -155,7 +155,7 @@ namespace Au.Triggers
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		public Action<HotkeyTriggerArgs> this[KKey key, string modKeys, TKFlags flags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 			set {
-				var ps = key.ToString(); if(AChar.IsAsciiDigit(ps[0])) ps = "VK" + ps;
+				var ps = key.ToString(); if(ps[0].IsAsciiDigit()) ps = "VK" + ps;
 				if(!modKeys.NE()) ps = modKeys + "+" + ps;
 
 				if(!AKeys.More.ParseHotkeyTriggerString_(modKeys, out var mod, out var modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");

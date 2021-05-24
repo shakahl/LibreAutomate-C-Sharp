@@ -34,12 +34,11 @@ namespace Au.Util
 		/// <param name="pScreen">Point in screen coordinates.</param>
 		/// <param name="w">Popup menu window, class name "#32768".</param>
 		/// <param name="msTimeout">Timeout (ms) to use when the window is busy or hung.</param>
-		public static AMenuItemInfo FromXY(POINT pScreen, AWnd w, int msTimeout = 5000)
-		{
-			if(!w.SendTimeout(msTimeout, out var hm, Api.MN_GETHMENU)) return null;
-			int i = Api.MenuItemFromPoint(default, hm, pScreen); if(i == -1) return null;
-			i = Api.GetMenuItemID(hm, i); if(i == -1 || i == 0) return null;
-			return new AMenuItemInfo { _hm=hm, _id=i};
+		public static AMenuItemInfo FromXY(POINT pScreen, AWnd w, int msTimeout = 5000) {
+			if (!w.SendTimeout(msTimeout, out var hm, Api.MN_GETHMENU)) return null;
+			int i = Api.MenuItemFromPoint(default, hm, pScreen); if (i == -1) return null;
+			i = Api.GetMenuItemID(hm, i); if (i == -1 || i == 0) return null;
+			return new AMenuItemInfo { _hm = hm, _id = i };
 		}
 
 		/// <summary>
@@ -47,11 +46,10 @@ namespace Au.Util
 		/// Returns null if fails, eg the point is not in a menu or the window is hung.
 		/// </summary>
 		/// <param name="msTimeout">Timeout (ms) to use when the window is busy or hung.</param>
-		public static AMenuItemInfo FromXY(int msTimeout = 5000)
-		{
+		public static AMenuItemInfo FromXY(int msTimeout = 5000) {
 			var p = AMouse.XY;
 			var w = AWnd.FromXY(p, WXYFlags.Raw);
-			if(!w.ClassNameIs("#32768")) return null;
+			if (!w.ClassNameIs("#32768")) return null;
 			return FromXY(p, w, msTimeout);
 		}
 
@@ -75,11 +73,10 @@ namespace Au.Util
 		/// </summary>
 		public bool IsSystem => _OwnerSystem().sys;
 
-		(AWnd ow, bool sys) _OwnerSystem()
-		{
-			if(_ow.Is0 && AMiscInfo.GetGUIThreadInfo(out var g)) {
+		(AWnd ow, bool sys) _OwnerSystem() {
+			if (_ow.Is0 && AMiscInfo.GetGUIThreadInfo(out var g)) {
 				_ow = g.hwndMenuOwner;
-				_isSystem = g.flags.Has(Native.GUI.SYSTEMMENUMODE);
+				_isSystem = g.flags.Has(GTIFlags.SYSTEMMENUMODE);
 			}
 			return (_ow, _isSystem);
 		}
@@ -101,20 +98,18 @@ namespace Au.Util
 		/// <param name="byIndex">id is 0-based index. For example you can use it to get text of a submenu-item, because such items usually don't have id.</param>
 		/// <param name="removeHotkey">If contains '\t' character, get substring before it.</param>
 		/// <param name="removeAmp">Call <see cref="AStringUtil.RemoveUnderlineChar"/>.</param>
-		public static unsafe string GetText(IntPtr menuHandle, int id, bool byIndex, bool removeHotkey, bool removeAmp)
-		{
+		[SkipLocalsInit]
+		public static unsafe string GetText(IntPtr menuHandle, int id, bool byIndex, bool removeHotkey, bool removeAmp) {
 			var mi = new Api.MENUITEMINFO(Api.MIIM_STRING);
-			if(!Api.GetMenuItemInfo(menuHandle, id, byIndex, ref mi)) return null; //get required buffer size
-			if(mi.cch == 0) return "";
-			mi.cch++; //string length -> buffer length
-			var b = AMemoryArray.Char_(ref mi.cch);
-			fixed (char* p = b.A) {
-				mi.dwTypeData = p;
-				if(!Api.GetMenuItemInfo(menuHandle, id, byIndex, ref mi)) return null;
-			}
-			var s = b.ToString();
-			if(removeHotkey) { int i = s.IndexOf('\t'); if(i >= 0) s = s.Remove(i); }
-			if(removeAmp) s = AStringUtil.RemoveUnderlineChar(s);
+			if (!Api.GetMenuItemInfo(menuHandle, id, byIndex, ref mi)) return null; //get required buffer size
+			if (mi.cch == 0) return "";
+			using ABuffer<char> b = new(mi.cch + 1);
+			mi.cch = b.n;
+			mi.dwTypeData = b.p;
+			if (!Api.GetMenuItemInfo(menuHandle, id, byIndex, ref mi)) return null;
+			var s = b.GetStringFindLength();
+			if (removeHotkey) { int i = s.IndexOf('\t'); if (i >= 0) s = s.Remove(i); }
+			if (removeAmp) s = AStringUtil.RemoveUnderlineChar(s);
 			return s;
 		}
 	}

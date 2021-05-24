@@ -526,15 +526,13 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets the value of an environment variable.
-		/// Returns null if unavailable.
+		/// Gets the value of an environment variable in current process.
+		/// Returns null if variable not found.
 		/// </summary>
 		/// <seealso cref="Environment.GetEnvironmentVariable"/>
 		/// <seealso cref="Environment.SetEnvironmentVariable"/>
 		/// <seealso cref="APath.ExpandEnvVar"/>
-		public static FolderPath EnvVar(string envVar) {
-			return new(APath.GetEnvVar_(envVar));
-		}
+		public static FolderPath EnvVar(string envVar) => new(Api.GetEnvironmentVariable(envVar));
 
 		#endregion
 

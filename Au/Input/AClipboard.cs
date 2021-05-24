@@ -89,7 +89,7 @@ namespace Au
 		/// <param name="cut">Use Ctrl+X.</param>
 		/// <param name="options">
 		/// Options. If null (default), uses <see cref="AOpt.Key"/>.
-		/// Uses <see cref="AOptKey.RestoreClipboard"/>, <see cref="AOptKey.NoBlockInput"/>, <see cref="AOptKey.KeySpeedClipboard"/>. Does not use <see cref="AOptKey.Hook"/>.
+		/// Uses <see cref="OKey.RestoreClipboard"/>, <see cref="OKey.NoBlockInput"/>, <see cref="OKey.KeySpeedClipboard"/>. Does not use <see cref="OKey.Hook"/>.
 		/// </param>
 		/// <exception cref="AuException">Failed. Fails if there is no focused window or if it does not set clipboard data. Fails if other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc).</exception>
 		/// <remarks>
@@ -98,7 +98,7 @@ namespace Au
 		/// Fails (exception) if the focused app does not set clipboard text or file paths, for example if there is no selected text/files.
 		/// Works with console windows too, even if they don't support Ctrl+C.
 		/// </remarks>
-		public static string Copy(bool cut = false, AOptKey options = null) {
+		public static string Copy(bool cut = false, OKey options = null) {
 			return _Copy(cut, options, null);
 			//rejected: 'format' parameter. Not useful.
 		}
@@ -125,12 +125,12 @@ namespace Au
 		/// if(files == null) AOutput.Write("no files in clipboard"); else AOutput.Write(files);
 		/// ]]></code>
 		/// </example>
-		public static void CopyData(Action callback, bool cut = false, AOptKey options = null) {
+		public static void CopyData(Action callback, bool cut = false, OKey options = null) {
 			if (callback == null) throw new ArgumentNullException();
 			_Copy(cut, options, callback);
 		}
 
-		static string _Copy(bool cut, AOptKey options, Action callback) {
+		static string _Copy(bool cut, OKey options, Action callback) {
 			string R = null;
 			var opt = options ?? AOpt.Key;
 			bool restore = opt.RestoreClipboard;
@@ -203,7 +203,7 @@ namespace Au
 		/// </param>
 		/// <param name="options">
 		/// Options. If null (default), uses <see cref="AOpt.Key"/>.
-		/// Uses <see cref="AOptKey.RestoreClipboard"/>, <see cref="AOptKey.PasteWorkaround"/>, <see cref="AOptKey.NoBlockInput"/>, <see cref="AOptKey.SleepFinally"/>, <see cref="AOptKey.Hook"/>, <see cref="AOptKey.KeySpeedClipboard"/>.
+		/// Uses <see cref="OKey.RestoreClipboard"/>, <see cref="OKey.PasteWorkaround"/>, <see cref="OKey.NoBlockInput"/>, <see cref="OKey.SleepFinally"/>, <see cref="OKey.Hook"/>, <see cref="OKey.KeySpeedClipboard"/>.
 		/// </param>
 		/// <exception cref="AuException">Failed. Fails if there is no focused window or if it does not get clipboard data. Fails if other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc).</exception>
 		/// <remarks>
@@ -219,7 +219,7 @@ namespace Au
 		/// AClipboard.Paste("Example\r\n");
 		/// ]]></code>
 		/// </example>
-		public static void Paste(string text, string html = null, AOptKey options = null) {
+		public static void Paste(string text, string html = null, OKey options = null) {
 			if (text.NE() && html.NE()) return;
 			object data = text;
 			if (html != null) data = new AClipboardData().AddHtml(html).AddText(text ?? html);
@@ -238,13 +238,13 @@ namespace Au
 		/// AClipboard.PasteData(new AClipboardData().AddHtml("<b>text</b>").AddText("text"));
 		/// ]]></code>
 		/// </example>
-		public static void PasteData(AClipboardData data, AOptKey options = null) {
+		public static void PasteData(AClipboardData data, OKey options = null) {
 			if (data == null) throw new ArgumentNullException();
 			_Paste(data, options);
 		}
 
 		//rejected. Should use some UI-created/saved data containing all three formats.
-		//public static void PasteRichText(string text, string rtf, string html = null, AOptKey options = null)
+		//public static void PasteRichText(string text, string rtf, string html = null, OKey options = null)
 		//{
 		//	var a = new List<(int, object)>();
 		//	if(!text.NE()) a.Add((0, text));
@@ -254,7 +254,7 @@ namespace Au
 		//	_Paste(a, options);
 		//}
 
-		static void _Paste(object data, AOptKey options = null) {
+		static void _Paste(object data, OKey options = null) {
 			var wFocus = AKeys.Internal_.GetWndFocusedOrActive(requireFocus: true);
 			var opt = options ?? AOpt.Key;
 			using (var bi = new AInputBlocker { ResendBlockedKeys = true }) {
@@ -275,7 +275,7 @@ namespace Au
 		/// <param name="data">string or AClipboardData.</param>
 		/// <param name="opt"></param>
 		/// <param name="wFocus"></param>
-		internal static void Paste_(object data, AOptKey opt, AWnd wFocus) {
+		internal static void Paste_(object data, OKey opt, AWnd wFocus) {
 			bool isConsole = wFocus.IsConsole;
 			List<KKey> andKeys = null;
 
@@ -371,7 +371,7 @@ namespace Au
 		{
 			bool _paste; //true if used for paste, false if for copy
 			object _data; //string or Data. null if !_paste.
-			Native.WNDPROC _wndProc;
+			WNDPROC _wndProc;
 			//AWnd _wPrevClipViewer;
 			AWnd _wFocus;
 
@@ -529,7 +529,7 @@ namespace Au
 			/// <exception cref="AuException">Failed to open.</exception>
 			public bool Reopen(bool noThrow = false) {
 				Debug.Assert(!_isOpen);
-				var to = new AWaitFor.Loop(noThrow ? -1 : -10, new AOptWaitFor(period: 1));
+				var to = new AWaitFor.Loop(noThrow ? -1 : -10, new OWaitFor(period: 1));
 				while (!Api.OpenClipboard(_w)) {
 					int ec = ALastError.Code;
 					if (!to.Sleep()) {
@@ -566,8 +566,8 @@ namespace Au
 
 			public void Save(bool debug = false) {
 				var p1 = new APerf.Local(); //will need if debug==true. Don't delete the APerf statements, they are used by a public function.
-				bool allFormats = AOptKey.RestoreClipboardAllFormats || debug;
-				string[] exceptFormats = AOptKey.RestoreClipboardExceptFormats;
+				bool allFormats = OKey.RestoreClipboardAllFormats || debug;
+				string[] exceptFormats = OKey.RestoreClipboardExceptFormats;
 
 				for (int format = 0; 0 != (format = Api.EnumClipboardFormats(format));) {
 					bool skip = false; string name = null;

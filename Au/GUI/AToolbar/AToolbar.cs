@@ -350,8 +350,8 @@ namespace Au
 			_MeasureText();
 			var size = _Measure();
 			var style = WS.POPUP | WS.CLIPCHILDREN | _BorderStyle(_sett.border);
-			var estyle = WS2.TOOLWINDOW | WS2.NOACTIVATE;
-			if (_topmost) estyle |= WS2.TOPMOST;
+			var estyle = WSE.TOOLWINDOW | WSE.NOACTIVATE;
+			if (_topmost) estyle |= WSE.TOPMOST;
 			var r = owned ? owner.Rect : screen.Rect; //create in center of owner window or screen, to minimize possibility of DPI change when setting final position
 			r = new(r.CenterX - size.width / 2, r.CenterY - size.height / 2, size.width, size.height);
 			ADpi.AdjustWindowRectEx(_dpi, ref r, style, estyle);

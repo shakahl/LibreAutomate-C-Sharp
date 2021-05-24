@@ -40,7 +40,7 @@ namespace Au.Compiler
 			if(wrap) {
 				var b = new StringBuilder();
 				b.AppendLine(c_defaultUsings);
-				b.AppendLine("[module: DefaultCharSet(CharSet.Unicode)]\r\npublic class __script__ {\r\n#line 1");
+				b.AppendLine("[module: DefaultCharSet(CharSet.Unicode)]\r\npublic class __script__ {\r\n#line 1"); //TODO: use top-level statements
 				b.AppendLine(code).Append('}');
 				code = b.ToString();
 			}
@@ -48,7 +48,7 @@ namespace Au.Compiler
 			var tree = CSharpSyntaxTree.ParseText(code, new CSharpParseOptions(LanguageVersion.Latest), "", Encoding.UTF8);
 			var refs = new MetaReferences().Refs;
 			var options = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, allowUnsafe: true);
-			var compilation = CSharpCompilation.Create("test", new SyntaxTree[] { tree }, refs, options);
+			var compilation = CSharpCompilation.Create("script", new SyntaxTree[] { tree }, refs, options);
 			var memStream = new MemoryStream(4096);
 			var emitResult = compilation.Emit(memStream);
 
@@ -62,7 +62,7 @@ namespace Au.Compiler
 
 			memStream.Position = 0;
 			if(load) {
-				r.assembly = Assembly.Load(memStream.ToArray());
+				r.assembly = Assembly.Load(memStream.ToArray()); //TODO: make collectible
 				r.method = r.assembly.GetTypes()[0].GetMethods(BindingFlags.InvokeMethod | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)[0];
 			} else {
 				r.stream = memStream;
@@ -70,6 +70,7 @@ namespace Au.Compiler
 			return true;
 		}
 
+		//TODO: use those in Options.
 		const string c_defaultUsings = @"using Au; using Au.Types; using System; using System.Collections.Generic; using System.Text; using System.Text.RegularExpressions; using System.Diagnostics; using System.Runtime.InteropServices; using System.IO; using System.Threading; using System.Threading.Tasks; using System.Linq;";
 
 		public class Result

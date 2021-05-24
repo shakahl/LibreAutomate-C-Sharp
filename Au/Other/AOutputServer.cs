@@ -4,7 +4,7 @@
 Single global server is supported in this user session.
 Single local server is supported in this process.
 
-AOutputServer does not implement an output window etc. It just collects messages and notifies an output window. Asynchronously.
+Server does not implement an output window etc. It just collects messages and notifies an output window. Asynchronously.
 
 How global output server/client is implemented:
 	Single server and multiple clients.
@@ -31,6 +31,8 @@ How local output server/client is implemented:
 */
 
 
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -43,325 +45,327 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-
-using Au.Types;
-using Au.Util;
+using System.Collections.Concurrent;
 
 namespace Au
 {
-	/// <summary>
-	/// Receives messages sent by <see cref="AOutput.Write"/>.
-	/// </summary>
-	/// <remarks>
-	/// If server is global, clients can be multiple processes, including this. Else only this process.
-	/// Works asynchronously, to make writing messages faster.
-	/// When a client writes a message, the message arrives to the server with some delay and is placed in a queue.
-	/// You then can get/remove messages from the queue (call <see cref="GetMessage"/>) and display them in a window (for example).
-	/// You can be notified about new messages.
-	/// 
-	/// Recommended setup (see example):
-	/// 1. When your application starts, create an <b>AOutputServer</b> instance and assign to a static variable. Call <see cref="Start"/>.
-	/// 2. When your application creates its output window, call <see cref="SetNotifications"/> to set window/message for notifications.
-	/// 3. In window procedure, when received the notification message, get/remove/display all new output messages.
-	/// 4. Call <see cref="Stop"/> when closing the window.
-	/// </remarks>
-	/// <example>
-	/// Simple program with output window.
-	/// <code><![CDATA[
-	/// using Au; using Au.Types; using System; using System.Collections.Generic; using System.IO; using System.Linq;
-	/// using System.Windows.Forms;
-	/// using System.Threading.Tasks;
-	/// using System.Runtime.InteropServices;
-	/// 
-	/// class OutputFormExample : Form
-	/// {
-	/// 	TextBox _tb;
-	/// 
-	/// 	public OutputFormExample()
-	/// 	{
-	/// 		_tb = new TextBox();
-	/// 		_tb.ReadOnly = true;
-	/// 		_tb.Multiline = true;
-	/// 		_tb.ScrollBars = ScrollBars.Both;
-	/// 		_tb.WordWrap = false;
-	/// 		_tb.Dock = DockStyle.Fill;
-	/// 		_tb.TabStop = false;
-	/// 		this.Controls.Add(_tb);
-	/// 	}
-	/// 
-	/// 	protected override void OnHandleCreated(EventArgs e) {
-	/// 		_os.SetNotifications(this.Hwnd(), WM_APP);
-	/// 		base.OnHandleCreated(e);
-	/// 	}
-	/// 
-	/// 	protected override void WndProc(ref Message m) {
-	/// 		if(m.Msg == WM_APP) _ProcessMessages();
-	/// 		base.WndProc(ref m);
-	/// 	}
-	/// 	
-	/// 	internal const int WM_APP = 0x8000;
-	/// 
-	/// 	void _ProcessMessages()
-	/// 	{
-	/// 		while(_os.GetMessage(out var m)) {
-	/// 			switch(m.Type) {
-	/// 			case OutServMessageType.Clear:
-	/// 				_tb.Clear();
-	/// 				break;
-	/// 			case OutServMessageType.Write:
-	/// 				//_tb.AppendText(m.Text);
-	/// 				_tb.AppendText($"{DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime()}  {m.Caller}  {m.Text}");
-	/// 				break;
-	/// 			}
-	/// 		}
-	/// 	}
-	/// 
-	/// 	static AOutputServer _os = new AOutputServer(isGlobal: false);
-	/// 
-	/// 	[STAThread]
-	/// 	public static void Main()
-	/// 	{
-	/// 		_os.Start();
-	/// 
-	/// 		//test Write and Clear, before and after creating window
-	/// 		AOutput.IgnoreConsole = true;
-	/// 		AOutput.Write("test before setting notifications");
-	/// 		Task.Run(() => { 1.s(); AOutput.Write("test after"); 1.s(); AOutput.Clear(); 1.s(); AOutput.Write("test after Clear"); });
-	/// 
-	/// 		Application.Run(new OutputFormExample());
-	/// 		_os.Stop();
-	/// 	}
-	/// }
-	/// ]]></code>
-	/// </example>
-	public unsafe class AOutputServer
+	public static partial class AOutput
 	{
-		//info:
-		//Although global and local servers are implemented quite differently, the interface is almost the same. For this and other reasons I decided to use single class.
-		//For local server, the thread and kernel timer would be not necessary. Instead could use just a user timer. But it has some limitations etc.
-
-		readonly System.Collections.Concurrent.ConcurrentQueue<OutServMessage> _messages = new System.Collections.Concurrent.ConcurrentQueue<OutServMessage>(); //all received and still not removed messages that were sent by clients when they call AOutput.Write etc
-		Handle_ _mailslot; //used if global
-		AWaitableTimer _timer; //used always
-		AWnd _notifWnd;
-		int _notifMsg;
-		bool _isStarted;
-		bool _isGlobal;
-		bool _isLocalTimer;
-
-		/// <param name="isGlobal">
-		/// If true, will receive output from all processes that don't have local server.
-		/// </param>
-		public AOutputServer(bool isGlobal) => _isGlobal = isGlobal;
-
 		/// <summary>
-		/// Starts server.
-		/// Returns false if server already exists (if global - in any process).
+		/// Receives messages sent by <see cref="AOutput.Write"/>.
 		/// </summary>
-		/// <exception cref="AuException">Failed.</exception>
-		public bool Start() {
-			lock (this) {
-				if (_isGlobal) {
-					var m = Api.CreateMailslot(MailslotName_, 0, 0, Api.SECURITY_ATTRIBUTES.ForLowIL);
-					if (m.Is0) {
-						var e = ALastError.Code;
-						if (e == Api.ERROR_ALREADY_EXISTS) return false; //called not first time, or exists in another process
-						throw new AuException(e, "*create mailslot");
-					}
-
-					_mailslot = m;
-					_CreateTimerAndThread();
-					_SM->IsServer = 1;
-				} else {
-					if (AOutput.s_localServer != null) return false;
-
-					_CreateTimerAndThread();
-					AOutput.s_localServer = this;
-				}
-
-				_isStarted = true;
-			}
-			return true;
-		}
-
-		void _CreateTimerAndThread() {
-			try {
-				if (_isGlobal) _timer = AWaitableTimer.Create(false, TimerName_);
-				else _timer = AWaitableTimer.Create();
-
-				AThread.Start(_Thread, sta: false);
-			}
-			catch {
-				if (_isGlobal) _mailslot.Dispose();
-				_timer?.Close(); _timer = null;
-				throw;
-			}
-		}
-
-		/// <summary>
-		/// Stops server.
-		/// </summary>
-		public void Stop() {
-			lock (this) {
-				if (!_isStarted) return;
-				_isStarted = false;
-				if (_isGlobal) {
-					_mailslot.Dispose();
-					_SM->IsServer = 0;
-				} else {
-					AOutput.s_localServer = null;
-				}
-				_timer?.Set(0); //break thread loop; use minimal time. //info: the thread will dispose _timer and set=null
-			}
-		}
-
-		/// <summary>
-		/// Calls Stop.
-		/// </summary>
-		~AOutputServer() => Stop();
-
-		/// <summary>
-		/// Sets window/message to be notified about server events.
-		/// </summary>
-		/// <param name="w">Your window that displays output, or any other window. Its window procedure on <i>message</i> should call <see cref="GetMessage"/> until it returns false. See example in class help.</param>
-		/// <param name="message">Windows message to send to <i>w</i> when one or more output events are available. For example WM_USER or WM_APP.</param>
 		/// <remarks>
+		/// If server is global, clients can be multiple processes, including this. Else only this process.
+		/// Works asynchronously, to make writing messages faster.
+		/// When a client writes a message, the message arrives to the server with some delay and is placed in a queue.
+		/// You then can get/remove messages from the queue (call <see cref="GetMessage"/>) and display them in a window (for example).
+		/// You can be notified about new messages.
+		/// 
+		/// Recommended setup (see example):
+		/// 1. When your application starts, create an <b>AOutput.Server</b> instance and assign to a static variable. Call <see cref="Start"/>.
+		/// 2. When your application creates its output window, call <see cref="SetNotifications"/> to set window/message for notifications.
+		/// 3. In window procedure, when received the notification message, get/remove/display all new output messages.
+		/// 4. Call <see cref="Stop"/> when closing the window.
 		/// </remarks>
-		public void SetNotifications(AWnd w, int message) {
-			_notifMsg = message;
-			_notifWnd = w;
-			if (!w.Is0) _timer?.Set(30);
-		}
+		/// <example>
+		/// Simple program with output window.
+		/// <code><![CDATA[
+		/// using Au;
+		/// using Au.Types;
+		/// using System;
+		/// using System.Windows.Forms;
+		/// using System.Threading.Tasks;
+		/// 
+		/// class OutputFormExample : Form
+		/// {
+		/// 	TextBox _tb;
+		/// 
+		/// 	public OutputFormExample()
+		/// 	{
+		/// 		_tb = new TextBox();
+		/// 		_tb.ReadOnly = true;
+		/// 		_tb.Multiline = true;
+		/// 		_tb.ScrollBars = ScrollBars.Both;
+		/// 		_tb.WordWrap = false;
+		/// 		_tb.Dock = DockStyle.Fill;
+		/// 		_tb.TabStop = false;
+		/// 		this.Controls.Add(_tb);
+		/// 	}
+		/// 
+		/// 	protected override void OnHandleCreated(EventArgs e) {
+		/// 		_os.SetNotifications(this.Hwnd(), WM_APP);
+		/// 		base.OnHandleCreated(e);
+		/// 	}
+		/// 
+		/// 	protected override void WndProc(ref Message m) {
+		/// 		if(m.Msg == WM_APP) _ProcessMessages();
+		/// 		base.WndProc(ref m);
+		/// 	}
+		/// 	
+		/// 	internal const int WM_APP = 0x8000;
+		/// 
+		/// 	void _ProcessMessages()
+		/// 	{
+		/// 		while(_os.GetMessage(out var m)) {
+		/// 			switch(m.Type) {
+		/// 			case OutputServerMessageType.Clear:
+		/// 				_tb.Clear();
+		/// 				break;
+		/// 			case OutputServerMessageType.Write:
+		/// 				//_tb.AppendText(m.Text);
+		/// 				_tb.AppendText($"{DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime()}  {m.Caller}  {m.Text}");
+		/// 				break;
+		/// 			}
+		/// 		}
+		/// 	}
+		/// 
+		/// 	static AOutput.Server _os = new(isGlobal: false);
+		/// 
+		/// 	[STAThread]
+		/// 	static void Main()
+		/// 	{
+		/// 		_os.Start();
+		/// 
+		/// 		//test Write and Clear, before and after creating window
+		/// 		AOutput.IgnoreConsole = true;
+		/// 		AOutput.Write("test before setting notifications");
+		/// 		Task.Run(() => { 1.s(); AOutput.Write("test after"); 1.s(); AOutput.Clear(); 1.s(); AOutput.Write("test after Clear"); });
+		/// 
+		/// 		Application.Run(new OutputFormExample());
+		/// 		_os.Stop();
+		/// 	}
+		/// }
+		/// ]]></code>
+		/// </example>
+		public unsafe class Server
+		{
+			//info:
+			//Although global and local servers are implemented quite differently, the interface is almost the same. For this and other reasons I decided to use single class.
+			//For local server, the thread and kernel timer would be not necessary. Instead could use just a user timer. But it has some limitations etc.
 
-		void _Thread() {
-			try {
-				for (int period = 1000; ;) {
-					bool isTimerEvent = _timer.WaitOne(period); //true if timer event, false if timeout
-					if (isTimerEvent) {
-						if (_isGlobal) _SM->IsTimer = 0;
-						else _isLocalTimer = false;
-					}
+			readonly ConcurrentQueue<OutputServerMessage> _messages = new(); //all received and still not removed messages that were sent by clients when they call AOutput.Write etc
+			Handle_ _mailslot; //used if global
+			AWaitableTimer _timer; //used always
+			AWnd _notifWnd;
+			int _notifMsg;
+			bool _isStarted;
+			bool _isGlobal;
+			bool _isLocalTimer;
 
-					lock (this) {
-						if (!_isStarted) {
-							_timer.Dispose(); _timer = null;
-							break;
+			/// <param name="isGlobal">
+			/// If true, will receive output from all processes that don't have local server.
+			/// </param>
+			public Server(bool isGlobal) => _isGlobal = isGlobal;
+
+			/// <summary>
+			/// Starts server.
+			/// Returns false if server already exists (if global - in any process).
+			/// </summary>
+			/// <exception cref="AuException">Failed.</exception>
+			public bool Start() {
+				lock (this) {
+					if (_isGlobal) {
+						var m = Api.CreateMailslot(MailslotName_, 0, 0, Api.SECURITY_ATTRIBUTES.ForLowIL);
+						if (m.Is0) {
+							var e = ALastError.Code;
+							if (e == Api.ERROR_ALREADY_EXISTS) return false; //called not first time, or exists in another process
+							throw new AuException(e, "*create mailslot");
 						}
 
-						if (_isGlobal) { //read messages from mailslot and add to _messages. Else messages are added directly to _messages.
-							while (Api.GetMailslotInfo(_mailslot, null, out var nextSize, out var msgCount) && msgCount > 0) {
-								//note: GetMailslotInfo makes Process Hacker show constant 24 B/s I/O total rate. Does not depend on period.
-								fixed (byte* b0 = AMemoryArray.Byte_(nextSize + 4)) {
-									var b = b0; //+4 for "\r\n"
-									bool ok = Api.ReadFile(_mailslot, b, nextSize, out var readSize) && readSize == nextSize;
-									if (ok) {
-										long time = 0; string s = null, caller = null;
-										var mtype = (OutServMessageType)(*b++);
-										switch (mtype) {
-										case OutServMessageType.Write or OutServMessageType.TaskEvent:
-											if (nextSize < 10) { ok = false; break; } //type, time(8), lenCaller
-											time = *(long*)b; b += 8;
-											int lenCaller = *b++;
-											if (lenCaller > 0) {
-												if (10 + lenCaller * 2 > nextSize) { ok = false; break; }
-												caller = new string((char*)b, 0, lenCaller);
-												b += lenCaller * 2;
-											}
-											int len = (nextSize - (int)(b - b0)) / 2;
-											if (!NoNewline && mtype == OutServMessageType.Write) {
-												char* p = (char*)(b0 + nextSize);
-												p[0] = '\r'; p[1] = '\n';
-												len += 2;
-											}
-											s = new string((char*)b, 0, len);
-											break;
-										case OutServMessageType.Clear:
-											if (nextSize != 1) ok = false;
-											break;
-										default:
-											ok = false;
-											break;
-										}
-										Debug.Assert(ok);
-										if (ok) {
-											var m = new OutServMessage(mtype, s, time, caller);
-											_AddMessage(m);
-										}
-									}
+						_mailslot = m;
+						_CreateTimerAndThread();
+						_SM->IsServer = 1;
+					} else {
+						if (AOutput.s_localServer != null) return false;
+
+						_CreateTimerAndThread();
+						AOutput.s_localServer = this;
+					}
+
+					_isStarted = true;
+				}
+				return true;
+			}
+
+			void _CreateTimerAndThread() {
+				try {
+					if (_isGlobal) _timer = AWaitableTimer.Create(false, TimerName_);
+					else _timer = AWaitableTimer.Create();
+
+					AThread.Start(_Thread, sta: false);
+				}
+				catch {
+					if (_isGlobal) _mailslot.Dispose();
+					_timer?.Close(); _timer = null;
+					throw;
+				}
+			}
+
+			/// <summary>
+			/// Stops server.
+			/// </summary>
+			public void Stop() {
+				lock (this) {
+					if (!_isStarted) return;
+					_isStarted = false;
+					if (_isGlobal) {
+						_mailslot.Dispose();
+						_SM->IsServer = 0;
+					} else {
+						AOutput.s_localServer = null;
+					}
+					_timer?.Set(0); //break thread loop; use minimal time. //info: the thread will dispose _timer and set=null
+				}
+			}
+
+			/// <summary>
+			/// Calls Stop.
+			/// </summary>
+			~Server() => Stop();
+
+			/// <summary>
+			/// Sets window/message to be notified about server events.
+			/// </summary>
+			/// <param name="w">Your window that displays output, or any other window. Its window procedure on <i>message</i> should call <see cref="GetMessage"/> until it returns false. See example in class help.</param>
+			/// <param name="message">Windows message to send to <i>w</i> when one or more output events are available. For example WM_USER or WM_APP.</param>
+			/// <remarks>
+			/// </remarks>
+			public void SetNotifications(AWnd w, int message) {
+				_notifMsg = message;
+				_notifWnd = w;
+				if (!w.Is0) _timer?.Set(30);
+			}
+
+			void _Thread() {
+				try {
+					for (int period = 1000; ;) {
+						bool isTimerEvent = _timer.WaitOne(period); //true if timer event, false if timeout
+						if (isTimerEvent) {
+							if (_isGlobal) _SM->IsTimer = 0;
+							else _isLocalTimer = false;
+						}
+
+						lock (this) {
+							if (!_isStarted) {
+								_timer.Dispose(); _timer = null;
+								break;
+							}
+
+							if (_isGlobal) { //read messages from mailslot and add to _messages. Else messages are added directly to _messages.
+								while (Api.GetMailslotInfo(_mailslot, null, out int nextSize, out var msgCount) && msgCount > 0) {
+									//note: GetMailslotInfo makes Process Hacker show constant 24 B/s I/O total rate. Does not depend on period.
+									_ReadMailslotMessage(nextSize);
+									if (msgCount == 1) break;
 								}
-								if (msgCount == 1) break;
 							}
 						}
+
+						if (!_notifWnd.Is0 && !_messages.IsEmpty) {
+
+							//AOutput.QM2.Write($"{_messages.Count}, {_ToMB(_memSize)}, {_ToMB(GC.GetTotalMemory(false))}");
+
+							if (!_notifWnd.IsAlive) break;
+							_notifWnd.Send(_notifMsg);
+						}
+
+						if (isTimerEvent) period = 50; //check after 50 ms, to avoid 1000 ms delay in case a client did not set timer because _SM->IsTimer was still 1 although the timer was already signaled
+						else period = 1000; //check every 1000 ms, for full reliability
+
+						//Console.WriteLine($"{period}");
 					}
-
-					if (!_notifWnd.Is0 && !_messages.IsEmpty) {
-
-						//AOutput.QM2.Write($"{_messages.Count}, {_ToMB(_memSize)}, {_ToMB(GC.GetTotalMemory(false))}");
-
-						if (!_notifWnd.IsAlive) break;
-						_notifWnd.Send(_notifMsg);
-					}
-
-					if (isTimerEvent) period = 50; //check after 50 ms, to avoid 1000 ms delay in case a client did not set timer because _SM->IsTimer was still 1 although the timer was already signaled
-					else period = 1000; //check every 1000 ms, for full reliability
-
-					//Console.WriteLine($"{period}");
+				}
+				catch (Exception ex) {
+					ADebug.Dialog(ex);
 				}
 			}
-			catch (Exception ex) {
-				ADebug.Dialog(ex);
+
+			[SkipLocalsInit]
+			void _ReadMailslotMessage(int size) {
+				using ABuffer<byte> b = new(size + 4); //+4 for "\r\n"
+				var p = b.p;
+				bool ok = Api.ReadFile(_mailslot, p, size, out var readSize) && readSize == size;
+				if (ok) {
+					long time = 0; string s = null, caller = null;
+					var mtype = (OutputServerMessageType)(*p++);
+					switch (mtype) {
+					case OutputServerMessageType.Write or OutputServerMessageType.TaskEvent:
+						if (size < 10) { ok = false; break; } //type, time(8), lenCaller
+						time = *(long*)p; p += 8;
+						int lenCaller = *p++;
+						if (lenCaller > 0) {
+							if (10 + lenCaller * 2 > size) { ok = false; break; }
+							caller = new string((char*)p, 0, lenCaller);
+							p += lenCaller * 2;
+						}
+						int len = (size - (int)(p - b.p)) / 2;
+						if (!NoNewline && mtype == OutputServerMessageType.Write) {
+							char* r = (char*)(b.p + size);
+							r[0] = '\r'; r[1] = '\n';
+							len += 2;
+						}
+						s = new string((char*)p, 0, len);
+						break;
+					case OutputServerMessageType.Clear:
+						if (size != 1) ok = false;
+						break;
+					default:
+						ok = false;
+						break;
+					}
+					Debug.Assert(ok);
+					if (ok) _AddMessage(new OutputServerMessage(mtype, s, time, caller));
+				}
 			}
-		}
 
-		//static string _ToMB(long n) => Math.Round(n / 1048576d, 3).ToStringInvariant();
+			//static string _ToMB(long n) => Math.Round(n / 1048576d, 3).ToStringInvariant();
 
-		/// <summary>
-		/// Adds s directly to _messages and sets timer.
-		/// If s is null, it is 'Clear' command.
-		/// Else if !NoNewline, appends "\r\n".
-		/// Used with local server only.
-		/// </summary>
-		internal void LocalWrite_(string s, long time = 0, string caller = null) {
-			Debug.Assert(!_isGlobal);
-			if (!NoNewline && s != null) s += "\r\n";
-			var m = new OutServMessage(s == null ? OutServMessageType.Clear : OutServMessageType.Write, s, time, caller);
-			_AddMessage(m);
-			if (!_isLocalTimer) { _timer?.Set(10); _isLocalTimer = true; }
-		}
+			/// <summary>
+			/// Adds s directly to _messages and sets timer.
+			/// If s is null, it is 'Clear' command.
+			/// Else if !NoNewline, appends "\r\n".
+			/// Used with local server only.
+			/// </summary>
+			internal void LocalWrite_(string s, long time = 0, string caller = null) {
+				Debug.Assert(!_isGlobal);
+				if (!NoNewline && s != null) s += "\r\n";
+				var m = new OutputServerMessage(s == null ? OutputServerMessageType.Clear : OutputServerMessageType.Write, s, time, caller);
+				_AddMessage(m);
+				if (!_isLocalTimer) { _timer?.Set(10); _isLocalTimer = true; }
+			}
 
-		void _AddMessage(OutServMessage m) {
-			//_memSize += _GetMessageMemorySize(m);
-			_messages.Enqueue(m);
-		}
+			void _AddMessage(OutputServerMessage m) {
+				//_memSize += _GetMessageMemorySize(m);
+				_messages.Enqueue(m);
+			}
 
-		//static int _GetMessageMemorySize(OutServMessage m) => 50 + m.Text.Lenn() * 2;
-		//int _memSize;
+			//static int _GetMessageMemorySize(OutputServerMessage m) => 50 + m.Text.Lenn() * 2;
+			//int _memSize;
 
-		/// <summary>
-		/// Gets next message and removes from the queue.
-		/// Returns false if there are no messages.
-		/// </summary>
-		/// <remarks>
-		/// Messages are added to an internal queue when clients call <see cref="AOutput.Write"/> etc. They contain the text, time, etc. This function gets the oldest message and removes it from the queue.
-		/// </remarks>
-		public bool GetMessage(out OutServMessage m) {
-			if (!_messages.TryDequeue(out m)) return false;
-			//_memSize -= _GetMessageMemorySize(m);
-			return true;
-		}
+			/// <summary>
+			/// Gets next message and removes from the queue.
+			/// Returns false if there are no messages.
+			/// </summary>
+			/// <remarks>
+			/// Messages are added to an internal queue when clients call <see cref="AOutput.Write"/> etc. They contain the text, time, etc. This function gets the oldest message and removes it from the queue.
+			/// </remarks>
+			public bool GetMessage(out OutputServerMessage m) {
+				if (!_messages.TryDequeue(out m)) return false;
+				//_memSize -= _GetMessageMemorySize(m);
+				return true;
+			}
 
-		/// <summary>
-		/// Gets the count of messages in the queue.
-		/// </summary>
-		public int MessageCount => _messages.Count;
+			/// <summary>
+			/// Gets the count of messages in the queue.
+			/// </summary>
+			public int MessageCount => _messages.Count;
 
-		/// <summary>
-		/// Let messages don't end with "\r\n".
-		/// </summary>
-		/// <remarks>
-		/// This can be used for performance, to avoid string copying when using local server. Does not affect performance of global server.
-		/// </remarks>
-		public bool NoNewline { get; set; }
+			/// <summary>
+			/// Let messages don't end with "\r\n".
+			/// </summary>
+			/// <remarks>
+			/// This can be used for performance, to avoid string copying when using local server. Does not affect performance of global server.
+			/// </remarks>
+			public bool NoNewline { get; set; }
 
 #if NEED_CALLER
 			/// <summary>
@@ -382,45 +386,38 @@ namespace Au
 			}
 #endif
 
-		/// <summary>
-		/// Gets mailslot name like <c>@"\\.\mailslot\Au.AOutput\" + sessionId</c>.
-		/// </summary>
-		internal static string MailslotName_ {
-			get {
-				if (_mailslotName == null) {
-					_mailslotName = @"\\.\mailslot\Au.AOutput\" + AProcess.ProcessSessionId.ToString();
+			/// <summary>
+			/// Gets mailslot name like <c>@"\\.\mailslot\Au.AOutput\" + sessionId</c>.
+			/// </summary>
+			internal static string MailslotName_ {
+				get {
+					if (_mailslotName == null) {
+						_mailslotName = @"\\.\mailslot\Au.AOutput\" + AProcess.ProcessSessionId.ToString();
+					}
+					return _mailslotName;
 				}
-				return _mailslotName;
 			}
-		}
-		static string _mailslotName;
+			static string _mailslotName;
 
-		/// <summary>
-		/// Gets waitable timer name like "timer.Au.AOutput".
-		/// </summary>
-		internal static string TimerName_ => "timer.Au.AOutput";
+			/// <summary>
+			/// Gets waitable timer name like "timer.Au.AOutput".
+			/// </summary>
+			internal static string TimerName_ => "timer.Au.AOutput";
 
-		/// <summary>
-		/// Shared memory variables. Used with global server only.
-		/// </summary>
-		[StructLayout(LayoutKind.Sequential, Size = 16)] //note: this struct is in shared memory. Size must be same in all library versions.
-		internal struct SharedMemoryData_
-		{
-			public byte IsServer, IsTimer;
+			/// <summary>
+			/// Shared memory variables. Used with global server only.
+			/// </summary>
+			[StructLayout(LayoutKind.Sequential, Size = 16)] //note: this struct is in shared memory. Size must be same in all library versions.
+			internal struct SharedMemoryData_
+			{
+				public byte IsServer, IsTimer;
 #if NEED_CALLER
 				public byte NeedCaller;
 #endif
+			}
+			internal static SharedMemoryData_* _SM => &SharedMemory_.Ptr->outp;
 		}
-		internal static SharedMemoryData_* _SM => &SharedMemory_.Ptr->outp;
-	}
-}
 
-namespace Au
-{
-	using Au.Util;
-
-	public static partial class AOutput
-	{
 		[MethodImpl(MethodImplOptions.NoInlining)] //for stack trace
 		static void _WriteToOutputServer(string s) {
 			Debug.Assert(s != null);
@@ -429,7 +426,7 @@ namespace Au
 
 			string caller = ATask.Name;
 #if NEED_CALLER
-			if(AOutputServer.NeedCallerMethod_) {
+			if(Server.NeedCallerMethod_) {
 				//info: this func always called from WriteDirectly, which is usually called through Writer, Write. But it is public and can be called directly.
 				var k = new StackTrace(2); //skip this func and WriteDirectly
 				lock(_writerTypes) {
@@ -442,13 +439,13 @@ namespace Au
 					}
 				}
 				//speed: with 'new StackFrame(i)' usually slower, regardless of stack size. Faster only when 1 loop, maybe 2.
-				//info: here we don't optimize caller strings like AOutputServer does, because StackTrace creates much more garbage.
+				//info: here we don't optimize caller strings like Server does, because StackTrace creates much more garbage.
 			}
 #endif
 
 			var loc = s_localServer;
 			if (loc != null) loc.LocalWrite_(s, time, caller);
-			else s_client.WriteLine(s, OutServMessageType.Write, caller, time);
+			else s_client.WriteLine(s, OutputServerMessageType.Write, caller, time);
 		}
 
 		static void _ClearToOutputServer() {
@@ -458,7 +455,7 @@ namespace Au
 		}
 
 		static readonly _ClientOfGlobalServer s_client = new();
-		internal static AOutputServer s_localServer; //null if we don't have a local server
+		internal static Server s_localServer; //null if we don't have a local server
 
 		/// <summary>
 		/// Logs start/end/fail events of miniProgram trigger actions.
@@ -469,11 +466,11 @@ namespace Au
 			Debug.Assert(ATask.Role == ATRole.MiniProgram);
 			//if (s == null) s = "\0DNl08ISh30Kbt6ekJV3VvA"; //JIT //now not used
 			//else {
-				if (sourceFile == null) sourceFile = MiniProgram_.s_scriptId; //task started/ended/failed
-				else sourceFile = sourceFile + "\0" + sourceLine.ToStringInvariant(); //trigger action started/ended/failed
-				sourceFile = id.ToStringInvariant() + "\0" + sourceFile;
+			if (sourceFile == null) sourceFile = MiniProgram_.s_scriptId; //task started/ended/failed
+			else sourceFile = sourceFile + "\0" + sourceLine.ToStringInvariant(); //trigger action started/ended/failed
+			sourceFile = id.ToStringInvariant() + "\0" + sourceFile;
 			//}
-			s_client.WriteLine(s, OutServMessageType.TaskEvent, sourceFile);
+			s_client.WriteLine(s, OutputServerMessageType.TaskEvent, sourceFile);
 		}
 
 		unsafe class _ClientOfGlobalServer
@@ -484,7 +481,8 @@ namespace Au
 			AWaitableTimer _timer;
 			long _sizeWritten;
 
-			public void WriteLine(string s, OutServMessageType mtype, string caller = null, long time = 0) {
+			[SkipLocalsInit]
+			public void WriteLine(string s, OutputServerMessageType mtype, string caller = null, long time = 0) {
 				if (time == 0) Api.GetSystemTimeAsFileTime(out time);
 
 				lock (_lockObj1) {
@@ -492,24 +490,31 @@ namespace Au
 
 					int lenS = s.Length, lenCaller = (caller != null) ? Math.Min(caller.Length, 255) : 0;
 					int lenAll = 1 + 8 + 1 + lenCaller * 2 + lenS * 2; //type, time, lenCaller, caller, s
-					bool ok;
-					fixed (byte* b = AMemoryArray.Byte_(lenAll)) {
-						b[0] = (byte)mtype;
-						*(long*)(b + 1) = time; //time
-						b[9] = (byte)lenCaller; if (lenCaller != 0) fixed (char* p = caller) Api.memcpy(b + 10, p, lenCaller * 2); //caller
-						if (lenS != 0) fixed (char* p = s) Api.memcpy(b + 10 + lenCaller * 2, p, lenS * 2); //s
-
-						//if (s == "\0DNl08ISh30Kbt6ekJV3VvA") { //JIT //now not used
-						//									   //_SetTimer();
-						//	AJit.Compile(typeof(AWaitableTimer), nameof(AWaitableTimer.Set));
-						//	AJit.Compile(typeof(Api), nameof(Api.WriteFile), nameof(Api.SetWaitableTimer)); //slow JIT SetWaitableTimer
-						//	return;
-						//}
-
-						g1:
-						ok = Api.WriteFile(_mailslot, b, lenAll, out _);
-						if (!ok && _ReopenMailslot()) goto g1;
+					using ABuffer<byte> b = new(lenAll);
+					byte* p = b.p;
+					//type
+					*p++ = (byte)mtype;
+					//time
+					*(long*)p = time; p += 8;
+					//caller
+					*p++ = (byte)lenCaller;
+					if (lenCaller != 0) {
+						fixed (char* k = caller) AMemory.Copy(k, p, lenCaller * 2);
+						p += lenCaller * 2;
 					}
+					//s
+					if (lenS != 0) fixed (char* k = s) AMemory.Copy(k, p, lenS * 2); //s
+
+					//if (s == "\0DNl08ISh30Kbt6ekJV3VvA") { //JIT //now not used
+					//									   //_SetTimer();
+					//	AJit.Compile(typeof(AWaitableTimer), nameof(AWaitableTimer.Set));
+					//	AJit.Compile(typeof(Api), nameof(Api.WriteFile), nameof(Api.SetWaitableTimer)); //slow JIT SetWaitableTimer
+					//	return;
+					//}
+
+					g1:
+					bool ok = Api.WriteFile(_mailslot, b.p, lenAll, out _);
+					if (!ok && _ReopenMailslot()) goto g1;
 
 					if (ok) {
 						_SetTimer();
@@ -517,7 +522,7 @@ namespace Au
 						//prevent overflow of mailslot and _messages
 						_sizeWritten += lenAll;
 						if (_sizeWritten > 1_000_000) {
-							while (Api.GetFileSizeEx(_mailslot, out _sizeWritten) && _sizeWritten > 300_000) Thread.Sleep(15);
+							while (Api.GetFileSizeEx(_mailslot, out _sizeWritten) && _sizeWritten > 300_000) Thread.Sleep(15); //TODO: cannot sleep if server is in same thread
 							//note: these numbers are carefully adjusted for best performance etc
 						}
 					}
@@ -529,7 +534,7 @@ namespace Au
 					if (!_Connect()) return;
 
 					g1:
-					byte b = (byte)OutServMessageType.Clear;
+					byte b = (byte)OutputServerMessageType.Clear;
 					bool ok = Api.WriteFile(_mailslot, &b, 1, out _);
 					if (!ok && _ReopenMailslot()) goto g1;
 					Debug.Assert(ok);
@@ -551,8 +556,8 @@ namespace Au
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			void _SetTimer() {
-				if (AOutputServer._SM->IsTimer == 0) {
-					if (_timer.Set(10)) AOutputServer._SM->IsTimer = 1;
+				if (Server._SM->IsTimer == 0) {
+					if (_timer.Set(10)) Server._SM->IsTimer = 1;
 				}
 			}
 
@@ -564,16 +569,16 @@ namespace Au
 			}
 
 			bool _Connect() {
-				if (AOutputServer._SM->IsServer == 0) {
+				if (Server._SM->IsServer == 0) {
 					_Close();
 					return false;
 				}
 
 				if (_mailslot.Is0) {
-					_mailslot = CreateFile_(AOutputServer.MailslotName_, true);
+					_mailslot = CreateFile_(Server.MailslotName_, true);
 					if (_mailslot.Is0) return false;
 
-					_timer = AWaitableTimer.Open(AOutputServer.TimerName_, noException: true);
+					_timer = AWaitableTimer.Open(Server.TimerName_, noException: true);
 					if (_timer == null) {
 						_mailslot.Dispose();
 						return false;
@@ -589,7 +594,7 @@ namespace Au
 
 		/// <summary>
 		/// Introduces a class that contain methods designed to write to the output.
-		/// Purpose - when server's <see cref="AOutputServer.NeedCallerMethod"/> is true, skip methods of this class when searching for the caller method in the call stack.
+		/// Purpose - when server's <see cref="Server.NeedCallerMethod"/> is true, skip methods of this class when searching for the caller method in the call stack.
 		/// For example, if you created class PrintColored that contains methods PrintRed, PrintGreen and PrintBlue, you should execute this code in its static constructor: <c>AOutput.IntroduceWriterClass(typeof(PrintColored));</c>.
 		/// Also use this if you redirect output using a writer class that calls WriteDirectly.
 		/// Not used when writing to console or log file.
@@ -607,49 +612,49 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// See <see cref="OutServMessage.Type"/>.
+	/// See <see cref="OutputServerMessage.Type"/>.
 	/// </summary>
-	public enum OutServMessageType
+	public enum OutputServerMessageType
 	{
 		/// <summary>
 		/// Add line to the output window.
-		/// All <see cref="OutServMessage"/> members can be used.
+		/// All <see cref="OutputServerMessage"/> members can be used.
 		/// </summary>
 		Write,
 
 		/// <summary>
 		/// Clear the output window.
-		/// Only <see cref="OutServMessage.Type"/> is used.
+		/// Only <see cref="OutputServerMessage.Type"/> is used.
 		/// </summary>
 		Clear,
 
 		/// <summary>
-		/// Used internally to log events such as start/end of tasks and trigger actions.
+		/// Used internally to log events such as start/end of trigger actions.
 		/// </summary>
 		TaskEvent,
 	}
 
 	/// <summary>
 	/// Contains message text and/or related info.
-	/// More info: <see cref="AOutputServer"/>, <see cref="AOutputServer.GetMessage"/>.
+	/// More info: <see cref="AOutput.Server"/>, <see cref="AOutput.Server.GetMessage"/>.
 	/// </summary>
-	public class OutServMessage
+	public class OutputServerMessage
 	{
 		/// <summary>
 		/// Message type.
 		/// Currently there are 2 types - Write and Clear.
 		/// </summary>
-		public OutServMessageType Type { get; }
+		public OutputServerMessageType Type { get; }
 
 		/// <summary>
 		/// Message text.
-		/// Used with OutServMessageType.Write.
+		/// Used with OutputServerMessageType.Write.
 		/// </summary>
 		public string Text { get; set; }
 
 		/// <summary>
 		/// Message time in FILETIME format, UTC.
-		/// Used with OutServMessageType.Write.
+		/// Used with OutputServerMessageType.Write.
 		/// To convert to string: <c>DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime().ToString()</c>.
 		/// </summary>
 		public long TimeUtc { get; }
@@ -657,12 +662,12 @@ namespace Au.Types
 #if NEED_CALLER
 			/// <summary>
 			/// The <see cref="ATask.Name"/> property value of the process that called <see cref="AOutput.Write"/>.
-			/// Used with OutServMessageType.Write.
+			/// Used with OutputServerMessageType.Write.
 			/// If <see cref="NeedCallerMethod"/> is true, also includes the caller method. Format: "scriptname:type.method".
 			/// </summary>
 			public string Caller { get; }
 
-			internal OutServMessage(OutServMessageType type, string text, long time, string caller)
+			internal OutputServerMessage(OutputServerMessageType type, string text, long time, string caller)
 			{
 				Type = type;
 				Text = text;
@@ -672,11 +677,11 @@ namespace Au.Types
 #else
 		/// <summary>
 		/// The <see cref="ATask.Name"/> property value of the process that called <see cref="AOutput.Write"/>.
-		/// Used with OutServMessageType.Write.
+		/// Used with OutputServerMessageType.Write.
 		/// </summary>
 		public string Caller { get; }
 
-		internal OutServMessage(OutServMessageType type, string text, long time, string caller) {
+		internal OutputServerMessage(OutputServerMessageType type, string text, long time, string caller) {
 			Type = type;
 			Text = text;
 			TimeUtc = time;
@@ -687,7 +692,7 @@ namespace Au.Types
 		public override string ToString() {
 			//in editor used for output history
 
-			if (Type != OutServMessageType.Write) return "";
+			if (Type != OutputServerMessageType.Write) return "";
 			var k = DateTime.FromFileTimeUtc(TimeUtc).ToLocalTime();
 			return $"{k.ToString()}  |  {Caller}\r\n{Text}";
 		}

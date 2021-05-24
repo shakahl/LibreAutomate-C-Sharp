@@ -27,21 +27,19 @@ namespace Au
 		HandleRef _HprocHR => new HandleRef(this, _hproc);
 
 		///
-		protected virtual void Dispose(bool disposing)
-		{
-			if(_hproc.Is0) return;
-			if(Mem != default) {
+		protected virtual void Dispose(bool disposing) {
+			if (_hproc.Is0) return;
+			if (Mem != default) {
 				var mem = Mem; Mem = default;
-				if(!_dontFree) {
-					if(!Api.VirtualFreeEx(_HprocHR, mem)) AWarning.Write("Failed to free process memory. " + ALastError.Message);
+				if (!_dontFree) {
+					if (!Api.VirtualFreeEx(_HprocHR, mem)) AWarning.Write("Failed to free process memory. " + ALastError.Message);
 				}
 			}
 			_hproc.Dispose();
 		}
 
 		///
-		public void Dispose()
-		{
+		public void Dispose() {
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
@@ -74,24 +72,22 @@ namespace Au
 		/// <remarks>
 		/// This function can be used if this variable was created with <i>nBytes</i> = 0. Else exception. Also exception if this function previously called with <i>freeWhenDisposing</i> = true.
 		/// </remarks>
-		public void SetMem(IntPtr mem, bool freeWhenDisposing)
-		{
-			if(Mem != default && !_dontFree) throw new InvalidOperationException();
+		public void SetMem(IntPtr mem, bool freeWhenDisposing) {
+			if (Mem != default && !_dontFree) throw new InvalidOperationException();
 			_dontFree = !freeWhenDisposing;
 			Mem = mem;
 		}
 		bool _dontFree;
 
-		void _Alloc(int pid, AWnd w, int nBytes)
-		{
+		void _Alloc(int pid, AWnd w, int nBytes) {
 			string err;
 			const uint fl = Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE;
 			_hproc = w.Is0 ? Handle_.OpenProcess(pid, fl) : Handle_.OpenProcess(w, fl);
-			if(_hproc.Is0) { err = "Failed to open process handle."; goto ge; }
+			if (_hproc.Is0) { err = "Failed to open process handle."; goto ge; }
 
-			if(nBytes != 0) {
+			if (nBytes != 0) {
 				Mem = Api.VirtualAllocEx(_HprocHR, default, nBytes);
-				if(Mem == default) { err = "Failed to allocate process memory."; goto ge; }
+				if (Mem == default) { err = "Failed to allocate process memory."; goto ge; }
 			}
 			return;
 			ge:
@@ -108,8 +104,7 @@ namespace Au
 		/// <remarks>This is the preferred constructor when the process has windows. It works with windows of [](xref:uac) High integrity level when this process is Medium+uiAccess.</remarks>
 		/// <exception cref="AuWndException">w invalid.</exception>
 		/// <exception cref="AuException">Failed to open process handle (usually because of UAC) or allocate memory.</exception>
-		public AProcessMemory(AWnd w, int nBytes)
-		{
+		public AProcessMemory(AWnd w, int nBytes) {
 			w.ThrowIfInvalid();
 			_Alloc(0, w, nBytes);
 		}
@@ -120,8 +115,7 @@ namespace Au
 		/// <param name="processId">Process id.</param>
 		/// <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
 		/// <exception cref="AuException">Failed to open process handle (usually because of [](xref:uac)) or allocate memory.</exception>
-		public AProcessMemory(int processId, int nBytes)
-		{
+		public AProcessMemory(int processId, int nBytes) {
 			_Alloc(processId, default, nBytes);
 		}
 
@@ -132,10 +126,9 @@ namespace Au
 		/// </summary>
 		/// <param name="s">A string in this process.</param>
 		/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-		public bool WriteUnicodeString(string s, int offsetBytes = 0)
-		{
-			if(Mem == default) return false;
-			if(s.NE()) return true;
+		public bool WriteUnicodeString(string s, int offsetBytes = 0) {
+			if (Mem == default) return false;
+			if (s.NE()) return true;
 			fixed (char* p = s) {
 				return Api.WriteProcessMemory(_HprocHR, Mem + offsetBytes, p, (s.Length + 1) * 2, null);
 			}
@@ -148,32 +141,25 @@ namespace Au
 		/// </summary>
 		/// <param name="s">A string in this process. Normal C# string (UTF-16), not ANSI.</param>
 		/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-		/// <param name="enc">If null, uses system's default ANSI encoding.</param>
-		public bool WriteAnsiString(string s, int offsetBytes = 0, Encoding enc = null)
-		{
-			if(Mem == default) return false;
-			if(s.NE()) return true;
-			if(enc == null) enc = Encoding.Default;
-			var a = enc.GetBytes(s + "\0");
+		/// <param name="enc">If null, uses system default ANSI encoding.</param>
+		public bool WriteAnsiString(string s, int offsetBytes = 0, Encoding enc = null) {
+			if (Mem == default) return false;
+			if (s.NE()) return true;
+			if (enc == null) enc = Encoding.Default;
+			var a = enc.GetBytes(s).InsertAt(-1);
 			fixed (byte* p = a) {
 				return Api.WriteProcessMemory(_HprocHR, Mem + offsetBytes, p, a.Length, null);
 			}
 		}
 
-		string _ReadString(bool ansiString, int nChars, int offsetBytes, bool findLength, Encoding enc = null)
-		{
-			if(Mem == default) return null;
-			int na = nChars; if(!ansiString) na *= 2;
-			var b = AMemoryArray.Char_((na + 1) / 2);
-			fixed (char* p = b.A) {
-				if(!Api.ReadProcessMemory(_HprocHR, Mem + offsetBytes, p, na, null)) return null;
-				if(findLength) {
-					if(ansiString) nChars = BytePtr_.Length((byte*)p, nChars);
-					else nChars = CharPtr_.Length(p, nChars);
-				}
-			}
-			if(ansiString) return b.ToStringFromAnsi_(nChars, enc);
-			return b.ToString(nChars);
+		[SkipLocalsInit]
+		string _ReadString(bool ansiString, int nChars, int offsetBytes, bool findLength, Encoding enc = null) {
+			if (Mem == default) return null;
+			int n = nChars + 1; if (!ansiString) n *= 2; //bytes with '\0'
+			using ABuffer<byte> b = new(n);
+			if (!Api.ReadProcessMemory(_HprocHR, Mem + offsetBytes, b.p, n, null)) return null;
+			if (findLength) nChars = ansiString ? BytePtr_.Length(b.p, nChars) : CharPtr_.Length((char*)b.p, nChars);
+			return ansiString ? new((sbyte*)b.p, 0, nChars, enc) : new((char*)b.p, 0, nChars);
 		}
 
 		/// <summary>
@@ -181,12 +167,11 @@ namespace Au
 		/// Returns the copied string, or null if fails.
 		/// In that process the string must be in Unicode UTF-16 format (ie not ANSI).
 		/// </summary>
-		/// <param name="nChars">Number of characters to copy. In both processes a character is 2 bytes.</param>
+		/// <param name="length">Number of characters to copy, not including the terminating '\0'. In both processes a character is 2 bytes.</param>
 		/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
 		/// <param name="findLength">Find true string length by searching for '\0' character in nChars range. If false, the returned string is of nChars length even if contains '\0' characters.</param>
-		public string ReadUnicodeString(int nChars, int offsetBytes = 0, bool findLength = false)
-		{
-			return _ReadString(false, nChars, offsetBytes, findLength);
+		public string ReadUnicodeString(int length, int offsetBytes = 0, bool findLength = false) {
+			return _ReadString(false, length, offsetBytes, findLength);
 		}
 
 		/// <summary>
@@ -194,13 +179,12 @@ namespace Au
 		/// Returns the copies string, or null if fails.
 		/// In that process the string must be in ANSI format (ie not Unicode UTF-16).
 		/// </summary>
-		/// <param name="nBytes">Number bytes to copy. In that process a character is 1 or more bytes (depending on encoding). In this process will be 2 bytes (normal C# string).</param>
+		/// <param name="length">Number bytes to copy, not including the terminating '\0'. In that process a character is 1 or more bytes (depending on encoding). In this process will be 2 bytes (normal C# string).</param>
 		/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
 		/// <param name="findLength">Find true string length by searching for '\0' character in nBytes range of the ANSI string.</param>
-		/// <param name="enc">If null, uses system's default ANSI encoding.</param>
-		public string ReadAnsiString(int nBytes, int offsetBytes = 0, bool findLength = false, Encoding enc = null)
-		{
-			return _ReadString(true, nBytes, offsetBytes, findLength, enc);
+		/// <param name="enc">If null, uses system default ANSI encoding.</param>
+		public string ReadAnsiString(int length, int offsetBytes = 0, bool findLength = false, Encoding enc = null) {
+			return _ReadString(true, length, offsetBytes, findLength, enc);
 		}
 
 		/// <summary>
@@ -210,9 +194,8 @@ namespace Au
 		/// <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
 		/// <param name="nBytes">Number of bytes to copy.</param>
 		/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-		public bool Write(void* ptr, int nBytes, int offsetBytes = 0)
-		{
-			if(Mem == default) return false;
+		public bool Write(void* ptr, int nBytes, int offsetBytes = 0) {
+			if (Mem == default) return false;
 			return Api.WriteProcessMemory(_HprocHR, Mem + offsetBytes, ptr, nBytes, null);
 		}
 
@@ -224,8 +207,7 @@ namespace Au
 		/// <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
 		/// <param name="nBytes">Number of bytes to copy.</param>
 		/// <seealso cref="SetMem"/>
-		public bool WriteOther(IntPtr ptrDestinationInThatProcess, void* ptr, int nBytes)
-		{
+		public bool WriteOther(IntPtr ptrDestinationInThatProcess, void* ptr, int nBytes) {
 			return Api.WriteProcessMemory(_HprocHR, ptrDestinationInThatProcess, ptr, nBytes, null);
 		}
 
@@ -236,9 +218,8 @@ namespace Au
 		/// <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
 		/// <param name="nBytes">Number of bytes to copy.</param>
 		/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-		public bool Read(void* ptr, int nBytes, int offsetBytes = 0)
-		{
-			if(Mem == default) return false;
+		public bool Read(void* ptr, int nBytes, int offsetBytes = 0) {
+			if (Mem == default) return false;
 			return Api.ReadProcessMemory(_HprocHR, Mem + offsetBytes, ptr, nBytes, null);
 		}
 
@@ -250,8 +231,7 @@ namespace Au
 		/// <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
 		/// <param name="nBytes">Number of bytes to copy.</param>
 		/// <seealso cref="SetMem"/>
-		public bool ReadOther(IntPtr ptrSourceInThatProcess, void* ptr, int nBytes)
-		{
+		public bool ReadOther(IntPtr ptrSourceInThatProcess, void* ptr, int nBytes) {
 			return Api.ReadProcessMemory(_HprocHR, ptrSourceInThatProcess, ptr, nBytes, null);
 		}
 	}

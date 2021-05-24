@@ -592,7 +592,7 @@ namespace Au
 			_scroll = new(true, i => _a[i].rect.top, i => _a[i].rect.bottom);
 
 			WS style = WS.POPUP | WS.DLGFRAME; //3-pixel frame
-			WS2 estyle = WS2.TOOLWINDOW | WS2.NOACTIVATE | WS2.TOPMOST;
+			WSE estyle = WSE.TOOLWINDOW | WSE.NOACTIVATE | WSE.TOPMOST;
 			SIZE z = _Measure(rs.Width * 19 / 20);
 
 			bool needScroll = z.height > rs.Height;
@@ -969,7 +969,7 @@ namespace Au
 			}
 		}
 
-		bool _WmKeydown(in Native.MSG msg) { //called for root menu
+		bool _WmKeydown(in MSG msg) { //called for root menu
 			KKey k = (KKey)(int)msg.wParam;
 			if (_IsCancelKey(k)) {
 				Close();

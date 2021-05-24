@@ -2306,12 +2306,12 @@ namespace DiffMatchPatch
 #if true
 		internal static string encodeURI(string str)
 		{
-			return Au.AExtString.Escape(str);
+			return Au.ExtString.Escape(str);
 		}
 
 		static string decodeURI(string str)
 		{
-			if(!Au.AExtString.Unescape(str, out var r)) throw new ArgumentException("Invalid diff delta string escaping.");
+			if(!Au.ExtString.Unescape(str, out var r)) throw new ArgumentException("Invalid diff delta string escaping.");
 			return r;
 		}
 #else //uses System.Web.dll

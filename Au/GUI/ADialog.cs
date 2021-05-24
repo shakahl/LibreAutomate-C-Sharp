@@ -1246,9 +1246,9 @@ namespace Au
 			//Create an intermediate "#32770" to be direct parent of the Edit control.
 			//It is safer (the dialog will not receive Edit notifications) and helps to solve Tab/Esc problems.
 			var pStyle = WS.CHILD | WS.VISIBLE | WS.CLIPCHILDREN | WS.CLIPSIBLINGS; //don't need WS_TABSTOP
-			var pExStyle = WS2.NOPARENTNOTIFY; //not WS2.CONTROLPARENT
+			var pExStyle = WSE.NOPARENTNOTIFY; //not WSE.CONTROLPARENT
 			_editParent = AWnd.More.CreateWindow("#32770", null, pStyle, pExStyle, r.left, r.top, r.Width, r.Height, parent);
-			Api.SetWindowLongPtr(_editParent, Native.GWL.DWL.DLGPROC, Marshal.GetFunctionPointerForDelegate(_editControlParentProcHolder = _EditControlParentProc));
+			Api.SetWindowLongPtr(_editParent, GWLong.DWL.DLGPROC, Marshal.GetFunctionPointerForDelegate(_editControlParentProcHolder = _EditControlParentProc));
 
 			//Create Edit or ComboBox control.
 			string cn = "Edit";
@@ -1260,7 +1260,7 @@ namespace Au
 			case DEdit.Multiline: style |= (WS)(Api.ES_MULTILINE | Api.ES_AUTOVSCROLL | Api.ES_WANTRETURN) | WS.VSCROLL; break;
 			case DEdit.Combo: style |= (WS)(Api.CBS_DROPDOWN | Api.CBS_AUTOHSCROLL) | WS.VSCROLL; cn = "ComboBox"; break;
 			}
-			_editWnd = AWnd.More.CreateWindow(cn, null, style, WS2.CLIENTEDGE, 0, 0, r.Width, r.Height, _editParent);
+			_editWnd = AWnd.More.CreateWindow(cn, null, style, WSE.CLIENTEDGE, 0, 0, r.Width, r.Height, _editParent);
 			AWnd.More.SetFont(_editWnd, _editFont);
 
 			//Init the control.
@@ -1317,7 +1317,7 @@ namespace Au
 			return 0;
 			//tested: WM_GETDLGCODE, no results.
 		}
-		Native.WNDPROC _editControlParentProcHolder;
+		WNDPROC _editControlParentProcHolder;
 
 		#endregion Edit control
 
@@ -2043,7 +2043,7 @@ namespace Au.Types
 
 	#region public API
 #pragma warning disable 1591 //missing XML documentation
-	public static partial class Native
+	public static partial class Native //TODO: remove
 	{
 		/// <summary>
 		/// Messages that your <see cref="ADialog"/> event handler can send to the dialog.

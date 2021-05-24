@@ -17,7 +17,7 @@ namespace Au.Types
 {
 	/// <summary>
 	/// Regular expression match info.
-	/// Used with <see cref="ARegex"/> class functions and String extension methods like <see cref="AExtString.RegexMatch"/>.
+	/// Used with <see cref="ARegex"/> class functions and String extension methods like <see cref="ExtString.RegexMatch"/>.
 	/// </summary>
 	/// <remarks>
 	/// Contains info about a regular expression match found in the subject string: index, length, substring, etc.

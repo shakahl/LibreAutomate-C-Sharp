@@ -14,16 +14,14 @@ using System.Xml.Linq;
 
 using Au;
 using Au.Types;
+using Au.Util;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.CodeAnalysis.Completion;
-using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Shared.Extensions;
-using Microsoft.CodeAnalysis.Tags;
-using Au.Util;
+using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 
 static class CiSnippets
 {
@@ -33,7 +31,7 @@ static class CiSnippets
 		public readonly _Context context;
 		public readonly bool custom;
 
-		public _CiComplItemSnippet(CompletionItem ci, XElement x, _Context context, bool custom) : base(ci) {
+		public _CiComplItemSnippet(string name, XElement x, _Context context, bool custom) : base(CiComplProvider.Snippet, default, name, CiItemKind.Snippet) {
 			this.x = x;
 			this.context = context;
 			this.custom = custom;
@@ -41,7 +39,6 @@ static class CiSnippets
 	}
 
 	static List<_CiComplItemSnippet> s_items;
-	static ImmutableArray<string> s_tags = ImmutableArray.Create(WellKnownTags.Snippet);
 
 	[Flags]
 	enum _Context
@@ -60,7 +57,11 @@ static class CiSnippets
 	static _Context s_context;
 
 	//static int s_test;
-	public static void AddSnippets(List<CiComplItem> items, TextSpan span, SyntaxNode root, string code) {
+	public static void AddSnippets(List<CiComplItem> items, TextSpan span, CompilationUnitSyntax root, string code, CSharpSyntaxContext syncon) {
+		//CSharpSyntaxContext was discovered later and therefore almost not used here.
+		if (syncon.IsObjectCreationTypeContext || syncon.IsAttributeNameContext) return;
+		//CiUtil.GetContextType(syncon);
+
 		//AOutput.Clear(); AOutput.Write(++s_test);
 
 		//AOutput.Clear();
@@ -139,7 +140,7 @@ static class CiSnippets
 
 			void _LoadFile(string file, bool custom) {
 				try {
-					var xroot = AExtXml.LoadElem(file);
+					var xroot = AXml.LoadElem(file);
 					foreach (var xg in xroot.Elements("group")) {
 						if (!xg.Attr(out string sc, "context")) continue;
 						_Context con = default;
@@ -159,8 +160,7 @@ static class CiSnippets
 						}
 						if (con == default) continue;
 						foreach (var xs in xg.Elements("snippet")) {
-							var ci = CompletionItem.Create(xs.Attr("name"), tags: s_tags);
-							a.Add(new _CiComplItemSnippet(ci, xs, con, custom));
+							a.Add(new _CiComplItemSnippet(xs.Attr("name"), xs, con, custom));
 						}
 					}
 				}
@@ -170,7 +170,7 @@ static class CiSnippets
 			//FUTURE: snippet editor, maybe like in Eclipse.
 		}
 
-		bool isLineStart = _IsLineStart(code, pos);
+		bool isLineStart = InsertCode.IsLineStart(code, pos);
 
 		foreach (var v in s_items) {
 			if (!v.context.HasAny(context)) continue;
@@ -179,24 +179,20 @@ static class CiSnippets
 			v.ci.Span = span;
 			items.Add(v);
 		}
+	}
 
-		items.Sort((i1, i2) => {
-			var r = string.Compare(i1.ci.DisplayText, i2.ci.DisplayText, StringComparison.OrdinalIgnoreCase);
-			if (r == 0) {
-				r = i1.kind - i2.kind;
-				if (r == 0 && i1 is _CiComplItemSnippet s1 && i2 is _CiComplItemSnippet s2) {
-					if (!s1.custom) r = 1; else if (!s2.custom) r = -1; //sort custom first
-				}
-			}
-			return r;
-		});
+	public static int Compare(CiComplItem i1, CiComplItem i2) {
+		if (i1 is _CiComplItemSnippet s1 && i2 is _CiComplItemSnippet s2) {
+			if (!s1.custom) return 1; else if (!s2.custom) return -1; //sort custom first
+		}
+		return 0;
 	}
 
 	public static System.Windows.Documents.Section GetDescription(CiComplItem item) {
 		var snippet = item as _CiComplItemSnippet;
 		var m = new CiText();
 		m.StartParagraph();
-		m.Append("Snippet "); m.Bold(item.ci.DisplayText); m.Append(".");
+		m.Append("Snippet "); m.Bold(item.Text); m.Append(".");
 		_AppendInfo(snippet.x);
 		bool isList = snippet.x.HasElements;
 		if (isList) {
@@ -268,7 +264,7 @@ static class CiSnippets
 		usingDir = x.Attr("using") ?? snippet.x.Attr("using");
 
 		//if multiline, add indentation
-		if (s.Contains('\n')) s = _Indent(s, doc, pos);
+		if (s.Contains('\n')) s = InsertCode.IndentStringForInsert(s, doc, pos);
 
 		//$end$ sets final position. Or $end$select_text$end$. Show signature if like Method($end$.
 		int selectLength = 0;
@@ -297,6 +293,7 @@ static class CiSnippets
 			}
 		}
 
+		CodeInfo.Pasting(doc);
 		doc.zReplaceRange(true, pos, endPos, s, moveCurrentPos: i < 0);
 
 		if (i >= 0) {
@@ -305,60 +302,6 @@ static class CiSnippets
 			if (tempRange != default) CodeInfo._correct.BracesAdded(doc, pos + tempRange.from, pos + tempRange.to, default);
 			if (showSignature) CodeInfo.ShowSignature();
 		}
-	}
-
-	/// <summary>
-	/// Called from CiCompletion._ShowList on char '/'. If need, inserts XML doc comment with empty summary, param and returns tags.
-	/// </summary>
-	public static void DocComment(in CodeInfo.Context cd) {
-		int pos = cd.pos16;
-		string code = cd.code;
-		SciCode doc = cd.sciDoc;
-
-		if (0 == code.Eq(pos - 3, false, "///\r", "///\n") || !_IsLineStart(code, pos - 3)) return;
-
-		var root = cd.document.GetSyntaxRootAsync().Result;
-		var node = root.FindToken(pos).Parent;
-		var start = node.SpanStart;
-		if (start < pos) return;
-
-		if (node is not MemberDeclarationSyntax) { //can be eg func return type (if no public etc) or attribute
-			node = node.Parent;
-			if (node is not MemberDeclarationSyntax || node.SpanStart != start) return;
-		}
-
-		//already has doc comment?
-		foreach (var v in node.GetLeadingTrivia()) {
-			if (v.IsDocumentationCommentTrivia) { //singleline (preceded by ///) or multiline (preceded by /**)
-				var span = v.Span;
-				if (span.Start != pos || span.Length > 2) return; //when single ///, span includes only newline after ///
-			}
-		}
-		//AOutput.Write(pos);
-		//CiUtil.PrintNode(node);
-
-		string s = @" <summary>
-/// 
-/// </summary>";
-
-		if (node is BaseMethodDeclarationSyntax md) //method, ctor
-			s += CiUtil.FormatSignatureXmlDoc(md, code);
-
-		s = _Indent(s, doc, pos);
-
-		doc.zInsertText(true, pos, s, true, true);
-		doc.zGoToPos(true, pos + s.Find("/ ") + 2);
-	}
-
-	static bool _IsLineStart(string s, int pos) {
-		int i = pos; while (--i >= 0 && (s[i] == ' ' || s[i] == '\t')) { }
-		return i < 0 || s[i] == '\n';
-	}
-
-	static string _Indent(string s, SciCode doc, int pos) {
-		int indent = doc.zLineIndentationFromPos(true, pos);
-		if (indent > 0) s = s.RegexReplace(@"(?<=\n)", new string('\t', indent));
-		return s;
 	}
 
 	public static readonly string DefaultFile = AFolders.ThisApp + @"Default\Snippets.xml";

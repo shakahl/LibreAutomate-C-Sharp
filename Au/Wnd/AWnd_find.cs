@@ -509,7 +509,7 @@ namespace Au
 		/// </remarks>
 		public static AWnd FindFast(string name = null, string cn = null, bool messageOnly = false, AWnd wAfter = default)
 		{
-			return Api.FindWindowEx(messageOnly ? Native.HWND.MESSAGE : default, wAfter, cn, name);
+			return Api.FindWindowEx(messageOnly ? SpecHWND.MESSAGE : default, wAfter, cn, name);
 		}
 
 		/// <summary>
@@ -795,8 +795,8 @@ namespace Au
 					} else {
 						if(!wParent.Is0 && w.OwnerWindow != wParent) return 1;
 					}
-					if(a == null) a = (int*)AMemory.Alloc((_cap = onlyVisible ? 200 : 1000) * 4);
-					else if(len == _cap) a = (int*)AMemory.ReAlloc(a, (_cap *= 2) * 4);
+					if(a == null) a = AMemory.Alloc<int>(_cap = onlyVisible ? 200 : 1000);
+					else if(len == _cap) AMemory.ReAlloc(ref a, _cap *= 2);
 					a[len++] = (int)w;
 					return 1;
 				}

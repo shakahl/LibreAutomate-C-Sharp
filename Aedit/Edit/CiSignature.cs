@@ -83,7 +83,7 @@ class CiSignature
 	bool _afterCharAdded;
 
 	public void SciCharAdded(SciCode doc, char ch) {
-		switch (ch) { case '(': case '[': case '<': case ')': case ']': case '>': case ',': break; default: return; }
+		switch (ch) { case '(' or '[' or '<' or ')' or ']' or '>' or ',': break; default: return; }
 		_ShowSignature(doc, ch);
 		_afterCharAdded = true;
 	}
@@ -92,6 +92,140 @@ class CiSignature
 		_ShowSignature(doc, default);
 	}
 
+#if true
+	async void _ShowSignature(SciCode doc, char ch) {
+		//APerf.First();
+		if (!CodeInfo.GetContextAndDocument(out var cd, -2) || cd.pos16 < 2) return; //returns false if position is in meta comments
+
+		_cancelTS?.Cancel();
+		_cancelTS = new CancellationTokenSource();
+		var cancelTS = _cancelTS;
+		var cancelToken = cancelTS.Token;
+#if DEBUG
+		if (Debugger.IsAttached) { cancelToken = default; _cancelTS = null; }
+#endif
+
+		//ISignatureHelpProvider provider = null;
+		SignatureHelpItems r = null;
+		try {
+			//could be sync, quite fast, but then sometimes reenters (GetItemsAsync waits/dispatches) and sometimes hangs
+			r = await Task.Run(async () => {
+				//APerf.Next();
+				var providers = _SignatureHelpProviders;
+				//AOutput.Write(providers);
+				SignatureHelpItems r = null;
+				var trigger = new SignatureHelpTriggerInfo(ch == default ? SignatureHelpTriggerReason.InvokeSignatureHelpCommand : SignatureHelpTriggerReason.TypeCharCommand, ch);
+				foreach (var p in providers) {
+					var r2 = await p.GetItemsAsync(cd.document, cd.pos16, trigger, cancelToken).ConfigureAwait(false);
+					if (cancelToken.IsCancellationRequested) { /*AOutput.Write("IsCancellationRequested");*/ return null; } //often
+					if (r2 == null) continue;
+					if (r == null || r2.ApplicableSpan.Start > r.ApplicableSpan.Start) {
+						r = r2;
+						//provider = p;
+					}
+					//Example: 'AOutput.Write(new Something())'.
+					//	The first provider probably is for Write (invocation).
+					//	Then the second is for Something (object creation).
+					//	We need the innermost, in this case Something.
+				}
+				return r;
+			});
+		}
+		catch (OperationCanceledException) { /*ADebug.Print("canceled");*/ return; } //never noticed
+		finally {
+			cancelTS.Dispose();
+			if (cancelTS == _cancelTS) _cancelTS = null;
+		}
+		//AOutput.Write(r, cancelToken.IsCancellationRequested);
+
+		if (cancelToken.IsCancellationRequested) return;
+		if (r == null) {
+			_CancelUI();
+			return;
+		}
+		Debug.Assert(doc == Panels.Editor.ZActiveDoc); //when active doc changed, cancellation must be requested
+		if (cd.pos16 != doc.zCurrentPos16 || (object)cd.code != doc.zText) return; //changed while awaiting
+
+		//APerf.NW('s');
+
+		//AOutput.Write($"<><c orange>pos={cd.pos16}, span={r.ApplicableSpan},    nItems={r.Items.Count},  argCount={r.ArgumentCount}, argIndex={r.ArgumentIndex}, argName={r.ArgumentName}, sel={r.SelectedItemIndex},    provider={provider}<>");
+
+		//get span of the arglist. r.ApplicableSpan.Start is of the statement, not of the arglist. In chained methods it is the chain start.
+		var root = cd.document.GetSyntaxRootAsync().Result;
+		var fullSpan = r.ApplicableSpan;
+		//CiUtil.HiliteRange(fullSpan); ATime.SleepDoEvents(500);
+		var start = fullSpan.Start;
+		var tok = root.FindToken(cd.pos16);
+		if (tok.Kind() is SyntaxKind.OpenParenToken or SyntaxKind.OpenBracketToken or SyntaxKind.LessThanToken) tok = tok.GetPreviousToken();
+		var argNode = tok.Parent;
+		while (argNode != null) {
+			int i = argNode.SpanStart; if (i <= start) break;
+			if (argNode is BaseArgumentListSyntax or AttributeArgumentListSyntax or TypeArgumentListSyntax) {
+				start = i + 1;
+				break;
+			}
+			//CiUtil.PrintNode(argNode);
+			argNode = argNode.Parent;
+		}
+		var argSpan = new TextSpan(start, fullSpan.End - start);
+		//CiUtil.PrintNode(argNode); CiUtil.HiliteRange(argSpan); //AOutput.Write(argSpan);
+
+		var span = new _Span(argSpan, cd.code);
+		int iSel = _data?.GetUserSelectedItemIfSameSpan(span, r) ?? -1; //preserve user selection in same session
+
+		_data = new _Data {
+			r = r,
+			span = span,
+			iUserSelected = iSel,
+			sciDoc = doc,
+		};
+
+		if (iSel < 0) {
+			iSel = r.SelectedItemIndex ?? (r.ArgumentCount == 0 ? 0 : -1);
+			if (iSel < 0) {
+				for (int i = 0; i < r.Items.Count; i++) if (r.Items[i].Parameters.Length >= r.ArgumentCount) { iSel = i; break; }
+				if (iSel < 0) {
+					for (int i = 0; i < r.Items.Count; i++) if (r.Items[i].IsVariadic) { iSel = i; break; }
+					if (iSel < 0) iSel = 0;
+				}
+			}
+		}
+
+		doc.ZTempRanges_Add(this, argSpan.Start, argSpan.End, onLeave: () => {
+			if (doc.ZTempRanges_Enum(doc.zCurrentPos8, this, utf8: true).Any()) return;
+			_CancelUI();
+		}, SciCode.ZTempRangeFlags.NoDuplicate);
+
+		var rect = RECT.Union(CiUtil.GetCaretRectFromPos(doc, fullSpan.Start), CiUtil.GetCaretRectFromPos(doc, cd.pos16));
+		doc.Hwnd.MapClientToScreen(ref rect);
+		rect.Width += ADpi.Scale(200, doc.Hwnd);
+		rect.left -= 6;
+
+		_textPopup ??= new CiPopupText(CiPopupText.UsedBy.Signature, onHiddenOrDestroyed: (_, _) => _data = null) {
+			OnLinkClick = (ph, e) => ph.Text = _FormatText(e.ToInt(1), userSelected: true)
+		};
+		_textPopup.Text = _FormatText(iSel, userSelected: false);
+
+		if (!_textPopup.IsVisible) {
+			CodeInfo.HideTextPopupAndTempWindows();
+			CodeInfo._compl.Cancel();
+		}
+
+		_textPopup.Show(Panels.Editor.ZActiveDoc, rect, System.Windows.Controls.Dock.Bottom);
+		//APerf.NW();
+
+		//also show Keys/Regex tool?
+		//CiUtil.PrintNode(node);
+		if (argNode is ArgumentListSyntax && cd.code.Eq(cd.pos16 - 1, "\"\"")) {
+			//AOutput.Write("string");
+			var semo = cd.document.GetSemanticModelAsync().Result;
+			argNode = root.FindToken(cd.pos16).Parent;
+			var stringFormat = CiUtil.GetParameterStringFormat(argNode, semo, false);
+			//AOutput.Write(stringFormat);
+			if (stringFormat != default) CodeInfo._tools.ShowForStringParameter(stringFormat, cd, argNode.Span, _textPopup.PopupWindow.Hwnd);
+		}
+	}
+#else //old
 	async void _ShowSignature(SciCode doc, char ch) {
 		//APerf.First();
 		if (!CodeInfo.GetContextAndDocument(out var cd, -2)) return; //returns false if position is in meta comments
@@ -143,18 +277,19 @@ class CiSignature
 			return;
 		}
 		Debug.Assert(doc == Panels.Editor.ZActiveDoc); //when active doc changed, cancellation must be requested
-		if (cd.pos16 != doc.zCurrentPos16 || (object)cd.code != doc.zText) return; //we are async, so these changes are possible
-																				   //APerf.NW('s');
+		if (cd.pos16 != doc.zCurrentPos16 || (object)cd.code != doc.zText) return; //changed while awaiting
+
+		//APerf.NW('s');
 
 		//AOutput.Write($"<><c orange>pos={cd.pos16}, span={r.ApplicableSpan},    nItems={r.Items.Count},  argCount={r.ArgumentCount}, argIndex={r.ArgumentIndex}, argName={r.ArgumentName}, sel={r.SelectedItemIndex},    provider={provider}<>");
 
 		//get span of the arglist. r.ApplicableSpan.Start is of the statement, not of the arglist. In chained methods it is the chain start.
 		var root = cd.document.GetSyntaxRootAsync().Result;
-		var aspan = r.ApplicableSpan;
-		var start = aspan.Start;
-		bool aspanStart = cd.code[aspan.Start] == '('; //normally End is at ')' and Start is < '(', but for tuple End is after ')' and Start is at '('
-		var toke = root.FindToken(aspanStart ? aspan.Start : aspan.End);
-		//CiUtil.HiliteRange(aspan);
+		var fullSpan = r.ApplicableSpan;
+		var start = fullSpan.Start;
+		bool aspanStart = cd.code[fullSpan.Start] == '('; //normally End is at ')' and Start is < '(', but for tuple End is after ')' and Start is at '('
+		var toke = root.FindToken(aspanStart ? fullSpan.Start : fullSpan.End);
+		//CiUtil.HiliteRange(fullSpan);
 		//return;
 
 		SyntaxNode node;
@@ -175,11 +310,11 @@ class CiSignature
 		}
 		bool _IsArglistNode(SyntaxNode sn) {
 			//AOutput.Write(sn.GetType());
-			return sn is BaseArgumentListSyntax || sn is AttributeArgumentListSyntax || sn is TypeArgumentListSyntax; //includes ArgumentListSyntax and BracketedArgumentListSyntax
+			return sn is BaseArgumentListSyntax or AttributeArgumentListSyntax or TypeArgumentListSyntax; //includes ArgumentListSyntax and BracketedArgumentListSyntax
 		}
 
-		start = Math.Max(aspan.Start, node.SpanStart);
-		var argSpan = new TextSpan(start, aspan.End - start);
+		start = Math.Max(fullSpan.Start, node.SpanStart);
+		var argSpan = new TextSpan(start, fullSpan.End - start);
 		//CiUtil.PrintNode(node); CiUtil.HiliteRange(argSpan); AOutput.Write(argSpan);
 
 		var span = new _Span(argSpan, cd.code);
@@ -208,7 +343,7 @@ class CiSignature
 			_CancelUI();
 		}, SciCode.ZTempRangeFlags.NoDuplicate);
 
-		var rect = RECT.Union(CiUtil.GetCaretRectFromPos(doc, aspan.Start), CiUtil.GetCaretRectFromPos(doc, cd.pos16));
+		var rect = RECT.Union(CiUtil.GetCaretRectFromPos(doc, fullSpan.Start), CiUtil.GetCaretRectFromPos(doc, cd.pos16));
 		doc.Hwnd.MapClientToScreen(ref rect);
 		rect.Width += ADpi.Scale(200, doc.Hwnd);
 		rect.left -= 6;
@@ -237,6 +372,7 @@ class CiSignature
 			if (stringFormat != default) CodeInfo._tools.ShowForStringParameter(stringFormat, cd, node.Span, _textPopup.PopupWindow.Hwnd);
 		}
 	}
+#endif
 
 	System.Windows.Documents.Section _FormatText(int iSel, bool userSelected) {
 		_data.iSelected = iSel;
@@ -279,7 +415,7 @@ class CiSignature
 				else if (isTuple == 0) x.AppendSymbolWithoutParameters(sym);
 				string b1 = "(", b2 = ")";
 				if (nt != null) {
-					if (nt.IsGenericType && isTuple != 2) { b1 = "&lt;"; b2 = "&gt;"; }
+					if (nt.IsGenericType && isTuple != 2) { b1 = "<"; b2 = ">"; }
 				} else if (sym is IPropertySymbol) {
 					b1 = "["; b2 = "]";
 				}

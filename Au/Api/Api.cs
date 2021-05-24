@@ -2,7 +2,6 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
 
 [module: DefaultCharSet(CharSet.Unicode)] //change default DllImport CharSet from ANSI to Unicode
 
@@ -389,8 +388,7 @@ namespace Au.Types
 		internal struct TOKEN_PRIVILEGES
 		{
 			public int PrivilegeCount;
-			/*[MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]*/
-			public LUID_AND_ATTRIBUTES Privileges;
+			public LUID_AND_ATTRIBUTES Privileges; //[1]
 		}
 
 		[DllImport("advapi32.dll", SetLastError = true)]
@@ -492,7 +490,7 @@ namespace Au.Types
 		internal static extern int SHParseDisplayName(string pszName, IntPtr pbc, out IntPtr pidl, uint sfgaoIn, uint* psfgaoOut);
 
 		[DllImport("shell32.dll", PreserveSig = true)]
-		internal static extern int SHGetNameFromIDList(IntPtr pidl, Native.SIGDN sigdnName, out string ppszName);
+		internal static extern int SHGetNameFromIDList(IntPtr pidl, SIGDN sigdnName, out string ppszName);
 
 		[DllImport("shell32.dll", PreserveSig = true)]
 		internal static extern int SHCreateShellItem(IntPtr pidlParent, IShellFolder psfParent, IntPtr pidl, out IShellItem ppsi);
@@ -837,9 +835,9 @@ namespace Au.Types
 		///// <param name="dotExt"></param>
 		//internal static string AssocQueryString(string dotExt/*, ASSOCSTR what = ASSOCSTR.ASSOCSTR_EXECUTABLE*/)
 		//{
-		//	var b = AMemoryArray.Char_(300, out var n);
+		//	var b = ApiBuffer_.Char_(300, out var n);
 		//	int hr = AssocQueryString(0x20, 2, dotExt, null, b, ref n); //ASSOCF_NOTRUNCATE
-		//	if(hr == E_POINTER) hr = AssocQueryString(0x20, 2, dotExt, null, b = AMemoryArray.Char_(n), ref n);
+		//	if(hr == E_POINTER) hr = AssocQueryString(0x20, 2, dotExt, null, b = ApiBuffer_.Char_(n), ref n);
 		//	return hr == 0 ? b.ToString(n) : null;
 		//}
 
@@ -1070,7 +1068,7 @@ namespace Au.Types
 		//[DllImport("msvcrt.dll", EntryPoint = "_strtoui64", CallingConvention = CallingConvention.Cdecl)]
 		//internal static extern long strtoui64(byte* s, byte** endPtr = null, int radix = 0);
 
-		//This is used when working with char*. With C# strings use AExtString.ToInt32 etc.
+		//This is used when working with char*. With C# strings use ExtString.ToInt32 etc.
 		internal static int strtoi(char* s, char** endPtr = null, int radix = 0) {
 			return (int)strtoi64(s, endPtr, radix);
 		}
@@ -1080,7 +1078,7 @@ namespace Au.Types
 			return (int)strtoi64(s, endPtr, radix);
 		}
 
-#if false //not used, because we have AExtString.ToInt32 etc, which has no overflow problems. But it supports only decimal and hex, not any radix.
+#if false //not used, because we have ExtString.ToInt32 etc, which has no overflow problems. But it supports only decimal and hex, not any radix.
 		/// <summary>
 		/// Converts part of string to int.
 		/// Returns the int value.
@@ -1145,16 +1143,13 @@ namespace Au.Types
 		internal static extern char* _ltoa(int value, byte* s, int radix);
 
 		[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void* memcpy(void* to, void* from, LPARAM n);
+		internal static extern void* memmove(void* to, void* from, nint n);
 
-		[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void* memmove(void* to, void* from, LPARAM n);
+		//[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
+		//internal static extern void* memset(void* ptr, int ch, nint n);
 
-		[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void* memset(void* ptr, int ch, LPARAM n);
-
-		[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int memcmp(void* p1, void* p2, LPARAM count);
+		//[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
+		//internal static extern int memcmp(void* p1, void* p2, nint count);
 
 
 
@@ -1349,7 +1344,7 @@ namespace Au.Types
 		internal static extern int MsiGetShortcutTarget(string szShortcutPath, char* szProductCode, char* szFeatureId, char* szComponentCode);
 
 		[DllImport("msi.dll", EntryPoint = "#173")]
-		internal static extern int MsiGetComponentPath(char* szProduct, char* szComponent, [Out] char[] lpPathBuf, ref int pcchBuf);
+		internal static extern int MsiGetComponentPath(char* szProduct, char* szComponent, char* lpPathBuf, ref int pcchBuf);
 
 
 		//[DllImport("urlmon.dll", PreserveSig = true)]

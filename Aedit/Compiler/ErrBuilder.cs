@@ -38,7 +38,7 @@ namespace Au.Compiler
 		/// <param name="fMain">Main file of the compilation. Used only for failures that are not C# errors, eg when fails to open a metadata reference file.</param>
 		/// <remarks>
 		/// This and other AddX functions add line like "[C:\path\file.cs(line,column)]: message" or "[C:\path\file.cs]: message".
-		/// Then our AOutputServer.SetNotifications callback will convert the "[...]" part to a link.
+		/// Then our AOutput.Server.SetNotifications callback will convert the "[...]" part to a link.
 		/// </remarks>
 		public void AddErrorOrWarning(Diagnostic d, FileNode fMain)
 		{

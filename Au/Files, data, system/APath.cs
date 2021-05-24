@@ -68,41 +68,8 @@ namespace Au
 				return s;
 			}
 
-			for (int na = s.Length + 100; ;) {
-				var b = AMemoryArray.Char_(ref na);
-				int nr = Api.ExpandEnvironmentStrings(s, b, na);
-				if (nr > na) na = nr;
-				else if (nr > 0) {
-					var R = b.ToString(nr - 1);
-					if (R == s) return R;
-					return ExpandEnvVar(R); //can be %envVar2% in envVar1 value
-				} else return s;
-			}
-		}
-
-		/// <summary>
-		/// Gets environment variable's value.
-		/// Returns "" if variable not found.
-		/// Does not support AFolders.X.
-		/// </summary>
-		/// <param name="name">Case-insensitive name. Without %.</param>
-		/// <remarks>
-		/// Environment variable values cannot be "" or null. Setting empty value removes the variable.
-		/// </remarks>
-		internal static string GetEnvVar_(string name) {
-			for (int na = 300; ;) {
-				var b = AMemoryArray.Char_(ref na);
-				int nr = Api.GetEnvironmentVariable(name, b, na);
-				if (nr > na) na = nr; else return (nr == 0) ? "" : b.ToString(nr);
-			}
-		}
-
-		/// <summary>
-		/// Returns true if environment variable exists.
-		/// </summary>
-		/// <param name="name">Case-insensitive name.</param>
-		internal static bool EnvVarExists_(string name) {
-			return 0 != Api.GetEnvironmentVariable(name, null, 0);
+			if (!Api.ExpandEnvironmentStrings(s, out s)) return s;
+			return ExpandEnvVar(s); //can be %envVar2% in envVar1 value
 		}
 
 		/// <summary>
@@ -126,7 +93,7 @@ namespace Au
 			int len = s.Lenn();
 
 			if (len >= 2) {
-				if (s[1] == ':' && AChar.IsAsciiAlpha(s[0])) {
+				if (s[1] == ':' && s[0].IsAsciiAlpha()) {
 					return len == 2 || IsSepChar_(s[2]);
 					//info: returns false if eg "c:abc" which means "abc" in current directory of drive "c:"
 				}
@@ -191,7 +158,7 @@ namespace Au
 			if (len >= 2) {
 				switch (s[1]) {
 				case ':':
-					if (AChar.IsAsciiAlpha(s[i])) {
+					if (s[i].IsAsciiAlpha()) {
 						int j = i + 2;
 						if (len == j) return j;
 						if (IsSepChar_(s[j])) return j + 1;
@@ -233,11 +200,11 @@ namespace Au
 		/// </remarks>
 		public static int GetUrlProtocolLength(string s) {
 			int len = (s == null) ? 0 : s.Length;
-			if (len > 2 && AChar.IsAsciiAlpha(s[0]) && s[1] != ':') {
+			if (len > 2 && s[0].IsAsciiAlpha() && s[1] != ':') {
 				for (int i = 1; i < len; i++) {
 					var c = s[i];
 					if (c == ':') return i + 1;
-					if (!(AChar.IsAsciiAlphaDigit(c) || c == '.' || c == '-' || c == '+')) break;
+					if (!(c.IsAsciiAlphaDigit() || c == '.' || c == '-' || c == '+')) break;
 				}
 			}
 			return 0;
@@ -331,7 +298,7 @@ namespace Au
 			if (s == null) return false;
 			int i = ((length < 0) ? s.Length : length) - 1;
 			if (i < 1 || s[i] != ':') return false;
-			if (!AChar.IsAsciiAlpha(s[--i])) return false;
+			if (!s[--i].IsAsciiAlpha()) return false;
 			if (i > 0 && !IsSepChar_(s[i - 1])) return false;
 			return true;
 		}
@@ -403,11 +370,7 @@ namespace Au
 				//note: although slower, call GetFullPathName always, not just when contains @"..\" etc.
 				//	Because it does many things (see Normalize doc), not all documented.
 				//	We still ~2 times faster than Path.GetFullPath (tested before Core).
-				for (int na = 300; ;) {
-					var b = AMemoryArray.Char_(ref na);
-					int nr = Api.GetFullPathName(s, na, b, null);
-					if (nr > na) na = nr; else { if (nr > 0) s = b.ToString(nr); break; }
-				}
+				Api.GetFullPathName(s, out s);
 
 				if (0 == (flags & PNFlags.DontExpandDosPath) && IsPossiblyDos_(s)) s = ExpandDosPath_(s);
 
@@ -451,13 +414,7 @@ namespace Au
 		/// </summary>
 		/// <param name="s">Can be null.</param>
 		internal static string ExpandDosPath_(string s) {
-			if (!s.NE()) {
-				for (int na = 300; ;) {
-					var b = AMemoryArray.Char_(ref na);
-					int nr = Api.GetLongPathName(s, b, na);
-					if (nr > na) na = nr; else { if (nr > 0) s = b.ToString(nr); break; }
-				}
-			}
+			if (!s.NE()) Api.GetLongPathName(s, out s);
 			return s;
 			//CONSIDER: the API fails if the file does not exist.
 			//	Workaround: if filename does not contain '~', pass only the part that contains.
@@ -473,7 +430,7 @@ namespace Au
 			if (s != null && s.Length >= 8) {
 				for (int i = 0; (i = s.IndexOf('~', i + 1)) > 0;) {
 					int j = i + 1, k = 0;
-					for (; k < 6 && j < s.Length; k++, j++) if (!AChar.IsAsciiDigit(s[j])) break;
+					for (; k < 6 && j < s.Length; k++, j++) if (!s[j].IsAsciiDigit()) break;
 					if (k == 0) continue;
 					char c = j < s.Length ? s[j] : '\\';
 					if (c == '\\' || c == '/' || (c == '.' && j == s.Length - 4)) {

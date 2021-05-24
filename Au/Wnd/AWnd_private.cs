@@ -83,6 +83,7 @@ namespace Au
 			/// <param name="appId">Receives app ID.</param>
 			/// <param name="prependShellAppsFolder">Prepend <c>@"shell:AppsFolder\"</c> (to run or get icon).</param>
 			/// <param name="getExePathIfNotWinStoreApp">Get program path if it is not a Windows Store app.</param>
+			[SkipLocalsInit]
 			internal static int GetWindowsStoreAppId(AWnd w, out string appId, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false) {
 				appId = null;
 
@@ -91,20 +92,18 @@ namespace Au
 					case 1:
 						using (var p = Handle_.OpenProcess(w)) {
 							if (!p.Is0) {
-								var b = AMemoryArray.Char_(1000, out int na);
-								if (0 == Api.GetApplicationUserModelId(p, ref na, b)) appId = b.ToString(na);
+								int na = 1024; var b = stackalloc char[na];
+								if (0 == Api.GetApplicationUserModelId(p, ref na, b) && na > 1) appId = new(b, 0, na - 1);
 							}
 						}
 						break;
-					case 2:
-						if (AVersion.MinWin10) {
-							if (0 == Api.SHGetPropertyStoreForWindow(w, Api.IID_IPropertyStore, out Api.IPropertyStore ps)) {
-								if (0 == ps.GetValue(Api.PKEY_AppUserModel_ID, out var v)) {
-									if (v.vt == Api.VARENUM.VT_LPWSTR) appId = Marshal.PtrToStringUni(v.value);
-									v.Dispose();
-								}
-								Marshal.ReleaseComObject(ps);
+					case 2 when AVersion.MinWin10:
+						if (0 == Api.SHGetPropertyStoreForWindow(w, Api.IID_IPropertyStore, out Api.IPropertyStore ps)) {
+							if (0 == ps.GetValue(Api.PKEY_AppUserModel_ID, out var v)) {
+								if (v.vt == Api.VARENUM.VT_LPWSTR) appId = Marshal.PtrToStringUni(v.value);
+								v.Dispose();
 							}
+							Marshal.ReleaseComObject(ps);
 						}
 						break;
 					}
@@ -195,10 +194,10 @@ namespace Au
 			/// </summary>
 			/// <param name="messageOnly"></param>
 			/// <param name="wndProcUnsafe">If not null, replaces window procedure (SetWindowLongPtr). The caller must protect the delegate from GC.</param>
-			public static AWnd CreateWindowDWP(bool messageOnly, Native.WNDPROC wndProcUnsafe = null) {
+			public static AWnd CreateWindowDWP(bool messageOnly, WNDPROC wndProcUnsafe = null) {
 				var cn = WindowClassDWP;
 				var w = messageOnly ? More.CreateMessageOnlyWindow(cn) : More.CreateWindow(cn);
-				if (wndProcUnsafe != null) Api.SetWindowLongPtr(w, Native.GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProcUnsafe));
+				if (wndProcUnsafe != null) Api.SetWindowLongPtr(w, GWLong.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProcUnsafe));
 				return w;
 			}
 			static int s_registeredDWP;
@@ -225,13 +224,13 @@ namespace Au
 			/// Replaces window procedure (SetWindowLongPtr). Returns previous window procedure.
 			/// The caller must protect the delegate from GC.
 			/// </summary>
-			public static IntPtr SubclassUnsafe(AWnd w, Native.WNDPROC wndProc) {
-				return Api.SetWindowLongPtr(w, Native.GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
+			public static IntPtr SubclassUnsafe(AWnd w, WNDPROC wndProc) {
+				return Api.SetWindowLongPtr(w, GWLong.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
 			}
 
 			/// <summary>
-			/// Returns true if w contains a non-zero special handle value (<see cref="Native.HWND"/>).
-			/// Note: <b>Native.HWND.TOP</b> is 0.
+			/// Returns true if w contains a non-zero special handle value (<see cref="SpecHWND"/>).
+			/// Note: <b>SpecHWND.TOP</b> is 0.
 			/// </summary>
 			public static bool IsSpecHwnd(AWnd w) {
 				int i = (int)w;

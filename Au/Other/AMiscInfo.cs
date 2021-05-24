@@ -39,8 +39,8 @@ namespace Au
 		/// </summary>
 		/// <param name="g">API <msdn>GUITHREADINFO</msdn>.</param>
 		/// <param name="idThread">Thread id. If 0 - the foreground (active window) thread. See <see cref="AThread.Id"/>, <see cref="AWnd.ThreadId"/>.</param>
-		public static bool GetGUIThreadInfo(out Native.GUITHREADINFO g, int idThread = 0) {
-			g = new Native.GUITHREADINFO(); g.cbSize = Api.SizeOf(g);
+		public static bool GetGUIThreadInfo(out GUITHREADINFO g, int idThread = 0) {
+			g = new GUITHREADINFO(); g.cbSize = Api.SizeOf(g);
 			return Api.GetGUIThreadInfo(idThread, ref g);
 		}
 

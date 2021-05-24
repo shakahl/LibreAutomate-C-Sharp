@@ -60,6 +60,7 @@ static class InsertCode
 					if (i >= 0) s = s.Remove(i, 1);
 				}
 
+				CodeInfo.Pasting(d);
 				d.zReplaceSel(false, start, s);
 				if (i >= 0) d.zGoToPos(true, start + i);
 			}
@@ -125,11 +126,11 @@ static class InsertCode
 	/// Inserts code 'using ns;\r\n' in correct place in editor text, unless it is already exists.
 	/// Returns true if inserted.
 	/// </summary>
-	/// <param name="ns">Namespace, eg "System.Diagnostics". Can be multiple, separated with colon or semicolon.</param>
+	/// <param name="ns">Namespace, eg "System.Diagnostics". Can be multiple, separated with semicolon (can be whitespce around).</param>
 	public static bool UsingDirective(string ns) {
 		Debug.Assert(Environment.CurrentManagedThreadId == 1);
 		if (!CodeInfo.GetContextAndDocument(out var k, 0, metaToo: true)) return false;
-		var namespaces = ns.Split(new char[] { ';', ',' }, StringSplitOptions.TrimEntries);
+		var namespaces = ns.Split(';', StringSplitOptions.TrimEntries);
 		var (_, end) = _FindUsings(k, namespaces);
 		if (!namespaces.Any(o => o != null)) return false;
 		var doc = k.sciDoc;
@@ -141,51 +142,111 @@ static class InsertCode
 			if (v != null) b.Append("using ").Append(v).AppendLine(";");
 		}
 
-		int line = doc.zLineFromPos(true, end), foldLine = (0 == doc.Call(Sci.SCI_GETLINEVISIBLE, line)) ? doc.Call(Sci.SCI_GETFOLDPARENT, line) : -1;
-		doc.zInsertText(true, end, b.ToString(), addUndoPointAfter: true);
-		if (foldLine >= 0) doc.Call(Sci.SCI_FOLDLINE, foldLine); //zInsertText expands folding
+		doc.zInsertText(true, end, b.ToString(), addUndoPointAfter: true, restoreFolding: true);
 
 		return true;
+
+		//tested: CompilationUnitSyntax.AddUsings isn't better than this code. Does not skip existing. Does not add newlines. Does not skip comments etc. Did't test #directives.
 	}
 
 	/// <summary>
 	/// Finds start and end of using directives.
-	/// If no usings, sets start = end = where new using directives can be inserted: 0 or end of meta or extern aliases or preprocessor directives.
+	/// If no usings, sets start = end = where new using directives can be inserted: 0 or end of extern aliases or #directives or meta or doc comments or 1 comments line.
 	/// Sets end = the start of next line if possible.
 	/// If namespaces!=null, clears existing namespaces in it (sets =null).
+	/// Ignores using directives within namespace.
 	/// </summary>
-	static (int start, int end) _FindUsings(in CodeInfo.Context k, string[] namespaces = null) {
+	static (int start, int end) _FindUsings(CodeInfo.Context k, string[] namespaces = null) {
 		int start = -1, end = -1, end2 = -1;
-		var root = k.document.GetSyntaxRootAsync().Result;
-		foreach (var v in root.ChildNodes()) {
-			switch (v) {
-			case UsingDirectiveSyntax u:
-				if (namespaces != null) {
+		var cu = k.document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
+		//AOutput.Write(cu.Externs, cu.Usings, cu.AttributeLists, cu.Members);
+		if (cu.Usings.Any()) {
+			if (namespaces != null) {
+				foreach (var u in cu.Usings) {
 					int i = Array.IndexOf(namespaces, u.Name.ToString());
 					if (i >= 0) namespaces[i] = null;
 				}
-				if (start < 0) start = v.SpanStart;
-				end = v.FullSpan.End;
-				break;
-			case ExternAliasDirectiveSyntax:
-				end2 = v.FullSpan.End;
-				break;
-			default: goto gr;
 			}
-			//CiUtil.PrintNode(v);
+			start = cu.Usings[0].SpanStart;
+			end = cu.Usings[^1].FullSpan.End;
+		} else if (cu.Externs.Any()) {
+			end2 = cu.Externs[^1].FullSpan.End;
 		}
-		gr:
 		if (start < 0) {
-			if (end2 < 0) foreach (var v in root.GetLeadingTrivia()) if (v.IsDirective) end2 = v.FullSpan.End;
+			if (end2 < 0) foreach (var v in cu.GetLeadingTrivia()) if (v.IsDirective) end2 = v.FullSpan.End; //skip directives
 			if (end2 < 0) {
-				end2 = k.metaEnd;
-				if (k.code.RegexMatch(@"\s*//.+\R", 0, out RXGroup g, RXFlags.ANCHORED, end2..)) end2 = g.End;
+				end2 = k.meta.end; //skip meta
+				if(end2 == 0) if (k.code.RegexMatch(@"(\s*///.*\R)+", 0, out RXGroup g1, RXFlags.ANCHORED, end2..)) end2 = g1.End; //skip ///comments
+				if (k.code.RegexMatch(@"\s*//.+\R", 0, out RXGroup g2, RXFlags.ANCHORED, end2..)) end2 = g2.End; //skip 1 line of //comments, because usually it is //. for folding
 			}
 			start = end = end2;
 		}
 		return (start, end);
+
+		//SHOULDDO: detect existing usings in namespace.
 	}
 
+	/// <summary>
+	/// Called from CiCompletion._ShowList on char '/'. If need, inserts XML doc comment with empty summary, param and returns tags.
+	/// </summary>
+	public static void DocComment(CodeInfo.Context cd) {
+		int pos = cd.pos16;
+		string code = cd.code;
+		SciCode doc = cd.sciDoc;
+
+		if (0 == code.Eq(pos - 3, false, "///\r", "///\n") || !IsLineStart(code, pos - 3)) return;
+
+		var root = cd.document.GetSyntaxRootAsync().Result;
+		var node = root.FindToken(pos).Parent;
+		var start = node.SpanStart;
+		if (start < pos) return;
+
+		if (node is not MemberDeclarationSyntax) { //can be eg func return type (if no public etc) or attribute
+			node = node.Parent;
+			if (node is not MemberDeclarationSyntax || node.SpanStart != start) return;
+		}
+
+		//already has doc comment?
+		foreach (var v in node.GetLeadingTrivia()) {
+			if (v.IsDocumentationCommentTrivia) { //singleline (preceded by ///) or multiline (preceded by /**)
+				var span = v.Span;
+				if (span.Start != pos || span.Length > 2) return; //when single ///, span includes only newline after ///
+			}
+		}
+		//AOutput.Write(pos);
+		//CiUtil.PrintNode(node);
+
+		string s = @" <summary>
+/// 
+/// </summary>";
+
+		if (node is BaseMethodDeclarationSyntax md) //method, ctor
+			s += CiUtil.FormatSignatureXmlDoc(md, code);
+
+		s = IndentStringForInsert(s, doc, pos);
+
+		doc.zInsertText(true, pos, s, true, true);
+		doc.zGoToPos(true, pos + s.Find("/ ") + 2);
+	}
+
+	/// <summary>
+	/// Returns true if pos in string is at a line start + any number of spaces and tabs.
+	/// </summary>
+	public static bool IsLineStart(string s, int pos) {
+		int i = pos; while (--i >= 0 && (s[i] == ' ' || s[i] == '\t')) { }
+		return i < 0 || s[i] == '\n';
+	}
+
+	/// <summary>
+	/// Returns string with same indentation as of the document line from pos.
+	/// </summary>
+	public static string IndentStringForInsert(string s, SciCode doc, int pos) {
+		int indent = doc.zLineIndentationFromPos(true, pos);
+		if (indent > 0) s = s.RegexReplace(@"(?<=\n)", new string('\t', indent));
+		return s;
+	}
+
+	//TODO: now optional parameters enclosed in [], like public override void Return(T[] array, [bool clearArray = false])
 	public static void ImplementInterfaceOrAbstractClass(bool explicitly, int position = -1) {
 		if (!CodeInfo.GetContextAndDocument(out var cd, position)) return;
 		var semo = cd.document.GetSemanticModelAsync().Result;
@@ -301,5 +362,34 @@ static class InsertCode
 		cd.sciDoc.zGoToPos(true, position);
 
 		//tested: Microsoft.CodeAnalysis.CSharp.ImplementInterface.CSharpImplementInterfaceService works but the result is badly formatted (without spaces, etc). Internal, undocumented.
+	}
+
+	public static void ConvertTlsScriptToClass() {
+		//SHOULDDO: use CompilationUnitSyntax.Usings etc, like in _FindUsings.
+		if (!CodeInfo.GetContextAndDocument(out var cd) /*|| !cd.sciDoc.ZFile.IsScript*/) return;
+		var root = cd.document.GetSyntaxRootAsync().Result;
+		int start = -1, end = cd.code.Length;
+		foreach (var v in root.ChildNodes()) {
+			switch (v) {
+			case UsingDirectiveSyntax or ExternAliasDirectiveSyntax:
+			case AttributeListSyntax als when als.Target.Identifier.Text is "module" or "assembly":
+				break;
+			case GlobalStatementSyntax:
+				if (start < 0) start = v.FullSpan.Start;
+				break;
+			default:
+				//CiUtil.PrintNode(v);
+				end = v.FullSpan.Start;
+				goto g1;
+			}
+		}
+		g1:
+		if (start < 0) start = end;
+
+		using var undo = new KScintilla.UndoAction(cd.sciDoc);
+		cd.sciDoc.zInsertText(true, end, "\r\n}\r\n}\r\n");
+		string s = "class Script { static void Main(string[] a) => new Script(a); Script(string[] args) { //;;\r\n";
+		//string s = "new K(args); class K { public K(string[] args) { //;;\r\n";
+		cd.sciDoc.zInsertText(true, start, s);
 	}
 }

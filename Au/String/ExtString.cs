@@ -27,10 +27,10 @@ namespace Au
 	/// See also <see cref="AProcess.CultureIsInvariant"/>.
 	/// 
 	/// This class also adds more methods.
-	/// You also can find string functions in other classes of this library, including <see cref="AStringUtil"/>, <see cref="ARegex"/>, <see cref="AChar"/>, <see cref="APath"/>, <see cref="ACsv"/>, <see cref="AKeys.More"/>, <see cref="AConvert"/>, <see cref="AHash"/>.
+	/// You also can find string functions in other classes of this library, including <see cref="AStringUtil"/>, <see cref="ARegex"/>, <see cref="APath"/>, <see cref="ACsv"/>, <see cref="AKeys.More"/>, <see cref="AConvert"/>, <see cref="AHash"/>.
 	/// </remarks>
 	[EditorBrowsable(EditorBrowsableState.Never)]
-	public static unsafe partial class AExtString
+	public static unsafe partial class ExtString
 	{
 		/// <summary>
 		/// Compares this and other string. Returns true if equal.
@@ -1392,6 +1392,14 @@ namespace Au
 			return true;
 		}
 
+		///// <summary>
+		///// Returns true if specified part of string does not contain non-ASCII characters.
+		///// </summary>
+		//public static bool IsAscii(this ReadOnlySpan<byte> t) {
+		//	foreach (char c in t) if (c > 0x7f) return false;
+		//	return true;
+		//}
+
 		internal static void CopyTo_(this string t, char* p) => t.AsSpan().CopyTo(new Span<char>(p, t.Length));
 	}
 }
@@ -1399,7 +1407,7 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Flags for <see cref="AExtString.ToInt"/> and similar functions.
+	/// Flags for <see cref="ExtString.ToInt"/> and similar functions.
 	/// </summary>
 	[Flags]
 	public enum STIFlags
@@ -1421,7 +1429,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Used with <see cref="AExtString.Upper(string, SUpper, CultureInfo)"/>
+	/// Used with <see cref="ExtString.Upper(string, SUpper, CultureInfo)"/>
 	/// </summary>
 	public enum SUpper
 	{

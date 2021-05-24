@@ -50,18 +50,19 @@ namespace Au.Util
 		/// Character '&amp;' (in WPF '_') is used to underline next character in displayed text of dialog controls and menu items. Two such characters are used to display single.
 		/// The underline is displayed when using the keyboard with Alt key to select dialog controls and menu items.
 		/// </remarks>
-		public static string RemoveUnderlineChar(string s, char underlineChar = '&') {
+		[SkipLocalsInit]
+		public static unsafe string RemoveUnderlineChar(string s, char underlineChar = '&') {
 			if (s != null && s.Contains(underlineChar)) {
-				var b = AMemoryArray.Char_(s.Length);
+				using ABuffer<char> b = new(s.Length);
 				int j = 0; bool was = false;
 				for (int i = 0; i < s.Length; i++) {
 					if (s[i] == underlineChar) {
 						if (i < s.Length - 1 && s[i + 1] == underlineChar) i++;
 						else if (!was) { was = underlineChar == '_'; continue; } //WPF removes only first single _
 					}
-					b.A[j++] = s[i];
+					b.p[j++] = s[i];
 				}
-				s = new string(b, 0, j);
+				s = new string(b.p, 0, j);
 			}
 			return s;
 		}
@@ -128,7 +129,7 @@ namespace Au.Util
 		/// <summary>
 		/// If string contains a number at startIndex, gets that number as int, also gets the string part that follows it, and returns true.
 		/// For example, for string "25text" or "25 text" gets num = 25, tail = "text".
-		/// Everything else is the same as with <see cref="AExtString.ToInt(string, int, out int, STIFlags)"/>.
+		/// Everything else is the same as with <see cref="ExtString.ToInt(string, int, out int, STIFlags)"/>.
 		/// </summary>
 		/// <param name="s"></param>
 		/// <param name="num">Receives the number. Receives 0 if no number.</param>

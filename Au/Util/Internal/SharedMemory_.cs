@@ -35,7 +35,7 @@ namespace Au.Util
 		[StructLayout(LayoutKind.Sequential, Size = 16)] struct _Header { }
 		_Header _h;
 
-		internal AOutputServer.SharedMemoryData_ outp;
+		internal AOutput.Server.SharedMemoryData_ outp;
 		internal Triggers.ActionTriggers.SharedMemoryData_ triggers;
 		internal AHookWin.SharedMemoryData_ winHook;
 		internal APerf.Local perf;

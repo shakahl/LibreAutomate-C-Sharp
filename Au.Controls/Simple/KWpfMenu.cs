@@ -16,7 +16,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Media.Imaging;
 
-namespace Au
+namespace Au.Controls
 {
 	/// <summary>
 	/// Based on WPF <see cref="ContextMenu"/>, makes simpler to use it.
@@ -318,10 +318,10 @@ namespace Au
 			}
 		}
 	}
-}
+//}
 
-namespace Au.Types
-{
+//namespace Au.Types
+//{
 	/// <summary>
 	/// Arguments for <see cref="KWpfMenu"/> item actions.
 	/// </summary>

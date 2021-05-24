@@ -85,7 +85,7 @@ namespace Au
 			}
 
 			//F keys
-			if (c == 'F' && AChar.IsAsciiDigit(s[i + 1])) {
+			if (c == 'F' && s[i + 1].IsAsciiDigit()) {
 				int n = s.ToInt(i + 1, out int e, STIFlags.NoHex);
 				if (n > 0 && n <= 24 && e == i + len) return (KKey)(0x6F + n);
 			}
@@ -174,7 +174,7 @@ namespace Au
 				break;
 			}
 			if (k != 0) {
-				for (int i2 = i + len; i < i2; i++) if (!AChar.IsAsciiAlpha(s[i])) return 0;
+				for (int i2 = i + len; i < i2; i++) if (!s[i].IsAsciiAlpha()) return 0;
 				return k;
 			}
 
@@ -340,7 +340,7 @@ namespace Au
 			/// Returns true if turned off CapsLock.
 			/// Does not sleep, blockinput, etc.
 			/// </summary>
-			internal static bool ReleaseModAndCapsLock(AOptKey opt) {
+			internal static bool ReleaseModAndCapsLock(OKey opt) {
 				//note: don't call Hook here, it does not make sense.
 
 				bool R = !opt.NoCapsOff && IsCapsLock;
@@ -364,7 +364,7 @@ namespace Au
 
 						//speed: often ~15 ms. Without Shift max 5 ms.
 
-						//never mind: don't need to turn off CapsLock if there is only text, unless KTextHow.KeysX.
+						//never mind: don't need to turn off CapsLock if there is only text, unless OKeyText.KeysX.
 					}
 				}
 				if (!opt.NoModOff) ReleaseModAndDisableModMenu();
@@ -404,14 +404,14 @@ namespace Au
 			{
 				ushort _scan;
 				KKey _vk;
-				AOptKey _opt;
+				OKey _opt;
 				List<KKey> _andKeys;
 
 				/// <summary>
 				/// Presses Ctrl+key. Does not release.
 				/// If andKeys used, Release will press/relase them.
 				/// </summary>
-				public void Press(KKey key, AOptKey opt, AWnd wFocus, List<KKey> andKeys = null) {
+				public void Press(KKey key, OKey opt, AWnd wFocus, List<KKey> andKeys = null) {
 					_scan = VkToSc(_vk = key, Api.GetKeyboardLayout(wFocus.ThreadId));
 					_andKeys = andKeys;
 					_opt = opt;
@@ -438,7 +438,7 @@ namespace Au
 				/// Sends one or more keys.
 				/// Not used for keys whose scancode can depend on keyboard layout. To get scancode, uses keyboard layout of current thread.
 				/// </summary>
-				public static void AndSendKeys(List<KKey> keys, AOptKey opt) {
+				public static void AndSendKeys(List<KKey> keys, OKey opt) {
 					foreach (var k in keys) {
 						var f = KeyTypes_.IsExtended(k) ? _KFlags.Extended : default;
 						var e = new _KEvent(true, k, f, VkToSc(k));
@@ -485,13 +485,13 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns AOptKey of this variable or OptKey cloned from this variable and possibly modified by Hook.
+		/// Returns <b>OKey</b> of this variable or <b>OKey</b> cloned from this variable and possibly modified by <b>Hook</b>.
 		/// </summary>
 		/// <param name="wFocus">receives the focused or active window. Also the function uses it to avoid frequent calling of Hook.</param>
 		/// <param name="getWndAlways">if false, the caller does not need wFocus. Then wFocus will be default(AWnd) if Hook is null.</param>
 		/// <param name="requireFocus">Wait for focused (and not just active) window longer, and throw exception on timeout. Used for clipboard copy/paste and send text.</param>
 		/// <exception cref="AuException">No focused window when <i>requireFocus</i>.</exception>
-		internal AOptKey GetOptionsAndWndFocused_(out AWnd wFocus, bool getWndAlways, bool requireFocus = false) {
+		internal OKey GetOptionsAndWndFocused_(out AWnd wFocus, bool getWndAlways, bool requireFocus = false) {
 			if (Options.Hook == null && !getWndAlways) {
 				wFocus = default;
 				return Options;
@@ -500,16 +500,16 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns AOptKey of this variable or OptKey cloned from this variable and possibly modified by Hook.
+		/// Returns <b>OKey</b> of this variable or <b>OptKey</b> cloned from this variable and possibly modified by Hook.
 		/// </summary>
 		/// <param name="wFocus">the focused or active window. The function uses it to avoid frequent calling of Hook. If you don't have it, use GetOptionsAndWndFocused_ instead.</param>
-		internal AOptKey GetOptions_(AWnd wFocus) {
+		internal OKey GetOptions_(AWnd wFocus) {
 			var call = Options.Hook;
 			if (call == null || wFocus.Is0) return Options;
 			if (wFocus != _sstate.wFocus) {
 				_sstate.wFocus = wFocus;
-				if (_sstate.options == null) _sstate.options = new AOptKey(Options); else _sstate.options.CopyOrDefault_(Options);
-				call(new KOHookData(_sstate.options, wFocus));
+				if (_sstate.options == null) _sstate.options = new OKey(Options); else _sstate.options.CopyOrDefault_(Options);
+				call(new OKeyHookData(_sstate.options, wFocus));
 			}
 			return _sstate.options;
 		}

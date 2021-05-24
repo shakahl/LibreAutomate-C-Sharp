@@ -1,4 +1,3 @@
-using Au.Types;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -19,13 +18,12 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 
-namespace Au
+namespace Au.Types
 {
 	/// <summary>
 	/// Adds extension methods for some WPF classes.
 	/// </summary>
-	[EditorBrowsable(EditorBrowsableState.Never)]
-	public static class AExtWpf
+	public static class ExtWpf
 	{
 		/// <summary>
 		/// Gets native window handle of this <b>Window</b> or <b>Popup</b>, or container window handle of this child object.
@@ -91,7 +89,7 @@ namespace Au
 				foreach (var k in VisualDescendants(v)) yield return k;
 				//SHOULDDO: now creates much garbage if tree is big.
 				//	See https://stackoverflow.com/a/30441479/2547338.
-				//	See AExt.Descendants. But it cannot be used here because VisualTreeHelper does not give an IEnumerable.
+				//	See ExtMisc.Descendants. But it cannot be used here because VisualTreeHelper does not give an IEnumerable.
 			}
 		}
 

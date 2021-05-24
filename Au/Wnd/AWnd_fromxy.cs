@@ -137,9 +137,9 @@ namespace Au
 			bool _IsPointVisibleIn_2(AWnd c) {
 				if (_hr == default) _hr = Api.CreateRectRgn(0, 0, 0, 0);
 				if (Api.GetWindowRgn(c, _hr) > 1 && !Api.PtInRegion(_hr, _p.x - r.left, _p.y - r.top)) return false;
-				if (c.HasExStyle(WS2.LAYERED) && c.IsCloaked) return false;
+				if (c.HasExStyle(WSE.LAYERED) && c.IsCloaked) return false;
 				return true;
-				//if(AVersion.MinWin8 && c.HasExStyle(WS2.LAYERED) && Api.GetLayeredWindowAttributes(c, ... //never mind. We can get alpha 0 (probably rare), but difficult or impossible to detect whether the point is transparent because of color key (probably not so rare).
+				//if(AVersion.MinWin8 && c.HasExStyle(WSE.LAYERED) && Api.GetLayeredWindowAttributes(c, ... //never mind. We can get alpha 0 (probably rare), but difficult or impossible to detect whether the point is transparent because of color key (probably not so rare).
 				//tested: WindowFromPoint skips all: region, cloaked, transparent (by alpha or colorkey).
 				//tested: RealChildWindowFromPoint skips region and cloaked, but not transparent.
 				//tested: UI Automation skips region and cloaked, but not transparent.
@@ -155,7 +155,7 @@ namespace Au
 						if (_IsPointVisibleIn_1(c2)) {
 							if (r.left >= r1.left && r.top >= r1.top && r.right <= r1.right && r.bottom <= r1.bottom && (r.right - r.left < r1.right - r1.left || r.bottom - r.top < r1.bottom - r1.top)) {
 								if (_IsPointVisibleIn_2(c2)) {
-									if (hwnd.SendTimeout(1000, out var ht, Api.WM_NCHITTEST, default, AMath.MakeUint(_p.x, _p.y), Native.SMTO.ABORTIFHUNG | Native.SMTO.BLOCK) && ht != Api.HTTRANSPARENT) break;
+									if (hwnd.SendTimeout(1000, out var ht, Api.WM_NCHITTEST, default, AMath.MakeUint(_p.x, _p.y), SMTFlags.ABORTIFHUNG | SMTFlags.BLOCK) && ht != Api.HTTRANSPARENT) break;
 									hwnd = c2;
 									r1 = r;
 									found = true;

@@ -195,9 +195,9 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Displays <see cref="AOutputServer"/> messages that are currently in its queue.
+		/// Displays <see cref="AOutput.Server"/> messages that are currently in its queue.
 		/// </summary>
-		/// <param name="os">The AOutputServer instance.</param>
+		/// <param name="os">The AOutput.Server instance.</param>
 		/// <param name="onMessage">
 		/// A callback function that can be called when this function gets/removes a message from os.
 		/// When message type is Write, it can change message text; if null, this function ignores the message.
@@ -209,8 +209,8 @@ namespace Au.Controls
 		/// Messages with tags must have prefix "&lt;&gt;".
 		/// Limits text length to about 4 MB (removes oldest text when exceeded).
 		/// </remarks>
-		/// <seealso cref="AOutputServer.SetNotifications"/>
-		public void OutputServerProcessMessages(AOutputServer os, Action<OutServMessage> onMessage = null) {
+		/// <seealso cref="AOutput.Server.SetNotifications"/>
+		public void OutputServerProcessMessages(AOutput.Server os, Action<OutputServerMessage> onMessage = null) {
 			//info: Cannot call _c.Write for each message, it's too slow. Need to join all messages.
 			//	If multiple messages, use StringBuilder.
 			//	If some messages have tags, use string "<\x15\x0\x4" to separate messages. Never mind: don't escape etc.
@@ -221,12 +221,12 @@ namespace Au.Controls
 			while (os.GetMessage(out var m)) {
 				onMessage?.Invoke(m);
 				switch (m.Type) {
-				case OutServMessageType.Clear:
+				case OutputServerMessageType.Clear:
 					_c.zClearText();
 					s = null;
 					b?.Clear();
 					break;
-				case OutServMessageType.Write when m.Text != null:
+				case OutputServerMessageType.Write when m.Text != null:
 					if (s == null) {
 						s = m.Text;
 						hasTags = hasTagsPrev = s.Starts("<>");
@@ -302,7 +302,7 @@ namespace Au.Controls
 			//}
 
 			int len = Encoding.UTF8.GetByteCount(text);
-			byte* buffer = (byte*)AMemory.Alloc(len * 2 + 4), s = buffer;
+			byte* buffer = AMemory.Alloc(len * 2 + 4), s = buffer;
 			try {
 				Encoding.UTF8.GetBytes(text, new Span<byte>(buffer, len));
 				if (appendLine) { s[len++] = (byte)'\r'; s[len++] = (byte)'\n'; }
@@ -342,7 +342,7 @@ namespace Au.Controls
 				if (s[0] == '/') {
 					s++;
 					ch = *s; if (ch == '+' || ch == '.') s++;
-					while (AChar.IsAsciiAlpha(*s)) s++;
+					while (((char)*s).IsAsciiAlpha()) s++;
 					if (s[0] != '>') goto ge;
 				}
 				if (s[0] == '>') {
@@ -380,7 +380,7 @@ namespace Au.Controls
 
 				//read tag name
 				ch = *s; if (ch == '_' || ch == '\a' || ch == '+' || ch == '.') s++;
-				while (AChar.IsAsciiAlpha(*s)) s++;
+				while (((char)*s).IsAsciiAlpha()) s++;
 				int tagLen = (int)(s - tag);
 				if (tagLen == 0) goto ge;
 
@@ -427,7 +427,7 @@ namespace Au.Controls
 				case 1 << 16 | 'Z':
 					if (attr == null) goto ge;
 					int color;
-					if (AChar.IsAsciiDigit(*attr)) color = Api.strtoi(attr);
+					if (((char)*attr).IsAsciiDigit()) color = Api.strtoi(attr);
 					else if (*attr == '#') color = Api.strtoi(attr + 1, radix: 16);
 					else {
 						var c = System.Drawing.Color.FromName(new string((sbyte*)attr, 0, attrLen));

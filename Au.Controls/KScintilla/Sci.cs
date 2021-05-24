@@ -22,13 +22,6 @@ namespace Au.Controls
 
 	public unsafe partial class KScintilla
 	{
-		[ThreadStatic] static WeakReference<byte[]> t_byte;
-
-		internal static byte[] zByte_(int n) => AMemoryArray.Get(n, ref t_byte);
-		//these currently not used
-		//internal static AMemoryArray.ByteBuffer zByte_(ref int n) { var r = AMemoryArray.Get(n, ref t_byte); n = r.Length - 1; return r; }
-		//internal static AMemoryArray.ByteBuffer zByte_(int n, out int nHave) { var r = AMemoryArray.Get(n, ref t_byte); nHave = r.Length - 1; return r; }
-
 		#region low level
 
 		/// <summary>
@@ -71,32 +64,9 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Calls a Scintilla message that gets a string.
-		/// Don't call this function from another thread.
-		/// </summary>
-		/// <param name="sciMessage"></param>
-		/// <param name="wParam"></param>
-		/// <param name="bufferSize">
-		/// How much UTF-8 bytes to allocate for Scintilla to store the text.
-		/// If -1 (default), at first calls sciMessage with lParam=0 (null buffer), let it return required buffer size. Then it can get binary string (with '\0' characters).
-		/// If 0, returns "" and does not call the message.
-		/// If positive, it can be either known or max expected text length, without the terminating '\0' character. The function will find length of the retrieved string (finds '\0'). Then it cannot get binary string (with '\0' characters).
-		/// The function allocates bufferSize+1 bytes and sets that last byte = 0. If Scintilla overwrites it, asserts and calls Environment.FailFast.
-		/// </param>
-		public string zGetString(int sciMessage, LPARAM wParam, int bufferSize = -1) {
-			if (bufferSize < 0) return zGetStringOfLength(sciMessage, wParam, Call(sciMessage, wParam));
-			if (bufferSize == 0) return "";
-			fixed (byte* b = zByte_(bufferSize)) {
-				b[bufferSize] = 0;
-				Call(sciMessage, wParam, b);
-				Debug.Assert(b[bufferSize] == 0);
-				int len = BytePtr_.Length(b, bufferSize);
-				return _FromUtf8(b, len);
-			}
-		}
-
-		/// <summary>
-		/// The same as <see cref="zGetString(int, LPARAM, int)"/>, but always uses utf8Length bytes of the result (does not find length).
+		/// Calls a Scintilla message that gets a string when length is known.
+		/// Always uses <i>utf8Length</i> bytes of the result (does not find length).
+		/// Can get binary string (with '\0' characters).
 		/// </summary>
 		/// <param name="sciMessage"></param>
 		/// <param name="wParam"></param>
@@ -104,17 +74,44 @@ namespace Au.Controls
 		/// Known length (bytes) of the result UTF-8 string, without the terminating '\0' character.
 		/// If 0, returns "" and does not call the message.
 		/// </param>
-		/// <remarks>
-		/// This function can get binary string (with '\0' characters).
-		/// </remarks>
-		public string zGetStringOfLength(int sciMessage, LPARAM wParam, int utf8Length) {
-			if (utf8Length == 0) return "";
-			fixed (byte* b = zByte_(utf8Length)) {
-				b[utf8Length] = 0;
-				Call(sciMessage, wParam, b);
-				Debug.Assert(b[utf8Length] == 0);
-				return _FromUtf8(b, utf8Length);
-			}
+		public string zGetStringOfLength(int sciMessage, LPARAM wParam, int utf8Length)
+			=> _GetString(sciMessage, wParam, utf8Length, false);
+
+		/// <summary>
+		/// Calls a Scintilla message that gets a string. See <see cref="zGetStringOfLength"/>.
+		/// To get buffer size, at first calls <i>sciMessage</i> with <i>lParam</i>=0 (null buffer).
+		/// Can get binary string (with '\0' characters).
+		/// Don't call this function from another thread.
+		/// </summary>
+		/// <param name="sciMessage"></param>
+		/// <param name="wParam"></param>
+		public string zGetStringGetLength(int sciMessage, LPARAM wParam)
+			=> _GetString(sciMessage, wParam, Call(sciMessage, wParam), false);
+
+		/// <summary>
+		/// Calls a Scintilla message that gets a '\0'-terminated string.
+		/// Cannot get binary string (with '\0' characters).
+		/// Don't call this function from another thread.
+		/// </summary>
+		/// <param name="sciMessage"></param>
+		/// <param name="wParam"></param>
+		/// <param name="bufferSize">
+		/// How much UTF-8 bytes to allocate for Scintilla to store the text.
+		/// Can be either known or max expected text length, without the terminating '\0' character. The function will find length of the retrieved string (finds '\0').
+		/// If 0, returns "" and does not call the message.
+		/// </param>
+		public string zGetString0Terminated(int sciMessage, LPARAM wParam, int bufferSize)
+			=> _GetString(sciMessage, wParam, bufferSize, true);
+
+		[SkipLocalsInit]
+		string _GetString(int sciMessage, LPARAM wParam, int len, bool findLength) {
+			if (len == 0) return "";
+			using ABuffer<byte> b = new(len + 1);
+			b[len] = 0;
+			Call(sciMessage, wParam, b.p);
+			Debug.Assert(b[len] == 0);
+			if (findLength) len = b.FindStringLengthAnsi();
+			return _FromUtf8(b, len);
 		}
 
 		static string _FromUtf8(byte* b, int n = -1) => AConvert.FromUtf8(b, n);
@@ -886,7 +883,7 @@ namespace Au.Controls
 		/// zAnnotationText gets text without image info.
 		/// Returns "" if the line does not contain annotation or is invalid line index.
 		/// </summary>
-		public string zAnnotationText_(int line) => zGetString(SCI_ANNOTATIONGETTEXT, line);
+		public string zAnnotationText_(int line) => zGetStringGetLength(SCI_ANNOTATIONGETTEXT, line);
 
 		/// <summary>
 		/// Sets annotation text of line.
@@ -930,15 +927,49 @@ namespace Au.Controls
 		/// <param name="s">Text to insert. Can be null.</param>
 		/// <param name="addUndoPointBefore">Call <see cref="zAddUndoPoint"/> before.</param>
 		/// <param name="addUndoPointAfter">Call <see cref="zAddUndoPoint"/> after.</param>
+		/// <param name="restoreFolding">If <i>pos</i> is hidden because of folding, finally collapse its folding again. See <see cref="FoldingRestorer"/>.</param>
 		/// <remarks>
 		/// Does not parse tags.
 		/// Does not change current selection, unless <i>pos</i> is in it; for it use <see cref="zReplaceSel"/> or <see cref="zReplaceRange"/>.
 		/// </remarks>
-		public void zInsertText(bool utf16, int pos, string s, bool addUndoPointBefore = false, bool addUndoPointAfter = false) {
+		public void zInsertText(bool utf16, int pos, string s, bool addUndoPointBefore = false, bool addUndoPointAfter = false, bool restoreFolding = false) {
 			if (addUndoPointBefore) zAddUndoPoint();
 			using (new _NoReadonly(this))
+			using (new FoldingRestorer(restoreFolding ? this : null, pos))
 				zSetString(SCI_INSERTTEXT, _ParamPos(utf16, pos), s ?? "");
 			if (addUndoPointAfter) zAddUndoPoint();
+		}
+
+		/// <summary>
+		/// If ctor detects that the line from <i>pos</i> is hidden because of folding, <b>Dispose</b> collapses its folding again.
+		/// Use when modifying text to prevent unfolding.
+		/// </summary>
+		public struct FoldingRestorer : IDisposable
+		{
+			KScintilla _sci;
+			int _foldLine;
+			//tested: temp setting SCI_SETAUTOMATICFOLD does not work. If restoring async, does not expand, but draws incorrectly.
+
+			/// <param name="sci">Can be null, then does nothing.</param>
+			/// <param name="pos"></param>
+			public FoldingRestorer(KScintilla sci, int pos) {
+				_sci = sci;
+				_foldLine = -1;
+				if (sci != null) {
+					int line = sci.zLineFromPos(true, pos);
+					if (0 == sci.Call(SCI_GETLINEVISIBLE, line)) _foldLine = sci.Call(SCI_GETFOLDPARENT, line);
+				}
+			}
+
+			public void Dispose() {
+				if (_foldLine < 0) return;
+				_sci.Call(SCI_FOLDLINE, _foldLine);
+
+				//If at the modified line index was a nested folding point, Scintilla will expand again, very async.
+				//	Could restore again with the following code, but it can be dangerous, eg document closed. Never mind.
+				//var sci = _sci; var i = _foldLine;
+				//ATimer.After(300, _ => sci.Call(SCI_FOLDLINE, i));
+			}
 		}
 
 		///// <summary>
@@ -1004,6 +1035,17 @@ namespace Au.Controls
 		public string zRangeText(bool utf16, int from, int to) {
 			zNormalizeRange(utf16, ref from, ref to);
 			return _RangeText(from, to);
+		}
+
+		/// <summary>
+		/// Gets direct pointer to a text range in Scintilla buffer (SCI_GETRANGEPOINTER).
+		/// Does not validate arguments, just asserts to >= from.
+		/// </summary>
+		/// <param name="from">UTF-8 start position.</param>
+		/// <param name="to">UTF-8 end position.</param>
+		public byte* zRangePointer(int from, int to) {
+			Debug.Assert(to >= from);
+			return (byte*)CallRetPtr(SCI_GETRANGEPOINTER, from, to - from);
 		}
 
 		/// <summary>
@@ -1150,7 +1192,7 @@ namespace Au.Controls
 			Encoding _NetEncoding() {
 				switch (_enc) {
 				case _Encoding.Ansi: return Encoding.Default;
-				case _Encoding.Utf16BOM: case _Encoding.Utf16NoBOM: return Encoding.Unicode;
+				case _Encoding.Utf16BOM or _Encoding.Utf16NoBOM: return Encoding.Unicode;
 				case _Encoding.Utf16BE: return Encoding.BigEndianUnicode;
 				case _Encoding.Utf32BOM: return Encoding.UTF32;
 				case _Encoding.Utf32BE: return new UTF32Encoding(true, false);
@@ -1243,34 +1285,36 @@ namespace Au.Controls
 			public unsafe void Save(KScintilla z, string file, string tempDirectory = null) {
 				if (_enc == _Encoding.Binary) throw new InvalidOperationException();
 
-				//_enc = _Encoding.Utf32BOM; //test
-
-				int len = z.zLen8;
-				int bom = (int)_enc >> 4;
-				if (bom == 2 || bom == 4) bom = 1; //1 UTF16 or UTF32 character
-				var b = zByte_(len + bom);
-
-				fixed (byte* p = b) z.Call(SCI_GETTEXT, len + 1, p + bom);
+				//_enc = _Encoding.; //test
 
 				Encoding e = _NetEncoding();
-				if (e != null) {
-					if (bom != 0) b[0] = 0; //clear BOM placeholder
-					b = Encoding.Convert(Encoding.UTF8, e, b, 0, len + bom);
-					len = b.Length;
-					switch (_enc) {
-					case _Encoding.Utf16BOM: case _Encoding.Utf32BOM: b[0] = 0xFF; b[1] = 0xFE; break;
-					case _Encoding.Utf16BE: b[0] = 0xFE; b[1] = 0xFF; break;
-					case _Encoding.Utf32BE: b[2] = 0xFE; b[3] = 0xFF; break;
+
+				int bom = (int)_enc >> 4; //BOM length
+				uint bomm = 0; //BOM memory
+				if (e != null) bomm = _enc switch {
+					_Encoding.Utf16BOM or _Encoding.Utf32BOM => 0xFEFF,
+					_Encoding.Utf16BE => 0xFFFE,
+					_Encoding.Utf32BE => 0xFFFE0000,
+					_ => 0
+				};
+				else if (bom == 3) bomm = 0xBFBBEF; //UTF8; else bom 0
+
+				//AOutput.Write(_enc, bom, bomm, e);
+
+				AFile.Save(file, temp => {
+					using var fs = File.OpenWrite(temp);
+					if (bomm != 0) { uint u = bomm; fs.Write(new ReadOnlySpan<byte>((byte*)&u, bom)); } //rare
+					if (e != null) { //rare
+						var bytes = e.GetBytes(z.zText); //convert encoding. zText likely gets cached text, fast
+						fs.Write(bytes);
+					} else {
+						int len = z.zLen8;
+						var bytes = (byte*)z.CallRetPtr(SCI_GETCHARACTERPOINTER);
+						fs.Write(new ReadOnlySpan<byte>(bytes, len));
 					}
-				} else if (bom == 3) {
-					len += 3;
-					b[0] = 0xEF; b[1] = 0xBB; b[2] = 0xBF;
-				} //else bom 0
+				}, tempDirectory: tempDirectory);
 
-				//for(int i = 0; i < len; i++) AOutput.Write(b[i]); return; //test
-
-				AFile.Save(file, temp => { using var fs = File.OpenWrite(temp); fs.Write(b, 0, len); }, tempDirectory: tempDirectory);
-				//using(var fs = File.OpenWrite(file)) fs.Write(b, 0, len); //not much faster
+				//AOutput.Write("file", File.ReadAllBytes(file));
 			}
 		}
 
@@ -1352,6 +1396,47 @@ namespace Au.Controls
 		public void zAddUndoPoint() {
 			Call(SCI_BEGINUNDOACTION);
 			Call(SCI_ENDUNDOACTION);
+		}
+
+		///// <summary>
+		///// SCI_BEGINUNDOACTION.
+		///// </summary>
+		//public void zBeginUndoAction() {
+		//	Call(SCI_BEGINUNDOACTION);
+		//}
+
+		///// <summary>
+		///// SCI_ENDUNDOACTION.
+		///// </summary>
+		//public void zEndUndoAction() {
+		//	Call(SCI_ENDUNDOACTION);
+		//}
+
+		/// <summary>
+		/// Ctor calls SCI_BEGINUNDOACTION. Dispose() calls SCI_ENDUNDOACTION.
+		/// </summary>
+		public struct UndoAction : IDisposable
+		{
+			KScintilla _sci;
+
+			/// <summary>
+			/// Calls SCI_BEGINUNDOACTION.
+			/// </summary>
+			/// <param name="sci">Can be null, then does nothing.</param>
+			public UndoAction(KScintilla sci) {
+				_sci = sci;
+				if (_sci != null) _sci.Call(SCI_BEGINUNDOACTION);
+			}
+
+			/// <summary>
+			/// Calls SCI_ENDUNDOACTION and clears this variable.
+			/// </summary>
+			public void Dispose() {
+				if (_sci != null) {
+					_sci.Call(SCI_ENDUNDOACTION);
+					_sci = null;
+				}
+			}
 		}
 	}
 

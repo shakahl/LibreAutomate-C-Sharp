@@ -20,6 +20,21 @@ namespace Au.Types
 	public sealed class NoDoc : Attribute { }
 
 	/// <summary>
+	/// Adds undeclared Windows API to the completion list of the inherited class.
+	/// </summary>
+	public abstract class WinAPI {
+		//For it could use an attribute. But this easily solves 2 problems:
+		//	1. In 'new' expression does not show completion list (with types from winapi DB) if the winapi class still does not have types inside. Because the completion service then returns null.
+		//	2. If class with attributes is after top-level statements, code info often does not work when typing directly above it. Works better if without attributes.
+
+		///
+		[NoDoc]
+		public class l { } //solves the first problem, because it's always in the list of completions
+
+		//CONSIDER: add util functions.
+	}
+
+	/// <summary>
 	/// Invokes specified action (calls callback function) at the end of <c>using(...) { ... }</c>.
 	/// Usually returned by functions. Example: <see cref="AOpt.Scope.Mouse"/>.
 	/// </summary>

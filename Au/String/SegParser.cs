@@ -34,7 +34,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Flags for <see cref="AExtString.Segments"/> and some other functions.
+	/// Flags for <see cref="ExtString.Segments"/> and some other functions.
 	/// </summary>
 	[Flags]
 	public enum SegFlags : byte
@@ -102,7 +102,7 @@ namespace Au.Types
 	/// Splits a string into substrings as start/end offsets or strings.
 	/// </summary>
 	/// <remarks>
-	/// Can be used with foreach. Normally you don't create <b>SegParser</b> instances explicitly; instead use <see cref="AExtString.Segments"/> with foreach.
+	/// Can be used with foreach. Normally you don't create <b>SegParser</b> instances explicitly; instead use <see cref="ExtString.Segments"/> with foreach.
 	/// </remarks>
 	public struct SegParser : IEnumerable<StartEnd>, IEnumerator<StartEnd>
 	{

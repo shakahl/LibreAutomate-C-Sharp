@@ -1,7 +1,10 @@
-/*/ ifRunning warn_restart; runSingle true; /*/ //.
-using Au; using Au.Types; using System; using System.Collections.Generic; using System.IO; using System.Linq;
-using System.Windows.Forms;
-class Script { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { ATask.Setup(); //;;;
+/// Script description.
+/// It is optional.
+
+/*/ runSingle true; /*/ //.
+using Au;
+using System.Text;
+;ATask.Setup(trayIcon: true); //;
 
 /*
 The programming language is C#.
@@ -10,33 +13,43 @@ In scripts you can use classes/functions of the automation library provided by
 this program, as well as of .NET and everything that can be used in C#.
 Also you can create and use new functions, classes, libraries and .exe programs.
 
-Like all C# programs, a script starts with standard code: using directives,
-class and function Main where the program starts. Click the small [+] box at
-the top-left to see and edit that code when need. The //. and //; are used to
-fold (hide) code.
+A script can optionally start with a description as /// comments.
+Then can be /*/ /*/ comments with script properties used by the editor program.
+Then 'using' directives.
+Then ATask.Setup or/and other code that sets run time properties. Optional.
+Then your script. It can contain local functions anywhere.
+Then optionally you can define classes and other types.
 
-To avoid 'static' everywhere, function Main creates a class instance. Your script
-code is in the constructor function. The function and the class end with } and }.
+This syntax is known as "C# top-level statements". It is simple and concise,
+but has some limitations. You can instead use a class with Main function. Try
+menu Edit -> Convert -> To script class.
 
-Script properties are saved in /*/ /*/ comments at the very start of script.
-You can change them in the Properties dialog or edit in script.
-More properties can be set in code with various functions. For example, to
-remove tray icon, replace ATask.Setup(); with ATask.Setup(trayIcon: false);.
+The //. and //; are used to fold (hide) code. Click the small [+] box at
+the top-left to see and edit that code when need. 
+
+Script properties are saved in /*/ /*/ comments at the start of script.
+You can change them in the Properties dialog or edit directly in script.
+Before /*/ /*/ comments can be only other comments, empty lines and spaces.
+
+More properties can be set in code with ATask.Setup and other functions.
+For example, if don't need tray icon, remove 'trayIcon: true'.
+
 To change default properties and code for new scripts: Options -> Templates.
 
 To run a script, you can click the ► Run button on the toolbar, or use command line,
-or call ATask.Run from another scrit, or in Options set to run at startup.
+or call ATask.Run from another script, or in Options set to run at startup.
 
-Triggers such as hotkeys, autotext, mouse and window are used to execute functions
-in a running script. Also you can create custom toolbars and menus. To start
-using them: menu File -> New -> Examples -> @Triggers and toolbars.
+Triggers such as hotkeys, autotext, mouse and window are used to execute code
+in a running script. That code also can launch other scripts.
+Also you can create custom toolbars and menus.
+To access triggers and toolbars you can use menu TT.
 */
 
 //Examples of automation functions.
 
-AOutput.Write("Main script code.");
+AOutput.Write("Script example");
 
-ADialog.Show("Message box.");
+ADialog.Show("Message box", "example");
 
 AFile.Run(AFolders.System + "notepad.exe");
 var w = AWnd.Wait(0, true, "*- Notepad");
@@ -52,30 +65,25 @@ if (!w2.Is0) {
 	500.ms();
 }
 
+
 //Examples of .NET functions.
 
 string s = "Example";
-var b = new System.Text.StringBuilder();
+var b = new StringBuilder();
 for (int i = 0; i < s.Length; i++) {
 	b.Append(s[i]).AppendLine();
 }
-MessageBox.Show(b.ToString());
+System.Windows.Forms.MessageBox.Show(b.ToString());
 
-//Example of your function and how functions can share variables.
 
-_sharedVariable = 1;
-FunctionExample("Example");
-AOutput.Write(_sharedVariable);
+//Example of your function. It is a local function and can use variables defined before it.
 
-} //end of main function
+int variable = 1;
 
-//Here you can add functions, shared variables (fields), nested classes, struct, enum, [DllImport], etc.
+FunctionExample("Function example"); //calls the function
+AOutput.Write(variable);
 
-void FunctionExample(string s) {
-	AOutput.Write(s, _sharedVariable);
-	_sharedVariable++;
+void FunctionExample(string s) { //a function
+	AOutput.Write(s, variable);
+	variable++;
 }
-
-int _sharedVariable;
-
-} //end of class

@@ -23,7 +23,7 @@ namespace Au.Types
 	/// If the string passed to the constructor starts with "*", replaces the "*" with "Failed to ". If does not end with ".", appends ".".
 	/// </remarks>
 	//[Serializable] //in .NET Framework would need for marshaling between appdomains. Probably don't need now.
-	public class AuException :Exception//, ISerializable
+	public class AuException : Exception//, ISerializable
 	{
 		/// <summary>
 		/// Sets <b>Message</b> = <i>message</i> (default "Failed.").
@@ -35,8 +35,7 @@ namespace Au.Types
 		/// Sets <b>NativeErrorCode</b> = <c>(errorCode != 0) ? errorCode : ALastError.Code</c>.
 		/// Sets <b>Message</b> = <c>message + " " + ALastError.MessageFor(NativeErrorCode)</c>.
 		/// </summary>
-		public AuException(int errorCode, string message = "Failed.", Exception innerException = null) : base(message, innerException)
-		{
+		public AuException(int errorCode, string message = "Failed.", Exception innerException = null) : base(message, innerException) {
 			NativeErrorCode = (errorCode != 0) ? errorCode : ALastError.Code;
 		}
 
@@ -59,24 +58,23 @@ namespace Au.Types
 		/// If then appendMessage is not empty, appends " " and appendMessage.
 		/// Also appends InnerException.Message in new tab-indented line if InnerException is not null.
 		/// </summary>
-		protected string FormatMessage(string appendMessage = null, string commonPostfix = null)
-		{
+		protected string FormatMessage(string appendMessage = null, string commonPostfix = null) {
 			var m = base.Message;
 
-			if(!m.NE()) {
-				if(m[0] == '*') m = "Failed to " + m.Substring(1);
-				if(!commonPostfix.NE()) {
+			if (!m.NE()) {
+				if (m[0] == '*') m = "Failed to " + m.Substring(1);
+				if (!commonPostfix.NE()) {
 					int k = m.Length - 1;
-					if(m[k] == '*') m = m.Substring(0, k) + commonPostfix;
+					if (m[k] == '*') m = m.Substring(0, k) + commonPostfix;
 				}
-				if(!m.Ends('.')) m = m + ".";
+				if (!m.Ends('.')) m = m + ".";
 			}
 
-			if(appendMessage == null && NativeErrorCode != 0) appendMessage = ALastError.MessageFor(NativeErrorCode);
+			if (appendMessage == null && NativeErrorCode != 0) appendMessage = ALastError.MessageFor(NativeErrorCode);
 
-			if(!appendMessage.NE()) m = m + " " + appendMessage;
+			if (!appendMessage.NE()) m = m + " " + appendMessage;
 
-			if(InnerException != null) m = m + "\r\n\t" + InnerException.Message;
+			if (InnerException != null) m = m + "\r\n\t" + InnerException.Message;
 
 			return FormattedMessage = m;
 		}
@@ -87,9 +85,8 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="errorCode">Windows API error code or HRESULT.</param>
 		/// <param name="message">Main message. The message of the error code will be appended to it.</param>
-		public static void ThrowIfHresultNot0(int errorCode, string message = null)
-		{
-			if(errorCode != 0) throw new AuException(errorCode, message);
+		public static void ThrowIfHresultNot0(int errorCode, string message = null) {
+			if (errorCode != 0) throw new AuException(errorCode, message);
 		}
 
 		/// <summary>
@@ -98,9 +95,8 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="errorCode">Windows API error code or HRESULT.</param>
 		/// <param name="message">Main message. The message of the error code will be appended to it.</param>
-		public static void ThrowIfHresultNegative(int errorCode, string message = null)
-		{
-			if(errorCode < 0) throw new AuException(errorCode, message);
+		public static void ThrowIfHresultNegative(int errorCode, string message = null) {
+			if (errorCode < 0) throw new AuException(errorCode, message);
 		}
 
 		//#region ISerializable
@@ -131,7 +127,7 @@ namespace Au.Types
 	/// If the string passed to the constructor starts with "*", replaces the "*" with "Failed to ". If ends with "*", replaces the "*" with " window.". If does not end with ".", appends ".".
 	/// </remarks>
 	//[Serializable]
-	public class AuWndException :AuException//, ISerializable
+	public class AuWndException : AuException//, ISerializable
 	{
 		const string _errStr_0Handle = "The window handle is 0. Usually it means 'window not found'.";
 		const string _errStr_InvalidHandle = "Invalid window handle. Usually it means 'the window was closed'.";
@@ -150,9 +146,8 @@ namespace Au.Types
 		public AuWndException(AWnd w, int errorCode, string message = "Failed.", Exception innerException = null)
 			: base(_Code(errorCode, w), message, innerException) { Window = w; }
 
-		static int _Code(int code, AWnd w)
-		{
-			if(code != 0 || w.IsAlive) return code;
+		static int _Code(int code, AWnd w) {
+			if (code != 0 || w.IsAlive) return code;
 			return Api.ERROR_INVALID_WINDOW_HANDLE;
 		}
 
@@ -160,14 +155,12 @@ namespace Au.Types
 		public AWnd Window { get; }
 
 		/// <summary> Gets error message. </summary>
-		public override string Message
-		{
-			get
-			{
-				if(FormattedMessage == null) {
+		public override string Message {
+			get {
+				if (FormattedMessage == null) {
 					string m;
-					if(Window.Is0) m = _errStr_0Handle;
-					else if(NativeErrorCode == Api.ERROR_INVALID_WINDOW_HANDLE) m = _errStr_InvalidHandle;
+					if (Window.Is0) m = _errStr_0Handle;
+					else if (NativeErrorCode == Api.ERROR_INVALID_WINDOW_HANDLE) m = _errStr_InvalidHandle;
 					else m = null; //will append ALastError.MessageFor(NativeErrorCode) if NativeErrorCode not 0, or InnerException.Message if it is not null.
 					FormatMessage(m, " window.");
 				}
@@ -197,7 +190,7 @@ namespace Au.Types
 	/// Functions that search for an object can throw this exception when not found.
 	/// </summary>
 	//[Serializable]
-	public class NotFoundException :Exception
+	public class NotFoundException : Exception
 	{
 		/// <summary>
 		/// Sets Message = "Not found.".
@@ -220,15 +213,14 @@ namespace Au.Types
 	}
 }
 
-namespace Au
+namespace Au.Types
 {
-	static partial class AExt
+	static partial class ExtMisc
 	{
 		/// <summary>
 		/// Returns string containing exception type name and message.
 		/// </summary>
-		public static string ToStringWithoutStack(this Exception t)
-		{
+		public static string ToStringWithoutStack(this Exception t) {
 			return t.GetType().Name + ", " + t.Message;
 		}
 	}

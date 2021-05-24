@@ -29,7 +29,7 @@ namespace Au.Controls
 	public class KPopup
 	{
 		WS _style;
-		WS2 _exStyle;
+		WSE _exStyle;
 		SizeToContent _sizeToContent;
 		bool _shadow;
 		HwndSource _hs;
@@ -37,7 +37,7 @@ namespace Au.Controls
 		bool _inSizeMove;
 
 		///
-		public KPopup(WS style = WS.POPUP | WS.THICKFRAME, WS2 exStyle = WS2.TOOLWINDOW | WS2.NOACTIVATE, bool shadow = false, SizeToContent sizeToContent = default) {
+		public KPopup(WS style = WS.POPUP | WS.THICKFRAME, WSE exStyle = WSE.TOOLWINDOW | WSE.NOACTIVATE, bool shadow = false, SizeToContent sizeToContent = default) {
 			_style = style;
 			_exStyle = exStyle;
 			_shadow = shadow;
@@ -260,7 +260,7 @@ namespace Au.Controls
 			_inSizeMove = false;
 			_w.MoveL(r);
 			if (_w.OwnerWindow != ow) _w.OwnerWindow = ow;
-			if (!IsVisible) _w.SetWindowPos(Native.SWP.SHOWWINDOW | Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOACTIVATE | Native.SWP.NOOWNERZORDER);
+			if (!IsVisible) _w.SetWindowPos(SWPFlags.SHOWWINDOW | SWPFlags.NOMOVE | SWPFlags.NOSIZE | SWPFlags.NOACTIVATE | SWPFlags.NOOWNERZORDER);
 		}
 
 		/// <summary>
@@ -361,13 +361,13 @@ namespace Au.Controls
 				break;
 			case Api.WM_WINDOWPOSCHANGED:
 				var wp = (Api.WINDOWPOS*)lParam;
-				//AOutput.Write(wp->flags & Native.SWP._KNOWNFLAGS, IsVisible);
-				if (!wp->flags.Has(Native.SWP.NOSIZE) && _inSizeMove) _size = SIZE.From(ADpi.Unscale((wp->cx, wp->cy), w), true);
-				if (wp->flags.Has(Native.SWP.SHOWWINDOW)) {
+				//AOutput.Write(wp->flags & SWPFlags._KNOWNFLAGS, IsVisible);
+				if (!wp->flags.Has(SWPFlags.NOSIZE) && _inSizeMove) _size = SIZE.From(ADpi.Unscale((wp->cx, wp->cy), w), true);
+				if (wp->flags.Has(SWPFlags.SHOWWINDOW)) {
 					UserClosed = false;
 					_ClickCloseTimer(true);
 				}
-				if (wp->flags.Has(Native.SWP.HIDEWINDOW)) {
+				if (wp->flags.Has(SWPFlags.HIDEWINDOW)) {
 					_ClickCloseTimer(false);
 					if(Border.IsKeyboardFocusWithin) Keyboard.ClearFocus();
 					Hidden?.Invoke(this, EventArgs.Empty);
@@ -386,12 +386,12 @@ namespace Au.Controls
 					Close(); //never mind: we probably don't receive this message if our thread is inactive
 					return Api.MA_NOACTIVATEANDEAT;
 				}
-				if (_exStyle.Has(WS2.NOACTIVATE)) {
+				if (_exStyle.Has(WSE.NOACTIVATE)) {
 					return Api.MA_NOACTIVATE;
 				}
 				break;
 			case Api.WM_NCLBUTTONDOWN:
-				if (_exStyle.Has(WS2.NOACTIVATE)) {
+				if (_exStyle.Has(WSE.NOACTIVATE)) {
 					//OS activates when clicked in non-client area, eg when moving or resizing. Workaround: on WM_NCLBUTTONDOWN suppress activation with a CBT hook.
 					//When moving or resizing, WM_NCLBUTTONDOWN returns when moving/resizing ends. On resizing would activate on mouse button up.
 					var wa = AWnd.ThisThread.Active;

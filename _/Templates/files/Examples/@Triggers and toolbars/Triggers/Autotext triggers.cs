@@ -1,4 +1,5 @@
-using Au; using Au.Types; using System; using System.Collections.Generic; using System.IO; using System.Linq;
+using Au;
+using Au.Types;
 using Au.Triggers;
 
 partial class Script {
@@ -21,7 +22,7 @@ void AutotextTriggers() {
 		tt.DefaultPostfixType = TAPostfix.None; //set some options for triggers added afterwards
 		tt["<b>"] = o => o.Replace("<b>[[|]]</b>");
 		
-		Triggers.Options.BeforeAction = o => { AOpt.Key.TextHow = KTextHow.Paste; }; //set AOpt options for trigger actions added afterwards
+		Triggers.Options.BeforeAction = o => { AOpt.Key.TextHow = OKeyText.Paste; }; //set AOpt options for trigger actions added afterwards
 		tt["#file", TAFlags.RemovePostfix] = o => {
 			o.Replace("");
 			using var fd = new System.Windows.Forms.OpenFileDialog { Title = "Autotext example" };

@@ -9,36 +9,40 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-//using System.Linq;
+using System.Linq;
 
 using Au;
 using Au.Types;
+using Au.Controls;
 
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
+using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 
 class CiErrors
 {
 	SemanticModel _semo;
 	List<(Diagnostic d, int start, int end)> _codeDiag;
-	readonly List<(int from, int to, string s)> _metaErrors = new List<(int, int, string)>();
-	readonly List<(int from, int to, string s)> _stringErrors = new List<(int, int, string)>();
+	readonly List<(int from, int to, string s)> _metaErrors = new();
+	readonly List<(int from, int to, string s)> _stringErrors = new();
 
-	public void Indicators(int start16, int end16) {
+	public void Indicators(int start16, int end16, bool pasting = false) {
 		_semo = null;
 
 		if (!CodeInfo.GetContextAndDocument(out var cd, 0, metaToo: true)) return;
 		var doc = cd.sciDoc;
 		var code = cd.code;
+		List<string> addUsings = null;
 		bool has = false;
 		var semo = cd.document.GetSemanticModelAsync().Result;
 		var a = semo.GetDiagnostics(TextSpan.FromBounds(start16, end16));
 		if (!a.IsDefaultOrEmpty) {
-			_codeDiag = new List<(Diagnostic d, int start, int end)>(a.Length);
-			foreach (var d in a) {
+			_codeDiag = new(a.Length);
+			foreach (var d_ in a) {
+				var d = d_;
 				if (d.IsSuppressed) continue;
 				var loc = d.Location; if (!loc.IsInSource) continue;
 				var span = loc.SourceSpan;
@@ -48,16 +52,42 @@ class CiErrors
 					if (end < code.Length && !(code[end] == '\r' || code[end] == '\n')) end++;
 					else if (start > 0) start--;
 				}
-				if (d.Severity == DiagnosticSeverity.Hidden && d.Code == 8019) { //unnecessary using directive
-					if (0 != code.Eq(start + 6, false, s_defaultUsings)) continue;
+				var ec = (ErrorCode)d.Code;
+				//if (d.Severity == DiagnosticSeverity.Hidden && ec == ErrorCode.HDN_UnusedUsingDirective) {
+				//	if (0 != code.Eq(start + 6, false, s_defaultUsings)) continue;
+				//}
+				if (start == 0 && ec == ErrorCode.WRN_UnprocessedXMLComment) continue; //XML comment at start
+
+				//workaround for: when starting to type the last top-level statement, if it's a word (a C# type or non-keyword), error
+				//	"A namespace cannot directly contain members such as fields or methods". Users would think it's a bug of this program.
+				//	Another workaround would be to add ';' after. But it does not work if it's a C# type eg 'int'.
+				//	Let's ignore it in editor. It's a lesser evil. And nobody will compile such unfinished code.
+				//if (ec == ErrorCode.ERR_NamespaceUnexpected) continue;
+				if (ec == ErrorCode.ERR_NamespaceUnexpected) {
+					//If unknown name, convert to ERR_NameNotInContext. Then on mouse hover will display tooltip with links to add using directive etc.
+					var d2 = cd.document.WithText(SourceText.From(code.Insert(end, ";"), Encoding.UTF8));
+					var m2 = d2.GetSemanticModelAsync().Result;
+					//AOutput.Write(m2.GetDiagnostics(span));
+					d = m2.GetDiagnostics(span).FirstOrDefault(o => (ErrorCode)o.Code == ErrorCode.ERR_NameNotInContext);
+					if (d == null) continue;
+					ec = ErrorCode.ERR_NameNotInContext;
 				}
+
+				//if pasted or called InsertCode.Statements() etc, try to insert favorite using directive
+				if (pasting && ec is ErrorCode.ERR_NameNotInContext or ErrorCode.ERR_SingleTypeNameNotFound) {
+					//TODO: now ignores extension methods. Eg when DWinImage inserts im.MouseMove().
+					var s1 = code[start..end];
+					if (!CodeInfo._favorite.GetNamespaceFor(s1, ref addUsings))
+						if (_IsAttributeNameWithoutSuffix(s1, start, semo)) CodeInfo._favorite.GetNamespaceFor(s1 + "Attribute", ref addUsings);
+				}
+
 				if (!has) doc.InicatorsDiag_(has = true);
 				var indic = d.Severity switch { DiagnosticSeverity.Error => SciCode.c_indicError, DiagnosticSeverity.Warning => SciCode.c_indicWarning, DiagnosticSeverity.Info => SciCode.c_indicInfo, _ => SciCode.c_indicDiagHidden };
 				doc.zIndicatorAdd(true, indic, start..end);
 				_codeDiag.Add((d, start, end));
 
 				if (d.Severity == DiagnosticSeverity.Error) {
-					switch ((ErrorCode)d.Code) {
+					switch (ec) {
 					case ErrorCode.ERR_NameNotInContext:
 					case ErrorCode.ERR_SingleTypeNameNotFound:
 					case ErrorCode.ERR_NoSuchMemberOrExtension:
@@ -87,12 +117,15 @@ class CiErrors
 		if (!has) {
 			doc.InicatorsDiag_(false);
 			_codeDiag = null;
+		} else {
+			//if (addUsings != null) InsertCode.UsingDirective(string.Join(';', addUsings)); //does not work because called from scintilla notification
+			if (addUsings != null) doc.Dispatcher.InvokeAsync(() => InsertCode.UsingDirective(string.Join(';', addUsings)));
 		}
 	}
 
-	static readonly string[] s_defaultUsings = new string[] { "Au;", "Au.Types;", "System;", "System.Collections.Generic;" };
+	//static readonly string[] s_defaultUsings = new string[] { "Au;", "Au.Types;", "System;", "System.Collections.Generic;", "System.Linq", "System.IO" };
 
-	void _Strings(SemanticModel semo, in CodeInfo.Context cd, int start16, int end16) {
+	void _Strings(SemanticModel semo, CodeInfo.Context cd, int start16, int end16) {
 		//using var p1 = APerf.Create();
 		_stringErrors.Clear();
 		var code = cd.code;
@@ -100,7 +133,6 @@ class CiErrors
 			var format = CiUtil.GetParameterStringFormat(node, semo, false);
 			if (format == PSFormat.None || format == PSFormat.ARegexReplacement) continue;
 			var s = node.GetFirstToken().ValueText; //replaced escape sequences
-													//AOutput.Write(format, s);
 			string es = null;
 			try {
 				switch (format) {
@@ -139,17 +171,28 @@ class CiErrors
 		doc.zIndicatorClear(false, SciCode.c_indicError, start..end);
 	}
 
-	public void SciModified() {
+	public void SciModified(SciCode doc, in Sci.SCNotification n) {
 		//clear arrays to prevent showing tooltip because positions changed. But don't clear indicators because we'll update them soon.
 		_codeDiag = null;
 		_stringErrors.Clear();
+
+		if (_pasting != null && n.modificationType.Has(Sci.MOD.SC_MOD_INSERTTEXT | Sci.MOD.SC_PERFORMED_USER)) {
+			var p = _pasting; _pasting = null;
+			if (doc == p && n.length > 3) {
+				int start = doc.zPos16(n.position), end = doc.zPos16(n.position + n.length);
+				Indicators(start, end, pasting: true);
+			}
+		}
 	}
+	SciCode _pasting;
+
+	public void Pasting(SciCode doc) { _pasting = doc; }
 
 	public System.Windows.Documents.Section GetPopupTextAt(SciCode doc, int pos8, int pos16, out Action<CiPopupText, string> onLinkClick) {
 		onLinkClick = null;
 		if (_codeDiag == null && _metaErrors.Count == 0 && _stringErrors.Count == 0) return null;
 		if (pos8 < 0) return null;
-		int all = doc.Call(Au.Controls.Sci.SCI_INDICATORALLONFOR, pos8);
+		int all = doc.Call(Sci.SCI_INDICATORALLONFOR, pos8);
 		//AOutput.Write(all);
 		if (0 == (all & ((1 << SciCode.c_indicError) | (1 << SciCode.c_indicWarning) | (1 << SciCode.c_indicInfo) | (1 << SciCode.c_indicDiagHidden)))) return null;
 
@@ -166,11 +209,11 @@ class CiErrors
 			x.LineBreak(s1, notIfFirstInParagraph: true);
 			x.Append(": " + d.GetMessage());
 
+			var ec = (ErrorCode)d.Code;
 			if (d.Severity == DiagnosticSeverity.Error) {
 				if (_semo == null) continue;
-				//AOutput.Write(d.Code, d.Id);
+				//AOutput.Write(ec, d.Id);
 				bool extMethod = false;
-				var ec = (ErrorCode)d.Code;
 				switch (ec) {
 				case ErrorCode.ERR_NoSuchMemberOrExtension:
 				case ErrorCode.ERR_NoSuchMemberOrExtensionNeedUsing: //all these end with (are you missing a using directive...
@@ -195,7 +238,7 @@ class CiErrors
 					break;
 				}
 			} else if (d.Severity == DiagnosticSeverity.Warning) {
-				switch ((ErrorCode)d.Code) {
+				switch (ec) {
 				case ErrorCode.WRN_MissingXMLComment:
 					_XmlComment(x/*, v*/);
 					break;
@@ -222,11 +265,13 @@ class CiErrors
 	void _UsingsEtc(CiText x, in (Diagnostic d, int start, int end) v, SciCode doc, bool extMethod) {
 		string code = doc.zText;
 		bool isGeneric = false;
-		int end2 = code.IndexOf('<', v.start, v.end - v.start);
+		int start = v.start;
+		int end2 = code.IndexOf('<', start, v.end - start);
 		if (end2 < 0) end2 = v.end; else isGeneric = true;
-		var errName = code[v.start..end2];
-		bool isAttribute = !extMethod && _semo.Root.FindToken(v.start).Parent?.Parent is AttributeSyntax && !errName.Ends("Attribute");
+		var errName = code[start..end2];
+		bool isAttribute = !extMethod && _IsAttributeNameWithoutSuffix(errName, start, _semo);
 		var errName2 = isAttribute ? errName + "Attribute" : null;
+		ITypeSymbol emReceiverType = null;
 
 		var comp = _semo.Compilation;
 		var usings = new List<string>();
@@ -254,8 +299,19 @@ class CiErrors
 						var its = nt as INamedTypeSymbol;
 						//p1.First();
 						if (its.IsStatic && its.MightContainExtensionMethods) { //fast, but without IsStatic slow first time
-							foreach (var v in nt.GetMembers()) { //fast; slightly slower than nt.MemberNames.Contains(errName) which gets member types etc too
-								if (v is IMethodSymbol && (found = v.Name == errName)) { sym = v; break; }
+							foreach (var m in nt.GetMembers().OfType<IMethodSymbol>()) { //fast; slightly slower than nt.MemberNames.Contains(errName) which gets member types etc too
+								if (m.Name == errName && m.IsExtensionMethod) {
+									if (emReceiverType == null) {
+										if (_semo.SyntaxTree.GetRoot().FindToken(start).Parent.Parent is MemberAccessExpressionSyntax ma)
+											emReceiverType = _semo.GetTypeInfo(ma.Expression).Type;
+										ADebug.PrintIf(emReceiverType == null, "failed to get extension method receiver type");
+										if (emReceiverType == null) continue;
+									}
+									if (null == m.ReduceExtensionMethod(emReceiverType)) { /*ADebug.Print(emReceiverType);*/ continue; }
+									found = true;
+									sym = m;
+									break;
+								}
 							}
 						}
 						//p1.Next();
@@ -328,5 +384,10 @@ class CiErrors
 
 		x.Append("\nTo add XML comment, type /// above.");
 		x.Append("\nTo disable warning, add just /// or disable warning 1591 (use warningDisableSnippet).");
+	}
+
+	static bool _IsAttributeNameWithoutSuffix(string name, int pos, SemanticModel semo) {
+		if (name.Ends("Attribute")) return false;
+		return semo.SyntaxTree.IsAttributeNameContext(pos, default);
 	}
 }

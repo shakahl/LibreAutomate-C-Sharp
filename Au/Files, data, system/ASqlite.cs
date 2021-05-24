@@ -744,7 +744,7 @@ namespace Au
 			int size = sizeof(T);
 			int ne = nb / size; nb = ne * size;
 			var r = new T[ne];
-			fixed (T* p = r) Buffer.MemoryCopy(t, p, nb, nb);
+			fixed (T* p = r) AMemory.Copy(t, p, nb);
 			return r;
 		}
 
@@ -768,7 +768,7 @@ namespace Au
 		{
 			var t = (T*)GetBlob(column, out int nb);
 			T r = default;
-			if(t != null && nb == sizeof(T)) Buffer.MemoryCopy(t, &r, nb, nb);
+			if(t != null && nb == sizeof(T)) AMemory.Copy(t, &r, nb);
 			return r;
 		}
 

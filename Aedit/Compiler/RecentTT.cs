@@ -39,7 +39,7 @@ static class RecentTT
 		else _Ended(t.taskId, time, exitCode < 0);
 	}
 
-	public static void TriggerEvent(OutServMessage m) {
+	public static void TriggerEvent(OutputServerMessage m) {
 		string s = m.Text, z = m.Caller;
 		//z format: "id\0sourceFilePath\0line1based"
 		//	id identifies that action instance in time (start/end/fail events have same id).

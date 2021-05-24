@@ -139,11 +139,11 @@ namespace Au.Util
 		/// Measures text with API <msdn>DrawText</msdn>.
 		/// Can be multiline. For drawing with API <msdn>DrawText</msdn>.
 		/// </summary>
-		public SIZE Measure(string s, int length, Native.DT format, int wrapWidth = 0) {
+		public SIZE Measure(string s, int length, TFFlags format, int wrapWidth = 0) {
 			if ((uint)length > s.Lenn()) throw new ArgumentException();
 			if (length == 0) return default;
 			RECT r = new(0, 0, wrapWidth, 0);
-			Api.DrawText(_dc, s, length, ref r, format | Native.DT.CALCRECT);
+			Api.DrawText(_dc, s, length, ref r, format | TFFlags.CALCRECT);
 			return new(r.Width, r.Height);
 		}
 
@@ -151,7 +151,7 @@ namespace Au.Util
 		/// Measures text with API <msdn>DrawText</msdn>.
 		/// Can be multiline. For drawing with API <msdn>DrawText</msdn>.
 		/// </summary>
-		public SIZE Measure(string s, Native.DT format, int wrapWidth = 0) => Measure(s, s.Lenn(), format, wrapWidth);
+		public SIZE Measure(string s, TFFlags format, int wrapWidth = 0) => Measure(s, s.Lenn(), format, wrapWidth);
 	}
 
 	struct Pen_ : IDisposable

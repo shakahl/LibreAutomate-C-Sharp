@@ -13,6 +13,8 @@ using System.Reflection;
 
 using Au.Types;
 
+//CONSIDER: System.Buffers.ArrayPool<T>.
+
 namespace Au.Util
 {
 	/// <summary>
@@ -65,7 +67,7 @@ namespace Au.Util
 			set {
 				if(value != _cap) {
 					if(value < _len) throw new ArgumentOutOfRangeException();
-					_p = (T*)AMemory.ReAlloc(_p, value * sizeof(T));
+					AMemory.ReAlloc(ref _p, value);
 					_cap = value;
 				}
 			}
@@ -83,7 +85,7 @@ namespace Au.Util
 		{
 			if(_cap != 0) Free();
 			int cap = count; if(cap < s_minCap && !noExtra) cap = s_minCap;
-			_p = (T*)AMemory.Alloc(cap * sizeof(T), zeroInit);
+			_p = AMemory.Alloc<T>(cap, zeroInit);
 			_cap = cap; _len = count;
 			return _p;
 		}
@@ -103,7 +105,7 @@ namespace Au.Util
 		public T* ReAlloc(int count, bool zeroInit = true, bool noExtra = false)
 		{
 			int cap = count; if(cap < s_minCap && !noExtra) cap = s_minCap;
-			_p = (T*)AMemory.ReAlloc(_p, cap * sizeof(T), zeroInit);
+			AMemory.ReAlloc(ref _p, cap, zeroInit);
 			_cap = cap; _len = count;
 			return _p;
 		}

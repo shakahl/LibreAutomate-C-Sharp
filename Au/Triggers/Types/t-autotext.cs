@@ -356,7 +356,7 @@ namespace Au.Triggers
 
 		static AWnd _GetFocusedWindow() {
 			if (!AMiscInfo.GetGUIThreadInfo(out var gt)) return AWnd.Active;
-			if (0 != (gt.flags & (Native.GUI.INMENUMODE | Native.GUI.INMOVESIZE))) return default; //the character will not be typed when showing menu (or just Alt or F10 pressed) or moving/resizing window. Of course this will not work with nonstandard menus, eg in Word, as well as with other controls that don't accept text.
+			if (0 != (gt.flags & (GTIFlags.INMENUMODE | GTIFlags.INMOVESIZE))) return default; //the character will not be typed when showing menu (or just Alt or F10 pressed) or moving/resizing window. Of course this will not work with nonstandard menus, eg in Word, as well as with other controls that don't accept text.
 			return gt.hwndFocus; //if no focus, the thread will not receive wm-keydown etc
 		}
 
@@ -761,7 +761,7 @@ namespace Au.Triggers
 
 			if (ke != null) k.Add(ke); else k.AddText(r, html);
 
-			if (pKey != default) k.AddKey(pKey); else if (pChar != default) k.AddText(pChar.ToString(), KTextHow.KeysOrChar);
+			if (pKey != default) k.AddKey(pKey); else if (pChar != default) k.AddText(pChar.ToString(), OKeyText.KeysOrChar);
 
 			if (caret >= 0) {
 				int keyLeft = 0;
@@ -787,7 +787,7 @@ namespace Au.Triggers
 		/// If <see cref="HasPostfixChar"/>==true, sends the postfix character (last character of <see cref="Text"/>) to the active window.
 		/// </summary>
 		public void SendPostfix() {
-			if (this.HasPostfixChar) new AKeys(AOpt.Key).AddText(this.Text[^1..], KTextHow.KeysOrChar).Send();
+			if (this.HasPostfixChar) new AKeys(AOpt.Key).AddText(this.Text[^1..], OKeyText.KeysOrChar).Send();
 		}
 
 		/// <summary>

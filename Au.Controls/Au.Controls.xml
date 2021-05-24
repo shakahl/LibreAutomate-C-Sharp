@@ -483,24 +483,11 @@
             Don't call this function from another thread.
             </summary>
         </member>
-        <member name="M:Au.Controls.KScintilla.zGetString(System.Int32,Au.Types.LPARAM,System.Int32)">
-            <summary>
-            Calls a Scintilla message that gets a string.
-            Don't call this function from another thread.
-            </summary>
-            <param name="sciMessage"></param>
-            <param name="wParam"></param>
-            <param name="bufferSize">
-            How much UTF-8 bytes to allocate for Scintilla to store the text.
-            If -1 (default), at first calls sciMessage with lParam=0 (null buffer), let it return required buffer size. Then it can get binary string (with '\0' characters).
-            If 0, returns "" and does not call the message.
-            If positive, it can be either known or max expected text length, without the terminating '\0' character. The function will find length of the retrieved string (finds '\0'). Then it cannot get binary string (with '\0' characters).
-            The function allocates bufferSize+1 bytes and sets that last byte = 0. If Scintilla overwrites it, asserts and calls Environment.FailFast.
-            </param>
-        </member>
         <member name="M:Au.Controls.KScintilla.zGetStringOfLength(System.Int32,Au.Types.LPARAM,System.Int32)">
             <summary>
-            The same as <see cref="M:Au.Controls.KScintilla.zGetString(System.Int32,Au.Types.LPARAM,System.Int32)"/>, but always uses utf8Length bytes of the result (does not find length).
+            Calls a Scintilla message that gets a string when length is known.
+            Always uses <i>utf8Length</i> bytes of the result (does not find length).
+            Can get binary string (with '\0' characters).
             </summary>
             <param name="sciMessage"></param>
             <param name="wParam"></param>
@@ -508,9 +495,30 @@
             Known length (bytes) of the result UTF-8 string, without the terminating '\0' character.
             If 0, returns "" and does not call the message.
             </param>
-            <remarks>
-            This function can get binary string (with '\0' characters).
-            </remarks>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zGetStringGetLength(System.Int32,Au.Types.LPARAM)">
+            <summary>
+            Calls a Scintilla message that gets a string. See <see cref="M:Au.Controls.KScintilla.zGetStringOfLength(System.Int32,Au.Types.LPARAM,System.Int32)"/>.
+            To get buffer size, at first calls <i>sciMessage</i> with <i>lParam</i>=0 (null buffer).
+            Can get binary string (with '\0' characters).
+            Don't call this function from another thread.
+            </summary>
+            <param name="sciMessage"></param>
+            <param name="wParam"></param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zGetString0Terminated(System.Int32,Au.Types.LPARAM,System.Int32)">
+            <summary>
+            Calls a Scintilla message that gets a '\0'-terminated string.
+            Cannot get binary string (with '\0' characters).
+            Don't call this function from another thread.
+            </summary>
+            <param name="sciMessage"></param>
+            <param name="wParam"></param>
+            <param name="bufferSize">
+            How much UTF-8 bytes to allocate for Scintilla to store the text.
+            Can be either known or max expected text length, without the terminating '\0' character. The function will find length of the retrieved string (finds '\0').
+            If 0, returns "" and does not call the message.
+            </param>
         </member>
         <member name="M:Au.Controls.KScintilla._RangeText(System.Int32,System.Int32)">
             <summary>
@@ -827,7 +835,7 @@
             <param name="to">End index.</param>
             <param name="withRN">Include "\r\n".</param>
         </member>
-        <member name="M:Au.Controls.KScintilla.zInsertText(System.Boolean,System.Int32,System.String,System.Boolean,System.Boolean)">
+        <member name="M:Au.Controls.KScintilla.zInsertText(System.Boolean,System.Int32,System.String,System.Boolean,System.Boolean,System.Boolean)">
             <summary>
             SCI_INSERTTEXT.
             </summary>
@@ -836,10 +844,21 @@
             <param name="s">Text to insert. Can be null.</param>
             <param name="addUndoPointBefore">Call <see cref="M:Au.Controls.KScintilla.zAddUndoPoint"/> before.</param>
             <param name="addUndoPointAfter">Call <see cref="M:Au.Controls.KScintilla.zAddUndoPoint"/> after.</param>
+            <param name="restoreFolding">If <i>pos</i> is hidden because of folding, finally collapse its folding again. See <see cref="T:Au.Controls.KScintilla.FoldingRestorer"/>.</param>
             <remarks>
             Does not parse tags.
             Does not change current selection, unless <i>pos</i> is in it; for it use <see cref="M:Au.Controls.KScintilla.zReplaceSel(System.String)"/> or <see cref="M:Au.Controls.KScintilla.zReplaceRange(System.Boolean,System.Int32,System.Int32,System.String,System.Boolean)"/>.
             </remarks>
+        </member>
+        <member name="T:Au.Controls.KScintilla.FoldingRestorer">
+            <summary>
+            If ctor detects that the line from <i>pos</i> is hidden because of folding, <b>Dispose</b> collapses its folding again.
+            Use when modifying text to prevent unfolding.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.FoldingRestorer.#ctor(Au.Controls.KScintilla,System.Int32)">
+            <param name="sci">Can be null, then does nothing.</param>
+            <param name="pos"></param>
         </member>
         <member name="M:Au.Controls.KScintilla.zDeleteRange(System.Boolean,System.Int32,System.Int32)">
             <summary>
@@ -878,6 +897,14 @@
             <param name="utf16"></param>
             <param name="from">Start index.</param>
             <param name="to">End index. If -1, uses control text length.</param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zRangePointer(System.Int32,System.Int32)">
+            <summary>
+            Gets direct pointer to a text range in Scintilla buffer (SCI_GETRANGEPOINTER).
+            Does not validate arguments, just asserts to >= from.
+            </summary>
+            <param name="from">UTF-8 start position.</param>
+            <param name="to">UTF-8 end position.</param>
         </member>
         <member name="M:Au.Controls.KScintilla.zReplaceSel(System.String)">
             <summary>
@@ -1019,6 +1046,22 @@
         <member name="M:Au.Controls.KScintilla.zAddUndoPoint">
             <summary>
             SCI_BEGINUNDOACTION, SCI_ENDUNDOACTION.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.KScintilla.UndoAction">
+            <summary>
+            Ctor calls SCI_BEGINUNDOACTION. Dispose() calls SCI_ENDUNDOACTION.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.UndoAction.#ctor(Au.Controls.KScintilla)">
+            <summary>
+            Calls SCI_BEGINUNDOACTION.
+            </summary>
+            <param name="sci">Can be null, then does nothing.</param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.UndoAction.Dispose">
+            <summary>
+            Calls SCI_ENDUNDOACTION and clears this variable.
             </summary>
         </member>
         <member name="T:Au.Controls.KSciCodeBox">
@@ -1170,13 +1213,6 @@
             Gets annotation text without image info.
             </summary>
         </member>
-        <member name="M:Au.Controls.SciImages._GetTextRange(System.Int32,System.Int32)">
-            <summary>
-            Copies text range to BufferForText.
-            If cannot get from-to length text, asserts and returns null.
-            Does not validate arguments.
-            </summary>
-        </member>
         <member name="P:Au.Controls.SciImages.Visible">
             <summary>
             Hides/shows all images, or changes the display style of annotation areas.
@@ -1218,11 +1254,11 @@
             This func is usually called after clearing control text.
             </summary>
         </member>
-        <member name="M:Au.Controls.SciTags.OutputServerProcessMessages(Au.AOutputServer,System.Action{Au.Types.OutServMessage})">
+        <member name="M:Au.Controls.SciTags.OutputServerProcessMessages(Au.AOutput.Server,System.Action{Au.Types.OutputServerMessage})">
             <summary>
-            Displays <see cref="T:Au.AOutputServer"/> messages that are currently in its queue.
+            Displays <see cref="T:Au.AOutput.Server"/> messages that are currently in its queue.
             </summary>
-            <param name="os">The AOutputServer instance.</param>
+            <param name="os">The AOutput.Server instance.</param>
             <param name="onMessage">
             A callback function that can be called when this function gets/removes a message from os.
             When message type is Write, it can change message text; if null, this function ignores the message.
@@ -1234,7 +1270,7 @@
             Messages with tags must have prefix "&lt;&gt;".
             Limits text length to about 4 MB (removes oldest text when exceeded).
             </remarks>
-            <seealso cref="M:Au.AOutputServer.SetNotifications(Au.AWnd,System.Int32)"/>
+            <seealso cref="M:Au.AOutput.Server.SetNotifications(Au.AWnd,System.Int32)"/>
         </member>
         <member name="M:Au.Controls.SciTags.AddText(System.String,System.Boolean,System.Boolean)">
             <summary>
@@ -2332,7 +2368,7 @@
             Like Popup, can be click-closed, and does not eat mouse events like Popup.
             </summary>
         </member>
-        <member name="M:Au.Controls.KPopup.#ctor(Au.Types.WS,Au.Types.WS2,System.Boolean,System.Windows.SizeToContent)">
+        <member name="M:Au.Controls.KPopup.#ctor(Au.Types.WS,Au.Types.WSE,System.Boolean,System.Windows.SizeToContent)">
             
         </member>
         <member name="P:Au.Controls.KPopup.Hwnd">
@@ -2456,6 +2492,161 @@
             
         </member>
         <member name="M:Au.Controls.KPopupListBox.OnMouseUp(System.Windows.Input.MouseButtonEventArgs)">
+            
+        </member>
+        <member name="T:Au.Controls.KWpfMenu">
+            <summary>
+            Based on WPF <see cref="T:System.Windows.Controls.ContextMenu"/>, makes simpler to use it.
+            </summary>
+            <example>
+            <code><![CDATA[
+            var m = new KWpfMenu();
+            m["One"] = o => AOutput.Write(o);
+            using(m.Submenu("Sub")) {
+            	m["Three"] = o => AOutput.Write(o);
+            	m["Four"] = o => AOutput.Write(o);
+            }
+            m.Separator();
+            m["Two"] = o => { AOutput.Write(o); };
+            m.Show(this); //or m.IsOpen=true;
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Controls.KWpfMenu.#ctor">
+            
+        </member>
+        <member name="M:Au.Controls.KWpfMenu.Add(System.Object,System.Action{Au.Controls.WpfMenuActionArgs},System.Object)">
+            <summary>
+            Creates new <see cref="T:System.Windows.Controls.MenuItem"/> and adds to the menu. Returns it.
+            </summary>
+            <param name="text">
+            Label. See <see cref="P:System.Windows.Controls.HeaderedItemsControl.Header"/>.
+            If contains '\0' character, uses text before it for label and text after it for <see cref="P:System.Windows.Controls.MenuItem.InputGestureText"/>; example: "Text\0" + "Ctrl+E".
+            </param>
+            <param name="click">Action called on click.</param>
+            <param name="icon">See <see cref="P:Au.Controls.KWpfMenu.Item(System.String,System.Boolean,System.Object)"/>.</param>
+            <remarks>
+            Usually it's easier to use the indexer instead. It just calls this function. See example.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            m["Example"] = o => AOutput.Write(o);
+            m.Last.IsChecked = true;
+            ]]></code>
+            </example>
+        </member>
+        <member name="P:Au.Controls.KWpfMenu.Item(System.String,System.Boolean,System.Object)">
+            <summary>
+            Creates new <see cref="T:System.Windows.Controls.MenuItem"/> and adds to the menu.
+            </summary>
+            <param name="text">
+            Label. See <see cref="P:System.Windows.Controls.HeaderedItemsControl.Header"/>.
+            If contains '\0' character, uses text before it for label and text after it for <see cref="P:System.Windows.Controls.MenuItem.InputGestureText"/>; example: "Text\0" + "Ctrl+E".
+            </param>
+            <param name="enabled">Disabled if false. Default true.</param>
+            <param name="icon">
+            Can be:
+            - <see cref="T:System.Windows.Controls.Image"/> or other WPF control to assign directly to <see cref="P:System.Windows.Controls.MenuItem.Icon"/>.
+            - <see cref="T:System.Windows.Media.ImageSource"/> - a WPF image. To create image from icon, use <see cref="M:Au.AIcon.ToWpfImage(System.Boolean)"/>.
+            - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or png image as Base-64 string with prefix "image:". Can be png or XAML file or resource. See <see cref="M:Au.Util.AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>. Supports environment variables. If not full path, looks in <see cref="P:Au.AFolders.ThisAppImages"/>.
+            - <see cref="T:System.Uri"/> - image file path, or resource pack URI, or URL. Does not support environment variables and <see cref="P:Au.AFolders.ThisAppImages"/>.
+            
+            If failed to find or load image file, prints warning (<see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>).
+            To create Base-64 string, use menu Code -> AWinImage.
+            To add an image resource in Visual Studio, use build action "Resource" for the image file.
+            </param>
+            <value>Action called on click.</value>
+            <remarks>
+            Calls <see cref="M:Au.Controls.KWpfMenu.Add(System.Object,System.Action{Au.Controls.WpfMenuActionArgs},System.Object)"/>.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            m["Example"] = o => AOutput.Write(o);
+            m.Last.IsChecked = true;
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Controls.KWpfMenu.Separator">
+            <summary>
+            Adds separator.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KWpfMenu.Submenu(System.Object,System.Object,System.Action{Au.Controls.WpfMenuActionArgs})">
+            <summary>
+            Creates new <see cref="T:System.Windows.Controls.MenuItem"/> for a submenu and adds to the menu.
+            </summary>
+            <param name="text">Label. See <see cref="P:System.Windows.Controls.HeaderedItemsControl.Header"/>.</param>
+            <param name="icon"><see cref="P:System.Windows.Controls.MenuItem.Icon"/>.</param>
+            <param name="click">Action called on click. Rarely used.</param>
+            <remarks>
+            Then the add-item functions will add items to the submenu, until the returned variable is disposed.
+            </remarks>
+            <example><see cref="T:Au.Controls.KWpfMenu"/></example>
+        </member>
+        <member name="P:Au.Controls.KWpfMenu.CurrentAddMenu">
+            <summary>
+            Gets <see cref="T:System.Windows.Controls.ItemsControl"/> of the menu or submenu where new items currently would be added.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.KWpfMenu.Last">
+            <summary>
+            Gets the last added <see cref="T:System.Windows.Controls.MenuItem"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.KWpfMenu.ItemAdded">
+            <summary>
+            Called when added a non-separator item.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.KWpfMenu.ActionException">
+            <summary>
+            Whether to handle exceptions in item action code. If false (default), handles exceptions and on exception calls <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>.
+            Applied to menu items added afterwards.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KWpfMenu.Show(System.Windows.UIElement,System.Boolean,System.Boolean)">
+            <summary>
+            Sets <see cref="P:System.Windows.Controls.ContextMenu.PlacementTarget"/> = <i>owner</i> and <see cref="P:System.Windows.Controls.ContextMenu.IsOpen"/> = true.
+            </summary>
+            <param name="owner"><see cref="P:System.Windows.Controls.ContextMenu.PlacementTarget"/>. The menu uses its DPI. If null, uses DPI of primary screen (WPF bug).</param>
+            <param name="byCaret">Show by caret (text cursor) position if possible.</param>
+            <param name="modal">Wait until closed.</param>
+        </member>
+        <member name="M:Au.Controls.KWpfMenu.OnClosed(System.Windows.RoutedEventArgs)">
+            
+        </member>
+        <member name="M:Au.Controls.KWpfMenu.ShowSimple(Au.Types.DStringList,System.Windows.UIElement,System.Boolean,System.Action{Au.Controls.KWpfMenu})">
+            <summary>
+            Creates and shows popup menu where items use ids instead of actions.
+            Returns selected item id, or 0 if cancelled.
+            </summary>
+            <param name="items">
+            Menu items. Can be string[], List&lt;string&gt; or string like "One|Two|Three".
+            Item id can be optionally specified like "1 One|2 Two|3 Three". If missing, uses id of previous non-separator item + 1. Example: "One|Two|100 Three Four" //1|2|100|101.
+            For separators use null or empty strings: "One|Two||Three|Four".
+            </param>
+            <param name="owner"><see cref="P:System.Windows.Controls.ContextMenu.PlacementTarget"/>. The menu uses its DPI. If null, uses DPI of primary screen (WPF bug).</param>
+            <param name="byCaret">Show by caret (text cursor) position if possible.</param>
+            <param name="beforeShow">Called after adding menu items, before showing the menu. For example can set placement properties.</param>
+            <remarks>
+            The menu is modal; the function returns when closed.
+            </remarks>
+            <seealso cref="M:Au.ADialog.ShowList(Au.Types.DStringList,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>
+        </member>
+        <member name="T:Au.Controls.WpfMenuActionArgs">
+            <summary>
+            Arguments for <see cref="T:Au.Controls.KWpfMenu"/> item actions.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.WpfMenuActionArgs.#ctor(System.Windows.Controls.MenuItem)">
+            
+        </member>
+        <member name="P:Au.Controls.WpfMenuActionArgs.Item">
+            <summary>
+            The menu item object.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.WpfMenuActionArgs.ToString">
             
         </member>
         <member name="T:Au.Controls.GdiTextRenderer">
@@ -2680,161 +2871,6 @@
             Returns null if path is not a valid image string or the file does not exist or failed to load.
             </summary>
             <remarks>Supports environment variables etc. If not full path, searches in <see cref="P:Au.AFolders.ThisAppImages"/> and standard directories.</remarks>
-        </member>
-        <member name="T:Au.KWpfMenu">
-            <summary>
-            Based on WPF <see cref="T:System.Windows.Controls.ContextMenu"/>, makes simpler to use it.
-            </summary>
-            <example>
-            <code><![CDATA[
-            var m = new KWpfMenu();
-            m["One"] = o => AOutput.Write(o);
-            using(m.Submenu("Sub")) {
-            	m["Three"] = o => AOutput.Write(o);
-            	m["Four"] = o => AOutput.Write(o);
-            }
-            m.Separator();
-            m["Two"] = o => { AOutput.Write(o); };
-            m.Show(this); //or m.IsOpen=true;
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.KWpfMenu.#ctor">
-            
-        </member>
-        <member name="M:Au.KWpfMenu.Add(System.Object,System.Action{Au.Types.WpfMenuActionArgs},System.Object)">
-            <summary>
-            Creates new <see cref="T:System.Windows.Controls.MenuItem"/> and adds to the menu. Returns it.
-            </summary>
-            <param name="text">
-            Label. See <see cref="P:System.Windows.Controls.HeaderedItemsControl.Header"/>.
-            If contains '\0' character, uses text before it for label and text after it for <see cref="P:System.Windows.Controls.MenuItem.InputGestureText"/>; example: "Text\0" + "Ctrl+E".
-            </param>
-            <param name="click">Action called on click.</param>
-            <param name="icon">See <see cref="P:Au.KWpfMenu.Item(System.String,System.Boolean,System.Object)"/>.</param>
-            <remarks>
-            Usually it's easier to use the indexer instead. It just calls this function. See example.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            m["Example"] = o => AOutput.Write(o);
-            m.Last.IsChecked = true;
-            ]]></code>
-            </example>
-        </member>
-        <member name="P:Au.KWpfMenu.Item(System.String,System.Boolean,System.Object)">
-            <summary>
-            Creates new <see cref="T:System.Windows.Controls.MenuItem"/> and adds to the menu.
-            </summary>
-            <param name="text">
-            Label. See <see cref="P:System.Windows.Controls.HeaderedItemsControl.Header"/>.
-            If contains '\0' character, uses text before it for label and text after it for <see cref="P:System.Windows.Controls.MenuItem.InputGestureText"/>; example: "Text\0" + "Ctrl+E".
-            </param>
-            <param name="enabled">Disabled if false. Default true.</param>
-            <param name="icon">
-            Can be:
-            - <see cref="T:System.Windows.Controls.Image"/> or other WPF control to assign directly to <see cref="P:System.Windows.Controls.MenuItem.Icon"/>.
-            - <see cref="T:System.Windows.Media.ImageSource"/> - a WPF image. To create image from icon, use <see cref="M:Au.AIcon.ToWpfImage(System.Boolean)"/>.
-            - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or png image as Base-64 string with prefix "image:". Can be png or XAML file or resource. See <see cref="M:Au.Util.AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>. Supports environment variables. If not full path, looks in <see cref="P:Au.AFolders.ThisAppImages"/>.
-            - <see cref="T:System.Uri"/> - image file path, or resource pack URI, or URL. Does not support environment variables and <see cref="P:Au.AFolders.ThisAppImages"/>.
-            
-            If failed to find or load image file, prints warning (<see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>).
-            To create Base-64 string, use menu Code -> AWinImage.
-            To add an image resource in Visual Studio, use build action "Resource" for the image file.
-            </param>
-            <value>Action called on click.</value>
-            <remarks>
-            Calls <see cref="M:Au.KWpfMenu.Add(System.Object,System.Action{Au.Types.WpfMenuActionArgs},System.Object)"/>.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            m["Example"] = o => AOutput.Write(o);
-            m.Last.IsChecked = true;
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.KWpfMenu.Separator">
-            <summary>
-            Adds separator.
-            </summary>
-        </member>
-        <member name="M:Au.KWpfMenu.Submenu(System.Object,System.Object,System.Action{Au.Types.WpfMenuActionArgs})">
-            <summary>
-            Creates new <see cref="T:System.Windows.Controls.MenuItem"/> for a submenu and adds to the menu.
-            </summary>
-            <param name="text">Label. See <see cref="P:System.Windows.Controls.HeaderedItemsControl.Header"/>.</param>
-            <param name="icon"><see cref="P:System.Windows.Controls.MenuItem.Icon"/>.</param>
-            <param name="click">Action called on click. Rarely used.</param>
-            <remarks>
-            Then the add-item functions will add items to the submenu, until the returned variable is disposed.
-            </remarks>
-            <example><see cref="T:Au.KWpfMenu"/></example>
-        </member>
-        <member name="P:Au.KWpfMenu.CurrentAddMenu">
-            <summary>
-            Gets <see cref="T:System.Windows.Controls.ItemsControl"/> of the menu or submenu where new items currently would be added.
-            </summary>
-        </member>
-        <member name="P:Au.KWpfMenu.Last">
-            <summary>
-            Gets the last added <see cref="T:System.Windows.Controls.MenuItem"/>.
-            </summary>
-        </member>
-        <member name="P:Au.KWpfMenu.ItemAdded">
-            <summary>
-            Called when added a non-separator item.
-            </summary>
-        </member>
-        <member name="P:Au.KWpfMenu.ActionException">
-            <summary>
-            Whether to handle exceptions in item action code. If false (default), handles exceptions and on exception calls <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>.
-            Applied to menu items added afterwards.
-            </summary>
-        </member>
-        <member name="M:Au.KWpfMenu.Show(System.Windows.UIElement,System.Boolean,System.Boolean)">
-            <summary>
-            Sets <see cref="P:System.Windows.Controls.ContextMenu.PlacementTarget"/> = <i>owner</i> and <see cref="P:System.Windows.Controls.ContextMenu.IsOpen"/> = true.
-            </summary>
-            <param name="owner"><see cref="P:System.Windows.Controls.ContextMenu.PlacementTarget"/>. The menu uses its DPI. If null, uses DPI of primary screen (WPF bug).</param>
-            <param name="byCaret">Show by caret (text cursor) position if possible.</param>
-            <param name="modal">Wait until closed.</param>
-        </member>
-        <member name="M:Au.KWpfMenu.OnClosed(System.Windows.RoutedEventArgs)">
-            
-        </member>
-        <member name="M:Au.KWpfMenu.ShowSimple(Au.Types.DStringList,System.Windows.UIElement,System.Boolean,System.Action{Au.KWpfMenu})">
-            <summary>
-            Creates and shows popup menu where items use ids instead of actions.
-            Returns selected item id, or 0 if cancelled.
-            </summary>
-            <param name="items">
-            Menu items. Can be string[], List&lt;string&gt; or string like "One|Two|Three".
-            Item id can be optionally specified like "1 One|2 Two|3 Three". If missing, uses id of previous non-separator item + 1. Example: "One|Two|100 Three Four" //1|2|100|101.
-            For separators use null or empty strings: "One|Two||Three|Four".
-            </param>
-            <param name="owner"><see cref="P:System.Windows.Controls.ContextMenu.PlacementTarget"/>. The menu uses its DPI. If null, uses DPI of primary screen (WPF bug).</param>
-            <param name="byCaret">Show by caret (text cursor) position if possible.</param>
-            <param name="beforeShow">Called after adding menu items, before showing the menu. For example can set placement properties.</param>
-            <remarks>
-            The menu is modal; the function returns when closed.
-            </remarks>
-            <seealso cref="M:Au.ADialog.ShowList(Au.Types.DStringList,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>
-        </member>
-        <member name="T:Au.Types.WpfMenuActionArgs">
-            <summary>
-            Arguments for <see cref="T:Au.KWpfMenu"/> item actions.
-            </summary>
-        </member>
-        <member name="M:Au.Types.WpfMenuActionArgs.#ctor(System.Windows.Controls.MenuItem)">
-            
-        </member>
-        <member name="P:Au.Types.WpfMenuActionArgs.Item">
-            <summary>
-            The menu item object.
-            </summary>
-        </member>
-        <member name="M:Au.Types.WpfMenuActionArgs.ToString">
-            
         </member>
         <member name="T:Au.Tools.KCheckTextBox">
             <summary>

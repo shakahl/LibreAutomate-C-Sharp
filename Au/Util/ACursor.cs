@@ -25,7 +25,7 @@ namespace Au.Util
 	{
 		IntPtr _handle;
 
-		//rejected: GC.AddMemoryPressure like with AIcon. Unlikely somebody will use many cursors or even find this class.
+		//rejected: use HandleCollector like with AIcon. Unlikely somebody will use many cursors or even find this class.
 
 		/// <summary>
 		/// Sets native cursor handle.

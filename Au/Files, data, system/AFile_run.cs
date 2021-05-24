@@ -210,7 +210,7 @@ namespace Au
 		/// Handles only exception of type <see cref="AuException"/>. It is thrown when fails, usually when the file does not exist.
 		/// </remarks>
 		/// <seealso cref="AWarning.Write"/>
-		/// <seealso cref="AOptWarnings.Disable"/>
+		/// <seealso cref="OWarnings.Disable"/>
 		/// <seealso cref="AWnd.FindOrRun"/>
 		[MethodImpl(MethodImplOptions.NoInlining)] //uses stack
 		public static RResult TryRun(string s, string args = null, RFlags flags = 0, ROptions dirEtc = null) {
@@ -358,11 +358,11 @@ namespace Au
 				int offs = 0; bool skipN = false;
 
 				int bSize = 8000;
-				b = (byte*)AMemory.Alloc(bSize);
+				b = AMemory.Alloc(bSize);
 
 				for (bool ended = false; !ended;) {
 					if (bSize - offs < 1000) { //part of 'prevent getting partial lines' code
-						b = (byte*)AMemory.ReAlloc(b, bSize *= 2);
+						AMemory.ReAlloc(ref b, bSize *= 2);
 						AMemory.Free(c); c = null;
 					}
 
@@ -403,7 +403,7 @@ namespace Au
 						}
 					}
 
-					if (c == null) c = (char*)AMemory.Alloc(bSize * 2);
+					if (c == null) c = AMemory.Alloc<char>(bSize);
 					if (encoding == null) {
 						if ((encoding = s_oemEncoding) == null) {
 							Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);

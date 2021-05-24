@@ -218,7 +218,7 @@ class UacDragDrop
 			_msgWnd = (AWnd)args[1].ToInt();
 
 			AWnd.More.RegisterWindowClass("Aedit.DD", _WndProc);
-			_w = AWnd.More.CreateWindow("Aedit.DD", null, WS.POPUP | WS.DISABLED, WS2.LAYERED | WS2.NOACTIVATE | WS2.TOOLWINDOW | WS2.TOPMOST);
+			_w = AWnd.More.CreateWindow("Aedit.DD", null, WS.POPUP | WS.DISABLED, WSE.LAYERED | WSE.NOACTIVATE | WSE.TOOLWINDOW | WSE.TOPMOST);
 			Api.SetLayeredWindowAttributes(_w, 0, 1, 2);
 
 			Api.OleInitialize(0);

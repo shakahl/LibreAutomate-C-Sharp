@@ -18,7 +18,7 @@ namespace Au
 	/// <summary>
 	/// Writes warnings to the output.
 	/// </summary>
-	/// <seealso cref="AOptWarnings"/>
+	/// <seealso cref="OWarnings"/>
 	public static class AWarning
 	{
 		/// <summary>
@@ -30,8 +30,8 @@ namespace Au
 		/// <param name="prefix">Text before <i>text</i>. Default <c>"&lt;&gt;Warning: "</c>.</param>
 		/// <remarks>
 		/// Calls <see cref="AOutput.Write"/>.
-		/// Does not show more than 1 warning/second, unless <b>AOpt.Warnings.Verbose</b> == true (see <see cref="AOptWarnings.Verbose"/>).
-		/// To disable some warnings, use code <c>AOpt.Warnings.Disable("warning text wildcard");</c> (see <see cref="AOptWarnings.Disable"/>).
+		/// Does not show more than 1 warning/second, unless <b>AOpt.Warnings.Verbose</b> == true (see <see cref="OWarnings.Verbose"/>).
+		/// To disable some warnings, use code <c>AOpt.Warnings.Disable("warning text wildcard");</c> (see <see cref="OWarnings.Disable"/>).
 		/// </remarks>
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		public static void Write(string text, int showStackFromThisFrame = 0, string prefix = "<>Warning: ")

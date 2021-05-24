@@ -25,7 +25,7 @@ namespace Au
 	/// 
 	/// There are two sets of identical or similar options - in class <b>AOpt</b> and in class <see cref="AOpt.Static"/>:
 	/// - <b>AOpt</b> - thread-static options (each thread has its own instance). Functions of this library use them. You can change or change-restore them anywhere in script. Initial options are automatically copied from <b>AOpt.Static</b> when that group of options (<b>Key</b>, <b>Mouse</b>, etc) is used first time in that thread (explicitly or by library functions).
-	/// - <b>AOpt.Static</b> - static options. Contains initial property values for <b>AOpt</b>. Normally you change them at the very start of script. Don't change later, it's not thread-safe.
+	/// - <b>AOpt.Static</b> - static options. Contains initial property values for <b>AOpt</b>. Normally you change them when script starts. Don't change later, it's not thread-safe.
 	/// </remarks>
 	public static class AOpt
 	{
@@ -48,8 +48,8 @@ namespace Au
 		/// k.Add("Right*10 Ctrl+A").Send(); //uses options of k
 		/// ]]></code>
 		/// </example>
-		public static AOptKey Key => t_key ??= new AOptKey(AOpt.Static.Key);
-		[ThreadStatic] static AOptKey t_key;
+		public static OKey Key => t_key ??= new OKey(AOpt.Static.Key);
+		[ThreadStatic] static OKey t_key;
 
 		/// <summary>
 		/// Options for mouse functions (class <see cref="AMouse"/> and functions that use it).
@@ -63,8 +63,8 @@ namespace Au
 		/// AMouse.Click();
 		/// ]]></code>
 		/// </example>
-		public static AOptMouse Mouse => t_mouse ??= new AOptMouse(AOpt.Static.Mouse);
-		[ThreadStatic] static AOptMouse t_mouse;
+		public static OMouse Mouse => t_mouse ??= new OMouse(AOpt.Static.Mouse);
+		[ThreadStatic] static OMouse t_mouse;
 
 		/// <summary>
 		/// Options for 'wait for' functions.
@@ -73,8 +73,8 @@ namespace Au
 		/// Each thread has its own <b>AOpt.WaitFor</b> instance. There is no <b>AOpt.Static.WaitFor</b>.
 		/// Most 'wait for' functions of this library use these options. Functions of .NET classes don't.
 		/// </remarks>
-		public static AOptWaitFor WaitFor => t_waitFor ??= new AOptWaitFor();
-		[ThreadStatic] static AOptWaitFor t_waitFor;
+		public static OWaitFor WaitFor => t_waitFor ??= new OWaitFor();
+		[ThreadStatic] static OWaitFor t_waitFor;
 
 		/// <summary>
 		/// Options for showing run-time warnings and other info that can be useful to find problems in code at run time.
@@ -89,8 +89,8 @@ namespace Au
 		/// AWarning.Write("Example");
 		/// ]]></code>
 		/// </example>
-		public static AOptWarnings Warnings => t_warnings ??= new AOptWarnings(AOpt.Static.Warnings);
-		[ThreadStatic] static AOptWarnings t_warnings;
+		public static OWarnings Warnings => t_warnings ??= new OWarnings(AOpt.Static.Warnings);
+		[ThreadStatic] static OWarnings t_warnings;
 
 		//rejected. Use AOpt.Scope.
 		///// <summary>
@@ -131,7 +131,7 @@ namespace Au
 			/// k.Add("Tab Ctrl+V").Send(); //uses options of k
 			/// ]]></code>
 			/// </example>
-			public static AOptKey Key { get; } = new AOptKey();
+			public static OKey Key { get; } = new OKey();
 
 			/// <summary>
 			/// Default option values for <see cref="AOpt.Mouse"/> of a thread.
@@ -143,7 +143,7 @@ namespace Au
 			/// AMouse.Click(); //uses AOpt.Mouse, which is implicitly copied from AOpt.Static.Mouse
 			/// ]]></code>
 			/// </example>
-			public static AOptMouse Mouse { get; } = new AOptMouse();
+			public static OMouse Mouse { get; } = new OMouse();
 
 			/// <summary>
 			/// Default option values for <see cref="AOpt.Warnings"/> of a thread.
@@ -153,7 +153,7 @@ namespace Au
 			/// AOpt.Static.Warnings.Verbose = false;
 			/// ]]></code>
 			/// </example>
-			public static AOptWarnings Warnings { get; } = new AOptWarnings();
+			public static OWarnings Warnings { get; } = new OWarnings();
 
 		}
 
@@ -183,11 +183,11 @@ namespace Au
 				return new UsingEndAction(() => t_mouse = old);
 			}
 
-			static AOptMouse _Mouse(bool inherit)
+			static OMouse _Mouse(bool inherit)
 			{
 				var old = t_mouse;
-				//t_mouse = new AOptMouse((old != null && inherit) ? old : Static.Mouse);
-				t_mouse = (old != null && inherit) ? new AOptMouse(old) : null; //lazy
+				//t_mouse = new OMouse((old != null && inherit) ? old : Static.Mouse);
+				t_mouse = (old != null && inherit) ? new OMouse(old) : null; //lazy
 				return old;
 			}
 
@@ -211,11 +211,11 @@ namespace Au
 				return new UsingEndAction(() => t_key = old);
 			}
 
-			static AOptKey _Key(bool inherit)
+			static OKey _Key(bool inherit)
 			{
 				var old = t_key;
-				//t_key = new AOptKey((old != null && inherit) ? old : Static.Key);
-				t_key = (old != null && inherit) ? new AOptKey(old) : null; //lazy
+				//t_key = new OKey((old != null && inherit) ? old : Static.Key);
+				t_key = (old != null && inherit) ? new OKey(old) : null; //lazy
 				return old;
 			}
 
@@ -239,11 +239,11 @@ namespace Au
 				return new UsingEndAction(() => t_waitFor = old);
 			}
 
-			static AOptWaitFor _WaitFor(bool inherit)
+			static OWaitFor _WaitFor(bool inherit)
 			{
 				var old = t_waitFor;
-				//t_waitFor = (old != null && inherit) ? new AOptWaitFor(old.Period, old.DoEvents) : new OptWaitFor();
-				t_waitFor = (old != null && inherit) ? new AOptWaitFor(old.Period, old.DoEvents) : null; //lazy
+				//t_waitFor = (old != null && inherit) ? new OWaitFor(old.Period, old.DoEvents) : new OptWaitFor();
+				t_waitFor = (old != null && inherit) ? new OWaitFor(old.Period, old.DoEvents) : null; //lazy
 				return old;
 			}
 
@@ -269,11 +269,11 @@ namespace Au
 				return new UsingEndAction(() => t_warnings = old);
 			}
 
-			static AOptWarnings _Warnings(bool inherit)
+			static OWarnings _Warnings(bool inherit)
 			{
 				var old = t_warnings;
-				//t_warnings = new AOptWarnings((old != null && inherit) ? old : Static.Warnings);
-				t_warnings = (old != null && inherit) ? new AOptWarnings(old) : null; //lazy
+				//t_warnings = new OWarnings((old != null && inherit) ? old : Static.Warnings);
+				t_warnings = (old != null && inherit) ? new OWarnings(old) : null; //lazy
 				return old;
 			}
 
@@ -314,7 +314,7 @@ namespace Au.Types
 	/// <summary>
 	/// Options for run-time warnings (<see cref="AWarning.Write"/>).
 	/// </summary>
-	public class AOptWarnings
+	public class OWarnings
 	{
 		bool? _verbose;
 		List<string> _disabledWarnings;
@@ -323,14 +323,14 @@ namespace Au.Types
 		/// Initializes this instance with default values or values copied from another instance.
 		/// </summary>
 		/// <param name="cloneOptions">If not null, copies its options into this variable.</param>
-		internal AOptWarnings(AOptWarnings cloneOptions = null)
+		internal OWarnings(OWarnings cloneOptions = null)
 		{
 			if(cloneOptions != null) {
 				_Copy(cloneOptions);
 			}
 		}
 
-		void _Copy(AOptWarnings o)
+		void _Copy(OWarnings o)
 		{
 			_verbose = o._verbose;
 			_disabledWarnings = o._disabledWarnings == null ? null : new List<string>(o._disabledWarnings);
@@ -354,13 +354,13 @@ namespace Au.Types
 		/// <summary>
 		/// Disables one or more run-time warnings.
 		/// </summary>
-		/// <param name="warningsWild">One or more warnings as case-insensitive wildcard strings. See <see cref="AExtString.Like(string, string, bool)"/>.</param>
+		/// <param name="warningsWild">One or more warnings as case-insensitive wildcard strings. See <see cref="ExtString.Like(string, string, bool)"/>.</param>
 		/// <remarks>
 		/// Adds the strings to an internal list. When <see cref="AWarning.Write"/> is called, it looks in the list. If finds the warning in the list, does not show the warning.
 		/// It's easy to auto-restore warnings with 'using', like in the second example. Restoring is optional.
 		/// </remarks>
 		/// <example>
-		/// This code at the very start of script disables two warnings in all threads.
+		/// This code at the start of script disables two warnings in all threads.
 		/// <code><![CDATA[
 		/// AOpt.Static.Warnings.Disable("*part of warning 1 text*", "*part of warning 2 text*");
 		/// ]]></code>
@@ -404,7 +404,7 @@ namespace Au.Types
 	/// </remarks>
 	/// <seealso cref="AOpt.Mouse"/>
 	/// <seealso cref="AOpt.Static.Mouse"/>
-	public class AOptMouse
+	public class OMouse
 	{
 		struct _Options //makes easier to copy and reset fields
 		{
@@ -417,7 +417,7 @@ namespace Au.Types
 		/// Initializes this instance with default values or values copied from another instance.
 		/// </summary>
 		/// <param name="cloneOptions">If not null, copies its options into this variable.</param>
-		internal AOptMouse(AOptMouse cloneOptions = null) //don't need public like AOptKey
+		internal OMouse(OMouse cloneOptions = null) //don't need public like OKey
 		{
 			if(cloneOptions != null) {
 				_o = cloneOptions._o;
@@ -531,13 +531,13 @@ namespace Au.Types
 	/// </summary>
 	/// <seealso cref="AOpt.Key"/>
 	/// <seealso cref="AOpt.Static.Key"/>
-	public class AOptKey
+	public class OKey
 	{
 		/// <summary>
 		/// Initializes this instance with default values or values copied from another instance.
 		/// </summary>
 		/// <param name="cloneOptions">If not null, copies its options into this variable.</param>
-		public AOptKey(AOptKey cloneOptions = null)
+		public OKey(OKey cloneOptions = null)
 		{
 			CopyOrDefault_(cloneOptions);
 		}
@@ -545,7 +545,7 @@ namespace Au.Types
 		/// <summary>
 		/// Copies options from o, or sets default if o==null. Like ctor does.
 		/// </summary>
-		internal void CopyOrDefault_(AOptKey o)
+		internal void CopyOrDefault_(OKey o)
 		{
 			if(o != null) {
 				_textSpeed = o._textSpeed;
@@ -566,7 +566,7 @@ namespace Au.Types
 				_clipboardKeySpeed = 5;
 				_sleepFinally = 10;
 				_pasteLength = 200;
-				TextHow = KTextHow.Characters;
+				TextHow = OKeyText.Characters;
 				PasteWorkaround = default;
 				RestoreClipboard = true;
 				NoModOff = default;
@@ -592,15 +592,15 @@ namespace Au.Types
 		//public void Reset() => CopyOrDefault_(AOpt.Static.Key);
 
 		/// <summary>
-		/// Returns this variable, or AOptKey cloned from this variable and possibly modified by Hook.
+		/// Returns this variable, or <b>OKey</b> cloned from this variable and possibly modified by <b>Hook</b>.
 		/// </summary>
 		/// <param name="wFocus">The focused or active window. Use Lib.GetWndFocusedOrActive().</param>
-		internal AOptKey GetHookOptionsOrThis_(AWnd wFocus)
+		internal OKey GetHookOptionsOrThis_(AWnd wFocus)
 		{
 			var call = this.Hook;
 			if(call == null || wFocus.Is0) return this;
-			var R = new AOptKey(this);
-			call(new KOHookData(R, wFocus));
+			var R = new OKey(this);
+			call(new OKeyHookData(R, wFocus));
 			return R;
 		}
 
@@ -681,12 +681,12 @@ namespace Au.Types
 
 		/// <summary>
 		/// How to send text to the active window (keys, characters or clipboard).
-		/// Default: <see cref="KTextHow.Characters"/>.
+		/// Default: <see cref="OKeyText.Characters"/>.
 		/// </summary>
-		public KTextHow TextHow { get; set; }
+		public OKeyText TextHow { get; set; }
 
 		/// <summary>
-		/// To send text use clipboard (like with <see cref="KTextHow.Paste"/>) if text length is &gt;= this value.
+		/// To send text use clipboard (like with <see cref="OKeyText.Paste"/>) if text length is &gt;= this value.
 		/// Default: 200.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
@@ -707,7 +707,7 @@ namespace Au.Types
 
 		//rejected: rarely used. Eg can be useful for Python programmers. Let call AClipboard.Paste() explicitly or set the Paste option eg in hook.
 		///// <summary>
-		///// To send text use <see cref="KTextHow.Paste"/> if text contains characters '\n' followed by '\t' (tab) or spaces.
+		///// To send text use <see cref="OKeyText.Paste"/> if text contains characters '\n' followed by '\t' (tab) or spaces.
 		///// </summary>
 		///// <remarks>
 		///// Some apps auto-indent. This option is a workaround.
@@ -730,7 +730,7 @@ namespace Au.Types
 		/// <remarks>
 		/// Restoring data of all formats set by some apps can be slow or cause problems. More info: <see cref="RestoreClipboardExceptFormats"/>.
 		/// 
-		/// This property is static, not thread-static. It should be set (if need) at the very start of script and not changed later.
+		/// This property is static, not thread-static. It should be set (if need) at the start of script and not changed later.
 		/// </remarks>
 		/// <seealso cref="RestoreClipboard"/>
 		/// <seealso cref="RestoreClipboardExceptFormats"/>
@@ -749,7 +749,7 @@ namespace Au.Types
 		/// There are several kinds of clipboard formats - registered, standard, private and display. Only registered formats have string names. For standard formats use API contant names, like "CF_WAVE". Private, display and metafile formats are never restored.
 		/// These formats are never restored: CF_METAFILEPICT, CF_ENHMETAFILE, CF_PALETTE, CF_OWNERDISPLAY, CF_DSPx formats, CF_GDIOBJx formats, CF_PRIVATEx formats. Some other formats too, but they are automatically synthesized from other formats if need. Also does not restore if data size is 0 or &gt; 10 MB.
 		/// 
-		/// This property is static, not thread-static. It should be set (if need) at the very start of script and not changed later.
+		/// This property is static, not thread-static. It should be set (if need) at the start of script and not changed later.
 		/// </remarks>
 		/// <seealso cref="RestoreClipboard"/>
 		/// <seealso cref="PrintClipboard"/>
@@ -795,8 +795,8 @@ namespace Au.Types
 		/// <remarks>
 		/// The callback function is called by <see cref="AKeys.Key"/>, <see cref="AKeys.Text"/>, <see cref="AKeys.Send"/>, <see cref="AClipboard.Paste"/> and similar functions. Not called by <see cref="AClipboard.Copy"/>.
 		/// </remarks>
-		/// <seealso cref="KOHookData"/>
-		public Action<KOHookData> Hook { get; set; }
+		/// <seealso cref="OKeyHookData"/>
+		public Action<OKeyHookData> Hook { get; set; }
 
 //#if DEBUG
 //		public int Debug1 { get; set; }
@@ -805,16 +805,16 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Parameter type of the <see cref="AOptKey.Hook"/> callback function.
+	/// Parameter type of the <see cref="OKey.Hook"/> callback function.
 	/// </summary>
-	public struct KOHookData
+	public struct OKeyHookData
 	{
-		internal KOHookData(AOptKey opt, AWnd w) { this.opt = opt; this.w = w; }
+		internal OKeyHookData(OKey opt, AWnd w) { this.opt = opt; this.w = w; }
 
 		/// <summary>
 		/// Options used by the 'send keys or text' function. The callback function can modify them, except Hook, NoModOff, NoCapsOff, NoBlockInput.
 		/// </summary>
-		public readonly AOptKey opt;
+		public readonly OKey opt;
 
 		/// <summary>
 		/// The focused control. If there is no focused control - the active window. Use <c>w.Window</c> to get top-level window; if <c>w.Window == w</c>, <b>w</b> is the active window, else the focused control. The callback function is not called if there is no active window.
@@ -824,7 +824,7 @@ namespace Au.Types
 
 	/// <summary>
 	/// How functions send text.
-	/// See <see cref="AOptKey.TextHow"/>.
+	/// See <see cref="OKey.TextHow"/>.
 	/// </summary>
 	/// <remarks>
 	/// There are three ways to send text to the active app using keys:
@@ -834,7 +834,7 @@ namespace Au.Types
 	/// 
 	/// Most but not all apps support all three ways.
 	/// </remarks>
-	public enum KTextHow
+	public enum OKeyText
 	{
 		/// <summary>
 		/// Send text characters using special key code VK_PACKET.
@@ -867,7 +867,7 @@ namespace Au.Types
 		/// Paste text using the clipboard and Ctrl+V.
 		/// Few apps don't support it.
 		/// This option is recommended for long text, because other ways then are too slow.
-		/// Other options are unreliable when text length is more than 4000 and the target app is too slow to process sent characters. Then <see cref="AOptKey.TextSpeed"/> can help.
+		/// Other options are unreliable when text length is more than 4000 and the target app is too slow to process sent characters. Then <see cref="OKey.TextSpeed"/> can help.
 		/// Also, other options are unreliable when the target app modifies typed text, for example has such features as auto-complete, auto-indent or auto-correct. However some apps modify even pasted text, for example trim the last newline or space.
 		/// When pasting text, previous clipboard data of some formats is lost. Text is restored by default.
 		/// </summary>
@@ -882,7 +882,7 @@ namespace Au.Types
 	/// <seealso cref="AOpt.WaitFor"/>
 	/// <seealso cref="AWaitFor.Condition"/>
 	/// <seealso cref="AWaitFor.Loop"/>
-	public class AOptWaitFor
+	public class OWaitFor
 	{
 		/// <summary>
 		/// The sleep time between checking the wait condition. Milliseconds.
@@ -918,7 +918,7 @@ namespace Au.Types
 		public bool DoEvents { get; set; }
 
 		///
-		public AOptWaitFor(int period = 10, bool doEvents = false)
+		public OWaitFor(int period = 10, bool doEvents = false)
 		{
 			Period = period; DoEvents = doEvents;
 		}
@@ -936,11 +936,11 @@ namespace Au.Types
 		///// <summary>
 		///// Implicit conversion from int. Sets <see cref="Period"/>.
 		///// </summary>
-		//public static implicit operator AOptWaitFor(int period) => new OptWaitFor(period, false);
+		//public static implicit operator OWaitFor(int period) => new OptWaitFor(period, false);
 
 		///// <summary>
 		///// Implicit conversion from bool. Sets <see cref="DoEvents"/>.
 		///// </summary>
-		//public static implicit operator AOptWaitFor(bool doEvents) => new OptWaitFor(10, doEvents);
+		//public static implicit operator OWaitFor(bool doEvents) => new OptWaitFor(10, doEvents);
 	}
 }

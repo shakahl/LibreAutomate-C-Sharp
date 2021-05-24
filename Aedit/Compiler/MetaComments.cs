@@ -22,7 +22,7 @@ namespace Au.Compiler
 	/// </summary>
 	/// <remarks>
 	/// To compile C# code, often need various settings, more files, etc. In Visual Studio you can set it in project Properties and Solution Explorer. In Au you can set it in C# code as meta comments.
-	/// Meta comments is a block of comments that starts and ends with <c>/*/</c>. Must be at the very start of C# code. Example:
+	/// Meta comments is a block of comments that starts and ends with <c>/*/</c>. Must be at the start of C# code. Before can be only comments, empty lines, spaces and tabs. Example:
 	/// <code><![CDATA[
 	/// /*/ option1 value1; option2 value2; option2 value3 /*/
 	/// ]]></code>
@@ -97,7 +97,7 @@ namespace Au.Compiler
 	/// <h3>Settings used to run the compiled script</h3>
 	/// <code><![CDATA[
 	/// runSingle false|true - whether to allow single running task, etc. Default: false. More info below.
-	/// ifRunning warn|warn_restart|cancel|cancel_restart|wait|wait_restart|run|run_restart|restart //what to do if this script is already running. Default: warn. More info below.
+	/// ifRunning warn_restart|warn|cancel_restart|cancel|wait_restart|wait|run_restart|run|restart //what to do if this script is already running. Default: warn_restart. More info below.
 	/// ifRunning2 same|warn|cancel|wait //what to do if another "runSingle" script is running. Default: same. More info below.
 	/// uac inherit|user|admin //UAC integrity level (IL) of the task process. Default: inherit. More info below.
 	/// bit32 false|true //if true, the task process is 32-bit even on 64-bit OS. It can use 32-bit and AnyCPU dlls, but not 64-bit dlls. Default: false.
@@ -273,7 +273,7 @@ namespace Au.Compiler
 
 		/// <summary>
 		/// Meta option 'ifRunning'.
-		/// Default: warn (warn and don't run).
+		/// Default: warn_restart (warn and don't run, but restart if from editor).
 		/// </summary>
 		public EIfRunning IfRunning { get; private set; }
 
@@ -352,9 +352,9 @@ namespace Au.Compiler
 		public EMSpecified Specified { get; private set; }
 
 		/// <summary>
-		/// If there is meta, gets character position after /*/. Else 0.
+		/// If there is meta, gets character positions before the starting /*/ and after the ending /*/. Else default.
 		/// </summary>
-		public int EndOfMeta { get; private set; }
+		public (int start, int end) MetaRange { get; private set; }
 
 		EMPFlags _flags;
 
@@ -435,11 +435,11 @@ namespace Au.Compiler
 			_fn = f;
 			_code = code;
 
-			int endOf = FindMetaComments(code);
-			if (endOf > 0) {
-				if (isMain) EndOfMeta = endOf;
+			var meta = FindMetaComments(code);
+			if (meta.end > 0) {
+				if (isMain) MetaRange = meta;
 
-				foreach (var t in EnumOptions(code, endOf)) {
+				foreach (var t in EnumOptions(code, meta)) {
 					//var p1 = APerf.Create();
 					_ParseOption(t.Name(), t.Value(), t.nameStart, t.valueStart);
 					//p1.Next(); var t1 = p1.TimeTotal; if(t1 > 5) AOutput.Write(t1, t.Name(), t.Value());
@@ -643,33 +643,28 @@ namespace Au.Compiler
 			return true;
 		}
 
-		//bool _Enum<T>(out T result, string s, ref FieldInfo[] fields) where T : unmanaged, Enum //slow, as well as with GetFields
-		//{
-		//	result = default;
-		//	var f = typeof(T).GetField(s);
-		//	if(f != null) { result = (T)f.GetRawConstantValue(); return true; }
-		//	_ErrorV("must be one of: " + string.Join(", ", Enum.GetNames(typeof(T))));
-		//	return false;
-		//}
 		unsafe bool _Enum<T>(out T result, string s) where T : unmanaged, Enum {
 			Debug.Assert(sizeof(T) == 4);
 			bool R = _Enum2(typeof(T), out int v, s);
 			result = Unsafe.As<int, T>(ref v);
 			return R;
 		}
-		bool _Enum2(Type ty, out int result, string s) {
+		bool _Enum2(Type t, out int result, string s) {
 			result = default;
-			if (!s_enumCache.TryGetValue(ty, out var fields)) {
-				var names = Enum.GetNames(ty);
-				var values = Enum.GetValues(ty);
-				fields = new (string, int)[names.Length];
-				for (int i = 0; i < names.Length; i++) fields[i] = (names[i], (int)values.GetValue(i));
-				s_enumCache[ty] = fields;
+			if (!s_enumCache.TryGetValue(t, out var r)) {
+				var a = t.GetFields(BindingFlags.Public | BindingFlags.Static);
+				int n = a.Length; foreach (var v in a) if (v.Name.Starts('_')) n--;
+				r = new (string, int)[n];
+				for (int i = 0, j = 0; i < a.Length; i++) {
+					var sn = a[i].Name;
+					if (!sn.Starts('_')) r[j++] = (sn, (int)a[i].GetRawConstantValue());
+				}
+				s_enumCache[t] = r;
 			}
-			foreach (var v in fields) if (v.name == s) { result = v.value; return true; }
-			return _ErrorV("must be one of: " + string.Join(", ", Enum.GetNames(ty)));
+			foreach (var v in r) if (v.name == s) { result = v.value; return true; }
+			return _ErrorV("must be one of:\n" + string.Join(", ", r.Select(o => o.name)));
 		}
-		static Dictionary<Type, (string name, int value)[]> s_enumCache = new();
+		static readonly Dictionary<Type, (string name, int value)[]> s_enumCache = new();
 
 		FileNode _GetFile(string s, bool? folder = false) {
 			var f = _fn.FindRelative(s, folder);
@@ -742,9 +737,9 @@ namespace Au.Compiler
 			}
 			if (needOP) OutputPath ??= GetDefaultOutputPath(f, Role, withEnvVar: false);
 
-			if ((IfRunning & ~EIfRunning._restartFlag) == EIfRunning.run && RunSingle) return _ErrorM("ifRunning run with runSingle true");
+			if ((IfRunning | EIfRunning._norestartFlag) == EIfRunning.run && RunSingle) return _ErrorM("ifRunning run with runSingle true");
 			if (Specified.Has(EMSpecified.ifRunning2) && !RunSingle) return _ErrorM("ifRunning2 without runSingle true");
-			if (IconFile?.IsFolder ?? false) if( Role != ERole.exeProgram) return _ErrorM("icon folder can be used only with role exeProgram"); //difficult to add multiple icons if miniProgram
+			if (IconFile?.IsFolder ?? false) if (Role != ERole.exeProgram) return _ErrorM("icon folder can be used only with role exeProgram"); //difficult to add multiple icons if miniProgram
 
 			//if(ResFile != null) {
 			//	if(IconFile != null) return _ErrorM("cannot add both res file and icon");
@@ -773,7 +768,8 @@ namespace Au.Compiler
 			   allowUnsafe: true,
 			   platform: Bit32 ? Platform.AnyCpu32BitPreferred : Platform.AnyCpu,
 			   warningLevel: WarningLevel,
-			   specificDiagnosticOptions: NoWarnings?.Select(wa => new KeyValuePair<string, ReportDiagnostic>(AChar.IsAsciiDigit(wa[0]) ? ("CS" + wa.PadLeft(4, '0')) : wa, ReportDiagnostic.Suppress)),
+			   specificDiagnosticOptions: NoWarnings?.Select(wa => new KeyValuePair<string, ReportDiagnostic>(wa[0].IsAsciiDigit() ? ("CS" + wa.PadLeft(4, '0')) : wa, ReportDiagnostic.Suppress)),
+			   //usings: new string[] { "Microsoft.Win32" /*test*/ }, //read below
 			   cryptoKeyFile: SignFile?.FilePath, //also need strongNameProvider
 			   strongNameProvider: SignFile == null ? null : new DesktopStrongNameProvider()
 			   //,metadataImportOptions: TestInternal != null ? MetadataImportOptions.Internal : MetadataImportOptions.Public
@@ -788,6 +784,14 @@ namespace Au.Compiler
 			//But if using this code, code info has problems. Completion list contains internal/protected from all assemblies, and difficult to filter out. No signature info.
 			//We instead modify Roslyn code in 2 places. Look in project CompilerDlls here. Also add class Au.Compiler.InternalsVisible and use it in CodeInfo._CreateSolution and Compiler._Compile.
 
+			//When in editor, we need to add default usings for intellisense.
+			//	CSharpCompilationOptions ctor has parameter 'usings', but it is ignored if not script.
+			//	Tried to modify Roslyn source, and even successfully with classic C#.
+			//		In BinderFactoryVisitor.VisitCompilationUnit add: if (!inUsing) result = new InContainerBinder(container: null, next: result, imports: compilation.GlobalImports);
+			//		But does not work with top-level statements (TLS). Tried to add similar code after the "simple program" code; works with classic C#, but not with TLS.
+
+			//r = r.WithTopLevelBinderFlags(BinderFlags.SemanticModel); //should be used in editor? Tested a bit, it seems works the same.
+
 			return r;
 		}
 
@@ -799,22 +803,37 @@ namespace Au.Compiler
 		}
 
 		/// <summary>
-		/// Returns the length of metacomments "/*/ ... /*/" at the start of code. Returns 0 if no metacomments.
+		/// Returns (start, end) of metacomments "/*/ ... /*/" at the start of code (before can be comments, empty lines, spaces, tabs). Returns default if no metacomments.
 		/// </summary>
 		/// <param name="code">Code. Can be null.</param>
-		public static int FindMetaComments(string code) {
-			if (code.Lenn() < 6 || !code.Starts("/*/")) return 0;
-			int iTo = code.Find("/*/", 3); if (iTo < 0) return 0;
-			return iTo + 3;
+		public static (int start, int end) FindMetaComments(string code) {
+			if (code != null) {
+				for (int i = 0; i <= code.Length - 6; i++) {
+					char c = code[i];
+					if (c == '/') {
+						c = code[++i];
+						if (c == '*') {
+							int j = code.Find("*/", ++i);
+							if (j < 0) break;
+							if (code[i] == '/' && code[j - 1] == '/') return (i - 2, j + 2);
+							i = j + 1;
+						} else if (c == '/') {
+							i = code.IndexOf('\n', i);
+							if (i < 0) break;
+						} else break;
+					} else if (!(c == '\r' || c == '\n' || c == ' ' || c == '\t')) break;
+				}
+			}
+			return default;
 		}
 
 		/// <summary>
 		/// Parses metacomments and returns offsets of all option names and values in code.
 		/// </summary>
 		/// <param name="code">Code that starts with metacomments "/*/ ... /*/".</param>
-		/// <param name="endOfMetacomments">The very end of metacomments, returned by <see cref="FindMetaComments"/>.</param>
-		public static IEnumerable<Token> EnumOptions(string code, int endOfMetacomments) {
-			for (int i = 3, iEnd = endOfMetacomments - 3; i < iEnd; i++) {
+		/// <param name="meta">The range of metacomments, returned by <see cref="FindMetaComments"/>.</param>
+		public static IEnumerable<Token> EnumOptions(string code, (int start, int end) meta) {
+			for (int i = meta.start + 3, iEnd = meta.end - 3; i < iEnd; i++) {
 				Token t = default;
 				for (; i < iEnd; i++) if (code[i] > ' ') break; //find next option
 				if (i == iEnd) break;
@@ -866,7 +885,7 @@ namespace Au.Compiler
 
 	enum EUac { inherit, user, admin }
 
-	enum EIfRunning { warn, warn_restart, cancel, cancel_restart, wait, wait_restart, run, run_restart, restart, _restartFlag = 1 }
+	enum EIfRunning { warn_restart, warn, cancel_restart, cancel, wait_restart, wait, run_restart, run, restart, _norestartFlag = 1 }
 	enum EIfRunning2 { same, warn, cancel, wait }
 
 	/// <summary>

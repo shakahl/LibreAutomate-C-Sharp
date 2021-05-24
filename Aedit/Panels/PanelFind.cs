@@ -425,22 +425,20 @@ class PanelFind : UserControl
 		var repl = f.replaceText;
 		if (f.rx != null) {
 			if (!f.rx.FindAll(text, out var ma)) return;
-			doc.Call(Sci.SCI_BEGINUNDOACTION);
+			using var undo = new KScintilla.UndoAction(doc);
 			for (int i = ma.Length - 1; i >= 0; i--) {
 				var m = ma[i];
 				doc.zReplaceRange(true, m.Start, m.End, m.ExpandReplacement(repl));
 			}
-			doc.Call(Sci.SCI_ENDUNDOACTION);
 		} else {
 			var a = _aEditor;
 			_FindAllInString(text, f, a);
 			if (a.Count == 0) return;
-			doc.Call(Sci.SCI_BEGINUNDOACTION);
+			using var undo = new KScintilla.UndoAction(doc);
 			for (int i = a.Count - 1; i >= 0; i--) {
 				var v = a[i];
 				doc.zReplaceRange(true, v.Start.Value, v.End.Value, repl);
 			}
-			doc.Call(Sci.SCI_ENDUNDOACTION);
 		}
 		//Easier/faster would be to create new text and call zSetText. But then all non-text data is lost: markers, folds, caret position...
 	}

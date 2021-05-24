@@ -19,7 +19,7 @@ namespace Au.Util
 
 		public static PostToThisThread_ OfThisThread => t_default ??= new();
 		[ThreadStatic] static PostToThisThread_ t_default;
-		[ThreadStatic] static Native.WNDPROC t_wp;
+		[ThreadStatic] static WNDPROC t_wp;
 
 		public void Post(Action a) {
 			bool post;

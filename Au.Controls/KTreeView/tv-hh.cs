@@ -26,7 +26,7 @@ namespace Au.Controls
 #if true
 			AWnd.More.CreateWindow(_wndProc = _WndProc, false, c_winClassName, Name, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
 #else //the below code works, but not on Win7. The above code works if WS.DISABLED or WM_NCHITTEST returns HTTRANSPARENT. WPF can remove WS.DISABLED.
-			_w=AWnd.More.CreateWindow(_wndProc = _WndProc, false, c_winClassName, null, WS.CHILD|WS.CLIPCHILDREN, WS2.TRANSPARENT|WS2.LAYERED, 0, 0, 10, 10, wParent);
+			_w=AWnd.More.CreateWindow(_wndProc = _WndProc, false, c_winClassName, null, WS.CHILD|WS.CLIPCHILDREN, WSE.TRANSPARENT|WSE.LAYERED, 0, 0, 10, 10, wParent);
 	//		_w.SetTransparency(true, 255);
 			Api.SetLayeredWindowAttributes(_w, 0, 0, 0);
 #endif
@@ -38,7 +38,7 @@ namespace Au.Controls
 			Api.DestroyWindow(_w);
 		}
 
-		Native.WNDPROC _wndProc;
+		WNDPROC _wndProc;
 		LPARAM _WndProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
 			//var pmo = new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
 			//if (AWnd.More.PrintMsg(out string s, _w, msg, wParam, lParam, pmo)) AOutput.Write("<><c green>" + s + "<>");

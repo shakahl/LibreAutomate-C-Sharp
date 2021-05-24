@@ -473,7 +473,7 @@ namespace Au
 		enum _FuncId { name = 1, value, description, default_action, role, state, rectangle, parent_object, child_object, container_window, child_count, child_objects, help_text, keyboard_shortcut, html, selection, uiaid }
 
 		/// <summary>
-		/// Calls Native.SetError and returns hr.
+		/// Calls SetLastError and returns hr.
 		/// In Debug config also outputs error in red.
 		/// If hr looks like not an error but just the property or action is unavailable, changes it to S_FALSE and does not show error. These are: S_FALSE, DISP_E_MEMBERNOTFOUND, E_NOTIMPL.
 		/// _FuncId also can be char, like (_FuncId)'n' for name.

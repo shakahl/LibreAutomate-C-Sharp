@@ -1107,7 +1107,7 @@ namespace Au
 
 	#region static
 
-	public static partial class AExtString
+	public static partial class ExtString
 	{
 		/// <summary>
 		/// Returns true if this string matches PCRE regular expression <i>rx</i>.

@@ -233,27 +233,27 @@ namespace Au
 		/// <summary>
 		/// Adds various useful features to this task (running script): tray icon, exit on Ctrl+Alt+Delete, etc.
 		/// </summary>
-		/// <param name="trayIcon">Add standard tray icon. Default true. Or you can set this = false and call <see cref="TrayIcon"/>.</param>
+		/// <param name="trayIcon">Add standard tray icon. See <see cref="TrayIcon"/>.</param>
 		/// <param name="sleepExit">
 		/// End this process when computer is going to sleep or hibernate.
 		/// If null (default), same as runSingle property of the script.
 		/// </param>
 		/// <param name="lockExit">
-		/// End this process when the active desktop has been switched (PC locked, Ctrl+Alt+Delete, screen saver, UAC consent, etc).
+		/// End this process when the active desktop has been switched (PC locked, Ctrl+Alt+Delete, screen saver, etc, except UAC consent).
 		/// Then to end this process you can use hotkeys Win+L (lock computer) and Ctrl+Alt+Delete.
 		/// Most mouse, keyboard, clipboard and window functions don't work when other desktop is active. Many of them then throw exception, and the script would end anyway.
 		/// If null (default), same as runSingle property of the script.
 		/// </param>
 		/// <param name="debug">Call <see cref="ADefaultTraceListener.Setup"/>(useAOutput: true).</param>
 		/// <param name="exception">What to do on unhandled exception (event <see cref="AppDomain.UnhandledException"/>).</param>
-		/// <param name="f_">[](xref:caller_info). Don't use. Or set = null to disable script editing when the tray icon clicked.</param>
+		/// <param name="f_">[](xref:caller_info). Don't use. Or set = null to disable script editing via the tray icon.</param>
 		/// <exception cref="InvalidOperationException">Already called.</exception>
 		/// <remarks>
-		/// Calling this function is optional. However it should be called if compiling the script with a non-default compiler (eg Visual Studio) if you want the task behave the same (invariant culture, STAThread for top-level statements, unhandled exception action).
+		/// Calling this function is optional. However it should be called if compiling the script with a non-default compiler (eg Visual Studio) if you want the task behave the same (invariant culture, STAThread, unhandled exception action).
 		/// 
 		/// Does nothing if role editorExtension.
 		/// </remarks>
-		public static void Setup(bool trayIcon = true, bool? sleepExit = null, bool? lockExit = null, bool debug = false, UExcept exception = UExcept.Print | UExcept.Exit, [CallerFilePath] string f_ = null) {
+		public static void Setup(bool trayIcon = false, bool? sleepExit = null, bool? lockExit = null, bool debug = false, UExcept exception = UExcept.Print | UExcept.Exit, [CallerFilePath] string f_ = null) {
 			if (Role == ATRole.EditorExtension) return;
 			if (s_setup) throw new InvalidOperationException("ATask.Setup already called");
 			s_setup = true;
@@ -261,7 +261,7 @@ namespace Au
 			s_setupException = exception;
 			if (!s_appModuleInit) AppModuleInit_(); //if role miniProgram, called by MiniProgram_.Init; else if default compiler, the call is compiled into code; else called now.
 
-			//info: default false, because slow and rarely used.
+			//info: default false, because slow and rarely used. //TODO: default true in miniProgram. Remove parameter, or make bool? debug.
 			if (debug) ADefaultTraceListener.Setup(useAOutput: true);
 
 			if ((sleepExit == null || lockExit == null) && IsRunSingle) { //fast
@@ -279,20 +279,13 @@ namespace Au
 							return Api.DefWindowProc(w, m, wp, lp);
 						}); //message-only windows don't receive WM_POWERBROADCAST
 					}
-					if (lockExit == true) {
-						new AHookAcc(AccEVENT.SYSTEM_DESKTOPSWITCH, 0, k => { k.hook.Dispose(); ExitOnSleepOrDesktopSwitch(sleep: false); });
-						//tested: on Win+L works immediately. OS switches desktop 2 times. At first briefly, then makes defaul again, then on key etc switches again to show password field.
-					}
+					if (lockExit == true) HookDesktopSwitch_();
 					while (Api.GetMessage(out var m) > 0) Api.DispatchMessage(m);
 				});
 			}
 		}
 		static bool s_setup;
-		[ThreadStatic] static Native.WNDPROC t_eocWP;
-
-		//SHOULDDO: on desktop switch prevent the task accidentally killing self.
-		//	Case 1: if this nonadmin process runs an admin program with UAC consent. Let AFile.Run set a static bool while it's running (and not waiting after process started).
-		//	Case 2: if this process eg locks PC. Could just document it.
+		[ThreadStatic] static WNDPROC t_eocWP;
 
 		/// <summary>
 		/// If role miniProgram or exeProgram, default compiler adds module initializer that calls this. If using other compiler, called from <b>Setup</b>.
@@ -317,12 +310,11 @@ namespace Au
 			};
 
 			if (Role == ATRole.ExeProgram) {
-				//set STA thread for top-level statements program
-				if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA) { //speed: 180 mcs
-					var ep = Assembly.GetEntryAssembly()?.EntryPoint.Name; //speed: 300 mcs
-					if (ep == "<Main>$") { //defined in public class Microsoft.CodeAnalysis.WellKnownMemberNames
-						AThread.SetComApartment_(ApartmentState.STA); //1.7 ms
-					} //info: GetEntryAssembly returns null in func called by host through coreclr_create_delegate.
+				//set STA thread if Main without [MTAThread]
+				if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA) { //speed: 150 mcs
+					if (null == Assembly.GetEntryAssembly().EntryPoint.GetCustomAttribute<MTAThreadAttribute>()) { //1.5 ms
+						AThread.SetComApartment_(ApartmentState.STA); //1.6 ms
+					}
 				}
 			}
 		}
@@ -332,8 +324,18 @@ namespace Au
 
 		internal static void ExitOnSleepOrDesktopSwitch(bool sleep) {
 			string runSingle = IsRunSingle ? " (depends on runSingle)" : null;
-			AOutput.Write($"Info: task '{Name}' ended on {(sleep ? "PC sleep" : "desktop switch")} at {DateTime.Now.ToShortTimeString()}. See ATask.Setup in script{runSingle}. See also Options -> Templates.");
+			AOutput.Write($"Info: task '{Name}' ended because of {(sleep ? "PC sleep" : "switched desktop")} at {DateTime.Now.ToShortTimeString()}. See ATask.Setup in script{runSingle}. See also Options -> Templates.");
 			Environment.Exit(2);
+		}
+
+		internal static AHookAcc HookDesktopSwitch_() {
+			return new AHookAcc(AccEVENT.SYSTEM_DESKTOPSWITCH, 0, k => {
+				if (AMiscInfo.IsInputDesktop()) return;
+				if (0 != AProcess.GetProcessId("consent.exe")) return; //UAC
+				k.hook.Dispose();
+				ExitOnSleepOrDesktopSwitch(sleep: false);
+			});
+			//tested: on Win+L works immediately. OS switches desktop 2 times. At first briefly, then makes defaul again, then on key etc switches again to show password field.
 		}
 
 		/// <summary>
@@ -364,7 +366,7 @@ namespace Au
 		/// <param name="delay">Delay, milliseconds.</param>
 		/// <param name="init">Called before showing the tray icon. Can set its properties and event handlers.</param>
 		/// <param name="menu">Called before showing context menu. Can add menu items. Menu item actions must not block messages etc for long time; if need, run in other thread or process (<see cref="ATask.Run"/>).</param>
-		/// <param name="f_">[](xref:caller_info). Don't use. Or set = null to disable script editing when the tray icon clicked.</param>
+		/// <param name="f_">[](xref:caller_info). Don't use. Or set = null to disable script editing via the tray icon.</param>
 		/// <remarks>
 		/// Uses other thread. The <i>init</i> and <i>menu</i> actions run in that thread too. It dispatches messages, therefore they also can set timers (<see cref="ATimer"/>), create hidden windows, etc. Current thread does not have to dispatch messages.
 		/// 
@@ -494,7 +496,7 @@ namespace Au
 	/// <summary>
 	/// Obsolete. Use <see cref="ATask.Setup"/>. See Options -> Templates -> Default.
 	/// </summary>
-	[Obsolete("Delete code « : AScript». See Options -> Templates.", error: !true), NoDoc]
+	[Obsolete("Delete code « : AScript». See Options -> Templates.", error: !true), NoDoc, EditorBrowsable(EditorBrowsableState.Never)]
 	public abstract class AScript { } //FUTURE: remove this class.
 }
 
@@ -545,6 +547,12 @@ namespace Au.Types
 		/// Info: the editor setup program disables Windows error reporting for tasks with role miniProgram (default). See <msdn>WerAddExcludedApplication</msdn>.
 		/// </summary>
 		Exit = 4,
+
+		/// <summary>
+		/// Display exception info in output, show dialog with exception info, and call <see cref="Environment.Exit"/>.
+		/// Same as <c>UExcept.Print | UExcept.Dialog | UExcept.Exit</c>.
+		/// </summary>
+		PrintDialogExit = Print | Dialog | Exit,
 
 		//rejected. Setup disables for miniProgram tasks.
 		///// <summary>

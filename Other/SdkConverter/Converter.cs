@@ -25,14 +25,16 @@ namespace SdkConverter
 			var x = new Converter();
 
 #if TEST_SMALL
-			x.Convert(
-				//@"Q:\app\Au\Other\SdkConverter\Data\Header.h",
-				@"Q:\app\Au\Other\SdkPreprocess\Cpp.cpp",
-				@"Q:\app\Au\Other\Api\Api.cs", false);
+			//x.Convert(
+			//	@"Q:\app\Au\Other\SdkConverter\Data\Header.h",
+			//	//@"Q:\app\Au\Other\SdkPreprocess\Cpp.cpp",
+			//	@"Q:\app\Au\Other\Api\Api-small.cs", false);
+
+			x.Convert(@"Q:\app\Au\Other\Api\Api-preprocessed-64.cpp", @"Q:\app\Au\Other\Api\Api-64.cs", false);
 #else
 			x.Convert(@"Q:\app\Au\Other\Api\Api-preprocessed-64.cpp", @"Q:\app\Au\Other\Api\Api-64.cs", false);
-			x = new Converter();
-			x.Convert(@"Q:\app\Au\Other\Api\Api-preprocessed-32.cpp", @"Q:\app\Au\Other\Api\Api-32.cs", true);
+			
+			//new Converter().Convert(@"Q:\app\Au\Other\Api\Api-preprocessed-32.cpp", @"Q:\app\Au\Other\Api\Api-32.cs", true);//TODO
 #endif
 		}
 	}
@@ -138,16 +140,19 @@ namespace SdkConverter
 // In some cases need to use different declarations in 32-bit and 64-bit process. This file contains everything that is not different, + 64-bit versions, + 32-bit versions with name suffix ""__32"".
 
 using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
-
-using Wnd = System.IntPtr; //HWND (window handle)
+#if true
+using Au;
+using Au.Types;
+#else
+using AWnd = System.IntPtr; //HWND (window handle)
 using LPARAM = System.IntPtr; //LPARAM, WPARAM, LRESULT, X_PTR, SIZE_T, ... (integer types of pointer size)
+#endif
 
 //add this to projects that will use these API
 [module: DefaultCharSet(CharSet.Unicode)]
 
-internal static unsafe class API
+static unsafe class API
 {
 ";
 

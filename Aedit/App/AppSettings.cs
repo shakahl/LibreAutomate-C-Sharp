@@ -98,6 +98,24 @@ class AppSettings : ASettings
 	public byte ci_correctStringEnter { get => _ci_correctStringEnter; set => Set(ref _ci_correctStringEnter, value); }
 	byte _ci_correctStringEnter;
 
+	public string ci_usings { get => _ci_usings; set => Set(ref _ci_usings, value); }
+	string _ci_usings = @"Au
+Au.Types
+System
+System.Collections.Generic
+System.Linq
+System.Text
+System.Threading.Tasks
+System.Threading
+System.Diagnostics
+System.Globalization
+System.IO
+System.IO.Compression
+System.Media
+System.Runtime.InteropServices
+Microsoft.Win32
+";
+
 	//public SIZE ci_sizeSignXaml { get => _ci_sizeSignXaml; set => Set(ref _ci_sizeSignXaml, value); }
 	//SIZE _ci_sizeSignXaml;
 

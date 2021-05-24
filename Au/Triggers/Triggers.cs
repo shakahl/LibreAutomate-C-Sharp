@@ -127,8 +127,8 @@ namespace Au.Triggers
 	/// 
 	/// //how to set AOpt options for trigger actions
 	/// 
-	/// //AOpt.Key.TextHow = KTextHow.Paste; //no, it won't work. It sets AOpt for this thread, not for trigger actions.
-	/// Triggers.Options.BeforeAction = o => { AOpt.Key.TextHow = KTextHow.Paste; }; //the correct way. Sets AOpt before executing an action.
+	/// //AOpt.Key.TextHow = OKeyText.Paste; //no, it won't work. It sets AOpt for this thread, not for trigger actions.
+	/// Triggers.Options.BeforeAction = o => { AOpt.Key.TextHow = OKeyText.Paste; }; //the correct way. Sets AOpt before executing an action.
 	/// ts["#p1"] = "text 1";
 	/// ts["#p2"] = "text 2";
 	/// Triggers.Options.BeforeAction = null;

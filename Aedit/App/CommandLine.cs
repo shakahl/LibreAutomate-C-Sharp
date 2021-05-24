@@ -212,7 +212,7 @@ static class CommandLine
 				var d = Serializer_.Deserialize(b);
 				script = d[0]; args = d[1]; pipeName = d[2];
 			}
-			var f = App.Model?.FindScript(script);
+			var f = App.Model?.FindFile(script);
 			if(f == null) {
 				if(action == 99) AOutput.Write($"Command line: script '{script}' not found."); //else the caller script will throw exception
 				return (int)ATask.RunResult_.notFound;

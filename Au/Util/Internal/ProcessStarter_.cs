@@ -62,7 +62,7 @@ namespace Au.Util
 				int len2 = envVar.Length;
 				var t = new string('\0', len1 + len2);
 				fixed (char* p = t) {
-					Api.memcpy(p, es, --len1 * 2);
+					AMemory.Copy(es, p, --len1 * 2);
 					for(int i = 0; i < envVar.Length; i++) p[len1 + i] = envVar[i];
 				}
 				this.envVar = t;

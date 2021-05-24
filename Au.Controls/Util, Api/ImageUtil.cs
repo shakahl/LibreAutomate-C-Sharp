@@ -202,7 +202,7 @@ namespace Au.Controls
 			}
 
 			//file path
-			if (length >= 8 && (c1 == '%' || (c2 == ':' && AChar.IsAsciiAlpha(c1)) || (c1 == '\\' && c2 == '\\'))) { //is image file path?
+			if (length >= 8 && (c1 == '%' || (c2 == ':' && c1.IsAsciiAlpha()) || (c1 == '\\' && c2 == '\\'))) { //is image file path?
 				byte* ext = s + length - 3;
 				if (ext[-1] == '.') {
 					if (BytePtr_.AsciiStartsi(ext, "bmp")) return ImageType.Bmp;
@@ -212,11 +212,11 @@ namespace Au.Controls
 					if (BytePtr_.AsciiStartsi(ext, "ico")) return ImageType.Ico;
 					if (BytePtr_.AsciiStartsi(ext, "cur")) return ImageType.Cur;
 					if (BytePtr_.AsciiStartsi(ext, "ani")) return ImageType.Cur;
-				} else if (AChar.IsAsciiDigit(ext[2])) { //can be like C:\x.dll,10
+				} else if (((char)ext[2]).IsAsciiDigit()) { //can be like C:\x.dll,10
 					byte* k = ext + 1, k2 = s + 8;
-					for (; k > k2; k--) if (!AChar.IsAsciiDigit(*k)) break;
+					for (; k > k2; k--) if (!((char)*k).IsAsciiDigit()) break;
 					if (*k == '-') k--;
-					if (*k == ',' && k[-4] == '.' && AChar.IsAsciiAlpha(k[-1])) return ImageType.IconLib;
+					if (*k == ',' && k[-4] == '.' && ((char)k[-1]).IsAsciiAlpha()) return ImageType.IconLib;
 				}
 			}
 

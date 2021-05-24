@@ -17,12 +17,14 @@ using Au.Util;
 using Au.Controls;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Tags;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.Shared.Extensions;
+using Microsoft.CodeAnalysis.CSharp.Extensions;
+using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 
 static class CiUtil
 {
@@ -53,11 +55,11 @@ static class CiUtil
 
 		if (token.IsKind(SyntaxKind.IdentifierToken)) {
 			switch (word) {
-				case "var":
-				case "dynamic":
-				case "nameof":
-				case "unmanaged": //tested cases
-					return (null, word, HelpKind.ContextualKeyword, token);
+			case "var":
+			case "dynamic":
+			case "nameof":
+			case "unmanaged": //tested cases
+				return (null, word, HelpKind.ContextualKeyword, token);
 			}
 		} else {
 			var k = token.Kind();
@@ -88,11 +90,11 @@ static class CiUtil
 				return (null, word, HelpKind.PreprocKeyword, token);
 			}
 			switch (k) {
-				case SyntaxKind.StringLiteralToken:
-				case SyntaxKind.InterpolatedStringTextToken:
-				case SyntaxKind.InterpolatedStringEndToken:
-				case SyntaxKind.InterpolatedStringStartToken:
-					return (null, null, HelpKind.String, token);
+			case SyntaxKind.StringLiteralToken:
+			case SyntaxKind.InterpolatedStringTextToken:
+			case SyntaxKind.InterpolatedStringEndToken:
+			case SyntaxKind.InterpolatedStringStartToken:
+				return (null, null, HelpKind.String, token);
 			}
 		}
 		//note: don't pass contextual keywords to GetSemanticInfo. It may get info for something other, eg for 'new' gets the ctor method.
@@ -105,11 +107,11 @@ static class CiUtil
 		foreach (var v in si.GetSymbols(includeType: true)) {
 			bool gen = false;
 			switch (v) {
-				case IErrorTypeSymbol: continue;
-				case INamedTypeSymbol ints when ints.IsGenericType:
-				case IMethodSymbol ims when ims.IsGenericMethod:
-					gen = true;
-					break;
+			case IErrorTypeSymbol: continue;
+			case INamedTypeSymbol ints when ints.IsGenericType:
+			case IMethodSymbol ims when ims.IsGenericMethod:
+				gen = true;
+				break;
 			}
 			//AOutput.Write(v, gen, v.Kind);
 			if (gen == preferGeneric) { symbol = v; break; }
@@ -130,8 +132,7 @@ static class CiUtil
 		if (sym != null) {
 			url = GetSymbolHelpUrl(sym);
 		} else if (keyword != null) {
-			var s = helpKind switch
-			{
+			var s = helpKind switch {
 				HelpKind.PreprocKeyword => "preprocessor directive",
 				HelpKind.AttributeTarget => "attributes, ",
 				_ => "keyword"
@@ -194,9 +195,9 @@ static class CiUtil
 	/// If <i>pos16</i> less than 0, uses current caret position.
 	/// </summary>
 	public static RECT GetCaretRectFromPos(SciCode doc, int pos16 = -1, bool inScreen = false) {
-		if (pos16 < 0) pos16 = doc.zCurrentPos8; else pos16 = doc.zPos8(pos16);
-		int x = doc.Call(Sci.SCI_POINTXFROMPOSITION, 0, pos16), y = doc.Call(Sci.SCI_POINTYFROMPOSITION, 0, pos16);
-		var r = new RECT(x, y, 1, doc.Call(Sci.SCI_TEXTHEIGHT, doc.zLineFromPos(false, pos16)) + 2);
+		int pos8 = pos16 < 0 ? doc.zCurrentPos8 : doc.zPos8(pos16);
+		int x = doc.Call(Sci.SCI_POINTXFROMPOSITION, 0, pos8), y = doc.Call(Sci.SCI_POINTYFROMPOSITION, 0, pos8);
+		var r = new RECT(x, y, 1, doc.Call(Sci.SCI_TEXTHEIGHT, doc.zLineFromPos(false, pos8)) + 2);
 		if (inScreen) doc.Hwnd.MapClientToScreen(ref r);
 		return r;
 	}
@@ -212,37 +213,37 @@ static class CiUtil
 		PSFormat format = PSFormat.None;
 		if (parent is ArgumentSyntax asy && parent.Parent is ArgumentListSyntax alis) {
 			switch (alis.Parent) {
-				case ObjectCreationExpressionSyntax oce:
-					format = _GetFormat(oce);
-					if (format == PSFormat.None) {
-						switch (oce.Type.ToString()) { //fast if single word
-							case "Regex":
-							case "System.Text.RegularExpressions.Regex":
-							case "RegexCompilationInfo":
-							case "System.Text.RegularExpressions.RegexCompilationInfo":
-								if ((object)asy == alis.Arguments[0]) format = PSFormat.Regex;
-								break;
-						}
+			case ObjectCreationExpressionSyntax oce:
+				format = _GetFormat(oce);
+				if (format == PSFormat.None) {
+					switch (oce.Type.ToString()) { //fast if single word
+					case "Regex":
+					case "System.Text.RegularExpressions.Regex":
+					case "RegexCompilationInfo":
+					case "System.Text.RegularExpressions.RegexCompilationInfo":
+						if ((object)asy == alis.Arguments[0]) format = PSFormat.Regex;
+						break;
 					}
-					break;
-				case InvocationExpressionSyntax ies:
-					format = _GetFormat(ies);
-					if (format == PSFormat.None) {
-						switch (ies.Expression.ToString()) {
-							case "Regex.IsMatch":
-							case "Regex.Match":
-							case "Regex.Matches":
-							case "Regex.Replace":
-							case "Regex.Split":
-								var aa = alis.Arguments;
-								if (aa.Count >= 2 && (object)asy == aa[1]) format = PSFormat.Regex;
-								break;
-						}
+				}
+				break;
+			case InvocationExpressionSyntax ies:
+				format = _GetFormat(ies);
+				if (format == PSFormat.None) {
+					switch (ies.Expression.ToString()) {
+					case "Regex.IsMatch":
+					case "Regex.Match":
+					case "Regex.Matches":
+					case "Regex.Replace":
+					case "Regex.Split":
+						var aa = alis.Arguments;
+						if (aa.Count >= 2 && (object)asy == aa[1]) format = PSFormat.Regex;
+						break;
 					}
-					break;
-					//default:
-					//	CiUtil.PrintNode(alis.Parent);
-					//	break;
+				}
+				break;
+				//default:
+				//	CiUtil.PrintNode(alis.Parent);
+				//	break;
 			}
 
 			PSFormat _GetFormat(ExpressionSyntax es) {
@@ -280,25 +281,25 @@ static class CiUtil
 		var nk = node.Kind();
 		//AOutput.Write(nk, position, node.Span, node.GetType(), node);
 		switch (nk) {
-			case SyntaxKind.StringLiteralExpression:
-				//return true only if position is in the string value.
-				//false if <= the first " or >= the last ".
-				//true if position is at the end of span and the last " is missing (error CS1010).
-				var span = node.Span;
-				int i = position - span.Start;
-				if (i <= 0 || (i == 1 && node.ToString().Starts('@'))) return false;
-				i = position - span.End;
-				if (i > 0 || (i == 0 && !_NoClosingQuote(node))) return false;
-				return true;
-			case SyntaxKind.InterpolatedStringExpression:
-				int j = node.Span.End - position;
-				if (j != 1 && !(j == 0 && _NoClosingQuote(node))) return false;
-				return true;
-			case SyntaxKind.InterpolatedStringText:
-			case SyntaxKind.Interpolation when position == node.SpanStart:
-				node = node.Parent;
-				nk = node.Kind();
-				return nk == SyntaxKind.InterpolatedStringExpression;
+		case SyntaxKind.StringLiteralExpression:
+			//return true only if position is in the string value.
+			//false if <= the first " or >= the last ".
+			//true if position is at the end of span and the last " is missing (error CS1010).
+			var span = node.Span;
+			int i = position - span.Start;
+			if (i <= 0 || (i == 1 && node.ToString().Starts('@'))) return false;
+			i = position - span.End;
+			if (i > 0 || (i == 0 && !_NoClosingQuote(node))) return false;
+			return true;
+		case SyntaxKind.InterpolatedStringExpression:
+			int j = node.Span.End - position;
+			if (j != 1 && !(j == 0 && _NoClosingQuote(node))) return false;
+			return true;
+		case SyntaxKind.InterpolatedStringText:
+		case SyntaxKind.Interpolation when position == node.SpanStart:
+			node = node.Parent;
+			nk = node.Kind();
+			return nk == SyntaxKind.InterpolatedStringExpression;
 		}
 		return false;
 
@@ -350,7 +351,7 @@ static class CiUtil
 		foreach (var p in m.ParameterList.Parameters) {
 			b.Append("\r\n/// <param name=\"").Append(p.Identifier.Text).Append("\"></param>");
 		}
-		if(m is MethodDeclarationSyntax mm) {
+		if (m is MethodDeclarationSyntax mm) {
 			var rt = mm.ReturnType;
 			if (!code.Eq(rt.Span.Start..rt.Span.End, "void")) b.Append("\r\n/// <returns></returns>");
 		}
@@ -388,8 +389,7 @@ static class CiUtil
 		kind = CiItemKind.None;
 		access = default;
 		if (tags.IsDefaultOrEmpty) return;
-		kind = tags[0] switch
-		{
+		kind = tags[0] switch {
 			WellKnownTags.Class => CiItemKind.Class,
 			WellKnownTags.Structure => CiItemKind.Structure,
 			WellKnownTags.Enum => CiItemKind.Enum,
@@ -409,12 +409,11 @@ static class CiUtil
 			WellKnownTags.Namespace => CiItemKind.Namespace,
 			WellKnownTags.Label => CiItemKind.Label,
 			WellKnownTags.TypeParameter => CiItemKind.TypeParameter,
-			WellKnownTags.Snippet => CiItemKind.Snippet,
+			//WellKnownTags.Snippet => CiItemKind.Snippet,
 			_ => CiItemKind.None
 		};
 		if (tags.Length > 1) {
-			access = tags[1] switch
-			{
+			access = tags[1] switch {
 				WellKnownTags.Private => CiItemAccess.Private,
 				WellKnownTags.Protected => CiItemAccess.Protected,
 				WellKnownTags.Internal => CiItemAccess.Internal,
@@ -424,11 +423,126 @@ static class CiUtil
 	}
 
 	public static string[] ItemKindNames { get; } = new string[] { "Class", "Structure", "Enum", "Delegate", "Interface", "Method", "ExtensionMethod", "Property", "Event", "Field", "LocalVariable", "Constant", "EnumMember", "Namespace", "Keyword", "Label", "Snippet", "TypeParameter" }; //must match enum CiItemKind
+
+#if DEBUG
+	//unfinished. Just prints what we can get from CSharpSyntaxContext.
+	public static /*CiContextType*/void GetContextType(/*in CodeInfo.Context cd,*/ CSharpSyntaxContext c) {
+		//AOutput.Write("--------");
+		AOutput.Clear();
+		//AOutput.Write(cd.pos16);
+		_Print("IsInNonUserCode", c.IsInNonUserCode);
+		_Print("IsGlobalStatementContext", c.IsGlobalStatementContext);
+		_Print("IsAnyExpressionContext", c.IsAnyExpressionContext);
+		//_Print("IsAtStartOfPattern", c.IsAtStartOfPattern);
+		//_Print("IsAtEndOfPattern", c.IsAtEndOfPattern);
+		_Print("IsAttributeNameContext", c.IsAttributeNameContext);
+		//_Print("IsCatchFilterContext", c.IsCatchFilterContext);
+		_Print("IsConstantExpressionContext", c.IsConstantExpressionContext);
+		_Print("IsCrefContext", c.IsCrefContext);
+		_Print("IsDeclarationExpressionContext", c.IsDeclarationExpressionContext);
+		//_Print("IsDefiniteCastTypeContext", c.IsDefiniteCastTypeContext);
+		//_Print("IsEnumBaseListContext", c.IsEnumBaseListContext);
+		//_Print("IsFixedVariableDeclarationContext", c.IsFixedVariableDeclarationContext);
+		//_Print("IsFunctionPointerTypeArgumentContext", c.IsFunctionPointerTypeArgumentContext);
+		//_Print("IsGenericTypeArgumentContext", c.IsGenericTypeArgumentContext);
+		//_Print("IsImplicitOrExplicitOperatorTypeContext", c.IsImplicitOrExplicitOperatorTypeContext);
+		_Print("IsInImportsDirective", c.IsInImportsDirective);
+		//_Print("IsInQuery", c.IsInQuery);
+		_Print("IsInstanceContext", c.IsInstanceContext);
+		//_Print("IsIsOrAsOrSwitchOrWithExpressionContext", c.IsIsOrAsOrSwitchOrWithExpressionContext);
+		//_Print("IsIsOrAsTypeContext", c.IsIsOrAsTypeContext);
+		_Print("IsLabelContext", c.IsLabelContext);
+		_Print("IsLocalVariableDeclarationContext", c.IsLocalVariableDeclarationContext);
+		//_Print("IsMemberAttributeContext", c.IsMemberAttributeContext(new HashSet<SyntaxKind>(), default));
+		_Print("IsMemberDeclarationContext", c.IsMemberDeclarationContext());
+		_Print("IsNameOfContext", c.IsNameOfContext);
+		_Print("IsNamespaceContext", c.IsNamespaceContext);
+		_Print("IsNamespaceDeclarationNameContext", c.IsNamespaceDeclarationNameContext);
+		_Print("IsNonAttributeExpressionContext", c.IsNonAttributeExpressionContext);
+		_Print("IsObjectCreationTypeContext", c.IsObjectCreationTypeContext);
+		_Print("IsOnArgumentListBracketOrComma", c.IsOnArgumentListBracketOrComma);
+		_Print("IsParameterTypeContext", c.IsParameterTypeContext);
+		_Print("IsPossibleLambdaOrAnonymousMethodParameterTypeContext", c.IsPossibleLambdaOrAnonymousMethodParameterTypeContext);
+		_Print("IsPossibleTupleContext", c.IsPossibleTupleContext);
+		_Print("IsPreProcessorDirectiveContext", c.IsPreProcessorDirectiveContext);
+		_Print("IsPreProcessorExpressionContext", c.IsPreProcessorExpressionContext);
+		_Print("IsPreProcessorKeywordContext", c.IsPreProcessorKeywordContext);
+		_Print("IsPrimaryFunctionExpressionContext", c.IsPrimaryFunctionExpressionContext);
+		_Print("IsRightOfNameSeparator", c.IsRightOfNameSeparator);
+		_Print("IsRightSideOfNumericType", c.IsRightSideOfNumericType);
+		_Print("IsStatementAttributeContext", c.IsStatementAttributeContext());
+		_Print("IsStatementContext", c.IsStatementContext);
+		_Print("IsTypeArgumentOfConstraintContext", c.IsTypeArgumentOfConstraintContext);
+		_Print("IsTypeAttributeContext", c.IsTypeAttributeContext(default));
+		_Print("IsTypeContext", c.IsTypeContext);
+		_Print("IsTypeDeclarationContext", c.IsTypeDeclarationContext());
+		_Print("IsTypeOfExpressionContext", c.IsTypeOfExpressionContext);
+		_Print("IsWithinAsyncMethod", c.IsWithinAsyncMethod);
+		//_Print("", c.);
+		//_Print("", c.);
+		//_Print("", c.);
+		//_Print("", c.);
+
+		static void _Print(string s, bool value) {
+			if (value) AOutput.Write($"<><c red>{s}<>");
+			else AOutput.Write(s);
+		}
+
+		//return CiContextType.Namespace;
+	}
+#endif
+
+	//unfinished. Also does not support namespaces.
+	//public static CiContextType GetContextType(CompilationUnitSyntax t, int pos) {
+	//	var members = t.Members;
+	//	var ms = members.FullSpan;
+	//	//foreach(var v in members) AOutput.Write(v.GetType().Name, v); return 0;
+	//	//AOutput.Write(pos, ms);
+	//	//CiUtil.HiliteRange(ms);
+	//	if (ms == default) { //assume empty top-level statements
+	//		var v = t.AttributeLists.FullSpan;
+	//		if (v == default) {
+	//			v = t.Usings.FullSpan;
+	//			if (v == default) v = t.Externs.FullSpan;
+	//		}
+	//		if (pos >= v.End) return CiContextType.Method;
+	//	} else if (pos < ms.Start) {
+	//	} else if (pos >= members.Span.End) {
+	//		if (members.Last() is GlobalStatementSyntax) return CiContextType.Method;
+	//	} else {
+	//		int i = members.IndexOf(o => o is not GlobalStatementSyntax);
+	//		if (i < 0 || pos <= members[i].SpanStart) return CiContextType.Method;
+
+	//		//now the difficult part
+	//		ms = members[i].Span;
+	//		AOutput.Write(pos, ms);
+	//		CiUtil.HiliteRange(ms);
+	//		//unfinished. Here should use CSharpSyntaxContext.
+	//	}
+	//	return CiContextType.Namespace;
+	//}
 }
 
-enum CiItemKind : sbyte { Class, Structure, Enum, Delegate, Interface, Method, ExtensionMethod, Property, Event, Field, LocalVariable, Constant, EnumMember, Namespace, Keyword, Label, Snippet, TypeParameter, None }
+//enum CiContextType
+//{
+//	/// <summary>
+//	/// Outside class/method/topLevelStatements. Eg before using directives or at end of file.
+//	/// Completion list must not include types.
+//	/// </summary>
+//	Namespace,
 
-enum CiItemAccess : sbyte { Public, Private, Protected, Internal }
+//	/// <summary>
+//	/// Inside class but outside method.
+//	/// Completion list can include types but not functions and values.
+//	/// </summary>
+//	Class,
+
+//	/// <summary>
+//	/// Inside method/topLevelStatements.
+//	/// Completion list can include all symbols.
+//	/// </summary>
+//	Method
+//}
 
 static class CiExt
 {

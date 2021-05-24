@@ -16,6 +16,7 @@ using System.Xml;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Au.Util;
 
 namespace Au.Controls
 {
@@ -61,7 +62,7 @@ namespace Au.Controls
 			else if (useDefaultXML = !AFile.ExistsAsFile(xmlFile)) goto gRetry;
 
 			try {
-				var x = AExtXml.LoadElem(xmlFile);
+				var x = AXml.LoadElem(xmlFile);
 				if (!useDefaultXML) _AutoUpdateXml(x, xmlFileDefault);
 				new _Node(this, x); //creates all and sets _rootStack
 			}
@@ -106,7 +107,7 @@ namespace Au.Controls
 		}
 
 		void _AutoUpdateXml(XElement rootStack, string xmlFileDefault) {
-			var defRootStack = AExtXml.LoadElem(xmlFileDefault);
+			var defRootStack = AXml.LoadElem(xmlFileDefault);
 			var eOld = rootStack.Descendants("panel").Concat(rootStack.Descendants("toolbar"))/*.Concat(rootStack.Descendants("document"))*/; //same speed as with .Where(cached delegate)
 			var eNew = defRootStack.Descendants("panel").Concat(defRootStack.Descendants("toolbar"))/*.Concat(defRootStack.Descendants("document"))*/;
 			var cmp = new _XmlNameAttrComparer();

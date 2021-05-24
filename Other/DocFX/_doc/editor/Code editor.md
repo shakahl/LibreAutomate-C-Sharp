@@ -19,7 +19,7 @@ You can type this text instead:
 amo.c 10, 20
 if ak.isct
 
-out "text"
+out "text
 ```
 
 While typing, editor completes words, inserts code snippets, adds `()`, `;`, `{}` and indentation. The result is the first code.
@@ -29,7 +29,7 @@ When you start typing a word, editor shows a list of symbols (classes, functions
 
 The list shows only items that contain the partially typed text. The text in list items is highlighted. Auto-selects an item that is considered the first best match. On Ctrl+Space shows all. You can use the vertical toolbar to filter and group list items, for example to show only methods.
 
-While the list is visible, when you enter a non-word character (space, comma, etc) or press Enter or Tab or double-click an item, the partially or fully typed word is replaced with the text of the selected list item. Also may add `()` or `{}`, for example if it is a method or a keyword like `if` or `finally`. The added text may be different when you press Enter; for example may add `{}` instead of `()`.
+While the list is visible, when you enter a non-word character (space, comma, etc) or press Enter or Tab or double-click an item, the partially or fully typed word is replaced with the text of the selected list item. Also may add `()` or `{}`, for example if it is a method or a keyword like `if` or `finally`. The added text may be different when you press Enter; for example may add `{}` instead of `()`. By default adds `()` only if completed with space; see Options -> Code.
 
 To select list items you also can click or press arrow or page keys. It does not hide the list. The tooltip-like window next to the list shows more info about the selected item, including links to online documentation and source code if available. Shows all overloads (functions with same name but different parameters), and you can click them to view their info.
 
@@ -57,7 +57,7 @@ While the Info panel is visible, whenever the mouse dwells on a symbol etc in th
 #### XML documentation comments
 Editor gets data for quick info, parameter info and other info about symbols from their assemblies and XML documentation comments. You can write XML documentation comments for your functions and types; look for how to on the internet. Documentation of the automation library and .NET is installed with the program. Documentation of other assemblies comes from their assembly.dll + assembly.xml files.
 
-Editor also helps to write XML documentation comments. Adds `///` on Enter, shows list of tags, autocompletes tags, color-highlights tags, text and see references.
+Editor also helps to write XML documentation comments. Adds empty summary and parameters when you type `///` above a class, method etc. Adds `///` on Enter, shows list of tags, autocompletes tags, color-highlights tags, text and see references.
 
 #### Go to symbol documentation
 To show symbol documentation if available, press F1 when the text cursor is in it. Or click the "more info" link in the autocompletion item info or parameter info window.

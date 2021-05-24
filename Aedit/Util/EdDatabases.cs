@@ -13,6 +13,7 @@ using System.Linq;
 
 using Au;
 using Au.Types;
+using Au.Util;
 
 /// <summary>
 /// Creates and opens databases ref.db, doc.db, winapi.db.
@@ -205,7 +206,7 @@ static class EdDatabases
 		void _AddFile(string asmName, string xmlFile) {
 			//AOutput.Write(asmName);
 			haveRefs.Add(asmName);
-			var xr = AExtXml.LoadElem(xmlFile);
+			var xr = AXml.LoadElem(xmlFile);
 			foreach (var e in xr.Descendants("member")) {
 				var name = e.Attr("name");
 
@@ -247,20 +248,35 @@ static class EdDatabases
 
 		using var d = new ASqlite(dbFile);
 		using var trans = d.Transaction();
-		d.Execute("CREATE TABLE api (name TEXT, def TEXT)"); //note: no PRIMARY KEY. Don't need index.
-		using var statInsert = d.Statement("INSERT INTO api VALUES (?, ?)");
+		d.Execute("CREATE TABLE api (name TEXT, code TEXT, kind INTEGER)"); //note: no PRIMARY KEY. Don't need index.
+		using var statInsert = d.Statement("INSERT INTO api VALUES (?, ?, ?)");
 
-		string rxType = @"(?ms)^(?:\[[^\r\n]+\r\n)*internal (?:struct|enum|interface|class) (\w+)[^\r\n\{]+\{(?:\}$|.+?^\})";
-		string rxFunc = @"(?m)^(?:\[[^\r\n]+\r\n)*internal (?:static extern|delegate) \w+\** (\w+)\(.+;$";
-		string rxVarConst = @"(?m)^internal (?:const|readonly|static) \w+ (\w+) =.+;$";
+		string rxType = @"(?ms)^(?:\[[^\r\n]+\r\n)*internal (struct|enum|interface|class) (\w+)[^\r\n\{]+\{(?:\}$|.+?^\})";
+		string rxFunc = @"(?m)^(?:\[[^\r\n]+\r\n)*internal (static extern|delegate) \w+\** (\w+)\(.+;$";
+		string rxVarConst = @"(?m)^internal (const|readonly|static) \w+ (\w+) =.+;$";
 
 		foreach (var m in s.RegexFindAll(rxType)) _Add(m);
 		foreach (var m in s.RegexFindAll(rxFunc)) _Add(m);
 		foreach (var m in s.RegexFindAll(rxVarConst)) _Add(m);
 
 		void _Add(RXMatch m) {
-			statInsert.Bind(1, m[1].Value);
+			statInsert.Bind(1, m[2].Value);
 			statInsert.Bind(2, m.Value);
+
+			CiItemKind kind = m[1].Value switch {
+				"struct" => CiItemKind.Structure,
+				"enum" => CiItemKind.Enum,
+				"interface" => CiItemKind.Interface,
+				"class" => CiItemKind.Class,
+				"static extern" => CiItemKind.Method,
+				"delegate" => CiItemKind.Delegate,
+				"const" => CiItemKind.Constant,
+				"static" or "readonly" => CiItemKind.Field,
+				_ => CiItemKind.None
+			};
+			ADebug.PrintIf(kind == CiItemKind.None, m[1].Value);
+			statInsert.Bind(3, (int)kind);
+
 			statInsert.Step();
 			statInsert.Reset();
 		}

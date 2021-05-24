@@ -88,7 +88,7 @@ namespace Au
 		/// Converts from a special handle value.
 		/// </summary>
 		/// <param name="hwnd">See API <msdn>SetWindowPos</msdn>.</param>
-		public static implicit operator AWnd(Native.HWND hwnd) => new((int)hwnd);
+		public static implicit operator AWnd(SpecHWND hwnd) => new((int)hwnd);
 
 		/// <summary>Compares window handles.</summary>
 		public static bool operator ==(AWnd w1, AWnd w2) => w1._h == w2._h;
@@ -201,7 +201,7 @@ namespace Au
 		/// Calls API <msdn>SendMessageTimeout</msdn>.
 		/// Returns its return value (false if failed). Supports <see cref="ALastError"/>.
 		/// </summary>
-		public bool SendTimeout(int millisecondsTimeout, int message, LPARAM wParam = default, LPARAM lParam = default, Native.SMTO flags = Native.SMTO.ABORTIFHUNG) {
+		public bool SendTimeout(int millisecondsTimeout, int message, LPARAM wParam = default, LPARAM lParam = default, SMTFlags flags = SMTFlags.ABORTIFHUNG) {
 			Debug.Assert(!Is0);
 			return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, millisecondsTimeout, out LPARAM R);
 		}
@@ -210,7 +210,7 @@ namespace Au
 		/// Calls API <msdn>SendMessageTimeout</msdn> and gets the result of the message processing.
 		/// Returns its return value (false if failed). Supports <see cref="ALastError"/>.
 		/// </summary>
-		public bool SendTimeout(int millisecondsTimeout, out LPARAM result, int message, LPARAM wParam = default, LPARAM lParam = default, Native.SMTO flags = Native.SMTO.ABORTIFHUNG) {
+		public bool SendTimeout(int millisecondsTimeout, out LPARAM result, int message, LPARAM wParam = default, LPARAM lParam = default, SMTFlags flags = SMTFlags.ABORTIFHUNG) {
 			Debug.Assert(!Is0);
 			result = 0;
 			return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, millisecondsTimeout, out result);
@@ -220,7 +220,7 @@ namespace Au
 		/// Calls API <msdn>SendMessageTimeout</msdn> where lParam is string.
 		/// Returns its return value (false if failed). Supports <see cref="ALastError"/>.
 		/// </summary>
-		public bool SendTimeoutS(int millisecondsTimeout, out LPARAM result, int message, LPARAM wParam, string lParam, Native.SMTO flags = Native.SMTO.ABORTIFHUNG) {
+		public bool SendTimeoutS(int millisecondsTimeout, out LPARAM result, int message, LPARAM wParam, string lParam, SMTFlags flags = SMTFlags.ABORTIFHUNG) {
 			Debug.Assert(!Is0);
 			result = 0;
 			fixed (char* p = lParam)
@@ -231,7 +231,7 @@ namespace Au
 		/// Calls API <msdn>SendMessageTimeout</msdn> where lParam is char[].
 		/// Returns its return value (false if failed). Supports <see cref="ALastError"/>.
 		/// </summary>
-		public bool SendTimeoutS(int millisecondsTimeout, out LPARAM result, int message, LPARAM wParam, char[] lParam, Native.SMTO flags = Native.SMTO.ABORTIFHUNG) {
+		public bool SendTimeoutS(int millisecondsTimeout, out LPARAM result, int message, LPARAM wParam, char[] lParam, SMTFlags flags = SMTFlags.ABORTIFHUNG) {
 			Debug.Assert(!Is0);
 			result = 0;
 			fixed (char* p = lParam)
@@ -416,7 +416,7 @@ namespace Au
 		//			if((style & WS.CAPTION) != WS.CAPTION) return !IsCloaked;
 
 		//			//is it a ghost ApplicationFrameWindow, like closed Calculator on Win10?
-		//			if(AVersion.MinWin10 && HasExStyle(WS2.NOREDIRECTIONBITMAP) && IsCloaked && ClassNameIs("ApplicationFrameWindow")) {
+		//			if(AVersion.MinWin10 && HasExStyle(WSE.NOREDIRECTIONBITMAP) && IsCloaked && ClassNameIs("ApplicationFrameWindow")) {
 		//				var isGhost = default == Api.FindWindowEx(this, default, "Windows.UI.Core.CoreWindow", null);
 		//				//AOutput.Write(isGhost, this);
 		//				return !isGhost;
@@ -479,8 +479,8 @@ namespace Au
 		public bool ShowL(bool show) {
 			if (show == HasStyle(WS.VISIBLE)) return true; //avoid messages and make much faster. Never mind: if show==false, returns true even if invalid hwnd.
 			Send(Api.WM_SHOWWINDOW, show); //not necessary for most windows, but eg winforms would not update the Visible property without it. ShowWindow sends it but SetWindowPos doesn't.
-			return SetWindowPos((show ? Native.SWP.SHOWWINDOW : Native.SWP.HIDEWINDOW)
-				| Native.SWP.NOSIZE | Native.SWP.NOMOVE | Native.SWP.NOACTIVATE | Native.SWP.NOZORDER | Native.SWP.NOOWNERZORDER);
+			return SetWindowPos((show ? SWPFlags.SHOWWINDOW : SWPFlags.HIDEWINDOW)
+				| SWPFlags.NOSIZE | SWPFlags.NOMOVE | SWPFlags.NOACTIVATE | SWPFlags.NOZORDER | SWPFlags.NOOWNERZORDER);
 
 			//This code is similar to ShowWindow(SW_SHOWNA). Don't use it because:
 			//	May change Z order. Eg makes above other windows of same thread.
@@ -779,7 +779,7 @@ namespace Au
 			static void _EnableActivate_MinRes() {
 				ADebug.Print("EnableActivate: need min/res");
 
-				AWnd t = More.CreateWindow(WindowClassDWP, null, WS.POPUP | WS.MINIMIZE | WS.VISIBLE, WS2.TOOLWINDOW);
+				AWnd t = More.CreateWindow(WindowClassDWP, null, WS.POPUP | WS.MINIMIZE | WS.VISIBLE, WSE.TOOLWINDOW);
 				//info: When restoring, the window must be visible, or may not work.
 				try {
 					var wp = new Api.WINDOWPLACEMENT { showCmd = Api.SW_RESTORE };
@@ -837,12 +837,12 @@ namespace Au
 			internal enum ActivateFlags
 			{
 				/// <summary>
-				/// Don't call ThrowIfInvalid at the very start (ie called ensures it is valid).
+				/// Don't call ThrowIfInvalid (ie caller ensures it is valid).
 				/// </summary>
 				NoThrowIfInvalid = 1,
 
 				/// <summary>
-				/// Don't call Get.Window (ie caller ensures it's a top-level window, not control).
+				/// Don't try to get top-level window (ie caller ensures it's a top-level window, not control).
 				/// </summary>
 				NoGetWindow = 2,
 
@@ -889,8 +889,8 @@ namespace Au
 			if (!R) {
 				if (0 != (flags & Internal_.ActivateFlags.IgnoreIfNoActivateStyleEtc)) {
 					var est = ExStyle;
-					if ((est & WS2.NOACTIVATE) != 0) noAct = true;
-					else if ((est & (WS2.TOOLWINDOW | WS2.APPWINDOW)) == WS2.TOOLWINDOW) noAct = !HasStyle(WS.CAPTION);
+					if ((est & WSE.NOACTIVATE) != 0) noAct = true;
+					else if ((est & (WSE.TOOLWINDOW | WSE.APPWINDOW)) == WSE.TOOLWINDOW) noAct = !HasStyle(WS.CAPTION);
 					if (noAct && !IsCloaked) {
 						ZorderTop(); //in most cases does not work, but try anyway, it just calls the API. It seems works if the window is topmost.
 						return false; //if cloaked, need to activate to uncloak
@@ -1667,11 +1667,11 @@ namespace Au
 		/// <param name="y"></param>
 		/// <param name="cx"></param>
 		/// <param name="cy"></param>
-		/// <param name="zorderAfter">A window or <see cref="Native.HWND"/>.<b>TOP</b>, <b>BOTTOM</b>, <b>TOPMOST</b>, <b>NOTOPMOST</b>.</param>
+		/// <param name="zorderAfter">A window or <see cref="SpecHWND"/>.<b>TOP</b>, <b>BOTTOM</b>, <b>TOPMOST</b>, <b>NOTOPMOST</b>.</param>
 		/// <remarks>
 		/// Supports <see cref="ALastError"/>.
 		/// </remarks>
-		public bool SetWindowPos(Native.SWP swpFlags, int x = 0, int y = 0, int cx = 0, int cy = 0, AWnd zorderAfter = default) {
+		public bool SetWindowPos(SWPFlags swpFlags, int x = 0, int y = 0, int cx = 0, int cy = 0, AWnd zorderAfter = default) {
 			return Api.SetWindowPos(this, zorderAfter, x, y, cx, cy, swpFlags);
 		}
 
@@ -1686,14 +1686,14 @@ namespace Au
 		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
 		/// </remarks>
 		/// <seealso cref="SetWindowPos"/>
-		public bool MoveL(int x, int y, int width, int height, Native.SWP swpFlagsToAdd = 0) {
-			return SetWindowPos(Native.SWP.NOZORDER | Native.SWP.NOOWNERZORDER | Native.SWP.NOACTIVATE | swpFlagsToAdd, x, y, width, height);
+		public bool MoveL(int x, int y, int width, int height, SWPFlags swpFlagsToAdd = 0) {
+			return SetWindowPos(SWPFlags.NOZORDER | SWPFlags.NOOWNERZORDER | SWPFlags.NOACTIVATE | swpFlagsToAdd, x, y, width, height);
 		}
 
 		/// <summary>
-		/// Moves and resizes. Same as <see cref="MoveL(int, int, int, int, Native.SWP)"/>.
+		/// Moves and resizes. Same as <see cref="MoveL(int, int, int, int, SWPFlags)"/>.
 		/// </summary>
-		public bool MoveL(RECT r, Native.SWP swpFlagsToAdd = 0) {
+		public bool MoveL(RECT r, SWPFlags swpFlagsToAdd = 0) {
 			return MoveL(r.left, r.top, r.Width, r.Height, swpFlagsToAdd);
 		}
 
@@ -1709,7 +1709,7 @@ namespace Au
 		/// </remarks>
 		/// <seealso cref="SetWindowPos"/>
 		public bool MoveL(int x, int y) {
-			return MoveL(x, y, 0, 0, Native.SWP.NOSIZE);
+			return MoveL(x, y, 0, 0, SWPFlags.NOSIZE);
 		}
 
 		internal bool MoveL_(POINT p) => MoveL(p.x, p.y);
@@ -1724,7 +1724,7 @@ namespace Au
 		/// </remarks>
 		/// <seealso cref="SetWindowPos"/>
 		public bool ResizeL(int width, int height) {
-			return MoveL(0, 0, width, height, Native.SWP.NOMOVE);
+			return MoveL(0, 0, width, height, SWPFlags.NOMOVE);
 		}
 
 		internal bool ResizeL_(SIZE z) => ResizeL(z.width, z.height);
@@ -1741,7 +1741,7 @@ namespace Au
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
 		/// For top-level windows use screen coordinates. For controls - direct parent client area coordinates.
-		/// With windows of current thread usually it's better to use <see cref="MoveL(int, int, int, int, Native.SWP)"/>.
+		/// With windows of current thread usually it's better to use <see cref="MoveL(int, int, int, int, SWPFlags)"/>.
 		/// </remarks>
 		/// <exception cref="AuWndException"/>
 		public void Move(Coord x, Coord y, Coord width, Coord height, bool workArea = false, AScreen screen = default) {
@@ -1757,9 +1757,9 @@ namespace Au
 				wh = Coord.Normalize(width, height, workArea, screen, widthHeight: true);
 			}
 
-			Native.SWP f = 0; uint getRect = 0;
-			if (x.IsEmpty && y.IsEmpty) f |= Native.SWP.NOMOVE; else if (x.IsEmpty) getRect |= 1; else if (y.IsEmpty) getRect |= 2;
-			if (width.IsEmpty && height.IsEmpty) f |= Native.SWP.NOSIZE; else if (width.IsEmpty) getRect |= 4; else if (height.IsEmpty) getRect |= 8;
+			SWPFlags f = 0; uint getRect = 0;
+			if (x.IsEmpty && y.IsEmpty) f |= SWPFlags.NOMOVE; else if (x.IsEmpty) getRect |= 1; else if (y.IsEmpty) getRect |= 2;
+			if (width.IsEmpty && height.IsEmpty) f |= SWPFlags.NOSIZE; else if (width.IsEmpty) getRect |= 4; else if (height.IsEmpty) getRect |= 8;
 
 			if (getRect != 0) {
 				if (!GetRectIn(w, out RECT r)) ThrowUseNative("*move/resize*");
@@ -1958,14 +1958,14 @@ namespace Au
 		#endregion
 
 		#region Zorder
-		const Native.SWP _SWP_ZORDER = Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOACTIVATE | Native.SWP.NOOWNERZORDER;
-		//note: without Native.SWP.NOOWNERZORDER sometimes fails, even when no owner.
+		const SWPFlags _SWP_ZORDER = SWPFlags.NOMOVE | SWPFlags.NOSIZE | SWPFlags.NOACTIVATE | SWPFlags.NOOWNERZORDER;
+		//note: without SWPFlags.NOOWNERZORDER sometimes fails, even when no owner.
 		//	Eg after moving or resizing a AToolbar starts to fail to zorder it above target window.
 		//	Also, when setting topmost, may set owner topmost and this below owner.
 
-		Native.SWP _SWP_ZorderFlags() {
+		SWPFlags _SWP_ZorderFlags() {
 			var r = _SWP_ZORDER;
-			if (!OwnerWindow.Is0) r &= ~Native.SWP.NOOWNERZORDER;
+			if (!OwnerWindow.Is0) r &= ~SWPFlags.NOOWNERZORDER;
 			return r;
 		}
 
@@ -2015,9 +2015,9 @@ namespace Au
 		/// Supports <see cref="ALastError"/>.
 		/// </remarks>
 		public bool ZorderTop(bool ownerToo = false) {
-			if (IsChild) return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.TOP);
+			if (IsChild) return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, SpecHWND.TOP);
 			var swp = ownerToo ? _SWP_ZorderFlags() : _SWP_ZORDER;
-			if (IsTopmost) return SetWindowPos(swp, 0, 0, 0, 0, Native.HWND.TOP);
+			if (IsTopmost) return SetWindowPos(swp, 0, 0, 0, 0, SpecHWND.TOP);
 			GetWnd.Top2(out var lastTopmost);
 			return SetWindowPos(swp, 0, 0, 0, 0, lastTopmost);
 		}
@@ -2033,7 +2033,7 @@ namespace Au
 		/// </remarks>
 		public bool ZorderBottom() {
 			ZorderNoTopmost();
-			return SetWindowPos(_SWP_ZorderFlags(), 0, 0, 0, 0, Native.HWND.BOTTOM);
+			return SetWindowPos(_SWP_ZorderFlags(), 0, 0, 0, 0, SpecHWND.BOTTOM);
 		}
 
 		/// <summary>
@@ -2050,7 +2050,7 @@ namespace Au
 				var ow = OwnerWindow;
 				if (!ow.Is0) ow.ZorderTopmost(true);
 			}
-			if (!SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.TOPMOST)) return false;
+			if (!SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, SpecHWND.TOPMOST)) return false;
 			return true;
 		}
 
@@ -2068,7 +2068,7 @@ namespace Au
 			if (!IsTopmost) return true;
 
 			var swp = _SWP_ZorderFlags();
-			AWnd after = Native.HWND.NOTOPMOST;
+			AWnd after = SpecHWND.NOTOPMOST;
 			if (afterActiveWindow) {
 				AWnd wa = Active;
 				if (!wa.Is0 && !Get.Owners(andThisWindow: true).Contains(wa)) after = wa;
@@ -2100,7 +2100,7 @@ namespace Au
 		/// <summary>
 		/// Returns true if this is a topmost (always-on-top) window.
 		/// </summary>
-		public bool IsTopmost => HasExStyle(WS2.TOPMOST);
+		public bool IsTopmost => HasExStyle(WSE.TOPMOST);
 
 		/// <summary>
 		/// Returns true if this window is above window w in the Z order.
@@ -2125,18 +2125,18 @@ namespace Au
 		/// <seealso cref="HasStyle"/>
 		/// <seealso cref="SetStyle"/>
 		public WS Style {
-			get => (WS)(uint)GetWindowLong(Native.GWL.STYLE);
+			get => (WS)(uint)GetWindowLong(GWLong.STYLE);
 		}
 
 		/// <summary>
 		/// Gets window extended style.
 		/// </summary>
-		/// <value>One or more <see cref="WS2"/> flags. Reference: <msdn>extended window styles</msdn>.</value>
+		/// <value>One or more <see cref="WSE"/> flags. Reference: <msdn>extended window styles</msdn>.</value>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
 		/// <seealso cref="HasExStyle"/>
 		/// <seealso cref="SetExStyle"/>
-		public WS2 ExStyle {
-			get => (WS2)(uint)GetWindowLong(Native.GWL.EXSTYLE);
+		public WSE ExStyle {
+			get => (WSE)(uint)GetWindowLong(GWLong.EXSTYLE);
 		}
 
 		/// <summary>
@@ -2159,7 +2159,7 @@ namespace Au
 		/// <param name="exStyle">One or more extended styles.</param>
 		/// <param name="any">Return true if has any (not necessary all) of the specified styles.</param>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool HasExStyle(WS2 exStyle, bool any = false) {
+		public bool HasExStyle(WSE exStyle, bool any = false) {
 			var k = ExStyle & exStyle;
 			return any ? k != 0 : k == exStyle;
 		}
@@ -2177,22 +2177,22 @@ namespace Au
 		/// <summary>
 		/// Changes window extended style.
 		/// </summary>
-		/// <param name="style">One or more <see cref="WS2"/> flags. Reference: <msdn>extended window styles</msdn>.</param>
+		/// <param name="style">One or more <see cref="WSE"/> flags. Reference: <msdn>extended window styles</msdn>.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="AuWndException"/>
 		/// <seealso cref="ExStyle"/>
-		public void SetExStyle(WS2 style, WSFlags flags = 0)
+		public void SetExStyle(WSE style, WSFlags flags = 0)
 			=> _SetStyle(true, (int)style, flags);
 
 		void _SetStyle(bool ex, int style, WSFlags flags) {
-			var gwl = ex ? Native.GWL.EXSTYLE : Native.GWL.STYLE;
+			var gwl = ex ? GWLong.EXSTYLE : GWLong.STYLE;
 			switch (flags & (WSFlags.Add | WSFlags.Remove)) {
 			case WSFlags.Add: style = (int)GetWindowLong(gwl) | style; break;
 			case WSFlags.Remove: style = (int)GetWindowLong(gwl) & ~style; break;
 			}
 			SetWindowLong(gwl, style);
 
-			if (flags.Has(WSFlags.UpdateNonclient)) SetWindowPos(Native.SWP.FRAMECHANGED | Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOZORDER | Native.SWP.NOOWNERZORDER | Native.SWP.NOACTIVATE);
+			if (flags.Has(WSFlags.UpdateNonclient)) SetWindowPos(SWPFlags.FRAMECHANGED | SWPFlags.NOMOVE | SWPFlags.NOSIZE | SWPFlags.NOZORDER | SWPFlags.NOOWNERZORDER | SWPFlags.NOACTIVATE);
 			if (flags.Has(WSFlags.UpdateClient)) Api.InvalidateRect(this, true);
 		}
 
@@ -2203,10 +2203,10 @@ namespace Au
 		public bool IsPopupWindow => HasStyle(WS.POPUP);
 
 		/// <summary>
-		/// Returns true if has WS2.TOOLWINDOW style.
+		/// Returns true if has WSE.TOOLWINDOW style.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool IsToolWindow => HasExStyle(WS2.TOOLWINDOW);
+		public bool IsToolWindow => HasExStyle(WSE.TOOLWINDOW);
 
 		/// <summary>
 		/// Returns true if has WS.THICKFRAME style.
@@ -2221,7 +2221,7 @@ namespace Au
 		/// <summary>
 		/// Calls API <msdn>GetWindowLongPtr</msdn>.
 		/// </summary>
-		/// <param name="index">A constant from <see cref="Native.GWL"/>, or an offset in window memory reserved when registering window class.</param>
+		/// <param name="index">A constant from <see cref="GWLong"/>, or an offset in window memory reserved when registering window class.</param>
 		/// <remarks>
 		/// Supports <see cref="ALastError"/>.
 		/// In 32-bit process actually calls <b>GetWindowLong</b>, because <b>GetWindowLongPtr</b> is unavailable.
@@ -2231,7 +2231,7 @@ namespace Au
 		/// <summary>
 		/// Calls API <msdn>SetWindowLongPtr</msdn>.
 		/// </summary>
-		/// <param name="index">A constant from <see cref="Native.GWL"/>, or an offset in window memory reserved when registering window class.</param>
+		/// <param name="index">A constant from <see cref="GWLong"/>, or an offset in window memory reserved when registering window class.</param>
 		/// <param name="newValue">New value.</param>
 		/// <exception cref="AuWndException"/>
 		/// <remarks>
@@ -2255,7 +2255,7 @@ namespace Au
 		/// <exception cref="AuWndException">The 'set' function failed.</exception>
 		public int ControlId {
 			get => Api.GetDlgCtrlID(this);
-			set { SetWindowLong(Native.GWL.ID, value); }
+			set { SetWindowLong(GWLong.ID, value); }
 		}
 
 		/// <summary>
@@ -2466,7 +2466,7 @@ namespace Au
 		/// Returns true if the class name of this window matches cn. Else returns false.
 		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="ALastError"/>.
 		/// </summary>
-		/// <param name="cn">Class name. Case-insensitive wildcard. See <see cref="AExtString.Like(string, string, bool)"/>. Cannot be null.</param>
+		/// <param name="cn">Class name. Case-insensitive wildcard. See <see cref="ExtString.Like(string, string, bool)"/>. Cannot be null.</param>
 		/// <seealso cref="IsMatch"/>
 		public bool ClassNameIs(string cn) => ClassName.Like(cn, true);
 
@@ -2474,7 +2474,7 @@ namespace Au
 		/// If window class name matches one of strings in <i>classNames</i>, returns 1-based string index. Else returns 0.
 		/// Also returns 0 if fails to get class name (probably window closed or 0 handle). Supports <see cref="ALastError"/>.
 		/// </summary>
-		/// <param name="classNames">Class names. Case-insensitive wildcard. See <see cref="AExtString.Like(string, string, bool)"/>. The array and strings cannot be null.</param>
+		/// <param name="classNames">Class names. Case-insensitive wildcard. See <see cref="ExtString.Like(string, string, bool)"/>. The array and strings cannot be null.</param>
 		public int ClassNameIs(params string[] classNames) {
 			//I expect this func will be often used instead of slow code like 'if (w.ClassName == "a" || w.ClassName == "b" || ...)'.
 
@@ -2502,7 +2502,7 @@ namespace Au
 		/// If window name matches one of strings in <i>names</i>, returns 1-based string index. Else returns 0.
 		/// Also returns 0 if fails to get name (probably window closed or 0 handle). Supports <see cref="ALastError"/>.
 		/// </summary>
-		/// <param name="names">Window names. Case-insensitive wildcard. See <see cref="AExtString.Like(string, string, bool)"/>. The array and strings cannot be null.</param>
+		/// <param name="names">Window names. Case-insensitive wildcard. See <see cref="ExtString.Like(string, string, bool)"/>. The array and strings cannot be null.</param>
 		public int NameIs(params string[] names) {
 			//I expect this func will be often used instead of slow code like 'if (w.Name == "a" || w.Name == "b" || ...)'.
 
@@ -2572,14 +2572,15 @@ namespace Au
 		/// Returns null if fails, eg if the control is destroyed or its thread is hung. Supports <see cref="ALastError"/>.
 		/// Calls API InternalGetWindowText. If it fails, and getControlTextIfEmpty==true, and this is a control, calls _GetTextSlow, which uses WM_GETTEXT.
 		/// </summary>
+		[SkipLocalsInit]
 		string _GetTextFast(bool useSlowIfEmpty) {
 			if (Is0) return null;
-			for (int na = 300; ; na *= 2) {
-				var b = AMemoryArray.Char_(ref na);
+			using ABuffer<char> b = new(null);
+			for (; ; b.More()) {
 				ALastError.Clear();
-				int nr = Api.InternalGetWindowText(this, b, na);
-				if (nr < na - 1) {
-					if (nr > 0) return new string(b, 0, nr);
+				int nr = Api.InternalGetWindowText(this, b.p, b.n);
+				if (nr < b.n - 1) {
+					if (nr > 0) return new string(b.p, 0, nr);
 					if (ALastError.Code != 0) return null;
 					if (useSlowIfEmpty && HasStyle(WS.CHILD)) return _GetTextSlow();
 					return "";
@@ -2593,18 +2594,16 @@ namespace Au
 		/// Returns null if fails, eg if the control is destroyed or its thread is hung. Supports <see cref="ALastError"/>.
 		/// Uses WM_GETTEXT.
 		/// </summary>
+		[SkipLocalsInit]
 		string _GetTextSlow() {
 			if (!SendTimeout(5000, out LPARAM ln, Api.WM_GETTEXTLENGTH)) return null;
 			int n = (int)ln; if (n < 1) return "";
 
-			var b = AMemoryArray.Char_(n);
-			fixed (char* p = b.A) {
-				if (!SendTimeout(30000, out ln, Api.WM_GETTEXT, n + 1, p)) return null;
-				if (ln < 1) return "";
-				b.A[n] = '\0';
-				n = CharPtr_.Length(p, n); //info: some controls return incorrect ln, eg including '\0'
-				return new string(b, 0, n);
-			}
+			using ABuffer<char> b = new(n + 1);
+			if (!SendTimeout(30000, out ln, Api.WM_GETTEXT, b.n, b.p)) return null;
+			if (ln < 1) return "";
+			b.p[n] = '\0';
+			return b.GetStringFindLength(); //info: some controls return incorrect ln, eg including '\0'
 
 			//note: cannot do this optimization:
 			//	At first allocate stack memory and send WM_GETTEXT without WM_GETTEXTLENGTH. Then use WM_GETTEXTLENGTH/WM_GETTEXT if returned size is buffer length - 1.
@@ -2692,7 +2691,7 @@ namespace Au
 		/// If window program name matches one of strings in <i>programNames</i>, returns 1-based string index. Else returns 0.
 		/// Also returns 0 if fails to get program name (probably window closed or 0 handle). Supports <see cref="ALastError"/>.
 		/// </summary>
-		/// <param name="programNames">Program names, like "notepad.exe". Case-insensitive wildcard. See <see cref="AExtString.Like(string, string, bool)"/>. The array and strings cannot be null.</param>
+		/// <param name="programNames">Program names, like "notepad.exe". Case-insensitive wildcard. See <see cref="ExtString.Like(string, string, bool)"/>. The array and strings cannot be null.</param>
 		public int ProgramNameIs(params string[] programNames) {
 			//I expect this func will be often used instead of slow code like 'if (w.ProgramName == "a" || w.ProgramName == "b" || ...)'.
 

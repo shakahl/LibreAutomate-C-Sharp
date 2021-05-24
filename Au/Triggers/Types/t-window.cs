@@ -348,7 +348,7 @@ namespace Au.Triggers
 					if(w.IsVisible) {
 						if(_usesVisibleArray) _aVisible.Add(w);
 						//skip empty winstore hosts that later probably will be used as new windows. Speed: ~100 mcs, first time ~10 ms.
-						if(_win10 && w.HasExStyle(WS2.NOREDIRECTIONBITMAP) && w.IsCloaked && w.ClassNameIs("ApplicationFrameWindow")) {
+						if(_win10 && w.HasExStyle(WSE.NOREDIRECTIONBITMAP) && w.IsCloaked && w.ClassNameIs("ApplicationFrameWindow")) {
 							//is it a window in an inactive virtual desktop? In both cases it does not have a child Windows.UI.Core.CoreWindow.
 							dm ??= new Api.VirtualDesktopManager() as Api.IVirtualDesktopManager;
 							if(0 == dm.GetWindowDesktopId(w.Get.RootOwnerOrThis(), out var guid) && guid == default) {

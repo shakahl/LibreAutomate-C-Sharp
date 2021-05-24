@@ -64,8 +64,6 @@ class DOptions : KDialogWindow
 		return new AWpfBuilder(tp, panelType).Margin("3");
 	}
 
-	#region General
-
 	void _General() {
 		var b = _Page("General").Columns(-1, -1);
 		//left column
@@ -114,7 +112,7 @@ class DOptions : KDialogWindow
 				foreach (var v in t.Data) {
 					var script = v[0];
 					if (script.Starts("//")) continue;
-					if (App.Model.FindScript(script) == null) return "Script not found: " + script;
+					if (App.Model.FindFile(script) == null) return "Script not found: " + script;
 					var delay = v.Length == 1 ? null : v[1];
 					if (!delay.NE()) {
 						rxDelay ??= new ARegex(@"(?i)^\d+ *m?s$");
@@ -126,10 +124,6 @@ class DOptions : KDialogWindow
 			return null;
 		}
 	}
-
-	#endregion
-
-	#region Files
 
 	void _Files() {
 		var b = _Page("Files");
@@ -143,10 +137,6 @@ class DOptions : KDialogWindow
 
 		};
 	}
-
-	#endregion
-
-	#region Templates
 
 	void _Templates() {
 		var b = _Page("Templates").Columns(0, 100, -1, 0, 100);
@@ -197,10 +187,6 @@ class DOptions : KDialogWindow
 		}
 	}
 
-	#endregion
-
-	#region Font
-
 	void _Font() {
 		var b = _Page("Font", WBPanelType.Dock);
 		b.Add(out KScintilla sciStyles).Width(150); sciStyles.ZInitBorder = true; sciStyles.Name = "styles";
@@ -231,7 +217,7 @@ class DOptions : KDialogWindow
 			var fontsVar = new List<string>();
 			using (var dc = new ScreenDC_()) {
 				unsafe {
-					EnumFontFamiliesEx(dc, default, (lf, tm, fontType, lParam) => {
+					api.EnumFontFamiliesEx(dc, default, (lf, tm, fontType, lParam) => {
 						if (lf->lfFaceName[0] != '@') {
 							var fn = new string(lf->lfFaceName);
 							if ((lf->lfPitchAndFamily & 0xf0) == 48) fontsMono.Add(fn); else fontsVar.Add(fn); //FF_MODERN=48
@@ -394,22 +380,30 @@ To apply changes after deleting etc, restart this application.
 		};
 	}
 
-	[DllImport("gdi32.dll", EntryPoint = "EnumFontFamiliesExW")]
-	internal static extern int EnumFontFamiliesEx(IntPtr hdc, in Api.LOGFONT lpLogfont, FONTENUMPROC lpProc, LPARAM lParam, uint dwFlags);
-	internal unsafe delegate int FONTENUMPROC(Api.LOGFONT* lf, IntPtr tm, uint fontType, LPARAM lParam);
-
-	#endregion
-
-	#region Code
-
 	void _Code() {
 		var b = _Page("Code", WBPanelType.VerticalStack);
-		b.StartGrid<GroupBox>("Completion list");
-		b.R.Add(out ComboBox complParen).Items("Spacebar|Always|Never").Select(App.Settings.ci_complParen).Add<Label>("adds ()");
+		b.StartGrid<GroupBox>("Completion list").Columns(250, 30, -1);
+		b.R.StartGrid(); //left
+		b.R.Add(out ComboBox complParen).Items("Spacebar|Always|Never").Select(App.Settings.ci_complParen).Add<Label>("adds ( )");
+		b.R.AddButton("Snippets ▾", _SnippetsButton).Width(70).Align("L");
+		b.End();
+		b.Skip().StartGrid(); //right
+		b.R.Add("Favorite namespaces", out TextBox usings, App.Settings.ci_usings, row2: -1).Multiline(90, TextWrapping.NoWrap)
+			.Tooltip(@"Completion list will contain types and extension methods from these namespaces even if there is no using directive in code.
+Also on paste will add missing using directives.
+Supports only namespaces from default assemblies (.NET and Au).
+Examples:
+System.IO
+Au.Util
+//Commented.Out")
+			.Validation(o => usings.Text.FindAny("= ") >= 0 ? "contains = or space" : null);
+		b.End();
 		b.End();
 		b.StartGrid<GroupBox>("Auto correction");
 		b.R.Add(out CheckBox correctStringEnter, @"Enter in string adds \r\n").Checked(0 == App.Settings.ci_correctStringEnter);
 		b.End();
+		//b.StartGrid<GroupBox>("");
+		//b.End();
 		b.End();
 
 		//b.Loaded += () => {
@@ -419,9 +413,22 @@ To apply changes after deleting etc, restart this application.
 		_b.OkApply += e => {
 			App.Settings.ci_complParen = complParen.SelectedIndex;
 			App.Settings.ci_correctStringEnter = (byte)(correctStringEnter.True() ? 0 : 1);
+			App.Settings.ci_usings = usings.Text;
 		};
+
+		void _SnippetsButton(WBButtonClickArgs o) {
+			switch(AMenu.ShowSimple("1 Edit snippets|2 Find default snippets")) {
+			case 1: AFile.SelectInExplorer(AFolders.ThisAppDocuments + @".settings\Snippets.xml"); break;
+			case 2: AFile.SelectInExplorer(AFolders.ThisApp + @"Default\Snippets.xml"); break;
+			}
+		}
 	}
 
-	#endregion
+	static class api
+	{
+		[DllImport("gdi32.dll", EntryPoint = "EnumFontFamiliesExW")]
+		internal static extern int EnumFontFamiliesEx(IntPtr hdc, in Api.LOGFONT lpLogfont, FONTENUMPROC lpProc, LPARAM lParam, uint dwFlags);
+		internal unsafe delegate int FONTENUMPROC(Api.LOGFONT* lf, IntPtr tm, uint fontType, LPARAM lParam);
 
+	}
 }

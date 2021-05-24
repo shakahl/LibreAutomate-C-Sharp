@@ -24,25 +24,9 @@ namespace Au
 	/// <remarks>
 	/// Native icons must be destroyed. An <b>AIcon</b> variable destroys its native icon when disposing. To dispose, call <b>Dispose</b> or use <b>using</b> statement. Or use functions like <see cref="ToGdipBitmap"/>, <see cref="ToWpfImage"/>; by default they dispose the <b>AIcon</b> variable. It's OK to not dispose if you use few icons; GC will do it.
 	/// </remarks>
-	public class AIcon : IDisposable
+	public class AIcon : IDisposable //rejected: base SafeHandle.
 	{
 		IntPtr _handle;
-
-		const int c_gcSize = 40000;
-		//Don't allow to exceed the process handle limit when the program does not dispose them.
-		//Default limit for USER and GDI objects is 10000, min 200.
-		//Icons are USER objects. Most icons also create 3 GDI objects, some 2. So a process can have max 3333 icons.
-		//If GC starts working when pressure is 4 MB, then the number of icons is ~100 and GDI handles ~300.
-		//	Problem: the GC threshold for unmanaged memory pressure is unknown, undocumented and changing.
-		//		Test results: used to be ~100 KB (why so small?), but now in .NET5 4MB (3MB in 32-bit process).
-		//		For managed memory it is 2 MB.
-		//		Could instead allocate managed array of this size and keep in a field.
-		//			Info: Icon objects loaded from file or stream keep icon memory in private readonly byte[]? _iconData.
-		//				That is why it triggers GC quite soon. But eg Clone doesn't clone that memory and it can be dangerous.
-		//Don't care about icon memory size.
-
-		//rejected: Add property for native icon ownership or methods for refcounting.
-		//	Usually a process uses few icons. If many, the programmer knows the importance of disposing icons; or GC.AddMemoryPressure helps.
 
 		/// <summary>
 		/// Sets native icon handle.
@@ -50,8 +34,14 @@ namespace Au
 		/// </summary>
 		public AIcon(IntPtr hicon) {
 			ADebug.PrintIf(hicon == default, "hicon == default");
+
+			//Don't allow to exceed the process handle limit when the program does not dispose them. Default limits are 10000, but min 200.
+			//Icons are USER objects. They also usually create 3 GDI objects (bitmaps?). So a process can have max ~3300 icons by default.
+			if (hicon != default) { GC_.UserHandleCollector.Add(); GC_.GdiHandleCollector.Add(); GC_.GdiHandleCollector.Add(); GC_.GdiHandleCollector.Add(); }
+			//rejected: Add property for native icon ownership or methods for refcounting.
+			//	Usually a process uses few icons. If many, the programmer knows the importance of disposing icons; or HandleCollector helps.
+
 			_handle = hicon;
-			if (_handle != default) GC.AddMemoryPressure(c_gcSize);
 		}
 
 		//FUTURE: FromGdipIcon, FromStream.
@@ -62,12 +52,9 @@ namespace Au
 		/// Destroys native icon handle.
 		/// </summary>
 		public void Dispose() {
-			if (_handle != default) {
-				Api.DestroyIcon(_handle);
-				_handle = default;
-				GC.RemoveMemoryPressure(c_gcSize);
-			}
-			GC.SuppressFinalize(this);
+			var h = Detach();
+			if (h != default) Api.DestroyIcon(h);
+			GC.SuppressFinalize(this); //never mind: actually this should be in Detach, but then intellisense gives 2 notes
 		}
 
 		///
@@ -80,9 +67,8 @@ namespace Au
 			var h = _handle;
 			if (_handle != default) {
 				_handle = default;
-				GC.RemoveMemoryPressure(c_gcSize);
+				GC_.UserHandleCollector.Remove(); GC_.GdiHandleCollector.Remove(); GC_.GdiHandleCollector.Remove(); GC_.GdiHandleCollector.Remove();
 			}
-			GC.SuppressFinalize(this);
 			return h;
 		}
 
@@ -534,8 +520,8 @@ namespace Au
 			bool large = size >= 24; //SHOULDDO: make high-DPI-aware. How?
 			bool ok = w.SendTimeout(2000, out LPARAM R, Api.WM_GETICON, large);
 			if (R == 0 && ok) w.SendTimeout(2000, out R, Api.WM_GETICON, !large);
-			if (R == 0) R = AWnd.More.GetClassLong(w, large ? Native.GCL.HICON : Native.GCL.HICONSM);
-			if (R == 0) R = AWnd.More.GetClassLong(w, large ? Native.GCL.HICONSM : Native.GCL.HICON);
+			if (R == 0) R = AWnd.More.GetClassLong(w, large ? GCLong.HICON : GCLong.HICONSM);
+			if (R == 0) R = AWnd.More.GetClassLong(w, large ? GCLong.HICONSM : GCLong.HICON);
 			//tested this code with DPI 125%. Small icon of most windows match DPI (20), some 16, some 24.
 			//tested: undocumented API InternalGetWindowIcon does not get icon of winstore app.
 
@@ -650,7 +636,7 @@ namespace Au
 			if (s.NE()) return false;
 			if (s[0] == '\"') path = s = s.Replace("\"", ""); //can be eg "path",index
 			if (s.Length < 3) return false;
-			if (!AChar.IsAsciiDigit(s[^1])) return false;
+			if (!s[^1].IsAsciiDigit()) return false;
 			int i = s.LastIndexOf(','); if (i < 1) return false;
 			index = s.ToInt(i + 1, out int e); if (e != s.Length) return false;
 			path = s[..i];
@@ -710,7 +696,7 @@ namespace Au
 				if (_time != 0) {
 					long t = ATime.PerfMilliseconds - _time;
 					if (t >= DebugSpeed) {
-						//if (_file is APidl p) _file = p.ToShellString(Native.SIGDN.NORMALDISPLAY);
+						//if (_file is APidl p) _file = p.ToShellString(SIGDN.NORMALDISPLAY);
 						AOutput.Write($"AIcon.DebugSpeed: {t} ms, {_file}");
 					}
 				}

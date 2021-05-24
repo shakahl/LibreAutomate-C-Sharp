@@ -89,8 +89,8 @@ namespace Au
 		/// - If redirected, to wherever it is redirected. See <see cref="Writer"/>.
 		/// - Else if using log file (<see cref="LogFile"/> not null), writes to the file.
 		/// - Else if using console (<see cref="IsWritingToConsole"/> returns true), writes to console.
-		/// - Else if using local <see cref="AOutputServer"/> (in this process), writes to it.
-		/// - Else if exists global <see cref="AOutputServer"/> (in any process), writes to it.
+		/// - Else if using local <see cref="AOutput.Server"/> (in this process), writes to it.
+		/// - Else if exists global <see cref="AOutput.Server"/> (in any process), writes to it.
 		/// - Else nowhere.
 		/// </remarks>
 		public static void Write(string value) {
@@ -429,27 +429,28 @@ namespace Au
 			/// <remarks>
 			/// If fails to write to file: Sets LogFile=null, which closes file handle. Writes a warning and s to the output window or console.
 			/// </remarks>
+			[SkipLocalsInit]
 			public bool WriteLine(string s) {
 				bool ok;
 				int n = Encoding.UTF8.GetByteCount(s ??= "") + 1;
-				fixed (byte* b = AMemoryArray.Byte_(n + 35)) {
-					if (LogFileTimestamp) {
-						Api.GetLocalTime(out var t);
-						Api.wsprintfA(b, "%i-%02i-%02i %02i:%02i:%02i.%03i   ", __arglist(t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond, t.wMilliseconds));
-						int nn = BytePtr_.Length(b);
-						Encoding.UTF8.GetBytes(s, new Span<byte>(b + nn, n));
-						n += nn;
-						if (s.Starts("<>")) {
-							Api.memmove(b + 2, b, nn);
-							b[0] = (byte)'<'; b[1] = (byte)'>';
-						}
-					} else {
-						Encoding.UTF8.GetBytes(s, new Span<byte>(b, n));
+				using ABuffer<byte> b = new(n + 35);
+				byte* p = b.p;
+				if (LogFileTimestamp) {
+					Api.GetLocalTime(out var t);
+					Api.wsprintfA(p, "%i-%02i-%02i %02i:%02i:%02i.%03i   ", __arglist(t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond, t.wMilliseconds));
+					int nn = BytePtr_.Length(p);
+					Encoding.UTF8.GetBytes(s, new Span<byte>(p + nn, n));
+					n += nn;
+					if (s.Starts("<>")) {
+						Api.memmove(p + 2, p, nn);
+						p[0] = (byte)'<'; p[1] = (byte)'>';
 					}
-					b[n - 1] = 13; b[n++] = 10;
-
-					ok = Api.WriteFile(_h, b, n, out _);
+				} else {
+					Encoding.UTF8.GetBytes(s, new Span<byte>(p, n));
 				}
+				p[n - 1] = 13; p[n++] = 10;
+
+				ok = Api.WriteFile(_h, p, n, out _);
 				if (!ok) {
 					string emsg = ALastError.Message;
 					LogFile = null;

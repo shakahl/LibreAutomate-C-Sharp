@@ -45,17 +45,31 @@ Use wildcard to specify partial name. Examples: Start*, *End, *AnyPart*
 Or text containing multiple full names. Example: Name1 Name2 Name3."
 );
 			b.Row(-1).Add(out code); code.ZInitBorder = true;
-			b.R.AddOkCancel("OK, copy to clipboard");
+			b.R.AddButton("...", _ => _Menu());
+			b.AddOkCancel("OK, copy to clipboard");
 			b.End();
 
 			b.OkApply += o => {
 				string s = code.zText;
 				if (s.NE()) return;
 				Clipboard.SetText(s);
-				InsertCode.UsingDirective("System.Runtime.InteropServices");
+				//InsertCode.UsingDirective("System.Runtime.InteropServices"); //no, we don't know where will paste. If the namespace is in favorites (default), will add the using directive automatically when pasted.
 			};
 
 			tName.TextChanged += (_, _) => _TextChanged();
+
+			void _Menu() {
+				int i = AMenu.ShowSimple("1 Class for Windows API");
+				if (i == 1) {
+					var s = @"/// <summary>
+/// Paste this class in scripts (at the end) and projects (in any file) where you want to use Windows API. Change the class name (api) if want.
+/// Then, whenever you need a Windows API function etc, type the class name and dot (api.). The completion list will contain undeclared API too. Select one, and it will add the declaration to this class, possibly with more code required for it.
+/// </summary>
+unsafe class api : WinAPI {}
+";
+					code.ZSetText(s);
+				}
+			}
 		}
 
 		protected override void OnSourceInitialized(EventArgs e) {
@@ -78,11 +92,11 @@ Or text containing multiple full names. Example: Name1 Name2 Name3."
 			int nWild = 0; for (int i = 0; i < name.Length; i++) { switch (name[i]) { case '*': case '?': nWild++; break; } }
 			if (name.Length > 0 && (nWild == 0 || name.Length - nWild >= 2)) {
 				string sql;
-				if (name.Contains(' ')) sql = $"SELECT * FROM api WHERE name in ('{string.Join("', '", name.RegexFindAll(@"\b[A-Za-z_]\w\w+", 0))}')";
-				else if (name.FindAny("*?") >= 0) sql = $"SELECT * FROM api WHERE name GLOB '{name}'";
-				else sql = $"SELECT * FROM api WHERE name = '{name}'";
+				if (name.Contains(' ')) sql = $"in ('{string.Join("', '", name.RegexFindAll(@"\b[A-Za-z_]\w\w+", 0))}')";
+				else if (name.FindAny("*?") >= 0) sql = $"GLOB '{name}'";
+				else sql = $"= '{name}'";
 				try {
-					using var stat = _db.Statement(sql);
+					using var stat = _db.Statement("SELECT name, code FROM api WHERE name " + sql);
 					//APerf.First();
 					while (stat.Step()) a.Add((stat.GetText(0), stat.GetText(1)));
 					//APerf.NW(); //30 ms cold, 10 ms warm. Without index.

@@ -1,8 +1,11 @@
-/*/ ifRunning warn_restart; /*/ //.
-using Au; using Au.Types; using System; using System.Collections.Generic; using System.IO; using System.Linq;
+//.
+using Au;
+using Au.Types;
 using Au.Triggers;
+using System;
 using System.Reflection;
-partial class Script { [STAThread] static void Main(string[] a) { ATask.Setup(trayIcon: false); new Script(a); } Script(string[] args) { //;;;
+partial class Script { static void Main(string[] a) => new Script(a); Script(string[] args) { //;;
+;ATask.Setup(trayIcon: !true); //;
 
 //Here you can add code that runs at startup. Set variables, etc.
 //Add triggers and toolbars in other files of this project. More info in "Readme.txt".
@@ -12,10 +15,10 @@ partial class Script { [STAThread] static void Main(string[] a) { ATask.Setup(tr
 RunTriggersAndToolbars();
 }
 
-//set these fields = true or false to enable or disable the example triggers and/or toolbars
+//set these fields = true or !true to enable or disable the example triggers and/or toolbars
 bool _enableHotkeyTriggerExamples = true;
 bool _enableAutotextTriggerExamples = true;
-bool _enableMouseTriggerExamples = false;
+bool _enableMouseTriggerExamples = !true;
 bool _enableWindowTriggerExamples = true;
 bool _enableToolbarExamples = true;
 

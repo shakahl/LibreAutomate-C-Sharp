@@ -31,19 +31,17 @@ class MetaCommentsParser
 
 	public MetaCommentsParser(FileNode f) : this(f.GetText()) { _fn = f; }
 
-	public MetaCommentsParser(string code)
-	{
-		int endOf = MetaComments.FindMetaComments(code);
-		if(endOf == 0) return;
-		EndOfMetaComments = endOf;
-		foreach(var t in MetaComments.EnumOptions(code, endOf)) _ParseOption(t.Name(), t.Value());
+	public MetaCommentsParser(string code) {
+		var meta = MetaComments.FindMetaComments(code);
+		if (meta.end == 0) return;
+		MetaRange = meta;
+		foreach (var t in MetaComments.EnumOptions(code, meta)) _ParseOption(t.Name(), t.Value());
 	}
 
-	public int EndOfMetaComments { get; private set; }
+	public (int start, int end) MetaRange { get; private set; }
 
-	void _ParseOption(string name, string value)
-	{
-		switch(name) {
+	void _ParseOption(string name, string value) {
+		switch (name) {
 		case "role": role = value; break;
 		case "outputPath": outputPath = value; break;
 		case "runSingle": runSingle = value; break;
@@ -76,14 +74,13 @@ class MetaCommentsParser
 	/// Formats metacomments string "/*/ ... /*/".
 	/// Returns "" if there are no options.
 	/// </summary>
-	public string Format(string append)
-	{
+	public string Format(string append) {
 		//prepare to make relative paths
 		string dir = null;
-		if(_fn != null) {
+		if (_fn != null) {
 			dir = _fn.ItemPath;
 			int i = dir.LastIndexOf('\\') + 1;
-			if(i > 1) dir = dir.Remove(i); else dir = null;
+			if (i > 1) dir = dir.Remove(i); else dir = null;
 		}
 
 		var b = new StringBuilder("/*/ ");
@@ -117,22 +114,20 @@ class MetaCommentsParser
 		_AppendList("c", _c, true);
 		_AppendList("resource", _resource, true);
 
-		if(b.Length == 4) return "";
+		if (b.Length == 4) return "";
 		b.Append("/*/");
-		if(append != null) b.Append(append);
+		if (append != null) b.Append(append);
 		return b.ToString();
 
-		void _Append(string name, string value, bool relativePath = false)
-		{
-			if(value != null) {
-				if(relativePath && dir != null && value.Starts(dir, true)) value = value[dir.Length..];
+		void _Append(string name, string value, bool relativePath = false) {
+			if (value != null) {
+				if (relativePath && dir != null && value.Starts(dir, true)) value = value[dir.Length..];
 				b.Append(name).Append(' ').Append(value).Append("; ");
 			}
 		}
 
-		void _AppendList(string name, List<string> a, bool relativePath = false)
-		{
-			if(a != null) foreach(var v in a.Distinct()) _Append(name, v, relativePath);
+		void _AppendList(string name, List<string> a, bool relativePath = false) {
+			if (a != null) foreach (var v in a.Distinct()) _Append(name, v, relativePath);
 		}
 	}
 }

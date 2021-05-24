@@ -607,9 +607,9 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 	public EClassFileRole GetClassFileRole() {
 		if (_type != EFileType.Class) return EClassFileRole.None;
 		var code = GetText();
-		int endOfMeta = MetaComments.FindMetaComments(code);
-		if (endOfMeta == 0) return EClassFileRole.Class;
-		foreach (var v in MetaComments.EnumOptions(code, endOfMeta)) {
+		var meta = MetaComments.FindMetaComments(code);
+		if (meta.end == 0) return EClassFileRole.Class;
+		foreach (var v in MetaComments.EnumOptions(code, meta)) {
 			if (!v.NameIs("role")) continue;
 			if (v.ValueIs("classLibrary")) return EClassFileRole.Library;
 			if (v.ValueIs("classFile")) break;
@@ -697,7 +697,7 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 			//load files.xml first time, or reload if file modified
 			AFile.GetProperties(s_xmlFilePath, out var fp, FAFlags.UseRawPath);
 			if (s_xml == null || fp.LastWriteTimeUtc != s_xmlFileTime) {
-				s_xml = AExtXml.LoadElem(s_xmlFilePath);
+				s_xml = AXml.LoadElem(s_xmlFilePath);
 				s_xmlFileTime = fp.LastWriteTimeUtc;
 			}
 

@@ -22,14 +22,14 @@ using Au.Util;
 class PanelOutput : DockPanel
 {
 	_SciOutput _c;
-	Queue<OutServMessage> _history;
+	Queue<OutputServerMessage> _history;
 
 	public KScintilla ZOutput => _c;
 
 	public PanelOutput() {
 		_c = new _SciOutput(this) { Name = "Output_text" };
 		this.Children.Add(_c);
-		_history = new Queue<OutServMessage>();
+		_history = new Queue<OutputServerMessage>();
 		App.Commands.BindKeysTarget(this, "Output");
 	}
 
@@ -42,7 +42,7 @@ class PanelOutput : DockPanel
 	public void ZHistory() {
 		var p = new KPopupListBox { PlacementTarget = this, Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint };
 		p.Control.ItemsSource = _history;
-		p.OK += o => AOutput.Write((o as OutServMessage).Text);
+		p.OK += o => AOutput.Write((o as OutputServerMessage).Text);
 		Dispatcher.InvokeAsync(() => p.IsOpen = true);
 	}
 
@@ -93,7 +93,7 @@ class PanelOutput : DockPanel
 		if (on) {
 			w.OwnerWindow = default;
 			w.ZorderTopmost();
-			//w.SetExStyle(WS2.APPWINDOW, SetAddRemove.Add);
+			//w.SetExStyle(WSE.APPWINDOW, SetAddRemove.Add);
 			//AWnd.GetWnd.Root.ActivateL(); w.ActivateL(); //let taskbar add button
 		} else {
 			w.ZorderNoTopmost();
@@ -127,7 +127,7 @@ class PanelOutput : DockPanel
 			SciTags.AddCommonLinkTag("open", s => _OpenLink(s));
 			SciTags.AddCommonLinkTag("script", s => _RunScript(s));
 			ZTags.AddLinkTag("+properties", fid => {
-				var f = App.Model.FindScript(fid);
+				var f = App.Model.FindFile(fid);
 				if (f == null || !App.Model.SetCurrentFile(f)) return;
 				Menus.File.Properties();
 			});
@@ -155,10 +155,10 @@ class PanelOutput : DockPanel
 			return base.WndProc(hwnd, msg, wParam, lParam, ref handled);
 		}
 
-		Action<OutServMessage> _onServerMessage;
-		void _OnServerMessage(OutServMessage m) {
-			if (m.Type != OutServMessageType.Write) {
-				if (m.Type == OutServMessageType.TaskEvent) RecentTT.TriggerEvent(m);
+		Action<OutputServerMessage> _onServerMessage;
+		void _OnServerMessage(OutputServerMessage m) {
+			if (m.Type != OutputServerMessageType.Write) {
+				if (m.Type == OutputServerMessageType.TaskEvent) RecentTT.TriggerEvent(m);
 				return;
 			}
 
@@ -229,7 +229,7 @@ class PanelOutput : DockPanel
 			}
 
 			if (s.Length <= 10_000) { //* 50 = 1 MB
-				if (!ReferenceEquals(s, m.Text)) m = new OutServMessage(OutServMessageType.Write, s, m.TimeUtc, m.Caller);
+				if (!ReferenceEquals(s, m.Text)) m = new OutputServerMessage(OutputServerMessageType.Write, s, m.TimeUtc, m.Caller);
 				var h = _p._history;
 				h.Enqueue(m);
 				if (h.Count > 50) h.Dequeue();
@@ -248,7 +248,7 @@ class PanelOutput : DockPanel
 
 		static void _RunScript(string s) {
 			var a = s.Split('|');
-			var f = App.Model.FindScript(a[0]); if (f == null) return;
+			var f = App.Model.FindFile(a[0]); if (f == null) return;
 			CompileRun.CompileAndRun(true, f, a.Length == 1 ? null : a.RemoveAt(0));
 		}
 	}

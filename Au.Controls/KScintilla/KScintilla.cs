@@ -197,6 +197,9 @@ namespace Au.Controls
 		//	Workaround: let app dispose the HwndHost in OnClosing.
 		//Never mind: after SetFocus, Keyboard.FocusedElement is null.
 
+		//TEST: never set real focus, but use SCI_SETFOCUS. From Scintilla doc:
+		//	The internal focus flag can be set with SCI_SETFOCUS. This is used by clients that have complex focus requirements such as having their own window that gets the real focus but with the need to indicate that Scintilla has the logical focus.
+
 		void _OnWmSetFocus() {
 			//keep logical focus on HwndHost, else will not work eg restoring of real focus when closing menu.
 			if (IsVisible && Focusable) { //info: !IsVisible when closing window without disposing this (WPF bug)
@@ -222,7 +225,7 @@ namespace Au.Controls
 			//base.TabIntoCore(request); //empty func, returns false
 		}
 
-		protected override bool TranslateAcceleratorCore(ref MSG msg, ModifierKeys modifiers) {
+		protected override bool TranslateAcceleratorCore(ref System.Windows.Interop.MSG msg, ModifierKeys modifiers) {
 			var m = msg.message;
 			var k = (KKey)msg.wParam;
 			//if (m == Api.WM_KEYDOWN) AOutput.Write(m, k);
@@ -238,7 +241,7 @@ namespace Au.Controls
 		}
 
 		//Without this, user cannot type eg character 'a' in HwndHost'ed control if there is button with text like "_Apply".
-		protected override bool TranslateCharCore(ref MSG msg, ModifierKeys modifiers) {
+		protected override bool TranslateCharCore(ref System.Windows.Interop.MSG msg, ModifierKeys modifiers) {
 			if (msg.message is not Api.WM_CHAR or Api.WM_DEADCHAR) return false; //WM_SYSCHAR etc if with Alt
 			if (msg.hwnd != _w.Handle) return false; //WPF bug. Eg when on key down the app makes this control focused.
 			if ((int)msg.wParam <= 32) return false; //eg control chars on Ctrl+key

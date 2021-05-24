@@ -17,7 +17,7 @@ static class App
 	//public const string AppName = "Automate C#ly";//TODO: also change in eg Au postbuild, now "$(SolutionDir)Other\Programs\nircmd.exe" win close etitle Aedit
 	public const string AppName = "Aedit";
 	public static string UserGuid;
-	internal static AOutputServer OutputServer;
+	internal static AOutput.Server OutputServer;
 	public static AppSettings Settings;
 
 	/// <summary>Main window</summary>
@@ -87,7 +87,7 @@ static class App
 
 		if (CommandLine.OnProgramStarted(args)) return;
 
-		OutputServer = new AOutputServer(true) { NoNewline = true };
+		OutputServer = new AOutput.Server(true) { NoNewline = true };
 		OutputServer.Start();
 
 		Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
@@ -221,7 +221,7 @@ static class App
 	static bool _RestartAsAdmin(string[] args) {
 		if (Debugger.IsAttached) return false; //very fast
 		try {
-			bool isAuHomePC = Api.GetEnvironmentVariable("Au.Home<PC>", null, 0) > 0 && !AFolders.ThisAppBS.Starts(@"C:\Program Files", true);
+			bool isAuHomePC = Api.EnvironmentVariableExists("Au.Home<PC>") && !AFolders.ThisAppBS.Starts(@"C:\Program Files", true);
 			//int pid = 
 			WinTaskScheduler.RunTask("Au",
 				isAuHomePC ? "_Aedit" : "Aedit", //run Q:\app\Au\_\Au.CL.exe or <installed path>\Au.CL.exe
@@ -252,7 +252,7 @@ static class App
 				s_msgTaskbarCreated = AWnd.More.RegisterMessage("TaskbarCreated", uacEnable: true);
 
 				AWnd.More.RegisterWindowClass("Aedit.TrayNotify", _WndProc);
-				_wNotify = AWnd.More.CreateWindow("Aedit.TrayNotify", null, WS.POPUP, WS2.NOACTIVATE);
+				_wNotify = AWnd.More.CreateWindow("Aedit.TrayNotify", null, WS.POPUP, WSE.NOACTIVATE);
 				//not message-only, because must receive s_msgTaskbarCreated and also used for context menu
 
 				AProcess.Exit += _ => {

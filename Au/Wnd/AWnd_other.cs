@@ -31,17 +31,17 @@ namespace Au
 		/// </remarks>
 		public void SetTransparency(bool allowTransparency, int? opacity = null, ColorInt? colorKey = null) {
 			var est = ExStyle;
-			bool layered = (est & WS2.LAYERED) != 0;
+			bool layered = (est & WSE.LAYERED) != 0;
 
 			if (allowTransparency) {
 				uint col = 0, f = 0; byte op = 0;
 				if (colorKey != null) { f |= 1; col = (uint)colorKey.GetValueOrDefault().ToBGR(); }
 				if (opacity != null) { f |= 2; op = (byte)Math.Clamp(opacity.GetValueOrDefault(), 0, 255); }
 
-				if (!layered) SetExStyle(est | WS2.LAYERED);
+				if (!layered) SetExStyle(est | WSE.LAYERED);
 				if (!Api.SetLayeredWindowAttributes(this, col, op, f)) ThrowUseNative();
 			} else if (layered) {
-				SetExStyle(est & ~WS2.LAYERED); //tested: resets attributes, ie after adding WS2.LAYERED the window will be normal
+				SetExStyle(est & ~WSE.LAYERED); //tested: resets attributes, ie after adding WSE.LAYERED the window will be normal
 			}
 		}
 
@@ -128,7 +128,7 @@ namespace Au
 		public bool IsWindows8MetroStyle {
 			get {
 				if (!AVersion.MinWin8) return false;
-				if (!HasExStyle(WS2.TOPMOST | WS2.NOREDIRECTIONBITMAP) || (Style & WS.CAPTION) != 0) return false;
+				if (!HasExStyle(WSE.TOPMOST | WSE.NOREDIRECTIONBITMAP) || (Style & WS.CAPTION) != 0) return false;
 				if (ClassNameIs("Windows.UI.Core.CoreWindow")) return true;
 				if (!AVersion.MinWin10 && IsOfShellProcess_) return true;
 				return false;
@@ -143,7 +143,7 @@ namespace Au
 		public int IsUwpApp {
 			get {
 				if (!AVersion.MinWin10) return 0;
-				if (!HasExStyle(WS2.NOREDIRECTIONBITMAP)) return 0;
+				if (!HasExStyle(WSE.NOREDIRECTIONBITMAP)) return 0;
 				return ClassNameIs("ApplicationFrameWindow", "Windows.UI.Core.CoreWindow");
 				//could use IsImmersiveProcess, but this is better
 			}

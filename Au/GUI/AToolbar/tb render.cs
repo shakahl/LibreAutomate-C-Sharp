@@ -31,7 +31,7 @@ namespace Au
 					WS s1 = _w.Style, s2 = _BorderStyle(value);
 					if (s2 != (s1 & mask)) _w.SetStyle(s1 = ((s1 & ~mask) | s2));
 					ADpi.AdjustWindowRectEx(r, ref r, s1, _w.ExStyle);
-					_w.MoveL(r, Native.SWP.FRAMECHANGED | Native.SWP.HIDEWINDOW);
+					_w.MoveL(r, SWPFlags.FRAMECHANGED | SWPFlags.HIDEWINDOW);
 					if (bpDiff != 0) _Measure(); //update button rectangles
 					_w.ShowL(true);
 				} else {
@@ -142,7 +142,7 @@ namespace Au
 			_Invalidate(ti);
 		}
 
-		const Native.DT c_tff = Native.DT.NOPREFIX | Native.DT.EXPANDTABS;
+		const TFFlags c_tff = TFFlags.NOPREFIX | TFFlags.EXPANDTABS;
 
 		void _MeasureText() {
 			NativeFont_ font = null;
@@ -345,7 +345,7 @@ namespace Au
 							r = new(b.rect.left + m.bBorder + m.imagePaddingX * 2 + m.ImageEtc(b, vert), b.rect.top + m.bBorder + m.textPaddingY, b.textSize.width, b.textSize.height);
 						}
 						r.right = Math.Min(r.right, b.rect.right - m.bBorder * 2);
-						//				if(!b.Text.Contains('\n')) tff|=Native.DT.SINGLELINE|Native.DT.VCENTER;
+						//				if(!b.Text.Contains('\n')) tff|=TFFlags.SINGLELINE|TFFlags.VCENTER;
 						Api.SetTextColor(dc, textColor);
 						Api.DrawText(dc, b.Text, _TextDispLen(b), ref r, tff);
 					}

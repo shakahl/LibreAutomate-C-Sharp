@@ -248,7 +248,7 @@ namespace Au
 		/// <seealso cref="AMouse.IsPressed"/>
 		/// <seealso cref="AMouse.WaitForNoButtonsPressed"/>
 		public static bool WaitForNoModifierKeysAndMouseButtons(double secondsTimeout = 0.0, KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win, MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2) {
-			var to = new AWaitFor.Loop(secondsTimeout, new AOptWaitFor(period: 2));
+			var to = new AWaitFor.Loop(secondsTimeout, new OWaitFor(period: 2));
 			for (; ; ) {
 				if (!IsMod(mod) && !AMouse.IsPressed(buttons)) return true;
 				if (!to.Sleep()) return false;
@@ -272,7 +272,7 @@ namespace Au
 			return AWaitFor.Condition(secondsTimeout, () => {
 				foreach (var k in keys) if (IsPressed(k)) return false;
 				return true;
-			}, new AOptWaitFor(period: 2));
+			}, new OWaitFor(period: 2));
 		}
 		//SHOULDDO: doc all waitfor functions whether they process messages etc and whether use AOpt.WaitFor.DoEvents.
 
@@ -292,14 +292,14 @@ namespace Au
 		/// Registers a temporary hotkey and waits for it.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <param name="hotkey">See <see cref="ARegisteredHotkey.Register"/>.</param>
+		/// <param name="hotkey">See <see cref="Util.ARegisteredHotkey.Register"/>.</param>
 		/// <param name="waitModReleased">Also wait until hotkey modifier keys released.</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="ArgumentException">Error in hotkey string.</exception>
 		/// <exception cref="AuException">Failed to register hotkey.</exception>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>
-		/// Uses <see cref="ARegisteredHotkey"/>; it uses API <msdn>RegisterHotKey</msdn>.
+		/// Uses <see cref="Util.ARegisteredHotkey"/>; it uses API <msdn>RegisterHotKey</msdn>.
 		/// Fails if the hotkey is currently registered by this or another application or used by Windows. Also if F12.
 		/// <note>Most single-key and Shift+key hotkeys don't work when the active window has higher UAC integrity level (eg admin) than this process. Media keys may work.</note>
 		/// </remarks>
@@ -316,9 +316,9 @@ namespace Au
 		/// </example>
 		public static bool WaitForHotkey(double secondsTimeout, KHotkey hotkey, bool waitModReleased = false) {
 			if (s_atomWFH == 0) s_atomWFH = Api.GlobalAddAtom("Au.WaitForHotkey");
-			using (ARegisteredHotkey rhk = default) {
+			using (Util.ARegisteredHotkey rhk = default) {
 				if (!rhk.Register(s_atomWFH, hotkey)) throw new AuException(0, "*register hotkey");
-				if (!AWaitFor.PostedMessage(secondsTimeout, (ref Native.MSG m) => m.message == Api.WM_HOTKEY && m.wParam == s_atomWFH)) return false;
+				if (!AWaitFor.PostedMessage(secondsTimeout, (ref MSG m) => m.message == Api.WM_HOTKEY && m.wParam == s_atomWFH)) return false;
 			}
 			if (waitModReleased) return WaitForNoModifierKeys(secondsTimeout, hotkey.Mod);
 			return true;
@@ -794,7 +794,7 @@ namespace Au
 		/// <th>Changed</th>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="AOptKey.NoBlockInput"/></td>
+		/// <td><see cref="OKey.NoBlockInput"/></td>
 		/// <td>false.
 		/// Blocks user-pressed keys. Sends them afterwards.
 		/// <br/>If the last argument is 'sleep', stops blocking before executing it; else stops blocking after executing all arguments.</td>
@@ -802,65 +802,65 @@ namespace Au
 		/// Does not block user-pressed keys.</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="AOptKey.NoCapsOff"/></td>
+		/// <td><see cref="OKey.NoCapsOff"/></td>
 		/// <td>false.
 		/// If the CapsLock key is toggled, untoggles it temporarily (presses it before and after).</td>
 		/// <td>true.
 		/// Does not touch the CapsLock key.
-		/// <br/>Alphabetic keys of "keys" arguments can depend on CapsLock. Text of "text" arguments doesn't depend on CapsLock, unless <see cref="AOptKey.TextHow"/> is <b>KeysX</b>.</td>
+		/// <br/>Alphabetic keys of "keys" arguments can depend on CapsLock. Text of "text" arguments doesn't depend on CapsLock, unless <see cref="OKey.TextHow"/> is <b>KeysX</b>.</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="AOptKey.NoModOff"/></td>
+		/// <td><see cref="OKey.NoModOff"/></td>
 		/// <td>false.
 		/// Releases modifier keys (Alt, Ctrl, Shift, Win).
-		/// <br/>Does it only at the start; later they cannot interfere, unless <see cref="AOptKey.NoBlockInput"/> is true.</td>
+		/// <br/>Does it only at the start; later they cannot interfere, unless <see cref="OKey.NoBlockInput"/> is true.</td>
 		/// <td>true.
 		/// Does not touch modifier keys.</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="AOptKey.TextSpeed"/></td>
+		/// <td><see cref="OKey.TextSpeed"/></td>
 		/// <td>0 ms.</td>
 		/// <td>0 - 1000.
 		/// Changes the speed for "text" arguments (makes slower).</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="AOptKey.KeySpeed"/></td>
+		/// <td><see cref="OKey.KeySpeed"/></td>
 		/// <td>1 ms.</td>
 		/// <td>0 - 1000.
 		/// Changes the speed for "keys" arguments (makes slower if &gt;1).</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="AOptKey.KeySpeedClipboard"/></td>
+		/// <td><see cref="OKey.KeySpeedClipboard"/></td>
 		/// <td>5 ms.</td>
 		/// <td>0 - 1000.
 		/// Changes the speed of Ctrl+V keys when pasting text or HTML using clipboard.</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="AOptKey.SleepFinally"/></td>
+		/// <td><see cref="OKey.SleepFinally"/></td>
 		/// <td>10 ms.</td>
 		/// <td>0 - 10000.
 		/// <br/>Tip: to sleep finally, also can be used code like this: <c>AKeys.Key("keys", 1000);</c>.</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="AOptKey.TextHow"/></td>
-		/// <td><see cref="KTextHow.Characters"/></td>
+		/// <td><see cref="OKey.TextHow"/></td>
+		/// <td><see cref="OKeyText.Characters"/></td>
 		/// <td><b>KeysOrChar</b>, <b>KeysOrPaste</b> or <b>Paste</b>.</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="AOptKey.PasteLength"/></td>
+		/// <td><see cref="OKey.PasteLength"/></td>
 		/// <td>200.
 		/// <br/>This option is used for "text" arguments. If text length &gt;= this value, uses clipboard.</td>
 		/// <td>&gt;=0.</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="AOptKey.PasteWorkaround"/></td>
+		/// <td><see cref="OKey.PasteWorkaround"/></td>
 		/// <td>false.
 		/// <br/>This option is used for "text" arguments when using clipboard.
 		/// </td>
 		/// <td>true.</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="AOptKey.RestoreClipboard"/></td>
+		/// <td><see cref="OKey.RestoreClipboard"/></td>
 		/// <td>true.
 		/// Restore clipboard data (by default only text).
 		/// <br/>This option is used for "text" and "HTML" arguments when using clipboard.</td>
@@ -868,13 +868,13 @@ namespace Au
 		/// Don't restore clipboard data.</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="AOptKey.Hook"/></td>
+		/// <td><see cref="OKey.Hook"/></td>
 		/// <td>null.</td>
 		/// <td>Callback function that can modify options depending on active window etc.</td>
 		/// </tr>
 		/// </table>
 		/// 
-		/// This function does not wait until the target app receives and processes sent keystrokes and text; there is no reliable way to know it. It just adds small delays depending on options (<see cref="AOptKey.SleepFinally"/> etc). If need, change options or add 'sleep' arguments or wait after calling this function. Sending text through the clipboard normally does not have these problems.
+		/// This function does not wait until the target app receives and processes sent keystrokes and text; there is no reliable way to know it. It just adds small delays depending on options (<see cref="OKey.SleepFinally"/> etc). If need, change options or add 'sleep' arguments or wait after calling this function. Sending text through the clipboard normally does not have these problems.
 		/// 
 		/// Don't use this function to automate windows of own thread. Call it from another thread. See the last example.
 		/// 
@@ -882,7 +882,7 @@ namespace Au
 		/// 
 		/// Mouse button codes/names (eg <see cref="KKey.MouseLeft"/>) cannot be used to click. Instead use callback, like in the "Ctrl+click" example.
 		/// 
-		/// You can use an <see cref="AKeys"/> variable instead of this function. Example: <c>new AKeys(null).Add("keys", "!text").Send();</c>. More examples in <see cref="AKeys(AOptKey)"/> topic.
+		/// You can use an <see cref="AKeys"/> variable instead of this function. Example: <c>new AKeys(null).Add("keys", "!text").Send();</c>. More examples in <see cref="AKeys(OKey)"/> topic.
 		/// 
 		/// This function calls <see cref="Add(KKeysEtc[])"/>, which calls these functions depending on argument type: <see cref="AddKeys"/>, <see cref="AddText"/>, <see cref="AddClipboardData"/>, <see cref="AddKey(KKey, bool?)"/>, <see cref="AddKey(KKey, ushort, bool, bool?)"/>, <see cref="AddSleep"/>, <see cref="AddAction"/>. Then calls <see cref="Send"/>.
 		/// 

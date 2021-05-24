@@ -2,7 +2,7 @@
 uid: caller_info
 ---
 
-# Caller info parameters (f_, l_)
+# Caller info parameter
 
 Some functions have parameters f_ and/or l_ with attribute [CallerFilePath] or [CallerLineNumber]. When calling, they should not be used. They automatically pass source file/line info to the function.
 

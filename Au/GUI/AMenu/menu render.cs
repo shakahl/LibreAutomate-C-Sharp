@@ -108,7 +108,7 @@ namespace Au
 					int len = s.Lenn();
 					if (len > 0) {
 						if (b.FontBold) Api.SelectObject(dc, NativeFont_.BoldCached(_dpi));
-						z = dc.Measure(s, len, _DtFlags(b), maxTextWidth);
+						z = dc.Measure(s, len, _TfFlags(b), maxTextWidth);
 						z.width = Math.Min(z.width, maxTextWidth);
 						if (b.FontBold) Api.SelectObject(dc, font);
 						_z.xTextEnd = Math.Max(_z.xTextEnd, z.width);
@@ -130,12 +130,12 @@ namespace Au
 			return R;
 		}
 
-		Native.DT _DtFlags(MenuItem b) {
-			var f = c_tff; if (b.rawText) f |= Native.DT.NOPREFIX; else if (!_flags.Has(MSFlags.Underline)) f |= Native.DT.HIDEPREFIX;
+		TFFlags _TfFlags(MenuItem b) {
+			var f = c_tff; if (b.rawText) f |= TFFlags.NOPREFIX; else if (!_flags.Has(MSFlags.Underline)) f |= TFFlags.HIDEPREFIX;
 			return f;
 		}
-		const Native.DT c_tff = Native.DT.EXPANDTABS | Native.DT.WORDBREAK /*| Native.DT.PATH_ELLIPSIS*/;
-		const Native.DT c_tffHotkey = Native.DT.NOPREFIX | Native.DT.SINGLELINE;
+		const TFFlags c_tff = TFFlags.EXPANDTABS | TFFlags.WORDBREAK /*| TFFlags.PATH_ELLIPSIS*/;
+		const TFFlags c_tffHotkey = TFFlags.NOPREFIX | TFFlags.SINGLELINE;
 
 		void _Render(IntPtr dc, RECT rUpdate) {
 			Api.FillRect(dc, rUpdate, (IntPtr)(Api.COLOR_BTNFACE + 1));
@@ -196,7 +196,7 @@ namespace Au
 					if (len > 0) {
 						if (b.FontBold) Api.SelectObject(dc, NativeFont_.BoldCached(_dpi));
 						r.Width = _z.xTextEnd;
-						Api.DrawText(dc, b.Text, len, ref r, _DtFlags(b));
+						Api.DrawText(dc, b.Text, len, ref r, _TfFlags(b));
 						if (b.FontBold) Api.SelectObject(dc, font);
 					}
 
@@ -213,7 +213,7 @@ namespace Au
 							Api.DrawThemeBackground(_z.theme, dc, part, state, r);
 						} else {
 							RECT r = new(x, y, width, height);
-							Api.DrawText(dc, c, 1, ref r, Native.DT.CENTER);
+							Api.DrawText(dc, c, 1, ref r, TFFlags.CENTER);
 							//cannot use DrawFrameControl(DFC_MENU, DFCS_MENUARROW etc), it draws with white background and too small when high DPI
 						}
 					}

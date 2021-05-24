@@ -13,6 +13,8 @@ using System.Reflection;
 
 using Au.Types;
 
+//TODO: CONSIDER: let Au.Util names start with U, like UDpi. To avoid mixing with Au names.
+
 namespace Au.Util
 {
 	/// <summary>
@@ -219,7 +221,7 @@ namespace Au.Util
 		/// <remarks>
 		/// Also adds scrollbar width or/and height if need.
 		/// </remarks>
-		public static bool AdjustWindowRectEx(DpiOf dpiOf, ref RECT r, WS style, WS2 exStyle, bool hasMenu = false) {
+		public static bool AdjustWindowRectEx(DpiOf dpiOf, ref RECT r, WS style, WSE exStyle, bool hasMenu = false) {
 			int dpi = dpiOf;
 			bool ok=AVersion.MinWin10_1607
 				? Api.AdjustWindowRectExForDpi(ref r, style, hasMenu, exStyle, dpi)

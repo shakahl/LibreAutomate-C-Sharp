@@ -669,10 +669,10 @@ namespace Au.Controls
 			string xmlFile = _defaultFile = xmlFileDefault;
 			_customizedFile = xmlFileCustomized;
 			try {
-				var a = AExtXml.LoadElem(xmlFileDefault).Elements().ToArray(); //menu and toolbars
+				var a = AXml.LoadElem(xmlFileDefault).Elements().ToArray(); //menu and toolbars
 				if (xmlFileCustomized != null && AFile.ExistsAsFile(xmlFileCustomized, true)) {
 					try { //replace a elements with elements that exist in xmlFileCustomized. If some toolbar does not exist there, use default.
-						var ac = AExtXml.LoadElem(xmlFileCustomized).Elements().ToArray();
+						var ac = AXml.LoadElem(xmlFileCustomized).Elements().ToArray();
 						for (int i = 0; i < a.Length; i++) {
 							var name = a[i].Name.LocalName;
 							foreach (var y in ac) if (y.Name.LocalName == name && y.HasElements) { a[i] = y; break; }

@@ -149,9 +149,9 @@ namespace Au.Util
 
 			if (0 != (flags & EFlags.RefPaths)) AssemblyLoadContext.Default.Resolving += _ResolvingAssembly;
 
-			if (0 != (flags & EFlags.MTA)) AThread.SetComApartment_(ApartmentState.MTA); //Main() without [STAThread]
+			if (0 != (flags & EFlags.MTA)) AThread.SetComApartment_(ApartmentState.MTA);
 
-			if (0 != (flags & EFlags.Console)) Api.AllocConsole(); //meta console true
+			if (0 != (flags & EFlags.Console)) Api.AllocConsole();
 
 			//if(0 != (flags & EFlags.Config)) { //this was with .NET 4
 			//	var config = asmFile + ".config";
@@ -184,10 +184,10 @@ namespace Au.Util
 			/// <summary>Has [RefPaths] attribute. It is when some meta r paths cannot be automatically resolved.</summary>
 			RefPaths = 1,
 
-			/// <summary>Main() does not have [STAThread].</summary>
+			/// <summary>Main() with [MTAThread].</summary>
 			MTA = 2,
 
-			/// <summary>Has meta console.</summary>
+			/// <summary>Has meta console true.</summary>
 			Console = 4,
 
 			//Config = 256, //meta hasConfig
@@ -208,7 +208,7 @@ namespace Au.Util
 				//}
 				if (m.code == HookData.CbtEvent.ACTIVATE) {
 					var w = (AWnd)m.wParam;
-					if (!w.HasExStyle(WS2.NOACTIVATE)) {
+					if (!w.HasExStyle(WSE.NOACTIVATE)) {
 						//AOutput.Write(w);
 						//AOutput.Write(w.ExStyle);
 						//Api.SetForegroundWindow(w); //does not work

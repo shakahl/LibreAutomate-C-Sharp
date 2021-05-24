@@ -21,6 +21,7 @@ using System.Resources;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Collections.Concurrent;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Au.Compiler
 {
@@ -133,15 +134,15 @@ namespace Au.Compiler
 
 			if (m.PreBuild.f != null && !_RunPrePostBuildScript(false, m, outFile)) return false;
 
-			var po = m.CreateParseOptions();
+			var pOpt = m.CreateParseOptions();
 			var trees = new CSharpSyntaxTree[m.CodeFiles.Count];
 			for (int i = 0; i < trees.Length; i++) {
 				var f1 = m.CodeFiles[i];
-				trees[i] = CSharpSyntaxTree.ParseText(f1.code, po, f1.f.FilePath, Encoding.UTF8) as CSharpSyntaxTree;
+				trees[i] = CSharpSyntaxTree.ParseText(f1.code, pOpt, f1.f.FilePath, Encoding.UTF8) as CSharpSyntaxTree;
 				//info: file path is used later in several places: in compilation error messages, run time stack traces (from PDB), Visual Studio debugger, etc.
-				//	Our AOutputServer.SetNotifications callback will convert file/line info to links. It supports compilation errors and run time stack traces.
+				//	Our AOutput.Server.SetNotifications callback will convert file/line info to links. It supports compilation errors and run time stack traces.
 			}
-			//p1.Next('t');
+			p1.Next('t');
 
 			string asmName = m.Name;
 			if (m.Role == ERole.editorExtension) //cannot load multiple assemblies with same name
@@ -152,8 +153,9 @@ namespace Au.Compiler
 				aFinally += () => InternalsVisible.Remove(asmName); //this func is called from try/catch/finally which calls aFinally
 			}
 
-			var compilation = CSharpCompilation.Create(asmName, trees, m.References.Refs, m.CreateCompilationOptions());
-			//p1.Next('c');
+			var cOpt = m.CreateCompilationOptions();
+			var compilation = CSharpCompilation.Create(asmName, trees, m.References.Refs, cOpt);
+			p1.Next('c');
 
 			string xdFile = null;
 			Stream xdStream = null;
@@ -165,9 +167,16 @@ namespace Au.Compiler
 				_AddAttributesEtc(ref compilation, m, out bool refPaths);
 				if (refPaths) r.flags |= MiniProgram_.EFlags.RefPaths;
 
+				//if empty script, error "no Main". Users would not understand why. Append semicolon to make compiler detect top-level statements.
+				if (m.Role != ERole.classLibrary) {
+					var diag1 = compilation.GetDiagnostics();
+					if(diag1.Any(o => o.Id == "CS5001")) //no Main
+						compilation = compilation.ReplaceSyntaxTree(trees[0], trees[0].WithChangedText(SourceText.From(m.CodeFiles[0].code + "\r\n;", Encoding.UTF8)) as CSharpSyntaxTree);
+				}
+
 				//Create debug info always. It is used for run-time error links.
 				//Embed it in assembly. It adds < 1 KB. Almost the same compiling speed. Same loading speed.
-				//Don't use classic pdb file. It is 14 KB, 2 times slower compiling, slower loading; error after switching to .NET Core: Unexpected error writing debug information -- 'The version of Windows PDB writer is older than required: 'diasymreader.dll''.
+				//Don't use classic pdb file. It is 14 KB, 2 times slower compiling, slower loading; error with .NET Core: Unexpected error writing debug information -- 'The version of Windows PDB writer is older than required: 'diasymreader.dll''.
 				eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded);
 
 				if (m.XmlDoc) xdStream = AFile.WaitIfLocked(() => File.Create(xdFile = outPath + "\\" + m.Name + ".xml"));
@@ -181,15 +190,15 @@ namespace Au.Compiler
 				//EmbeddedText.FromX //it seems we can embed source code in PDB. Not tested.
 			}
 
-			//p1.Next();
-			var asmStream = new MemoryStream(8000);
+			p1.Next();
+			var asmStream = new MemoryStream(16000);
 			var emitResult = compilation.Emit(asmStream, null, xdStream, resNat, resMan, eOpt);
 
 			if (needOutputFiles) {
 				xdStream?.Dispose();
 				resNat?.Dispose(); //info: compiler disposes resMan
 			}
-			//p1.Next('e');
+			p1.Next('e');
 
 			var diag = emitResult.Diagnostics;
 			if (!diag.IsEmpty) {
@@ -209,15 +218,9 @@ namespace Au.Compiler
 			}
 
 			if (needOutputFiles) {
-				if (m.Role == ERole.miniProgram || m.Role == ERole.exeProgram) {
-					//if there is no [STAThread], will need MTA thread, unless top-level statements
-					bool hasSTAThread = false;
-					var ep = compilation.GetEntryPoint(default);
-					if (ep != null) {
-						bool isTopLevelStatements = ep.Name == WellKnownMemberNames.TopLevelStatementsEntryPointMethodName; //"<Main>$"
-						hasSTAThread = isTopLevelStatements || ep.GetAttributes().Any(o => o.ToString() == "System.STAThreadAttribute");
-					}
-					if (!hasSTAThread) r.flags |= MiniProgram_.EFlags.MTA;
+				if (m.Role == ERole.miniProgram) {
+					//is Main with [MTAThread]? Default STA, even if Main without [STAThread].
+					if (compilation.GetEntryPoint(default)?.GetAttributes().Any(o => o.ToString() == "System.MTAThreadAttribute") ?? false) r.flags |= MiniProgram_.EFlags.MTA;
 
 					if (m.Console) r.flags |= MiniProgram_.EFlags.Console;
 				}

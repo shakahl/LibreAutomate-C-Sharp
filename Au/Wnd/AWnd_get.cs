@@ -253,7 +253,7 @@ namespace Au
 			public AWnd DirectParent {
 				get {
 #if true
-					var p = _w.GetWindowLong(Native.GWL.HWNDPARENT);
+					var p = _w.GetWindowLong(GWLong.HWNDPARENT);
 					if (p == default) {
 						//#if DEBUG
 						//						var p2 = Api.GetAncestor(_w, Api.GA_PARENT);
@@ -461,8 +461,8 @@ namespace Au
 				if (!w.IsVisible) return false;
 
 				var exStyle = w.ExStyle;
-				if ((exStyle & WS2.APPWINDOW) == 0) {
-					if ((exStyle & (WS2.TOOLWINDOW | WS2.NOACTIVATE)) != 0) return false;
+				if ((exStyle & WSE.APPWINDOW) == 0) {
+					if ((exStyle & (WSE.TOOLWINDOW | WSE.NOACTIVATE)) != 0) return false;
 					if (!w.OwnerWindow.Is0) return false;
 				}
 
@@ -471,7 +471,7 @@ namespace Au
 				if (AVersion.MinWin10) {
 					if (w.IsCloaked) {
 						if (!allDesktops) return false;
-						if ((exStyle & WS2.NOREDIRECTIONBITMAP) != 0) { //probably a store app
+						if ((exStyle & WSE.NOREDIRECTIONBITMAP) != 0) { //probably a store app
 							switch (w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
 							case 1: return false; //Windows search, experience host, etc. Also app windows that normally would sit on ApplicationFrameWindow windows.
 							case 2: if (_WindowsStoreAppFrameChild(w).Is0) return false; break; //skip hosts
@@ -479,8 +479,8 @@ namespace Au
 						}
 					}
 				} else if (AVersion.MinWin8) {
-					if ((exStyle & WS2.NOREDIRECTIONBITMAP) != 0 && !w.HasStyle(WS.CAPTION)) {
-						if (!allDesktops && (exStyle & WS2.TOPMOST) != 0) return false; //skip store apps
+					if ((exStyle & WSE.NOREDIRECTIONBITMAP) != 0 && !w.HasStyle(WS.CAPTION)) {
+						if (!allDesktops && (exStyle & WSE.TOPMOST) != 0) return false; //skip store apps
 						if (ShellWindow.GetThreadProcessId(out var pidShell) != 0 && w.GetThreadProcessId(out var pid) != 0 && pid == pidShell) return false; //skip captionless shell windows
 					}
 					//On Win8 impossible to get next window like Alt+Tab.
@@ -596,7 +596,7 @@ namespace Au
 		public AWnd OwnerWindow {
 			get => Api.GetWindow(this, Api.GW_OWNER);
 			set {
-				SetWindowLong(Native.GWL.HWNDPARENT, (LPARAM)value);
+				SetWindowLong(GWLong.HWNDPARENT, (LPARAM)value);
 				if (!value.Is0) {
 					bool tm = value.IsTopmost;
 					if (tm != IsTopmost) { if (tm) ZorderTopmost(); else ZorderNoTopmost(); }
@@ -638,9 +638,9 @@ namespace Au
 		public bool IsChildOf(AWnd w) { return Api.IsChild(w, this); }
 
 		/// <summary>
-		/// Returns <c>(AWnd)GetWindowLong(Native.GWL.HWNDPARENT)</c>.
+		/// Returns <c>(AWnd)GetWindowLong(GWLong.HWNDPARENT)</c>.
 		/// </summary>
-		internal AWnd ParentGWL_ => (AWnd)GetWindowLong(Native.GWL.HWNDPARENT);
+		internal AWnd ParentGWL_ => (AWnd)GetWindowLong(GWLong.HWNDPARENT);
 
 		/// <summary>
 		/// Gets the active (foreground) window.

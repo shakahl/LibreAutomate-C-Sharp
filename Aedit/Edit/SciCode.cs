@@ -321,16 +321,16 @@ partial class SciCode : KScintilla
 	}
 	bool _noModelEnsureCurrentSelected;
 
-	protected override bool TranslateAcceleratorCore(ref MSG msg, ModifierKeys mod) {
+	protected override bool TranslateAcceleratorCore(ref System.Windows.Interop.MSG msg, ModifierKeys mod) {
 		if (msg.message is Api.WM_KEYDOWN or Api.WM_SYSKEYDOWN) {
 			var key = (KKey)msg.wParam;
 			switch ((key, mod)) {
 			case (KKey.C, ModifierKeys.Control):
-				ZForumCopy(onlyInfo: true);
-				break;
+				ZCopy();
+				return true;
 			case (KKey.V, ModifierKeys.Control):
-				if (ZForumPaste()) return true;
-				break;
+				ZPaste();
+				return true;
 			case (KKey.W, ModifierKeys.Control):
 				Menus.Edit.View.Wrap_lines();
 				return true;
@@ -390,59 +390,74 @@ partial class SciCode : KScintilla
 
 	#region copy paste
 
-	public void ZForumCopy(bool onlyInfo = false) {
+	/// <summary>
+	/// Called when copying (menu or Ctrl+C).
+	/// Caller must not copy text to clipboard, and must not pass the event to Scintilla.
+	/// </summary>
+	/// <param name="forum">Copy as bbcode for forum.</param>
+	public void ZCopy(bool forum = false) {
 		int i1 = zSelectionStart8, i2 = zSelectionEnd8, textLen = zLen8;
 		if (textLen == 0) return;
 		bool isCS = _fn.IsCodeFile;
 		bool isFragment = (i2 != i1 && !(i1 == 0 && i2 == textLen)) || !isCS;
-		if (onlyInfo) {
-			if (isFragment || s_infoCopy) return; s_infoCopy = true;
-			AOutput.Write("Info: To copy C# code for pasting in the forum, use menu Edit -> Forum Copy. Then simply paste there; don't use the Code button.");
-			return;
-		}
-
-		bool isScript = _fn.IsScript;
-		var b = new StringBuilder(isCS ? "[cs]" : "[code]");
-		string s;
-		if (isFragment) {
-			b.Append(zRangeText(false, i1, i2));
+		if (forum) {
+			bool isScript = _fn.IsScript;
+			var b = new StringBuilder(isCS ? "[cs]" : "[code]");
+			string s;
+			if (isFragment) {
+				b.Append(zRangeText(false, i1, i2));
+			} else {
+				s = CiUtil.GetTextWithoutUnusedUsingDirectives();
+				var name = _fn.Name; if (name.RegexIsMatch(@"(?i)^(Script|Class)\d*\.cs")) name = null;
+				b.AppendFormat("// {0} \"{1}\"{2}{3}", isScript ? "script" : "class", name, s[0] == '/' ? " " : "\r\n", s);
+			}
+			b.AppendLine(isCS ? "[/cs]" : "[/code]");
+			s = b.ToString();
+			new AClipboardData().AddText(s).SetClipboard();
 		} else {
-			s = CiUtil.GetTextWithoutUnusedUsingDirectives();
-			var name = _fn.Name; if (name.RegexIsMatch(@"(?i)^(Script|Class)\d*\.cs")) name = null;
-			b.AppendFormat("// {0} \"{1}\"{2}{3}", isScript ? "script" : "class", name, s[0] == '/' ? " " : "\r\n", s);
+			if (!(isFragment || s_infoCopy)) {
+				s_infoCopy = true;
+				AOutput.Write("Info: To copy C# code for pasting in the forum, use menu Edit -> Forum Copy. Then simply paste there; don't use the Code button.");
+			}
+			Call(SCI_COPY);
 		}
-		b.AppendLine(isCS ? "[/cs]" : "[/code]");
-		s = b.ToString();
-		new AClipboardData().AddText(s).SetClipboard();
 	}
 	static bool s_infoCopy;
 
-	public bool ZForumPaste() {
+	/// <summary>
+	/// Called when pasting (menu or Ctrl+V). Inserts text, possibly with processed forum bbcode etc.
+	/// Caller must not insert text, and must not pass the event to Scintilla.
+	/// </summary>
+	public void ZPaste() {
 		var s = AClipboard.Text;
-		if (s == null) return false;
+		if (s.NE()) return;
+		//string s0 = s;
 		if (s.Like("[cs]*[/cs]\r\n")) s = s[4..^7];
 
-		if (!s.RegexMatch(@"^// (script|class) ""(.*?)""( |\R)", out var m)) return false;
-		bool isClass = s[3] == 'c';
-		s = s[m.End..];
-		var name = m[2].Length > 0 ? m[2].Value : (isClass ? "Class1.cs" : "Script1.cs");
+		if (s.RegexMatch(@"^// (script|class) ""(.*?)""( |\R)", out var m)) {
+			bool isClass = s[3] == 'c';
+			s = s[m.End..];
+			var name = m[2].Length > 0 ? m[2].Value : (isClass ? "Class1.cs" : "Script1.cs");
 
-		string buttons = _fn.FileType != (isClass ? EFileType.Class : EFileType.Script)
-			? "1 Create new file|0 Cancel"
-			: "1 Create new file|2 Replace all text|3 Paste|0 Cancel";
-		switch (ADialog.Show("Import C# file text from clipboard", "Source file: " + name, buttons, DFlags.CommandLinks, owner: this)) {
-		case 1: //Create new file
-			App.Model.NewItem(isClass ? "Class.cs" : "Script.cs", null, name, text: new EdNewFileText(replaceTemplate: true, s));
-			break;
-		case 2: //Replace all text
-			zSetText(s);
-			break;
-		case 3: //Paste
-			zReplaceSel(s);
-			break;
-		} //rejected: option to rename this file
-
-		return true;
+			string buttons = _fn.FileType != (isClass ? EFileType.Class : EFileType.Script)
+				? "1 Create new file|0 Cancel"
+				: "1 Create new file|2 Replace all text|3 Paste|0 Cancel";
+			switch (ADialog.Show("Import C# file text from clipboard", "Source file: " + name, buttons, DFlags.CommandLinks, owner: this)) {
+			case 1: //Create new file
+				App.Model.NewItem(isClass ? "Class.cs" : "Script.cs", null, name, text: new EdNewFileText(replaceTemplate: true, s));
+				break;
+			case 2: //Replace all text
+				zSetText(s);
+				break;
+			case 3: //Paste
+				CodeInfo.Pasting(this);
+				zReplaceSel(s);
+				break;
+			} //rejected: option to rename this file
+		} else {
+			CodeInfo.Pasting(this);
+			Call(SCI_PASTE); //not zReplaceSel, because can be SCI_SETMULTIPASTE etc
+		}
 	}
 
 	#endregion
@@ -482,7 +497,7 @@ partial class SciCode : KScintilla
 		end += s2.Length;
 		found = (start, end, zLineFromPos(false, start), zLineFromPos(false, end));
 		return true;
-	}
+	}  //TODO
 
 	/// <summary>
 	/// Folds script header "//.\r\nusing Au; ... //;;;\r\n" if found.
@@ -705,7 +720,7 @@ partial class SciCode : KScintilla
 		public override string ToString() => $"({CurrentFrom}, {CurrentTo}), owner={_owner}";
 	}
 
-	List<_TempRange> _tempRanges = new List<_TempRange>();
+	List<_TempRange> _tempRanges = new();
 
 	/// <summary>
 	/// Marks a temporary working range of text and later notifies when it is leaved.
@@ -728,8 +743,12 @@ partial class SciCode : KScintilla
 		int fromUtf16 = from;
 		zNormalizeRange(true, ref from, ref to);
 		//AOutput.Write(fromUtf16, from, to, zCurrentPos8);
-		//Debug.Assert(zCurrentPos8 >= from && (flags.Has(ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) ? zCurrentPos8 == to : zCurrentPos8 <= to));
-		ADebug.PrintIf(!(zCurrentPos8 >= from && (flags.Has(ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) ? zCurrentPos8 == to : zCurrentPos8 <= to)), "bad");
+#if DEBUG
+		if(!(zCurrentPos8 >= from && (flags.Has(ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) ? zCurrentPos8 == to : zCurrentPos8 <= to))) {
+			ADebug.Print("bad");
+			//CiUtil.HiliteRange(from, to);
+		}
+#endif
 
 		if (flags.Has(ZTempRangeFlags.NoDuplicate)) {
 			for (int i = _tempRanges.Count - 1; i >= 0; i--) {

@@ -16,7 +16,6 @@ using Au.Util;
 
 using Microsoft.CodeAnalysis;
 using System.Collections.Immutable;
-using System.Globalization;
 
 namespace Au.Compiler
 {
@@ -301,7 +300,7 @@ namespace Au.Compiler
 								d.Execute("CREATE TABLE doc (name TEXT PRIMARY KEY, xml TEXT)");
 								using var statInsert = d.Statement("INSERT INTO doc VALUES (?, ?)");
 
-								var xr = AExtXml.LoadElem(xmlPath);
+								var xr = AXml.LoadElem(xmlPath);
 								foreach(var e in xr.Descendants("member")) {
 									var name = e.Attr("name");
 
@@ -332,7 +331,7 @@ namespace Au.Compiler
 			}
 			static System.Collections.Concurrent.ConcurrentDictionary<string, _DocumentationProvider> s_d = new System.Collections.Concurrent.ConcurrentDictionary<string, _DocumentationProvider>(StringComparer.OrdinalIgnoreCase);
 
-			protected internal override string GetDocumentationForSymbol(string documentationMemberID, CultureInfo preferredCulture, CancellationToken cancellationToken = default)
+			protected internal override string GetDocumentationForSymbol(string documentationMemberID, System.Globalization.CultureInfo preferredCulture, CancellationToken cancellationToken = default)
 			{
 				if(_db != null) {
 					lock(_db) { //sometimes not in main thread

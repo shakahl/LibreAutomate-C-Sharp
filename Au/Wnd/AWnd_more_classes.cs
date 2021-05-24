@@ -199,7 +199,7 @@ namespace Au
 				}
 
 				/// <summary>
-				/// Calls <see cref="FromString"/>. If it returns true, calls <see cref="NormalizeRect"/>, <see cref="AExtWpf.SetRect"/>, maximizes if need and returns true.
+				/// Calls <see cref="FromString"/>. If it returns true, calls <see cref="NormalizeRect"/>, <see cref="ExtWpf.SetRect"/>, maximizes if need and returns true.
 				/// Call this function before showing window.
 				/// </summary>
 				/// <param name="w"></param>

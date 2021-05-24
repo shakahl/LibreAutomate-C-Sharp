@@ -109,7 +109,7 @@ namespace Au
 			set {
 				if (value == _r) return;
 				_r = value;
-				if (IsHandleCreated) _w.SetWindowPos(Native.SWP.NOACTIVATE, _r.left, _r.top, _r.Width, _r.Height, Native.HWND.TOPMOST);
+				if (IsHandleCreated) _w.SetWindowPos(SWPFlags.NOACTIVATE, _r.left, _r.top, _r.Width, _r.Height, SpecHWND.TOPMOST);
 			}
 		}
 		RECT _r;
@@ -160,11 +160,11 @@ namespace Au
 				s_isWinClassRegistered |= regMask;
 			}
 
-			var es = WS2.TOOLWINDOW | WS2.TOPMOST | WS2.LAYERED | WS2.TRANSPARENT | WS2.NOACTIVATE;
-			if (ClickToClose) es &= ~WS2.TRANSPARENT;
+			var es = WSE.TOOLWINDOW | WSE.TOPMOST | WSE.LAYERED | WSE.TRANSPARENT | WSE.NOACTIVATE;
+			if (ClickToClose) es &= ~WSE.TRANSPARENT;
 			_w = AWnd.More.CreateWindow(WndProc, true, cn, Name, WS.POPUP, es); //note: don't set rect here: can be painting problems when resizing
 			_SetOpacity();
-			if (!_r.Is0) _w.SetWindowPos(Native.SWP.NOACTIVATE, _r.left, _r.top, _r.Width, _r.Height, Native.HWND.TOPMOST);
+			if (!_r.Is0) _w.SetWindowPos(SWPFlags.NOACTIVATE, _r.left, _r.top, _r.Width, _r.Height, SpecHWND.TOPMOST);
 		}
 		static byte s_isWinClassRegistered;
 
@@ -471,12 +471,12 @@ namespace Au
 
 		/// <summary>
 		/// Gets or sets text format flags.
-		/// Default: Native.DT.NOPREFIX | Native.DT.WORDBREAK | Native.DT.EXPANDTABS.
+		/// Default: TFFlags.NOPREFIX | TFFlags.WORDBREAK | TFFlags.EXPANDTABS.
 		/// </summary>
 		/// <remarks>
 		/// This property cannot be changed after creating OSD window.
 		/// </remarks>
-		public Native.DT TextFormatFlags { get; set; } = Native.DT.NOPREFIX | Native.DT.WORDBREAK | Native.DT.EXPANDTABS;
+		public TFFlags TextFormatFlags { get; set; } = TFFlags.NOPREFIX | TFFlags.WORDBREAK | TFFlags.EXPANDTABS;
 
 		/// <summary>
 		/// Icon or image at the left. Can be <see cref="AIcon"/>, <b>Icon</b> or <b>System.Drawing.Image</b>. Any size.
@@ -615,7 +615,7 @@ namespace Au
 			if (!Text.NE()) {
 				Api.SetTextColor(dc, TextColor.ToBGR());
 				Api.SetBkMode(dc, 1);
-				var tff = TextFormatFlags; if (WrapWidth > 0) tff |= Native.DT.WORDBREAK;
+				var tff = TextFormatFlags; if (WrapWidth > 0) tff |= TFFlags.WORDBREAK;
 				using var soFont = new GdiSelectObject_(dc, _font);
 				RECT rt = r;
 				Api.DrawText(dc, Text, Text.Length, ref rt, tff);
@@ -663,7 +663,7 @@ namespace Au
 					_EnsureFontAndMargin(dpi);
 					var tff = TextFormatFlags;
 					int maxWidth = screen.WorkArea.Width - zi.Width - 10;
-					int ww = WrapWidth; if (ww > 0) { maxWidth = Math.Min(maxWidth, ww); tff |= Native.DT.WORDBREAK; }
+					int ww = WrapWidth; if (ww > 0) { maxWidth = Math.Min(maxWidth, ww); tff |= TFFlags.WORDBREAK; }
 					using var dc = new FontDC_(_font);
 					z = dc.Measure(Text, tff, maxWidth);
 				}

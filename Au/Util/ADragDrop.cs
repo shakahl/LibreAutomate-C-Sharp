@@ -83,7 +83,7 @@ namespace Au.Util
 			/// Current message retrieved by API <msdn>GetMessage</msdn>.
 			/// API <msdn>MSG</msdn>.
 			/// </summary>
-			public Native.MSG Msg;
+			public MSG Msg;
 
 			/// <summary>
 			/// Native cursor handle. The callback function can set this to temporarily set cursor.

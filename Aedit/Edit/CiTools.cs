@@ -119,7 +119,7 @@ class CiTools
 		else t.KeysWindowShow(doc, cd.code, pos16, stringSpan);
 	}
 
-	public void ShowForStringParameter(PSFormat stringFormat, in CodeInfo.Context cd, TextSpan stringSpan, AWnd dontCover = default) {
+	public void ShowForStringParameter(PSFormat stringFormat, CodeInfo.Context cd, TextSpan stringSpan, AWnd dontCover = default) {
 		switch (stringFormat) {
 		case PSFormat.ARegex:
 		case PSFormat.ARegexReplacement:

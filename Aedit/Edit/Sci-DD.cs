@@ -103,9 +103,12 @@ partial class SciCode
 				s = _data.text;
 			} else {
 				if (_sci._fn.IsCodeFile) {
-					var text = _sci.zText;
-					int endOfMeta = Au.Compiler.MetaComments.FindMetaComments(text);
-					if (endOfMeta > 0 && _sci.zPos16(pos8) < endOfMeta) return;
+					//var text = _sci.zText;
+					//var meta = Au.Compiler.MetaComments.FindMetaComments(text);
+					//if (meta.end > 0) {
+					//	int pos1 = _sci.zPos16(pos8);
+					//	if (pos1 > meta.start && pos1 < meta.end) return;
+					//}
 
 					string mi = _data.scripts
 						? "1 var s = name;|2 var s = path;|3 ATask.Run(path);|4 t[name] = o => ATask.Run(path);"
@@ -164,6 +167,7 @@ partial class SciCode
 					z.text = p8;
 					z.len = s8.Length - 1;
 					if (!_justText || 0 == ((DragDropEffects)effect & DragDropEffects.Move)) z.copy = 1;
+					CodeInfo.Pasting(_sci);
 					_sci.Call(SCI_DRAGDROP, 2, &z);
 				}
 				if (!_sci.IsFocused && _sci.Hwnd.Window.IsActive) { //note: don't activate window; let the drag source do it, eg Explorer activates on drag-enter.
@@ -213,7 +217,7 @@ partial class SciCode
 					for (int i = 0; i < n; i++) {
 						using var pidl = new APidl(pidlFolder, (IntPtr)(p + pi[i]));
 						shells[i] = pidl.ToString();
-						names[i] = pidl.ToShellString(Native.SIGDN.NORMALDISPLAY);
+						names[i] = pidl.ToShellString(SIGDN.NORMALDISPLAY);
 					}
 				}
 			}

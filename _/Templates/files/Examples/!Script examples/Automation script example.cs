@@ -1,6 +1,6 @@
-/*/ ifRunning warn_restart; runSingle true; /*/ //.
-using Au; using Au.Types; using System; using System.Collections.Generic; using System.IO; using System.Linq;
-class Script { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { ATask.Setup(); //;;;
+/*/ runSingle true; /*/ //.
+using Au;
+;ATask.Setup(trayIcon: true); //;
 
 //Click the ► button on the toolbar to run the script.
 
@@ -18,6 +18,3 @@ if (ADialog.ShowYesNo("Run Notepad?", "The script will add some text and close N
 string linkText = "Read about code editor features",
 	linkUrl = "https://www.quickmacros.com/au/help/editor/Code editor.html";
 AOutput.Write($"<><link \"{linkUrl}\">{linkText}</link>");
-
-}
-}

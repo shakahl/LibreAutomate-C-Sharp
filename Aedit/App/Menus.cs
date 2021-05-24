@@ -177,20 +177,13 @@ static class Menus
 		public static void Cut() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_CUT); }
 
 		[Command(keysText = "Ctrl+C", image = "resources/images/copy_16x.xaml")]
-		public static void Copy() {
-			var doc = Panels.Editor.ZActiveDoc;
-			doc.ZForumCopy(onlyInfo: true);
-			doc.Call(Sci.SCI_COPY);
-		}
+		public static void Copy() { Panels.Editor.ZActiveDoc.ZCopy(); }
 
 		[Command(keysText = "Ctrl+V", image = "resources/images/paste_16x.xaml")]
-		public static void Paste() {
-			var doc = Panels.Editor.ZActiveDoc;
-			if (!doc.ZForumPaste()) doc.Call(Sci.SCI_PASTE);
-		}
+		public static void Paste() { Panels.Editor.ZActiveDoc.ZPaste(); }
 
 		[Command()]
-		public static void Forum_copy() { Panels.Editor.ZActiveDoc.ZForumCopy(); }
+		public static void Forum_copy() { Panels.Editor.ZActiveDoc.ZCopy(forum: true); }
 
 		[Command(separator = true, keys = "Ctrl+F", image = "resources/images/findinfile_16x.xaml")]
 		public static void Find() { Panels.Find.ZCtrlF(Panels.Editor.ZActiveDoc); }
@@ -210,20 +203,27 @@ static class Menus
 		[Command(separator = true)]
 		public static class Selection
 		{
-			[Command]
+			[Command(keysText = "R-click margin")]
 			public static void Comment() { Panels.Editor.ZActiveDoc.ZCommentLines(true); }
 
-			[Command]
+			[Command(keysText = "R-click margin")]
 			public static void Uncomment() { Panels.Editor.ZActiveDoc.ZCommentLines(false); }
 
-			[Command]
+			[Command(keysText = "Tab")]
 			public static void Indent() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_TAB); }
 
-			[Command]
+			[Command(keysText = "Shift+Tab")]
 			public static void Unindent() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_BACKTAB); }
 
-			[Command]
+			[Command(keysText = "Ctrl+A")]
 			public static void Select_all() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_SELECTALL); }
+		}
+
+		[Command]
+		public static class Convert
+		{
+			[Command]
+			public static void To_script_class() { InsertCode.ConvertTlsScriptToClass(); }
 		}
 
 		[Command]

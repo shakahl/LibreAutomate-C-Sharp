@@ -420,7 +420,7 @@ public partial class AToolbar
 		var (r, prevSize) = _GetCachedOwnerRect();
 		//AOutput.Write(r, Anchor, _xy, Size);
 
-		var swp = Native.SWP.NOZORDER | Native.SWP.NOOWNERZORDER | Native.SWP.NOACTIVATE;
+		var swp = SWPFlags.NOZORDER | SWPFlags.NOOWNERZORDER | SWPFlags.NOACTIVATE;
 		var bounds = _w.Rect;
 		int x, y, cx = bounds.Width, cy = bounds.Height;
 
@@ -450,9 +450,9 @@ public partial class AToolbar
 			_sett.offsets = _offsets;
 		}
 
-		if(x == bounds.left && y == bounds.top) swp |= Native.SWP.NOMOVE;
-		if(cx == bounds.Width && cy == bounds.Height) swp |= Native.SWP.NOSIZE;
-		if(!swp.Has(Native.SWP.NOMOVE | Native.SWP.NOSIZE)) {
+		if(x == bounds.left && y == bounds.top) swp |= SWPFlags.NOMOVE;
+		if(cx == bounds.Width && cy == bounds.Height) swp |= SWPFlags.NOSIZE;
+		if(!swp.Has(SWPFlags.NOMOVE | SWPFlags.NOSIZE)) {
 			_ignorePosChanged = true;
 			_w.SetWindowPos(swp, x, y, cx, cy);
 			_ignorePosChanged = false;
@@ -475,7 +475,7 @@ public partial class AToolbar
 		if(!_created) return;
 //		//AOutput.Write(this, wp.flags);
 		
-//		if(!wp.flags.Has(Native.SWP.NOSIZE)) {
+//		if(!wp.flags.Has(SWPFlags.NOSIZE)) {
 //			SIZE min = _GetMinSize();
 //			if(wp.cx < min.width) wp.cx = min.width;
 //			if(wp.cy < min.height) wp.cy = min.height;
@@ -492,7 +492,7 @@ public partial class AToolbar
 //			return (Math.Max(k, ms.Width), Math.Max(k, ms.Height));
 //		}
 		
-		if(!wp.flags.Has(Native.SWP.NOMOVE) && _IsSatellite) {
+		if(!wp.flags.Has(SWPFlags.NOMOVE) && _IsSatellite) {
 			RECT r=_satPlanet._w.Rect;
 			if(wp.x>r.right) wp.x=r.right; else wp.x=Math.Max(wp.x, r.left-wp.cx);
 			if(wp.y>r.bottom) wp.y=r.bottom; else wp.y=Math.Max(wp.y, r.top-wp.cy);
@@ -502,8 +502,8 @@ public partial class AToolbar
 	void _WmWindowPosChanged(in Api.WINDOWPOS wp)
 	{
 		if(!_created) return;
-		if(!wp.flags.Has(Native.SWP.NOMOVE | Native.SWP.NOSIZE)) {
-			bool resized=!wp.flags.Has(Native.SWP.NOSIZE);
+		if(!wp.flags.Has(SWPFlags.NOMOVE | SWPFlags.NOSIZE)) {
+			bool resized=!wp.flags.Has(SWPFlags.NOSIZE);
 			if(!_ignorePosChanged) {
 				_os?.UpdateIfAutoScreen();
 				_UpdateOffsets(wp.x, wp.y, wp.cx, wp.cy); //tested: if SWP_NOMOVE or SWP_NOSIZE, wp contains current values
@@ -517,7 +517,7 @@ public partial class AToolbar
 			}
 			_SatFollow();
 		}
-		if(wp.flags.Has(Native.SWP.HIDEWINDOW)) {
+		if(wp.flags.Has(SWPFlags.HIDEWINDOW)) {
 			_SatHide();
 		}
 	}

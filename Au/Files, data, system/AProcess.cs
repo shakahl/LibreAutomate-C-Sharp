@@ -112,13 +112,14 @@ namespace Au
 			internal static _LastWndProps OfThread => _ofThread ??= new _LastWndProps();
 		}
 
+		[SkipLocalsInit]
 		static bool _QueryFullProcessImageName(IntPtr hProcess, bool getFilename, out string s) {
 			s = null;
-			for (int na = 300; ; na *= 2) {
-				var b = AMemoryArray.Char_(ref na);
-				if (Api.QueryFullProcessImageName(hProcess, getFilename, b, ref na)) {
-					if (getFilename) s = _GetFileName(b, na);
-					else s = new string(b, 0, na);
+			using ABuffer<char> b = new(null);
+			for (; ; b.More()) {
+				int n = b.n;
+				if (Api.QueryFullProcessImageName(hProcess, getFilename, b.p, ref n)) {
+					s = getFilename ? _GetFileName(b.p, n) : new(b.p, 0, n);
 					return true;
 				}
 				if (ALastError.Code != Api.ERROR_INSUFFICIENT_BUFFER) return false;
@@ -155,28 +156,25 @@ namespace Au
 				_p = null;
 				Api.SYSTEM_PROCESS_INFORMATION* b = null;
 				try {
-					for (int na = 300_000; ;) {
-						b = (Api.SYSTEM_PROCESS_INFORMATION*)AMemory.Alloc(na);
-
+					for (int na = 500_000; ;) {
+						AMemory.FreeAlloc(ref b, na);
 						int status = Api.NtQuerySystemInformation(5, b, na, out na);
-						//AOutput.Write(na); //eg 224000
-
+						//AOutput.Write(na); //~300_000, Win10, year 2021
 						if (status == 0) break;
 						if (status != Api.STATUS_INFO_LENGTH_MISMATCH) throw new AuException(status);
-						var t = b; b = null; AMemory.Free(t);
 					}
 
-					Api.SYSTEM_PROCESS_INFORMATION* p;
 					int nProcesses = 0, nbNames = 0;
-					for (p = b; p->NextEntryOffset != 0; p = (Api.SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset)) {
+					for (var p = b; ; p = (Api.SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset)) {
 						nProcesses++;
 						nbNames += p->NameLength; //bytes, not chars
+						if (p->NextEntryOffset == 0) break;
 					}
 					count = nProcesses;
 					_p = (ProcessInfo_*)AMemory.Alloc(nProcesses * sizeof(ProcessInfo_) + nbNames);
 					ProcessInfo_* r = _p;
 					char* names = (char*)(_p + nProcesses);
-					for (p = b; p->NextEntryOffset != 0; p = (Api.SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset), r++) {
+					for (var p = b; ; p = (Api.SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset), r++) {
 						r->processID = (int)p->UniqueProcessId;
 						r->sessionID = (int)p->SessionId;
 						int len = p->NameLength / 2;
@@ -184,9 +182,11 @@ namespace Au
 						if (len > 0) {
 							//copy name to _p memory because it's in the huge buffer that will be released in this func
 							r->namePtr = names;
-							Api.memcpy(names, (char*)p->NamePtr, len * 2);
+							AMemory.Copy((char*)p->NamePtr, names, len * 2);
 							names += len;
 						} else r->namePtr = null; //Idle
+
+						if (p->NextEntryOffset == 0) break;
 					}
 					pi = _p;
 				}
@@ -223,7 +223,7 @@ namespace Au
 					if (processID == 0) return "Idle";
 					return null;
 				}
-				string R = new string(namePtr, 0, nameLen);
+				string R = new(namePtr, 0, nameLen);
 				if (!cannotOpen && APath.IsPossiblyDos_(R)) {
 					using var ph = Handle_.OpenProcess(processID);
 					if (!ph.Is0 && _QueryFullProcessImageName(ph, false, out var s)) {
@@ -250,7 +250,7 @@ namespace Au
 				var a = new ProcessInfo[ns];
 				for (int i = 0, j = 0; i < n; i++) {
 					if (ofThisSession && p[i].sessionID != sessionId) continue;
-					a[j++] = new ProcessInfo(p[i].sessionID, p[i].processID, p[i].GetName());
+					a[j++] = new ProcessInfo(p[i].GetName(), p[i].processID, p[i].sessionID);
 				}
 				return a;
 			}
@@ -323,10 +323,6 @@ namespace Au
 
 		static string _GetFileName(string s) {
 			fixed (char* p = s) return _GetFileName(p, s.Length);
-		}
-
-		static string _GetFileName(char[] s, int len) {
-			fixed (char* p = s) return _GetFileName(p, len);
 		}
 
 		/// <summary>
@@ -615,27 +611,33 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Contains process id, name and session id.
+	/// Contains process name (like "notepad.exe"), id, name and user session id.
 	/// </summary>
-	public struct ProcessInfo
-	{
-		/// <summary>User session id.</summary>
-		public int SessionId;
+	public record ProcessInfo(string Name, int ProcessId, int SessionId);
+	//use record to auto-implement ==, eg for code like var a=AProcess.AllProcesses(); 5.s(); AOutput.Write(AProcess.AllProcesses().Except(a));
 
-		/// <summary>Process id.</summary>
-		public int ProcessId;
+	///// <summary>
+	///// Contains process id, name and session id.
+	///// </summary>
+	//public struct ProcessInfo
+	//{
+	//	/// <summary>Executable file name, like "notepad.exe".</summary>
+	//	public string Name;
 
-		/// <summary>Executable file name, like "notepad.exe".</summary>
-		public string Name;
+	//	/// <summary>Process id.</summary>
+	//	public int ProcessId;
 
-		//public IntPtr UserSid; //where is its memory?
+	//	/// <summary>User session id.</summary>
+	//	public int SessionId;
 
-		///
-		public ProcessInfo(int session, int pid, string name) {
-			SessionId = session; ProcessId = pid; Name = name;
-		}
+	//	//public IntPtr UserSid; //where is its memory?
 
-		///
-		public override string ToString() => Name;
-	}
+	//	///
+	//	public ProcessInfo(int session, int pid, string name) {
+	//		SessionId = session; ProcessId = pid; Name = name;
+	//	}
+
+	//	///
+	//	public override string ToString() => Name;
+	//}
 }

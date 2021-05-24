@@ -13,14 +13,12 @@ using System.Linq;
 using System.Xml.Linq;
 using System.Xml;
 
-
-namespace Au
+namespace Au.Types
 {
 	/// <summary>
-	/// Adds extension methods and some static functions for <see cref="XElement"/> and <see cref="XDocument"/>.
+	/// Adds extension methods for <see cref="XElement"/> and <see cref="XDocument"/>.
 	/// </summary>
-	//[EditorBrowsable(EditorBrowsableState.Never)] //no, some static methods are not extension methods, eg LoadElem
-	public static class AExtXml
+	public static class ExtXml
 	{
 		/// <summary>
 		/// Gets XML attribute value.
@@ -259,18 +257,39 @@ namespace Au
 			return null;
 		}
 
-		static XContainer _Load(string file, LoadOptions options, bool doc) {
-			if (file.Starts('<')) return _Load2(file, options, doc, true);
-			file = APath.NormalizeForNET_(file);
-			return AFile.WaitIfLocked(() => _Load2(file, options, doc, false));
-
-			static XContainer _Load2(string file, LoadOptions options, bool doc, bool isString) {
-				using var r = isString ? new XmlTextReader(new StringReader(file)) : new XmlTextReader(file); //to preserve \r\n
-				if (0 == (options & LoadOptions.PreserveWhitespace)) r.WhitespaceHandling = WhitespaceHandling.Significant; //to save correctly formatted. Default of XElement.Load(string).
-				return doc ? (XContainer)XDocument.Load(r, options) : XElement.Load(r, options);
-			}
+		/// <summary>
+		/// Saves XML to a file in a safer way.
+		/// Uses <see cref="XElement.Save(string, SaveOptions)"/> and <see cref="AFile.Save"/>.
+		/// </summary>
+		/// <exception cref="Exception">Exceptions of <see cref="XElement.Save"/> and <see cref="AFile.Save"/>.</exception>
+		public static void SaveElem(this XElement t, string file, bool backup = false, SaveOptions? options = default)
+		{
+			AFile.Save(file, temp => {
+				if(options.HasValue) t.Save(temp, options.GetValueOrDefault()); else t.Save(temp);
+			}, backup);
 		}
 
+		/// <summary>
+		/// Saves XML to a file in a safer way.
+		/// Uses <see cref="XDocument.Save(string)"/> and <see cref="AFile.Save"/>
+		/// </summary>
+		/// <exception cref="Exception">Exceptions of <see cref="XDocument.Save"/> and <see cref="AFile.Save"/>.</exception>
+		public static void SaveDoc(this XDocument t, string file, bool backup = false, SaveOptions? options = default)
+		{
+			AFile.Save(file, temp => {
+				if(options.HasValue) t.Save(temp, options.GetValueOrDefault()); else t.Save(temp);
+			}, backup);
+		}
+	}
+}
+
+namespace Au.Util
+{
+	/// <summary>
+	/// Extends some .NET XML classes.
+	/// </summary>
+	public static class AXml
+	{
 		/// <summary>
 		/// Loads XML file in a safer way.
 		/// Uses <see cref="XElement.Load(XmlReader, LoadOptions)"/> and <see cref="AFile.WaitIfLocked"/>.
@@ -305,28 +324,16 @@ namespace Au
 		public static XDocument LoadDoc(string file, LoadOptions options = default)
 			=> _Load(file, options, true) as XDocument;
 
-		/// <summary>
-		/// Saves XML to a file in a safer way.
-		/// Uses <see cref="XElement.Save(string, SaveOptions)"/> and <see cref="AFile.Save"/>.
-		/// </summary>
-		/// <exception cref="Exception">Exceptions of <see cref="XElement.Save"/> and <see cref="AFile.Save"/>.</exception>
-		public static void SaveElem(this XElement t, string file, bool backup = false, SaveOptions? options = default)
-		{
-			AFile.Save(file, temp => {
-				if(options.HasValue) t.Save(temp, options.GetValueOrDefault()); else t.Save(temp);
-			}, backup);
-		}
+		static XContainer _Load(string file, LoadOptions options, bool doc) {
+			if (file.Starts('<')) return _Load2(file, options, doc, true);
+			file = APath.NormalizeForNET_(file);
+			return AFile.WaitIfLocked(() => _Load2(file, options, doc, false));
 
-		/// <summary>
-		/// Saves XML to a file in a safer way.
-		/// Uses <see cref="XDocument.Save(string)"/> and <see cref="AFile.Save"/>
-		/// </summary>
-		/// <exception cref="Exception">Exceptions of <see cref="XDocument.Save"/> and <see cref="AFile.Save"/>.</exception>
-		public static void SaveDoc(this XDocument t, string file, bool backup = false, SaveOptions? options = default)
-		{
-			AFile.Save(file, temp => {
-				if(options.HasValue) t.Save(temp, options.GetValueOrDefault()); else t.Save(temp);
-			}, backup);
+			static XContainer _Load2(string file, LoadOptions options, bool doc, bool isString) {
+				using var r = isString ? new XmlTextReader(new StringReader(file)) : new XmlTextReader(file); //to preserve \r\n
+				if (0 == (options & LoadOptions.PreserveWhitespace)) r.WhitespaceHandling = WhitespaceHandling.Significant; //to save correctly formatted. Default of XElement.Load(string).
+				return doc ? (XContainer)XDocument.Load(r, options) : XElement.Load(r, options);
+			}
 		}
 	}
 }

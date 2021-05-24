@@ -1,7 +1,8 @@
+using Au.Util;
 using System;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Au.Types
 {
@@ -20,8 +21,48 @@ namespace Au.Types
 		[DllImport("kernel32.dll", EntryPoint = "SetDllDirectoryW", SetLastError = true)]
 		internal static extern bool SetDllDirectory(string lpPathName);
 
+		[SuppressGCTransition] //makes slightly faster, eg 23 -> 18 ns when hot CPU. Not faster with [MethodImpl].
+		[DllImport("kernel32.dll")]
+		internal static extern bool QueryPerformanceCounter(out long lpPerformanceCount);
+
+		[DllImport("kernel32.dll")]
+		internal static extern bool QueryPerformanceFrequency(out long lpFrequency);
+
 		[DllImport("kernel32.dll")]
 		internal static extern bool QueryUnbiasedInterruptTime(out long UnbiasedTime);
+
+		[DllImport("kernel32.dll")]
+		internal static extern long GetTickCount64();
+
+		[DllImport("kernel32.dll")]
+		internal static extern int GetTickCount();
+
+		internal struct SYSTEMTIME
+		{
+			public ushort wYear;
+			public ushort wMonth;
+			public ushort wDayOfWeek;
+			public ushort wDay;
+			public ushort wHour;
+			public ushort wMinute;
+			public ushort wSecond;
+			public ushort wMilliseconds;
+		}
+
+		[DllImport("kernel32.dll")]
+		internal static extern void GetLocalTime(out SYSTEMTIME lpSystemTime);
+
+		[DllImport("kernel32.dll")]
+		internal static extern void GetSystemTimeAsFileTime(out long lpSystemTimeAsFileTime);
+
+		//[DllImport("kernel32.dll", SetLastError = true)]
+		//internal static extern bool GetThreadTimes(IntPtr hThread, out long lpCreationTime, out long lpExitTime, out long lpKernelTime, out long lpUserTime);
+
+		//[DllImport("kernel32.dll")]
+		//internal static extern bool GetProcessTimes(IntPtr hProcess, out long lpCreationTime, out long lpExitTime, out long lpKernelTime, out long lpUserTime);
+
+		//[DllImport("kernel32.dll")]
+		//internal static extern bool QueryProcessCycleTime(IntPtr ProcessHandle, out long CycleTime);
 
 		[DllImport("kernel32.dll", EntryPoint = "CreateEventW", SetLastError = true)]
 		internal static extern Handle_ CreateEvent2(IntPtr lpEventAttributes, bool bManualReset, bool bInitialState, string lpName);
@@ -74,7 +115,7 @@ namespace Au.Types
 		internal static extern int GetCurrentProcessId();
 
 		[DllImport("kernel32.dll", EntryPoint = "QueryFullProcessImageNameW", SetLastError = true)]
-		internal static extern bool QueryFullProcessImageName(IntPtr hProcess, bool nativeFormat, [Out] char[] lpExeName, ref int lpdwSize);
+		internal static extern bool QueryFullProcessImageName(IntPtr hProcess, bool nativeFormat, char* lpExeName, ref int lpdwSize);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool TerminateProcess(IntPtr hProcess, int uExitCode);
@@ -89,7 +130,7 @@ namespace Au.Types
 		//internal static extern Handle_ OpenFileMapping(uint dwDesiredAccess, bool bInheritHandle, string lpName);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern IntPtr MapViewOfFile(IntPtr hFileMappingObject, uint dwDesiredAccess, uint dwFileOffsetHigh, uint dwFileOffsetLow, LPARAM dwNumberOfBytesToMap);
+		internal static extern IntPtr MapViewOfFile(IntPtr hFileMappingObject, uint dwDesiredAccess, uint dwFileOffsetHigh, uint dwFileOffsetLow, nint dwNumberOfBytesToMap);
 
 		//[DllImport("kernel32.dll", SetLastError = true)]
 		//internal static extern bool UnmapViewOfFile(IntPtr lpBaseAddress);
@@ -141,10 +182,32 @@ namespace Au.Types
 		internal static extern Handle_ OpenProcess(uint dwDesiredAccess, bool bInheritHandle, int dwProcessId);
 
 		[DllImport("kernel32.dll", EntryPoint = "GetFullPathNameW", SetLastError = true)]
-		internal static extern int GetFullPathName(string lpFileName, int nBufferLength, [Out] char[] lpBuffer, char** lpFilePart);
+		static extern int _GetFullPathName(string lpFileName, int nBufferLength, char* lpBuffer, char** lpFilePart);
+
+		/// <summary>
+		/// Calls API GetFullPathName.
+		/// Returns false if failed or result is same; then r is s.
+		/// r can be same variable as s.
+		/// </summary>
+		[SkipLocalsInit]
+		internal static bool GetFullPathName(string s, out string r) {
+			using ABuffer<char> b = new(null);
+			for (; ; ) if (b.GetString(_GetFullPathName(s, b.n, b.p, null), out r, 0, s)) return (object)r != s;
+		}
 
 		[DllImport("kernel32.dll", EntryPoint = "GetLongPathNameW", SetLastError = true)]
-		internal static extern int GetLongPathName(string lpszShortPath, [Out] char[] lpszLongPath, int cchBuffer);
+		static extern int _GetLongPathName(string lpszShortPath, char* lpszLongPath, int cchBuffer);
+
+		/// <summary>
+		/// Calls API GetFullPathName.
+		/// Returns false if failed or result is same; then r is s.
+		/// r can be same variable as s.
+		/// </summary>
+		[SkipLocalsInit]
+		internal static bool GetLongPathName(string s, out string r) {
+			using ABuffer<char> b = new(null);
+			for (; ; ) if (b.GetString(_GetLongPathName(s, b.p, b.n), out r, 0, s)) return (object)r != s;
+		}
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool ProcessIdToSessionId(int dwProcessId, out int pSessionId);
@@ -173,17 +236,17 @@ namespace Au.Types
 		internal const uint MEM_LARGE_PAGES = 0x20000000;
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern void* VirtualAlloc(void* lpAddress, LPARAM dwSize, uint flAllocationType = MEM_COMMIT | MEM_RESERVE, uint flProtect = PAGE_READWRITE);
+		internal static extern void* VirtualAlloc(void* lpAddress, nint dwSize, uint flAllocationType = MEM_COMMIT | MEM_RESERVE, uint flProtect = PAGE_READWRITE);
 		//note: with PAGE_EXECUTE_READWRITE writing to the memory first time is much slower.
 
 		[DllImport("kernel32.dll")]
-		internal static extern bool VirtualFree(void* lpAddress, LPARAM dwSize = default, uint dwFreeType = MEM_RELEASE);
+		internal static extern bool VirtualFree(void* lpAddress, nint dwSize = default, uint dwFreeType = MEM_RELEASE);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern IntPtr VirtualAllocEx(HandleRef hProcess, IntPtr lpAddress, LPARAM dwSize, uint flAllocationType = MEM_COMMIT | MEM_RESERVE, uint flProtect = PAGE_EXECUTE_READWRITE);
+		internal static extern IntPtr VirtualAllocEx(HandleRef hProcess, IntPtr lpAddress, nint dwSize, uint flAllocationType = MEM_COMMIT | MEM_RESERVE, uint flProtect = PAGE_EXECUTE_READWRITE);
 
 		[DllImport("kernel32.dll")]
-		internal static extern bool VirtualFreeEx(HandleRef hProcess, IntPtr lpAddress, LPARAM dwSize = default, uint dwFreeType = MEM_RELEASE);
+		internal static extern bool VirtualFreeEx(HandleRef hProcess, IntPtr lpAddress, nint dwSize = default, uint dwFreeType = MEM_RELEASE);
 
 		[DllImport("kernel32.dll", EntryPoint = "GetFileAttributesW", SetLastError = true)]
 		internal static extern System.IO.FileAttributes GetFileAttributes(string lpFileName);
@@ -206,7 +269,19 @@ namespace Au.Types
 		internal static extern bool GetFileAttributesEx(string lpFileName, int zero, out WIN32_FILE_ATTRIBUTE_DATA lpFileInformation);
 
 		[DllImport("kernel32.dll", EntryPoint = "SearchPathW", SetLastError = true)]
-		internal static extern int SearchPath(string lpPath, string lpFileName, string lpExtension, int nBufferLength, [Out] char[] lpBuffer, char** lpFilePart);
+		static extern int _SearchPath(string lpPath, string lpFileName, string lpExtension, int nBufferLength, char* lpBuffer, char** lpFilePart);
+
+		/// <summary>
+		/// Calls API SearchPath. Returns full path, or null if not found.
+		/// </summary>
+		/// <param name="lpPath">Parent directory or null.</param>
+		/// <param name="lpFileName"></param>
+		/// <param name="lpExtension">null or extension like ".ext" to add if lpFileName is without extension.</param>
+		[SkipLocalsInit]
+		internal static string SearchPath(string lpPath, string lpFileName, string lpExtension = null) {
+			using ABuffer<char> b = new(null);
+			for (; ; ) if (b.GetString(_SearchPath(lpPath, lpFileName, lpExtension, b.n, b.p, null), out var s)) return s;
+		}
 
 		internal const uint BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE = 0x1;
 		internal const uint BASE_SEARCH_PATH_DISABLE_SAFE_SEARCHMODE = 0x10000;
@@ -227,7 +302,7 @@ namespace Au.Types
 		internal static extern bool SetThreadPriority(IntPtr hThread, int nPriority);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern IntPtr LocalAlloc(uint uFlags, LPARAM uBytes);
+		internal static extern IntPtr LocalAlloc(uint uFlags, nint uBytes);
 
 		[DllImport("kernel32.dll")]
 		internal static extern IntPtr LocalFree(void* hMem);
@@ -237,18 +312,6 @@ namespace Au.Types
 
 		[DllImport("kernel32.dll", EntryPoint = "lstrcpynW")]
 		internal static extern char* lstrcpyn(char* sTo, string sFrom, int sToBufferLength);
-
-		[DllImport("kernel32.dll")]
-		internal static extern void GetSystemTimeAsFileTime(out long lpSystemTimeAsFileTime);
-
-		//[DllImport("kernel32.dll", SetLastError = true)]
-		//internal static extern bool GetThreadTimes(IntPtr hThread, out long lpCreationTime, out long lpExitTime, out long lpKernelTime, out long lpUserTime);
-
-		//[DllImport("kernel32.dll")]
-		//internal static extern bool GetProcessTimes(IntPtr hProcess, out long lpCreationTime, out long lpExitTime, out long lpKernelTime, out long lpUserTime);
-
-		//[DllImport("kernel32.dll")]
-		//internal static extern bool QueryProcessCycleTime(IntPtr ProcessHandle, out long CycleTime);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool Wow64DisableWow64FsRedirection(out IntPtr OldValue);
@@ -262,9 +325,9 @@ namespace Au.Types
 		[DllImport("kernel32.dll")]
 		internal static extern IntPtr GetProcessHeap();
 		[DllImport("kernel32.dll")]
-		internal static extern void* HeapAlloc(IntPtr hHeap, uint dwFlags, LPARAM dwBytes);
+		internal static extern void* HeapAlloc(IntPtr hHeap, uint dwFlags, nint dwBytes);
 		[DllImport("kernel32.dll")]
-		internal static extern void* HeapReAlloc(IntPtr hHeap, uint dwFlags, void* lpMem, LPARAM dwBytes);
+		internal static extern void* HeapReAlloc(IntPtr hHeap, uint dwFlags, void* lpMem, nint dwBytes);
 		[DllImport("kernel32.dll")]
 		internal static extern bool HeapFree(IntPtr hHeap, uint dwFlags, void* lpMem);
 
@@ -390,7 +453,7 @@ namespace Au.Types
 
 		internal struct OVERLAPPED
 		{
-			LPARAM _1, _2;
+			nint _1, _2;
 			int _3, _4;
 			public IntPtr hEvent;
 		}
@@ -478,32 +541,45 @@ namespace Au.Types
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool GetMailslotInfo(IntPtr hMailslot, uint* lpMaxMessageSize, out int lpNextSize, out int lpMessageCount, int* lpReadTimeout = null);
 
-		internal struct SYSTEMTIME
-		{
-			public ushort wYear;
-			public ushort wMonth;
-			public ushort wDayOfWeek;
-			public ushort wDay;
-			public ushort wHour;
-			public ushort wMinute;
-			public ushort wSecond;
-			public ushort wMilliseconds;
-		}
-
 		[DllImport("kernel32.dll")]
-		internal static extern void GetLocalTime(out SYSTEMTIME lpSystemTime);
-
-		[DllImport("kernel32.dll")]
-		internal static extern int GetApplicationUserModelId(IntPtr hProcess, ref int AppModelIDLength, [Out] char[] sbAppUserModelID);
+		internal static extern int GetApplicationUserModelId(IntPtr hProcess, ref int AppModelIDLength, char* sbAppUserModelID);
 
 		[DllImport("kernel32.dll", EntryPoint = "GetEnvironmentVariableW", SetLastError = true)]
-		internal static extern int GetEnvironmentVariable(string lpName, [Out] char[] lpBuffer, int nSize);
+		static extern int _GetEnvironmentVariable(string lpName, char* lpBuffer, int nSize);
+
+		/// <summary>
+		/// Calls API GetEnvironmentVariable.
+		/// Returns null if variable not found.
+		/// Does not support AFolders.X.
+		/// </summary>
+		/// <param name="name">Case-insensitive name. Without %.</param>
+		[SkipLocalsInit]
+		internal static string GetEnvironmentVariable(string name) {
+			using ABuffer<char> b = new(null);
+			for (; ; ) if (b.GetString(_GetEnvironmentVariable(name, b.p, b.n), out var s)) return s;
+		}
+
+		/// <summary>
+		/// Returns true if environment variable exists.
+		/// </summary>
+		internal static bool EnvironmentVariableExists(string name) => 0 != _GetEnvironmentVariable(name, null, 0);
 
 		[DllImport("kernel32.dll", EntryPoint = "SetEnvironmentVariableW", SetLastError = true)]
 		internal static extern bool SetEnvironmentVariable(string lpName, string lpValue);
 
 		[DllImport("kernel32.dll", EntryPoint = "ExpandEnvironmentStringsW")]
-		internal static extern int ExpandEnvironmentStrings(string lpSrc, [Out] char[] lpDst, int nSize);
+		static extern int _ExpandEnvironmentStrings(string lpSrc, char* lpDst, int nSize);
+
+		/// <summary>
+		/// Calls API ExpandEnvironmentStrings.
+		/// Returns false if failed or result is same; then r is s.
+		/// r can be same variable as s.
+		/// </summary>
+		[SkipLocalsInit]
+		internal static bool ExpandEnvironmentStrings(string s, out string r) {
+			using ABuffer<char> b = new(null);
+			for (; ; ) if (b.GetString(_ExpandEnvironmentStrings(s, b.p, b.n), out r, BSFlags.ReturnsLengthWith0, s)) return (object)r != s;
+		}
 
 		[DllImport("kernel32.dll", EntryPoint = "GetEnvironmentStringsW")]
 		internal static extern char* GetEnvironmentStrings();
@@ -618,10 +694,10 @@ namespace Au.Types
 		internal static extern ushort GlobalDeleteAtom(ushort nAtom);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool ReadProcessMemory(HandleRef hProcess, IntPtr lpBaseAddress, void* lpBuffer, LPARAM nSize, LPARAM* lpNumberOfBytesRead);
+		internal static extern bool ReadProcessMemory(HandleRef hProcess, IntPtr lpBaseAddress, void* lpBuffer, nint nSize, nint* lpNumberOfBytesRead);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool WriteProcessMemory(HandleRef hProcess, IntPtr lpBaseAddress, void* lpBuffer, LPARAM nSize, LPARAM* lpNumberOfBytesWritten);
+		internal static extern bool WriteProcessMemory(HandleRef hProcess, IntPtr lpBaseAddress, void* lpBuffer, nint nSize, nint* lpNumberOfBytesWritten);
 
 		[DllImport("kernel32", SetLastError = true)]
 		internal extern static IntPtr CreateActCtx(in ACTCTX actctx);
@@ -673,7 +749,7 @@ namespace Au.Types
 		internal const uint GMEM_ZEROINIT = 0x40;
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern IntPtr GlobalAlloc(uint uFlags, LPARAM dwBytes);
+		internal static extern IntPtr GlobalAlloc(uint uFlags, nint dwBytes);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern IntPtr GlobalFree(IntPtr hMem);
@@ -685,7 +761,7 @@ namespace Au.Types
 		internal static extern bool GlobalUnlock(IntPtr hMem);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern LPARAM GlobalSize(IntPtr hMem);
+		internal static extern nint GlobalSize(IntPtr hMem);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool GetFileSizeEx(IntPtr hFile, out long lpFileSize);
@@ -765,12 +841,6 @@ namespace Au.Types
 		[DllImport("kernel32.dll", EntryPoint = "OpenWaitableTimerW", SetLastError = true)]
 		internal static extern Handle_ OpenWaitableTimer(uint dwDesiredAccess, bool bInheritHandle, string lpTimerName);
 
-		[DllImport("kernel32.dll")]
-		internal static extern bool QueryPerformanceCounter(out long lpPerformanceCount);
-
-		[DllImport("kernel32.dll")]
-		internal static extern bool QueryPerformanceFrequency(out long lpFrequency);
-
 		[DllImport("kernel32.dll", EntryPoint = "GetModuleFileNameW", SetLastError = true)]
 		internal static extern int GetModuleFileName(IntPtr hModule, char* lpFilename, int nSize);
 
@@ -818,47 +888,41 @@ namespace Au.Types
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool AllocConsole();
 
-		[DllImport("kernel32.dll")]
-		internal static extern long GetTickCount64();
-
-		[DllImport("kernel32.dll")]
-		internal static extern int GetTickCount();
-
 		[DllImport("kernel32.dll", EntryPoint = "OutputDebugStringW")]
 		internal static extern void OutputDebugString(string lpOutputString);
 
 		//internal const uint THREAD_SET_CONTEXT = 0x10;
 
-		//internal delegate void PAPCFUNC(LPARAM Parameter);
+		//internal delegate void PAPCFUNC(nint Parameter);
 
 		//[DllImport("kernel32.dll", SetLastError = true)]
-		//internal static extern uint QueueUserAPC(PAPCFUNC pfnAPC, IntPtr hThread, LPARAM dwData);
+		//internal static extern uint QueueUserAPC(PAPCFUNC pfnAPC, IntPtr hThread, nint dwData);
 
 		[DllImport("kernel32.dll")]
 		internal static extern int GetOEMCP();
 
 		[DllImport("kernel32.dll")]
-		internal static extern bool SetProcessWorkingSetSize(IntPtr hProcess, LPARAM dwMinimumWorkingSetSize, LPARAM dwMaximumWorkingSetSize);
+		internal static extern bool SetProcessWorkingSetSize(IntPtr hProcess, nint dwMinimumWorkingSetSize, nint dwMaximumWorkingSetSize);
 
 		//internal struct PROCESS_MEMORY_COUNTERS
 		//{
 		//	public int cb;
 		//	public int PageFaultCount;
-		//	public LPARAM PeakWorkingSetSize;
-		//	public LPARAM WorkingSetSize;
-		//	public LPARAM QuotaPeakPagedPoolUsage;
-		//	public LPARAM QuotaPagedPoolUsage;
-		//	public LPARAM QuotaPeakNonPagedPoolUsage;
-		//	public LPARAM QuotaNonPagedPoolUsage;
-		//	public LPARAM PagefileUsage;
-		//	public LPARAM PeakPagefileUsage;
+		//	public nint PeakWorkingSetSize;
+		//	public nint WorkingSetSize;
+		//	public nint QuotaPeakPagedPoolUsage;
+		//	public nint QuotaPagedPoolUsage;
+		//	public nint QuotaPeakNonPagedPoolUsage;
+		//	public nint QuotaNonPagedPoolUsage;
+		//	public nint PagefileUsage;
+		//	public nint PeakPagefileUsage;
 		//}
 
 		//[DllImport("kernel32.dll", EntryPoint = "K32GetProcessMemoryInfo")]
 		//internal static extern bool GetProcessMemoryInfo(IntPtr Process, ref PROCESS_MEMORY_COUNTERS ppsmemCounters, int cb);
 
 		[DllImport("kernel32.dll", EntryPoint = "FindResourceW", SetLastError = true)]
-		public static extern IntPtr FindResource(IntPtr hModule, LPARAM lpName, LPARAM lpType);
+		public static extern IntPtr FindResource(IntPtr hModule, nint lpName, nint lpType);
 
 		internal const int RT_GROUP_ICON = 14;
 

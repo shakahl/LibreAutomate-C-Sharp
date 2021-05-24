@@ -10,7 +10,6 @@ using Au;
 using Au.Types;
 using Au.Controls;
 using Au.Compiler;
-using System.Globalization;
 using Microsoft.Win32;
 using System.Windows.Controls.Primitives;
 using System.Threading.Tasks;
@@ -96,9 +95,6 @@ class DProperties : KDialogWindow
 		b.R.AddOkCancel();
 		b.End();
 
-		//b.Loaded += () => {
-		//};
-
 		_meta = new MetaCommentsParser(_f);
 
 		_role = _meta.role switch {
@@ -112,8 +108,7 @@ class DProperties : KDialogWindow
 		_InitCombo(role, _isClass ? "miniProgram|exeProgram|editorExtension|classLibrary|classFile" : "miniProgram|exeProgram|editorExtension", null, (int)_role);
 		testScript.Text = _f.TestScript?.ItemPath;
 		//Run
-		_InitCombo(ifRunning, "warn|warn_restart|cancel|cancel_restart|wait|wait_restart|run|run_restart|restart", _meta.ifRunning);
-		if (_meta.runSingle == "true") runSingle.IsChecked = true;
+		_InitCombo(ifRunning, "warn_restart|warn|cancel_restart|cancel|wait_restart|wait|run_restart|run|restart", _meta.ifRunning);
 		_InitCombo(ifRunning2, "same|warn|cancel|wait", _meta.ifRunning2);
 		_InitCombo(uac, "inherit|user|admin", _meta.uac);
 		if (_meta.bit32 == "true") bit32.IsChecked = true;
@@ -177,6 +172,7 @@ class DProperties : KDialogWindow
 		void _ChangedRunSingle() {
 			_ShowHide(ifRunning2, _IsChecked(runSingle));
 		}
+		if (_meta.runSingle == "true") { runSingle.IsChecked = true; _ShowHide(ifRunning2, true); }
 		runSingle.CheckChanged += (_, _) => {
 			_ChangedRunSingle();
 			if (_IsIfRunningRunAndRunSingle()) ifRunning.SelectedItem = "warn_restart";
@@ -189,6 +185,10 @@ class DProperties : KDialogWindow
 		string _ValidateFile(FrameworkElement e, string name, bool? folder = false) {
 			return (_Get(e as TextBox) is string s && null == _f.FindRelative(s, folder)) ? name + " file not found" : null;
 		}
+
+		//b.Loaded += () => {
+		//	
+		//};
 
 		b.OkApply += _OkApply;
 		_InitInfo();
@@ -240,18 +240,22 @@ class DProperties : KDialogWindow
 
 		var doc = Panels.Editor.ZActiveDoc;
 		var code = doc.zText;
-		int endOf = MetaComments.FindMetaComments(code);
-		string append = null; if (endOf == 0) append = (_f.IsScript && code.Starts("//.\r")) ? " " : "\r\n";
+		var meta = MetaComments.FindMetaComments(code);
+		string append = null;
+		if (meta.end == 0) {
+			if(code.RegexMatch(@"(?s)^(\s*///\N*\R|\s*/\*.*\*/)*\s*", 0, out RXGroup g)) { meta = (g.End, g.End); }
+			append = (_f.IsScript && code.Eq(meta.end, "//.")) ? " " : "\r\n";
+		}
 		var s = _meta.Format(append);
 
 		if (s.Length == 0) {
-			if (endOf == 0) return;
-			while (endOf < code.Length && code[endOf] <= ' ') endOf++;
-		} else if (s.Length == endOf) {
-			if (s == doc.zRangeText(true, 0, endOf)) return; //did not change
+			if (meta.end == 0) return;
+			while (meta.end < code.Length && code[meta.end] <= ' ') meta.end++;
+		} else if (s.Length == meta.end - meta.start) {
+			if (s == doc.zRangeText(true, meta.start, meta.end)) return; //did not change
 		}
 
-		doc.zReplaceRange(true, 0, endOf, s);
+		doc.zReplaceRange(true, meta.start, meta.end, s);
 	}
 
 	private void _ButtonClick_addNet(WBButtonClickArgs e) {
@@ -415,7 +419,7 @@ class DProperties : KDialogWindow
 					aloc.Add(s1);
 					var s2 = "Neutral";
 					if (lcid > 0) {
-						try { s2 = new CultureInfo(lcid).DisplayName; } catch { s2 = s1; }
+						try { s2 = new System.Globalization.CultureInfo(lcid).DisplayName; } catch { s2 = s1; }
 					}
 					aloc2.Add(s2);
 				}
@@ -514,7 +518,7 @@ class DProperties : KDialogWindow
 	}
 
 	string _GetOutputPath(bool getDefault, bool expandEnvVar = false) {
-		if(!getDefault && _Get(outputPath) is string r) {
+		if (!getDefault && _Get(outputPath) is string r) {
 			if (expandEnvVar) r = APath.ExpandEnvVar(r);
 		} else {
 			r = MetaComments.GetDefaultOutputPath(_f, _role, withEnvVar: !expandEnvVar);
@@ -545,7 +549,7 @@ class DProperties : KDialogWindow
 		info.zText = "This file is a C# <help editor/" + (_isClass ? @"Class files, projects>class file" : "Scripts>script") + @"<>.
 
 C# file properties here are similar to C# project properties in Visual Studio.
-Saved in <c green>/*/ meta comments /*/<> at the very start of code, and can be edited there too.
+Saved in <c green>/*/ meta comments /*/<> at the start of code, and can be edited there too.
 ";
 
 		info.AddElem(role,
@@ -568,13 +572,14 @@ This option is saved in current workspace, not in meta comments.
 ");
 		info.AddElem(ifRunning,
 @"<b>ifRunning</b> - when trying to start this script, what to do if it is already running.
- • <i>warn</i> (default) - write warning in output and don't run.
+ • <i>warn</i> - write warning in output and don't run.
  • <i>cancel</i> - don't run.
  • <i>wait</i> - run later, when it ends.
  • <i>run</i> - run simultaneously.
  • <i>restart</i> - end it and run.
 
 Suffix _restart means restart if starting the script with the Run button/menu.
+Default is warn_restart.
 
 This option is ignored when the task runs as .exe program started not from editor.
 ");

@@ -13,7 +13,7 @@ using System.Reflection;
 
 using Au.Types;
 
-namespace Au
+namespace Au.Util
 {
 	/// <summary>
 	/// Registers a hotkey using API <msdn>RegisterHotKey</msdn>. Unregisters when disposing.
@@ -25,11 +25,13 @@ namespace Au
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
-	/// static void TestRegisterHotkey()
-	/// {
-	/// 	var f = new FormRegisterHotkey();
-	/// 	f.ShowDialog();
-	/// }
+	/// using Au; using System;
+	/// using System.Windows.Forms;
+	/// using Au.Util;
+	/// using Au.Types;
+	/// 
+	/// var f = new FormRegisterHotkey();
+	/// f.ShowDialog();
 	/// 
 	/// class FormRegisterHotkey :Form
 	/// {

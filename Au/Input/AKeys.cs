@@ -19,7 +19,7 @@ namespace Au
 	/// Keyboard functions: send virtual keystrokes and text to the active window, get key states.
 	/// </summary>
 	/// <remarks>
-	/// The main function is <see cref="Key"/>. Most documentation is there. See also <see cref="Text"/>. These functions use <see cref="AOpt.Key"/>. Alternatively can be used <b>AKeys</b> variables, see <see cref="AKeys(AOptKey)"/>.
+	/// The main function is <see cref="Key"/>. Most documentation is there. See also <see cref="Text"/>. These functions use <see cref="AOpt.Key"/>. Alternatively can be used <b>AKeys</b> variables, see <see cref="AKeys(OKey)"/>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -44,12 +44,12 @@ namespace Au
 		/// for(int i = 0; i < 5; i++) k.Send(true); //does not clear the variable
 		/// ]]></code>
 		/// </example>
-		public AKeys(AOptKey cloneOptions) { Options = new AOptKey(cloneOptions); }
+		public AKeys(OKey cloneOptions) { Options = new OKey(cloneOptions); }
 
 		/// <summary>
 		/// Options used by this variable.
 		/// </summary>
-		public AOptKey Options { get; }
+		public OKey Options { get; }
 
 		//KEYEVENTF_ flags for API SendInput.
 		[Flags]
@@ -133,7 +133,7 @@ namespace Au
 		struct _KSendingState
 		{
 			public AWnd wFocus;
-			public AOptKey options;
+			public OKey options;
 
 			public void Clear() {
 				wFocus = default;
@@ -350,8 +350,8 @@ namespace Au
 		/// Returns this.
 		/// </summary>
 		/// <param name="text">Text. Can be null.</param>
-		/// <param name="how">Overrides <see cref="AOptKey.TextHow"/>.</param>
-		public AKeys AddText(string text, KTextHow how) {
+		/// <param name="how">Overrides <see cref="OKey.TextHow"/>.</param>
+		public AKeys AddText(string text, OKeyText how) {
 			_ThrowIfSending();
 			if (!text.NE()) {
 				var ke = new _KEvent(_KType.Text, _SetData(text)) { vk = (KKey)((byte)how | 0x80) };
@@ -567,7 +567,7 @@ namespace Au
 		}
 
 		//Caller should set k.scan; this func doesn't.
-		unsafe static void _SendKey2(_KEvent k, _KEvent kNext, bool isLast, AOptKey opt) {
+		unsafe static void _SendKey2(_KEvent k, _KEvent kNext, bool isLast, OKey opt) {
 			var ki = new Api.INPUTK(k.vk, k.scan, (uint)k.SIFlags);
 
 			int count = 1, sleep = opt.KeySpeed;
@@ -624,34 +624,34 @@ namespace Au
 			object data = _GetData(ke.data); //string or AClipboardData
 			string s = data as string;
 
-			KTextHow textHow;
-			if (0 != ((byte)ke.vk & 0x80)) textHow = (KTextHow)((byte)ke.vk & 0xf);
+			OKeyText textHow;
+			if (0 != ((byte)ke.vk & 0x80)) textHow = (OKeyText)((byte)ke.vk & 0xf);
 			else if (s != null && s.Length < opt.PasteLength) textHow = opt.TextHow;
-			else textHow = KTextHow.Paste;
+			else textHow = OKeyText.Paste;
 
-			if (textHow != KTextHow.Paste) {
+			if (textHow != OKeyText.Paste) {
 				//use paste if there are Unicode surrogate pairs, because some apps/controls/frameworks don't support surrogates with WM_PACKET.
 				//known apps that support: standard Edit and RichEdit controls, Chrome, Firefox, IE, WPF, WinForms, new Scintilla, Dreamweaver, LibreOffice.
 				//known apps that don't: Office 2003, OpenOffice, old Scintilla.
 				//known apps that don't if 0 sleep: QT edit controls in VirtualBox.
 				//known apps that don't support these chars even when pasting: Java (tested the old and new frameworks).
 				//tested: the same if SendInput(arrayOfAllChars).
-				for (int i = 0; i < s.Length; i++) if ((s[i] & 0xf800) == 0xd800) { textHow = KTextHow.Paste; break; }
+				for (int i = 0; i < s.Length; i++) if ((s[i] & 0xf800) == 0xd800) { textHow = OKeyText.Paste; break; }
 			}
 
 			LPARAM hkl = default;
-			if (textHow == KTextHow.KeysOrChar || textHow == KTextHow.KeysOrPaste) {
+			if (textHow == OKeyText.KeysOrChar || textHow == OKeyText.KeysOrPaste) {
 				hkl = Api.GetKeyboardLayout(wFocus.ThreadId);
-				if (textHow == KTextHow.KeysOrPaste) {
+				if (textHow == OKeyText.KeysOrPaste) {
 					foreach (char c in s) {
 						if (c == '\r' || c == '\n') continue;
-						if (_CharToKey(c, hkl).vk == default) { textHow = KTextHow.Paste; break; }
+						if (_CharToKey(c, hkl).vk == default) { textHow = OKeyText.Paste; break; }
 					}
 				}
 			}
 			//AOutput.Write(opt.TextHow, textHow);
 
-			if (textHow == KTextHow.Paste) {
+			if (textHow == OKeyText.Paste) {
 				Pasting?.Invoke(this, new PastingEventArgs { Text = s, Options = opt, WndFocus = wFocus });
 				AClipboard.Paste_(data, opt, wFocus);
 				return;
@@ -683,7 +683,7 @@ namespace Au
 						vk = KKey.Enter;
 					} else if (c == ' ' || c == '\t') {
 						vk = (KKey)c; //eg AbiWord ignores VK_PACKET. Tested: all other chars OK.
-					} else if (textHow == KTextHow.KeysOrChar || textHow == KTextHow.KeysOrPaste) {
+					} else if (textHow == OKeyText.KeysOrChar || textHow == OKeyText.KeysOrPaste) {
 						(vk, mod) = _CharToKey(c, hkl);
 						//AOutput.Write(c, vk, mod, (ushort)km);
 					}
@@ -756,7 +756,7 @@ namespace Au.Types
 		///
 		public string Text { get; init; }
 		///
-		public AOptKey Options { get; init; }
+		public OKey Options { get; init; }
 		///
 		public AWnd WndFocus { get; init; }
 	}
