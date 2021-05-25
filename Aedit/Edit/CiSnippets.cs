@@ -199,7 +199,7 @@ static class CiSnippets
 			foreach (var v in snippet.x.Elements("list")) {
 				m.Separator();
 				m.StartParagraph();
-				m.Append(v.Attr("item"));
+				m.Append(AStringUtil.RemoveUnderlineChar(v.Attr("item")));
 				_AppendInfo(v);
 				_AppendCode(v);
 			}

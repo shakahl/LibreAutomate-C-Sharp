@@ -66,6 +66,9 @@ namespace Au.Util
 			public int nArgs;
 		}
 
+		/// <summary>
+		/// Called by apphost.
+		/// </summary>
 		static void Init(nint pn, out _TaskInit r) {
 			r = default;
 			string pipeName = new((char*)pn);

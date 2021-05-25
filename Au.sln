@@ -100,6 +100,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfUserControlLibrary", "Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfCustomControlLibrary", "Test Projects\WpfCustomControlLibrary\WpfCustomControlLibrary.csproj", "{35D1BF34-6884-4F52-A152-A79A6737F0DB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsWin32", "Test Projects\CsWin32\CsWin32.csproj", "{961DA435-5800-4CEE-928D-4928B3D3CB2A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -458,6 +460,18 @@ Global
 		{35D1BF34-6884-4F52-A152-A79A6737F0DB}.Release|x64.Build.0 = Release|Any CPU
 		{35D1BF34-6884-4F52-A152-A79A6737F0DB}.Release|x86.ActiveCfg = Release|Any CPU
 		{35D1BF34-6884-4F52-A152-A79A6737F0DB}.Release|x86.Build.0 = Release|Any CPU
+		{961DA435-5800-4CEE-928D-4928B3D3CB2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{961DA435-5800-4CEE-928D-4928B3D3CB2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{961DA435-5800-4CEE-928D-4928B3D3CB2A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{961DA435-5800-4CEE-928D-4928B3D3CB2A}.Debug|x64.Build.0 = Debug|Any CPU
+		{961DA435-5800-4CEE-928D-4928B3D3CB2A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{961DA435-5800-4CEE-928D-4928B3D3CB2A}.Debug|x86.Build.0 = Debug|Any CPU
+		{961DA435-5800-4CEE-928D-4928B3D3CB2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{961DA435-5800-4CEE-928D-4928B3D3CB2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{961DA435-5800-4CEE-928D-4928B3D3CB2A}.Release|x64.ActiveCfg = Release|Any CPU
+		{961DA435-5800-4CEE-928D-4928B3D3CB2A}.Release|x64.Build.0 = Release|Any CPU
+		{961DA435-5800-4CEE-928D-4928B3D3CB2A}.Release|x86.ActiveCfg = Release|Any CPU
+		{961DA435-5800-4CEE-928D-4928B3D3CB2A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -497,6 +511,7 @@ Global
 		{364DE14A-3808-4326-A943-20E9FDF5CB67} = {A237D0C7-1BDE-4828-AAF9-E4B2579DAA92}
 		{EE23ABB8-7B07-456F-80D4-DE3EE9E19CB5} = {A237D0C7-1BDE-4828-AAF9-E4B2579DAA92}
 		{35D1BF34-6884-4F52-A152-A79A6737F0DB} = {A237D0C7-1BDE-4828-AAF9-E4B2579DAA92}
+		{961DA435-5800-4CEE-928D-4928B3D3CB2A} = {A237D0C7-1BDE-4828-AAF9-E4B2579DAA92}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F4DC626A-22DF-4C8A-9686-8A694050B23E}

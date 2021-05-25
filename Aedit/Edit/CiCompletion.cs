@@ -370,6 +370,8 @@ partial class CiCompletion
 			//	return enclosing != null && symbol.IsAccessibleWithin(enclosing);
 			//}
 
+			//info: some members of enum UnmanagedType are missing. Hidden with EditorBrowsableState.Never, don't know why.
+
 			//var testInternal = CodeInfo.Meta.TestInternal;
 			Dictionary<INamespaceOrTypeSymbol, List<int>> groups = canGroup ? new() : null;
 			List<int> keywordsGroup = null, etcGroup = null, snippetsGroup = null;

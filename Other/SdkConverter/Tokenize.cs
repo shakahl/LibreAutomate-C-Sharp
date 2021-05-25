@@ -51,7 +51,7 @@ namespace SdkConverter
 					_tok.Add(new _Token(s, 1));
 					break;
 				default:
-					//TODO: replace '$' with '_'. Although SDK does not have such identifiers when removed CRT headers.
+					//SHOULDDO: replace '$' with '_'. Although SDK does not have such identifiers when removed CRT headers.
 					if(_IsCharIdentStart(c)) {
 						len = _LenIdent(s);
 

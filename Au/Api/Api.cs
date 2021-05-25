@@ -477,8 +477,8 @@ namespace Au.Types
 			public string szTypeName;
 		}
 
-		[DllImport("shell32.dll", EntryPoint = "SHGetFileInfoW")]
-		internal static extern LPARAM SHGetFileInfo(string pszPath, uint dwFileAttributes, out SHFILEINFO psfi, int cbFileInfo, uint uFlags);
+		//[DllImport("shell32.dll", EntryPoint = "SHGetFileInfoW")]
+		//internal static extern LPARAM SHGetFileInfo(string pszPath, uint dwFileAttributes, out SHFILEINFO psfi, int cbFileInfo, uint uFlags);
 
 		[DllImport("shell32.dll", EntryPoint = "SHGetFileInfoW")]
 		internal static extern LPARAM SHGetFileInfo(IntPtr pidl, uint dwFileAttributes, out SHFILEINFO psfi, int cbFileInfo, uint uFlags);
@@ -879,11 +879,11 @@ namespace Au.Types
 
 		/// <summary>API <msdn>SetWindowSubclass</msdn></summary>
 		[DllImport("comctl32.dll", EntryPoint = "#410")]
-		internal static extern bool SetWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, nint dwRefData = default);
+		internal static extern bool SetWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, LPARAM dwRefData = default);
 
 		/// <summary>API <msdn>GetWindowSubclass</msdn></summary>
 		[DllImport("comctl32.dll", EntryPoint = "#411")] //this is exported only by ordinal
-		internal static extern bool GetWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, out nint pdwRefData);
+		internal static extern bool GetWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, out LPARAM pdwRefData);
 
 		/// <summary>API <msdn>RemoveWindowSubclass</msdn></summary>
 		[DllImport("comctl32.dll", EntryPoint = "#412")]
@@ -894,7 +894,7 @@ namespace Au.Types
 		internal static extern LPARAM DefSubclassProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam);
 
 		/// <summary>API <msdn>SUBCLASSPROC</msdn></summary>
-		internal delegate LPARAM SUBCLASSPROC(AWnd w, int msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, nint dwRefData);
+		internal delegate LPARAM SUBCLASSPROC(AWnd w, int msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, LPARAM dwRefData);
 
 
 
@@ -947,7 +947,7 @@ namespace Au.Types
 		//internal static extern int OleInitialize(IntPtr pvReserved);
 
 		[DllImport("ole32.dll", PreserveSig = true)]
-		internal static extern int OleInitialize(nint pvReserved);
+		internal static extern int OleInitialize(IntPtr pvReserved);
 
 		[DllImport("ole32.dll")]
 		internal static extern void OleUninitialize();
@@ -1331,13 +1331,6 @@ namespace Au.Types
 		[DllImport("winmm.dll")]
 		internal static extern uint timeEndPeriod(uint uPeriod);
 
-
-		[DllImport("hhctrl.ocx", EntryPoint = "HtmlHelpW")]
-		internal static extern AWnd HtmlHelp(AWnd hwndCaller, string pszFile, int uCommand, LPARAM dwData);
-
-
-		//[DllImport("wer.dll")]
-		//internal static extern int WerAddExcludedApplication(string pwzExeName, bool bAllUsers);
 
 
 		[DllImport("msi.dll", EntryPoint = "#217")]

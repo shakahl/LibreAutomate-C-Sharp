@@ -62,29 +62,6 @@ namespace Au.Types
 			[PreserveSig] int Clone(out IEnumIDList ppenum);
 		}
 
-		//internal const uint GIL_OPENICON = 0x1;
-		//internal const uint GIL_FORSHELL = 0x2;
-		//internal const uint GIL_ASYNC = 0x20;
-		//internal const uint GIL_DEFAULTICON = 0x40;
-		//internal const uint GIL_FORSHORTCUT = 0x80;
-		//internal const uint GIL_CHECKSHIELD = 0x200;
-		//internal const uint GIL_SIMULATEDOC = 0x1;
-		//internal const uint GIL_PERINSTANCE = 0x2;
-		//internal const uint GIL_PERCLASS = 0x4;
-		//internal const uint GIL_NOTFILENAME = 0x8;
-		//internal const uint GIL_DONTCACHE = 0x10;
-		//internal const uint GIL_SHIELD = 0x200;
-		//internal const uint GIL_FORCENOSHIELD = 0x400;
-
-		//internal static Guid IID_IExtractIcon = new Guid(0x000214FA, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46);
-
-		//[ComImport, Guid("000214fa-0000-0000-c000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-		//internal interface IExtractIcon
-		//{
-		//	[PreserveSig] int GetIconLocation(uint uFlags, [MarshalAs(UnmanagedType.LPArray)] [Out] char[] pszIconFile, int cchMax, out int piIndex, out uint pwFlags);
-		//	[PreserveSig] int Extract([MarshalAs(UnmanagedType.LPWStr)] string pszFile, int nIconIndex, IntPtr* phiconLarge, IntPtr* phiconSmall, int nIconSize);
-		//}
-
 		[ComImport, Guid("000214F9-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 		internal interface IShellLink
 		{
@@ -162,57 +139,8 @@ namespace Au.Types
 			[PreserveSig] int Commit();
 		}
 
-		//internal struct IMAGEINFO
-		//{
-		//	public IntPtr hbmImage;
-		//	public IntPtr hbmMask;
-		//	public int Unused1;
-		//	public int Unused2;
-		//	public RECT rcImage;
-		//}
-
 		//note: this is used in the lib, even if IImageList isn't.
 		internal static Guid IID_IImageList = new Guid(0x46EB5926, 0x582E, 0x4017, 0x9F, 0xDF, 0xE8, 0x99, 0x8D, 0xAA, 0x09, 0x50);
-
-		//[ComImport, Guid("46EB5926-582E-4017-9FDF-E8998DAA0950"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-		//internal interface IImageList
-		//{
-		//	[PreserveSig] int Add(IntPtr hbmImage, IntPtr hbmMask, out int pi);
-		//	[PreserveSig] int ReplaceIcon(int i, IntPtr hicon, out int pi);
-		//	[PreserveSig] int SetOverlayImage(int iImage, int iOverlay);
-		//	[PreserveSig] int Replace(int i, IntPtr hbmImage, IntPtr hbmMask);
-		//	[PreserveSig] int AddMasked(IntPtr hbmImage, uint crMask, out int pi);
-		//	[PreserveSig] int Draw(IntPtr pimldp); //ref IMAGELISTDRAWPARAMS
-		//	[PreserveSig] int Remove(int i);
-		//	[PreserveSig] int GetIcon(int i, uint flags, out IntPtr picon);
-		//	[PreserveSig] int GetImageInfo(int i, out IMAGEINFO pImageInfo);
-		//	[PreserveSig] int Copy(int iDst, [MarshalAs(UnmanagedType.IUnknown)] Object punkSrc, int iSrc, uint uFlags);
-		//	[PreserveSig] int Merge(int i1, [MarshalAs(UnmanagedType.IUnknown)] Object punk2, int i2, int dx, int dy, in Guid riid, out IntPtr ppv);
-		//	[PreserveSig] int Clone(in Guid riid, out IntPtr ppv);
-		//	[PreserveSig] int GetImageRect(int i, out RECT prc);
-		//	[PreserveSig] int GetIconSize(out int cx, out int cy);
-		//	[PreserveSig] int SetIconSize(int cx, int cy);
-		//	[PreserveSig] int GetImageCount(out int pi);
-		//	[PreserveSig] int SetImageCount(int uNewCount);
-		//	[PreserveSig] int SetBkColor(uint clrBk, out uint pclr);
-		//	[PreserveSig] int GetBkColor(out uint pclr);
-		//	[PreserveSig] int BeginDrag(int iTrack, int dxHotspot, int dyHotspot);
-		//	[PreserveSig] int EndDrag();
-		//	[PreserveSig] int DragEnter(AWnd hwndLock, int x, int y);
-		//	[PreserveSig] int DragLeave(AWnd hwndLock);
-		//	[PreserveSig] int DragMove(int x, int y);
-		//	[PreserveSig] int SetDragCursorImage([MarshalAs(UnmanagedType.IUnknown)] Object punk, int iDrag, int dxHotspot, int dyHotspot);
-		//	[PreserveSig] int DragShowNolock([MarshalAs(UnmanagedType.Bool)] bool fShow);
-		//	[PreserveSig] int GetDragImage(out POINT ppt, out Point pptHotspot, in Guid riid, out IntPtr ppv);
-		//	[PreserveSig] int GetItemFlags(int i, out uint dwFlags);
-		//	[PreserveSig] int GetOverlayImage(int iOverlay, out int piIndex);
-		//}
-
-		//[ComImport, Guid("00020400-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsDual)]
-		//internal interface IDispatch
-		//{
-		//}
-
 
 		[ComImport, Guid("0f87369f-a4e5-4cfc-bd3e-73e6154572dd"), ClassInterface(ClassInterfaceType.None)]
 		internal class TaskScheduler { }

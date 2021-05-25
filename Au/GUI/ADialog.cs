@@ -162,7 +162,7 @@ namespace Au
 				public int cxWidth;
 			}
 
-			internal delegate int TaskDialogCallbackProc(AWnd hwnd, Native.TDN notification, LPARAM wParam, LPARAM lParam, IntPtr data);
+			internal delegate int TaskDialogCallbackProc(AWnd hwnd, DNative.TDN notification, LPARAM wParam, LPARAM lParam, IntPtr data);
 		}
 
 		#endregion private API
@@ -926,22 +926,22 @@ namespace Au
 		}
 		AScreen _screen;
 
-		int _CallbackProc(AWnd w, Native.TDN message, LPARAM wParam, LPARAM lParam, IntPtr data) {
+		int _CallbackProc(AWnd w, DNative.TDN message, LPARAM wParam, LPARAM lParam, IntPtr data) {
 			Action<DEventArgs> e = null;
 			int R = 0;
 
 			//AOutput.Write(message);
 			switch (message) {
-			case Native.TDN.DIALOG_CONSTRUCTED:
+			case DNative.TDN.DIALOG_CONSTRUCTED:
 				_LockUnlock(false);
 				Send = new DSend(this); //note: must be before setting _dlg, because another thread may call if(d.IsOpen) d.Send.Message(..).
 				_dlg = w;
 				break;
-			case Native.TDN.DESTROYED:
+			case DNative.TDN.DESTROYED:
 				//AOutput.Write(w.IsAlive); //valid
 				e = Destroyed;
 				break;
-			case Native.TDN.CREATED:
+			case DNative.TDN.CREATED:
 				if (_enableOwner) _c.hwndParent.Enable(true);
 				_SetPos(false);
 
@@ -958,7 +958,7 @@ namespace Au
 
 				e = Created;
 				break;
-			case Native.TDN.TIMER:
+			case DNative.TDN.TIMER:
 				if (_timeoutActive) {
 					int timeElapsed = (int)wParam / 1000;
 					if (timeElapsed < _timeoutS) {
@@ -971,14 +971,14 @@ namespace Au
 
 				e = Timer;
 				break;
-			case Native.TDN.BUTTON_CLICKED:
+			case DNative.TDN.BUTTON_CLICKED:
 				e = ButtonClicked;
 				wParam = _buttons.MapIdNativeToUser((int)wParam);
 				break;
-			case Native.TDN.HYPERLINK_CLICKED:
+			case DNative.TDN.HYPERLINK_CLICKED:
 				e = HyperlinkClicked;
 				break;
-			case Native.TDN.HELP:
+			case DNative.TDN.HELP:
 				e = HelpF1;
 				break;
 			default:
@@ -994,7 +994,7 @@ namespace Au
 				R = ed.returnValue;
 			}
 
-			if (message == Native.TDN.DESTROYED) _SetClosed();
+			if (message == DNative.TDN.DESTROYED) _SetClosed();
 
 			return R;
 		}
@@ -1113,7 +1113,7 @@ namespace Au
 		/// <remarks>
 		/// Example: <c>d.Send.Close();</c> .
 		/// Example: <c>d.Send.ChangeText2("new text", false);</c> .
-		/// Example: <c>d.Send.Message(Native.TDM.CLICK_VERIFICATION, 1);</c> .
+		/// Example: <c>d.Send.Message(DNative.TDM.CLICK_VERIFICATION, 1);</c> .
 		/// 
 		/// Can be used only while the dialog is open. Before showing the dialog returns null. After closing the dialog the returned variable is deactivated; its method calls are ignored.
 		/// Can be used in dialog event handlers. Also can be used in another thread, for example with <see cref="ShowNoWait"/> and <see cref="ShowProgress"/>.
@@ -1121,11 +1121,11 @@ namespace Au
 		public DSend Send { get; private set; }
 
 		//called by DSend
-		internal int SendMessage_(Native.TDM message, LPARAM wParam = default, LPARAM lParam = default) {
+		internal int SendMessage_(DNative.TDM message, LPARAM wParam = default, LPARAM lParam = default) {
 			switch (message) {
-			case Native.TDM.CLICK_BUTTON:
-			case Native.TDM.ENABLE_BUTTON:
-			case Native.TDM.SET_BUTTON_ELEVATION_REQUIRED_STATE:
+			case DNative.TDM.CLICK_BUTTON:
+			case DNative.TDM.ENABLE_BUTTON:
+			case DNative.TDM.SET_BUTTON_ELEVATION_REQUIRED_STATE:
 				wParam = _buttons.MapIdUserToNative((int)wParam);
 				break;
 			}
@@ -1134,12 +1134,12 @@ namespace Au
 		}
 
 		//called by DSend
-		internal void SetText_(bool resizeDialog, Native.TDE partId, string text) {
-			if (partId == Native.TDE.CONTENT && (_controls?.EditType ?? default) == DEdit.Multiline) {
+		internal void SetText_(bool resizeDialog, DNative.TDE partId, string text) {
+			if (partId == DNative.TDE.CONTENT && (_controls?.EditType ?? default) == DEdit.Multiline) {
 				text = _c.pszContent = text + c_multilineString;
 			}
 
-			_dlg.SendS((int)(resizeDialog ? Native.TDM.SET_ELEMENT_TEXT : Native.TDM.UPDATE_ELEMENT_TEXT), (int)partId, text ?? "");
+			_dlg.SendS((int)(resizeDialog ? DNative.TDM.SET_ELEMENT_TEXT : DNative.TDM.UPDATE_ELEMENT_TEXT), (int)partId, text ?? "");
 			//info: null does not change text.
 
 			if (_IsEdit) _EditControlUpdateAsync(!resizeDialog);
@@ -1226,7 +1226,7 @@ namespace Au
 				int top = r.top;
 				if (!_c.pszContent.Ends(c_multilineString)) {
 					_c.pszContent += c_multilineString;
-					_dlg.SendS((int)Native.TDM.SET_ELEMENT_TEXT, (int)Native.TDE.CONTENT, _c.pszContent);
+					_dlg.SendS((int)DNative.TDM.SET_ELEMENT_TEXT, (int)DNative.TDE.CONTENT, _c.pszContent);
 					prog.GetRectIn(parent, out r); //used to calculate Edit control height: after changing text, prog is moved down, and we know its previous location...
 				}
 				if (_editMultilineHeight == 0) { _editMultilineHeight = r.bottom - top; } else top = r.bottom - _editMultilineHeight;
@@ -1278,13 +1278,13 @@ namespace Au
 			Api.SetFocus(_editWnd);
 		}
 
-		void _EditControlOnMessage(Native.TDN message) {
+		void _EditControlOnMessage(DNative.TDN message) {
 			switch (message) {
-			case Native.TDN.BUTTON_CLICKED:
+			case DNative.TDN.BUTTON_CLICKED:
 				_controls.EditText = _editWnd.ControlText;
 				break;
-			case Native.TDN.EXPANDO_BUTTON_CLICKED:
-			case Native.TDN.NAVIGATED:
+			case DNative.TDN.EXPANDO_BUTTON_CLICKED:
+			case DNative.TDN.NAVIGATED:
 				_EditControlUpdateAsync(); //when expando clicked, sync does not work even with doevents
 				break;
 			}
@@ -1678,7 +1678,7 @@ namespace Au
 
 			d.ShowDialogNoWait();
 
-			if (marquee) d.Send.Message(Native.TDM.SET_PROGRESS_BAR_MARQUEE, true);
+			if (marquee) d.Send.Message(DNative.TDM.SET_PROGRESS_BAR_MARQUEE, true);
 
 			return d;
 		}
@@ -1875,16 +1875,16 @@ namespace Au.Types
 	/// </remarks>
 	public class DEventArgs : EventArgs
 	{
-		internal DEventArgs(ADialog obj_, AWnd hwnd_, Native.TDN message_, LPARAM wParam_, LPARAM lParam_) {
+		internal DEventArgs(ADialog obj_, AWnd hwnd_, DNative.TDN message_, LPARAM wParam_, LPARAM lParam_) {
 			dialog = obj_; hwnd = hwnd_; message = message_; wParam = wParam_;
-			LinkHref = (message_ == Native.TDN.HYPERLINK_CLICKED) ? Marshal.PtrToStringUni(lParam_) : null;
+			LinkHref = (message_ == DNative.TDN.HYPERLINK_CLICKED) ? Marshal.PtrToStringUni(lParam_) : null;
 		}
 
 #pragma warning disable 1591 //missing XML documentation
 		public ADialog dialog;
 		public AWnd hwnd;
 		/// <summary>Reference: <msdn>task dialog notifications</msdn>.</summary>
-		public Native.TDN message;
+		public DNative.TDN message;
 		public LPARAM wParam;
 		public int returnValue;
 #pragma warning restore 1591 //missing XML documentation
@@ -1937,16 +1937,16 @@ namespace Au.Types
 		/// </summary>
 		/// <remarks>
 		/// Call this method while the dialog is open, eg in an event handler.
-		/// Example (in an event handler): <c>e.dialog.Send.Message(Native.TDM.CLICK_VERIFICATION, 1);</c>
+		/// Example (in an event handler): <c>e.dialog.Send.Message(DNative.TDM.CLICK_VERIFICATION, 1);</c>
 		/// Also there are several other functions to send some messages: change text, close dialog, enable/disable buttons, update progress.
 		/// Reference: <msdn>task dialog messages</msdn>.
 		/// NAVIGATE_PAGE currently not supported.
 		/// </remarks>
-		public int Message(Native.TDM message, LPARAM wParam = default, LPARAM lParam = default) {
+		public int Message(DNative.TDM message, LPARAM wParam = default, LPARAM lParam = default) {
 			return _tdo?.SendMessage_(message, wParam, lParam) ?? 0;
 		}
 
-		void _SetText(bool resizeDialog, Native.TDE partId, string text) {
+		void _SetText(bool resizeDialog, DNative.TDE partId, string text) {
 			_tdo?.SetText_(resizeDialog, partId, text);
 		}
 
@@ -1957,7 +1957,7 @@ namespace Au.Types
 		/// Call this method while the dialog is open, eg in an event handler.
 		/// </remarks>
 		public void ChangeText1(string text, bool resizeDialog) {
-			_SetText(resizeDialog, Native.TDE.MAIN_INSTRUCTION, text);
+			_SetText(resizeDialog, DNative.TDE.MAIN_INSTRUCTION, text);
 		}
 
 		/// <summary>
@@ -1967,7 +1967,7 @@ namespace Au.Types
 		/// Call this method while the dialog is open, eg in an event handler.
 		/// </remarks>
 		public void ChangeText2(string text, bool resizeDialog) {
-			_SetText(resizeDialog, Native.TDE.CONTENT, text);
+			_SetText(resizeDialog, DNative.TDE.CONTENT, text);
 		}
 
 		/// <summary>
@@ -1977,7 +1977,7 @@ namespace Au.Types
 		/// Call this method while the dialog is open, eg in an event handler.
 		/// </remarks>
 		public void ChangeFooterText(string text, bool resizeDialog) {
-			_SetText(resizeDialog, Native.TDE.FOOTER, text);
+			_SetText(resizeDialog, DNative.TDE.FOOTER, text);
 		}
 
 		/// <summary>
@@ -1987,19 +1987,19 @@ namespace Au.Types
 		/// Call this method while the dialog is open, eg in an event handler.
 		/// </remarks>
 		public void ChangeExpandedText(string text, bool resizeDialog) {
-			_SetText(resizeDialog, Native.TDE.EXPANDED_INFORMATION, text);
+			_SetText(resizeDialog, DNative.TDE.EXPANDED_INFORMATION, text);
 		}
 
 #if false //currently not implemented
 		/// <summary>
 		/// Applies new properties to the dialog while it is already open.
 		/// Call this method while the dialog is open, eg in an event handler, after setting new properties.
-		/// Sends message Native.TDM.NAVIGATE_PAGE.
+		/// Sends message DNative.TDM.NAVIGATE_PAGE.
 		/// </summary>
 		public void Reconstruct()
 		{
 			var td = _tdo; if(td == null) return;
-			_ApiSendMessageTASKDIALOGCONFIG(_dlg, (uint)Native.TDM.NAVIGATE_PAGE, 0, ref td._c);
+			_ApiSendMessageTASKDIALOGCONFIG(_dlg, (uint)DNative.TDM.NAVIGATE_PAGE, 0, ref td._c);
 		}
 
 		[DllImport("user32.dll", EntryPoint = "SendMessageW")]
@@ -2011,10 +2011,10 @@ namespace Au.Types
 		/// <param name="buttonId">A button id or some other number that will be returned by ShowDialog.</param>
 		/// <remarks>
 		/// Call this method while the dialog is open, eg in an event handler.
-		/// Sends message Native.TDM.CLICK_BUTTON.
+		/// Sends message DNative.TDM.CLICK_BUTTON.
 		/// </remarks>
 		public bool Close(int buttonId = 0) {
-			return 0 != Message(Native.TDM.CLICK_BUTTON, buttonId);
+			return 0 != Message(DNative.TDM.CLICK_BUTTON, buttonId);
 		}
 
 		/// <summary>
@@ -2023,10 +2023,10 @@ namespace Au.Types
 		/// <remarks>
 		/// Call this method while the dialog is open, eg in an event handler.
 		/// Example: <c>d.Created += e => { e.dialog.Send.EnableButton(4, false); };</c>
-		/// Sends message Native.TDM.ENABLE_BUTTON.
+		/// Sends message DNative.TDM.ENABLE_BUTTON.
 		/// </remarks>
 		public void EnableButton(int buttonId, bool enable) {
-			Message(Native.TDM.ENABLE_BUTTON, buttonId, enable);
+			Message(DNative.TDM.ENABLE_BUTTON, buttonId, enable);
 		}
 
 		/// <summary>
@@ -2034,16 +2034,22 @@ namespace Au.Types
 		/// </summary>
 		/// <remarks>
 		/// Call this method while the dialog is open, eg in an event handler.
-		/// Sends message Native.TDM.SET_PROGRESS_BAR_POS.
+		/// Sends message DNative.TDM.SET_PROGRESS_BAR_POS.
 		/// </remarks>
 		public int Progress(int percent) {
-			return Message(Native.TDM.SET_PROGRESS_BAR_POS, percent);
+			return Message(DNative.TDM.SET_PROGRESS_BAR_POS, percent);
 		}
 	}
 
 	#region public API
 #pragma warning disable 1591 //missing XML documentation
-	public static partial class Native //TODO: remove
+	/// <summary>
+	/// Rarely used constants for native API used by <see cref="ADialog"/>.
+	/// </summary>
+	/// <remarks>
+	/// Constants are in enums. Enum name is constant prefix. Enum members are without prefix. For example for <b>TDM_CLICK_BUTTON</b> use <c>DNative.TDM.CLICK_BUTTON</c>.
+	/// </remarks>
+	public static partial class DNative
 	{
 		/// <summary>
 		/// Messages that your <see cref="ADialog"/> event handler can send to the dialog.
@@ -2057,14 +2063,14 @@ namespace Au.Types
 			SET_PROGRESS_BAR_RANGE = WM_USER + 105, // lParam = AMath.MakeUint(min, max)
 			SET_PROGRESS_BAR_POS = WM_USER + 106, // wParam = new position
 			SET_PROGRESS_BAR_MARQUEE = WM_USER + 107, // wParam = 0 (stop marquee), wParam != 0 (start marquee), lParam = speed (milliseconds between repaints)
-			SET_ELEMENT_TEXT = WM_USER + 108, // wParam = element (enum Native.TDE), lParam = new element text (string)
+			SET_ELEMENT_TEXT = WM_USER + 108, // wParam = element (enum DNative.TDE), lParam = new element text (string)
 			CLICK_RADIO_BUTTON = WM_USER + 110, // wParam = radio button id
 			ENABLE_BUTTON = WM_USER + 111, // wParam = button id, lParam = 0 (disable), lParam != 0 (enable)
 			ENABLE_RADIO_BUTTON = WM_USER + 112, // wParam = radio button id, lParam = 0 (disable), lParam != 0 (enable)
 			CLICK_VERIFICATION = WM_USER + 113, // wParam = 0 (unchecked), 1 (checked), lParam = 1 (set key focus)
-			UPDATE_ELEMENT_TEXT = WM_USER + 114, // wParam = element (enum Native.TDE), lParam = new element text (string)
+			UPDATE_ELEMENT_TEXT = WM_USER + 114, // wParam = element (enum DNative.TDE), lParam = new element text (string)
 			SET_BUTTON_ELEVATION_REQUIRED_STATE = WM_USER + 115, // wParam = button id, lParam = 0 (elevation not required), lParam != 0 (elevation required)
-			UPDATE_ICON = WM_USER + 116  // wParam = icon element (enum Native.TDIE), lParam = new icon (icon handle or DIcon)
+			UPDATE_ICON = WM_USER + 116  // wParam = icon element (enum DNative.TDIE), lParam = new icon (icon handle or DIcon)
 		}
 		const uint WM_USER = Api.WM_USER;
 
@@ -2087,7 +2093,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Constants for Native.TDM.SET_ELEMENT_TEXT and Native.TDM.UPDATE_ELEMENT_TEXT messages and ADialog.Send.Text().
+		/// Constants for DNative.TDM.SET_ELEMENT_TEXT and DNative.TDM.UPDATE_ELEMENT_TEXT messages and ADialog.Send.Text().
 		/// Used with <see cref="ADialog"/>.
 		/// </summary>
 		public enum TDE
@@ -2099,7 +2105,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Constants for Native.TDM.UPDATE_ICON message used with <see cref="ADialog"/>.
+		/// Constants for DNative.TDM.UPDATE_ICON message used with <see cref="ADialog"/>.
 		/// </summary>
 		public enum TDIE
 		{

@@ -309,50 +309,57 @@ namespace SdkConverter
 					switch (name) {
 					case "char":
 						isBlittable = false;
-						if (ptr == 1) { //not 'if(ptr != 0)', because cannot be 'ref string'
-							ptr = 0;
+						if (ptr is 1 or 2) {
 							bool isBSTR = _TokIs(iTokTypename, "BSTR");
+							if (ptr == 1 || (isParameter && isBSTR)) {
+								//why '&& isBSTR':
+								//	If non-BSTR char** parameter, cannot be 'out string' because .NET does not know how to free the string; often it is even undocumented.
+								//	And ref in many cases is bad.
 
-							switch (context) {
-							case _TypeContext.Member:
-								if (isConst || isBSTR) {
-									name = "string";
-									if (isBSTR) marshalAs = "BStr";
-								} else {
-									//string dangerous, because if the callee changes member pointer, .NET tries to free the new string with CoTaskMemFree.
-									ptr = 1;
-									//AOutput.Write(_DebugGetLine(iTokTypename));
-									isRawPtr = true;
-								}
-								break;
-							case _TypeContext.Return:
-							case _TypeContext.ComReturn:
-								ptr = 1; //if string, .NET tries to free the return value
-								isRawPtr = true;
-								break;
-							case _TypeContext.DelegateParameter:
-								ptr = 1; //because some are "LPSTR or WORD". Rarely used.
-								isRawPtr = true;
-								break;
-							case _TypeContext.Parameter:
-							case _TypeContext.ComParameter:
-								Debug.Assert(!(isConst && (_Out_ || _Inout_)));
-								if (isConst || _In_ || isBSTR) {
-									name = "string";
-									if (isCOM) {
-										//if(!isBSTR) AOutput.Write(_tok[iTokTypename]);
-										if (!isBSTR) marshalAs = "LPWStr";
-									} else {
+								ptr--;
+
+								switch (context) {
+								case _TypeContext.Member:
+									if (isConst || isBSTR) {
+										name = "string";
 										if (isBSTR) marshalAs = "BStr";
+									} else {
+										//string dangerous, because if the callee changes member pointer, .NET tries to free the new string with CoTaskMemFree.
+										ptr = 1;
+										//AOutput.Write(_DebugGetLine(iTokTypename));
+										isRawPtr = true;
 									}
-								} else {
-									ptr = 1;
+									break;
+								case _TypeContext.Return:
+								case _TypeContext.ComReturn:
+									ptr = 1; //if string, .NET tries to free the return value
 									isRawPtr = true;
-									//Could be StringBuilder, but the Au library does not use it, it is slow. Or [Out] char[]. But the Au library uses char*.
+									break;
+								case _TypeContext.DelegateParameter:
+									ptr = 1; //because some are "LPSTR or WORD". Rarely used.
+									isRawPtr = true;
+									break;
+								case _TypeContext.Parameter:
+								case _TypeContext.ComParameter:
+									Debug.Assert(!(isConst && (_Out_ || _Inout_)));
+									if (isConst || _In_ || isBSTR) {
+										name = "string";
+										//if (ptr == 1) AOutput.Write(_DebugGetLine(iTokTypename));
+										if (isCOM) {
+											if (!isBSTR) marshalAs = "LPWStr";
+										} else {
+											if (isBSTR) marshalAs = "BStr";
+										}
+									} else {
+										ptr = 1;
+										isRawPtr = true;
+										//Could be StringBuilder, but Au library does not use it, it is slow. Or [Out] char[]. But Au library uses char*.
+									}
+									break;
 								}
-								break;
 							}
-						} else if (ptr > 1) {
+						}
+						if (ptr > 1) {
 							isRawPtr = true;
 							isConst = false;
 						}
@@ -394,18 +401,15 @@ namespace SdkConverter
 				var ts = t as _Struct;
 				if (ts != null) {
 					if (ts.isInterface) {
-						//OutList(ptr, ts.csTypename);
+						//AOutput.Write(ptr, ts.csTypename);
 						if (ptr == 0) _Err(iTokTypename, "unexpected");
-						ptr--;
-						switch (name) {
-						case "IUnknown":
+						if (--ptr > 0 && context == _TypeContext.Member) {
+							name = "IntPtr";
+							isBlittable = true;
+						} else if (name is "IUnknown" or "IDispatch") {
+							ADebug.PrintIf(ptr > 1, context);
 							marshalAs = name;
-							name = "Object";
-							break;
-							//case "IDispatch": //not sure should this be used, because we don't convert SDK interfaces to C# IDispatch interfaces
-							//	marshalAs = name;
-							//	name = "Object";
-							//	break;
+							name = "object";
 						}
 					} else if (!ts.isClass) {
 						switch (name) {
@@ -413,7 +417,10 @@ namespace SdkConverter
 						case "GUID": name = "Guid"; break;
 						case "DECIMAL": name = "decimal"; break;
 						case "VARIANT":
-							if (context == _TypeContext.ComParameter) name = "object";
+							if ((isParameter && ptr <= 1) || (context == _TypeContext.Member && ptr == 0)) {
+								name = "object";
+								if (context != _TypeContext.ComParameter) marshalAs = "Struct";
+							}
 							break;
 						//case "SAFEARRAY": //in SDK used only with SafeArrayX functions, with several other not-important functions and as [PROP]VARIANT members
 						//AOutput.Write(ptr);
@@ -440,17 +447,17 @@ namespace SdkConverter
 
 					if (iSAL > 0 && ptr == 1) { //if ptr>1, can be TYPE[]* or TYPE*[]
 						if (_In_ && (sal.Contains("_reads_") || sal.Contains("count"))) {
-							//OutList(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
+							//AOutput.Write(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 							isArray = true;
 							__ctn.Append("[In] ");
 						}
 						if (_Inout_ && (sal.Contains("_updates_") || sal.Contains("count"))) {
-							//OutList(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
+							//AOutput.Write(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 							isArray = true;
 							__ctn.Append("[In,Out] ");
 						}
 						if (_Out_ && (sal.Contains("_writes_") || sal.Contains("count"))) {
-							//OutList(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
+							//AOutput.Write(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 							isArray = true;
 							__ctn.Append("[Out] ");
 						}
@@ -468,17 +475,17 @@ namespace SdkConverter
 						} else if (_In_ || isConst) {
 							if (isBlittable) {
 								if (isConst && ptr == 0 && name != "IntPtr") {
-									//OutList(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
+									//AOutput.Write(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 									isArray = true; //usually array, because there is no sense for eg 'const int* param', unless it is a 64-bit value (SDK usually then uses LARGE_INTEGER etc, not __int64). Those with just _In_ usually are not arrays, because for arrays are used _In_reads_ etc.
 								} else {
 									__ctn.Append("in ");
-									//OutList(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
+									//AOutput.Write(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 								}
 							} else {
 								if (isConst) {
 									__ctn.Append("in "); //prevents copying non-blittable types back to the caller when don't need
 								} else {
-									//OutList(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
+									//AOutput.Write(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 									//__ctn.Append("in "); //no, because there are many errors in SDK where inout parameters have _In_
 									__ctn.Append("ref ");
 								}
@@ -499,7 +506,7 @@ namespace SdkConverter
 							ptr++;
 							__ctn.Clear();
 							//maybe can be array, not tested. Never mind, in SDK only 4 rarely used.
-							//OutList(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
+							//AOutput.Write(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 						} else if (marshalAs != null) useMarshalAsSubtype = true;
 
 						if (useMarshalAsSubtype) marshalAs = "LPArray, ArraySubType = UnmanagedType." + marshalAs;
@@ -585,7 +592,7 @@ namespace SdkConverter
 				}
 			}
 
-			if (t.attributes != null) _Err(_i, "TODO"); //0 in SDK. Should extract its type from [MarshalAs(UnmanagedType.(\w+) and insert in the new attributes.
+			if (t.attributes != null) _Err(_i, "todo"); //0 in SDK. Should extract its type from [MarshalAs(UnmanagedType.(\w+) and insert in the new attributes.
 			t.attributes = $"{comment}[MarshalAs(UnmanagedType.{marshalAs}, SizeConst = {elemCount})]{comment2}";
 			//CONSIDER: also add commented properties to get Span. Then also can add properties to get/set managed string or array from the Span.
 			//	The MarshalAs way often cannot be used (makes the type managed and then cannot get pointer) or undesirable. The fixed way can be used only with some types.

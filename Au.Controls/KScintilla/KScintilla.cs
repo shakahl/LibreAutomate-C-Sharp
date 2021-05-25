@@ -93,7 +93,7 @@ namespace Au.Controls
 				Call(SCI_SETWRAPMODE, SC_WRAP_WORD);
 			}
 
-			//note: cannot set styles here, because later inherited class will call zStyleClearAll, which sets some special styles.
+			//note: cannot set styles here, because later derived class will call zStyleClearAll, which sets some special styles.
 
 			if (hasImages) ZImages = new SciImages(this, ZInitImagesStyle == ZImagesStyle.AnyString);
 			if (hasTags) ZTags = new SciTags(this);
@@ -103,7 +103,7 @@ namespace Au.Controls
 
 			ZOnHandleCreated();
 
-			if (!_text.NE()) zSetText(_text, SciSetTextFlags.NoUndoNoNotify); //after inherited classes set styles etc
+			if (!_text.NE()) zSetText(_text, SciSetTextFlags.NoUndoNoNotify); //after derived classes set styles etc
 
 			return new HandleRef(this, _w.Handle);
 		}
@@ -130,8 +130,8 @@ namespace Au.Controls
 		//	base.Dispose(disposing); //then follows DestroyWindowCore, probably base calls it
 		//}
 
-		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParamIP, IntPtr lParam, ref bool handled) {
-			nint wParam = wParamIP; //C# compiler bug: if using nint parameters instead of IntPtr, inherited classes cannot override this method.
+		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam_, IntPtr lParam, ref bool handled) {
+			nint wParam = wParam_; //if parameters are nint, this func is OK, but somehow error if a derived class that overrides this method calls base.WndProc.
 
 			//if(Tag is string s1 && s1 == "test") AWnd.More.PrintMsg(_w, msg, wParam, lParam);
 			//if(this.Parent?.Name == "Output") AWnd.More.PrintMsg(_w, msg, wParam, lParam, Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_PAINT, Api.WM_IME_SETCONTEXT, Api.WM_IME_NOTIFY);

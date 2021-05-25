@@ -19,21 +19,21 @@ namespace Au.Util
 		public static void Uninit() { Api.BufferedPaintUnInit(); }
 
 		AWnd _w;
-		nint _dcn, _dcb;
+		IntPtr _dcn, _dcb;
 		bool _wmPaint;
 		Api.PAINTSTRUCT _ps;
-		nint _hb;
+		IntPtr _hb;
 		RECT _r;
 
 		/// <summary>
 		/// Gets window DC.
 		/// </summary>
-		public nint NonBufferedDC => _dcn;
+		public IntPtr NonBufferedDC => _dcn;
 
 		/// <summary>
 		/// Gets the buffered DC. Returns <see cref="NonBufferedDC"/> if API <msdn>BeginBufferedPaint</msdn> failed.
 		/// </summary>
-		public nint DC => _dcb;
+		public IntPtr DC => _dcb;
 
 		/// <summary>
 		/// Gets client area rectangle.

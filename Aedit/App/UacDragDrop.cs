@@ -221,7 +221,7 @@ class UacDragDrop
 			_w = AWnd.More.CreateWindow("Aedit.DD", null, WS.POPUP | WS.DISABLED, WSE.LAYERED | WSE.NOACTIVATE | WSE.TOOLWINDOW | WSE.TOPMOST);
 			Api.SetLayeredWindowAttributes(_w, 0, 1, 2);
 
-			Api.OleInitialize(0);
+			Api.OleInitialize(default);
 			Api.RegisterDragDrop(_w, _dt = new _DropTarget());
 			_msgWnd.Send(Api.WM_USER, 10, (LPARAM)_w);
 			Api.SetTimer(_w, 1, 1000, null);

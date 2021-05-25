@@ -11,14 +11,6 @@ using System.Runtime.CompilerServices;
 using Au;
 using Au.Types;
 
-//TODO: now C# supports interface inheritance. Don't add members of base interfaces.
-//	At least don't add IDispatch members; if impossible, their parameters should be IntPtr. Now much garbage with CiWinapi etc.
-
-//TODO: replace VARIANT and PROPVARIANT with simplified versions: struct VARIANT { public ushort vt; uint _u; public nint value; nint _u2; }
-//	Or make managed members unmanaged (DATA=double, other=nint).
-//	Now cannot use VARIANT* because contains managed types.
-//	Also _wireVARIANT. Or remove _wireVARIANT, _wireSAFEARRAY, _wireBRECORD, SAFEARRAYUNION and all types of SAFEARRAYUNION members; they are not used elsewhere.
-
 namespace SdkConverter
 {
 	unsafe partial class Converter
@@ -39,7 +31,7 @@ namespace SdkConverter
 				if (c == '{') typedefType = 2; else if (c == '(') typedefType = 1; else if (c != ';') continue;
 				break;
 			}
-			//OutList(_tok[_i], typedefType);
+			//AOutput.Write(_tok[_i], typedefType);
 
 			var d = new _FINDTYPEDATA();
 
@@ -91,9 +83,9 @@ namespace SdkConverter
 							if (_is32bit ? (aliasOf.csTypename == "int" || aliasOf.csTypename == "uint") : (aliasOf.csTypename == "long" || aliasOf.csTypename == "ulong")) {
 								string name = _TokToString(_i);
 								if (name.Ends("_PTR") || name == "POINTER_64_INT") {
-									//OutList(_tok[_i], aliasOf.csTypename, ptr);
+									//AOutput.Write(_tok[_i], aliasOf.csTypename, ptr);
 									aliasOf = _sym_LPARAM;
-								} //else OutList(_tok[_i], aliasOf.csTypename, ptr);
+								} //else AOutput.Write(_tok[_i], aliasOf.csTypename, ptr);
 
 							}
 
@@ -102,7 +94,7 @@ namespace SdkConverter
 						} else if (_nsCurrent == 0 && aliasOf.forwardDecl && ptrBase + ptr == 0) {
 							string alias = _TokToString(_i);
 							//if(!(aliasOf is _Struct)) AOutput.Write(aliasOf); //0 in SDK
-							//OutList(aliasOf.csTypename, alias, ptr != 0);
+							//AOutput.Write(aliasOf.csTypename, alias, ptr != 0);
 							try { _forwardDeclTypedefs.Add(aliasOf.csTypename, _i); } catch { } //info: try/catch because SDK contains 1 duplicate typedef
 						}
 
@@ -146,19 +138,19 @@ namespace SdkConverter
 			//We convert to struct, because would be difficult to have this as typedef.
 		}
 
-		_Symbol _CopyStruct(_Symbol xFrom, string name) {
-			var t = _Struct.Copy(xFrom as _Struct, name);
-			try { _AddSymbol(_i, t); } catch { return xFrom; } //info: 3 in SDK already defined
-			_FormatStruct(t);
-			return t;
-		}
+		//_Symbol _CopyStruct(_Symbol xFrom, string name) {
+		//	var t = _Struct.Copy(xFrom as _Struct, name);
+		//	try { _AddSymbol(_i, t); } catch { return xFrom; } //info: 3 in SDK already defined
+		//	_FormatStruct(t);
+		//	return t;
+		//}
 
-		_Symbol _CopyEnum(_Symbol xFrom, string name) {
-			var t = _Enum.Copy(xFrom as _Enum, name);
-			try { _AddSymbol(_i, t); } catch { return xFrom; } //info: 0 in SDK already defined
-			_FormatEnum(t);
-			return t;
-		}
+		//_Symbol _CopyEnum(_Symbol xFrom, string name) {
+		//	var t = _Enum.Copy(xFrom as _Enum, name);
+		//	try { _AddSymbol(_i, t); } catch { return xFrom; } //info: 0 in SDK already defined
+		//	_FormatEnum(t);
+		//	return t;
+		//}
 
 		//When 'typedef struct X Y;', and X is forward declaration, we add X=Y to this map. Then, when defining X, we swap names Y with X.
 		//Without this, everywhere would be used X, which usually is a tag name such as tagVARIANT.
@@ -339,7 +331,7 @@ namespace SdkConverter
 				//add to a dictionary, to resolve other enum and #define
 				if (!isScoped) {
 					ulong v = value; if (isFlags) v |= 0x8000000000000000UL;
-					//OutList("add", _tok[iMember]);
+					//AOutput.Write("add", _tok[iMember]);
 					_enumValues[_tok[iMember]] = v;
 				}
 
@@ -368,7 +360,7 @@ namespace SdkConverter
 		Dictionary<_Token, ulong> _enumValues = new Dictionary<_Token, ulong>();
 		bool _EnumFindValue(int iTokName, out ulong value, out _OP type) {
 			type = _OP.OperandInt;
-			//OutList("find", _tok[iTokName]);
+			//AOutput.Write("find", _tok[iTokName]);
 			if (!_enumValues.TryGetValue(_tok[iTokName], out value)) return false;
 			if ((value & 0x8000000000000000UL) != 0) { value = (uint)value; type = _OP.OperandUint; }
 			return true;
@@ -389,8 +381,8 @@ namespace SdkConverter
 		/// </summary>
 		void _DeclareType(ref _FINDTYPEDATA d, bool skipVariablesUntilSemicolon = false) {
 			//struct, union, class, or __interface?
-			bool isUnion = false, isInterface = false, isClass = false;
-			string access = "public";
+			bool isUnion = false, isInterface = false, isDualInterface = false, isClass = false;
+			string access = "public", inheritInterface = null;
 			char keyword = *T(_i);
 			switch (keyword) {
 			case 't': _DeclareTypedef(); return;
@@ -447,7 +439,7 @@ namespace SdkConverter
 						//info: don't need name in this case
 						//if(uuid != null) AOutput.Write(isClass); //all True
 						if (isClass && uuid != null && _nsCurrent == 0) { //coclass
-																		  //OutList(keyword, name, uuid);
+																		  //AOutput.Write(keyword, name, uuid);
 							_DeclareGuid("CLSID_", name, uuid);
 							_sbInterface.AppendFormat(
 								"\r\n[ComImport, Guid({0}), ClassInterface(ClassInterfaceType.None)]"
@@ -462,14 +454,17 @@ namespace SdkConverter
 				name = _TokToString(iName);
 			} //later will get name from variable
 
-			//skip IUnknown
-			if (!__haveIUnknown && (isInterface || uuid != null) && name == "IUnknown") {
-				__haveIUnknown = true;
-				_SkipStatement();
-				x.forwardDecl = false;
-				x.isInterface = true;
-				_DeclareGuid("IID_", name, uuid);
-				return;
+			//skip IUnknown and IDispatch
+			if (isInterface || uuid != null) {
+				bool skip = false;
+				if (!__haveIUnknown && name == "IUnknown") __haveIUnknown = skip = true; else if (!__haveIDispatch && name == "IDispatch") __haveIDispatch = skip = true;
+				if (skip) {
+					_SkipStatement();
+					x.forwardDecl = false;
+					x.isInterface = true;
+					_DeclareGuid("IID_", name, uuid);
+					return;
+				}
 			}
 
 			//is interface?
@@ -490,18 +485,25 @@ namespace SdkConverter
 				if (_TokIsIdent(_i + 1) && _FindKeyword(_i).kwType == _KeywordT.PubPrivProt) _i++;
 
 				bool addedBaseMembers = false;
-				for (; ; _i++) { //support multiple inheritance
+				for (int iBase = 0; ; iBase++, _i++) { //support multiple inheritance
 					_Symbol baseType = _FindType(_i, true);
 					int ptr = _Unalias(_i, ref baseType);
 					var bt = baseType as _Struct;
 					if (bt == null || bt.forwardDecl || ptr != 0) _Err(_i, "unexpected");
-					if (bt.members != null) { //null if IUnknown or no members
-						if (bt.members[0] != '/') {
-							sb.Append("// ");
-							sb.AppendLine(bt.csTypename);
+					if (bt.members != null) { //null if IUnknown/IDispatch or no members
+						if (isInterface) {
+							//AOutput.Write(iBase, bt.csTypename);
+							inheritInterface = inheritInterface == null ? bt.csTypename : inheritInterface + ", " + bt.csTypename;
+						} else {
+							if (bt.members[0] != '/') {
+								sb.Append("// ");
+								sb.AppendLine(bt.csTypename);
+							}
+							sb.Append(bt.members);
+							addedBaseMembers = true;
 						}
-						sb.Append(bt.members);
-						addedBaseMembers = true;
+					} else {
+						if (iBase == 0 && !isDualInterface) isDualInterface = bt.csTypename == "IDispatch";
 					}
 					if (!_TokIsChar(++_i, ',')) break;
 				}
@@ -627,7 +629,7 @@ namespace SdkConverter
 
 			//attributes
 			if (isInterface) {
-				sb.AppendFormat("[ComImport, Guid({0}), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]\r\n", uuid, name);
+				sb.AppendFormat("[ComImport, Guid({0}){1}\r\n", uuid, isDualInterface ? "] //dual" : ", InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]");
 				x.isInterface = true;
 			} else {
 				if (hasBitfields) sb.AppendLine("[DebuggerStepThrough]");
@@ -636,15 +638,16 @@ namespace SdkConverter
 			}
 			if (sb.Length > 0) sb.CopyTo(0, x.attributes = new char[sb.Length], 0, sb.Length);
 
-			_FormatStruct(x);
+			_FormatStruct(x, inheritInterface);
 		}
 
-		void _FormatStruct(_Struct x) {
+		void _FormatStruct(_Struct x, string inheritInterface) {
 			StringBuilder sb = x.isInterface ? _sbInterface : _sbType;
 			sb.AppendLine();
 			if (x.attributes != null) sb.Append(x.attributes);
 			sb.Append(x.isInterface ? "internal interface " : "internal struct ");
 			sb.Append(x.csTypename);
+			if (inheritInterface != null) sb.Append(" : ").Append(inheritInterface);
 			if (x.members != null) {
 				sb.Append(" {\r\n");
 				int offs = sb.Length;
@@ -675,7 +678,7 @@ namespace SdkConverter
 			_Symbol x;
 			if (!d.TryGetValue(token, out x)) return false;
 			int ptr = _Unalias(iTok, ref x);
-			//OutList(tag, x.GetType(), _TokToString(iTok), x.csTypename, ptr, x.forwardDecl);
+			//AOutput.Write(tag, x.GetType(), _TokToString(iTok), x.csTypename, ptr, x.forwardDecl);
 			if (!x.forwardDecl || ptr != 0) _Err(iTok, "already exists");
 			d.Remove(token);
 			return true;
@@ -774,7 +777,7 @@ namespace SdkConverter
 
 		#endregion
 
-		bool __haveIUnknown;
+		bool __haveIUnknown, __haveIDispatch;
 
 		void _DeclareGuid(string prefix, string name, string uuid) {
 			if (uuid == null) return;
@@ -865,12 +868,12 @@ namespace SdkConverter
 			//join types etc into single string, for replacements
 			var sb = new StringBuilder();
 			sb.Append("\r\n// TYPE\r\n");
-			sb.Append(_sbType.ToString()); _sbType.Clear();
-			sb.Append(_sbInlineDelegate.ToString()); _sbInlineDelegate.Clear();
+			sb.Append(_sbType); _sbType.Clear();
+			sb.Append(_sbInlineDelegate); _sbInlineDelegate.Clear();
 			sb.Append("\r\n// FUNCTION\r\n");
 			foreach (var v in _func) { sb.Append(v.Value); }
 			sb.Append("\r\n// INTERFACE\r\n");
-			sb.Append(_sbInterface.ToString()); _sbInterface.Clear();
+			sb.Append(_sbInterface); _sbInterface.Clear();
 			string R = sb.ToString(); sb.Clear();
 
 			//APerf.First();
@@ -895,14 +898,13 @@ namespace SdkConverter
 						continue;
 					}
 
-					//if(_FindIdentifierInString(R, s) < 0) { OutList("no", s); continue; } //5 in SDK
-					//OutList(sym.csTypename, sym); //0 in SDK
+					//if(_FindIdentifierInString(R, s) < 0) { AOutput.Write("no", s); continue; } //5 in SDK
+					//AOutput.Write(sym.csTypename, sym); //0 in SDK
 					continue;
 				}
 
 				//process typedefs
-				var td = sym as _Typedef;
-				if (td != null) {
+				if (sym is _Typedef td) {
 					if (!td.wasForwardDecl) continue; //don't need to replace. Makes this replacement code 10 times faster.
 					if (td.ptr != 0) continue; //the type is or will be resolved in some way
 					_Symbol t = td.aliasOf;
@@ -950,48 +952,63 @@ namespace SdkConverter
 			R.RegexReplace(@"\bPROPSHEETHEADERW_V2\b", "PROPSHEETHEADER", out R);
 			R.RegexReplace(@"(?ms)^internal struct OPENFILENAME_NT4\b.+?^\}\r\n", "", out R, 1);
 
+			//in VARIANT, PROPVARIANT, _wireVARIANT members replace non-blittable types with IntPtr. Also replace some other types.
+			R = R.RegexReplace(@"(?ms)^internal struct (?:PROP|_wire)?VARIANT \{\R\K.+?\R\}", __VariantMembers);
+
 			return R;
-		}
 
-		//what: 0 struct, 1 interface, 2 delegate, flag 0x10000 _W
-		void __RemoveAW(ref string R, string name, int what) {
-			string sW = "W", sA = "A";
-			if ((what & 0x10000) != 0) { sW = "_W"; sA = "_A"; }
-			what &= 0xff;
+			//what: 0 struct, 1 interface, 2 delegate, flag 0x10000 _W
+			static void __RemoveAW(ref string R, string name, int what) {
+				string sW = "W", sA = "A";
+				if ((what & 0x10000) != 0) { sW = "_W"; sA = "_A"; }
+				what &= 0xff;
 
-			if (0 != R.RegexReplace($@"\b{name}{sW}\b", name, out R)) {
-				//AOutput.Write($"<><c 0xff0000>{name}</c>");
+				if (0 != R.RegexReplace($@"\b{name}{sW}\b", name, out R)) {
+					//AOutput.Write($"<><c 0xff0000>{name}</c>");
 
-				//remove STRUCTA
+					//remove STRUCTA
 
-				g1:
-				string rx = null;
-				switch (what) {
-				case 0: rx = $@"(?ms)^internal struct {name}{sA} .+?^\}}\r\n\r\n"; break;
-				case 1: rx = $@"(?ms)^internal interface {name}{sA} .+?^\}}\r\n\r\n"; break;
-				case 2: rx = $@"(?m)^internal delegate \w+\** {name}{sA}\(.+\r\n\r\n"; break;
-				}
-				if (R.RegexMatch(rx, out var m)) {
-					//find attributes (regex with attributes would be very slow)
-					int i = m.Start - 3;
-					while (0 == string.Compare(R, i, "]\r\n", 0, 3)) {
-						//AOutput.Write("attr");
-						i = R.LastIndexOf('\n', i) - 2;
+					g1:
+					string rx = null;
+					switch (what) {
+					case 0: rx = $@"(?ms)^internal struct {name}{sA} .+?^\}}\r\n\r\n"; break;
+					case 1: rx = $@"(?ms)^internal interface {name}{sA} .+?^\}}\r\n\r\n"; break;
+					case 2: rx = $@"(?m)^internal delegate \w+\** {name}{sA}\(.+\r\n\r\n"; break;
 					}
-					i += 3;
+					if (R.RegexMatch(rx, out var m)) {
+						//find attributes (regex with attributes would be very slow)
+						int i = m.Start - 3;
+						while (0 == string.Compare(R, i, "]\r\n", 0, 3)) {
+							//AOutput.Write("attr");
+							i = R.LastIndexOf('\n', i) - 2;
+						}
+						i += 3;
 
-					R = R.Remove(i, m.Start - i + m.Length);
-					//OutList(what, name, R.RegexIs_($"\b{name}\b")); //all False
-				} else { //2 in SDK have TYPE/TYPEW instead of TYPEA/TYPEW
-						 //OutList(what, name);
-					if (sA != null) {
-						sA = null;
-						goto g1;
+						R = R.Remove(i, m.Start - i + m.Length);
+						//AOutput.Write(what, name, R.RegexIs_($"\b{name}\b")); //all False
+					} else { //2 in SDK have TYPE/TYPEW instead of TYPEA/TYPEW
+							 //AOutput.Write(what, name);
+						if (sA != null) {
+							sA = null;
+							goto g1;
+						}
 					}
+				} else {
+					//AOutput.Write($"<><c 0xff>{name}</c>"); //0
+					//AOutput.Write(R.Find($"internal struct {name}A "));
 				}
-			} else {
-				//AOutput.Write($"<><c 0xff>{name}</c>"); //0
-				//AOutput.Write(R.Find($"internal struct {name}A "));
+			}
+
+			static string __VariantMembers(RXMatch m) {
+				var s = m.Value;
+				//AOutput.Write(s);
+				s = s.RegexReplace(@"\[MarshalAs.+?\] ", "");
+				s = s.RegexReplace(@"\b(string|object|I[A-Z]\w+)\b", "IntPtr");
+				s = s.RegexReplace(@"\bDateTime\b", "double");
+				s = s.RegexReplace(@"\b(CY|FILETIME)\b", "long");
+				s = s.RegexReplace(@"\bVERSIONEDSTREAM\*", "IntPtr");
+				//AOutput.Write(s);
+				return s;
 			}
 		}
 	}

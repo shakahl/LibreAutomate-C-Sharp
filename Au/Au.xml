@@ -1367,10 +1367,10 @@
             <param name="wNotify"></param>
             <param name="nifFlags"></param>
         </member>
-        <member name="M:Au.Types.Api.SetWindowSubclass(Au.AWnd,Au.Types.Api.SUBCLASSPROC,Au.Types.LPARAM,System.IntPtr)">
+        <member name="M:Au.Types.Api.SetWindowSubclass(Au.AWnd,Au.Types.Api.SUBCLASSPROC,Au.Types.LPARAM,Au.Types.LPARAM)">
             <summary>API <msdn>SetWindowSubclass</msdn></summary>
         </member>
-        <member name="M:Au.Types.Api.GetWindowSubclass(Au.AWnd,Au.Types.Api.SUBCLASSPROC,Au.Types.LPARAM,System.IntPtr@)">
+        <member name="M:Au.Types.Api.GetWindowSubclass(Au.AWnd,Au.Types.Api.SUBCLASSPROC,Au.Types.LPARAM,Au.Types.LPARAM@)">
             <summary>API <msdn>GetWindowSubclass</msdn></summary>
         </member>
         <member name="M:Au.Types.Api.RemoveWindowSubclass(Au.AWnd,Au.Types.Api.SUBCLASSPROC,Au.Types.LPARAM)">
@@ -1442,7 +1442,7 @@
         <member name="F:Au.Types.Api.WINDOWPLACEMENT.flags">
             <summary> WPF_ </summary>
         </member>
-        <member name="M:Au.Types.Api.SystemParametersInfo(System.UInt32,System.Int32,Au.Types.LPARAM,System.UInt32)">
+        <member name="M:Au.Types.Api.SystemParametersInfo(System.UInt32,System.Int32,System.Void*,System.UInt32)">
             <summary>
             Gets or sets any value. This is the direct API call.
             </summary>
@@ -1457,7 +1457,7 @@
             Gets BOOL value. Returns false if failed.
             </summary>
         </member>
-        <member name="M:Au.Types.Api.SystemParametersInfo(System.UInt32,System.Int32,Au.Types.LPARAM,System.Boolean,System.Boolean)">
+        <member name="M:Au.Types.Api.SystemParametersInfo(System.UInt32,System.Int32,System.Void*,System.Boolean,System.Boolean)">
             <summary>
             Sets value.
             </summary>
@@ -1586,13 +1586,13 @@
             flags: 1 not inproc, 2 get only name.
             </summary>
         </member>
-        <member name="M:Au.Types.Cpp.Cpp_RegexCompile(System.String,Au.Types.LPARAM,Au.Types.RXFlags,System.Int32@,Au.Types.BSTR@)">
+        <member name="M:Au.Types.Cpp.Cpp_RegexCompile(System.String,System.IntPtr,Au.Types.RXFlags,System.Int32@,Au.Types.BSTR@)">
             <summary>This and related API are documented in the C++ dll project.</summary>
         </member>
         <member name="T:Au.Types.Cpp.RegexMatch">
             <summary>This and related API are documented in the C++ dll project.</summary>
         </member>
-        <member name="M:Au.Types.Cpp.Cpp_RegexMatch(System.Runtime.InteropServices.HandleRef,System.String,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.RXMatchFlags,Au.Types.Cpp.PcreCalloutT,Au.Types.Cpp.RegexMatch@,Au.Types.BSTR@)">
+        <member name="M:Au.Types.Cpp.Cpp_RegexMatch(System.Runtime.InteropServices.HandleRef,System.String,System.IntPtr,System.IntPtr,Au.Types.RXMatchFlags,Au.Types.Cpp.PcreCalloutT,Au.Types.Cpp.RegexMatch@,Au.Types.BSTR@)">
             <summary>This and related API are documented in the C++ dll project.</summary>
         </member>
         <member name="T:Au.Types.OWarnings">
@@ -2003,7 +2003,7 @@
         </member>
         <member name="T:Au.Types.WinAPI">
             <summary>
-            Adds undeclared Windows API to the completion list of the inherited class.
+            If a class is derived from this class, editor adds undeclared Windows API to its completion list.
             </summary>
         </member>
         <member name="T:Au.Types.WinAPI.l">
@@ -4301,13 +4301,13 @@
             Example (in an event handler): <c>e.dialog.Close();</c>
             </remarks>
         </member>
-        <member name="M:Au.Types.DSend.Message(Au.Types.Native.TDM,Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.Types.DSend.Message(Au.Types.DNative.TDM,Au.Types.LPARAM,Au.Types.LPARAM)">
             <summary>
             Sends a message to the dialog.
             </summary>
             <remarks>
             Call this method while the dialog is open, eg in an event handler.
-            Example (in an event handler): <c>e.dialog.Send.Message(Native.TDM.CLICK_VERIFICATION, 1);</c>
+            Example (in an event handler): <c>e.dialog.Send.Message(DNative.TDM.CLICK_VERIFICATION, 1);</c>
             Also there are several other functions to send some messages: change text, close dialog, enable/disable buttons, update progress.
             Reference: <msdn>task dialog messages</msdn>.
             NAVIGATE_PAGE currently not supported.
@@ -4352,7 +4352,7 @@
             <param name="buttonId">A button id or some other number that will be returned by ShowDialog.</param>
             <remarks>
             Call this method while the dialog is open, eg in an event handler.
-            Sends message Native.TDM.CLICK_BUTTON.
+            Sends message DNative.TDM.CLICK_BUTTON.
             </remarks>
         </member>
         <member name="M:Au.Types.DSend.EnableButton(System.Int32,System.Boolean)">
@@ -4362,7 +4362,7 @@
             <remarks>
             Call this method while the dialog is open, eg in an event handler.
             Example: <c>d.Created += e => { e.dialog.Send.EnableButton(4, false); };</c>
-            Sends message Native.TDM.ENABLE_BUTTON.
+            Sends message DNative.TDM.ENABLE_BUTTON.
             </remarks>
         </member>
         <member name="M:Au.Types.DSend.Progress(System.Int32)">
@@ -4371,28 +4371,36 @@
             </summary>
             <remarks>
             Call this method while the dialog is open, eg in an event handler.
-            Sends message Native.TDM.SET_PROGRESS_BAR_POS.
+            Sends message DNative.TDM.SET_PROGRESS_BAR_POS.
             </remarks>
         </member>
-        <member name="T:Au.Types.Native.TDM">
+        <member name="T:Au.Types.DNative">
+            <summary>
+            Rarely used constants for native API used by <see cref="T:Au.ADialog"/>.
+            </summary>
+            <remarks>
+            Constants are in enums. Enum name is constant prefix. Enum members are without prefix. For example for <b>TDM_CLICK_BUTTON</b> use <c>DNative.TDM.CLICK_BUTTON</c>.
+            </remarks>
+        </member>
+        <member name="T:Au.Types.DNative.TDM">
             <summary>
             Messages that your <see cref="T:Au.ADialog"/> event handler can send to the dialog.
             </summary>
         </member>
-        <member name="T:Au.Types.Native.TDN">
+        <member name="T:Au.Types.DNative.TDN">
             <summary>
             Notification messages that your <see cref="T:Au.ADialog"/> event handler receives.
             </summary>
         </member>
-        <member name="T:Au.Types.Native.TDE">
+        <member name="T:Au.Types.DNative.TDE">
             <summary>
-            Constants for Native.TDM.SET_ELEMENT_TEXT and Native.TDM.UPDATE_ELEMENT_TEXT messages and ADialog.Send.Text().
+            Constants for DNative.TDM.SET_ELEMENT_TEXT and DNative.TDM.UPDATE_ELEMENT_TEXT messages and ADialog.Send.Text().
             Used with <see cref="T:Au.ADialog"/>.
             </summary>
         </member>
-        <member name="T:Au.Types.Native.TDIE">
+        <member name="T:Au.Types.DNative.TDIE">
             <summary>
-            Constants for Native.TDM.UPDATE_ICON message used with <see cref="T:Au.ADialog"/>.
+            Constants for DNative.TDM.UPDATE_ICON message used with <see cref="T:Au.ADialog"/>.
             </summary>
         </member>
         <member name="T:Au.Types.MSFlags">
@@ -7578,6 +7586,11 @@
             Prepares to quickly start and execute a script with role miniProgram in this preloaded task process.
             </summary>
         </member>
+        <member name="M:Au.Util.MiniProgram_.Init(System.IntPtr,Au.Util.MiniProgram_._TaskInit@)">
+            <summary>
+            Called by apphost.
+            </summary>
+        </member>
         <member name="F:Au.Util.MiniProgram_.EFlags.RefPaths">
             <summary>Has [RefPaths] attribute. It is when some meta r paths cannot be automatically resolved.</summary>
         </member>
@@ -7590,8 +7603,20 @@
         <member name="T:Au.Util.ABuffer`1">
             <summary>
             Allocates memory buffers for calling Windows API and other functions.
-            Functions that use this must have <c>[SkipLocalsInit]</c> attribute.
+            Must be used with <c>[SkipLocalsInit]</c> attribute; add it to the caller function or class or module.
             </summary>
+            <example>
+            <code><![CDATA[
+            [DllImport("kernel32.dll", EntryPoint = "GetEnvironmentVariableW", SetLastError = true)]
+            static extern int _GetEnvironmentVariable(string lpName, char* lpBuffer, int nSize);
+            
+            [SkipLocalsInit]
+            internal static string GetEnvironmentVariable(string name) {
+            	using ABuffer<char> b = new(null);
+            	for (; ; ) if (b.GetString(_GetEnvironmentVariable(name, b.p, b.n), out var s)) return s;
+            }
+            ]]></code>
+            </example>
         </member>
         <member name="F:Au.Util.ABuffer`1.StackSize">
             <summary>
@@ -7621,7 +7646,7 @@
         </member>
         <member name="M:Au.Util.ABuffer`1.#ctor(System.String)">
             <summary>
-            Allocates first buffer of default size. It is on stack (in this variable), and its length is 2048/sizeof(T) elements of type T.
+            Allocates first buffer of default size. It is on stack (in this variable), and its length is StackSize/sizeof(T) elements of type T (2048 bytes or 1024 chars or 512 ints...).
             </summary>
             <param name="unused">Should be null. It makes the compiler to choose this overload. This function does not use this value.</param>
         </member>
@@ -7631,7 +7656,7 @@
             </summary>
             <param name="n">
             Buffer length (number of elements of type T).
-            If &lt;= 2048/sizeof(T), the buffer contains 2048/sizeof(T) elements on stack (in this variable). Else allocates native memory, which is slower.
+            If &lt;= StackSize/sizeof(T), the buffer contains StackSize/sizeof(T) elements on stack (in this variable); it is 2048 bytes or 1024 chars or 512 ints... Else allocates native memory (much slower).
             </param>
         </member>
         <member name="M:Au.Util.ABuffer`1.More(System.Int32)">
@@ -8157,7 +8182,7 @@
             Calls API <msdn>GetSystemMetricsForDpi</msdn> if available, else <msdn>GetSystemMetrics</msdn>.
             </summary>
         </member>
-        <member name="M:Au.Util.ADpi.SystemParametersInfo(System.UInt32,System.Int32,Au.Types.LPARAM,Au.Types.DpiOf)">
+        <member name="M:Au.Util.ADpi.SystemParametersInfo(System.UInt32,System.Int32,System.Void*,Au.Types.DpiOf)">
             <summary>
             Calls API <msdn>SystemParametersInfoForDpi</msdn> if available, else <msdn>SystemParametersInfo</msdn>.
             Use only with <i>uiAction</i> = SPI_GETICONTITLELOGFONT, SPI_GETICONMETRICS, SPI_GETNONCLIENTMETRICS.
@@ -8624,9 +8649,11 @@
         <member name="T:Au.Util.AMemory">
             <summary>
             Allocates memory from native heap of this process using heap API.
-            Uses the common heap of this process, API <msdn>GetProcessHeap</msdn>.
-            Usually slightly faster than Marshal class functions.
+            Also has more functions to work with memory: copy, move.
             </summary>
+            <remarks>
+            Uses the common heap of this process, API <msdn>GetProcessHeap</msdn>.
+            </remarks>
         </member>
         <member name="M:Au.Util.AMemory.Alloc(System.IntPtr,System.Boolean)">
             <summary>
@@ -8706,7 +8733,7 @@
         <member name="T:Au.Util.AVirtualMemory">
             <summary>
             Allocates memory with API <msdn>VirtualAlloc</msdn>.
-            Faster than managed and <see cref="T:Au.Util.AMemory"/> when memory size is large, eg more than 1 MB.
+            Faster than managed and <see cref="T:Au.Util.AMemory"/> when memory size is large, more than 1 MB; else slower.
             The memory is initialized to zero (all bytes 0).
             </summary>
         </member>
@@ -13631,7 +13658,7 @@
             <remarks>
             Example: <c>d.Send.Close();</c> .
             Example: <c>d.Send.ChangeText2("new text", false);</c> .
-            Example: <c>d.Send.Message(Native.TDM.CLICK_VERIFICATION, 1);</c> .
+            Example: <c>d.Send.Message(DNative.TDM.CLICK_VERIFICATION, 1);</c> .
             
             Can be used only while the dialog is open. Before showing the dialog returns null. After closing the dialog the returned variable is deactivated; its method calls are ignored.
             Can be used in dialog event handlers. Also can be used in another thread, for example with <see cref="M:Au.ADialog.ShowNoWait(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> and <see cref="M:Au.ADialog.ShowProgress(System.Boolean,System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.

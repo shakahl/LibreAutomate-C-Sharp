@@ -212,9 +212,9 @@ namespace Au.Types
 	/// <summary>API <msdn>CREATESTRUCT</msdn></summary>
 	public unsafe struct CREATESTRUCT
 	{
-		public nint lpCreateParams;
-		public nint hInstance;
-		public nint hMenu;
+		public LPARAM lpCreateParams;
+		public IntPtr hInstance;
+		public LPARAM hMenu;
 		public AWnd hwndParent;
 		public int cy;
 		public int cx;

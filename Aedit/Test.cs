@@ -51,16 +51,9 @@ static unsafe class Test
 	public static void FromMenubar() {
 		//Cpp.Cpp_Test();
 
-		//var s = Panels.Editor.ZActiveDoc.zGetString0Terminated(Sci.SCI_GETSELTEXT, 0, 1000);
-		//AOutput.Write(s);
-		//var s2 = Panels.Editor.ZActiveDoc.zGetStringGetLength(Sci.SCI_GETSELTEXT, 0);
-		//AOutput.Write(s2);
-		//var s3 = Panels.Editor.ZActiveDoc.zGetStringOfLength(Sci.SCI_GETSELTEXT, 0, 5);
-		//AOutput.Write(s2);
-
 		//InsertCode.UsingDirective("Test.Usings");
 
-		//EdDatabases.CreateWinapi();
+		EdDatabases.CreateWinapi();
 
 		//var code = App.Settings.ci_usings.RegexReplace(@"(?m)^.+$", "using $0;");
 		////var code = "using Au.Types;";

@@ -27,8 +27,12 @@ namespace Au.Types
 	[DebuggerStepThrough]
 	public unsafe struct LPARAM : IEquatable<LPARAM>, IComparable<LPARAM>
 	{
-		//Now could use nint instead. But then need too many explicit casts.
-		//	Eg to pass a pointer to SendMessage need (nint)(&v); for bool need v ? 1 : 0.
+		//rejected: use nint instead. Then need too many explicit casts.
+		//	Eg to pass a pointer to SendMessage etc need (nint)(&v); for bool need v ? 1 : 0.
+		//Now this library uses:
+		//	LPARAM - when can be anything (integer, handle/pointer/string, bool).
+		//	IntPtr - when can be only handle, pointer or string.
+		//	nint - when the value can be only integer, eg size_t. But sometimes for other types too, usually as private/local.
 
 #pragma warning disable 1591 //XML doc
 		readonly nint _v;

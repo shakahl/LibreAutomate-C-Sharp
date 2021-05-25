@@ -18,7 +18,7 @@ namespace Au.Util
 {
 	/// <summary>
 	/// Allocates memory buffers for calling Windows API and other functions.
-	/// Functions that use this must have <c>[SkipLocalsInit]</c> attribute.
+	/// Must be used with <c>[SkipLocalsInit]</c> attribute; add it to the caller function or class or module.
 	/// </summary>
 	/// <example>
 	/// <code><![CDATA[

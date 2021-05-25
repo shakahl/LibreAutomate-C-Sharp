@@ -161,7 +161,7 @@ namespace Au.Triggers
 
 		internal bool HasFunc => _funcBefore != null || _funcAfter != null;
 
-		//probably not useful. Or also need a property for eg HotkeyTriggers in inherited classes.
+		//probably not useful. Or also need a property for eg HotkeyTriggers in derived classes.
 		///// <summary>
 		///// The <see cref="ActionTriggers"/> instance to which this trigger belongs.
 		///// </summary>

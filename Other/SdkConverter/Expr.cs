@@ -91,7 +91,7 @@ namespace SdkConverter
 
 			//Calculate expression.
 
-			//OutList(debugConstName, _TokToString(iFrom, iTo));
+			//AOutput.Write(debugConstName, _TokToString(iFrom, iTo));
 
 			//Part 1 - convert the expression from normal infix form to RPN form which is easy to calculate.
 			//Use the shunting-yard algorithm: https://en.wikipedia.org/wiki/Shunting-yard_algorithm
@@ -230,7 +230,7 @@ namespace SdkConverter
 							if(op2 == _OP.LeftParen) break; //is an operator at the top of the stack?
 							bool pop = false, opRTL = (op & _OP._FlagRightToLeft) != 0;
 							int prec1 = (int)(op & _OP._MaskPrecedence), prec2 = (int)(op2 & _OP._MaskPrecedence);
-							//OutList("  ", op, prec1, opRTL, op2, prec2);
+							//AOutput.Write("  ", op, prec1, opRTL, op2, prec2);
 
 							if(!opRTL) pop = prec1 >= prec2; //op is left-associative and its precedence is less than or equal to that of op2
 							else pop = prec1 > prec2; //op is right associative, and has precedence less than that of o2

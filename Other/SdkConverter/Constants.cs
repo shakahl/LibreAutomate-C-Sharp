@@ -70,9 +70,9 @@ namespace SdkConverter
 						if(!isFuncWA) {
 							//don't add '#define NAME1 NAME2'
 							if(iNext - iValue == 1 && _TokIsIdent(iValue)) {
-								//OutList(name, r.valueS);
+								//AOutput.Write(name, r.valueS);
 							} else {
-								//OutList(name, iNext-iValue);
+								//AOutput.Write(name, iNext-iValue);
 								__DefineAddToOther(iName, name, " " + r.valueS);
 							}
 						}
@@ -115,7 +115,7 @@ namespace SdkConverter
 				_func.Remove(name + "A");
 				//most are FuncA+FuncW, but some Func/FuncW and even Func/FuncA/FuncW. Some just FuncW.
 				if(_func.Remove(name)) {
-					//OutList(1, def); //6 in SDK
+					//AOutput.Write(1, def); //6 in SDK
 				}
 
 				def = def.Replace("W(", "(");

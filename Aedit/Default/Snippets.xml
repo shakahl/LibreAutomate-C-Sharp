@@ -132,7 +132,7 @@ finally {  }]]>
 			<list item="OK button and &amp;error icon">ADialog.ShowError("$end$");</list>
 			<list item="OK and &amp;Cancel buttons">if (!ADialog.ShowOkCancel("$end$")) return;</list>
 			<list item="&amp;Yes and No buttons">if (!ADialog.ShowYesNo("$end$")) return;</list>
-			<list item="Custom &amp;buttons">
+			<list item="Custom &amp;buttons" using="Au.Types">
 				<![CDATA[int button = ADialog.Show("$end$", "", "1 OK|0 Cancel|2 Yes|3 No|4 Retry|5 Close|10 Button1|11 Button2", flags: DFlags.CommandLinks);
 switch (button) {
 case 1:  break;
@@ -349,7 +349,7 @@ default: return;
 			</list>
 		</snippet>
 
-		<snippet name="wpfSnippet" info="Create dialog window with controls." using="System.Windows;System.Windows.Controls;System.Windows.Controls.Primitives;System.Windows.Media" more="See also: dialogSnippet, menu File -> New -> Templates.">
+		<snippet name="wpfSnippet" info="Create dialog window with controls." using="Au.Types;System.Windows;System.Windows.Controls;System.Windows.Controls.Primitives;System.Windows.Media" more="See also: dialogSnippet, menu File -> New -> Templates.">
 			<list item="Simple">
 				<![CDATA[var b = new AWpfBuilder("Window").WinSize(400);
 b.R.Add("Text", out TextBox text1).Focus();

@@ -343,15 +343,15 @@ namespace Au.Types
 		{
 			public int version;
 			public readonly int callout_number, capture_top, capture_last;
-			public readonly LPARAM* vec;
+			public readonly nint* vec;
 			public readonly char* mark, subject;
-			public readonly LPARAM subject_length;
-			public readonly LPARAM start_match;
-			public readonly LPARAM current_position;
-			public readonly LPARAM pattern_position;
-			public readonly LPARAM next_item_length;
-			public readonly LPARAM callout_string_offset;
-			public readonly LPARAM callout_string_length;
+			public readonly nint subject_length;
+			public readonly nint start_match;
+			public readonly nint current_position;
+			public readonly nint pattern_position;
+			public readonly nint next_item_length;
+			public readonly nint callout_string_offset;
+			public readonly nint callout_string_length;
 			public readonly char* callout_string;
 			public readonly int callout_flags;
 		}
@@ -584,7 +584,7 @@ namespace Au.Types
 	{
 		/// <summary>This and related API are documented in the C++ dll project.</summary>
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern LPARAM Cpp_RegexCompile(string rx, LPARAM len, RXFlags flags, out int codeSize, out BSTR errStr);
+		internal static extern nint Cpp_RegexCompile(string rx, nint len, RXFlags flags, out int codeSize, out BSTR errStr);
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int Cpp_RegexDtor(IntPtr code);
@@ -602,19 +602,19 @@ namespace Au.Types
 
 		/// <summary>This and related API are documented in the C++ dll project.</summary>
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int Cpp_RegexMatch(HandleRef code, string s, LPARAM len, LPARAM start, RXMatchFlags flags,
+		internal static extern int Cpp_RegexMatch(HandleRef code, string s, nint len, nint start, RXMatchFlags flags,
 			PcreCalloutT callout, out RegexMatch m, out BSTR errStr);
 		//note: don't use [MarshalAs(UnmanagedType.BStr)] out string errStr, it makes much slower.
 
 		//This overload allows to pass m null. Using 2 overloads makes programming simpler.
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int Cpp_RegexMatch(HandleRef code, string s, LPARAM len, LPARAM start, RXMatchFlags flags,
+		internal static extern int Cpp_RegexMatch(HandleRef code, string s, nint len, nint start, RXMatchFlags flags,
 			PcreCalloutT callout, RegexMatch* m, out BSTR errStr);
 
 		//rejected
 		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		//internal static extern int Cpp_RegexSubstitute(HandleRef code, string s, LPARAM len, LPARAM start, PCRE2_SUBSTITUTE_ flags,
-		//	string repl, LPARAM rlen, [Out] char[] outputbuffer, ref LPARAM outlen, out BSTR errStr);
+		//internal static extern int Cpp_RegexSubstitute(HandleRef code, string s, nint len, nint start, PCRE2_SUBSTITUTE_ flags,
+		//	string repl, nint rlen, [Out] char[] outputbuffer, ref nint outlen, out BSTR errStr);
 
 		#region PCRE API
 

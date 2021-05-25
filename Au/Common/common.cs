@@ -20,7 +20,7 @@ namespace Au.Types
 	public sealed class NoDoc : Attribute { }
 
 	/// <summary>
-	/// Adds undeclared Windows API to the completion list of the inherited class.
+	/// If a class is derived from this class, editor adds undeclared Windows API to its completion list.
 	/// </summary>
 	public abstract class WinAPI {
 		//For it could use an attribute. But this easily solves 2 problems:
@@ -30,8 +30,6 @@ namespace Au.Types
 		///
 		[NoDoc]
 		public class l { } //solves the first problem, because it's always in the list of completions
-
-		//CONSIDER: add util functions.
 	}
 
 	/// <summary>

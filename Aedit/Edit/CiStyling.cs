@@ -313,7 +313,7 @@ partial class CiStyling
 		p1.NW('F');
 #endif
 		if (!minimal) {
-			_diagCounter = 6; //update diagnostics after 1.5 s
+			_diagCounter = 4; //update diagnostics after 1 s
 		} else {
 			CodeInfo._diag.EraseIndicatorsInLine(doc, doc.zCurrentPos8);
 		}

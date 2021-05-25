@@ -178,7 +178,7 @@ namespace SdkConverter
 			//TestStructString(ref p);
 			////TestStructString2(p);
 			//AOutput.Write("returned");
-			//OutList(p.k, p.s);
+			//AOutput.Write(p.k, p.s);
 			//AOutput.Write(p.s == s);
 
 			//var p = new POINT();
@@ -203,11 +203,11 @@ namespace SdkConverter
 
 			//int k = 1;
 			//int R=TestUnmanaged(ref k);
-			//OutList(R, k);
+			//AOutput.Write(R, k);
 
 			//bool k = false;
 			//bool R=TestUnmanaged(ref k);
-			//OutList(R, k);
+			//AOutput.Write(R, k);
 
 
 			//AOutput.Write(1);
@@ -263,7 +263,7 @@ namespace SdkConverter
 
 			//APerf.ExecuteMulti(5, 50, a1, a2);
 
-			//OutList(n1, n2);
+			//AOutput.Write(n1, n2);
 		}
 	}
 }

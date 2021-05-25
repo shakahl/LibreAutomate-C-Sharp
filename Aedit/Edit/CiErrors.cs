@@ -74,11 +74,15 @@ class CiErrors
 				}
 
 				//if pasted or called InsertCode.Statements() etc, try to insert favorite using directive
-				if (pasting && ec is ErrorCode.ERR_NameNotInContext or ErrorCode.ERR_SingleTypeNameNotFound) {
-					//TODO: now ignores extension methods. Eg when DWinImage inserts im.MouseMove().
-					var s1 = code[start..end];
-					if (!CodeInfo._favorite.GetNamespaceFor(s1, ref addUsings))
-						if (_IsAttributeNameWithoutSuffix(s1, start, semo)) CodeInfo._favorite.GetNamespaceFor(s1 + "Attribute", ref addUsings);
+				if (pasting) {
+					if (ec is ErrorCode.ERR_NameNotInContext or ErrorCode.ERR_SingleTypeNameNotFound) {
+						var s1 = code[start..end];
+						if (!CodeInfo._favorite.GetNamespaceFor(s1, ref addUsings))
+							if (_IsAttributeNameWithoutSuffix(s1, start, semo)) CodeInfo._favorite.GetNamespaceFor(s1 + "Attribute", ref addUsings);
+					} else if (ec == ErrorCode.ERR_NoSuchMemberOrExtension) {
+						var emReceiverType = _GetExtensionMethodReceiverType(semo, start);
+						if (emReceiverType != null) CodeInfo._favorite.GetNamespaceFor(code[start..end], ref addUsings, emReceiverType);
+					}
 				}
 
 				if (!has) doc.InicatorsDiag_(has = true);
@@ -301,12 +305,9 @@ class CiErrors
 						if (its.IsStatic && its.MightContainExtensionMethods) { //fast, but without IsStatic slow first time
 							foreach (var m in nt.GetMembers().OfType<IMethodSymbol>()) { //fast; slightly slower than nt.MemberNames.Contains(errName) which gets member types etc too
 								if (m.Name == errName && m.IsExtensionMethod) {
-									if (emReceiverType == null) {
-										if (_semo.SyntaxTree.GetRoot().FindToken(start).Parent.Parent is MemberAccessExpressionSyntax ma)
-											emReceiverType = _semo.GetTypeInfo(ma.Expression).Type;
-										ADebug.PrintIf(emReceiverType == null, "failed to get extension method receiver type");
-										if (emReceiverType == null) continue;
-									}
+									emReceiverType ??= _GetExtensionMethodReceiverType(_semo, start);
+									ADebug.PrintIf(emReceiverType == null, "failed to get extension method receiver type");
+									if (emReceiverType == null) continue;
 									if (null == m.ReduceExtensionMethod(emReceiverType)) { /*ADebug.Print(emReceiverType);*/ continue; }
 									found = true;
 									sym = m;
@@ -389,5 +390,13 @@ class CiErrors
 	static bool _IsAttributeNameWithoutSuffix(string name, int pos, SemanticModel semo) {
 		if (name.Ends("Attribute")) return false;
 		return semo.SyntaxTree.IsAttributeNameContext(pos, default);
+	}
+
+	static ITypeSymbol _GetExtensionMethodReceiverType(SemanticModel semo, int startOfMethodName) {
+		ITypeSymbol t = null;
+		if (semo.SyntaxTree.GetRoot().FindToken(startOfMethodName).Parent.Parent is MemberAccessExpressionSyntax ma)
+			t = semo.GetTypeInfo(ma.Expression).Type;
+		ADebug.PrintIf(t == null, "failed to get extension method receiver type");
+		return t;
 	}
 }

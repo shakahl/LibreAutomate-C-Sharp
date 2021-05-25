@@ -773,7 +773,7 @@ namespace Au.Types
 		public IntPtr hIcon;
 		public IntPtr hCursor;
 		public MCursor mCursor;
-		public nint hbrBackground;
+		public LPARAM hbrBackground;
 		public IntPtr hIconSm;
 #pragma warning restore 1591 //XML doc
 	}

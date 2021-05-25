@@ -116,7 +116,7 @@ namespace Au.Types
 			public IntPtr hInstance;
 			public IntPtr hIcon;
 			public IntPtr hCursor;
-			public nint hbrBackground;
+			public LPARAM hbrBackground;
 #pragma warning disable 169
 			IntPtr lpszMenuName;
 #pragma warning restore 169
@@ -739,7 +739,7 @@ namespace Au.Types
 		/// Gets or sets any value. This is the direct API call.
 		/// </summary>
 		[DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
-		internal static extern bool SystemParametersInfo(uint uiAction, int uiParam, LPARAM pvParam, uint fWinIni = 0);
+		internal static extern bool SystemParametersInfo(uint uiAction, int uiParam, void* pvParam, uint fWinIni = 0);
 
 		/// <summary>
 		/// Gets 32-bit integer value. Returns <i>def</i> if failed.
@@ -764,7 +764,7 @@ namespace Au.Types
 		/// <summary>
 		/// Sets value.
 		/// </summary>
-		internal static bool SystemParametersInfo(uint uiAction, int uiParam, LPARAM pvParam, bool save, bool notify) {
+		internal static bool SystemParametersInfo(uint uiAction, int uiParam, void* pvParam, bool save, bool notify) {
 			uint f = 0;
 			if (save) f |= 1; //SPIF_UPDATEINIFILE
 			if (notify) f |= 2; //SPIF_SENDCHANGE
@@ -772,7 +772,7 @@ namespace Au.Types
 		}
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool SystemParametersInfoForDpi(uint uiAction, int uiParam, LPARAM pvParam, uint fWinIni, int dpi);
+		internal static extern bool SystemParametersInfoForDpi(uint uiAction, int uiParam, void* pvParam, uint fWinIni, int dpi);
 
 		#endregion
 

@@ -200,17 +200,32 @@ class CiFavorite
 	}
 
 	/// <summary>
-	/// If <i>name</i> is a type in favorite namespaces, calls <c>namespaces ??= new()</c>, adds its namespace to <i>namespaces</i> (once) and returns true.
+	/// If <i>name</i> is a type or extension method (if typeForExtensionMethods not null) in favorite namespaces, calls <c>namespaces ??= new()</c>, adds its namespace to <i>namespaces</i> (once) and returns true.
 	/// </summary>
-	public bool GetNamespaceFor(string name, ref List<string> namespaces) {
+	public bool GetNamespaceFor(string name, ref List<string> namespaces, ITypeSymbol typeForExtensionMethods = null) {
 		if (!_Init()) return false;
 		INamespaceSymbol ns = null;
 		foreach (var nt in _namespaces) {
-			foreach (var (t, _, _) in nt.types) {
-				if (t.Name == name) {
-					if (ns != null) return false; //multiple namespaces contain type with this name
-					ns = nt.ns;
-					break;
+			if (typeForExtensionMethods != null) {
+				if (nt.em == null) continue;
+				foreach (var a in nt.em) {
+					foreach (var m in a) {
+						if (m.Name == name) {
+							var rm = m.ReduceExtensionMethod(typeForExtensionMethods);
+							if (rm == null) continue;
+							if (ns != null) return false; //multiple namespaces contain extension methods with this name
+							ns = nt.ns;
+							break;
+						}
+					}
+				}
+			} else {
+				foreach (var (t, _, _) in nt.types) {
+					if (t.Name == name) {
+						if (ns != null) return false; //multiple namespaces contain type with this name
+						ns = nt.ns;
+						break;
+					}
 				}
 			}
 		}

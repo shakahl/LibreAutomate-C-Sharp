@@ -896,7 +896,7 @@ namespace Au.Types
 		//internal delegate void PAPCFUNC(nint Parameter);
 
 		//[DllImport("kernel32.dll", SetLastError = true)]
-		//internal static extern uint QueueUserAPC(PAPCFUNC pfnAPC, IntPtr hThread, nint dwData);
+		//internal static extern uint QueueUserAPC(PAPCFUNC pfnAPC, IntPtr hThread, LPARAM dwData);
 
 		[DllImport("kernel32.dll")]
 		internal static extern int GetOEMCP();
@@ -922,7 +922,7 @@ namespace Au.Types
 		//internal static extern bool GetProcessMemoryInfo(IntPtr Process, ref PROCESS_MEMORY_COUNTERS ppsmemCounters, int cb);
 
 		[DllImport("kernel32.dll", EntryPoint = "FindResourceW", SetLastError = true)]
-		public static extern IntPtr FindResource(IntPtr hModule, nint lpName, nint lpType);
+		public static extern IntPtr FindResource(IntPtr hModule, LPARAM lpName, LPARAM lpType);
 
 		internal const int RT_GROUP_ICON = 14;
 

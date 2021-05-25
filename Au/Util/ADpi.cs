@@ -210,7 +210,7 @@ namespace Au.Util
 		/// Calls API <msdn>SystemParametersInfoForDpi</msdn> if available, else <msdn>SystemParametersInfo</msdn>.
 		/// Use only with <i>uiAction</i> = SPI_GETICONTITLELOGFONT, SPI_GETICONMETRICS, SPI_GETNONCLIENTMETRICS.
 		/// </summary>
-		public static bool SystemParametersInfo(uint uiAction, int uiParam, LPARAM pvParam, DpiOf dpiOf)
+		public static unsafe bool SystemParametersInfo(uint uiAction, int uiParam, void* pvParam, DpiOf dpiOf)
 			=> AVersion.MinWin10_1607
 			? Api.SystemParametersInfoForDpi(uiAction, uiParam, pvParam, 0, dpiOf)
 			: Api.SystemParametersInfo(uiAction, uiParam, pvParam);

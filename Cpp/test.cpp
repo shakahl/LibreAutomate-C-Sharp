@@ -653,20 +653,15 @@ public:
 
 void _TestIAccessibleImpl();
 
-struct S1 { int i; int a[1]; };
-struct S2 { int i; int a[0]; };
-struct S3 { int i; int a[]; };
-struct S4 { double d; int i; char a[]; };
-struct S5 { char i; int a[]; };
+//struct S1 { int i; int a[1]; };
+//struct S2 { int i; int a[0]; };
+//struct S3 { int i; int a[]; };
+//struct S4 { double d; int i; char a[]; };
+//struct S5 { char i; int a[]; };
 
 EXPORT void Cpp_Test()
 {
-	Print(sizeof(S1));
-	Print(sizeof(S2));
-	Print(sizeof(S3));
-	Print(sizeof(S4));
-	Print(sizeof(S5));
-	Print(offsetof(S4, a));
+
 
 
 	//_TestIAccessibleImpl();
