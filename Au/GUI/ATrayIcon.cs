@@ -262,10 +262,10 @@ namespace Au
 		/// Window procedure of the hidden window that receives tray icon notifications (<see cref="MsgNotify"/>) in version 4 format.
 		/// If you override it, call the base function.
 		/// </summary>
-		protected virtual LPARAM WndProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
+		protected virtual nint WndProc(AWnd w, int msg, nint wParam, nint lParam) {
 			if (_visible) {
 				if (msg == MsgNotify) {
-					int m = AMath.LoWord(lParam); POINT p = new(AMath.LoShort(wParam), AMath.HiShort(wParam));
+					int m = AMath.LoWord(lParam); POINT p = AMath.NintToPOINT(wParam);
 					//if(m!=Api.WM_MOUSEMOVE) AOutput.Write(m, p);
 					Message?.Invoke(new(m, p));
 					switch (m) {
@@ -302,7 +302,7 @@ namespace Au
 				_Delete();
 				_hookDesktopSwitch?.Dispose(); _hookDesktopSwitch = null;
 			}
-			if (msg == Api.WM_CLOSE && wParam != default) Environment.Exit((int)wParam);
+			if (msg == Api.WM_CLOSE && wParam != 0) Environment.Exit((int)wParam);
 
 			return R;
 		}

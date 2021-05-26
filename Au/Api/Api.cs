@@ -478,10 +478,10 @@ namespace Au.Types
 		}
 
 		//[DllImport("shell32.dll", EntryPoint = "SHGetFileInfoW")]
-		//internal static extern LPARAM SHGetFileInfo(string pszPath, uint dwFileAttributes, out SHFILEINFO psfi, int cbFileInfo, uint uFlags);
+		//internal static extern nint SHGetFileInfo(string pszPath, uint dwFileAttributes, out SHFILEINFO psfi, int cbFileInfo, uint uFlags);
 
 		[DllImport("shell32.dll", EntryPoint = "SHGetFileInfoW")]
-		internal static extern LPARAM SHGetFileInfo(IntPtr pidl, uint dwFileAttributes, out SHFILEINFO psfi, int cbFileInfo, uint uFlags);
+		internal static extern nint SHGetFileInfo(IntPtr pidl, uint dwFileAttributes, out SHFILEINFO psfi, int cbFileInfo, uint uFlags);
 
 		[DllImport("shell32.dll", PreserveSig = true)]
 		internal static extern int SHGetDesktopFolder(out IShellFolder ppshf);
@@ -875,26 +875,26 @@ namespace Au.Types
 		internal static extern bool TrackMouseEvent(ref TRACKMOUSEEVENT lpEventTrack);
 
 		[DllImport("comctl32.dll", EntryPoint = "#380", PreserveSig = true)]
-		internal static extern int LoadIconMetric(IntPtr hinst, LPARAM pszName, int lims, out IntPtr phico);
+		internal static extern int LoadIconMetric(IntPtr hinst, nint pszName, int lims, out IntPtr phico);
 
 		/// <summary>API <msdn>SetWindowSubclass</msdn></summary>
 		[DllImport("comctl32.dll", EntryPoint = "#410")]
-		internal static extern bool SetWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, LPARAM dwRefData = default);
+		internal static extern bool SetWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, nint uIdSubclass, nint dwRefData = 0);
 
 		/// <summary>API <msdn>GetWindowSubclass</msdn></summary>
 		[DllImport("comctl32.dll", EntryPoint = "#411")] //this is exported only by ordinal
-		internal static extern bool GetWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, out LPARAM pdwRefData);
+		internal static extern bool GetWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, nint uIdSubclass, out nint pdwRefData);
 
 		/// <summary>API <msdn>RemoveWindowSubclass</msdn></summary>
 		[DllImport("comctl32.dll", EntryPoint = "#412")]
-		internal static extern bool RemoveWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass);
+		internal static extern bool RemoveWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, nint uIdSubclass);
 
 		/// <summary>API <msdn>DefSubclassProc</msdn></summary>
 		[DllImport("comctl32.dll", EntryPoint = "#413")]
-		internal static extern LPARAM DefSubclassProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam);
+		internal static extern nint DefSubclassProc(AWnd w, int msg, nint wParam, nint lParam);
 
 		/// <summary>API <msdn>SUBCLASSPROC</msdn></summary>
-		internal delegate LPARAM SUBCLASSPROC(AWnd w, int msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, LPARAM dwRefData);
+		internal delegate nint SUBCLASSPROC(AWnd w, int msg, nint wParam, nint lParam, nint uIdSubclass, nint dwRefData);
 
 
 
@@ -1029,7 +1029,7 @@ namespace Au.Types
 		internal struct VarInt
 		{
 			ushort _vt, _1, _2, _3;
-			LPARAM _int, _4;
+			nint _int, _4;
 			public static implicit operator VarInt(int i) => new VarInt { _vt = 3, _int = i + 1 };
 			public static implicit operator int(VarInt v) {
 				if (v._vt == 3) return (int)v._int - 1;

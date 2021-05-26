@@ -176,7 +176,7 @@ namespace Au.Controls
 		///
 		protected override void OnMouseWheel(MouseWheelEventArgs e) {
 			e.Handled = true;
-			if (!_avi.NE_() && _vscroll.Visible) _vscroll.WndProc(_w, Api.WM_MOUSEWHEEL, AMath.MakeUint(0, e.Delta), 0);
+			if (!_avi.NE_() && _vscroll.Visible) _vscroll.WndProc(_w, Api.WM_MOUSEWHEEL, AMath.MakeLparam(0, e.Delta), 0);
 			base.OnMouseWheel(e);
 		}
 

@@ -541,7 +541,7 @@ namespace Au.Triggers
 			public KKey vk;
 			public KMod mod;
 			public uint sc;
-			public LPARAM hkl;
+			public nint hkl;
 		}
 
 		//User-typed characters. _len characters are valid.

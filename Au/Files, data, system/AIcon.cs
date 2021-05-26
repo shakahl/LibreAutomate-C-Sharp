@@ -484,7 +484,7 @@ namespace Au
 		/// Calls API <msdn>LoadIconMetric</msdn>.
 		/// </remarks>
 		public static unsafe AIcon TrayIcon(string icoFile) {
-			fixed (char* p = icoFile) return 0 == Api.LoadIconMetric(default, p, 0, out var hi) ? _New(hi) : null;
+			fixed (char* p = icoFile) return 0 == Api.LoadIconMetric(default, (nint)p, 0, out var hi) ? _New(hi) : null;
 			//LoadIconMetric bug: does not load large icon from ico file.
 		}
 
@@ -518,15 +518,15 @@ namespace Au
 			}
 
 			bool large = size >= 24; //SHOULDDO: make high-DPI-aware. How?
-			bool ok = w.SendTimeout(2000, out LPARAM R, Api.WM_GETICON, large);
-			if (R == 0 && ok) w.SendTimeout(2000, out R, Api.WM_GETICON, !large);
+			bool ok = w.SendTimeout(2000, out nint R, Api.WM_GETICON, large ? 1 : 0);
+			if (R == 0 && ok) w.SendTimeout(2000, out R, Api.WM_GETICON, large ? 0 : 1);
 			if (R == 0) R = AWnd.More.GetClassLong(w, large ? GCLong.HICON : GCLong.HICONSM);
 			if (R == 0) R = AWnd.More.GetClassLong(w, large ? GCLong.HICONSM : GCLong.HICON);
 			//tested this code with DPI 125%. Small icon of most windows match DPI (20), some 16, some 24.
 			//tested: undocumented API InternalGetWindowIcon does not get icon of winstore app.
 
 			//Copy, because will DestroyIcon, also it resizes if need.
-			if (R != default) R = Api.CopyImage(R, Api.IMAGE_ICON, size, size, 0);
+			if (R != 0) R = Api.CopyImage(R, Api.IMAGE_ICON, size, size, 0);
 			return _New(R);
 		}
 

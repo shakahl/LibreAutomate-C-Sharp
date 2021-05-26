@@ -105,7 +105,7 @@ namespace Au.Triggers
 			if(_Send(UsedEvents.Keyboard)) k.BlockEvent();
 		}
 
-		unsafe bool _MouseHookProc(LPARAM wParam, LPARAM lParam)
+		unsafe bool _MouseHookProc(nint wParam, nint lParam)
 		{
 			int msg = (int)wParam;
 			if(msg == Api.WM_MOUSEMOVE) {

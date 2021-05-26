@@ -364,7 +364,7 @@ namespace Au
 				return _res;
 			}
 
-			LPARAM _WndProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
+			nint _WndProc(AWnd w, int msg, nint wParam, nint lParam) {
 				//AWnd.More.PrintMsg(w, msg, wParam, lParam);
 
 				switch (msg) {
@@ -387,10 +387,10 @@ namespace Au
 					Api.EndPaint(w, ps);
 					return default;
 				case Api.WM_MOUSEMOVE:
-					_WmMousemove(AMath.LparamToPOINT(lParam));
+					_WmMousemove(AMath.NintToPOINT(lParam));
 					break;
 				case Api.WM_LBUTTONDOWN:
-					_WmLbuttondown(AMath.LparamToPOINT(lParam));
+					_WmLbuttondown(AMath.NintToPOINT(lParam));
 					break;
 				}
 

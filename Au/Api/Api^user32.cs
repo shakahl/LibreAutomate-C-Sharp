@@ -9,55 +9,55 @@ namespace Au.Types
 	static unsafe partial class Api
 	{
 		[DllImport("user32.dll", EntryPoint = "SendMessageW", SetLastError = true)]
-		internal static extern LPARAM SendMessage(AWnd hWnd, int msg, LPARAM wParam, LPARAM lParam);
+		internal static extern nint SendMessage(AWnd hWnd, int msg, nint wParam, nint lParam);
 
 		[DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW", SetLastError = true)]
-		internal static extern LPARAM SendMessageTimeout(AWnd hWnd, int Msg, LPARAM wParam, LPARAM lParam, SMTFlags flags, int uTimeout, out LPARAM lpdwResult);
+		internal static extern nint SendMessageTimeout(AWnd hWnd, int Msg, nint wParam, nint lParam, SMTFlags flags, int uTimeout, out nint lpdwResult);
 
 		[DllImport("user32.dll", EntryPoint = "SendNotifyMessageW", SetLastError = true)]
-		internal static extern bool SendNotifyMessage(AWnd hWnd, int Msg, LPARAM wParam, LPARAM lParam);
+		internal static extern bool SendNotifyMessage(AWnd hWnd, int Msg, nint wParam, nint lParam);
 
 		[DllImport("user32.dll", EntryPoint = "PostMessageW", SetLastError = true)]
-		internal static extern bool PostMessage(AWnd hWnd, int Msg, LPARAM wParam, LPARAM lParam);
+		internal static extern bool PostMessage(AWnd hWnd, int Msg, nint wParam, nint lParam);
 
 		[DllImport("user32.dll", EntryPoint = "PostThreadMessageW")]
-		internal static extern bool PostThreadMessage(int idThread, int Msg, LPARAM wParam, LPARAM lParam);
+		internal static extern bool PostThreadMessage(int idThread, int Msg, nint wParam, nint lParam);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		static extern LPARAM GetWindowLongW(AWnd hWnd, int nIndex);
+		static extern nint GetWindowLongW(AWnd hWnd, int nIndex);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		static extern LPARAM GetWindowLongPtrW(AWnd hWnd, int nIndex);
+		static extern nint GetWindowLongPtrW(AWnd hWnd, int nIndex);
 
 		//info: 32-bit user32.dll does not have GetWindowLongPtrW etc. In C++, in x86 config it is defined as GetWindowLongW etc.
-		internal static LPARAM GetWindowLongPtr(AWnd w, int nIndex)
+		internal static nint GetWindowLongPtr(AWnd w, int nIndex)
 			=> IntPtr.Size == 8 ? GetWindowLongPtrW(w, nIndex) : GetWindowLongW(w, nIndex);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		static extern LPARAM SetWindowLongW(AWnd hWnd, int nIndex, LPARAM dwNewLong);
+		static extern nint SetWindowLongW(AWnd hWnd, int nIndex, nint dwNewLong);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		static extern LPARAM SetWindowLongPtrW(AWnd hWnd, int nIndex, LPARAM dwNewLong);
+		static extern nint SetWindowLongPtrW(AWnd hWnd, int nIndex, nint dwNewLong);
 
-		internal static LPARAM SetWindowLongPtr(AWnd w, int nIndex, LPARAM dwNewLong)
+		internal static nint SetWindowLongPtr(AWnd w, int nIndex, nint dwNewLong)
 			=> IntPtr.Size == 8 ? SetWindowLongPtrW(w, nIndex, dwNewLong) : SetWindowLongW(w, nIndex, dwNewLong);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		static extern LPARAM GetClassLongW(AWnd hWnd, int nIndex);
+		static extern nint GetClassLongW(AWnd hWnd, int nIndex);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		static extern LPARAM GetClassLongPtrW(AWnd hWnd, int nIndex);
+		static extern nint GetClassLongPtrW(AWnd hWnd, int nIndex);
 
-		internal static LPARAM GetClassLongPtr(AWnd w, int nIndex)
+		internal static nint GetClassLongPtr(AWnd w, int nIndex)
 			=> IntPtr.Size == 8 ? GetClassLongPtrW(w, nIndex) : GetClassLongW(w, nIndex);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		static extern LPARAM SetClassLongW(AWnd hWnd, int nIndex, LPARAM dwNewLong);
+		static extern nint SetClassLongW(AWnd hWnd, int nIndex, nint dwNewLong);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		static extern LPARAM SetClassLongPtrW(AWnd hWnd, int nIndex, LPARAM dwNewLong);
+		static extern nint SetClassLongPtrW(AWnd hWnd, int nIndex, nint dwNewLong);
 
-		internal static LPARAM SetClassLongPtr(AWnd w, int nIndex, LPARAM dwNewLong)
+		internal static nint SetClassLongPtr(AWnd w, int nIndex, nint dwNewLong)
 			=> IntPtr.Size == 8 ? SetClassLongPtrW(w, nIndex, dwNewLong) : SetClassLongW(w, nIndex, dwNewLong);
 
 		[DllImport("user32.dll", EntryPoint = "GetClassNameW", SetLastError = true)]
@@ -116,7 +116,7 @@ namespace Au.Types
 			public IntPtr hInstance;
 			public IntPtr hIcon;
 			public IntPtr hCursor;
-			public LPARAM hbrBackground;
+			public nint hbrBackground;
 #pragma warning disable 169
 			IntPtr lpszMenuName;
 #pragma warning restore 169
@@ -157,15 +157,15 @@ namespace Au.Types
 		internal static extern bool UnregisterClass(uint classAtom, IntPtr hInstance);
 
 		[DllImport("user32.dll", EntryPoint = "CreateWindowExW", SetLastError = true)]
-		internal static extern AWnd CreateWindowEx(WSE dwExStyle, string lpClassName, string lpWindowName, WS dwStyle, int x, int y, int nWidth, int nHeight, AWnd hWndParent = default, LPARAM hMenu = default, IntPtr hInstance = default, LPARAM lpParam = default);
+		internal static extern AWnd CreateWindowEx(WSE dwExStyle, string lpClassName, string lpWindowName, WS dwStyle, int x, int y, int nWidth, int nHeight, AWnd hWndParent = default, nint hMenu = 0, IntPtr hInstance = default, nint lpParam = 0);
 
 		internal const int CW_USEDEFAULT = 1 << 31;
 
 		[DllImport("user32.dll", EntryPoint = "DefWindowProcW")]
-		internal static extern LPARAM DefWindowProc(AWnd hWnd, int msg, LPARAM wParam, LPARAM lParam);
+		internal static extern nint DefWindowProc(AWnd hWnd, int msg, nint wParam, nint lParam);
 
 		[DllImport("user32.dll", EntryPoint = "CallWindowProcW")]
-		internal static extern LPARAM CallWindowProc(LPARAM lpPrevWndFunc, AWnd hWnd, int Msg, LPARAM wParam, LPARAM lParam);
+		internal static extern nint CallWindowProc(nint lpPrevWndFunc, AWnd hWnd, int Msg, nint wParam, nint lParam);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool DestroyWindow(AWnd hWnd);
@@ -180,7 +180,7 @@ namespace Au.Types
 		internal static extern bool TranslateMessage(in MSG lpMsg);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern LPARAM DispatchMessage(in MSG lpmsg);
+		internal static extern nint DispatchMessage(in MSG lpmsg);
 
 		internal const uint PM_NOREMOVE = 0x0;
 		internal const uint PM_REMOVE = 0x1;
@@ -197,7 +197,7 @@ namespace Au.Types
 		internal static extern bool WaitMessage();
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool ReplyMessage(LPARAM lResult);
+		internal static extern bool ReplyMessage(nint lResult);
 
 		internal const int GA_PARENT = 1;
 		internal const int GA_ROOT = 2;
@@ -313,7 +313,7 @@ namespace Au.Types
 		[DllImport("user32.dll", EntryPoint = "LoadImageW", SetLastError = true)]
 		internal static extern IntPtr LoadImage(IntPtr hInst, string name, int type, int cx, int cy, uint LR_X);
 		[DllImport("user32.dll", EntryPoint = "LoadImageW", SetLastError = true)]
-		internal static extern IntPtr LoadImage(IntPtr hInst, LPARAM resId, int type, int cx, int cy, uint LR_X);
+		internal static extern IntPtr LoadImage(IntPtr hInst, nint resId, int type, int cx, int cy, uint LR_X);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern IntPtr CopyImage(IntPtr h, int type, int cx, int cy, uint flags);
@@ -382,28 +382,28 @@ namespace Au.Types
 
 
 		[DllImport("user32.dll", EntryPoint = "GetPropW", SetLastError = true)]
-		internal static extern LPARAM GetProp(AWnd hWnd, string lpString);
+		internal static extern nint GetProp(AWnd hWnd, string lpString);
 
 		[DllImport("user32.dll", EntryPoint = "GetPropW", SetLastError = true)]
-		//internal static extern LPARAM GetProp(AWnd hWnd, [MarshalAs(UnmanagedType.SysInt)] ushort atom); //exception, must be U2
-		internal static extern LPARAM GetProp(AWnd hWnd, LPARAM atom);
+		//internal static extern nint GetProp(AWnd hWnd, [MarshalAs(UnmanagedType.SysInt)] ushort atom); //exception, must be U2
+		internal static extern nint GetProp(AWnd hWnd, nint atom);
 
 		[DllImport("user32.dll", EntryPoint = "SetPropW", SetLastError = true)]
-		internal static extern bool SetProp(AWnd hWnd, string lpString, LPARAM hData);
+		internal static extern bool SetProp(AWnd hWnd, string lpString, nint hData);
 
 		[DllImport("user32.dll", EntryPoint = "SetPropW", SetLastError = true)]
-		internal static extern bool SetProp(AWnd hWnd, LPARAM atom, LPARAM hData);
+		internal static extern bool SetProp(AWnd hWnd, nint atom, nint hData);
 
 		[DllImport("user32.dll", EntryPoint = "RemovePropW", SetLastError = true)]
-		internal static extern LPARAM RemoveProp(AWnd hWnd, string lpString);
+		internal static extern nint RemoveProp(AWnd hWnd, string lpString);
 
 		[DllImport("user32.dll", EntryPoint = "RemovePropW", SetLastError = true)]
-		internal static extern LPARAM RemoveProp(AWnd hWnd, LPARAM atom);
+		internal static extern nint RemoveProp(AWnd hWnd, nint atom);
 
-		internal delegate bool PROPENUMPROCEX(AWnd hwnd, IntPtr lpszString, LPARAM hData, LPARAM dwData);
+		internal delegate bool PROPENUMPROCEX(AWnd hwnd, IntPtr lpszString, nint hData, nint dwData);
 
 		[DllImport("user32.dll", EntryPoint = "EnumPropsExW", SetLastError = true)]
-		internal static extern int EnumPropsEx(AWnd hWnd, PROPENUMPROCEX lpEnumFunc, LPARAM lParam);
+		internal static extern int EnumPropsEx(AWnd hWnd, PROPENUMPROCEX lpEnumFunc, nint lParam);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern AWnd GetDlgItem(AWnd hDlg, int nIDDlgItem);
@@ -826,12 +826,12 @@ namespace Au.Types
 
 		internal struct INPUTK
 		{
-			LPARAM _type;
+			nint _type;
 			public ushort wVk;
 			public ushort wScan;
 			public uint dwFlags;
 			public int time;
-			public LPARAM dwExtraInfo;
+			public nint dwExtraInfo;
 #pragma warning disable 414 //never used
 			int _u1, _u2; //need INPUT size
 #pragma warning restore 414
@@ -875,13 +875,13 @@ namespace Au.Types
 
 		internal struct INPUTM
 		{
-			LPARAM _type;
+			nint _type;
 			public int dx;
 			public int dy;
 			public int mouseData;
 			public IMFlags dwFlags;
 			public int time;
-			public LPARAM dwExtraInfo;
+			public nint dwExtraInfo;
 
 			public INPUTM(IMFlags flags, int x = 0, int y = 0, int data = 0) {
 				_type = INPUT_MOUSE;
@@ -926,13 +926,13 @@ namespace Au.Types
 		[DllImport("user32.dll", EntryPoint = "LoadCursorW", SetLastError = true)]
 		internal static extern IntPtr LoadCursor(IntPtr hInstance, MCursor cursorId);
 
-		internal delegate void TIMERPROC(AWnd param1, int param2, LPARAM param3, uint param4);
+		internal delegate void TIMERPROC(AWnd param1, int param2, nint param3, uint param4);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern LPARAM SetTimer(AWnd hWnd, LPARAM nIDEvent, int uElapse, TIMERPROC lpTimerFunc);
+		internal static extern nint SetTimer(AWnd hWnd, nint nIDEvent, int uElapse, TIMERPROC lpTimerFunc);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool KillTimer(AWnd hWnd, LPARAM uIDEvent);
+		internal static extern bool KillTimer(AWnd hWnd, nint uIDEvent);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern AWnd SetParent(AWnd hWndChild, AWnd hWndNewParent);
@@ -1054,13 +1054,13 @@ namespace Au.Types
 		internal static extern bool UpdateWindow(AWnd hWnd);
 
 		[DllImport("user32.dll")]
-		internal static extern LPARAM GetKeyboardLayout(int idThread);
+		internal static extern nint GetKeyboardLayout(int idThread);
 
 		[DllImport("user32.dll", EntryPoint = "MapVirtualKeyExW")]
-		internal static extern uint MapVirtualKeyEx(uint uCode, uint uMapType, LPARAM dwhkl);
+		internal static extern uint MapVirtualKeyEx(uint uCode, uint uMapType, nint dwhkl);
 
 		[DllImport("user32.dll", EntryPoint = "VkKeyScanExW")]
-		internal static extern short VkKeyScanEx(char ch, LPARAM dwhkl);
+		internal static extern short VkKeyScanEx(char ch, nint dwhkl);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool OpenClipboard(AWnd hWndNewOwner);
@@ -1177,7 +1177,7 @@ namespace Au.Types
 		internal const int WH_KEYBOARD_LL = 13;
 		internal const int WH_MOUSE_LL = 14;
 
-		internal delegate LPARAM HOOKPROC(int code, LPARAM wParam, LPARAM lParam);
+		internal delegate nint HOOKPROC(int code, nint wParam, nint lParam);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern IntPtr SetWindowsHookEx(int WH_X, HOOKPROC lpfn, IntPtr hMod, int dwThreadId);
@@ -1186,7 +1186,7 @@ namespace Au.Types
 		internal static extern bool UnhookWindowsHookEx(IntPtr hhk);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern LPARAM CallNextHookEx(IntPtr hhk, int nCode, LPARAM wParam, LPARAM lParam);
+		internal static extern nint CallNextHookEx(IntPtr hhk, int nCode, nint wParam, nint lParam);
 
 		internal const uint LLKHF_EXTENDED = 0x1;
 		internal const uint LLKHF_INJECTED = 0x10;
@@ -1199,7 +1199,7 @@ namespace Au.Types
 			public uint scanCode;
 			public uint flags;
 			public int time;
-			public LPARAM dwExtraInfo;
+			public nint dwExtraInfo;
 
 			public bool IsUp => 0 != (flags & LLKHF_UP);
 
@@ -1232,7 +1232,7 @@ namespace Au.Types
 			public uint mouseData;
 			public uint flags;
 			public int time;
-			public LPARAM dwExtraInfo;
+			public nint dwExtraInfo;
 
 			/// <summary>
 			/// true if the event was generated by software.
@@ -1338,7 +1338,7 @@ namespace Au.Types
 			public IntPtr hSubMenu;
 			public IntPtr hbmpChecked;
 			public IntPtr hbmpUnchecked;
-			public LPARAM dwItemData;
+			public nint dwItemData;
 			public char* dwTypeData;
 			public int cch;
 			public IntPtr hbmpItem;
@@ -1468,7 +1468,7 @@ namespace Au.Types
 		internal static extern Util.ADpi.Awareness GetAwarenessFromDpiAwarenessContext(IntPtr value);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern LPARAM SetThreadDpiAwarenessContext(LPARAM dpiContext);
+		internal static extern nint SetThreadDpiAwarenessContext(nint dpiContext);
 
 		[DllImport("shcore.dll", PreserveSig = true)]
 		internal static extern int GetDpiForMonitor(IntPtr hmonitor, int dpiType, out int dpiX, out int dpiY);
@@ -1519,11 +1519,11 @@ namespace Au.Types
 			public int cbSize;
 			public uint uFlags;
 			public AWnd hwnd;
-			public LPARAM uId;
+			public nint uId;
 			public RECT rect;
 			public IntPtr hinst;
 			public char* lpszText;
-			public LPARAM lParam;
+			public nint lParam;
 			public void* lpReserved;
 		}
 

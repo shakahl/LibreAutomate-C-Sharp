@@ -12,9 +12,9 @@ namespace Au
 	[ComVisible(true)]
 	partial class MTBase
 	{
-		private protected bool _WmGetobject(LPARAM wParam, LPARAM lParam, out LPARAM result) {
+		private protected bool _WmGetobject(nint wParam, nint lParam, out nint result) {
 			result = default;
-			var oid = (AccOBJID)(uint)lParam;
+			var oid = (AccOBJID)lParam;
 			if (oid != AccOBJID.CLIENT) return false;
 			result = Cpp.Cpp_AccWorkaround((IAccessible)this, wParam, ref _accWorkaround);
 			return true;

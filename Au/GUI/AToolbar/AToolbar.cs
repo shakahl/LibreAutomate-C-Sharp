@@ -454,7 +454,7 @@ namespace Au
 		}
 		static int s_winclassRegistered;
 
-		unsafe LPARAM _WndProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
+		unsafe nint _WndProc(AWnd w, int msg, nint wParam, nint lParam) {
 			//AWnd.More.PrintMsg(w, msg, wParam, lParam);
 
 			switch (msg) {
@@ -595,9 +595,9 @@ namespace Au
 			return -1;
 		}
 
-		unsafe void _WmMousemove(LPARAM lParam) {
+		unsafe void _WmMousemove(nint lParam) {
 			if (_iClick < 0) {
-				var p = AMath.LparamToPOINT(lParam);
+				var p = AMath.NintToPOINT(lParam);
 				int i = _HitTest(p);
 				if (i != _iHot) {
 					if (_iHot >= 0) _Invalidate(_iHot);
@@ -621,10 +621,10 @@ namespace Au
 			if (_iHot >= 0) { _Invalidate(_iHot); _iHot = -1; }
 		}
 
-		void _WmMouselbuttondown(LPARAM lParam) {
+		void _WmMouselbuttondown(nint lParam) {
 			var mod = AKeys.UI.GetMod(); if (mod != 0 && mod != KMod.Shift) return;
 			if (mod == 0) { //click button
-				var p = AMath.LparamToPOINT(lParam);
+				var p = AMath.NintToPOINT(lParam);
 				int i = _HitTest(p);
 				if (i >= 0) _Click(i, true);
 				//		} else if(mod==KMod.Shift) { //move toolbar
@@ -667,7 +667,7 @@ namespace Au
 						_Invalidate(_iClick = i);
 						ok = ADragDrop.SimpleDragDrop(_w, MButtons.Left, d => {
 							if (d.Msg.message != Api.WM_MOUSEMOVE) return;
-							int j = _HitTest(AMath.LparamToPOINT(d.Msg.lParam));
+							int j = _HitTest(AMath.NintToPOINT(d.Msg.lParam));
 							if ((j == i) == _noHotClick) {
 								_noHotClick ^= true;
 								_Invalidate(i);
@@ -796,13 +796,13 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 			if (m.Last != null) m.Show();
 		}
 
-		bool _WmNchittest(LPARAM xy, out int ht) {
+		bool _WmNchittest(nint xy, out int ht) {
 			ht = 0;
 			if (AKeys.UI.GetMod() == KMod.Shift) { //move
 				ht = Api.HTCAPTION;
 			} else { //resize?
 				if (Border == TBBorder.None || (!Sizable && Border < TBBorder.Thick)) return false;
-				int x = AMath.LoShort(xy), y = AMath.HiShort(xy);
+				var (x, y) = AMath.NintToPOINT(xy);
 				if (Sizable) {
 					_w.GetWindowInfo_(out var k);
 					RECT r = k.rcWindow;

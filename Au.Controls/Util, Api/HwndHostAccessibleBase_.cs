@@ -273,8 +273,8 @@ namespace Au.Controls
 		/// Call in hook wndproc on WM_GETOBJECT like this: <c>handled = true; return (_acc ??= new _Accessible(this)).WmGetobject(wParam, lParam);</c>.
 		/// If lParam is AccOBJID.CLIENT, calls API LresultFromObject(this), else calls API DefWindowProc.
 		/// </summary>
-		public LPARAM WmGetobject(LPARAM wParam, LPARAM lParam) {
-			var oid = (AccOBJID)(uint)lParam;
+		public nint WmGetobject(nint wParam, nint lParam) {
+			var oid = (AccOBJID)lParam;
 			//AOutput.Write(oid);
 			if (oid != AccOBJID.CLIENT) return Api.DefWindowProc(_w, Api.WM_GETOBJECT, wParam, lParam);
 

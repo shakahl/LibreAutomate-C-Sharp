@@ -192,7 +192,7 @@ namespace Au
 			return s;
 		}
 
-		private protected unsafe void _SetTooltip(MTItem b, RECT r, LPARAM lParam, int submenuDelay = -1) {
+		private protected unsafe void _SetTooltip(MTItem b, RECT r, nint lParam, int submenuDelay = -1) {
 			string s = _GetFullTooltip(b);
 			bool setTT = !s.NE() && b != _tt.item;
 			if (!setTT && (setTT = _tt.item != null && _tt.item.rect != _tt.rect)) b = _tt.item; //update tooltip tool rect
@@ -201,7 +201,7 @@ namespace Au
 				_tt.item = b;
 				if (!_tt.tt.IsAlive) {
 					_tt.tt = Api.CreateWindowEx(WSE.TOPMOST | WSE.TRANSPARENT, "tooltips_class32", null, Api.TTS_ALWAYSTIP | Api.TTS_NOPREFIX, 0, 0, 0, 0, _w);
-					_tt.tt.Send(Api.TTM_ACTIVATE, true);
+					_tt.tt.Send(Api.TTM_ACTIVATE, 1);
 					_tt.tt.Send(Api.TTM_SETMAXTIPWIDTH, 0, AScreen.Of(_w).WorkArea.Width / 3);
 				}
 

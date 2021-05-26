@@ -30,7 +30,7 @@ namespace Au.Util
 			if (post) _w.Post(Api.WM_USER);
 		}
 
-		LPARAM _WndProc(AWnd w, int message, LPARAM wParam, LPARAM lParam) {
+		nint _WndProc(AWnd w, int message, nint wParam, nint lParam) {
 			switch (message) {
 			case Api.WM_USER:
 				//AOutput.Write(_q.Count);

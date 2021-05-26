@@ -723,7 +723,7 @@ namespace Au.Types
 		internal static extern SLError sqlite3_clear_bindings(IntPtr stmt);
 
 		[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-		static extern SLError sqlite3_bind_blob64(IntPtr stmt, int index, void* value, long nSize, LPARAM nTransient);
+		static extern SLError sqlite3_bind_blob64(IntPtr stmt, int index, void* value, long nSize, nint nTransient);
 
 		internal static SLError sqlite3_bind_blob64(IntPtr stmt, int index, void* value, long nSize)
 			=> sqlite3_bind_blob64(stmt, index, value, nSize, -1); //SQLITE_TRANSIENT
@@ -741,7 +741,7 @@ namespace Au.Types
 		internal static extern SLError sqlite3_bind_null(IntPtr stmt, int index);
 
 		[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-		static extern SLError sqlite3_bind_text16(IntPtr stmt, int index, string value, int nlen, LPARAM nTransient);
+		static extern SLError sqlite3_bind_text16(IntPtr stmt, int index, string value, int nlen, nint nTransient);
 
 		internal static SLError sqlite3_bind_text16(IntPtr stmt, int index, string value, int nlen)
 			=> sqlite3_bind_text16(stmt, index, value, nlen, -1); //SQLITE_TRANSIENT

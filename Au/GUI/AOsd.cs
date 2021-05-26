@@ -172,7 +172,7 @@ namespace Au
 		/// Called when the OSD window receives a message.
 		/// If your derived class overrides this function, it must call base.WndProc and return its return value, except when don't need default processing.
 		/// </summary>
-		protected virtual LPARAM WndProc(AWnd w, int message, LPARAM wParam, LPARAM lParam) {
+		protected virtual nint WndProc(AWnd w, int message, nint wParam, nint lParam) {
 			switch (message) {
 			case Api.WM_ERASEBKGND:
 				return 0;

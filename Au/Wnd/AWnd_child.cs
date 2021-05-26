@@ -748,7 +748,7 @@ namespace Au.Types
 			} else {
 				if (state == W.Send(BM_GETCHECK)) return;
 				W.Post(BM_SETCHECK, state);
-				W.Get.DirectParent.Post(Api.WM_COMMAND, id, (LPARAM)W);
+				W.Get.DirectParent.Post(Api.WM_COMMAND, id, (nint)W);
 			}
 			W.MinimalSleepIfOtherThread_();
 		}

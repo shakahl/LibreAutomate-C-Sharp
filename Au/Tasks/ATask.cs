@@ -480,7 +480,7 @@ namespace Au
 								return Api.DefWindowProc(w, m, wp, lp);
 							}, AWnd.Internal_.WindowClassDWP);
 							w.SetStyle(WS.VISIBLE, WSFlags.Add); //or w.ShowL(true); //does not make visible because it is a message-only window, but enables wm_sethotkey
-							var r = Api.DefWindowProc(w, Api.WM_SETHOTKEY, AMath.MakeWord((int)key, (int)hotkey.Mod), default); //not MakeUint
+							var r = Api.DefWindowProc(w, Api.WM_SETHOTKEY, AMath.MakeWord((int)key, (int)hotkey.Mod), default); //not MakeLparam
 						}
 					}
 

@@ -240,13 +240,13 @@ namespace Au.Types
 		//note: with PAGE_EXECUTE_READWRITE writing to the memory first time is much slower.
 
 		[DllImport("kernel32.dll")]
-		internal static extern bool VirtualFree(void* lpAddress, nint dwSize = default, uint dwFreeType = MEM_RELEASE);
+		internal static extern bool VirtualFree(void* lpAddress, nint dwSize = 0, uint dwFreeType = MEM_RELEASE);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern IntPtr VirtualAllocEx(HandleRef hProcess, IntPtr lpAddress, nint dwSize, uint flAllocationType = MEM_COMMIT | MEM_RESERVE, uint flProtect = PAGE_EXECUTE_READWRITE);
 
 		[DllImport("kernel32.dll")]
-		internal static extern bool VirtualFreeEx(HandleRef hProcess, IntPtr lpAddress, nint dwSize = default, uint dwFreeType = MEM_RELEASE);
+		internal static extern bool VirtualFreeEx(HandleRef hProcess, IntPtr lpAddress, nint dwSize = 0, uint dwFreeType = MEM_RELEASE);
 
 		[DllImport("kernel32.dll", EntryPoint = "GetFileAttributesW", SetLastError = true)]
 		internal static extern System.IO.FileAttributes GetFileAttributes(string lpFileName);
@@ -896,7 +896,7 @@ namespace Au.Types
 		//internal delegate void PAPCFUNC(nint Parameter);
 
 		//[DllImport("kernel32.dll", SetLastError = true)]
-		//internal static extern uint QueueUserAPC(PAPCFUNC pfnAPC, IntPtr hThread, LPARAM dwData);
+		//internal static extern uint QueueUserAPC(PAPCFUNC pfnAPC, IntPtr hThread, nint dwData);
 
 		[DllImport("kernel32.dll")]
 		internal static extern int GetOEMCP();
@@ -922,7 +922,7 @@ namespace Au.Types
 		//internal static extern bool GetProcessMemoryInfo(IntPtr Process, ref PROCESS_MEMORY_COUNTERS ppsmemCounters, int cb);
 
 		[DllImport("kernel32.dll", EntryPoint = "FindResourceW", SetLastError = true)]
-		public static extern IntPtr FindResource(IntPtr hModule, LPARAM lpName, LPARAM lpType);
+		public static extern IntPtr FindResource(IntPtr hModule, nint lpName, nint lpType);
 
 		internal const int RT_GROUP_ICON = 14;
 

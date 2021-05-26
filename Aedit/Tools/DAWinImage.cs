@@ -504,7 +504,7 @@ If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits ma
 			Bitmap _b;
 
 			WNDPROC _wndProc;
-			LPARAM _WndProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
+			nint _WndProc(AWnd w, int msg, nint wParam, nint lParam) {
 				//var pmo = new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
 				//if (AWnd.More.PrintMsg(out string s, _w, msg, wParam, lParam, pmo)) AOutput.Write("<><c green>" + s + "<>");
 

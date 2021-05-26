@@ -580,9 +580,9 @@ partial class TestScript
 	unsafe static class _Api
 	{
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool VirtualLock(void* lpAddress, LPARAM dwSize);
+		internal static extern bool VirtualLock(void* lpAddress, nint dwSize);
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool VirtualUnlock(void* lpAddress, LPARAM dwSize);
+		internal static extern bool VirtualUnlock(void* lpAddress, nint dwSize);
 
 	}
 

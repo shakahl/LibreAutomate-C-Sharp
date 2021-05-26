@@ -32,7 +32,7 @@ namespace Au.Types
 			[PreserveSig] int EnumObjects(AWnd hwnd, uint grfFlags, out IEnumIDList ppenumIDList);
 			[PreserveSig] int BindToObject(IntPtr pidl, IntPtr pbc, in Guid riid, out IntPtr ppv);
 			[PreserveSig] int BindToStorage(IntPtr pidl, IntPtr pbc, in Guid riid, out IntPtr ppv);
-			[PreserveSig] int CompareIDs(LPARAM lParam, IntPtr pidl1, IntPtr pidl2);
+			[PreserveSig] int CompareIDs(nint lParam, IntPtr pidl1, IntPtr pidl2);
 			[PreserveSig] int CreateViewObject(AWnd hwndOwner, in Guid riid, out IntPtr ppv);
 			[PreserveSig] int GetAttributesOf(uint cidl, [MarshalAs(UnmanagedType.LPArray)] IntPtr[] apidl, ref uint rgfInOut);
 			[PreserveSig] //int GetUIObjectOf(AWnd hwndOwner, uint cidl, [MarshalAs(UnmanagedType.LPArray)] IntPtr[] apidl, in Guid riid, IntPtr rgfReserved, [MarshalAs(UnmanagedType.IUnknown)] out object ppv);
@@ -108,10 +108,10 @@ namespace Au.Types
 		internal struct PROPVARIANT : IDisposable
 		{
 			public VARENUM vt; //ushort
-			public ushort _u1;
-			public uint _u2;
-			public LPARAM value;
-			public LPARAM value2;
+			ushort _u1;
+			uint _u2;
+			public nint value;
+			public nint value2;
 
 			/// <summary>
 			/// Calls PropVariantClear.

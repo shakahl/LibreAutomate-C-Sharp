@@ -79,7 +79,7 @@ namespace SdkConverter
 						bool defined = false;
 						if (aliasOf is _CppType) {
 
-							//convert LONG_PTR etc to LPARAM, not to long/ulong
+							//convert LONG_PTR etc to nint, not to long/ulong
 							if (_is32bit ? (aliasOf.csTypename == "int" || aliasOf.csTypename == "uint") : (aliasOf.csTypename == "long" || aliasOf.csTypename == "ulong")) {
 								string name = _TokToString(_i);
 								if (name.Ends("_PTR") || name == "POINTER_64_INT") {
@@ -768,7 +768,7 @@ namespace SdkConverter
 				} else if (t == _sym_LPARAM) {
 					csTypename = _is32bit ? "int" : "long";
 					return _is32bit ? 32 : 64;
-					//SDK has 1 such struct (union PSAPI_WORKING_SET_BLOCK), and there the bitfield is at the end, so in most cases it is safe to use C# long instead. Using LPARAM is difficult because of its variable size.
+					//SDK has 1 such struct (union PSAPI_WORKING_SET_BLOCK), and there the bitfield is at the end, so in most cases it is safe to use C# long instead. Using nint is difficult because of its variable size.
 				}
 			}
 			_Err(_i, "unexpected");
@@ -785,7 +785,7 @@ namespace SdkConverter
 			if (_guids.ContainsKey(fullName)) return;
 			if (prefix == "IID_" && _guids.ContainsKey("DIID_" + name)) return;
 			//AOutput.Write(fullName);
-			_sbVar.AppendFormat("\r\ninternal static Guid {0} = new Guid({1});\r\n", fullName, uuid);
+			_sbVar.AppendFormat("\r\ninternal static Guid {0} = new({1});\r\n", fullName, uuid);
 			//note: not 'readonly' because then could not be passed as ref.
 		}
 
@@ -951,6 +951,10 @@ namespace SdkConverter
 			R.RegexReplace(@"\bPROPSHEETPAGEW_V4\b", "PROPSHEETPAGE", out R);
 			R.RegexReplace(@"\bPROPSHEETHEADERW_V2\b", "PROPSHEETHEADER", out R);
 			R.RegexReplace(@"(?ms)^internal struct OPENFILENAME_NT4\b.+?^\}\r\n", "", out R, 1);
+
+			//replace some types
+			R = R.RegexReplace(@"\bLPARAM\b", "nint");
+			R = R.RegexReplace(@"(?<!\bstruct )\bU?LARGE_INTEGER\b", "long");
 
 			//in VARIANT, PROPVARIANT, _wireVARIANT members replace non-blittable types with IntPtr. Also replace some other types.
 			R = R.RegexReplace(@"(?ms)^internal struct (?:PROP|_wire)?VARIANT \{\R\K.+?\R\}", __VariantMembers);

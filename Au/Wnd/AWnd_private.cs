@@ -31,7 +31,7 @@ namespace Au
 			Debug.Assert(!IsOfThisThread);
 			//APerf.First();
 			Thread.Sleep(15);
-			SendTimeout(1000, 0);
+			SendTimeout(1000, out _, 0);
 			//APerf.NW();
 		}
 

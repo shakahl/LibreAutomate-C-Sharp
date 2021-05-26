@@ -351,7 +351,7 @@ namespace SdkConverter
 			//LongToHandle
 			//HRESULT_FROM_WIN32
 
-			//never mind: sizeof pointers, IntPtr, LPARAM and AWnd.
+			//never mind: sizeof pointers, IntPtr, nint and AWnd.
 		}
 
 		void __ExprDebugOutValue(_EVAL v)
@@ -569,7 +569,7 @@ namespace SdkConverter
 			if(ct == null) {
 				//support LPARAM, HWND
 				if(A.op > _OP.OperandUint) return false; //0 in SDK
-				if(x == _sym_LPARAM || x == _sym_Wnd) return true;
+				if(x == _sym_LPARAM || x == _sym_AWnd) return true;
 				//support enum, callback
 				if(x is _Enum || x is _Callback) return true;
 				//_Err(i, "stop 2"); //0 in SDK

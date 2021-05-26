@@ -310,7 +310,7 @@ namespace Au.Util
 		/// </example>
 		public struct AwarenessContext : IDisposable
 		{
-			LPARAM _dac;
+			nint _dac;
 
 			/// <summary>
 			/// Calls API <msdn>SetThreadDpiAwarenessContext</msdn> if available.

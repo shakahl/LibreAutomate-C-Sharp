@@ -145,7 +145,7 @@ static class CommandLine
 	/// </summary>
 	public static AWnd MsgWnd => _msgWnd;
 
-	static LPARAM _WndProc(AWnd w, int message, LPARAM wParam, LPARAM lParam)
+	static nint _WndProc(AWnd w, int message, nint wParam, nint lParam)
 	{
 		switch(message) {
 		case Api.WM_COPYDATA:
@@ -175,7 +175,7 @@ static class CommandLine
 		return Api.DefWindowProc(w, message, wParam, lParam);
 	}
 
-	static LPARAM _WmCopyData(LPARAM wParam, LPARAM lParam)
+	static nint _WmCopyData(nint wParam, nint lParam)
 	{
 		var c = new AWnd.More.CopyDataStruct(lParam);
 		int action = c.DataId;

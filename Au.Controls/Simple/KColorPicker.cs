@@ -133,7 +133,7 @@ namespace Au.Controls
 			protected override Size MeasureOverride(Size constraint) => _Measure();
 
 			WNDPROC _wndProc;
-			LPARAM _WndProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
+			nint _WndProc(AWnd w, int msg, nint wParam, nint lParam) {
 				//var pmo = new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
 				//if (AWnd.More.PrintMsg(out string s, _w, msg, wParam, lParam, pmo)) AOutput.Write("<><c green>" + s + "<>");
 
@@ -258,8 +258,8 @@ namespace Au.Controls
 				Invalidate();
 			}
 
-			void _WmLbuttondown(LPARAM lp) {
-				int x = AMath.LoShort(lp), y = AMath.HiShort(lp);
+			void _WmLbuttondown(nint xy) {
+				var (x, y) = AMath.NintToPOINT(xy);
 				x--; x /= _cellSize;
 				y--; y /= _cellSize;
 				x = Math.Clamp(x, 0, c_nHue - 1);

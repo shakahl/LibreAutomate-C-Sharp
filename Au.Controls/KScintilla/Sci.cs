@@ -30,7 +30,7 @@ namespace Au.Controls
 		/// If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
 		/// Don't call this function from another thread.
 		/// </summary>
-		public int zSetString(int sciMessage, LPARAM wParam, string lParam, bool useUtf8LengthForWparam = false) {
+		public int zSetString(int sciMessage, nint wParam, string lParam, bool useUtf8LengthForWparam = false) {
 			fixed (byte* s = _ToUtf8(lParam, out var len)) {
 				if (useUtf8LengthForWparam) wParam = len;
 				return Call(sciMessage, wParam, s);
@@ -43,7 +43,7 @@ namespace Au.Controls
 		/// If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
 		/// Don't call this function from another thread.
 		/// </summary>
-		public int zSetString(int sciMessage, string wParam, LPARAM lParam) {
+		public int zSetString(int sciMessage, string wParam, nint lParam) {
 			fixed (byte* s = _ToUtf8(wParam)) {
 				return Call(sciMessage, lParam, s);
 			}
@@ -59,7 +59,7 @@ namespace Au.Controls
 			fixed (byte* s = _ToUtf8(wParam0lParam, out var len)) {
 				int i = BytePtr_.Length(s);
 				Debug.Assert(i < len);
-				return Call(sciMessage, s, s + i + 1);
+				return Call(sciMessage, (nint)s, s + i + 1);
 			}
 		}
 
@@ -74,7 +74,7 @@ namespace Au.Controls
 		/// Known length (bytes) of the result UTF-8 string, without the terminating '\0' character.
 		/// If 0, returns "" and does not call the message.
 		/// </param>
-		public string zGetStringOfLength(int sciMessage, LPARAM wParam, int utf8Length)
+		public string zGetStringOfLength(int sciMessage, nint wParam, int utf8Length)
 			=> _GetString(sciMessage, wParam, utf8Length, false);
 
 		/// <summary>
@@ -85,7 +85,7 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="sciMessage"></param>
 		/// <param name="wParam"></param>
-		public string zGetStringGetLength(int sciMessage, LPARAM wParam)
+		public string zGetStringGetLength(int sciMessage, nint wParam)
 			=> _GetString(sciMessage, wParam, Call(sciMessage, wParam), false);
 
 		/// <summary>
@@ -100,11 +100,11 @@ namespace Au.Controls
 		/// Can be either known or max expected text length, without the terminating '\0' character. The function will find length of the retrieved string (finds '\0').
 		/// If 0, returns "" and does not call the message.
 		/// </param>
-		public string zGetString0Terminated(int sciMessage, LPARAM wParam, int bufferSize)
+		public string zGetString0Terminated(int sciMessage, nint wParam, int bufferSize)
 			=> _GetString(sciMessage, wParam, bufferSize, true);
 
 		[SkipLocalsInit]
-		string _GetString(int sciMessage, LPARAM wParam, int len, bool findLength) {
+		string _GetString(int sciMessage, nint wParam, int len, bool findLength) {
 			if (len == 0) return "";
 			using ABuffer<byte> b = new(len + 1);
 			b[len] = 0;
@@ -142,17 +142,17 @@ namespace Au.Controls
 				int n1 = gap - start8, n2 = end8 - gap;
 				int len1 = Encoding.UTF8.GetCharCount(p1, n1);
 				int len2 = Encoding.UTF8.GetCharCount(p2, n2);
-				LPARAM k1 = p1, k2 = p2;
+				nint k1 = (nint)p1, k2 = (nint)p2;
 				return string.Create(len1 + len2, (k1, k2, n1, n2), (span, a) => {
-					int len1 = Encoding.UTF8.GetChars(new ReadOnlySpan<byte>(a.k1, a.n1), span);
-					Encoding.UTF8.GetChars(new ReadOnlySpan<byte>(a.k2, a.n2), span.Slice(len1));
+					int len1 = Encoding.UTF8.GetChars(new ReadOnlySpan<byte>((byte*)a.k1, a.n1), span);
+					Encoding.UTF8.GetChars(new ReadOnlySpan<byte>((byte*)a.k2, a.n2), span.Slice(len1));
 				});
 			} else {
 				int n1 = end8 - start8;
 				int len1 = Encoding.UTF8.GetCharCount(p1, n1);
-				LPARAM k1 = p1;
+				nint k1 = (nint)p1;
 				return string.Create(len1, (k1, n1), (span, a) => {
-					Encoding.UTF8.GetChars(new ReadOnlySpan<byte>(a.k1, a.n1), span);
+					Encoding.UTF8.GetChars(new ReadOnlySpan<byte>((byte*)a.k1, a.n1), span);
 				});
 			}
 		}
@@ -254,13 +254,13 @@ namespace Au.Controls
 				_noUndo = flags.Has(SciSetTextFlags.NoUndo) && 0 != _t.Call(SCI_GETUNDOCOLLECTION);
 				_noNotif = flags.Has(SciSetTextFlags.NoNotify);
 				if (_noNotif) _t.ZDisableModifiedNotifications = true;
-				if (_noUndo) _t.Call(SCI_SETUNDOCOLLECTION, false);
+				if (_noUndo) _t.Call(SCI_SETUNDOCOLLECTION);
 			}
 
 			public void Dispose() {
 				if (_noUndo) {
 					_t.Call(SCI_EMPTYUNDOBUFFER);
-					_t.Call(SCI_SETUNDOCOLLECTION, true);
+					_t.Call(SCI_SETUNDOCOLLECTION, 1);
 				}
 				if (_noNotif) _t.ZDisableModifiedNotifications = false;
 			}
@@ -1130,7 +1130,7 @@ namespace Au.Controls
 		/// </summary>
 		public bool zIsReadonly {
 			get => 0 != Call(SCI_GETREADONLY);
-			set => Call(SCI_SETREADONLY, value);
+			set => Call(SCI_SETREADONLY, value ? 1 : 0);
 		}
 
 		//public bool zIsReadonly {

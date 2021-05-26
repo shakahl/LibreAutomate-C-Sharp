@@ -1421,7 +1421,7 @@ namespace Au
 			struct _RXCode
 			{
 				public string regex;
-				public ARegex code; //note: could instead cache only PCRE code (LPARAM), but it makes quite difficult
+				public ARegex code; //note: could instead cache only PCRE code (nint), but it makes quite difficult
 				public RXFlags flags;
 			}
 

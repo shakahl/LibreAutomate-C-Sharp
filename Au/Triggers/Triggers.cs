@@ -365,12 +365,12 @@ namespace Au.Triggers
 		static bool s_wasRun, s_wasKM;
 		const string c_cn = "Au.Triggers.Hooks";
 
-		LPARAM _WndProc(AWnd w, int message, LPARAM wParam, LPARAM lParam) {
+		nint _WndProc(AWnd w, int message, nint wParam, nint lParam) {
 			try {
 				switch (message) {
 				case Api.WM_USER + 1:
 					//_ht.Return((int)wParam, false); //test speed without _KeyMouseEvent
-					_KeyMouseEvent((int)wParam, (HooksThread.UsedEvents)(int)lParam);
+					_KeyMouseEvent((int)wParam, (HooksThread.UsedEvents)lParam);
 					return 0;
 				case Api.WM_USER + 20:
 					_windowTriggers.SimulateNew_(wParam, lParam);
@@ -399,7 +399,7 @@ namespace Au.Triggers
 			if (eventType == HooksThread.UsedEvents.Keyboard) {
 				//AOutput.Write("key");
 				if (!_ht.GetKeyData(messageId, out var data)) return;
-				var k = new HookData.Keyboard(null, &data);
+				var k = new HookData.Keyboard(null, (nint)(&data));
 				_thc.InitMod(k);
 				if (this[TriggerType.Hotkey] is HotkeyTriggers tk) { //if not null
 					eat = tk.HookProc(k, _thc);
@@ -417,7 +417,7 @@ namespace Au.Triggers
 				//AOutput.Write(_ht.mouseMessage_);
 				if (this[TriggerType.Mouse] is MouseTriggers tm) {
 					if (!_ht.GetClickWheelData(messageId, out var data, out int message)) return;
-					var k = new HookData.Mouse(null, message, &data);
+					var k = new HookData.Mouse(null, message, (nint)(&data));
 					eat = tm.HookProcClickWheel(k, _thc);
 				}
 			}
@@ -538,7 +538,7 @@ namespace Au.Triggers
 			public bool resetAutotext;
 		}
 
-		internal void Notify_(int message, LPARAM wParam = default, LPARAM lParam = default) {
+		internal void Notify_(int message, nint wParam = 0, nint lParam = 0) {
 			_wMsg.SendNotify(message, wParam, lParam);
 		}
 

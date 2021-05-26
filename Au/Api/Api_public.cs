@@ -167,8 +167,8 @@ namespace Au.Types
 	{
 		public AWnd hwnd;
 		public int message;
-		public LPARAM wParam;
-		public LPARAM lParam;
+		public nint wParam;
+		public nint lParam;
 		public int time;
 		public POINT pt;
 
@@ -212,9 +212,9 @@ namespace Au.Types
 	/// <summary>API <msdn>CREATESTRUCT</msdn></summary>
 	public unsafe struct CREATESTRUCT
 	{
-		public LPARAM lpCreateParams;
+		public nint lpCreateParams;
 		public IntPtr hInstance;
-		public LPARAM hMenu;
+		public nint hMenu;
 		public AWnd hwndParent;
 		public int cy;
 		public int cx;
@@ -340,7 +340,7 @@ namespace Au.Types
 	}
 
 	/// <summary>API <msdn>WNDPROC</msdn></summary>
-	public delegate LPARAM WNDPROC(AWnd w, int msg, LPARAM wParam, LPARAM lParam);
+	public delegate nint WNDPROC(AWnd w, int msg, nint wParam, nint lParam);
 
 	/// <summary>API <msdn>SendMessageTimeout</msdn> flags. Used with <see cref="AWnd.SendTimeout"/>.</summary>
 	[Flags]

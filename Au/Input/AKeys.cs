@@ -639,7 +639,7 @@ namespace Au
 				for (int i = 0; i < s.Length; i++) if ((s[i] & 0xf800) == 0xd800) { textHow = OKeyText.Paste; break; }
 			}
 
-			LPARAM hkl = default;
+			nint hkl = 0;
 			if (textHow == OKeyText.KeysOrChar || textHow == OKeyText.KeysOrPaste) {
 				hkl = Api.GetKeyboardLayout(wFocus.ThreadId);
 				if (textHow == OKeyText.KeysOrPaste) {
@@ -657,7 +657,7 @@ namespace Au
 				return;
 			}
 
-			static (KKey vk, KMod mod) _CharToKey(char c, LPARAM hkl) {
+			static (KKey vk, KMod mod) _CharToKey(char c, nint hkl) {
 				short km = Api.VkKeyScanEx(c, hkl); //note: call for non-ASCII char too; depending on keyboard layout it can succeed
 				if (0 != (km & 0xf800)) return default; //-1 if failed, mod flag 8 Hankaku key, 16/32 reserved for driver
 				return ((KKey)(km & 0xff), (KMod)(km >> 8));

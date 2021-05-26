@@ -527,7 +527,7 @@ namespace Au
 					_hwndQM2 = Api.FindWindow("QM_Editor", null);
 					if (_hwndQM2.Is0) return;
 				}
-				_hwndQM2.SendS(Api.WM_SETTEXT, -1, s);
+				_hwndQM2.Send(Api.WM_SETTEXT, -1, s);
 			}
 			static AWnd _hwndQM2;
 		}

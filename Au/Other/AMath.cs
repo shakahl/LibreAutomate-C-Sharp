@@ -22,16 +22,27 @@ namespace Au
 	public static class AMath
 	{
 		/// <summary>
-		/// Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32.
+		/// Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32. Returns it as nint, ready to use with Windows message API as lParam or wParam or return value.
 		/// Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
 		/// </summary>
-		public static uint MakeUint(uint loWord, uint hiWord) => ((hiWord & 0xffff) << 16) | (loWord & 0xffff);
+		public static nint MakeLparam(uint loWord, uint hiWord) => (nint)(((hiWord & 0xffff) << 16) | (loWord & 0xffff));
+		//Returns nint, because usually used as sendmessage etc parameter. If uint, would need to explicitly cast to nint. If somebody casts to int, the result may be incorrect, ie negative.
+
+		//Why named MakeLparam, MakeWord, LoWord, HiWord:
+		//	1. Like C macros MAKELPARAM/MAKEWORD/LOWORD/HIWORD.
+		//	2. MakeLparam used mostly as lParam of sendmessage etc.
 		
 		/// <summary>
-		/// Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32.
+		/// Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32. Returns it as nint, ready to use with Windows message API as lParam or wParam or return value.
 		/// Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
 		/// </summary>
-		public static uint MakeUint(int loWord, int hiWord) => MakeUint((uint)loWord, (uint)hiWord);
+		public static nint MakeLparam(int loWord, int hiWord) => MakeLparam((uint)loWord, (uint)hiWord);
+		
+		/// <summary>
+		/// Creates uint by placing (ushort)p.x in bits 1-16 and (ushort)p.y in bits 17-32. Returns it as nint, ready to use with Windows message API as lParam or wParam or return value.
+		/// Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
+		/// </summary>
+		public static nint MakeLparam(POINT p) => MakeLparam((uint)p.x, (uint)p.y);
 
 		/// <summary>
 		/// Creates ushort by placing (byte)loByte in bits 1-8 and (byte)hiByte in bits 9-16.
@@ -50,36 +61,36 @@ namespace Au
 		/// Like C macro LOWORD.
 		/// </summary>
 		/// <remarks>
-		/// The parameter is interpreted as uint. Its declared type is LPARAM because it allows to avoid explicit casting from other integer types and IntPtr (casting from IntPtr to uint could throw OverflowException).
+		/// The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr (and avoid OverflowException).
 		/// </remarks>
-		public static ushort LoWord(LPARAM x) => (ushort)((uint)x & 0xFFFF);
+		public static ushort LoWord(nint x) => (ushort)((uint)x & 0xFFFF);
 
 		/// <summary>
 		/// Gets bits 17-32 as ushort.
 		/// Like C macro HIWORD.
 		/// </summary>
 		/// <remarks>
-		/// The parameter is interpreted as uint. Its declared type is LPARAM because it allows to avoid explicit casting from other integer types and IntPtr (casting from IntPtr to uint could throw OverflowException).
+		/// The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr (and avoid OverflowException).
 		/// </remarks>
-		public static ushort HiWord(LPARAM x) => (ushort)((uint)x >> 16);
+		public static ushort HiWord(nint x) => (ushort)((uint)x >> 16);
 
 		/// <summary>
 		/// Gets bits 1-16 as short.
 		/// Like C macro GET_X_LPARAM.
 		/// </summary>
 		/// <remarks>
-		/// The parameter is interpreted as uint. Its declared type is LPARAM because it allows to avoid explicit casting from other integer types and IntPtr (casting from IntPtr to uint could throw OverflowException).
+		/// The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr (and avoid OverflowException).
 		/// </remarks>
-		public static short LoShort(LPARAM x) => (short)((uint)x & 0xFFFF);
+		public static short LoShort(nint x) => (short)((uint)x & 0xFFFF);
 
 		/// <summary>
 		/// Gets bits 17-32 as short.
 		/// Like C macro GET_Y_LPARAM.
 		/// </summary>
 		/// <remarks>
-		/// The parameter is interpreted as uint. Its declared type is LPARAM because it allows to avoid explicit casting from other integer types and IntPtr (casting from IntPtr to uint could throw OverflowException).
+		/// The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr (and avoid OverflowException).
 		/// </remarks>
-		public static short HiShort(LPARAM x) => (short)((uint)x >> 16);
+		public static short HiShort(nint x) => (short)((uint)x >> 16);
 
 		/// <summary>
 		/// Gets bits 1-8 as byte.
@@ -94,9 +105,9 @@ namespace Au
 		public static byte HiByte(ushort x) => (byte)((uint)x >> 8);
 
 		/// <summary>
-		/// Converts <b>LPARAM</b> containing x and y coordinates to <b>POINT</b>.
+		/// Converts <b>nint</b> containing x and y coordinates to <b>POINT</b>.
 		/// </summary>
-		public static POINT LparamToPOINT(LPARAM xy) => new(LoShort(xy), HiShort(xy));
+		public static POINT NintToPOINT(nint xy) => new(LoShort(xy), HiShort(xy));
 
 		/// <summary>
 		/// Returns <c>number * multiply / divide</c>.

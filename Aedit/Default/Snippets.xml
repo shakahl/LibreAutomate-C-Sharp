@@ -584,6 +584,17 @@ void Toolbar_$end$RenameMe$end$(Au.Triggers.TriggerArgs ta = null) {
 	<group context="Namespace|Type|Line">
 		<!-- snippets that are valid in types, namespaces and global scope, at the start of line -->
 
+		<snippet name="nativeApiSnippet" info="Adds class for Windows API or other native API.">
+			<![CDATA[/// <summary>
+/// Add an empty class like this in scripts (at the end) and projects (in any file) where you want to use native API. Change the class name (api) if want.
+/// Then, whenever you need an API function etc, type the class name and dot (api.). The completion list contains API names and adds declarations to this class.
+/// </summary>
+#pragma warning disable 649, 169 //field never assigned/used
+unsafe class api : NativeApi {}
+#pragma warning restore 649, 169 //field never assigned/used
+]]>
+		</snippet>
+
 	</group>
 	<!-- end of Namespace|Type|Line -->
 

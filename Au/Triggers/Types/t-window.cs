@@ -839,10 +839,10 @@ namespace Au.Triggers
 		}
 
 		//Called in correct thread.
-		internal void SimulateNew_(LPARAM wParam, LPARAM lParam)
+		internal void SimulateNew_(nint wParam, nint lParam)
 		{
 			var w = (AWnd)lParam;
-			if(w.IsAlive) _Proc((TWLater)(int)wParam, w, _ProcCaller.Run);
+			if(w.IsAlive) _Proc((TWLater)wParam, w, _ProcCaller.Run);
 		}
 
 		bool _log;

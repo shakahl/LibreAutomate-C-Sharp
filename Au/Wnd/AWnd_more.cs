@@ -37,7 +37,7 @@ namespace Au
 			/// <param name="wndProc">
 			/// Delegate of a window procedure. See <msdn>Window Procedures</msdn>.
 			/// 
-			/// Use null when you need a different delegate (method or target object) for each window instance; create windows with <see cref="CreateWindow(WNDPROC, bool, string, string, WS, WSE, int, int, int, int, AWnd, LPARAM, IntPtr, LPARAM)"/> or <see cref="CreateMessageOnlyWindow(WNDPROC, string)"/>.
+			/// Use null when you need a different delegate (method or target object) for each window instance; create windows with <see cref="CreateWindow(WNDPROC, bool, string, string, WS, WSE, int, int, int, int, AWnd, nint, IntPtr, nint)"/> or <see cref="CreateMessageOnlyWindow(WNDPROC, string)"/>.
 			/// If not null, it must be a static method; create windows with any other function, including API <msdn>CreateWindowEx</msdn>.
 			/// </param>
 			/// <param name="etc">
@@ -55,7 +55,7 @@ namespace Au
 			/// Thread-safe.
 			/// Protects the <i>wndProc</i> delegate from GC.
 			/// </remarks>
-			public static unsafe void RegisterWindowClass(string className, WNDPROC wndProc = null, RWCEtc etc = null) {
+			public static unsafe void RegisterWindowClass(string className, WNDPROC wndProc = null, RWCEtc etc = null) {//TODO: try delegate*
 				if (wndProc?.Target != null) throw new ArgumentException("wndProc must be static method or null. Use non-static wndProc with CreateWindow.");
 
 				lock (s_classes) {
@@ -91,7 +91,7 @@ namespace Au
 			static Dictionary<string, WNDPROC> s_classes = new(StringComparer.OrdinalIgnoreCase); //allows to find registered classes and protects their wndProc delegates from GC
 			[ThreadStatic] static Dictionary<AWnd, WNDPROC> t_windows; //allows to dispatch messages and protects wndProc delegates of windows created in this thread from GC
 
-			static LPARAM _CWProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
+			static nint _CWProc(AWnd w, int msg, nint wParam, nint lParam) {
 				//PrintMsg(w, msg, wParam, lParam);
 				if (t_cwUnsafe) {
 					t_cwUnsafe = false;
@@ -143,7 +143,7 @@ namespace Au
 			/// To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="DestroyWindow"/>, <see cref="Close"/>, API <msdn>WM_CLOSE</msdn>.
 			/// </remarks>
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-			public static AWnd CreateWindow(WNDPROC wndProc, bool keepAlive, string className, string name = null, WS style = 0, WSE exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default) {
+			public static AWnd CreateWindow(WNDPROC wndProc, bool keepAlive, string className, string name = null, WS style = 0, WSE exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, nint controlId = 0, IntPtr hInstance = default, nint param = 0) {
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 				if (wndProc is null || className is null) throw new ArgumentNullException();
 
@@ -181,7 +181,7 @@ namespace Au
 			/// To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="DestroyWindow"/>, <see cref="Close"/>, API <msdn>WM_CLOSE</msdn>.
 			/// </remarks>
 			/// <seealso cref="RegisterWindowClass"/>
-			public static AWnd CreateWindow(string className, string name = null, WS style = 0, WSE exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default) {
+			public static AWnd CreateWindow(string className, string name = null, WS style = 0, WSE exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, nint controlId = 0, IntPtr hInstance = default, nint param = 0) {
 				var w = Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
 				if (w.Is0) throw new AuException(0);
 				return w;
@@ -209,7 +209,7 @@ namespace Au
 			/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 			/// <remarks>
 			/// Styles: WS_POPUP, WS_EX_NOACTIVATE.
-			/// Calls <see cref="CreateWindow(WNDPROC, bool, string, string, WS, WSE, int, int, int, int, AWnd, LPARAM, IntPtr, LPARAM)"/> with <i>keepAlive</i>=true.
+			/// Calls <see cref="CreateWindow(WNDPROC, bool, string, string, WS, WSE, int, int, int, int, AWnd, nint, IntPtr, nint)"/> with <i>keepAlive</i>=true.
 			/// </remarks>
 			public static AWnd CreateMessageOnlyWindow(WNDPROC wndProc, string className) {
 				return CreateWindow(wndProc, true, className, null, WS.POPUP, WSE.NOACTIVATE, parent: SpecHWND.MESSAGE);
@@ -299,17 +299,17 @@ namespace Au
 			/// For index can be used constants from <see cref="GCLong"/>. All values are the same in 32-bit and 64-bit process.
 			/// In 32-bit process actually calls <b>GetClassLong</b>, because <b>GetClassLongPtr</b> is unavailable.
 			/// </remarks>
-			public static LPARAM GetClassLong(AWnd w, int index) => Api.GetClassLongPtr(w, index);
+			public static nint GetClassLong(AWnd w, int index) => Api.GetClassLongPtr(w, index);
 
 			//probably not useful. Dangerous.
 			///// <summary>
 			///// Calls API <msdn>SetClassLongPtr</msdn> (SetClassLong in 32-bit process).
 			///// </summary>
 			///// <exception cref="AuWndException"/>
-			//public static LPARAM SetClassLong(AWnd w, int index, LPARAM newValue)
+			//public static nint SetClassLong(AWnd w, int index, nint newValue)
 			//{
 			//	ALastError.Clear();
-			//	LPARAM R = Api.SetClassLongPtr(w, index, newValue);
+			//	nint R = Api.SetClassLongPtr(w, index, newValue);
 			//	if(R == 0 && ALastError.Code != 0) w.ThrowUseNative();
 			//	return R;
 			//}
@@ -353,7 +353,7 @@ namespace Au
 			/// Writes a Windows message to a string.
 			/// If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
 			/// </summary>
-			public static bool PrintMsg(out string s, AWnd w, int msg, LPARAM wParam, LPARAM lParam, PrintMsgOptions options = null, [CallerMemberName] string m_ = null) {
+			public static bool PrintMsg(out string s, AWnd w, int msg, nint wParam, nint lParam, PrintMsgOptions options = null, [CallerMemberName] string m_ = null) {
 				//Could instead use System.Windows.Forms.Message.ToString, but its list is incomplete, eg no dpichange messages.
 				//	https://referencesource.microsoft.com/#System.Windows.Forms/winforms/Managed/System/WinForms/MessageDecoder.cs,b19021e2f4480d57
 
@@ -691,7 +691,7 @@ void _WmDeclTextToCode() {
 			/// <summary>
 			/// Writes a Windows message to the output, unless it is specified in <i>options</i>.
 			/// </summary>
-			public static void PrintMsg(AWnd w, int msg, LPARAM wParam, LPARAM lParam, PrintMsgOptions options = null, [CallerMemberName] string m_ = null) {
+			public static void PrintMsg(AWnd w, int msg, nint wParam, nint lParam, PrintMsgOptions options = null, [CallerMemberName] string m_ = null) {
 				if (PrintMsg(out string s, w, msg, wParam, lParam, options, m_)) AOutput.Write(s);
 			}
 
@@ -773,7 +773,7 @@ namespace Au.Types
 		public IntPtr hIcon;
 		public IntPtr hCursor;
 		public MCursor mCursor;
-		public LPARAM hbrBackground;
+		public nint hbrBackground;
 		public IntPtr hIconSm;
 #pragma warning restore 1591 //XML doc
 	}

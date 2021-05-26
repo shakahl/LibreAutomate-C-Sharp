@@ -29,13 +29,13 @@ namespace Au.Controls
 		public const int MK_SCI_NOFOCUS = 0x10000;
 
 		[DllImport("SciLexer", EntryPoint = "Scintilla_DirectFunction")]
-		public static extern LPARAM Sci_Call(LPARAM sci, int message, LPARAM wParam = default, LPARAM lParam = default);
+		public static extern nint Sci_Call(nint sci, int message, nint wParam = 0, nint lParam = 0);
 
 		[DllImport("SciLexer")]
-		public static extern int Sci_Range(LPARAM sci, int start8, int end8, out byte* p1, out byte* p2, int* length = null);
+		public static extern int Sci_Range(nint sci, int start8, int end8, out byte* p1, out byte* p2, int* length = null);
 
 		[DllImport("SciLexer")]
-		public static extern void Sci_SetFoldLevels(LPARAM sci, int line, int lastLine, int len, int* a);
+		public static extern void Sci_SetFoldLevels(nint sci, int line, int lastLine, int len, int* a);
 
 		public struct Sci_StylingInfo
 		{
@@ -46,7 +46,7 @@ namespace Au.Controls
 		/// flags: 1 endStyled, 2 endStyledLine, endStyledLineStart, 4 visibleFrom, visibleFromLine, 8 visibleTo, visibleToLine
 		/// </summary>
 		[DllImport("SciLexer")]
-		public static extern void Sci_GetStylingInfo(LPARAM sci, int flags, out Sci_StylingInfo r);
+		public static extern void Sci_GetStylingInfo(nint sci, int flags, out Sci_StylingInfo r);
 
 #pragma warning disable 649
 		public unsafe struct Sci_AnnotationDrawCallbackData
@@ -1218,7 +1218,7 @@ namespace Au.Controls
 		public struct Sci_NotifyHeader
 		{
 			public AWnd hwndFrom;
-			public LPARAM idFrom;
+			public nint idFrom;
 			public NOTIF code;
 		}
 
@@ -1226,20 +1226,20 @@ namespace Au.Controls
 		{
 #pragma warning disable 649 //field never assigned
 			public Sci_NotifyHeader nmhdr;
-			LPARAM _position;
+			nint _position;
 			public int position => (int)_position;
 			public int ch;
 			public int modifiers;
 			public MOD modificationType;
 			public byte* textUTF8;
-			LPARAM _length;
+			nint _length;
 			public int length => (int)_length;
-			LPARAM _linesAdded;
+			nint _linesAdded;
 			public int linesAdded => (int)_linesAdded;
 			public int message;
-			public LPARAM wParam;
-			public LPARAM lParam;
-			LPARAM _line;
+			public nint wParam;
+			public nint lParam;
+			nint _line;
 			public int line => (int)_line;
 			public int foldLevelNow;
 			public int foldLevelPrev;
@@ -1248,7 +1248,7 @@ namespace Au.Controls
 			public int x;
 			public int y;
 			public int token;
-			LPARAM _annotationLinesAdded;
+			nint _annotationLinesAdded;
 			public int annotationLinesAdded => (int)_annotationLinesAdded;
 			public int updated;
 			public int listCompletionMethod;

@@ -36,14 +36,14 @@ namespace Au
 	public class ATimer
 	{
 		Action<ATimer> _action;
-		LPARAM _id;
+		nint _id;
 		int _threadId;
 		bool _singlePeriod;
 
 		//To control object lifetime we use a thread-static Dictionary.
 		//Tried GCHandle, but could not find a way to delete object when thread ends.
 		//Calling KillTimer when thread ends is optional. Need just to re-enable garbage collection for this object.
-		[ThreadStatic] static Dictionary<LPARAM, ATimer> t_timers;
+		[ThreadStatic] static Dictionary<nint, ATimer> t_timers;
 
 		///
 		public ATimer(Action<ATimer> timerAction) {
@@ -94,7 +94,7 @@ namespace Au
 			if (milliseconds < 0) throw new ArgumentOutOfRangeException();
 			bool isNew = _id == 0;
 			if (!isNew) _ThreadTrap();
-			LPARAM r = Api.SetTimer(default, _id, milliseconds, _timerProc);
+			nint r = Api.SetTimer(default, _id, milliseconds, _timerProc);
 			if (r == 0) throw new Win32Exception();
 			Debug.Assert(isNew || r == _id);
 			_id = r;
@@ -102,13 +102,13 @@ namespace Au
 			Tag = tag;
 			if (isNew) {
 				_threadId = Thread.CurrentThread.ManagedThreadId;
-				(t_timers ??= new Dictionary<LPARAM, ATimer>()).Add(_id, this);
+				(t_timers ??= new Dictionary<nint, ATimer>()).Add(_id, this);
 			}
 			//AOutput.Write($"Start: {_id}  isNew={isNew}  singlePeriod={singlePeriod}  _threadId={_threadId}");
 		}
 
 		static Api.TIMERPROC _timerProc = _TimerProc;
-		static void _TimerProc(AWnd w, int msg, LPARAM idEvent, uint time) {
+		static void _TimerProc(AWnd w, int msg, nint idEvent, uint time) {
 			//AOutput.Write(t_timers.Count, idEvent);
 			if (!t_timers.TryGetValue(idEvent, out var t)) {
 				//ADebug.Print($"timer id {idEvent} not in t_timers");

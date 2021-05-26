@@ -79,8 +79,6 @@ namespace Au
 
 		public static explicit operator AWnd(nint hwnd) => new(hwnd);
 		public static explicit operator nint(AWnd w) => w.Handle;
-		public static explicit operator AWnd(LPARAM hwnd) => new(hwnd);
-		public static explicit operator LPARAM(AWnd w) => w._h;
 		public static explicit operator AWnd(int hwnd) => new(hwnd);
 		public static explicit operator int(AWnd w) => (int)w._h;
 
@@ -97,14 +95,14 @@ namespace Au
 		public static bool operator !=(AWnd w1, AWnd w2) => w1._h != w2._h;
 
 		//Prevent accidental usage AWnd==null. The C# compiler allowed it without a warning; level-5 warning since C# 9. Bad: disables AWnd==AWnd?.
-		[Obsolete("Replace AWnd==AWnd? with AWnd.Equals(AWnd?). Replace AWnd==null with AWnd.Is0.", true), NoDoc]
-		public static bool operator ==(AWnd w1, AWnd? w2) => false;
-		[Obsolete("Replace AWnd==AWnd? with AWnd.Equals(AWnd?). Replace AWnd==null with AWnd.Is0.", true), NoDoc]
-		public static bool operator !=(AWnd w1, AWnd? w2) => true;
-		[Obsolete("Replace AWnd==AWnd? with AWnd.Equals(AWnd?). Replace AWnd==null with AWnd.Is0.", true), NoDoc]
-		public static bool operator ==(AWnd? w1, AWnd w2) => false;
-		[Obsolete("Replace AWnd==AWnd? with AWnd.Equals(AWnd?). Replace AWnd==null with AWnd.Is0.", true), NoDoc]
-		public static bool operator !=(AWnd? w1, AWnd w2) => true;
+		//[Obsolete("Replace AWnd==AWnd? with AWnd.Equals(AWnd?). Replace AWnd==null with AWnd.Is0.", true), NoDoc]
+		//public static bool operator ==(AWnd w1, AWnd? w2) => false;
+		//[Obsolete("Replace AWnd==AWnd? with AWnd.Equals(AWnd?). Replace AWnd==null with AWnd.Is0.", true), NoDoc]
+		//public static bool operator !=(AWnd w1, AWnd? w2) => true;
+		//[Obsolete("Replace AWnd==AWnd? with AWnd.Equals(AWnd?). Replace AWnd==null with AWnd.Is0.", true), NoDoc]
+		//public static bool operator ==(AWnd? w1, AWnd w2) => false;
+		//[Obsolete("Replace AWnd==AWnd? with AWnd.Equals(AWnd?). Replace AWnd==null with AWnd.Is0.", true), NoDoc]
+		//public static bool operator !=(AWnd? w1, AWnd w2) => true;
 
 		/// <summary>
 		/// Returns the same value if it is not default(AWnd). Else throws <see cref="NotFoundException"/>.
@@ -170,7 +168,7 @@ namespace Au
 		/// Calls API <msdn>SendMessage</msdn>.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public LPARAM Send(int message, LPARAM wParam = default, LPARAM lParam = default) {
+		public nint Send(int message, nint wParam = 0, nint lParam = 0) {
 			Debug.Assert(!Is0);
 			return Api.SendMessage(this, message, wParam, lParam);
 		}
@@ -179,40 +177,39 @@ namespace Au
 		/// Calls API <msdn>SendMessage</msdn> where lParam is string.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public LPARAM SendS(int message, LPARAM wParam, string lParam) {
+		public nint Send(int message, nint wParam, string lParam) {
 			Debug.Assert(!Is0);
 			fixed (char* p = lParam)
-				return Api.SendMessage(this, message, wParam, p);
+				return Api.SendMessage(this, message, wParam, (nint)p);
 			//info: don't use overload, then eg ambiguous if null.
 		}
 
 		/// <summary>
-		/// Calls API <msdn>SendMessage</msdn> where lParam is char[].
+		/// Calls API <msdn>SendMessage</msdn> where lParam is any pointer.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public LPARAM SendS(int message, LPARAM wParam, char[] lParam) {
+		public nint Send(int message, nint wParam, void* lParam) {
 			Debug.Assert(!Is0);
-			fixed (char* p = lParam)
-				return Api.SendMessage(this, message, wParam, p);
+			return Api.SendMessage(this, message, wParam, (nint)lParam);
+			//info: don't use overload, then eg ambiguous if null.
 		}
-		//rejected: Span<char> lParam instead of char[]. Can use Send(pointer).
 
-		/// <summary>
-		/// Calls API <msdn>SendMessageTimeout</msdn>.
-		/// Returns its return value (false if failed). Supports <see cref="ALastError"/>.
-		/// </summary>
-		public bool SendTimeout(int millisecondsTimeout, int message, LPARAM wParam = default, LPARAM lParam = default, SMTFlags flags = SMTFlags.ABORTIFHUNG) {
-			Debug.Assert(!Is0);
-			return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, millisecondsTimeout, out LPARAM R);
-		}
+		//rejected: overload without out result parameter. Confusing intellisense when bad types of other parameters. Not so often used, and not so hard to put ', out _'.
+		///// <summary>
+		///// Calls API <msdn>SendMessageTimeout</msdn>.
+		///// Returns its return value (false if failed). Supports <see cref="ALastError"/>.
+		///// </summary>
+		//public bool SendTimeout(int millisecondsTimeout, int message, nint wParam = 0, nint lParam = 0, SMTFlags flags = SMTFlags.ABORTIFHUNG) {
+		//	Debug.Assert(!Is0);
+		//	return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, millisecondsTimeout, out _);
+		//}
 
 		/// <summary>
 		/// Calls API <msdn>SendMessageTimeout</msdn> and gets the result of the message processing.
 		/// Returns its return value (false if failed). Supports <see cref="ALastError"/>.
 		/// </summary>
-		public bool SendTimeout(int millisecondsTimeout, out LPARAM result, int message, LPARAM wParam = default, LPARAM lParam = default, SMTFlags flags = SMTFlags.ABORTIFHUNG) {
+		public bool SendTimeout(int millisecondsTimeout, out nint result, int message, nint wParam = 0, nint lParam = 0, SMTFlags flags = SMTFlags.ABORTIFHUNG) {
 			Debug.Assert(!Is0);
-			result = 0;
 			return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, millisecondsTimeout, out result);
 		}
 
@@ -220,29 +217,27 @@ namespace Au
 		/// Calls API <msdn>SendMessageTimeout</msdn> where lParam is string.
 		/// Returns its return value (false if failed). Supports <see cref="ALastError"/>.
 		/// </summary>
-		public bool SendTimeoutS(int millisecondsTimeout, out LPARAM result, int message, LPARAM wParam, string lParam, SMTFlags flags = SMTFlags.ABORTIFHUNG) {
+		public bool SendTimeout(int millisecondsTimeout, out nint result, int message, nint wParam, string lParam, SMTFlags flags = SMTFlags.ABORTIFHUNG) {
 			Debug.Assert(!Is0);
 			result = 0;
 			fixed (char* p = lParam)
-				return 0 != Api.SendMessageTimeout(this, message, wParam, p, flags, millisecondsTimeout, out result);
+				return 0 != Api.SendMessageTimeout(this, message, wParam, (nint)p, flags, millisecondsTimeout, out result);
 		}
 
 		/// <summary>
-		/// Calls API <msdn>SendMessageTimeout</msdn> where lParam is char[].
+		/// Calls API <msdn>SendMessageTimeout</msdn> and gets the result of the message processing.
 		/// Returns its return value (false if failed). Supports <see cref="ALastError"/>.
 		/// </summary>
-		public bool SendTimeoutS(int millisecondsTimeout, out LPARAM result, int message, LPARAM wParam, char[] lParam, SMTFlags flags = SMTFlags.ABORTIFHUNG) {
+		public bool SendTimeout(int millisecondsTimeout, out nint result, int message, nint wParam, void* lParam, SMTFlags flags = SMTFlags.ABORTIFHUNG) {
 			Debug.Assert(!Is0);
-			result = 0;
-			fixed (char* p = lParam)
-				return 0 != Api.SendMessageTimeout(this, message, wParam, p, flags, millisecondsTimeout, out result);
+			return 0 != Api.SendMessageTimeout(this, message, wParam, (nint)lParam, flags, millisecondsTimeout, out result);
 		}
 
 		/// <summary>
 		/// Calls API <msdn>SendNotifyMessage</msdn>.
 		/// Returns its return value (false if failed). Supports <see cref="ALastError"/>.
 		/// </summary>
-		public bool SendNotify(int message, LPARAM wParam = default, LPARAM lParam = default) {
+		public bool SendNotify(int message, nint wParam = 0, nint lParam = 0) {
 			Debug.Assert(!Is0);
 			return Api.SendNotifyMessage(this, message, wParam, lParam);
 		}
@@ -251,8 +246,8 @@ namespace Au
 		/// Calls API <msdn>PostMessage</msdn>.
 		/// Returns its return value (false if failed). Supports <see cref="ALastError"/>.
 		/// </summary>
-		/// <seealso cref="More.PostThreadMessage(int, int, LPARAM, LPARAM)"/>
-		public bool Post(int message, LPARAM wParam = default, LPARAM lParam = default) {
+		/// <seealso cref="More.PostThreadMessage"/>
+		public bool Post(int message, nint wParam = 0, nint lParam = 0) {
 			//Debug.Assert(!Is0); //no, can be used for "post thread message"
 			return Api.PostMessage(this, message, wParam, lParam);
 		}
@@ -264,7 +259,7 @@ namespace Au
 			/// Calls API <msdn>PostThreadMessage</msdn>. 
 			/// Returns false if failed. Supports <see cref="ALastError"/>.
 			/// </summary>
-			public static bool PostThreadMessage(int threadId, int message, LPARAM wParam = default, LPARAM lParam = default) {
+			public static bool PostThreadMessage(int threadId, int message, nint wParam = 0, nint lParam = 0) {
 				return Api.PostThreadMessage(threadId, message, wParam, lParam);
 			}
 		}
@@ -478,7 +473,7 @@ namespace Au
 		/// </remarks>
 		public bool ShowL(bool show) {
 			if (show == HasStyle(WS.VISIBLE)) return true; //avoid messages and make much faster. Never mind: if show==false, returns true even if invalid hwnd.
-			Send(Api.WM_SHOWWINDOW, show); //not necessary for most windows, but eg winforms would not update the Visible property without it. ShowWindow sends it but SetWindowPos doesn't.
+			Send(Api.WM_SHOWWINDOW, show ? 1 : 0); //not necessary for most windows, but eg winforms would not update the Visible property without it. ShowWindow sends it but SetWindowPos doesn't.
 			return SetWindowPos((show ? SWPFlags.SHOWWINDOW : SWPFlags.HIDEWINDOW)
 				| SWPFlags.NOSIZE | SWPFlags.NOMOVE | SWPFlags.NOACTIVATE | SWPFlags.NOZORDER | SWPFlags.NOOWNERZORDER);
 
@@ -651,15 +646,15 @@ namespace Au
 					if (ALastError.Code == Api.ERROR_ACCESS_DENIED) {
 						//UAC blocks the API but not WM_SYSCOMMAND.
 						//However does not allow to maximize with WM_SYSCOMMAND.
-						uint cmd;
+						int cmd;
 						switch (state) {
 						case Api.SW_MINIMIZE: cmd = Api.SC_MINIMIZE; break;
 						case Api.SW_SHOWMAXIMIZED: cmd = Api.SC_MAXIMIZE; break;
 						default: cmd = Api.SC_RESTORE; break;
 						}
-						ok = Send(Api.WM_SYSCOMMAND, cmd);
+						ok = 0 != Send(Api.WM_SYSCOMMAND, cmd);
 						//if was minimized, now can be maximized, need to restore if SW_SHOWNORMAL
-						if (ok && state == Api.SW_SHOWNORMAL && IsMaximized) ok = Send(Api.WM_SYSCOMMAND, cmd);
+						if (ok && state == Api.SW_SHOWNORMAL && IsMaximized) ok = 0 != Send(Api.WM_SYSCOMMAND, cmd);
 					}
 
 					if (!ok) ThrowUseNative("*minimize/maximize/restore*");
@@ -2226,7 +2221,7 @@ namespace Au
 		/// Supports <see cref="ALastError"/>.
 		/// In 32-bit process actually calls <b>GetWindowLong</b>, because <b>GetWindowLongPtr</b> is unavailable.
 		/// </remarks>
-		public LPARAM GetWindowLong(int index) => Api.GetWindowLongPtr(this, index);
+		public nint GetWindowLong(int index) => Api.GetWindowLongPtr(this, index);
 
 		/// <summary>
 		/// Calls API <msdn>SetWindowLongPtr</msdn>.
@@ -2237,7 +2232,7 @@ namespace Au
 		/// <remarks>
 		/// See also API <msdn>SetWindowSubclass</msdn>.
 		/// </remarks>
-		public LPARAM SetWindowLong(int index, LPARAM newValue) {
+		public nint SetWindowLong(int index, nint newValue) {
 			ALastError.Clear();
 			var prev = Api.SetWindowLongPtr(this, index, newValue);
 			if (prev == 0) {
@@ -2596,14 +2591,14 @@ namespace Au
 		/// </summary>
 		[SkipLocalsInit]
 		string _GetTextSlow() {
-			if (!SendTimeout(5000, out LPARAM ln, Api.WM_GETTEXTLENGTH)) return null;
-			int n = (int)ln; if (n < 1) return "";
+			if (!SendTimeout(5000, out nint n, Api.WM_GETTEXTLENGTH)) return null;
+			if (n < 1) return "";
 
-			using ABuffer<char> b = new(n + 1);
-			if (!SendTimeout(30000, out ln, Api.WM_GETTEXT, b.n, b.p)) return null;
-			if (ln < 1) return "";
+			using ABuffer<char> b = new((int)n + 1);
+			if (!SendTimeout(30000, out n, Api.WM_GETTEXT, b.n, b.p)) return null;
+			if (n < 1) return "";
 			b.p[n] = '\0';
-			return b.GetStringFindLength(); //info: some controls return incorrect ln, eg including '\0'
+			return b.GetStringFindLength(); //info: some controls return incorrect n, eg including '\0'
 
 			//note: cannot do this optimization:
 			//	At first allocate stack memory and send WM_GETTEXT without WM_GETTEXTLENGTH. Then use WM_GETTEXTLENGTH/WM_GETTEXT if returned size is buffer length - 1.
@@ -2627,7 +2622,7 @@ namespace Au
 		/// <seealso cref="Name"/>
 		/// <seealso cref="ControlText"/>
 		public void SetText(string text) {
-			if (!SendTimeoutS(30000, out var _, Api.WM_SETTEXT, 0, text ?? "", 0)) ThrowUseNative();
+			if (!SendTimeout(30000, out var _, Api.WM_SETTEXT, 0, text ?? "", 0)) ThrowUseNative();
 		}
 
 		//rejected: faster but not better than NameAcc. Or must be improved.
@@ -2750,7 +2745,7 @@ namespace Au
 		public bool Close(bool noWait = false, bool useXButton = false) {
 			if (!IsAlive) return true;
 
-			int msg = Api.WM_CLOSE; uint wparam = 0; if (useXButton) { msg = Api.WM_SYSCOMMAND; wparam = Api.SC_CLOSE; }
+			int msg = Api.WM_CLOSE; int wparam = 0; if (useXButton) { msg = Api.WM_SYSCOMMAND; wparam = Api.SC_CLOSE; }
 
 			if (IsOfThisThread) {
 				if (noWait) Post(msg, wparam);
@@ -2794,7 +2789,7 @@ namespace Au
 					if (!IsVisible || (Style & (WS.POPUP | WS.CHILD)) != 0) i += 2;
 
 					if (i >= 50) {
-						if (!SendTimeout(200, 0)) {
+						if (!SendTimeout(200, out _, 0)) {
 							if (!IsAlive || IsHung) break;
 						}
 					}
@@ -2855,7 +2850,7 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="name">Property name.</param>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public LPARAM this[string name] => Api.GetProp(_w, name);
+		public nint this[string name] => Api.GetProp(_w, name);
 
 		/// <summary>
 		/// Gets a window property.
@@ -2865,7 +2860,7 @@ namespace Au.Types
 		/// <remarks>
 		/// This overload uses atom instead of string. I's about 3 times faster. See API <msdn>GlobalAddAtom</msdn>, <msdn>GlobalDeleteAtom</msdn>.
 		/// </remarks>
-		public LPARAM this[ushort atom] => Api.GetProp(_w, atom);
+		public nint this[ushort atom] => Api.GetProp(_w, atom);
 
 		/// <summary>
 		/// Sets a window property.
@@ -2878,7 +2873,7 @@ namespace Au.Types
 		/// 
 		/// Later call <see cref="Remove(string)"/> to remove the property. If you use many unique property names and don't remove the properties, the property name strings can fill the global atom table which is of a fixed size (about 48000) and which is used by all processes for various purposes.
 		/// </remarks>
-		public bool Set(string name, LPARAM value) {
+		public bool Set(string name, nint value) {
 			return Api.SetProp(_w, name, value);
 		}
 
@@ -2891,7 +2886,7 @@ namespace Au.Types
 		/// <remarks>
 		/// This overload uses atom instead of string. I's about 3 times faster. See API <msdn>GlobalAddAtom</msdn>, <msdn>GlobalDeleteAtom</msdn>.
 		/// </remarks>
-		public bool Set(ushort atom, LPARAM value) {
+		public bool Set(ushort atom, nint value) {
 			return Api.SetProp(_w, atom, value);
 		}
 
@@ -2901,7 +2896,7 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="name">Property name. Other overload allows to use global atom instead, which is faster.</param>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public LPARAM Remove(string name) {
+		public nint Remove(string name) {
 			return Api.RemoveProp(_w, name);
 		}
 
@@ -2910,7 +2905,7 @@ namespace Au.Types
 		/// Calls API <msdn>RemoveProp</msdn> and returns its return value.
 		/// </summary>
 		/// <param name="atom">Property name atom in the global atom table.</param>
-		public LPARAM Remove(ushort atom) {
+		public nint Remove(ushort atom) {
 			return Api.RemoveProp(_w, atom);
 		}
 
@@ -2921,8 +2916,8 @@ namespace Au.Types
 		/// <remarks>
 		/// Returns 0-length list if fails. Fails if invalid window or access denied ([](xref:uac)). Supports <see cref="ALastError"/>.
 		/// </remarks>
-		public Dictionary<string, LPARAM> GetList() {
-			var a = new Dictionary<string, LPARAM>();
+		public Dictionary<string, nint> GetList() {
+			var a = new Dictionary<string, nint>();
 			Api.EnumPropsEx(_w, (w, name, data, p) => {
 				string s;
 				if ((long)name < 0x10000) s = "#" + (int)name; else s = Marshal.PtrToStringUni(name);

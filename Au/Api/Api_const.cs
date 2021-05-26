@@ -368,26 +368,26 @@ namespace Au.Types
 		#endregion
 
 		#region SC_
-		internal const uint SC_SIZE = 0xF000;
-		internal const uint SC_MOVE = 0xF010;
-		internal const uint SC_MINIMIZE = 0xF020;
-		internal const uint SC_MAXIMIZE = 0xF030;
-		internal const uint SC_NEXTWINDOW = 0xF040;
-		internal const uint SC_PREVWINDOW = 0xF050;
-		internal const uint SC_CLOSE = 0xF060;
-		internal const uint SC_VSCROLL = 0xF070;
-		internal const uint SC_HSCROLL = 0xF080;
-		internal const uint SC_MOUSEMENU = 0xF090;
-		internal const uint SC_KEYMENU = 0xF100;
-		internal const uint SC_ARRANGE = 0xF110;
-		internal const uint SC_RESTORE = 0xF120;
-		internal const uint SC_TASKLIST = 0xF130;
-		internal const uint SC_SCREENSAVE = 0xF140;
-		internal const uint SC_HOTKEY = 0xF150;
-		internal const uint SC_DEFAULT = 0xF160;
-		internal const uint SC_MONITORPOWER = 0xF170;
-		internal const uint SC_CONTEXTHELP = 0xF180;
-		internal const uint SC_SEPARATOR = 0xF00F;
+		internal const int SC_SIZE = 0xF000;
+		internal const int SC_MOVE = 0xF010;
+		internal const int SC_MINIMIZE = 0xF020;
+		internal const int SC_MAXIMIZE = 0xF030;
+		internal const int SC_NEXTWINDOW = 0xF040;
+		internal const int SC_PREVWINDOW = 0xF050;
+		internal const int SC_CLOSE = 0xF060;
+		internal const int SC_VSCROLL = 0xF070;
+		internal const int SC_HSCROLL = 0xF080;
+		internal const int SC_MOUSEMENU = 0xF090;
+		internal const int SC_KEYMENU = 0xF100;
+		internal const int SC_ARRANGE = 0xF110;
+		internal const int SC_RESTORE = 0xF120;
+		internal const int SC_TASKLIST = 0xF130;
+		internal const int SC_SCREENSAVE = 0xF140;
+		internal const int SC_HOTKEY = 0xF150;
+		internal const int SC_DEFAULT = 0xF160;
+		internal const int SC_MONITORPOWER = 0xF170;
+		internal const int SC_CONTEXTHELP = 0xF180;
+		internal const int SC_SEPARATOR = 0xF00F;
 		#endregion
 
 		#region COLOR_
@@ -555,11 +555,11 @@ namespace Au.Types
 
 		#region MK_
 
-		internal const uint MK_LBUTTON = 0x1;
-		internal const uint MK_RBUTTON = 0x2;
-		internal const uint MK_SHIFT = 0x4;
-		internal const uint MK_CONTROL = 0x8;
-		internal const uint MK_MBUTTON = 0x10;
+		internal const int MK_LBUTTON = 0x1;
+		internal const int MK_RBUTTON = 0x2;
+		internal const int MK_SHIFT = 0x4;
+		internal const int MK_CONTROL = 0x8;
+		internal const int MK_MBUTTON = 0x10;
 
 		#endregion
 
@@ -598,7 +598,7 @@ namespace Au.Types
 		#region misc
 
 		internal const int IDI_APPLICATION = 32512;
-		internal const uint PBT_APMSUSPEND = 0x4;
+		internal const int PBT_APMSUSPEND = 0x4;
 
 		#endregion
 

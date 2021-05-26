@@ -302,7 +302,7 @@ class RunningTasks
 	/// Removes an ended task from the 'running' list. If a task is queued and can run, starts it.
 	/// When task ended, TaskEnded1 posts message WM_TASK_ENDED with task id in wParam to the message window, which calls this function.
 	/// </summary>
-	internal void TaskEnded2(LPARAM wParam, LPARAM lParam) {
+	internal void TaskEnded2(nint wParam, nint lParam) {
 		if (_disposed) return;
 
 		int taskId = (int)wParam;

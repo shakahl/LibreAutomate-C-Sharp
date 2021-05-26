@@ -259,7 +259,7 @@ partial class SciCode : KScintilla
 			return true;
 		case Api.WM_RBUTTONDOWN: {
 				//workaround for Scintilla bug: when right-clicked a margin, if caret or selection start is at that line, goes to the start of line
-				POINT p = (AMath.LoShort(lParam), AMath.HiShort(lParam));
+				POINT p = AMath.NintToPOINT(lParam);
 				int margin = zMarginFromPoint(p, false);
 				if (margin >= 0) {
 					var selStart = zSelectionStart8;
@@ -274,7 +274,7 @@ partial class SciCode : KScintilla
 			break;
 		case Api.WM_CONTEXTMENU: {
 				bool kbd = (int)lParam == -1;
-				int margin = kbd ? -1 : zMarginFromPoint(AMath.LparamToPOINT(lParam), true);
+				int margin = kbd ? -1 : zMarginFromPoint(AMath.NintToPOINT(lParam), true);
 				switch (margin) {
 				case -1:
 					var m = new KWpfMenu();

@@ -1126,7 +1126,7 @@ namespace Au
 			///// If the window shows a dialog, the SendX functions usually wait until the dialog is closed.
 			///// </param>
 			///// <exception cref="AuException">Failed, or timeout.</exception>
-			//static void _SendOrPost(int waitMS, AWnd w, uint message, LPARAM wParam, LPARAM lParam)
+			//static void _SendOrPost(int waitMS, AWnd w, uint message, nint wParam, nint lParam)
 			//{
 			//	bool ok;
 			//	if(message == 0) {

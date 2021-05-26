@@ -135,7 +135,7 @@ namespace Au.Util
 		/// </summary>
 		public event Action<NativeScrollbar_, int> PosChanged;
 
-		public bool WndProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
+		public bool WndProc(AWnd w, int msg, nint wParam, nint lParam) {
 			_w = w;
 			switch (msg) {
 			case Api.WM_NCDESTROY:

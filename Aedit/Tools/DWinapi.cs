@@ -37,15 +37,11 @@ namespace Au.Tools
 				}
 			}
 
-			var b = new AWpfBuilder(this).WinSize(700, 500);
+			var b = new AWpfBuilder(this).WinSize(800, 500);
 			b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
-			b.R.Add("Name", out tName, name).Tooltip(
-@"Case-sensitive name of a function, struct, constant, interface, callback.
-Use wildcard to specify partial name. Examples: Start*, *End, *AnyPart*
-Or text containing multiple full names. Example: Name1 Name2 Name3."
-);
+			b.R.Add("Name", out tName, name);
 			b.Row(-1).Add(out code); code.ZInitBorder = true;
-			b.R.AddButton("...", _ => _Menu());
+			b.R.AddButton("?", _ => _Help());
 			b.AddOkCancel("OK, copy to clipboard");
 			b.End();
 
@@ -58,17 +54,22 @@ Or text containing multiple full names. Example: Name1 Name2 Name3."
 
 			tName.TextChanged += (_, _) => _TextChanged();
 
-			void _Menu() {
-				int i = AMenu.ShowSimple("1 Class for Windows API");
-				if (i == 1) {
-					var s = @"/// <summary>
-/// Paste this class in scripts (at the end) and projects (in any file) where you want to use Windows API. Change the class name (api) if want.
-/// Then, whenever you need a Windows API function etc, type the class name and dot (api.). The completion list will contain undeclared API too. Select one, and it will add the declaration to this class, possibly with more code required for it.
-/// </summary>
-unsafe class api : WinAPI {}
-";
-					code.ZSetText(s);
-				}
+			void _Help() {
+				var s = @"/**
+Here you can find Windows API declarations: function, struct, enum, interface, delegate, constant, GUID.
+Enter API name in the above field. Case-sensitive. Wildcard examples: Start*, *End, *Part*.
+Or multiple full names, like Name1 Name2 Name3.
+You can in editor select text with one or more names and open this window. Or use error tooltips.
+If script is without a class, create new class (or convert script to class) and paste declarations there.
+
+Also try snippet nativeApiSnippet (select it from the completion list when text cursor is where classes can be,
+for example at the end of script). It adds a special class. Then anywhere in script just type class name, dot,
+and select from the list. It adds the declaration to the class, and more declarations if need.
+
+The database contains ~51000 declarations. They are not perfect. You can edit.
+If some really useful API are missing, tell about it: https://www.quickmacros.com/forum or support@quickmacros.com.
+*/";
+				code.ZSetText(s);
 			}
 		}
 

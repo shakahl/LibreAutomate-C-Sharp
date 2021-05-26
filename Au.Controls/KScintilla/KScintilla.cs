@@ -34,7 +34,7 @@ namespace Au.Controls
 	public unsafe partial class KScintilla : HwndHost
 	{
 		AWnd _w;
-		LPARAM _sciPtr;
+		nint _sciPtr;
 		Sci_NotifyCallback _notifyCallback;
 		internal int _dpi;
 
@@ -43,7 +43,7 @@ namespace Au.Controls
 			AFile.More.LoadDll64or32Bit("SciLexer.dll");
 		}
 
-		public LPARAM ZSciPtr => _sciPtr;
+		public nint ZSciPtr => _sciPtr;
 
 		[Browsable(false)]
 		public SciImages ZImages { get; private set; }
@@ -316,14 +316,35 @@ namespace Au.Controls
 		/// Don't call this function from another thread.
 		/// </summary>
 		[DebuggerStepThrough]
-		public int Call(int sciMessage, LPARAM wParam = default, LPARAM lParam = default) => (int)CallRetPtr(sciMessage, wParam, lParam);
+		public int Call(int sciMessage, nint wParam = 0, nint lParam = 0) => (int)CallRetPtr(sciMessage, wParam, lParam);
 
 		/// <summary>
-		/// Sends a Scintilla message to the control and returns LPARAM.
+		/// Sends a Scintilla message to the control and returns int.
 		/// Don't call this function from another thread.
 		/// </summary>
 		[DebuggerStepThrough]
-		public LPARAM CallRetPtr(int sciMessage, LPARAM wParam = default, LPARAM lParam = default) {
+		public int Call(int sciMessage, nint wParam, void* lParam) => (int)CallRetPtr(sciMessage, wParam, (nint)lParam);
+
+		/// <summary>
+		/// Sends a Scintilla message to the control and returns int.
+		/// Don't call this function from another thread.
+		/// </summary>
+		[DebuggerStepThrough]
+		public int Call(int sciMessage, nint wParam, bool lParam) => (int)CallRetPtr(sciMessage, wParam, lParam ? 1 : 0);
+
+		/// <summary>
+		/// Sends a Scintilla message to the control and returns int.
+		/// Don't call this function from another thread.
+		/// </summary>
+		[DebuggerStepThrough]
+		public int Call(int sciMessage, bool wParam, nint lParam = 0) => (int)CallRetPtr(sciMessage, wParam ? 1 : 0, lParam);
+
+		/// <summary>
+		/// Sends a Scintilla message to the control and returns nint.
+		/// Don't call this function from another thread.
+		/// </summary>
+		[DebuggerStepThrough]
+		public nint CallRetPtr(int sciMessage, nint wParam = 0, nint lParam = 0) {
 #if DEBUG
 			if (ZDebugPrintMessages_) _DebugPrintMessage(sciMessage);
 #endif

@@ -223,7 +223,7 @@ class UacDragDrop
 
 			Api.OleInitialize(default);
 			Api.RegisterDragDrop(_w, _dt = new _DropTarget());
-			_msgWnd.Send(Api.WM_USER, 10, (LPARAM)_w);
+			_msgWnd.Send(Api.WM_USER, 10, (nint)_w);
 			Api.SetTimer(_w, 1, 1000, null);
 
 			_w.ShowL(true);
@@ -231,7 +231,7 @@ class UacDragDrop
 			Api.OleUninitialize();
 		}
 
-		static LPARAM _WndProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
+		static nint _WndProc(AWnd w, int msg, nint wParam, nint lParam) {
 			switch (msg) {
 			case Api.WM_DESTROY:
 				Api.RevokeDragDrop(w);

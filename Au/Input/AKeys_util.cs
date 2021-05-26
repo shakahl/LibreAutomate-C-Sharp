@@ -272,8 +272,8 @@ namespace Au
 			/// Gets scan code from virtual-key code.
 			/// </summary>
 			/// <param name="vk"></param>
-			/// <param name="hkl">Keyboard layout. If default(LPARAM), uses of current thread.</param>
-			internal static ushort VkToSc(KKey vk, LPARAM hkl = default) {
+			/// <param name="hkl">Keyboard layout. If 0, uses of current thread.</param>
+			internal static ushort VkToSc(KKey vk, nint hkl = 0) {
 				if (hkl == default) hkl = Api.GetKeyboardLayout(0);
 				uint sc = Api.MapVirtualKeyEx((uint)vk, 0, hkl); //MAPVK_VK_TO_VSC
 

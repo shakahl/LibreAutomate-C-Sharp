@@ -698,7 +698,7 @@ namespace Au
 
 		#endregion
 
-		LPARAM _WndProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
+		nint _WndProc(AWnd w, int msg, nint wParam, nint lParam) {
 			//var pmo = new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
 			//if (AWnd.More.PrintMsg(out string s, w, msg, wParam, lParam, pmo)) AOutput.Write("<><c green>" + s + "<>");
 			//AWnd.More.PrintMsg(w, msg, wParam, lParam);
@@ -713,7 +713,7 @@ namespace Au
 				_WmNcdestroy();
 				break;
 			case Api.WM_CLOSE:
-				Close(ancestorsToo: 0 != ((int)wParam & 1));
+				Close(ancestorsToo: 0 != (wParam & 1));
 				return default;
 			//case Api.WM_THEMECHANGED: //don't need for a menu window
 			//	_z?.Dispose();
@@ -770,7 +770,7 @@ namespace Au
 
 					if (part <= -2) { //if mouse wheel, update hot item, submenu, tooltip
 						var p = _w.MouseClientXY;
-						if (_w.ClientRect.Contains(p)) _WmMousemove(AMath.MakeUint(p.x, p.y), fake: true);
+						if (_w.ClientRect.Contains(p)) _WmMousemove(AMath.MakeLparam(p), fake: true);
 					}
 				};
 				_scroll.Visible = true;
@@ -794,8 +794,8 @@ namespace Au
 			return r;
 		}
 
-		void _WmMousemove(LPARAM lParam, bool fake) {
-			var p = AMath.LparamToPOINT(lParam);
+		void _WmMousemove(nint lParam, bool fake) {
+			var p = AMath.NintToPOINT(lParam);
 
 			//prevent selecting item when mouse position does not change. It would interfere with keyboard navigation.
 			if (!fake && p == _mouse.p) return; _mouse.p = p;
@@ -851,7 +851,7 @@ namespace Au
 			_SubmenuTimer();
 		}
 
-		void _WmMousebutton(int msg, LPARAM lParam) {
+		void _WmMousebutton(int msg, nint lParam) {
 			switch (msg) {
 			case Api.WM_LBUTTONDOWN: _mouse.left = true; return;
 			case Api.WM_LBUTTONUP: if (!_mouse.left) return; _mouse.left = false; break;
@@ -861,7 +861,7 @@ namespace Au
 			case Api.WM_MBUTTONUP: if (_mouse.middle) Close(ancestorsToo: true); return;
 			default: return;
 			}
-			var p = AMath.LparamToPOINT(lParam);
+			var p = AMath.NintToPOINT(lParam);
 			int i = _HitTest(p);
 			if (i < 0) return;
 			if (msg == Api.WM_LBUTTONUP) _Click(i);

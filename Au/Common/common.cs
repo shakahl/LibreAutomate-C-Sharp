@@ -22,10 +22,12 @@ namespace Au.Types
 	/// <summary>
 	/// If a class is derived from this class, editor adds undeclared Windows API to its completion list.
 	/// </summary>
-	public abstract class WinAPI {
+	public abstract class NativeApi {
 		//For it could use an attribute. But this easily solves 2 problems:
 		//	1. In 'new' expression does not show completion list (with types from winapi DB) if the winapi class still does not have types inside. Because the completion service then returns null.
 		//	2. If class with attributes is after top-level statements, code info often does not work when typing directly above it. Works better if without attributes.
+		//FUTURE: Also add attribute. Then can specify an alternative DB or text file with declarations. Maybe also some settings.
+		//	But use this class as base too, like now. Eg could add protected util functions. Could use this class as both (base and attribute), but Attribute has static members.
 
 		///
 		[NoDoc]

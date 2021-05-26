@@ -564,7 +564,7 @@ public partial class AToolbar
 		return (_ow.GetCachedRect(this), _ow.GetPrevSize(this));
 	}
 	
-	unsafe void _WmDpiChanged(LPARAM wParam, LPARAM lParam) {
+	unsafe void _WmDpiChanged(nint wParam, nint lParam) {
 		if(_os!=null) {
 			if(!_SetDpi()) return;
 //			AOutput.Write("WM_DPICHANGED", _w.Rect);

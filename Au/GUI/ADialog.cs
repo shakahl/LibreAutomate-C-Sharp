@@ -162,7 +162,7 @@ namespace Au
 				public int cxWidth;
 			}
 
-			internal delegate int TaskDialogCallbackProc(AWnd hwnd, DNative.TDN notification, LPARAM wParam, LPARAM lParam, IntPtr data);
+			internal delegate int TaskDialogCallbackProc(AWnd hwnd, DNative.TDN notification, nint wParam, nint lParam, IntPtr data);
 		}
 
 		#endregion private API
@@ -926,7 +926,7 @@ namespace Au
 		}
 		AScreen _screen;
 
-		int _CallbackProc(AWnd w, DNative.TDN message, LPARAM wParam, LPARAM lParam, IntPtr data) {
+		int _CallbackProc(AWnd w, DNative.TDN message, nint wParam, nint lParam, IntPtr data) {
 			Action<DEventArgs> e = null;
 			int R = 0;
 
@@ -1121,7 +1121,7 @@ namespace Au
 		public DSend Send { get; private set; }
 
 		//called by DSend
-		internal int SendMessage_(DNative.TDM message, LPARAM wParam = default, LPARAM lParam = default) {
+		internal int SendMessage_(DNative.TDM message, nint wParam = 0, nint lParam = 0) {
 			switch (message) {
 			case DNative.TDM.CLICK_BUTTON:
 			case DNative.TDM.ENABLE_BUTTON:
@@ -1139,7 +1139,7 @@ namespace Au
 				text = _c.pszContent = text + c_multilineString;
 			}
 
-			_dlg.SendS((int)(resizeDialog ? DNative.TDM.SET_ELEMENT_TEXT : DNative.TDM.UPDATE_ELEMENT_TEXT), (int)partId, text ?? "");
+			_dlg.Send((int)(resizeDialog ? DNative.TDM.SET_ELEMENT_TEXT : DNative.TDM.UPDATE_ELEMENT_TEXT), (int)partId, text ?? "");
 			//info: null does not change text.
 
 			if (_IsEdit) _EditControlUpdateAsync(!resizeDialog);
@@ -1205,7 +1205,7 @@ namespace Au
 		}
 
 		void _EditControlUpdateAsync(bool onlyZorder = false) {
-			_editParent.Post(Api.WM_APP + 111, onlyZorder);
+			_editParent.Post(Api.WM_APP + 111, onlyZorder ? 1 : 0);
 		}
 
 		//to reserve space for multiline Edit control we append this to text2
@@ -1226,7 +1226,7 @@ namespace Au
 				int top = r.top;
 				if (!_c.pszContent.Ends(c_multilineString)) {
 					_c.pszContent += c_multilineString;
-					_dlg.SendS((int)DNative.TDM.SET_ELEMENT_TEXT, (int)DNative.TDE.CONTENT, _c.pszContent);
+					_dlg.Send((int)DNative.TDM.SET_ELEMENT_TEXT, (int)DNative.TDE.CONTENT, _c.pszContent);
 					prog.GetRectIn(parent, out r); //used to calculate Edit control height: after changing text, prog is moved down, and we know its previous location...
 				}
 				if (_editMultilineHeight == 0) { _editMultilineHeight = r.bottom - top; } else top = r.bottom - _editMultilineHeight;
@@ -1267,7 +1267,7 @@ namespace Au
 			_editWnd.SetText(_controls.EditText);
 			if (_controls.EditType == DEdit.Combo) {
 				if (_controls.ComboboxValues != null) {
-					foreach (var s in _controls.ComboboxValues) _editWnd.SendS(Api.CB_INSERTSTRING, -1, s);
+					foreach (var s in _controls.ComboboxValues) _editWnd.Send(Api.CB_INSERTSTRING, -1, s);
 				}
 				RECT cbr = _editWnd.Rect;
 				_editParent.ResizeL(cbr.Width, cbr.Height); //because ComboBox resizes itself
@@ -1298,7 +1298,7 @@ namespace Au
 		NativeFont_ _editFont;
 
 		//Dlgproc of our intermediate #32770 control, the parent of out Edit control.
-		LPARAM _EditControlParentProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
+		nint _EditControlParentProc(AWnd w, int msg, nint wParam, nint lParam) {
 			//AOutput.Write(msg, wParam, lParam);
 			switch (msg) {
 			case Api.WM_SETFOCUS: //enables Tab when in single-line Edit control
@@ -1678,7 +1678,7 @@ namespace Au
 
 			d.ShowDialogNoWait();
 
-			if (marquee) d.Send.Message(DNative.TDM.SET_PROGRESS_BAR_MARQUEE, true);
+			if (marquee) d.Send.Message(DNative.TDM.SET_PROGRESS_BAR_MARQUEE, 1);
 
 			return d;
 		}
@@ -1875,7 +1875,7 @@ namespace Au.Types
 	/// </remarks>
 	public class DEventArgs : EventArgs
 	{
-		internal DEventArgs(ADialog obj_, AWnd hwnd_, DNative.TDN message_, LPARAM wParam_, LPARAM lParam_) {
+		internal DEventArgs(ADialog obj_, AWnd hwnd_, DNative.TDN message_, nint wParam_, nint lParam_) {
 			dialog = obj_; hwnd = hwnd_; message = message_; wParam = wParam_;
 			LinkHref = (message_ == DNative.TDN.HYPERLINK_CLICKED) ? Marshal.PtrToStringUni(lParam_) : null;
 		}
@@ -1885,7 +1885,7 @@ namespace Au.Types
 		public AWnd hwnd;
 		/// <summary>Reference: <msdn>task dialog notifications</msdn>.</summary>
 		public DNative.TDN message;
-		public LPARAM wParam;
+		public nint wParam;
 		public int returnValue;
 #pragma warning restore 1591 //missing XML documentation
 
@@ -1942,7 +1942,7 @@ namespace Au.Types
 		/// Reference: <msdn>task dialog messages</msdn>.
 		/// NAVIGATE_PAGE currently not supported.
 		/// </remarks>
-		public int Message(DNative.TDM message, LPARAM wParam = default, LPARAM lParam = default) {
+		public int Message(DNative.TDM message, nint wParam = 0, nint lParam = 0) {
 			return _tdo?.SendMessage_(message, wParam, lParam) ?? 0;
 		}
 
@@ -2003,7 +2003,7 @@ namespace Au.Types
 		}
 
 		[DllImport("user32.dll", EntryPoint = "SendMessageW")]
-		static extern LPARAM _ApiSendMessageTASKDIALOGCONFIG(AWnd hWnd, uint msg, LPARAM wParam, in TASKDIALOGCONFIG c);
+		static extern nint _ApiSendMessageTASKDIALOGCONFIG(AWnd hWnd, uint msg, nint wParam, in TASKDIALOGCONFIG c);
 #endif
 		/// <summary>
 		/// Clicks a button. Normally it closes the dialog.
@@ -2026,7 +2026,7 @@ namespace Au.Types
 		/// Sends message DNative.TDM.ENABLE_BUTTON.
 		/// </remarks>
 		public void EnableButton(int buttonId, bool enable) {
-			Message(DNative.TDM.ENABLE_BUTTON, buttonId, enable);
+			Message(DNative.TDM.ENABLE_BUTTON, buttonId, enable ? 1 : 0);
 		}
 
 		/// <summary>
@@ -2060,7 +2060,7 @@ namespace Au.Types
 			CLICK_BUTTON = WM_USER + 102, // wParam = button id
 			SET_MARQUEE_PROGRESS_BAR = WM_USER + 103, // wParam = 0 (nonMarque) wParam != 0 (Marquee)
 			SET_PROGRESS_BAR_STATE = WM_USER + 104, // wParam = new progress state (0, 1 or 2)
-			SET_PROGRESS_BAR_RANGE = WM_USER + 105, // lParam = AMath.MakeUint(min, max)
+			SET_PROGRESS_BAR_RANGE = WM_USER + 105, // lParam = AMath.MakeLparam(min, max)
 			SET_PROGRESS_BAR_POS = WM_USER + 106, // wParam = new position
 			SET_PROGRESS_BAR_MARQUEE = WM_USER + 107, // wParam = 0 (stop marquee), wParam != 0 (start marquee), lParam = speed (milliseconds between repaints)
 			SET_ELEMENT_TEXT = WM_USER + 108, // wParam = element (enum DNative.TDE), lParam = new element text (string)

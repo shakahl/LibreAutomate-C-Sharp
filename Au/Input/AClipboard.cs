@@ -171,7 +171,7 @@ namespace Au
 					Api.RemoveClipboardFormatListener(oc.WndClipOwner);
 				}
 
-				wFocus.SendTimeout(500, 0); //workaround: in SharpDevelop and ILSpy (both WPF), API GetClipboardData takes ~1 s. Need to sleep min 10 ms or send message.
+				wFocus.SendTimeout(500, out _, 0); //workaround: in SharpDevelop and ILSpy (both WPF), API GetClipboardData takes ~1 s. Need to sleep min 10 ms or send message.
 
 				if (callback != null) {
 					callback();
@@ -347,7 +347,7 @@ namespace Au
 
 				//CONSIDER: opt.SleepClipboard. If 0, uses smart sync, else simply sleeps.
 				for (int i = 0, n = sync ? 3 : (restore ? 25 : 15); i < n; i++) {
-					wFocus.SendTimeout(1000, 0, flags: 0);
+					wFocus.SendTimeout(1000, out _, 0, flags: 0);
 					AKeys.Internal_.Sleep(i + 3);
 
 					//info: repeats this min 3 times as a workaround for this Dreamweaver problem:
@@ -429,11 +429,11 @@ namespace Au
 					//is hung?
 					if (--n == 0) throw new AuException(_paste ? "*paste" : "*copy");
 					ctrlKey.Release();
-					_wFocus.SendTimeout(5000, 0, flags: 0);
+					_wFocus.SendTimeout(5000, out _, 0, flags: 0);
 				}
 			}
 
-			LPARAM _WndProc(AWnd w, int message, LPARAM wParam, LPARAM lParam) {
+			nint _WndProc(AWnd w, int message, nint wParam, nint lParam) {
 				//AWnd.More.PrintMsg(w, message, wParam, lParam);
 
 				switch (message) {

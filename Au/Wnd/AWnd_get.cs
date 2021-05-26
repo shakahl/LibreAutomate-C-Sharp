@@ -596,7 +596,7 @@ namespace Au
 		public AWnd OwnerWindow {
 			get => Api.GetWindow(this, Api.GW_OWNER);
 			set {
-				SetWindowLong(GWLong.HWNDPARENT, (LPARAM)value);
+				SetWindowLong(GWLong.HWNDPARENT, (nint)value);
 				if (!value.Is0) {
 					bool tm = value.IsTopmost;
 					if (tm != IsTopmost) { if (tm) ZorderTopmost(); else ZorderNoTopmost(); }

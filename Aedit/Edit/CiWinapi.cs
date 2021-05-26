@@ -27,7 +27,7 @@ class CiWinapi
 	int _typenameStart;
 	bool _canInsert;
 
-	public static bool IsWinapiClassSymbol(INamedTypeSymbol typeSym) => typeSym?.BaseType?.Name == "WinAPI";
+	public static bool IsWinapiClassSymbol(INamedTypeSymbol typeSym) => typeSym?.BaseType?.Name == "NativeApi";
 
 	public static CiWinapi AddWinapi(INamedTypeSymbol typeSym, List<CiComplItem> items, TextSpan span, int typenameStart, bool onlyTypes) {
 		Debug.Assert(IsWinapiClassSymbol(typeSym));
@@ -123,7 +123,7 @@ class CiWinapi
 
 			if (level == 0) { //insert missing usings first
 				int len = doc.zLen16;
-				InsertCode.UsingDirective("Au;Au.Types;System;System.Runtime.InteropServices"); //Au: AWnd; Au.Types: LPARAM, RECT etc; System: IntPtr, Guid etc
+				InsertCode.UsingDirective("Au;Au.Types;System;System.Runtime.InteropServices"); //Au: AWnd; Au.Types: RECT etc; System: IntPtr, Guid etc
 				int add = doc.zLen16 - len;
 				posInsert += add; posClass += add;
 			}
@@ -133,7 +133,7 @@ class CiWinapi
 
 			//recursively add declarations for unknown names found in now added declaration
 			if (kind is CiItemKind.Constant or CiItemKind.Field or CiItemKind.Enum or CiItemKind.Class) return;
-			AOutput.Write(level, name);//TODO
+			//AOutput.Write(level, name);
 			if (level > 30) return; //max seen 10. Tested: at level 10 uses ~40 KB of stack.
 			if (!CodeInfo.GetDocumentAndFindNode(out var cd, out node, posClass)) return;
 			if (node is not ClassDeclarationSyntax) return;
@@ -176,11 +176,9 @@ class CiWinapi
 					_Insert(level + 1, node, text, name, kind);
 				} else {
 					if (ec == ErrorCode.ERR_ManagedAddr) continue; //possibly same name is an internal managed type in some assembly, but in our DB it may be unmanaged. This error is for for field; we'll catch its type later.
-					else AOutput.Write(d);//TODO
+					else ADebug.Print(d);
 				}
 			}
-
-			//TODO: add info about this somewhere in UI or/and in md doc.
 		}
 	}
 }

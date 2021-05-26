@@ -296,7 +296,7 @@ static class App
 			//	I guess then it calls GetIconInfoEx to get module/resource and extracts new icon from same resource.
 		}
 
-		static void _Notified(LPARAM wParam, LPARAM lParam) {
+		static void _Notified(nint wParam, nint lParam) {
 			int msg = AMath.LoWord(lParam);
 			//if (msg != Api.WM_MOUSEMOVE) AWnd.More.PrintMsg(default, msg, 0, 0);
 			switch (msg) {
@@ -312,7 +312,7 @@ static class App
 			}
 		}
 
-		static LPARAM _WndProc(AWnd w, int m, LPARAM wParam, LPARAM lParam) {
+		static nint _WndProc(AWnd w, int m, nint wParam, nint lParam) {
 			//AWnd.More.PrintMsg(w, m, wParam, lParam);
 			if (m == c_msgNotify) _Notified(wParam, lParam);
 			else if (m == s_msgTaskbarCreated) _Add(true); //when explorer restarted or taskbar DPI changed
@@ -326,7 +326,7 @@ static class App
 
 		internal static bool WaitForShow_() {
 			while (Api.GetMessage(out var m) > 0) {
-				if (m.hwnd == default && m.message == c_msgBreakMessageLoop) return m.wParam;
+				if (m.hwnd == default && m.message == c_msgBreakMessageLoop) return 0 != m.wParam;
 				Api.TranslateMessage(m);
 				Api.DispatchMessage(m);
 			}

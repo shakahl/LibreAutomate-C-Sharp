@@ -8,8 +8,7 @@ using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-using LPARAM = System.IntPtr;
-using Wnd = System.IntPtr;
+using AWnd = System.IntPtr;
 
 //add this to projects that will use these API
 [module: DefaultCharSet(CharSet.Unicode)]
@@ -19,7 +18,7 @@ using Wnd = System.IntPtr;
 class Api2
 {
 	[DllImport("user32.dll", EntryPoint = "SendMessageW")]
-	public static extern LPARAM SendMessage(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam);
+	public static extern nint SendMessage(AWnd hWnd, uint Msg, nint wParam, nint lParam);
 
 }
 #endif

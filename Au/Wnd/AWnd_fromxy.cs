@@ -155,7 +155,7 @@ namespace Au
 						if (_IsPointVisibleIn_1(c2)) {
 							if (r.left >= r1.left && r.top >= r1.top && r.right <= r1.right && r.bottom <= r1.bottom && (r.right - r.left < r1.right - r1.left || r.bottom - r.top < r1.bottom - r1.top)) {
 								if (_IsPointVisibleIn_2(c2)) {
-									if (hwnd.SendTimeout(1000, out var ht, Api.WM_NCHITTEST, default, AMath.MakeUint(_p.x, _p.y), SMTFlags.ABORTIFHUNG | SMTFlags.BLOCK) && ht != Api.HTTRANSPARENT) break;
+									if (hwnd.SendTimeout(1000, out var ht, Api.WM_NCHITTEST, 0, AMath.MakeLparam(_p), SMTFlags.ABORTIFHUNG | SMTFlags.BLOCK) && ht != Api.HTTRANSPARENT) break;
 									hwnd = c2;
 									r1 = r;
 									found = true;

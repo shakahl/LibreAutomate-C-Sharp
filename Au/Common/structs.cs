@@ -18,88 +18,6 @@ using System.Text.Json.Serialization;
 namespace Au.Types
 {
 	/// <summary>
-	/// Pointer-sized integer. Same as C/C++ LPARAM. Same as C# nint, but has more implicit conversions.
-	/// </summary>
-	/// <remarks>
-	///	There is no struct WPARAM (unsigned). Use LPARAM instead, it is the same in most cases.
-	///	There is no cast operators for enum. When need, cast through int.
-	/// </remarks>
-	[DebuggerStepThrough]
-	public unsafe struct LPARAM : IEquatable<LPARAM>, IComparable<LPARAM>
-	{
-		//rejected: use nint instead. Then need too many explicit casts.
-		//	Eg to pass a pointer to SendMessage etc need (nint)(&v); for bool need v ? 1 : 0.
-		//Now this library uses:
-		//	LPARAM - when can be anything (integer, handle/pointer/string, bool).
-		//	IntPtr - when can be only handle, pointer or string.
-		//	nint - when the value can be only integer, eg size_t. But sometimes for other types too, usually as private/local.
-
-#pragma warning disable 1591 //XML doc
-		readonly nint _v;
-
-		LPARAM(nint v) { _v = v; }
-
-		//LPARAM = int etc
-		public static implicit operator LPARAM(void* x) => new((nint)x);
-		public static implicit operator LPARAM(nint x) => new(x);
-		public static implicit operator LPARAM(nuint x) => new((nint)x);
-		public static implicit operator LPARAM(int x) => new(x);
-		public static implicit operator LPARAM(uint x) => new((nint)x);
-		public static implicit operator LPARAM(sbyte x) => new(x);
-		public static implicit operator LPARAM(byte x) => new(x);
-		public static implicit operator LPARAM(short x) => new(x);
-		public static implicit operator LPARAM(ushort x) => new(x);
-		public static implicit operator LPARAM(char x) => new(x);
-		public static implicit operator LPARAM(long x) => new((nint)x);
-		public static implicit operator LPARAM(ulong x) => new((nint)x);
-		public static implicit operator LPARAM(bool x) => new(x ? 1 : 0);
-		//also would be good to have LPARAM(Enum x), but C# does not allow generic operators.
-
-		//int etc = LPARAM
-		public static implicit operator void*(LPARAM x) => (void*)x._v;
-		public static implicit operator nint(LPARAM x) => x._v;
-		public static explicit operator nuint(LPARAM x) => (nuint)x._v;
-		public static explicit operator int(LPARAM x) => (int)x._v;
-		public static explicit operator uint(LPARAM x) => (uint)x._v;
-		public static explicit operator sbyte(LPARAM x) => (sbyte)x._v;
-		public static explicit operator byte(LPARAM x) => (byte)x._v;
-		public static explicit operator short(LPARAM x) => (short)x._v;
-		public static explicit operator ushort(LPARAM x) => (ushort)x._v;
-		public static explicit operator char(LPARAM x) => (char)x._v;
-		public static explicit operator long(LPARAM x) => x._v;
-		public static explicit operator ulong(LPARAM x) => (ulong)x._v;
-		public static implicit operator bool(LPARAM x) => x._v != default;
-		//note: don't use implicit. It's unsafe. Eg arithmetic and other operators then implicitly convert LPARAM operands to int, although must be long.
-
-		public static bool operator ==(LPARAM a, LPARAM b) => a._v == b._v;
-		public static bool operator !=(LPARAM a, LPARAM b) => a._v != b._v;
-		public static bool operator <(LPARAM a, LPARAM b) => a._v < b._v;
-		public static bool operator >(LPARAM a, LPARAM b) => a._v > b._v;
-		public static bool operator <=(LPARAM a, LPARAM b) => a._v <= b._v;
-		public static bool operator >=(LPARAM a, LPARAM b) => a._v >= b._v;
-		public static LPARAM operator +(LPARAM a, int b) => a._v + b;
-		public static LPARAM operator -(LPARAM a, int b) => a._v - b;
-
-		public override string ToString() => _v.ToStringInvariant();
-
-		public override int GetHashCode() => (int)_v;
-
-		public override bool Equals(object obj) => obj is LPARAM k && k == this;
-
-		/// <summary>
-		/// Returns true if other == this.
-		/// Implements IEquatable. Prevents boxing when used as a key of a collection.
-		/// </summary>
-		public bool Equals(LPARAM other) => _v == other._v;
-
-		/// <summary>
-		/// Implements IComparable. It allows to sort a collection.
-		/// </summary>
-		public int CompareTo(LPARAM other) => _v.CompareTo(other._v);
-#pragma warning restore 1591 //XML doc
-	}
-
-	/// <summary>
 	/// Point coordinates x y.
 	/// </summary>
 	public struct POINT : IEquatable<POINT>
@@ -707,8 +625,8 @@ namespace Au.Types
 		public Api.VARENUM vt; //ushort
 		ushort _u1;
 		uint _u2;
-		public LPARAM value;
-		public LPARAM value2;
+		public nint value;
+		public nint value2;
 		//note: cannot use FieldOffset because of different 32/64 bit size
 
 		public VARIANT(int x) : this() { vt = Api.VARENUM.VT_I4; value = x; }
@@ -770,7 +688,7 @@ namespace Au.Types
 		BSTR(char* p) => _p = p;
 
 		public static explicit operator BSTR(string s) => new((char*)Marshal.StringToBSTR(s));
-		public static explicit operator LPARAM(BSTR b) => b._p;
+		public static explicit operator nint(BSTR b) => (nint)b._p;
 
 		public static BSTR AttachBSTR(char* bstr) => new(bstr);
 

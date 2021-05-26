@@ -152,7 +152,6 @@ using Au;
 using Au.Types;
 #else
 using AWnd = System.IntPtr; //HWND (window handle)
-using LPARAM = System.IntPtr; //LPARAM, WPARAM, LRESULT, X_PTR, SIZE_T, ... (integer types of pointer size)
 #endif
 
 //add this to projects that will use these API
@@ -182,12 +181,12 @@ static unsafe class API
 			//#if !TEST_SMALL
 			catch (ConverterException e) {
 				AOutput.Write(e);
-				AWnd.FindFast(null, "QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{_cppFile}||{e.Offset}");
+				AWnd.FindFast(null, "QM_Editor").Send(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{_cppFile}||{e.Offset}");
 				throw;
 			}
 			catch (Exception e) {
 				AOutput.Write(e);
-				AWnd.FindFast(null, "QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {" "}||{_cppFile}||{_Pos(_i)}");
+				AWnd.FindFast(null, "QM_Editor").Send(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {" "}||{_cppFile}||{_Pos(_i)}");
 				throw;
 			}
 			//#endif
@@ -289,10 +288,10 @@ static unsafe class API
 			_AddKeyword("IntPtr", new _CppType("IntPtr", _is32bit ? 4 : 8, false));
 
 			_AddSymbol("LPARAM", _sym_LPARAM = new _Struct("LPARAM", false), 0);
-			_AddSymbol("HWND", _sym_Wnd = new _Struct("AWnd", false), 0);
+			_AddSymbol("HWND", _sym_AWnd = new _Struct("AWnd", false), 0);
 		}
 
-		_Struct _sym_LPARAM, _sym_Wnd;
+		_Struct _sym_LPARAM, _sym_AWnd;
 
 		void _ConvertAll(int nestLevel) {
 			for (; _i < _nTokUntilDefUndef; _i++) {
@@ -473,7 +472,7 @@ static unsafe class API
 
 				if (!_guidsAdded.Add(name)) return false; //prevent duplicates
 
-				_sbVar.AppendFormat("\r\ninternal static Guid {0} = new Guid({1});\r\n", name, data);
+				_sbVar.AppendFormat("\r\ninternal static Guid {0} = new({1});\r\n", name, data);
 
 				_i++;
 			} else { //C++ const constant

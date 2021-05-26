@@ -1367,16 +1367,16 @@
             <param name="wNotify"></param>
             <param name="nifFlags"></param>
         </member>
-        <member name="M:Au.Types.Api.SetWindowSubclass(Au.AWnd,Au.Types.Api.SUBCLASSPROC,Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.Types.Api.SetWindowSubclass(Au.AWnd,Au.Types.Api.SUBCLASSPROC,System.IntPtr,System.IntPtr)">
             <summary>API <msdn>SetWindowSubclass</msdn></summary>
         </member>
-        <member name="M:Au.Types.Api.GetWindowSubclass(Au.AWnd,Au.Types.Api.SUBCLASSPROC,Au.Types.LPARAM,Au.Types.LPARAM@)">
+        <member name="M:Au.Types.Api.GetWindowSubclass(Au.AWnd,Au.Types.Api.SUBCLASSPROC,System.IntPtr,System.IntPtr@)">
             <summary>API <msdn>GetWindowSubclass</msdn></summary>
         </member>
-        <member name="M:Au.Types.Api.RemoveWindowSubclass(Au.AWnd,Au.Types.Api.SUBCLASSPROC,Au.Types.LPARAM)">
+        <member name="M:Au.Types.Api.RemoveWindowSubclass(Au.AWnd,Au.Types.Api.SUBCLASSPROC,System.IntPtr)">
             <summary>API <msdn>RemoveWindowSubclass</msdn></summary>
         </member>
-        <member name="M:Au.Types.Api.DefSubclassProc(Au.AWnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.Types.Api.DefSubclassProc(Au.AWnd,System.Int32,System.IntPtr,System.IntPtr)">
             <summary>API <msdn>DefSubclassProc</msdn></summary>
         </member>
         <member name="T:Au.Types.Api.SUBCLASSPROC">
@@ -1562,7 +1562,7 @@
         </member>
         <member name="T:Au.Types.GWLong">
             <summary>
-            Window long constants. Used with <see cref="M:Au.AWnd.GetWindowLong(System.Int32)"/> and <see cref="M:Au.AWnd.SetWindowLong(System.Int32,Au.Types.LPARAM)"/>.
+            Window long constants. Used with <see cref="M:Au.AWnd.GetWindowLong(System.Int32)"/> and <see cref="M:Au.AWnd.SetWindowLong(System.Int32,System.IntPtr)"/>.
             See API <msdn>GetWindowLong</msdn>. See also API <msdn>SetWindowSubclass</msdn>.
             </summary>
         </member>
@@ -1576,7 +1576,7 @@
             <summary>API <msdn>WNDPROC</msdn></summary>
         </member>
         <member name="T:Au.Types.SMTFlags">
-            <summary>API <msdn>SendMessageTimeout</msdn> flags. Used with <see cref="M:Au.AWnd.SendTimeout(System.Int32,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.SMTFlags)"/>.</summary>
+            <summary>API <msdn>SendMessageTimeout</msdn> flags. Used with <see cref="M:Au.AWnd.SendTimeout(System.Int32,System.IntPtr@,System.Int32,System.IntPtr,System.IntPtr,Au.Types.SMTFlags)"/>.</summary>
         </member>
         <member name="T:Au.Types.TFFlags">
             <summary>API <msdn>DrawTextEx</msdn> format flags.</summary>
@@ -2001,12 +2001,12 @@
             In DocFX-generated help files removes documentation and auto-generated links in TOC and class pages.
             </summary>
         </member>
-        <member name="T:Au.Types.WinAPI">
+        <member name="T:Au.Types.NativeApi">
             <summary>
             If a class is derived from this class, editor adds undeclared Windows API to its completion list.
             </summary>
         </member>
-        <member name="T:Au.Types.WinAPI.l">
+        <member name="T:Au.Types.NativeApi.l">
             
         </member>
         <member name="T:Au.Types.UsingEndAction">
@@ -2715,26 +2715,6 @@
         <member name="M:Au.Types.DStringList.ToArray">
             <summary>
             Converts the value to string[].
-            </summary>
-        </member>
-        <member name="T:Au.Types.LPARAM">
-            <summary>
-            Pointer-sized integer. Same as C/C++ LPARAM. Same as C# nint, but has more implicit conversions.
-            </summary>
-            <remarks>
-            There is no struct WPARAM (unsigned). Use LPARAM instead, it is the same in most cases.
-            There is no cast operators for enum. When need, cast through int.
-            </remarks>
-        </member>
-        <member name="M:Au.Types.LPARAM.Equals(Au.Types.LPARAM)">
-            <summary>
-            Returns true if other == this.
-            Implements IEquatable. Prevents boxing when used as a key of a collection.
-            </summary>
-        </member>
-        <member name="M:Au.Types.LPARAM.CompareTo(Au.Types.LPARAM)">
-            <summary>
-            Implements IComparable. It allows to sort a collection.
             </summary>
         </member>
         <member name="T:Au.Types.POINT">
@@ -4301,7 +4281,7 @@
             Example (in an event handler): <c>e.dialog.Close();</c>
             </remarks>
         </member>
-        <member name="M:Au.Types.DSend.Message(Au.Types.DNative.TDM,Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.Types.DSend.Message(Au.Types.DNative.TDM,System.IntPtr,System.IntPtr)">
             <summary>
             Sends a message to the dialog.
             </summary>
@@ -6805,7 +6785,7 @@
             This overload uses atom instead of string. I's about 3 times faster. See API <msdn>GlobalAddAtom</msdn>, <msdn>GlobalDeleteAtom</msdn>.
             </remarks>
         </member>
-        <member name="M:Au.Types.WProp.Set(System.String,Au.Types.LPARAM)">
+        <member name="M:Au.Types.WProp.Set(System.String,System.IntPtr)">
             <summary>
             Sets a window property.
             Calls API <msdn>SetProp</msdn> and returns its return value.
@@ -6818,7 +6798,7 @@
             Later call <see cref="M:Au.Types.WProp.Remove(System.String)"/> to remove the property. If you use many unique property names and don't remove the properties, the property name strings can fill the global atom table which is of a fixed size (about 48000) and which is used by all processes for various purposes.
             </remarks>
         </member>
-        <member name="M:Au.Types.WProp.Set(System.UInt16,Au.Types.LPARAM)">
+        <member name="M:Au.Types.WProp.Set(System.UInt16,System.IntPtr)">
             <summary>
             Sets a window property.
             Calls API <msdn>SetProp</msdn> and returns its return value.
@@ -7133,7 +7113,7 @@
         </member>
         <member name="T:Au.Types.PrintMsgOptions">
             <summary>
-            Options for <see cref="M:Au.AWnd.More.PrintMsg(System.String@,Au.AWnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.PrintMsgOptions,System.String)"/>.
+            Options for <see cref="M:Au.AWnd.More.PrintMsg(System.String@,Au.AWnd,System.Int32,System.IntPtr,System.IntPtr,Au.Types.PrintMsgOptions,System.String)"/>.
             </summary>
         </member>
         <member name="M:Au.Types.PrintMsgOptions.#ctor">
@@ -8894,8 +8874,8 @@
             </summary>
             <param name="recorded">
             List of x y distances from previous.
-            The first distance is from the mouse position before the first movement; at run time it will be distance from <see cref="P:Au.AMouse.LastXY"/>.
-            To create uint value from distance dx dy use this code: <c>AMath.MakeUint(dx, dy)</c>.
+            The first distance is from mouse position before the first movement; at run time it will be distance from <see cref="P:Au.AMouse.LastXY"/>.
+            To create uint value from distance dx dy use <see cref="M:Au.AMath.MakeLparam(System.UInt32,System.UInt32)"/> and cast to uint.
             </param>
             <param name="withSleepTimes">
             <i>recorded</i> also contains sleep times (milliseconds) alternating with distances.
@@ -14496,7 +14476,7 @@
             Does nothing if not created or not visible.
             </summary>
         </member>
-        <member name="M:Au.AOsdWindow.WndProc(Au.AWnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.AOsdWindow.WndProc(Au.AWnd,System.Int32,System.IntPtr,System.IntPtr)">
             <summary>
             Called when the OSD window receives a message.
             If your derived class overrides this function, it must call base.WndProc and return its return value, except when don't need default processing.
@@ -15512,7 +15492,7 @@
             A hidden window automatically created for this tray icon to receive its notifications.
             </summary>
         </member>
-        <member name="M:Au.ATrayIcon.WndProc(Au.AWnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.ATrayIcon.WndProc(Au.AWnd,System.Int32,System.IntPtr,System.IntPtr)">
             <summary>
             Window procedure of the hidden window that receives tray icon notifications (<see cref="F:Au.ATrayIcon.MsgNotify"/>) in version 4 format.
             If you override it, call the base function.
@@ -18573,12 +18553,12 @@
             Else returns 0.
             </summary>
         </member>
-        <member name="M:Au.AKeys.Internal_.VkToSc(Au.Types.KKey,Au.Types.LPARAM)">
+        <member name="M:Au.AKeys.Internal_.VkToSc(Au.Types.KKey,System.IntPtr)">
             <summary>
             Gets scan code from virtual-key code.
             </summary>
             <param name="vk"></param>
-            <param name="hkl">Keyboard layout. If default(LPARAM), uses of current thread.</param>
+            <param name="hkl">Keyboard layout. If 0, uses of current thread.</param>
         </member>
         <member name="M:Au.AKeys.Internal_.SendKeyEventRaw(Au.Types.KKey,System.UInt16,System.UInt32)">
             <summary>
@@ -19305,15 +19285,21 @@
             Simple calculation functions.
             </summary>
         </member>
-        <member name="M:Au.AMath.MakeUint(System.UInt32,System.UInt32)">
+        <member name="M:Au.AMath.MakeLparam(System.UInt32,System.UInt32)">
             <summary>
-            Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32.
+            Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32. Returns it as nint, ready to use with Windows message API as lParam or wParam or return value.
             Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
             </summary>
         </member>
-        <member name="M:Au.AMath.MakeUint(System.Int32,System.Int32)">
+        <member name="M:Au.AMath.MakeLparam(System.Int32,System.Int32)">
             <summary>
-            Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32.
+            Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32. Returns it as nint, ready to use with Windows message API as lParam or wParam or return value.
+            Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
+            </summary>
+        </member>
+        <member name="M:Au.AMath.MakeLparam(Au.Types.POINT)">
+            <summary>
+            Creates uint by placing (ushort)p.x in bits 1-16 and (ushort)p.y in bits 17-32. Returns it as nint, ready to use with Windows message API as lParam or wParam or return value.
             Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
             </summary>
         </member>
@@ -19329,40 +19315,40 @@
             Like C macro MAKEWORD.
             </summary>
         </member>
-        <member name="M:Au.AMath.LoWord(Au.Types.LPARAM)">
+        <member name="M:Au.AMath.LoWord(System.IntPtr)">
             <summary>
             Gets bits 1-16 as ushort.
             Like C macro LOWORD.
             </summary>
             <remarks>
-            The parameter is interpreted as uint. Its declared type is LPARAM because it allows to avoid explicit casting from other integer types and IntPtr (casting from IntPtr to uint could throw OverflowException).
+            The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr (and avoid OverflowException).
             </remarks>
         </member>
-        <member name="M:Au.AMath.HiWord(Au.Types.LPARAM)">
+        <member name="M:Au.AMath.HiWord(System.IntPtr)">
             <summary>
             Gets bits 17-32 as ushort.
             Like C macro HIWORD.
             </summary>
             <remarks>
-            The parameter is interpreted as uint. Its declared type is LPARAM because it allows to avoid explicit casting from other integer types and IntPtr (casting from IntPtr to uint could throw OverflowException).
+            The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr (and avoid OverflowException).
             </remarks>
         </member>
-        <member name="M:Au.AMath.LoShort(Au.Types.LPARAM)">
+        <member name="M:Au.AMath.LoShort(System.IntPtr)">
             <summary>
             Gets bits 1-16 as short.
             Like C macro GET_X_LPARAM.
             </summary>
             <remarks>
-            The parameter is interpreted as uint. Its declared type is LPARAM because it allows to avoid explicit casting from other integer types and IntPtr (casting from IntPtr to uint could throw OverflowException).
+            The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr (and avoid OverflowException).
             </remarks>
         </member>
-        <member name="M:Au.AMath.HiShort(Au.Types.LPARAM)">
+        <member name="M:Au.AMath.HiShort(System.IntPtr)">
             <summary>
             Gets bits 17-32 as short.
             Like C macro GET_Y_LPARAM.
             </summary>
             <remarks>
-            The parameter is interpreted as uint. Its declared type is LPARAM because it allows to avoid explicit casting from other integer types and IntPtr (casting from IntPtr to uint could throw OverflowException).
+            The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr (and avoid OverflowException).
             </remarks>
         </member>
         <member name="M:Au.AMath.LoByte(System.UInt16)">
@@ -19377,9 +19363,9 @@
             Like C macro HIBYTE.
             </summary>
         </member>
-        <member name="M:Au.AMath.LparamToPOINT(Au.Types.LPARAM)">
+        <member name="M:Au.AMath.NintToPOINT(System.IntPtr)">
             <summary>
-            Converts <b>LPARAM</b> containing x and y coordinates to <b>POINT</b>.
+            Converts <b>nint</b> containing x and y coordinates to <b>POINT</b>.
             </summary>
         </member>
         <member name="M:Au.AMath.MulDiv(System.Int32,System.Int32,System.Int32)">
@@ -25196,67 +25182,61 @@
             Formats string <c>$"{handle}  {ClassName}  \"{Name}\"  {ProgramName}  {Rect}"</c>.
             </summary>
         </member>
-        <member name="M:Au.AWnd.Send(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.AWnd.Send(System.Int32,System.IntPtr,System.IntPtr)">
             <summary>
             Calls API <msdn>SendMessage</msdn>.
             </summary>
             <remarks>Supports <see cref="T:Au.ALastError"/>.</remarks>
         </member>
-        <member name="M:Au.AWnd.SendS(System.Int32,Au.Types.LPARAM,System.String)">
+        <member name="M:Au.AWnd.Send(System.Int32,System.IntPtr,System.String)">
             <summary>
             Calls API <msdn>SendMessage</msdn> where lParam is string.
             </summary>
             <remarks>Supports <see cref="T:Au.ALastError"/>.</remarks>
         </member>
-        <member name="M:Au.AWnd.SendS(System.Int32,Au.Types.LPARAM,System.Char[])">
+        <member name="M:Au.AWnd.Send(System.Int32,System.IntPtr,System.Void*)">
             <summary>
-            Calls API <msdn>SendMessage</msdn> where lParam is char[].
+            Calls API <msdn>SendMessage</msdn> where lParam is any pointer.
             </summary>
             <remarks>Supports <see cref="T:Au.ALastError"/>.</remarks>
         </member>
-        <member name="M:Au.AWnd.SendTimeout(System.Int32,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.SMTFlags)">
-            <summary>
-            Calls API <msdn>SendMessageTimeout</msdn>.
-            Returns its return value (false if failed). Supports <see cref="T:Au.ALastError"/>.
-            </summary>
-        </member>
-        <member name="M:Au.AWnd.SendTimeout(System.Int32,Au.Types.LPARAM@,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.SMTFlags)">
+        <member name="M:Au.AWnd.SendTimeout(System.Int32,System.IntPtr@,System.Int32,System.IntPtr,System.IntPtr,Au.Types.SMTFlags)">
             <summary>
             Calls API <msdn>SendMessageTimeout</msdn> and gets the result of the message processing.
             Returns its return value (false if failed). Supports <see cref="T:Au.ALastError"/>.
             </summary>
         </member>
-        <member name="M:Au.AWnd.SendTimeoutS(System.Int32,Au.Types.LPARAM@,System.Int32,Au.Types.LPARAM,System.String,Au.Types.SMTFlags)">
+        <member name="M:Au.AWnd.SendTimeout(System.Int32,System.IntPtr@,System.Int32,System.IntPtr,System.String,Au.Types.SMTFlags)">
             <summary>
             Calls API <msdn>SendMessageTimeout</msdn> where lParam is string.
             Returns its return value (false if failed). Supports <see cref="T:Au.ALastError"/>.
             </summary>
         </member>
-        <member name="M:Au.AWnd.SendTimeoutS(System.Int32,Au.Types.LPARAM@,System.Int32,Au.Types.LPARAM,System.Char[],Au.Types.SMTFlags)">
+        <member name="M:Au.AWnd.SendTimeout(System.Int32,System.IntPtr@,System.Int32,System.IntPtr,System.Void*,Au.Types.SMTFlags)">
             <summary>
-            Calls API <msdn>SendMessageTimeout</msdn> where lParam is char[].
+            Calls API <msdn>SendMessageTimeout</msdn> and gets the result of the message processing.
             Returns its return value (false if failed). Supports <see cref="T:Au.ALastError"/>.
             </summary>
         </member>
-        <member name="M:Au.AWnd.SendNotify(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.AWnd.SendNotify(System.Int32,System.IntPtr,System.IntPtr)">
             <summary>
             Calls API <msdn>SendNotifyMessage</msdn>.
             Returns its return value (false if failed). Supports <see cref="T:Au.ALastError"/>.
             </summary>
         </member>
-        <member name="M:Au.AWnd.Post(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.AWnd.Post(System.Int32,System.IntPtr,System.IntPtr)">
             <summary>
             Calls API <msdn>PostMessage</msdn>.
             Returns its return value (false if failed). Supports <see cref="T:Au.ALastError"/>.
             </summary>
-            <seealso cref="M:Au.AWnd.More.PostThreadMessage(System.Int32,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)"/>
+            <seealso cref="M:Au.AWnd.More.PostThreadMessage(System.Int32,System.Int32,System.IntPtr,System.IntPtr)"/>
         </member>
         <member name="T:Au.AWnd.More">
             <summary>
             Miscellaneous window-related functions and classes. Rarely used, or useful only for programmers.
             </summary>
         </member>
-        <member name="M:Au.AWnd.More.PostThreadMessage(System.Int32,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.AWnd.More.PostThreadMessage(System.Int32,System.Int32,System.IntPtr,System.IntPtr)">
             <summary>
             Posts a message to the message queue of the specified thread. Of this thread if <i>threadId</i> is 0.
             Calls API <msdn>PostThreadMessage</msdn>. 
@@ -25292,7 +25272,7 @@
             <param name="wndProc">
             Delegate of a window procedure. See <msdn>Window Procedures</msdn>.
             
-            Use null when you need a different delegate (method or target object) for each window instance; create windows with <see cref="M:Au.AWnd.More.CreateWindow(Au.Types.WNDPROC,System.Boolean,System.String,System.String,Au.Types.WS,Au.Types.WSE,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)"/> or <see cref="M:Au.AWnd.More.CreateMessageOnlyWindow(Au.Types.WNDPROC,System.String)"/>.
+            Use null when you need a different delegate (method or target object) for each window instance; create windows with <see cref="M:Au.AWnd.More.CreateWindow(Au.Types.WNDPROC,System.Boolean,System.String,System.String,Au.Types.WS,Au.Types.WSE,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,System.IntPtr,System.IntPtr,System.IntPtr)"/> or <see cref="M:Au.AWnd.More.CreateMessageOnlyWindow(Au.Types.WNDPROC,System.String)"/>.
             If not null, it must be a static method; create windows with any other function, including API <msdn>CreateWindowEx</msdn>.
             </param>
             <param name="etc">
@@ -25300,7 +25280,7 @@
             To set cursor use field <b>mCursor</b> (standard cursor) or <b>hCursor</b> (native handle of a custom cursor).
             If null, this function sets arrow cursor and style CS_VREDRAW | CS_HREDRAW.
             </param>
-            <exception cref="T:System.ArgumentException"><i>wndProc</i> is an instance method. Must be static method or null. If need instance method, use null here and pass <i>wndProc</i> to <see cref="M:Au.AWnd.More.CreateWindow(Au.Types.WNDPROC,System.Boolean,System.String,System.String,Au.Types.WS,Au.Types.WSE,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)"/>.</exception>
+            <exception cref="T:System.ArgumentException"><i>wndProc</i> is an instance method. Must be static method or null. If need instance method, use null here and pass <i>wndProc</i> to <see cref="M:Au.AWnd.More.CreateWindow(Au.Types.WNDPROC,System.Boolean,System.String,System.String,Au.Types.WS,Au.Types.WSE,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,System.IntPtr,System.IntPtr,System.IntPtr)"/>.</exception>
             <exception cref="T:System.InvalidOperationException">The class already registered with this function and different <i>wndProc</i> (another method or another target object).</exception>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed, for example if the class already exists and was registered not with this function.</exception>
             <remarks>
@@ -25311,7 +25291,7 @@
             Protects the <i>wndProc</i> delegate from GC.
             </remarks>
         </member>
-        <member name="M:Au.AWnd.More.CreateWindow(Au.Types.WNDPROC,System.Boolean,System.String,System.String,Au.Types.WS,Au.Types.WSE,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)">
+        <member name="M:Au.AWnd.More.CreateWindow(Au.Types.WNDPROC,System.Boolean,System.String,System.String,Au.Types.WS,Au.Types.WSE,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,System.IntPtr,System.IntPtr,System.IntPtr)">
             <summary>
             Creates native/unmanaged window (API <msdn>CreateWindowEx</msdn>) and sets its window procedure.
             </summary>
@@ -25327,7 +25307,7 @@
             To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="M:Au.AWnd.More.DestroyWindow(Au.AWnd)"/>, <see cref="M:Au.AWnd.Close(System.Boolean,System.Boolean)"/>, API <msdn>WM_CLOSE</msdn>.
             </remarks>
         </member>
-        <member name="M:Au.AWnd.More.CreateWindow(System.String,System.String,Au.Types.WS,Au.Types.WSE,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)">
+        <member name="M:Au.AWnd.More.CreateWindow(System.String,System.String,Au.Types.WS,Au.Types.WSE,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,System.IntPtr,System.IntPtr,System.IntPtr)">
             <summary>
             Creates native/unmanaged window.
             </summary>
@@ -25358,7 +25338,7 @@
             <exception cref="T:Au.Types.AuException">Failed to create window. Unlikely.</exception>
             <remarks>
             Styles: WS_POPUP, WS_EX_NOACTIVATE.
-            Calls <see cref="M:Au.AWnd.More.CreateWindow(Au.Types.WNDPROC,System.Boolean,System.String,System.String,Au.Types.WS,Au.Types.WSE,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)"/> with <i>keepAlive</i>=true.
+            Calls <see cref="M:Au.AWnd.More.CreateWindow(Au.Types.WNDPROC,System.Boolean,System.String,System.String,Au.Types.WS,Au.Types.WSE,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,System.IntPtr,System.IntPtr,System.IntPtr)"/> with <i>keepAlive</i>=true.
             </remarks>
         </member>
         <member name="M:Au.AWnd.More.DestroyWindow(Au.AWnd)">
@@ -25417,13 +25397,13 @@
             It allows processes of lower [](xref:uac) integrity level to send these messages to this process.
             </summary>
         </member>
-        <member name="M:Au.AWnd.More.PrintMsg(System.String@,Au.AWnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.PrintMsgOptions,System.String)">
+        <member name="M:Au.AWnd.More.PrintMsg(System.String@,Au.AWnd,System.Int32,System.IntPtr,System.IntPtr,Au.Types.PrintMsgOptions,System.String)">
             <summary>
             Writes a Windows message to a string.
             If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
             </summary>
         </member>
-        <member name="M:Au.AWnd.More.PrintMsg(Au.AWnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.PrintMsgOptions,System.String)">
+        <member name="M:Au.AWnd.More.PrintMsg(Au.AWnd,System.Int32,System.IntPtr,System.IntPtr,Au.Types.PrintMsgOptions,System.String)">
             <summary>
             Writes a Windows message to the output, unless it is specified in <i>options</i>.
             </summary>
@@ -25664,7 +25644,7 @@
             <seealso cref="T:System.IO.MemoryMappedFiles.MemoryMappedFile"/>
             <seealso cref="T:System.IO.Pipes.NamedPipeServerStream"/>
         </member>
-        <member name="M:Au.AWnd.More.CopyDataStruct.SendString(Au.AWnd,System.Int32,System.String,Au.Types.LPARAM)">
+        <member name="M:Au.AWnd.More.CopyDataStruct.SendString(Au.AWnd,System.Int32,System.String,System.IntPtr)">
             <summary>
             Sends string to a window of another process using API <msdn>SendMessage</msdn>(<msdn>WM_COPYDATA</msdn>).
             </summary>
@@ -25674,13 +25654,13 @@
             <param name="s">Data. Can contain '\0' characters.</param>
             <param name="wParam">wParam of WM_COPYDATA. Optional.</param>
         </member>
-        <member name="M:Au.AWnd.More.CopyDataStruct.SendBytes(Au.AWnd,System.Int32,System.Byte[],Au.Types.LPARAM)">
+        <member name="M:Au.AWnd.More.CopyDataStruct.SendBytes(Au.AWnd,System.Int32,System.Byte[],System.IntPtr)">
             <summary>
             Sends byte[] to a window of another process using API <msdn>SendMessage</msdn>(<msdn>WM_COPYDATA</msdn>).
-            More info: <see cref="M:Au.AWnd.More.CopyDataStruct.SendString(Au.AWnd,System.Int32,System.String,Au.Types.LPARAM)"/>.
+            More info: <see cref="M:Au.AWnd.More.CopyDataStruct.SendString(Au.AWnd,System.Int32,System.String,System.IntPtr)"/>.
             </summary>
         </member>
-        <member name="M:Au.AWnd.More.CopyDataStruct.#ctor(Au.Types.LPARAM)">
+        <member name="M:Au.AWnd.More.CopyDataStruct.#ctor(System.IntPtr)">
             <summary>
             Initializes this variable from <i>lParam</i> of a received <msdn>WM_COPYDATA</msdn> message.
             Then you can call methods and properties of this variable to get data in managed format.
@@ -26692,7 +26672,7 @@
             In 32-bit process actually calls <b>GetWindowLong</b>, because <b>GetWindowLongPtr</b> is unavailable.
             </remarks>
         </member>
-        <member name="M:Au.AWnd.SetWindowLong(System.Int32,Au.Types.LPARAM)">
+        <member name="M:Au.AWnd.SetWindowLong(System.Int32,System.IntPtr)">
             <summary>
             Calls API <msdn>SetWindowLongPtr</msdn>.
             </summary>
@@ -27004,7 +26984,7 @@
             </param>
             <remarks>
             The window may refuse to be closed. For example, it may be hung, or hide itself instead, or display a "Save?" message box, or is a dialog without X button, or just need more time to close it.
-            If the window is of this thread, just calls <see cref="M:Au.AWnd.Send(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)"/> or <see cref="M:Au.AWnd.Post(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)"/> (if <i>noWait</i>==true) and returns true.
+            If the window is of this thread, just calls <see cref="M:Au.AWnd.Send(System.Int32,System.IntPtr,System.IntPtr)"/> or <see cref="M:Au.AWnd.Post(System.Int32,System.IntPtr,System.IntPtr)"/> (if <i>noWait</i>==true) and returns true.
             </remarks>
             <seealso cref="M:Au.AWnd.WaitForClosed(System.Double,System.Boolean)"/>
             <example>

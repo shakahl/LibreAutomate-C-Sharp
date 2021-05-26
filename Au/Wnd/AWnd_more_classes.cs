@@ -404,7 +404,7 @@ namespace Au
 			public unsafe struct CopyDataStruct
 			{
 				//COPYDATASTRUCT fields
-				LPARAM _dwData;
+				nint _dwData;
 				int _cbData;
 				void* _lpData;
 
@@ -418,7 +418,7 @@ namespace Au
 				/// <param name="dataId">Data id. It is <msdn>COPYDATASTRUCT.dwData</msdn>.</param>
 				/// <param name="s">Data. Can contain '\0' characters.</param>
 				/// <param name="wParam">wParam of WM_COPYDATA. Optional.</param>
-				public static LPARAM SendString(AWnd w, int dataId, string s, LPARAM wParam = default) {
+				public static nint SendString(AWnd w, int dataId, string s, nint wParam = 0) {
 					fixed (char* p = s) {
 						var c = new CopyDataStruct { _dwData = dataId, _cbData = s.Length * 2, _lpData = p };
 						return w.Send(Api.WM_COPYDATA, wParam, &c);
@@ -429,7 +429,7 @@ namespace Au
 				/// Sends byte[] to a window of another process using API <msdn>SendMessage</msdn>(<msdn>WM_COPYDATA</msdn>).
 				/// More info: <see cref="SendString"/>.
 				/// </summary>
-				public static unsafe LPARAM SendBytes(AWnd w, int dataId, byte[] a, LPARAM wParam = default) {
+				public static unsafe nint SendBytes(AWnd w, int dataId, byte[] a, nint wParam = 0) {
 					fixed (byte* p = a) {
 						var c = new CopyDataStruct { _dwData = dataId, _cbData = a.Length, _lpData = p };
 						return w.Send(Api.WM_COPYDATA, wParam, &c);
@@ -445,7 +445,7 @@ namespace Au
 				/// Then you can call methods and properties of this variable to get data in managed format.
 				/// </summary>
 				/// <param name="lParam"><i>lParam</i> of a <msdn>WM_COPYDATA</msdn> message received in a window procedure. It is <msdn>COPYDATASTRUCT</msdn> pointer.</param>
-				public CopyDataStruct(LPARAM lParam) {
+				public CopyDataStruct(nint lParam) {
 					var p = (CopyDataStruct*)lParam;
 					_dwData = p->_dwData; _cbData = p->_cbData; _lpData = p->_lpData;
 				}

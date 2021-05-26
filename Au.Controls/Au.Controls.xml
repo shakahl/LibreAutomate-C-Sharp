@@ -331,15 +331,33 @@
             Occurs when text changed.
             </summary>
         </member>
-        <member name="M:Au.Controls.KScintilla.Call(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.Controls.KScintilla.Call(System.Int32,System.IntPtr,System.IntPtr)">
             <summary>
             Sends a Scintilla message to the control and returns int.
             Don't call this function from another thread.
             </summary>
         </member>
-        <member name="M:Au.Controls.KScintilla.CallRetPtr(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.Controls.KScintilla.Call(System.Int32,System.IntPtr,System.Void*)">
             <summary>
-            Sends a Scintilla message to the control and returns LPARAM.
+            Sends a Scintilla message to the control and returns int.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.Call(System.Int32,System.IntPtr,System.Boolean)">
+            <summary>
+            Sends a Scintilla message to the control and returns int.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.Call(System.Int32,System.Boolean,System.IntPtr)">
+            <summary>
+            Sends a Scintilla message to the control and returns int.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.CallRetPtr(System.Int32,System.IntPtr,System.IntPtr)">
+            <summary>
+            Sends a Scintilla message to the control and returns nint.
             Don't call this function from another thread.
             </summary>
         </member>
@@ -459,7 +477,7 @@
             Returns 0 if pos is invalid.
             </summary>
         </member>
-        <member name="M:Au.Controls.KScintilla.zSetString(System.Int32,Au.Types.LPARAM,System.String,System.Boolean)">
+        <member name="M:Au.Controls.KScintilla.zSetString(System.Int32,System.IntPtr,System.String,System.Boolean)">
             <summary>
             Calls a Scintilla message that sets a string which is passed using lParam.
             The string can be null if the Scintilla message allows it.
@@ -467,7 +485,7 @@
             Don't call this function from another thread.
             </summary>
         </member>
-        <member name="M:Au.Controls.KScintilla.zSetString(System.Int32,System.String,Au.Types.LPARAM)">
+        <member name="M:Au.Controls.KScintilla.zSetString(System.Int32,System.String,System.IntPtr)">
             <summary>
             Calls a Scintilla message that sets a string which is passed using wParam.
             The string can be null if the Scintilla message allows it.
@@ -483,7 +501,7 @@
             Don't call this function from another thread.
             </summary>
         </member>
-        <member name="M:Au.Controls.KScintilla.zGetStringOfLength(System.Int32,Au.Types.LPARAM,System.Int32)">
+        <member name="M:Au.Controls.KScintilla.zGetStringOfLength(System.Int32,System.IntPtr,System.Int32)">
             <summary>
             Calls a Scintilla message that gets a string when length is known.
             Always uses <i>utf8Length</i> bytes of the result (does not find length).
@@ -496,9 +514,9 @@
             If 0, returns "" and does not call the message.
             </param>
         </member>
-        <member name="M:Au.Controls.KScintilla.zGetStringGetLength(System.Int32,Au.Types.LPARAM)">
+        <member name="M:Au.Controls.KScintilla.zGetStringGetLength(System.Int32,System.IntPtr)">
             <summary>
-            Calls a Scintilla message that gets a string. See <see cref="M:Au.Controls.KScintilla.zGetStringOfLength(System.Int32,Au.Types.LPARAM,System.Int32)"/>.
+            Calls a Scintilla message that gets a string. See <see cref="M:Au.Controls.KScintilla.zGetStringOfLength(System.Int32,System.IntPtr,System.Int32)"/>.
             To get buffer size, at first calls <i>sciMessage</i> with <i>lParam</i>=0 (null buffer).
             Can get binary string (with '\0' characters).
             Don't call this function from another thread.
@@ -506,7 +524,7 @@
             <param name="sciMessage"></param>
             <param name="wParam"></param>
         </member>
-        <member name="M:Au.Controls.KScintilla.zGetString0Terminated(System.Int32,Au.Types.LPARAM,System.Int32)">
+        <member name="M:Au.Controls.KScintilla.zGetString0Terminated(System.Int32,System.IntPtr,System.Int32)">
             <summary>
             Calls a Scintilla message that gets a '\0'-terminated string.
             Cannot get binary string (with '\0' characters).
@@ -1099,7 +1117,7 @@
             Uses <b>ToolTip</b> property; don't overwrite it.
             </summary>
         </member>
-        <member name="M:Au.Controls.Sci.Sci_GetStylingInfo(Au.Types.LPARAM,System.Int32,Au.Controls.Sci.Sci_StylingInfo@)">
+        <member name="M:Au.Controls.Sci.Sci_GetStylingInfo(System.IntPtr,System.Int32,Au.Controls.Sci.Sci_StylingInfo@)">
             <summary>
             flags: 1 endStyled, 2 endStyledLine, endStyledLineStart, 4 visibleFrom, visibleFromLine, 8 visibleTo, visibleToLine
             </summary>
@@ -2781,7 +2799,7 @@
             Does nothing.
             </summary>
         </member>
-        <member name="M:Au.Controls.HwndHostAccessibleBase_.WmGetobject(Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.Controls.HwndHostAccessibleBase_.WmGetobject(System.IntPtr,System.IntPtr)">
             <summary>
             Call in hook wndproc on WM_GETOBJECT like this: <c>handled = true; return (_acc ??= new _Accessible(this)).WmGetobject(wParam, lParam);</c>.
             If lParam is AccOBJID.CLIENT, calls API LresultFromObject(this), else calls API DefWindowProc.

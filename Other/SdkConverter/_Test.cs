@@ -77,7 +77,7 @@ namespace SdkConverter
 			public STRU[] d;
 		}
 
-		public static Guid IID_IPersist = new Guid("0000010c-0000-0000-C000-000000000046");
+		public static Guid IID_IPersist = new("0000010c-0000-0000-C000-000000000046");
 
 
 		[DllImport("kernel32.dll", EntryPoint = "GetCommandLineW")]

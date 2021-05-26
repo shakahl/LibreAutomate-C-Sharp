@@ -39,7 +39,7 @@ namespace Au.Controls
 		}
 
 		WNDPROC _wndProc;
-		LPARAM _WndProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
+		nint _WndProc(AWnd w, int msg, nint wParam, nint lParam) {
 			//var pmo = new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
 			//if (AWnd.More.PrintMsg(out string s, _w, msg, wParam, lParam, pmo)) AOutput.Write("<><c green>" + s + "<>");
 
@@ -69,7 +69,7 @@ namespace Au.Controls
 				_height = AMath.HiWord(lParam);
 				_Measure();
 				break;
-			case Api.WM_SYSCOMMAND when ((uint)wParam & 0xfff0) is Api.SC_VSCROLL or Api.SC_HSCROLL: //note: Windows bug: swapped SC_VSCROLL and SC_HSCROLL
+			case Api.WM_SYSCOMMAND when ((int)wParam & 0xfff0) is Api.SC_VSCROLL or Api.SC_HSCROLL: //note: Windows bug: swapped SC_VSCROLL and SC_HSCROLL
 				try {
 					_inScrollbarScroll = true;
 					return Api.DefWindowProc(w, msg, wParam, lParam);

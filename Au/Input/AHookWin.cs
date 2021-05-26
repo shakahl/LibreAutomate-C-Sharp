@@ -107,7 +107,7 @@ namespace Au
 		public static AHookWin Mouse(Action<HookData.Mouse> hookProc, bool ignoreAuInjected = true, bool setNow = true)
 			=> new AHookWin(Api.WH_MOUSE_LL, hookProc, setNow, 0, ignoreAuInjected);
 
-		internal static AHookWin MouseRaw_(Func<LPARAM, LPARAM, bool> hookProc, bool ignoreAuInjected = true, bool setNow = true)
+		internal static AHookWin MouseRaw_(Func<nint, nint, bool> hookProc, bool ignoreAuInjected = true, bool setNow = true)
 			=> new AHookWin(Api.WH_MOUSE_LL, hookProc, setNow, 0, ignoreAuInjected, "Mouse");
 
 		/// <summary>
@@ -367,7 +367,7 @@ namespace Au
 			//ok if unhooked but not disposed. If we are here, the thread ended and therefore don't need to remove this from t_antiGC.
 		}
 
-		unsafe LPARAM _HookProc(int code, LPARAM wParam, LPARAM lParam) {
+		unsafe nint _HookProc(int code, nint wParam, nint lParam) {
 			if (code >= 0) {
 				try {
 					bool eat = false;
@@ -401,14 +401,14 @@ namespace Au
 			return Api.CallNextHookEx(default, code, wParam, lParam);
 		}
 
-		unsafe LPARAM _HookProcLL(int code, LPARAM wParam, LPARAM lParam) {
+		unsafe nint _HookProcLL(int code, nint wParam, nint lParam) {
 			if (code >= 0) {
 				try {
 					//using var p1 = APerf.Create();
 					bool eat = false;
 					long t1 = 0;
 					Action<HookData.Mouse> pm1;
-					Func<LPARAM, LPARAM, bool> pm2;
+					Func<nint, nint, bool> pm2;
 
 					switch (_proc2) {
 					case Action<HookData.Keyboard> p:
@@ -463,7 +463,7 @@ namespace Au
 							if (eat = mll->BlockEvent) mll->BlockEvent = false;
 						}
 						break;
-					case Func<LPARAM, LPARAM, bool> p: //raw mouse
+					case Func<nint, nint, bool> p: //raw mouse
 						pm2 = p; pm1 = null;
 						goto gm1;
 					}
@@ -583,7 +583,7 @@ namespace Au.Types
 
 			readonly Api.KBDLLHOOKSTRUCT* _x;
 
-			internal Keyboard(AHookWin hook, LPARAM lParam) {
+			internal Keyboard(AHookWin hook, nint lParam) {
 				this.hook = hook;
 				_x = (Api.KBDLLHOOKSTRUCT*)lParam;
 			}
@@ -681,7 +681,7 @@ namespace Au.Types
 			/// <summary>API <msdn>KBDLLHOOKSTRUCT</msdn></summary>
 			public int time => _x->time;
 			/// <summary>API <msdn>KBDLLHOOKSTRUCT</msdn></summary>
-			public LPARAM dwExtraInfo => _x->dwExtraInfo;
+			public nint dwExtraInfo => _x->dwExtraInfo;
 
 			internal Api.KBDLLHOOKSTRUCT* NativeStructPtr_ => _x;
 		}
@@ -703,7 +703,7 @@ namespace Au.Types
 			readonly Api.MSLLHOOKSTRUCT* _x;
 			readonly MouseEvent _event;
 
-			internal Mouse(AHookWin hook, LPARAM wParam, LPARAM lParam) {
+			internal Mouse(AHookWin hook, nint wParam, nint lParam) {
 				IsMove = IsButtonDown = IsButtonUp = IsWheel = false;
 				this.hook = hook;
 				var p = (Api.MSLLHOOKSTRUCT*)lParam;
@@ -806,7 +806,7 @@ namespace Au.Types
 			/// <summary>API <msdn>MSLLHOOKSTRUCT</msdn></summary>
 			public int time => _x->time;
 			/// <summary>API <msdn>MSLLHOOKSTRUCT</msdn></summary>
-			public LPARAM dwExtraInfo => _x->dwExtraInfo;
+			public nint dwExtraInfo => _x->dwExtraInfo;
 
 			internal Api.MSLLHOOKSTRUCT* NativeStructPtr_ => _x;
 		}
@@ -843,15 +843,15 @@ namespace Au.Types
 			public readonly CbtEvent code;
 
 			/// <summary>API <msdn>CBTProc</msdn></summary>
-			public readonly LPARAM wParam;
+			public readonly nint wParam;
 
 			/// <summary>API <msdn>CBTProc</msdn></summary>
-			public readonly LPARAM lParam;
+			public readonly nint lParam;
 
 			/// <summary>Window handle.</summary>
 			public AWnd Hwnd => code switch { CbtEvent.ACTIVATE or CbtEvent.CREATEWND or CbtEvent.DESTROYWND or CbtEvent.MINMAX or CbtEvent.MOVESIZE or CbtEvent.SETFOCUS => (AWnd)wParam, _ => default };
 
-			internal ThreadCbt(AHookWin hook, int code, LPARAM wParam, LPARAM lParam) {
+			internal ThreadCbt(AHookWin hook, int code, nint wParam, nint lParam) {
 				this.hook = hook;
 				this.code = (CbtEvent)code;
 				this.wParam = wParam;
@@ -980,7 +980,7 @@ namespace Au.Types
 			/// </summary>
 			public readonly MSG* msg;
 
-			internal ThreadGetMessage(AHookWin hook, LPARAM wParam, LPARAM lParam) {
+			internal ThreadGetMessage(AHookWin hook, nint wParam, nint lParam) {
 				this.hook = hook;
 				PM_NOREMOVE = (uint)wParam == Api.PM_NOREMOVE;
 				msg = (MSG*)lParam;
@@ -1016,7 +1016,7 @@ namespace Au.Types
 			/// </summary>
 			public bool IsUp => 0 != (lParam & 0x80000000);
 
-			internal ThreadKeyboard(AHookWin hook, int code, LPARAM wParam, LPARAM lParam) {
+			internal ThreadKeyboard(AHookWin hook, int code, nint wParam, nint lParam) {
 				this.hook = hook;
 				PM_NOREMOVE = code == Api.HC_NOREMOVE;
 				key = (KKey)(uint)wParam;
@@ -1049,7 +1049,7 @@ namespace Au.Types
 			/// </summary>
 			public readonly MOUSEHOOKSTRUCT* m;
 
-			internal ThreadMouse(AHookWin hook, int code, LPARAM wParam, LPARAM lParam) {
+			internal ThreadMouse(AHookWin hook, int code, nint wParam, nint lParam) {
 				this.hook = hook;
 				PM_NOREMOVE = code == Api.HC_NOREMOVE;
 				message = (uint)wParam;
@@ -1064,14 +1064,14 @@ namespace Au.Types
 			public POINT pt;
 			public AWnd hwnd;
 			public int wHitTestCode;
-			public LPARAM dwExtraInfo;
+			public nint dwExtraInfo;
 		}
 
 		/// <summary>API <msdn>CWPSTRUCT</msdn></summary>
 		public struct CWPSTRUCT
 		{
-			public LPARAM lParam;
-			public LPARAM wParam;
+			public nint lParam;
+			public nint wParam;
 			public int message;
 			public AWnd hwnd;
 		}
@@ -1079,9 +1079,9 @@ namespace Au.Types
 		/// <summary>API <msdn>CWPRETSTRUCT</msdn></summary>
 		public struct CWPRETSTRUCT
 		{
-			public LPARAM lResult;
-			public LPARAM lParam;
-			public LPARAM wParam;
+			public nint lResult;
+			public nint lParam;
+			public nint wParam;
 			public int message;
 			public AWnd hwnd;
 		}
@@ -1107,9 +1107,9 @@ namespace Au.Types
 			/// </summary>
 			public readonly CWPSTRUCT* msg;
 
-			internal ThreadCallWndProc(AHookWin hook, LPARAM wParam, LPARAM lParam) {
+			internal ThreadCallWndProc(AHookWin hook, nint wParam, nint lParam) {
 				this.hook = hook;
-				sentByOtherThread = wParam;
+				sentByOtherThread = 0!=wParam;
 				msg = (CWPSTRUCT*)lParam;
 			}
 		}
@@ -1134,9 +1134,9 @@ namespace Au.Types
 			/// </summary>
 			public readonly CWPRETSTRUCT* msg;
 
-			internal ThreadCallWndProcRet(AHookWin hook, LPARAM wParam, LPARAM lParam) {
+			internal ThreadCallWndProcRet(AHookWin hook, nint wParam, nint lParam) {
 				this.hook = hook;
-				sentByOtherThread = wParam;
+				sentByOtherThread = 0!=wParam;
 				msg = (CWPRETSTRUCT*)lParam;
 			}
 		}
@@ -1151,6 +1151,6 @@ namespace Au.Types
 		/// <remarks>
 		/// It can be used as a workaround for this problem: in low-level hook procedure some functions don't work with some windows. For example cannot get an accessible object or use a COM object. Error/exception "An outgoing call cannot be made since the application is dispatching an input-synchronous call (0x8001010D)".
 		/// </remarks>
-		public static void ReplyMessage(bool cancelEvent) => Api.ReplyMessage(cancelEvent);
+		public static void ReplyMessage(bool cancelEvent) => Api.ReplyMessage(cancelEvent ? 1 : 0);
 	}
 }

@@ -403,9 +403,9 @@ namespace Au
 			if (r.NoArea || State.HasAny(AccSTATE.INVISIBLE | AccSTATE.OFFSCREEN)) throw new AuException(0, "Invisible or offscreen");
 			//FUTURE: Chrome bug: OFFSCREEN is not updated after scrolling.
 
-			var xy = AMath.MakeUint(r.CenterX, r.CenterY);
-			uint b = 0; if (AKeys.IsCtrl) b |= Api.MK_CONTROL; if (AKeys.IsShift) b |= Api.MK_SHIFT;
-			uint b1 = b | (right ? Api.MK_RBUTTON : Api.MK_LBUTTON);
+			nint xy = AMath.MakeLparam(r.CenterX, r.CenterY);
+			int b = 0; if (AKeys.IsCtrl) b |= Api.MK_CONTROL; if (AKeys.IsShift) b |= Api.MK_SHIFT;
+			int b1 = b | (right ? Api.MK_RBUTTON : Api.MK_LBUTTON);
 			w.Post(right ? Api.WM_RBUTTONDOWN : Api.WM_LBUTTONDOWN, b1, xy);
 			w.Post(Api.WM_MOUSEMOVE, b1, xy);
 			w.Post(right ? Api.WM_RBUTTONUP : Api.WM_LBUTTONUP, b, xy);
