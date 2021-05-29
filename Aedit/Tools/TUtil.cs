@@ -344,7 +344,7 @@ namespace Au.Tools
 						var g = AShortcutFile.Open(path);
 						string target = g.TargetAnyType;
 						if (target.Starts("::")) {
-							using var pidl = APidl.FromString(target);
+							using var pidl = Pidl.FromString(target);
 							_name2 = pidl.ToShellString(SIGDN.NORMALDISPLAY);
 						} else {
 							_args = g.Arguments;
@@ -610,7 +610,7 @@ namespace Au.Tools
 			try {
 				bTest.IsEnabled = false;
 				if (!Au.Compiler.Scripting.Compile(code, out var c, wrap: true, load: true)) {
-					ADebug.Print("---- CODE ----\r\n" + code + "--------------");
+					ADebug_.Print("---- CODE ----\r\n" + code + "--------------");
 					ADialog.ShowError("Errors in code", c.errors, owner: dialog, flags: DFlags.CenterOwner | DFlags.Wider/*, expandedText: code*/);
 				} else {
 					var rr = (object[])c.method.Invoke(null, null); //use array because fails to cast tuple, probably because in that assembly it is new type

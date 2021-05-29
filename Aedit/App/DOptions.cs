@@ -375,7 +375,7 @@ To change all: replace the file.
 To backup: copy the file.
 
 To apply changes after deleting etc, restart this application.
-", icon: DIcon.Info, onLinkClick: e => { AFile.SelectInExplorer(e.LinkHref); });
+", icon: DIcon.Info, onLinkClick: e => { ARun.SelectInExplorer(e.LinkHref); });
 			};
 		};
 	}
@@ -399,8 +399,10 @@ Au.Util
 			.Validation(o => usings.Text.FindAny("= ") >= 0 ? "contains = or space" : null);
 		b.End();
 		b.End();
-		b.StartGrid<GroupBox>("Auto correction");
-		b.R.Add(out CheckBox correctStringEnter, @"Enter in string adds \r\n").Checked(0 == App.Settings.ci_correctStringEnter);
+		b.StartGrid<GroupBox>("Auto correction").Columns(0, 100, -1);
+		b.R.StartStack().Add<TextBlock>("Need Shift to exit (...) with").Add(out KCheckBox shiftEnter, "Enter").Margin("T4").Add(out KCheckBox shiftTab, "Tab").Margin("T4").End();
+		//b.R.Add(@"Break ""string""", out ComboBox breakString).Items(@"""abc"" + """"|""abc\r\n"" + """"|@""multiline""").Span(1); //rejected. Rarely used.
+
 		b.End();
 		//b.StartGrid<GroupBox>("");
 		//b.End();
@@ -412,14 +414,16 @@ Au.Util
 
 		_b.OkApply += e => {
 			App.Settings.ci_complParen = complParen.SelectedIndex;
-			App.Settings.ci_correctStringEnter = (byte)(correctStringEnter.True() ? 0 : 1);
+			App.Settings.ci_shiftEnterAlways = (byte)(shiftEnter.True() ? 0 : 1);
+			App.Settings.ci_shiftTabAlways = (byte)(shiftTab.True() ? 0 : 1);
+			//App.Settings.ci_breakString = (byte)breakString.SelectedIndex;
 			App.Settings.ci_usings = usings.Text;
 		};
 
 		void _SnippetsButton(WBButtonClickArgs o) {
 			switch(AMenu.ShowSimple("1 Edit snippets|2 Find default snippets")) {
-			case 1: AFile.SelectInExplorer(AFolders.ThisAppDocuments + @".settings\Snippets.xml"); break;
-			case 2: AFile.SelectInExplorer(AFolders.ThisApp + @"Default\Snippets.xml"); break;
+			case 1: ARun.SelectInExplorer(AFolders.ThisAppDocuments + @".settings\Snippets.xml"); break;
+			case 2: ARun.SelectInExplorer(AFolders.ThisApp + @"Default\Snippets.xml"); break;
 			}
 		}
 	}

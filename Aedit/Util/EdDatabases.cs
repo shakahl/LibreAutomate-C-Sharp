@@ -98,7 +98,7 @@ static class EdDatabases
 		string subdirRN = @"\ref\net" + version.RegexReplace(@"^\d+\.\d+\K.+", @"\", 1);
 
 		var dir1 = dirCore + version + subdirRN;
-		if (!AFile.ExistsAsDirectory(dir1, true)) throw new DirectoryNotFoundException("Not found: " + dir1);
+		if (!AFile.Exists(dir1, true).isDir) throw new DirectoryNotFoundException("Not found: " + dir1);
 
 		//find WindowsDesktop folder. Must have same X.X.X version. Preview version may be different.
 		bool preview; int i = version.Find("-p", true);
@@ -112,7 +112,7 @@ static class EdDatabases
 		}
 		if (verDesktop == null) throw new DirectoryNotFoundException("Not found: WindowsDesktop SDK");
 		var dir2 = dirDesktop + verDesktop + subdirRN;
-		if (!AFile.ExistsAsDirectory(dir2, true)) throw new DirectoryNotFoundException("Not found: " + dir2);
+		if (!AFile.Exists(dir2, true).isDir) throw new DirectoryNotFoundException("Not found: " + dir2);
 
 		string dbRef, dbDoc;
 		if (all) {
@@ -194,7 +194,7 @@ static class EdDatabases
 				if (!f.Name.Ends(".xml", true)) continue;
 				var asmName = f.Name[..^4];
 				if (skip.Contains(asmName)) continue;
-				if (!AFile.ExistsAsFile(dir + asmName + ".dll")) {
+				if (!AFile.Exists(dir + asmName + ".dll").isFile) {
 					AOutput.Write("<><c 0x808080>" + f.Name + "</c>");
 					continue;
 				}
@@ -274,7 +274,7 @@ static class EdDatabases
 				"static" or "readonly" => CiItemKind.Field,
 				_ => CiItemKind.None
 			};
-			ADebug.PrintIf(kind == CiItemKind.None, m[1].Value);
+			ADebug_.PrintIf(kind == CiItemKind.None, m[1].Value);
 			statInsert.Bind(3, (int)kind);
 
 			statInsert.Step();

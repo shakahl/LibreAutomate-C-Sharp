@@ -278,7 +278,7 @@ namespace Au.Compiler
 					//if(m.ConfigFile != null) {
 					//	r.hasConfig = true;
 					//	_CopyFileIfNeed(m.ConfigFile.FilePath, configFile);
-					//} else if(AFile.ExistsAsFile(configFile, true)) {
+					//} else if(AFile.Exists(configFile, true).isFile) {
 					//	AFile.Delete(configFile);
 					//}
 				}
@@ -523,7 +523,7 @@ namespace Au.Compiler
 			//var p1 = APerf.Create();
 			string exeFile = DllNameToAppHostExeName(outFile, bit32);
 
-			if (AFile.ExistsAsAny(exeFile) && !Api.DeleteFile(exeFile)) {
+			if (AFile.Exists(exeFile) && !Api.DeleteFile(exeFile)) {
 				var ec = ALastError.Code;
 				if (!(ec == Api.ERROR_ACCESS_DENIED && _RenameLockedFile(exeFile, notInCache: true))) throw new AuException(ec);
 			}
@@ -707,7 +707,7 @@ namespace Au.Compiler
 			if (notInCache) {
 				if (s_renamedFiles == null) {
 					s_renamedFiles = new List<string>();
-					AProcess.Exit += _ => _DeleteRenamedLockedFiles(null);
+					AThisProcess.Exit += _ => _DeleteRenamedLockedFiles(null);
 					s_rfTimer = new ATimer(_DeleteRenamedLockedFiles);
 				}
 				if (!s_rfTimer.IsRunning) s_rfTimer.Every(60_000);

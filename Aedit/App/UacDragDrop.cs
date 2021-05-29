@@ -339,7 +339,7 @@ struct DDData
 				finally { Api.ReleaseStgMedium(ref m); }
 			}
 		}
-		catch (Exception ex) { ADebug.Print(ex); } //info: if from IE, IDataObject.GetData fails for all formats.
+		catch (Exception ex) { ADebug_.Print(ex); } //info: if from IE, IDataObject.GetData fails for all formats.
 		return false;
 	}
 }

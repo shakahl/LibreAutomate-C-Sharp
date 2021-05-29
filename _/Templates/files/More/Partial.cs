@@ -1,4 +1,4 @@
-﻿// Part of Script or other partial class in a project folder.
+﻿// Part of a partial class in a project folder.
 
 partial class Script {
 

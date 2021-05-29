@@ -353,7 +353,7 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 		}
 		r ??= "";
 		if (es != null) {
-			AWarning.Write($"{es}\r\n\tFailed to get text of <open>{ItemPath}<>, file <explore>{path}<>", -1);
+			AOutput.Warning($"{es}\r\n\tFailed to get text of <open>{ItemPath}<>, file <explore>{path}<>", -1);
 		} else if (cache && Model.IsWatchingFileChanges && !this.IsLink && r.Length < 1_000_000) { //don't cache links because we don't watch their file folders
 			_text = r; //FUTURE: set = null after some time if not used
 		}
@@ -653,7 +653,7 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 
 		bool _Exists(string s) {
 			if (null != _FindIn(folder.Children(), s, null, false)) return true;
-			if (AFile.ExistsAsAny(folder.FilePath + "\\" + s)) return true; //orphaned file?
+			if (AFile.Exists(folder.FilePath + "\\" + s)) return true; //orphaned file?
 			return false;
 		}
 	}
@@ -670,7 +670,7 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 		public static string FilePathReal(ETempl templ, bool? user = null) {
 			bool u = user ?? ((ETempl)App.Settings.templ_use).Has(templ);
 			var file = FilePathRaw(templ, u);
-			if (u && !AFile.ExistsAsFile(file, true)) file = FilePathRaw(templ, false);
+			if (u && !AFile.Exists(file, true)) file = FilePathRaw(templ, false);
 			return file;
 		}
 
@@ -892,7 +892,7 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 			type = EFileType.Class;
 			//rejected. Unreliable and rarely useful. Does not detect scripts with top-level statements etc.
 			//try { if (AFile.LoadText(path).RegexIsMatch(@"\bclass Script\b")) type = EFileType.Script; }
-			//catch (Exception ex) { ADebug.Print(ex); }
+			//catch (Exception ex) { ADebug_.Print(ex); }
 
 			//FUTURE: later allow to change file type script from/to class. Eg in Properties.
 		}

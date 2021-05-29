@@ -13,13 +13,13 @@ using System.Reflection;
 
 using Au.Types;
 
-namespace Au
+namespace Au.Util
 {
 	/// <summary>
 	/// Simple calculation functions.
 	/// </summary>
 	//[DebuggerStepThrough]
-	public static class AMath
+	public static class AMath //TODO: new name Math2
 	{
 		/// <summary>
 		/// Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32. Returns it as nint, ready to use with Windows message API as lParam or wParam or return value.

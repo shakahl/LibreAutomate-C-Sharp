@@ -77,7 +77,7 @@ namespace Au.Util
 		public static System.Drawing.Bitmap TryLoadGdipBitmapFromString(string s, bool warning)
 		{
 			try { return LoadGdipBitmapFromString(s); }
-			catch(Exception ex) { if(warning) AWarning.Write(ex.ToStringWithoutStack()); }
+			catch(Exception ex) { if(warning) AOutput.Warning(ex.ToStringWithoutStack()); }
 			return null;
 		}
 
@@ -87,7 +87,7 @@ namespace Au.Util
 		public static BitmapFrame TryLoadWpfImageFromString(string s, bool warning)
 		{
 			try { return LoadWpfImageFromString(s); }
-			catch(Exception ex) { if(warning) AWarning.Write(ex.ToStringWithoutStack()); }
+			catch(Exception ex) { if(warning) AOutput.Warning(ex.ToStringWithoutStack()); }
 			return null;
 		}
 
@@ -137,7 +137,7 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="image">
 		/// Can be:
-		/// - file path; can be .xaml, .png etc; supports environment variables etc, see <see cref="APath.ExpandEnvVar"/>; can have prefix "imagefile:".
+		/// - file path; can be .xaml, .png etc; supports environment variables etc, see <see cref="APath.Expand"/>; can have prefix "imagefile:".
 		/// - resource path that starts with "resources/" or has prefix "resource:"; uses <see cref="AResources.GetXamlObject"/> if ends with ".xaml", else <see cref="AResources.GetWpfImage"/>.
 		/// - Base-64 image with prefix "image:"; uses<see cref="LoadWpfImageFromString"/>.
 		/// - XAML string that starts with "&lt;".

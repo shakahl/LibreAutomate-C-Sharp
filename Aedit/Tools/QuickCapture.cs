@@ -54,19 +54,19 @@ namespace Au.Tools
 			if (path != null)
 				m.Submenu("Program path", m => {
 					m["var s = path;"] = o => _Path(0);
-					m["AFile.Run(path);"] = o => _Path(1);
-					m["t[name] = o => AFile.Run(path);"] = o => _Path(2);
+					m["ARun.Run(path);"] = o => _Path(1);
+					m["t[name] = o => ARun.Run(path);"] = o => _Path(2);
 					void _Path(int what) {
 						if (path.Ends(@"\explorer.exe") && w.ClassNameIs("CabinetWClass")) { //if folder window, try to get folder path
 							var tb = w.Child("***id 1001", "ToolbarWindow32"); // @"Address: C:\Program Files (x86)\Windows Kits\10\bin\x86"
-							if (!tb.Is0 && tb.Name is string sa && sa.RegexMatch(@"^\S+: +(.+)", 1, out RXGroup rg) && AFile.ExistsAsDirectory(sa = rg.Value, useRawPath: true)) path = sa;
+							if (!tb.Is0 && tb.Name is string sa && sa.RegexMatch(@"^\S+: +(.+)", 1, out RXGroup rg) && AFile.Exists(sa = rg.Value, useRawPath: true).isDir) path = sa;
 						}
 						var g = new TUtil.PathInfo(path);
 						int f = g.SelectFormatUI(); if (f == 0) return;
 						var r = g.GetResult(f);
 						var s = r.path;
 						if (what == 2 && path.Starts("shell:")) r.name = w.Name;
-						_Insert(what switch { 1 => $"AFile.Run({s});", 2 => $"t[{_Str(r.name)}] = o => AFile.Run({s});", _ => $"var s = {s};" });
+						_Insert(what switch { 1 => $"ARun.Run({s});", 2 => $"t[{_Str(r.name)}] = o => ARun.Run({s});", _ => $"var s = {s};" });
 					}
 				});
 			m.Separator();

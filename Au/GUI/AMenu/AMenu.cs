@@ -43,7 +43,7 @@ namespace Au
 	/// 	m["Three"] = o => AOutput.Write(o);
 	/// 	m["Four"] = o => AOutput.Write(o);
 	/// });
-	/// m["notepad"] = o => AFile.TryRun(AFolders.System + "notepad.exe");
+	/// m["notepad"] = o => ARun.RunSafe(AFolders.System + "notepad.exe");
 	/// m.Show();
 	/// ]]></code>
 	/// </example>
@@ -499,7 +499,7 @@ namespace Au
 					void _ExecItem() {
 						var action = b.clicked as Action<MenuItem>;
 						try { action(b); }
-						catch (Exception ex) when (!b.actionException) { AWarning.Write(ex.ToString(), -1); }
+						catch (Exception ex) when (!b.actionException) { AOutput.Warning(ex.ToString(), -1); }
 					}
 				}
 				R = b.Id;
@@ -563,7 +563,7 @@ namespace Au
 			_flags = flags;
 
 			RECT cr = default;
-			bool byCaret = flags.Has(MSFlags.ByCaret) && AMiscInfo.GetTextCursorRect(out cr, out _);
+			bool byCaret = flags.Has(MSFlags.ByCaret) && AInputInfo.GetTextCursorRect(out cr, out _);
 			POINT p = byCaret ? new(cr.left, cr.bottom) : xy ?? AMouse.XY;
 
 			var screen = AScreen.Of(p);

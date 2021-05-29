@@ -31,7 +31,7 @@ namespace Au.Util
 		/// <param name="dpi">DPI of window that will display the image.</param>
 		/// <param name="isImage">
 		/// true - load image from xaml/png/etc file, resource or string with <see cref="AImageUtil.LoadGdipBitmapFromFileOrResourceOrString"/> or <see cref="AImageUtil.LoadWpfImageElementFromFileOrResourceOrString"/>.
-		/// false - get file icon with <see cref="AIcon.OfFile"/>.
+		/// false - get file icon with <see cref="AIcon.Of"/>.
 		/// null (default) - call <see cref="AImageUtil.HasImageOrResourcePrefix"/> to determine whether it is image.
 		/// </param>
 		/// <param name="asyncCompletion">
@@ -41,7 +41,7 @@ namespace Au.Util
 		/// Used only for icons, not for images.
 		/// </param>
 		/// <param name="acData">Something to pass to the <i>asyncCompletion</i> callback function. The function is called once for a unique asyncCompletion/acData.</param>
-		/// <param name="onException">Action to call when fails to load image. If null, calls <see cref="AWarning.Write"/>. Parameters are image source string and exception.</param>
+		/// <param name="onException">Action to call when fails to load image. If null, calls <see cref="AOutput.Warning"/>. Parameters are image source string and exception.</param>
 		public Bitmap Get(string imageSource, int dpi, bool? isImage = null, Action<Bitmap, object> asyncCompletion = null, object acData = null, Action<string, Exception> onException = null) {
 			lock (this) {
 				bool isIm = isImage ?? AImageUtil.HasImageOrResourcePrefix(imageSource);
@@ -95,7 +95,7 @@ namespace Au.Util
 					Bitmap b = null;
 					try {
 						if (!isIm) {
-							b = AIcon.OfFile(imageSource)?.ToGdipBitmap();
+							b = AIcon.Of(imageSource)?.ToGdipBitmap();
 							if (b != null) {
 								lock (this) {
 									var hash = _Hash(b);
@@ -106,7 +106,7 @@ namespace Au.Util
 						} else if (isXaml) b = AImageUtil.LoadGdipBitmapFromXaml(imageSource, (c_imageSize, c_imageSize), dpi);
 						else b = AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(imageSource);
 					}
-					catch (Exception ex) { if (onException != null) onException(imageSource, ex); else AWarning.Write(ex.ToStringWithoutStack()); }
+					catch (Exception ex) { if (onException != null) onException(imageSource, ex); else AOutput.Warning(ex.ToStringWithoutStack()); }
 					return b;
 				}
 
@@ -121,14 +121,14 @@ namespace Au.Util
 
 		AHash.MD5Result _Hash(Bitmap b) {
 			_ms.Position = 0;
-			b.Save(_ms, System.Drawing.Imaging.ImageFormat.Bmp); //fast, if compared with AIcon.OfFile
+			b.Save(_ms, System.Drawing.Imaging.ImageFormat.Bmp); //fast, if compared with AIcon.Of
 			AHash.MD5 md = default;
 			unsafe { fixed (byte* p = _ms.GetBuffer()) md.Add(p, (int)_ms.Position); } //fast
 			return md.Hash;
 		}
 		//also tested hashing bits from hicon directly, to avoid ToGdipBitmap for duplicates.
 		//	It makes faster for duplicates, else slower.
-		//	Anyway AIcon.OfFile is much slower. Better use smaller code.
+		//	Anyway AIcon.Of is much slower. Better use smaller code.
 
 		/// <summary>
 		/// Disposes all image objects.

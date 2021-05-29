@@ -87,7 +87,7 @@ AOutput.Write(""t"" + 'c' + 1);
 				//EdUtil.MinimizeProcessPhysicalMemory(500); //with this later significantly slower
 			}
 			catch (Exception ex) {
-				ADebug.Print(ex);
+				ADebug_.Print(ex);
 			}
 		});
 	}
@@ -380,7 +380,7 @@ AOutput.Write(""t"" + 'c' + 1);
 				}
 			}
 			catch (Exception ex) {
-				ADebug.Print(ex);
+				ADebug_.Print(ex);
 				return false;
 			}
 

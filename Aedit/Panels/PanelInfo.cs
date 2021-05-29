@@ -62,7 +62,7 @@ class PanelInfo : Grid
 		if (s == "?") {
 			ZSetAboutInfo(About.Panel);
 		} else {
-			AFile.TryRun(s);
+			ARun.RunSafe(s);
 		}
 	}
 

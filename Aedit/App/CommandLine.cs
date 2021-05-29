@@ -81,7 +81,7 @@ static class CommandLine
 				AWnd wMain = (AWnd)w.Send(Api.WM_USER);
 				if(!wMain.Is0) {
 					try { wMain.Activate(); }
-					catch(Exception ex) { ADebug.Print(ex); }
+					catch(Exception ex) { ADebug_.Print(ex); }
 				}
 			}
 
@@ -196,7 +196,7 @@ static class CommandLine
 		case 4:
 			var f1 = APath.IsFullPath(s) ? App.Model.FindByFilePath(s) : App.Model.Find(s, null);
 			if(f1 != null) App.Model.OpenAndGoTo(f1, (int)wParam - 1);
-			else AWarning.Write($"Script '{s}' not found.", -1);
+			else AOutput.Warning($"Script '{s}' not found.", -1);
 			break;
 		case 99: //run script from Au.CL.exe command line
 		case 100: //run script from script (ATask.Run/RunWait)

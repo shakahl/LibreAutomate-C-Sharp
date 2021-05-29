@@ -46,7 +46,7 @@ namespace Au
 			_isl = new Api.ShellLink() as Api.IShellLink;
 			_ipf = _isl as Api.IPersistFile;
 			_lnkPath = lnkPath;
-			if (mode != Api.STGM_WRITE && (mode == Api.STGM_READ || AFile.ExistsAsFile(_lnkPath))) {
+			if (mode != Api.STGM_WRITE && (mode == Api.STGM_READ || AFile.Exists(_lnkPath).isFile)) {
 				AuException.ThrowIfHresultNot0(_ipf.Load(_lnkPath, mode), "*open");
 				_isOpen = true;
 			}
@@ -91,7 +91,7 @@ namespace Au
 		/// Creates parent folder if need.
 		/// </remarks>
 		public void Save() {
-			if (_changedHotkey && !_isOpen && AFile.ExistsAsFile(_lnkPath)) _UnregisterHotkey(_lnkPath);
+			if (_changedHotkey && !_isOpen && AFile.Exists(_lnkPath).isFile) _UnregisterHotkey(_lnkPath);
 
 			AFile.CreateDirectoryFor(_lnkPath);
 			AuException.ThrowIfHresultNot0(_ipf.Save(_lnkPath, true), "*save");
@@ -124,8 +124,8 @@ namespace Au
 		/// Most but not all shortcuts have this property; the 'get' function returns null if the shortcut does not have it.
 		/// </remarks>
 		/// <exception cref="AuException">The 'set' function failed.</exception>
-		public APidl TargetPidl {
-			get => (0 == _isl.GetIDList(out var pidl)) ? new APidl(pidl) : null;
+		public Pidl TargetPidl {
+			get => (0 == _isl.GetIDList(out var pidl)) ? new Pidl(pidl) : null;
 			set { AuException.ThrowIfHresultNot0(_isl.SetIDList(value?.UnsafePtr ?? default)); GC.KeepAlive(value); }
 		}
 
@@ -138,7 +138,7 @@ namespace Au
 		public string TargetURL {
 			get {
 				if (0 != _isl.GetIDList(out var pidl)) return null;
-				try { return APidl.ToShellString(pidl, SIGDN.URL); }
+				try { return Pidl.ToShellString(pidl, SIGDN.URL); }
 				finally { Marshal.FreeCoTaskMem(pidl); }
 			}
 			set {
@@ -147,18 +147,18 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets or sets target of any type - file/folder, URL, virtual shell object (see <see cref="APidl"/>).
-		/// The string can be used with <see cref="AFile.Run"/>.
+		/// Gets or sets target of any type - file/folder, URL, virtual shell object (see <see cref="Pidl"/>).
+		/// The string can be used with <see cref="ARun.Run"/>.
 		/// </summary>
 		/// <exception cref="AuException">The 'set' function failed.</exception>
 		public string TargetAnyType {
 			get {
 				var R = TargetPath; if (R != null) return R; //support MSI etc
 				if (0 != _isl.GetIDList(out var pidl)) return null;
-				try { return APidl.ToString(pidl); } finally { Marshal.FreeCoTaskMem(pidl); }
+				try { return Pidl.ToString(pidl); } finally { Marshal.FreeCoTaskMem(pidl); }
 			}
 			set {
-				var pidl = APidl.FromString_(value, true);
+				var pidl = Pidl.FromString_(value, true);
 				try { AuException.ThrowIfHresultNot0(_isl.SetIDList(pidl)); } finally { Marshal.FreeCoTaskMem(pidl); }
 			}
 		}
@@ -273,7 +273,7 @@ namespace Au
 		/// <exception cref="AuException">Failed to unregister hotkey.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="AFile.Delete(string, bool)"/>.</exception>
 		public static void Delete(string lnkPath) {
-			if (!AFile.ExistsAsFile(lnkPath)) return;
+			if (!AFile.Exists(lnkPath).isFile) return;
 			_UnregisterHotkey(lnkPath);
 			AFile.Delete(lnkPath);
 		}
@@ -283,7 +283,7 @@ namespace Au
 
 		/// <exception cref="AuException">Failed to open or save.</exception>
 		static void _UnregisterHotkey(string lnkPath) {
-			Debug.Assert(AFile.ExistsAsFile(lnkPath));
+			Debug.Assert(AFile.Exists(lnkPath).isFile);
 			using var x = OpenOrCreate(lnkPath);
 			var k = x.Hotkey;
 			if (k != 0) {
@@ -314,7 +314,7 @@ namespace Au
 			if (R.NE()) return null;
 
 			if (!fixMSI) {
-				R = APath.ExpandEnvVar(R);
+				R = APath.Expand(R);
 			} else if (R.Find(@"\Installer\{") > 0) {
 				//For MSI shortcuts GetPath gets like "C:\WINDOWS\Installer\{90110409-6000-11D3-8CFE-0150048383C9}\accicons.exe".
 				var product = stackalloc char[40];
@@ -337,9 +337,9 @@ namespace Au
 			//GetWorkingDirectory and GetIconLocation get raw path, and envronment variables such as %ProgramFiles% are expanded to (x86) in 32-bit process.
 			if (AVersion.Is32BitProcessAnd64BitOS) {
 				if (_pf == null) { string s = AFolders.ProgramFilesX86; _pf = s + "\\"; }
-				if (R.Starts(_pf, true) && !AFile.ExistsAsAny(R)) {
+				if (R.Starts(_pf, true) && !AFile.Exists(R)) {
 					var s2 = R.Remove(_pf.Length - 7, 6);
-					if (AFile.ExistsAsAny(s2)) R = s2;
+					if (AFile.Exists(s2)) R = s2;
 					//info: "C:\\Program Files (x86)\\" in English, "C:\\Programme (x86)\\" in German etc.
 					//never mind: System32 folder also has similar problem, because of redirection.
 					//note: ShellExecuteEx also has this problem.

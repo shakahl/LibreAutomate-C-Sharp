@@ -275,7 +275,7 @@ namespace Au
 					}
 				}
 				catch (Exception ex) {
-					ADebug.Dialog(ex);
+					ADebug_.Dialog(ex);
 				}
 			}
 
@@ -392,7 +392,7 @@ namespace Au
 			internal static string MailslotName_ {
 				get {
 					if (_mailslotName == null) {
-						_mailslotName = @"\\.\mailslot\Au.AOutput\" + AProcess.ProcessSessionId.ToString();
+						_mailslotName = @"\\.\mailslot\Au.AOutput\" + AThisProcess.SessionId.ToString();
 					}
 					return _mailslotName;
 				}

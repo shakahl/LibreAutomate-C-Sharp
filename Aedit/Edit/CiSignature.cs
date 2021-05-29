@@ -131,7 +131,7 @@ class CiSignature
 				return r;
 			});
 		}
-		catch (OperationCanceledException) { /*ADebug.Print("canceled");*/ return; } //never noticed
+		catch (OperationCanceledException) { /*ADebug_.Print("canceled");*/ return; } //never noticed
 		finally {
 			cancelTS.Dispose();
 			if (cancelTS == _cancelTS) _cancelTS = null;
@@ -264,7 +264,7 @@ class CiSignature
 				return r;
 			});
 		}
-		catch (OperationCanceledException) { /*ADebug.Print("canceled");*/ return; } //never noticed
+		catch (OperationCanceledException) { /*ADebug_.Print("canceled");*/ return; } //never noticed
 		finally {
 			cancelTS.Dispose();
 			if (cancelTS == _cancelTS) _cancelTS = null;
@@ -304,7 +304,7 @@ class CiSignature
 			default: //no closing )]>
 				toke = toke.GetPreviousToken(); //toke = root.FindToken(cd.pos16); //both don't work for eg List< (no closing >), because there is BinaryExpressionSyntax instead of TypeArgumentListSyntax
 				node = toke.Parent.FirstAncestorOrSelf<SyntaxNode>(o => _IsArglistNode(o), false);
-				if (node == null || node.SpanStart < start) { /*ADebug.Print("todo");*/ return; } //eg List< (no closing >), difficult to detect. Never mind.
+				if (node == null || node.SpanStart < start) { /*ADebug_.Print("todo");*/ return; } //eg List< (no closing >), difficult to detect. Never mind.
 				break;
 			}
 		}
@@ -437,7 +437,7 @@ class CiSignature
 				if (i == iSel && selParam >= 0) currentParameter = sh.Parameters[selParam];
 				x.EndOverload(i == iSel);
 			} else {
-				ADebug.Print(sh);
+				ADebug_.Print(sh);
 			}
 		}
 
@@ -479,7 +479,7 @@ class CiSignature
 			)) {
 			//AOutput.Write(t);
 			var c = t.GetConstructor(Type.EmptyTypes);
-			ADebug.PrintIf(c == null, t.ToString());
+			ADebug_.PrintIf(c == null, t.ToString());
 			if (c == null) continue;
 			var o = c.Invoke(null) as ISignatureHelpProvider; Debug.Assert(o != null); if (o == null) continue;
 			a.Add(o);

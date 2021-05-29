@@ -97,7 +97,7 @@ namespace Au
 					t_cwUnsafe = false;
 					var wndProc = t_cwProc;
 					t_cwProc = null;
-					Api.SetWindowLongPtr(w, GWLong.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
+					Api.SetWindowLongPtr(w, GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
 					//AOutput.Write("subclassed", w);
 					return wndProc(w, msg, wParam, lParam);
 				} else {
@@ -163,9 +163,9 @@ namespace Au
 					if (w.Is0) throw new AuException(0);
 					if (keepAlive) {
 						t_windows[w] = wndProc;
-						Api.SetWindowLongPtr(w, GWLong.WNDPROC, s_cwProcFP);
+						Api.SetWindowLongPtr(w, GWL.WNDPROC, s_cwProcFP);
 					} else {
-						Api.SetWindowLongPtr(w, GWLong.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
+						Api.SetWindowLongPtr(w, GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
 					}
 				}
 
@@ -296,7 +296,7 @@ namespace Au
 			/// </summary>
 			/// <remarks>
 			/// Supports <see cref="ALastError"/>.
-			/// For index can be used constants from <see cref="GCLong"/>. All values are the same in 32-bit and 64-bit process.
+			/// For index can be used constants from <see cref="GCL"/>. All values are the same in 32-bit and 64-bit process.
 			/// In 32-bit process actually calls <b>GetClassLong</b>, because <b>GetClassLongPtr</b> is unavailable.
 			/// </remarks>
 			public static nint GetClassLong(AWnd w, int index) => Api.GetClassLongPtr(w, index);
@@ -317,7 +317,7 @@ namespace Au
 			//Rejected. Does not work with many windows. Unreliable. Rarely used.
 			///// <summary>
 			///// Gets atom of a window class.
-			///// To get class atom when you have a window w, use <c>AWnd.More.GetClassLong(w, GCLong.ATOM)</c>.
+			///// To get class atom when you have a window w, use <c>AWnd.More.GetClassLong(w, GCL.ATOM)</c>.
 			///// </summary>
 			///// <param name="className">Class name.</param>
 			///// <param name="moduleHandle">Native module handle of the exe or dll that registered the class. Don't use if it is a global class (CS_GLOBALCLASS style).</param>

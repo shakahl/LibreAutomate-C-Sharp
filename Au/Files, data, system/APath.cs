@@ -21,8 +21,11 @@ using System.Reflection;
 namespace Au
 {
 	/// <summary>
-	/// Extends <see cref="Path"/>.
+	/// Contains static functions to work with file paths. Parse, combine, make full, make unique, make valid, expand variables, etc.
 	/// </summary>
+	/// <remarks>
+	/// Also you can use .NET class <see cref="Path"/>. In the past it was too limited and unsafe to use, for example no long paths, too many exceptions. Later improved, but this class still has something it doesn't.
+	/// </remarks>
 	public static unsafe class APath
 	{
 		/// <summary>
@@ -42,11 +45,11 @@ namespace Au
 		/// <seealso cref="Environment.ExpandEnvironmentVariables"/>
 		/// <seealso cref="Environment.GetEnvironmentVariable"/>
 		/// <seealso cref="Environment.SetEnvironmentVariable"/>
-		public static string ExpandEnvVar(string path) {
+		public static string Expand(string path) {
 			var s = path;
 			if (s.Lenn() < 3) return s;
 			if (s[0] != '%') {
-				if (s[0] == '\"' && s[1] == '%') return "\"" + ExpandEnvVar(s[1..]);
+				if (s[0] == '\"' && s[1] == '%') return "\"" + Expand(s[1..]);
 				return s;
 			}
 			int i = s.IndexOf('%', 2); if (i < 0) return s;
@@ -69,7 +72,7 @@ namespace Au
 			}
 
 			if (!Api.ExpandEnvironmentStrings(s, out s)) return s;
-			return ExpandEnvVar(s); //can be %envVar2% in envVar1 value
+			return Expand(s); //can be %envVar2% in envVar1 value
 		}
 
 		/// <summary>
@@ -86,7 +89,7 @@ namespace Au
 		/// 
 		/// Supports only file-system paths. Returns false if path is URL (<see cref="IsUrl"/>) or starts with <c>"::"</c>.
 		/// 
-		/// If path starts with <c>"%environmentVariable%"</c>, shows warning and returns false. You should at first expand environment variables with <see cref="ExpandEnvVar"/> or instead use <see cref="IsFullPathExpandEnvVar"/>.
+		/// If path starts with <c>"%environmentVariable%"</c>, shows warning and returns false. You should at first expand environment variables with <see cref="Expand"/> or instead use <see cref="IsFullPathExpand"/>.
 		/// </remarks>
 		public static bool IsFullPath(string path) {
 			var s = path;
@@ -103,10 +106,10 @@ namespace Au
 					return IsSepChar_(s[1]);
 				case '%':
 #if true
-					if (!ExpandEnvVar(s).Starts('%'))
-						AWarning.Write("Path starts with %environmentVariable%. Use APath.IsFullPathExpandEnvVar instead.");
+					if (!Expand(s).Starts('%'))
+						AOutput.Warning("Path starts with %environmentVariable%. Use APath.IsFullPathExpand instead.");
 #else
-					s = ExpandEnvVar(s); //quite fast. 70% slower than just EnvVarExists_, but reliable.
+					s = Expand(s); //quite fast. 70% slower than just EnvVarExists_, but reliable.
 					return !s.Starts('%') && IsFullPath(s);
 #endif
 					break;
@@ -122,7 +125,7 @@ namespace Au
 		/// </summary>
 		/// <param name="path">
 		/// Any string. Can be null.
-		/// If starts with '%' character, calls <see cref="IsFullPath"/> with expanded environment variables (<see cref="ExpandEnvVar"/>). If it returns true, replaces the passed variable with the expanded path string.
+		/// If starts with '%' character, calls <see cref="IsFullPath"/> with expanded environment variables (<see cref="Expand"/>). If it returns true, replaces the passed variable with the expanded path string.
 		/// </param>
 		/// <remarks>
 		/// Returns true if <i>path</i> matches one of these wildcard patterns:
@@ -132,11 +135,11 @@ namespace Au
 		/// Supports '/' characters too.
 		/// Supports only file-system paths. Returns false if path is URL (<see cref="IsUrl"/>) or starts with <c>"::"</c>.
 		/// </remarks>
-		public static bool IsFullPathExpandEnvVar(ref string path) {
+		public static bool IsFullPathExpand(ref string path) {
 			var s = path;
 			if (s == null || s.Length < 2) return false;
 			if (s[0] != '%') return IsFullPath(s);
-			s = ExpandEnvVar(s);
+			s = Expand(s);
 			if (s[0] == '%') return false;
 			if (!IsFullPath(s)) return false;
 			path = s;
@@ -232,7 +235,7 @@ namespace Au
 		/// <param name="prefixLongPath">Call <see cref="PrefixLongPathIfNeed"/> which may prepend <c>@"\\?\"</c> if the result path is very long. Default true.</param>
 		/// <remarks>
 		/// If s1 and s2 are null or "", returns "". Else if s1 is null or "", returns s2. Else if s2 is null or "", returns s1.
-		/// Does not expand environment variables. For it use <see cref="ExpandEnvVar"/> before, or <see cref="Normalize"/> instead. Path that starts with an environment variable here is considerd not full path.
+		/// Does not expand environment variables. For it use <see cref="Expand"/> before, or <see cref="Normalize"/> instead. Path that starts with an environment variable here is considerd not full path.
 		/// Similar to <see cref="Path.Combine"/>. Main differences: has some options; supports null arguments.
 		/// </remarks>
 		/// <seealso cref="Normalize"/>
@@ -330,9 +333,9 @@ namespace Au
 		/// <exception cref="ArgumentException">path is not full path, and <i>defaultParentDirectory</i> is not used or does not make it full path.</exception>
 		/// <remarks>
 		/// The sequence of actions:
-		/// 1. If path starts with '%' character, expands environment variables and special folder names. See <see cref="ExpandEnvVar"/>.
+		/// 1. If path starts with '%' character, expands environment variables and special folder names. See <see cref="Expand"/>.
 		/// 2. If path is not full path but looks like URL, and used flag CanBeUrl, returns path.
-		/// 3. If path is not full path, and defaultParentDirectory is not null/"", combines path with ExpandEnvVar(defaultParentDirectory).
+		/// 3. If path is not full path, and defaultParentDirectory is not null/"", combines path with Expand(defaultParentDirectory).
 		/// 4. If path is not full path, throws exception.
 		/// 5. Calls API <msdn>GetFullPathName</msdn>. It replaces <c>'/'</c> with <c>'\\'</c>, replaces multiple <c>'\\'</c> with single (where need), processes <c>@"\.."</c> etc, trims spaces, etc.
 		/// 6. If no flag DontExpandDosPath, if path looks like a short DOS path version (contains <c>'~'</c> etc), calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example <c>@"c:\progra~1"</c> to <c>@"c:\program files"</c>. It is slow. It converts path only if the file exists.
@@ -343,11 +346,11 @@ namespace Au
 		/// Similar to <see cref="Path.GetFullPath"/>. Main differences: this function expands environment variables, does not support relative paths, trims <c>'\\'</c> at the end if need.
 		/// </remarks>
 		public static string Normalize(string path, string defaultParentDirectory = null, PNFlags flags = 0) {
-			path = ExpandEnvVar(path);
+			path = Expand(path);
 			if (!IsFullPath(path)) { //note: not EEV
 				if (0 != (flags & PNFlags.CanBeUrlOrShell)) if (IsShellPathOrUrl_(path)) return path;
 				if (defaultParentDirectory.NE()) goto ge;
-				path = Combine_(ExpandEnvVar(defaultParentDirectory), path);
+				path = Combine_(Expand(defaultParentDirectory), path);
 				if (!IsFullPath(path)) goto ge;
 			}
 
@@ -362,8 +365,8 @@ namespace Au
 		/// </summary>
 		internal static string Normalize_(string s, PNFlags flags = 0, bool noExpandEV = false) {
 			if (!s.NE()) {
-				if (!noExpandEV) s = ExpandEnvVar(s);
-				ADebug.PrintIf(IsShellPathOrUrl_(s), s);
+				if (!noExpandEV) s = Expand(s);
+				ADebug_.PrintIf(IsShellPathOrUrl_(s), s);
 
 				if (_EndsWithDriveWithoutSep(s)) s += "\\"; //API would append current directory
 
@@ -384,12 +387,12 @@ namespace Au
 
 		/// <summary>
 		/// Prepares path for passing to API that support "..", DOS path etc.
-		/// Calls ExpandEnvVar, _AddRemoveSep, PrefixLongPathIfNeed. Optionally throws if !IsFullPath(path).
+		/// Calls Expand, _AddRemoveSep, PrefixLongPathIfNeed. Optionally throws if !IsFullPath(path).
 		/// </summary>
 		/// <exception cref="ArgumentException">Not full path (only if throwIfNotFullPath is true).</exception>
 		internal static string NormalizeMinimally_(string path, bool throwIfNotFullPath) {
-			var s = ExpandEnvVar(path);
-			ADebug.PrintIf(IsShellPathOrUrl_(s), s);
+			var s = Expand(path);
+			ADebug_.PrintIf(IsShellPathOrUrl_(s), s);
 			if (throwIfNotFullPath && !IsFullPath(s)) throw new ArgumentException($"Not full path: '{path}'.");
 			s = _AddRemoveSep(s);
 			s = PrefixLongPathIfNeed(s);
@@ -398,12 +401,12 @@ namespace Au
 
 		/// <summary>
 		/// Prepares path for passing to .NET file functions.
-		/// Calls ExpandEnvVar, _AddRemoveSep. Throws if !IsFullPath(path).
+		/// Calls Expand, _AddRemoveSep. Throws if !IsFullPath(path).
 		/// </summary>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		internal static string NormalizeForNET_(string path) {
-			var s = ExpandEnvVar(path);
-			ADebug.PrintIf(IsShellPathOrUrl_(s), s);
+			var s = Expand(path);
+			ADebug_.PrintIf(IsShellPathOrUrl_(s), s);
 			if (!IsFullPath(s)) throw new ArgumentException($"Not full path: '{path}'.");
 			return _AddRemoveSep(s);
 		}
@@ -464,7 +467,7 @@ namespace Au
 		/// </summary>
 		/// <param name="path">
 		/// Path. Can be null.
-		/// Must not start with <c>"%environmentVariable%"</c>. This function does not expand it. See <see cref="ExpandEnvVar"/>.
+		/// Must not start with <c>"%environmentVariable%"</c>. This function does not expand it. See <see cref="Expand"/>.
 		/// </param>
 		/// <remarks>
 		/// Windows API kernel functions support extended-length paths, ie longer than 259 characters. But the path must have this prefix. Windows API shell functions don't support it.
@@ -483,7 +486,7 @@ namespace Au
 		/// </summary>
 		/// <param name="path">
 		/// Path. Can be null.
-		/// Must not start with <c>"%environmentVariable%"</c>. This function does not expand it. See <see cref="ExpandEnvVar"/>.
+		/// Must not start with <c>"%environmentVariable%"</c>. This function does not expand it. See <see cref="Expand"/>.
 		/// </param>
 		public static string PrefixLongPathIfNeed(string path) {
 			if (path != null && path.Length > MaxDirectoryPathLength) path = PrefixLongPath(path);
@@ -498,7 +501,7 @@ namespace Au
 		/// </summary>
 		/// <param name="path">
 		/// Path. Can be null.
-		/// Must not start with <c>"%environmentVariable%"</c>. This function does not expand it. See <see cref="ExpandEnvVar"/>.
+		/// Must not start with <c>"%environmentVariable%"</c>. This function does not expand it. See <see cref="Expand"/>.
 		/// </param>
 		public static string UnprefixLongPath(string path) {
 			if (!path.NE()) {
@@ -809,11 +812,11 @@ namespace Au
 		/// <param name="path">Suggested full path.</param>
 		/// <param name="isDirectory">The path is for a directory. The number is always appended at the very end, not before .extension.</param>
 		public static string MakeUnique(string path, bool isDirectory) {
-			if (!AFile.ExistsAsAny(path)) return path;
+			if (!AFile.Exists(path)) return path;
 			string ext = isDirectory ? null : GetExtension(path, out path);
 			for (int i = 2; ; i++) {
 				var s = path + " " + i + ext;
-				if (!AFile.ExistsAsAny(s)) return s;
+				if (!AFile.Exists(s)) return s;
 			}
 		}
 	}

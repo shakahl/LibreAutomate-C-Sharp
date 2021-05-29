@@ -182,7 +182,7 @@ class CiGoTo
 				md5.Add(_docId);
 				var hash = md5.Hash.ToString().Remove(16);
 
-				AFile.TryRun(s_sources[i].site + $"/{_assembly}/a.html#{hash}");
+				ARun.RunSafe(s_sources[i].site + $"/{_assembly}/a.html#{hash}");
 			});
 		}
 	}
@@ -194,7 +194,7 @@ class CiGoTo
 	/// </summary>
 	void _GetAssemblyNameOfForwardedType() {
 		var path = AFolders.NetRuntimeBS + _assembly + ".dll";
-		if (!(AFile.ExistsAsFile(path) || AFile.ExistsAsFile(path = AFolders.NetRuntimeDesktopBS + _assembly + ".dll"))) return;
+		if (!(AFile.Exists(path).isFile || AFile.Exists(path = AFolders.NetRuntimeDesktopBS + _assembly + ".dll").isFile)) return;
 
 		var alc = new System.Runtime.Loader.AssemblyLoadContext(null, true);
 		try {
@@ -202,7 +202,7 @@ class CiGoTo
 			var ft = asm.GetForwardedTypes()?.FirstOrDefault(ty => ty.FullName == _typeName);
 			if (ft != null) _assembly = ft.Assembly.GetName().Name;
 		}
-		catch (Exception ex) { ADebug.Print(ex); }
+		catch (Exception ex) { ADebug_.Print(ex); }
 		finally { alc.Unload(); }
 	}
 

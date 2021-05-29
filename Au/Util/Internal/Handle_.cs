@@ -107,7 +107,7 @@ namespace Au.Types
 		{
 			WaitHandle_ wh = null;
 			try { wh = new WaitHandle_(Handle_.OpenProcess(pid, desiredAccess), true); }
-			catch(Exception ex) { ADebug.Print(ex); }
+			catch(Exception ex) { ADebug_.Print(ex); }
 			return wh;
 		}
 	}

@@ -275,7 +275,7 @@ namespace Au.Triggers
 		public Action<WindowTriggerArgs> this[TWEvent winEvent, AWnd.Finder f, TWFlags flags = 0, TWLater later = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 			set {
 				_triggers.ThrowIfRunning_();
-				if(f.Props.contains.Value is AWinImage.Finder) AWarning.Write("Window triggers with 'contains image' are unreliable.");
+				if(f.Props.contains.Value is AWinImage.Finder) AOutput.Warning("Window triggers with 'contains image' are unreliable.");
 
 				var t = new WindowTrigger(_triggers, value, winEvent, f, flags, later, (f_, l_));
 				ref var last = ref _tActive; if(t.IsVisible) last = ref _tVisible;
@@ -427,7 +427,7 @@ namespace Au.Triggers
 			//	//if(n1 + n2 > 0) AOutput.Write(n1, n2);
 			//}
 			//_aVisibleOld = a;
-			//ADebug.MemoryPrint_();
+			//ADebug_.MemoryPrint_();
 
 			//bool needEW = false;
 			//if(Visible.HasTriggers) needEW = true;
@@ -572,7 +572,7 @@ namespace Au.Triggers
 			if(_inProc) {
 				_hookEventQueue.Enqueue((accEvent, (int)w));
 				//AOutput.Write(_hookEventQueue.Count);
-				ADebug.PrintIf(_hookEventQueue.Count > 4, "_hookEventQueue.Count=" + _hookEventQueue.Count);
+				ADebug_.PrintIf(_hookEventQueue.Count > 4, "_hookEventQueue.Count=" + _hookEventQueue.Count);
 				return;
 			}
 			_inProc = true;
@@ -583,7 +583,7 @@ namespace Au.Triggers
 					TWLater e = 0;
 					switch(accEvent) {
 					case AccEVENT.SYSTEM_FOREGROUND:
-						//ADebug.PrintIf(!w.IsActive, $"{ATime.PerfMilliseconds % 10000}, SYSTEM_FOREGROUND but not active: {w}"); //it is normal. The window either will be active soon (and timer will catch it), or will not be activated (eg prevented by Windows, hooks, etc), or another window became active.
+						//ADebug_.PrintIf(!w.IsActive, $"{ATime.PerfMilliseconds % 10000}, SYSTEM_FOREGROUND but not active: {w}"); //it is normal. The window either will be active soon (and timer will catch it), or will not be activated (eg prevented by Windows, hooks, etc), or another window became active.
 						if(w != _wActive && w.IsActive) e = TWLater.Active;
 						break;
 					case AccEVENT.OBJECT_UNCLOAKED: e = TWLater.Uncloaked; break;

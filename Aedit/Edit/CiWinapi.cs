@@ -149,12 +149,12 @@ class CiWinapi
 					) {
 					var loc = d.Location;
 					if (!loc.IsInSource) {
-						ADebug.Print("!insource");
+						ADebug_.Print("!insource");
 						continue;
 					}
 					var span = loc.SourceSpan;
 					if (!newSpan.Contains(span)) {
-						ADebug.Print("!contains");
+						ADebug_.Print("!contains");
 						continue;
 					}
 					name = cd.code[span.Start..span.End];
@@ -166,7 +166,7 @@ class CiWinapi
 					using (var db = EdDatabases.OpenWinapi()) //fast, if compared with GetDiagnostics
 					using (var stat = db.Statement("SELECT code, kind FROM api WHERE name=?", name)) {
 						if (!stat.Step()) {
-							ADebug.Print("not in DB: " + name);
+							ADebug_.Print("not in DB: " + name);
 							continue;
 						}
 						text = stat.GetText(0);
@@ -176,7 +176,7 @@ class CiWinapi
 					_Insert(level + 1, node, text, name, kind);
 				} else {
 					if (ec == ErrorCode.ERR_ManagedAddr) continue; //possibly same name is an internal managed type in some assembly, but in our DB it may be unmanaged. This error is for for field; we'll catch its type later.
-					else ADebug.Print(d);
+					else ADebug_.Print(d);
 				}
 			}
 		}

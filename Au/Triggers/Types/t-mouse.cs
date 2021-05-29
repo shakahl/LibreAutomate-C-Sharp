@@ -431,7 +431,7 @@ namespace Au.Triggers
 				_keyHook = AHookWin.Keyboard(k => {
 					if (ATime.WinMilliseconds >= _keyHookTimeout) {
 						_ResetUpAndUnhookTempKeybHook();
-						ADebug.Print("hook timeout");
+						ADebug_.Print("hook timeout");
 					} else {
 						var mod = k.Mod;
 						if (0 != (mod & _upMod) && k.IsUp) {

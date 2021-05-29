@@ -254,9 +254,9 @@ namespace Au.Controls
 						s = AFile.SearchPath(s, AFolders.ThisAppImages);
 						if (s == null) return null;
 					} else {
-						if (!APath.IsFullPathExpandEnvVar(ref s)) return null;
+						if (!APath.IsFullPathExpand(ref s)) return null;
 						s = APath.Normalize(s, AFolders.ThisAppImages);
-						if (!AFile.ExistsAsFile(s)) return null;
+						if (!AFile.Exists(s).isFile) return null;
 					}
 					break;
 				}
@@ -281,7 +281,7 @@ namespace Au.Controls
 					return _IconToBytes(s, t == ImageType.Cur, searchPath);
 				}
 			}
-			catch (Exception ex) { ADebug.Print(ex.Message + "    " + s); }
+			catch (Exception ex) { ADebug_.Print(ex.Message + "    " + s); }
 			return null;
 		}
 
@@ -320,7 +320,7 @@ namespace Au.Controls
 				siz = Api.GetSystemMetrics(Api.SM_CXCURSOR);
 				//note: if LR_DEFAULTSIZE, uses SM_CXCURSOR, normally 32. It may be not what Explorer displays eg in Cursors folder. But without it gets the first cursor, which often is large, eg 128.
 			} else {
-				hi = AIcon.OfFile(s, 16, searchPath ? 0 : IconGetFlags.DontSearch)?.Detach() ?? default;
+				hi = AIcon.Of(s, 16, searchPath ? 0 : IconGetFlags.DontSearch)?.Detach() ?? default;
 				siz = 16;
 			}
 			if (hi == default) return null;
@@ -398,7 +398,7 @@ namespace Au.Controls
 			case ImageType.PngGifJpg:
 				path = AFile.SearchPath(path, AFolders.ThisAppImages); if (path == null) return null;
 				try { return "image:" + Convert.ToBase64String(AFile.LoadBytes(path)); }
-				catch (Exception ex) { ADebug.Print(ex.Message); return null; }
+				catch (Exception ex) { ADebug_.Print(ex.Message); return null; }
 			}
 			return BmpFileDataToString(BmpFileDataFromString(path, t, true));
 		}

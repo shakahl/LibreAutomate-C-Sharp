@@ -11,7 +11,6 @@ using Au.Types;
 using Au.Controls;
 using Au.Compiler;
 using Microsoft.Win32;
-using System.Windows.Controls.Primitives;
 using System.Threading.Tasks;
 
 class DProperties : KDialogWindow
@@ -259,7 +258,7 @@ class DProperties : KDialogWindow
 	}
 
 	private void _ButtonClick_addNet(WBButtonClickArgs e) {
-		var dir = AFolders.ThisApp + "Libraries"; if (!AFile.ExistsAsDirectory(dir)) dir = AFolders.ThisApp;
+		var dir = AFolders.ThisApp + "Libraries"; if (!AFile.Exists(dir).isDir) dir = AFolders.ThisApp;
 		var d = new OpenFileDialog { InitialDirectory = dir, Filter = "Dll|*.dll|All files|*.*", Multiselect = true };
 		if (d.ShowDialog(this) != true) return;
 
@@ -375,7 +374,7 @@ class DProperties : KDialogWindow
 	}
 
 	//To convert a COM type library we use TypeLibConverter class. However .NET Core does not have it (not tested .NET 5).
-	//Workaround: the code is in Au.Net45.exe. It uses .NET Framework 4.5. We call it through RunConsole.
+	//Workaround: the code is in Au.Net45.exe. It uses .NET Framework 4.5. We call it through ARun.Console.
 	//We don't use tlbimp.exe:
 	//	1. If some used interop assemblies are in GAC (eg MS Office PIA), does not create files for them. But we cannot use GAC in Core/5 app.
 	//	2. Does not tell what files created.
@@ -432,7 +431,7 @@ class DProperties : KDialogWindow
 				locale = aloc[i - 1];
 			}
 			comDll = r.GetPath(locale);
-			if (comDll == null || !AFile.ExistsAsFile(comDll)) {
+			if (comDll == null || !AFile.Exists(comDll).isFile) {
 				ADialog.ShowError(comDll == null ? "Failed to get file path." : "File does not exist.", owner: this);
 				return;
 			}
@@ -456,7 +455,7 @@ class DProperties : KDialogWindow
 						converted.Add(s);
 					}
 				}
-				rr = AFile.RunConsole(_Callback, AFolders.ThisAppBS + "Au.Net45.exe", $"/typelib \"{s_comConvertedDir}|{comDll}\"", encoding: Encoding.UTF8);
+				rr = ARun.Console(_Callback, AFolders.ThisAppBS + "Au.Net45.exe", $"/typelib \"{s_comConvertedDir}|{comDll}\"", encoding: Encoding.UTF8);
 			});
 		}
 		catch (Exception ex) { ADialog.ShowError("Failed to convert type library", ex.ToStringWithoutStack(), owner: this); }
@@ -519,7 +518,7 @@ class DProperties : KDialogWindow
 
 	string _GetOutputPath(bool getDefault, bool expandEnvVar = false) {
 		if (!getDefault && _Get(outputPath) is string r) {
-			if (expandEnvVar) r = APath.ExpandEnvVar(r);
+			if (expandEnvVar) r = APath.Expand(r);
 		} else {
 			r = MetaComments.GetDefaultOutputPath(_f, _role, withEnvVar: !expandEnvVar);
 		}

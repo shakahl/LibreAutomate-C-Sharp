@@ -16,8 +16,9 @@ using System.Reflection;
 namespace Au
 {
 	/// <summary>
-	/// Thread functions. Extends <see cref="Thread"/>.
+	/// Thread functions.
 	/// </summary>
+	/// <seealso cref="Thread"/>
 	public static class AThread
 	{
 		/// <summary>
@@ -45,14 +46,13 @@ namespace Au
 		/// </summary>
 		/// <param name="isWPF">Has WPF message loop and no winforms message loop.</param>
 		/// <seealso cref="AWnd.GetWnd.ThreadWindows"/>
-		public static bool HasMessageLoop(out bool isWPF)
-		{
+		public static bool HasMessageLoop(out bool isWPF) {
 			//info: we don't call .NET functions directly to avoid loading assemblies.
 
 			isWPF = false;
 			int f = Assembly_.IsLoadedWinformsWpf();
-			if(0 != (f & 1) && _HML_Forms()) return true;
-			if(0 != (f & 2) && _HML_Wpf()) return isWPF = true;
+			if (0 != (f & 1) && _HML_Forms()) return true;
+			if (0 != (f & 2) && _HML_Wpf()) return isWPF = true;
 			return false;
 		}
 
@@ -86,11 +86,10 @@ namespace Au
 		/// </param>
 		/// <param name="sta">If true (default), sets <see cref="ApartmentState.STA"/>.</param>
 		/// <exception cref="OutOfMemoryException"></exception>
-		public static Thread Start(Action threadProc, bool background = true, bool sta = true)
-		{
+		public static Thread Start(Action threadProc, bool background = true, bool sta = true) {
 			var t = new Thread(threadProc.Invoke);
-			if(background) t.IsBackground = true;
-			if(sta) t.SetApartmentState(ApartmentState.STA);
+			if (background) t.IsBackground = true;
+			if (sta) t.SetApartmentState(ApartmentState.STA);
 			t.Start();
 			return t;
 		}

@@ -111,7 +111,7 @@ namespace Au
 		static void _TimerProc(AWnd w, int msg, nint idEvent, uint time) {
 			//AOutput.Write(t_timers.Count, idEvent);
 			if (!t_timers.TryGetValue(idEvent, out var t)) {
-				//ADebug.Print($"timer id {idEvent} not in t_timers");
+				//ADebug_.Print($"timer id {idEvent} not in t_timers");
 				return;
 				//It is possible after killing timer.
 				//	Normally API KillTimer removes WM_TIMER message from queue (tested), but in some conditions our callback can still be called several times.
@@ -121,7 +121,7 @@ namespace Au
 			if (t._singlePeriod) t.Stop();
 
 			try { t._action(t); }
-			catch (Exception ex) { AWarning.Write(ex.ToString(), -1); }
+			catch (Exception ex) { AOutput.Warning(ex.ToString(), -1); }
 			//info: OS handles exceptions in timer procedure.
 		}
 

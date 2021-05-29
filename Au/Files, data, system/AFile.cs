@@ -19,13 +19,15 @@ using Microsoft.Win32;
 namespace Au
 {
 	/// <summary>
-	/// File system functions.
+	/// Contains static functions to work with files and directories, such as copy, move, delete, find, get properties, enumerate, create directory, safe load/save, wait if locked.
 	/// </summary>
 	/// <remarks>
-	/// Works with files and directories. Disk drives like <c>@"C:\"</c> or <c>"C:"</c> are directories too.
-	/// Extends .NET file system classes such as <see cref="File"/> and <see cref="Directory"/>.
+	/// Also you can use .NET file system classes, such as <see cref="File"/> and <see cref="Directory"/> in <b>System.IO</b> namespace. In the past they were too limited and unsafe to use, for example no long paths, too many exceptions, difficult to recursively enumerate directories containing protected items. Later improved, but this class still has something they don't, for example environment variables in path, safe load/save. This class does not have low-level functions to open/read/write files.
+	/// 
 	/// Most functions support only full path. Most of them throw <b>ArgumentException</b> if passed a filename or relative path, ie in "current directory". Using current directory is unsafe.
 	/// Most functions support extended-length paths (longer than 259). Such local paths should have <c>@"\\?\"</c> prefix, like <c>@"\\?\C:\..."</c>. Such network path should be like <c>@"\\?\UNC\server\share\..."</c>. See <see cref="APath.PrefixLongPath"/>, <see cref="APath.PrefixLongPathIfNeed"/>. Many functions support long paths even without prefix.
+	/// 
+	/// Disk drives like <c>@"C:\"</c> or <c>"C:"</c> are directories too.
 	/// </remarks>
 	public static partial class AFile
 	{
@@ -50,7 +52,7 @@ namespace Au
 		/// Returns false if the file/directory does not exist.
 		/// Calls API <msdn>GetFileAttributesEx</msdn>.
 		/// </summary>
-		/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag UseRawPath not used, supports environment variables (see <see cref="APath.ExpandEnvVar"/>).</param>
+		/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag UseRawPath not used, supports environment variables (see <see cref="APath.Expand"/>).</param>
 		/// <param name="properties">Receives properties.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="ArgumentException">Not full path (when not used flag UseRawPath).</exception>
@@ -79,7 +81,7 @@ namespace Au
 		/// Returns false if the file/directory does not exist.
 		/// Calls API <msdn>GetFileAttributes</msdn>.
 		/// </summary>
-		/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag UseRawPath not used, supports environment variables (see <see cref="APath.ExpandEnvVar"/>).</param>
+		/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag UseRawPath not used, supports environment variables (see <see cref="APath.Expand"/>).</param>
 		/// <param name="attributes">Receives attributes, or 0 if failed.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="ArgumentException">Not full path (when not used flag UseRawPath).</exception>
@@ -149,95 +151,52 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets file system entry type - file, directory, and whether it exists.
-		/// Returns NotFound (0) if does not exist or if fails to get attributes.
-		/// Calls API <msdn>GetFileAttributes</msdn>.
+		/// Gets file or directory attributes as <see cref="FAttr"/> that tells whether it exists, is directory, symbolic link, readonly, hidden, system. See examples.
 		/// </summary>
-		/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="APath.ExpandEnvVar"/>). Can be null.</param>
+		/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="APath.Expand"/>). Can be null.</param>
 		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
 		/// Supports <see cref="ALastError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attribute Directory.
-		/// Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
+		/// Always use full path. If path is not full: if useRawPath is false (default), can't find the file; if useRawPath is true, searches in "current directory".
+		/// For symbolic links gets attributes of the link, not target; does not care whether its target exists.
 		/// </remarks>
-		public static FileDir ExistsAs(string path, bool useRawPath = false) {
-			if (!_GetAttributes(path, out var a, useRawPath)) return FileDir.NotFound;
-			var R = (0 != (a & FileAttributes.Directory)) ? FileDir.Directory : FileDir.File;
-			return R;
+		/// <example>
+		/// <code><![CDATA[
+		/// var path = @"C:\Test\test.txt";
+		/// if (AFile.Exists(path)) AOutput.Write("exists");
+		/// if (AFile.Exists(path).isFile) AOutput.Write("exists as file");
+		/// if (AFile.Exists(path).isDir) AOutput.Write("exists as directory");
+		/// if (AFile.Exists(path) is FAttr { isFile: true, isReadonly: false }) AOutput.Write("exists as file and isn't readonly");
+		/// switch (AFile.Exists(path)) {
+		/// case 0: AOutput.Write("doesn't exist"); break;
+		/// case 1: AOutput.Write("file"); break;
+		/// case 2: AOutput.Write("dir"); break;
+		/// }
+		/// ]]></code>
+		/// </example>
+		public static FAttr Exists(string path, bool useRawPath = false) {
+			if (_GetAttributes(path, out var a, useRawPath)) return new(a, true);
+			return new(0, (a == (FileAttributes)(-1)) ? null : false);
 		}
 
 		/// <summary>
 		/// Gets file system entry type - file, directory, symbolic link, whether it exists and is accessible.
 		/// Returns NotFound (0) if does not exist. Returns AccessDenied (&lt; 0) if exists but this process cannot access it and get attributes.
 		/// Calls API <msdn>GetFileAttributes</msdn>.
-		/// The same as <see cref="ExistsAs"/> but provides more complete result. In most cases you can use ExistsAs, it's simpler.
 		/// </summary>
-		/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="APath.ExpandEnvVar"/>). Can be null.</param>
+		/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="APath.Expand"/>). Can be null.</param>
 		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
 		/// Supports <see cref="ALastError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attributes Directory and ReparsePoint.
 		/// Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
 		/// </remarks>
-		public static unsafe FileDir2 ExistsAs2(string path, bool useRawPath = false) {
+		internal static unsafe FileIs_ ExistsAs_(string path, bool useRawPath = false) {
 			if (!_GetAttributes(path, out var a, useRawPath)) {
-				return (a == (FileAttributes)(-1)) ? FileDir2.AccessDenied : FileDir2.NotFound;
+				return (a == (FileAttributes)(-1)) ? FileIs_.AccessDenied : FileIs_.NotFound;
 			}
-			var R = (0 != (a & FileAttributes.Directory)) ? FileDir2.Directory : FileDir2.File;
-			if (0 != (a & FileAttributes.ReparsePoint)) R |= (FileDir2)4;
+			var R = (0 != (a & FileAttributes.Directory)) ? FileIs_.Directory : FileIs_.File;
+			if (0 != (a & FileAttributes.ReparsePoint)) R |= (FileIs_)4;
 			return R;
-		}
-
-		/// <summary>
-		/// Returns true if file or directory exists.
-		/// Calls <see cref="ExistsAs2"/>, which calls API <msdn>GetFileAttributes</msdn>.
-		/// </summary>
-		/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="APath.ExpandEnvVar"/>). Can be null.</param>
-		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
-		/// <remarks>
-		/// Supports <see cref="ALastError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/>.
-		/// Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
-		/// For symbolic links etc, returns true if the link exists. Does not care whether its target exists.
-		/// Unlike <see cref="ExistsAsFile"/> and <see cref="ExistsAsDirectory"/>, this function returns true when the file exists but cannot get its attributes. Then <c>ExistsAsAny(path)</c> is not the same as <c>ExistsAsFile(path) || ExistsAsDirectory(path)</c>.
-		/// </remarks>
-		public static bool ExistsAsAny(string path, bool useRawPath = false) {
-			return ExistsAs2(path, useRawPath) != FileDir2.NotFound;
-		}
-
-		/// <summary>
-		/// Returns true if file exists and is not a directory.
-		/// Returns false if does not exist or if fails to get its attributes.
-		/// Calls <see cref="ExistsAs"/>, which calls API <msdn>GetFileAttributes</msdn>.
-		/// </summary>
-		/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="APath.ExpandEnvVar"/>). Can be null.</param>
-		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
-		/// <remarks>
-		/// Supports <see cref="ALastError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attribute Directory.
-		/// Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
-		/// For symbolic links etc, returns true if the link exists and its target is not a directory. Does not care whether its target exists.
-		/// </remarks>
-		public static bool ExistsAsFile(string path, bool useRawPath = false) {
-			var R = ExistsAs(path, useRawPath);
-			if (R == FileDir.File) return true;
-			if (R != FileDir.NotFound) ALastError.Clear();
-			return false;
-		}
-
-		/// <summary>
-		/// Returns true if directory (folder or drive) exists.
-		/// Returns false if does not exist or if fails to get its attributes.
-		/// Calls <see cref="ExistsAs"/>, which calls API <msdn>GetFileAttributes</msdn>.
-		/// </summary>
-		/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="APath.ExpandEnvVar"/>). Can be null.</param>
-		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
-		/// <remarks>
-		/// Supports <see cref="ALastError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attribute Directory.
-		/// Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
-		/// For symbolic links etc, returns true if the link exists and its target is a directory. Does not care whether its target exists.
-		/// </remarks>
-		public static bool ExistsAsDirectory(string path, bool useRawPath = false) {
-			var R = ExistsAs(path, useRawPath);
-			if (R == FileDir.Directory) return true;
-			if (R != FileDir.NotFound) ALastError.Clear();
-			return false;
 		}
 
 		/// <summary>
@@ -245,7 +204,7 @@ namespace Au
 		/// Returns null if cannot be found.
 		/// </summary>
 		/// <remarks>
-		/// If the path argument is full path, calls <see cref="ExistsAsAny"/> and returns normalized path if exists, null if not.
+		/// If the path argument is full path, calls <see cref="Exists"/> and returns normalized path if exists, null if not.
 		/// Else searches in these places:
 		///	1. <i>dirs</i>, if used.
 		/// 2. <see cref="AFolders.ThisApp"/>.
@@ -258,22 +217,22 @@ namespace Au
 			if (path.NE()) return null;
 
 			string s = path;
-			if (APath.IsFullPathExpandEnvVar(ref s)) {
-				if (ExistsAsAny(s)) return APath.Normalize_(s, noExpandEV: true);
+			if (APath.IsFullPathExpand(ref s)) {
+				if (Exists(s)) return APath.Normalize_(s, noExpandEV: true);
 				return null;
 			}
 
 			if (dirs != null) {
 				foreach (var d in dirs) {
 					s = d;
-					if (!APath.IsFullPathExpandEnvVar(ref s)) continue;
+					if (!APath.IsFullPathExpand(ref s)) continue;
 					s = APath.Combine(s, path);
-					if (ExistsAsAny(s)) return APath.Normalize_(s, noExpandEV: true);
+					if (Exists(s)) return APath.Normalize_(s, noExpandEV: true);
 				}
 			}
 
 			s = AFolders.ThisApp + path;
-			if (ExistsAsAny(s)) return APath.Normalize_(s, noExpandEV: true);
+			if (Exists(s)) return APath.Normalize_(s, noExpandEV: true);
 
 			if (Api.SearchPath(null, path) is string s1) return s1;
 
@@ -283,10 +242,10 @@ namespace Au
 						?? Registry.GetValue(@"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\App Paths\" + path, "", null) as string;
 					if (path != null) {
 						path = APath.Normalize(path.Trim('\"'));
-						if (ExistsAsAny(path, true)) return path;
+						if (Exists(path, true)) return path;
 					}
 				}
-				catch (Exception ex) { ADebug.Print(path + "    " + ex.Message); }
+				catch (Exception ex) { ADebug_.Print(path + "    " + ex.Message); }
 			}
 
 			return null;
@@ -316,7 +275,7 @@ namespace Au
 		/// 
 		/// By default gets only direct children. Use flag <see cref="FEFlags.AndSubdirectories"/> to get all descendants.
 		/// 
-		/// The paths that this function gets are normalized, ie may not start with exact <i>directoryPath</i> string. Expanded environment variables (see <see cref="APath.ExpandEnvVar"/>), "..", DOS path etc.
+		/// The paths that this function gets are normalized, ie may not start with exact <i>directoryPath</i> string. Expanded environment variables (see <see cref="APath.Expand"/>), "..", DOS path etc.
 		/// Paths longer than <see cref="APath.MaxDirectoryPathLength"/> have <c>@"\\?\"</c> prefix (see <see cref="APath.PrefixLongPathIfNeed"/>).
 		/// 
 		/// For symbolic links and mounted folders, gets info of the link/folder and not of its target.
@@ -380,7 +339,7 @@ namespace Au
 							case Api.ERROR_PATH_NOT_FOUND: //the directory not found, or symlink target directory is missing
 							case Api.ERROR_DIRECTORY: //it is file, not directory. Error text is "The directory name is invalid".
 							case Api.ERROR_BAD_NETPATH: //eg \\COMPUTER\MissingFolder
-								if (stack.Count == 0 && !ExistsAsDirectory(path, true))
+								if (stack.Count == 0 && !Exists(path, true).isDir)
 									throw new DirectoryNotFoundException($"Directory not found: '{path}'. {ALastError.MessageFor(ec)}");
 								//itsOK = (attr & Api.FILE_ATTRIBUTE_REPARSE_POINT) != 0;
 								itsOK = true; //or maybe the subdirectory was deleted after we retrieved it
@@ -468,7 +427,7 @@ namespace Au
 		static unsafe void _FileOp(_FileOpType opType, bool into, string path1, string path2, FIfExists ifExists, FCFlags copyFlags, Func<FEFile, bool> filter) {
 			string opName = (opType == _FileOpType.Rename) ? "rename" : ((opType == _FileOpType.Move) ? "move" : "copy");
 			path1 = _PreparePath(path1);
-			var type1 = ExistsAs2(path1, true);
+			var type1 = ExistsAs_(path1, true);
 			if (type1 <= 0) throw new FileNotFoundException($"Failed to {opName}. File not found: '{path1}'");
 
 			if (opType == _FileOpType.Rename) {
@@ -493,40 +452,40 @@ namespace Au
 			bool ok = false, copy = opType == _FileOpType.Copy, deleteSource = false, mergeDirectory = false;
 			var del = new _SafeDeleteExistingDirectory();
 			try {
-				if (ifExists == FIfExists.MergeDirectory && type1 != FileDir2.Directory) ifExists = FIfExists.Fail;
+				if (ifExists == FIfExists.MergeDirectory && type1 != FileIs_.Directory) ifExists = FIfExists.Fail;
 
 				if (ifExists == FIfExists.Fail) {
 					//API will fail if exists. We don't use use API flags 'replace existing'.
 				} else {
 					//Delete, RenameExisting, MergeDirectory
 					//bool deleted = false;
-					var existsAs = ExistsAs2(path2, true);
+					var existsAs = ExistsAs_(path2, true);
 					switch (existsAs) {
-					case FileDir2.NotFound:
+					case FileIs_.NotFound:
 						//deleted = true;
 						break;
-					case FileDir2.AccessDenied:
+					case FileIs_.AccessDenied:
 						break;
 					default:
 						if (More.IsSameFile_(path1, path2)) {
 							//eg renaming "file.txt" to "FILE.txt"
-							ADebug.Print("same file");
+							ADebug_.Print("same file");
 							//deleted = true;
 							//copy will fail, move will succeed
-						} else if (ifExists == FIfExists.MergeDirectory && (existsAs == FileDir2.Directory || existsAs == FileDir2.SymLinkDirectory)) {
-							if (type1 == FileDir2.Directory || type1 == FileDir2.SymLinkDirectory) {
+						} else if (ifExists == FIfExists.MergeDirectory && (existsAs == FileIs_.Directory || existsAs == FileIs_.SymLinkDirectory)) {
+							if (type1 == FileIs_.Directory || type1 == FileIs_.SymLinkDirectory) {
 								//deleted = true;
 								mergeDirectory = true;
 								if (!copy) { copy = true; deleteSource = true; }
 							} // else API will fail. We refuse to replace a directory with a file.
-						} else if (ifExists == FIfExists.RenameExisting || existsAs == FileDir2.Directory) {
+						} else if (ifExists == FIfExists.RenameExisting || existsAs == FileIs_.Directory) {
 							//deleted = 
 							del.Rename(path2, ifExists == FIfExists.RenameExisting);
 							//Rename to a temp name. Finally delete if ok (if !RenameExisting), undo if failed.
 							//It also solves this problem: if we delete the directory now, need to ensure that it does not delete the source directory, which is quite difficult.
 						} else {
 							//deleted = 0 ==
-							_DeleteL(path2, existsAs == FileDir2.SymLinkDirectory);
+							_DeleteL(path2, existsAs == FileIs_.SymLinkDirectory);
 						}
 						break;
 					}
@@ -543,7 +502,7 @@ namespace Au
 				}
 
 				if (copy) {
-					if (type1 == FileDir2.Directory) {
+					if (type1 == FileIs_.Directory) {
 						try {
 							_CopyDirectory(path1, path2, mergeDirectory, copyFlags, filter);
 							ok = true;
@@ -552,7 +511,7 @@ namespace Au
 							throw new AuException($"*{opName} '{path1}' to '{path2}'", ex);
 						}
 					} else {
-						if (type1 == FileDir2.SymLinkDirectory)
+						if (type1 == FileIs_.SymLinkDirectory)
 							ok = Api.CreateDirectoryEx(path1, path2, default);
 						else
 							ok = Api.CopyFileEx(path1, path2, null, default, null, Api.COPY_FILE_FAIL_IF_EXISTS | Api.COPY_FILE_COPY_SYMLINK);
@@ -567,7 +526,7 @@ namespace Au
 					}
 					catch (Exception ex) {
 						if (!path1.Ends(':')) //moving drive contents. Deleted contents but cannot delete drive.
-							AWarning.Write($"Failed to delete '{path1}' after copying it to another drive. {ex.Message}");
+							AOutput.Warning($"Failed to delete '{path1}' after copying it to another drive. {ex.Message}");
 						//throw new AuException("*move", ex); //don't. MoveFileEx also succeeds even if fails to delete source.
 					}
 				}
@@ -601,9 +560,9 @@ namespace Au
 				//AOutput.Write(s1, s2);
 				//continue;
 				if (f.IsDirectory) {
-					if (merge) switch (ExistsAs(s2, true)) {
-						case FileDir.Directory: continue; //never mind: check symbolic link mismatch
-						case FileDir.File: _DeleteL(s2, false); break;
+					if (merge) switch (Exists(s2, true)) {
+						case 2: continue; //never mind: check symbolic link mismatch
+						case 1: _DeleteL(s2, false); break;
 						}
 
 					ok = Api.CreateDirectoryEx(s1, s2, default);
@@ -623,7 +582,7 @@ namespace Au
 						//To create or copy symbolic links, need SeCreateSymbolicLinkPrivilege privilege.
 						//Admins have it, else this process cannot get it.
 						//More info: MS technet -> "Create symbolic links".
-						//ADebug.Print($"failed to copy symbolic link '{s1}'. It's OK, skipped it. Error: {ALastError.MessageFor()}");
+						//ADebug_.Print($"failed to copy symbolic link '{s1}'. It's OK, skipped it. Error: {ALastError.MessageFor()}");
 						continue;
 					}
 					if (0 != (copyFlags & FCFlags.IgnoreInaccessible)) {
@@ -655,7 +614,7 @@ namespace Au
 				string s1 = path.Remove(iFN) + "old", s2 = " " + path.Substring(iFN);
 				for (int i = 1; ; i++) {
 					tempPath = s1 + i + s2;
-					if (!ExistsAsAny(tempPath, true)) break;
+					if (!Exists(tempPath, true)) break;
 				}
 				if (!Api.MoveFileEx(path, tempPath, 0)) return false;
 				_oldPath = path; _tempPath = tempPath; _dontDelete = dontDelete;
@@ -830,11 +789,11 @@ namespace Au
 				var a = new List<string>();
 				foreach (var v in paths) {
 					var s = _PreparePath(v);
-					if (ExistsAsAny(s, true)) a.Add(s);
+					if (Exists(s, true)) a.Add(s);
 				}
 				if (a.Count == 0) return;
 				if (_DeleteShell(null, true, a)) return;
-				ADebug.Print("_DeleteShell failed");
+				ADebug_.Print("_DeleteShell failed");
 			}
 			foreach (var v in paths) Delete(v);
 		}
@@ -842,18 +801,18 @@ namespace Au
 		/// <summary>
 		/// note: path must be normalized.
 		/// </summary>
-		static FileDir2 _Delete(string path, bool tryRecycleBin = false) {
-			var type = ExistsAs2(path, true);
-			if (type == FileDir2.NotFound) return type;
-			if (type == FileDir2.AccessDenied) throw new AuException(0, $"*delete '{path}'");
+		static FileIs_ _Delete(string path, bool tryRecycleBin = false) {
+			var type = ExistsAs_(path, true);
+			if (type == FileIs_.NotFound) return type;
+			if (type == FileIs_.AccessDenied) throw new AuException(0, $"*delete '{path}'");
 
 			if (tryRecycleBin) {
 				if (_DeleteShell(path, true)) return type;
-				ADebug.Print("_DeleteShell failed");
+				ADebug_.Print("_DeleteShell failed");
 			}
 
 			int ec = 0;
-			if (type == FileDir2.Directory) {
+			if (type == FileIs_.Directory) {
 				var dirs = new List<string>();
 				foreach (var f in Enumerate(path, FEFlags.AndSubdirectories | FEFlags.UseRawPath | FEFlags.IgnoreInaccessible)) {
 					if (f.IsDirectory) dirs.Add(f.FullPath);
@@ -869,14 +828,14 @@ namespace Au
 					ShellNotify_(Api.SHCNE_RMDIR, path);
 					return type;
 				}
-				ADebug.Print("Using _DeleteShell.");
+				ADebug_.Print("Using _DeleteShell.");
 				//if(_DeleteShell(path, Recycle.No)) return type;
 				if (_DeleteShell(path, false)) return type;
 			} else {
-				ec = _DeleteL(path, type == FileDir2.SymLinkDirectory);
+				ec = _DeleteL(path, type == FileIs_.SymLinkDirectory);
 				if (ec == 0) return type;
 			}
-			if (ExistsAsAny(path, true)) throw new AuException(ec, $"*delete '{path}'");
+			if (Exists(path, true)) throw new AuException(ec, $"*delete '{path}'");
 
 			//info:
 			//RemoveDirectory fails if not empty.
@@ -902,13 +861,13 @@ namespace Au
 			for (int i = 1; (ec == Api.ERROR_SHARING_VIOLATION || ec == Api.ERROR_LOCK_VIOLATION || ec == Api.ERROR_DIR_NOT_EMPTY) && i <= 50; i++) {
 				//ERROR_DIR_NOT_EMPTY: see comments above about Explorer. Also fails in other cases, eg when a file was opened in a web browser.
 				string es = ec == Api.ERROR_DIR_NOT_EMPTY ? "ERROR_DIR_NOT_EMPTY when empty. Retry " : "ERROR_SHARING_VIOLATION. Retry ";
-				ADebug.PrintIf(i > 1, es + i.ToString());
+				ADebug_.PrintIf(i > 1, es + i.ToString());
 				Thread.Sleep(15);
 				if (dir ? Api.RemoveDirectory(path) : Api.DeleteFile(path)) return 0;
 				ec = ALastError.Code;
 			}
 			if (ec == Api.ERROR_FILE_NOT_FOUND || ec == Api.ERROR_PATH_NOT_FOUND) return 0;
-			ADebug.Print("_DeleteL failed. " + ALastError.MessageFor(ec) + "  " + path
+			ADebug_.Print("_DeleteL failed. " + ALastError.MessageFor(ec) + "  " + path
 				+ (dir ? ("   Children: " + string.Join(" | ", Enumerate(path).Select(f => f.Name))) : null));
 			return ec;
 
@@ -931,9 +890,9 @@ namespace Au
 			//if(r != 0) return false; //after all, I don't trust this too
 			//in some cases API returns 0 but does not delete. For example when path too long.
 			if (a == null) {
-				if (ExistsAsAny(path, true)) return false;
+				if (Exists(path, true)) return false;
 			} else {
-				foreach (var v in a) if (ExistsAsAny(v, true)) return false;
+				foreach (var v in a) if (Exists(v, true)) return false;
 			}
 			return true;
 
@@ -984,7 +943,7 @@ namespace Au
 		}
 
 		static bool _CreateDirectory(string path, bool pathIsPrepared = false, string templateDirectory = null) {
-			if (ExistsAsDirectory(path, pathIsPrepared)) return false;
+			if (Exists(path, pathIsPrepared).isDir) return false;
 			if (!pathIsPrepared) path = _PreparePath(path);
 			if (templateDirectory != null) templateDirectory = _PreparePath(templateDirectory);
 
@@ -994,7 +953,7 @@ namespace Au
 				stack.Push(s);
 				s = _RemoveFilename(s, true);
 				if (s == null) throw new AuException($@"*create directory '{path}'. Drive not found.");
-			} while (!ExistsAsDirectory(s, true));
+			} while (!Exists(s, true).isDir);
 
 			while (stack.Count > 0) {
 				s = stack.Pop();
@@ -1019,11 +978,11 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Expands environment variables (see <see cref="APath.ExpandEnvVar"/>). Throws ArgumentException if not full path. Normalizes. Removes or adds <c>'\\'</c> at the end.
+		/// Expands environment variables (see <see cref="APath.Expand"/>). Throws ArgumentException if not full path. Normalizes. Removes or adds <c>'\\'</c> at the end.
 		/// </summary>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		static string _PreparePath(string path) {
-			if (!APath.IsFullPathExpandEnvVar(ref path)) throw new ArgumentException($"Not full path: '{path}'.");
+			if (!APath.IsFullPathExpand(ref path)) throw new ArgumentException($"Not full path: '{path}'.");
 			return APath.Normalize_(path, noExpandEV: true);
 		}
 
@@ -1149,7 +1108,7 @@ namespace Au
 		/// Loads text file in a safer way.
 		/// Uses <see cref="File.ReadAllText(string)"/> and <see cref="WaitIfLocked{T}(Func{T}, int)"/>.
 		/// </summary>
-		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.</param>
+		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="APath.Expand"/>.</param>
 		/// <param name="encoding">Text encoding in file. Default <b>Encoding.UTF8</b>.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="File.ReadAllText(string)"/>.</exception>
@@ -1165,7 +1124,7 @@ namespace Au
 		/// Loads file in a safer way.
 		/// Uses <see cref="File.ReadAllBytes(string)"/> and <see cref="WaitIfLocked{T}(Func{T}, int)"/>.
 		/// </summary>
-		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.</param>
+		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="APath.Expand"/>.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="File.ReadAllBytes(string)"/>.</exception>
 		public static byte[] LoadBytes(string file) {
@@ -1177,7 +1136,7 @@ namespace Au
 		/// Loads file in a safer way.
 		/// Uses <see cref="File.OpenRead(string)"/> and <see cref="WaitIfLocked{T}(Func{T}, int)"/>.
 		/// </summary>
-		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.</param>
+		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="APath.Expand"/>.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="File.OpenRead(string)"/>.</exception>
 		public static FileStream LoadStream(string file) {
@@ -1189,7 +1148,7 @@ namespace Au
 		/// Writes any data to a file in a safe way, using a callback function.
 		/// </summary>
 		/// <param name="file">
-		/// File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.
+		/// File. Must be full path. Can contain environment variables etc, see <see cref="APath.Expand"/>.
 		/// The file can exist or not; this function overwrites it. If the directory does not exist, this function creates it.
 		/// </param>
 		/// <param name="writer">
@@ -1271,10 +1230,10 @@ namespace Au
 			w = new _LockedWaiter(lockedWaitMS);
 			g2:
 			string es = null;
-			if (ExistsAsFile(file, true)) {
+			if (Exists(file, true).isFile) {
 				if (!Api.ReplaceFile(file, temp, back, 6)) es = "ReplaceFile failed"; //random ERROR_UNABLE_TO_REMOVE_REPLACED; _LockedWaiter knows it
 				else if (backup) ShellNotify_(Api.SHCNE_RENAMEITEM, temp, file); //without it Explorer shows 2 files with filename of temp
-				else if (!Api.DeleteFile(back)) ADebug.PrintNativeError_(); //maybe should wait/retry if failed, but never noticed
+				else if (!Api.DeleteFile(back)) ADebug_.PrintNativeError_(); //maybe should wait/retry if failed, but never noticed
 			} else {
 				if (!Api.MoveFileEx(temp, file, Api.MOVEFILE_REPLACE_EXISTING)) es = "MoveFileEx failed";
 			}
@@ -1297,26 +1256,12 @@ namespace Au
 
 namespace Au.Types
 {
-	/// <summary>
-	/// File system entry type - file, directory, and whether it exists.
-	/// Returned by <see cref="AFile.ExistsAs"/>.
-	/// </summary>
-	public enum FileDir
-	{
-		/// <summary>Does not exist, or failed to get attributes.</summary>
-		NotFound = 0,
-		/// <summary>Is file, or symbolic link to a file.</summary>
-		File = 1,
-		/// <summary>Is directory, or symbolic link to a directory.</summary>
-		Directory = 2,
-	}
-
+	//CONSIDER: remove. Use FAttr instead.
 	/// <summary>
 	/// File system entry type - file, directory, symbolic link, whether it exists and is accessible.
-	/// Returned by <see cref="AFile.ExistsAs2"/>.
 	/// The enum value NotFound is 0; AccessDenied is negative ((int)0x80000000); other values are greater than 0.
 	/// </summary>
-	public enum FileDir2
+	internal enum FileIs_
 	{
 		/// <summary>Does not exist.</summary>
 		NotFound = 0,
@@ -1330,6 +1275,82 @@ namespace Au.Types
 		SymLinkDirectory = 6,
 		/// <summary>Exists but this process cannot access it and get attributes.</summary>
 		AccessDenied = int.MinValue,
+	}
+
+	/// <summary>
+	/// Contains file or directory attributes. Tells whether it exists, is directory, symbolic link, readonly, hidden, system.
+	/// See <see cref="AFile.Exists"/>.
+	/// </summary>
+	public struct FAttr
+	{
+		readonly FileAttributes _a;
+		readonly bool _exists, _unknown;
+
+		/// <param name="attributes">Attributes, or 0 if does not exist or can't get attributes.</param>
+		/// <param name="exists">True if exists and can get attributes. False if does not exist. null if exists but can't get attributes.</param>
+		public FAttr(FileAttributes attributes, bool? exists) { _a = attributes; _exists = exists == true; _unknown = exists == null; }
+
+		/// <summary>
+		/// Returns file or directory attributes. Returns 0 if <see cref="exists"/> false.
+		/// </summary>
+		public FileAttributes attr => _a;
+
+		/// <summary>
+		/// Returns <see cref="exists"/>.
+		/// </summary>
+		public static implicit operator bool(FAttr fa) => fa.exists;
+
+		/// <summary>
+		/// Returns 0 if !<see cref="exists"/>, 1 if <see cref="isFile"/>, 2 if <see cref="isDir"/>. Can be used with switch.
+		/// </summary>
+		public static implicit operator int(FAttr fa) => !fa.exists ? 0 : (fa.isDir ? 2 : 1);
+
+		/// <summary>
+		/// Exists and is accessible (<see cref="unknown"/> false).
+		/// See also <see cref="isFile"/>, <see cref="isDir"/>.
+		/// </summary>
+		public bool exists => _exists;
+
+		/// <summary>
+		/// Exists but this process cannot access it and get attributes (error "access denied"). Then other bool properties return false.
+		/// </summary>
+		public bool unknown => _unknown;
+
+		/// <summary>
+		/// Is file (not directory), or symbolic link to a file (if <see cref="isSymlink"/> true).
+		/// </summary>
+		public bool isFile => 0 == (_a & FileAttributes.Directory) && _exists;
+
+		/// <summary>
+		/// Is directory, or symbolic link to a directory (if <see cref="isSymlink"/> true).
+		/// </summary>
+		public bool isDir => 0 != (_a & FileAttributes.Directory);
+
+		/// <summary>
+		/// Has <see cref="FileAttributes.ReparsePoint"/>.
+		/// If <see cref="isFile"/> true, it is symbolic link to a file. If <see cref="isDir"/> true, it is symbolic link to a directory or is a mounted folder.
+		/// </summary>
+		public bool isSymlink => 0 != (_a & FileAttributes.ReparsePoint);
+
+		/// <summary>
+		/// Has <see cref="FileAttributes.ReadOnly"/>.
+		/// </summary>
+		public bool isReadonly => 0 != (_a & FileAttributes.ReadOnly);
+
+		/// <summary>
+		/// Has <see cref="FileAttributes.Hidden"/>.
+		/// </summary>
+		public bool isHidden => 0 != (_a & FileAttributes.Hidden);
+
+		/// <summary>
+		/// Has <see cref="FileAttributes.System"/>.
+		/// </summary>
+		public bool isSystem => 0 != (_a & FileAttributes.System);
+
+		///
+		public override string ToString() {
+			return unknown ? "unknown" : (exists ? $"{{ isDir={isDir}, isSymlink={isSymlink}, attr={attr} }}" : "doesn't exist");
+		}
 	}
 
 	/// <summary>

@@ -135,7 +135,7 @@ partial class FilesModel
 		try {
 			//SHOULDDO: if editor runs as admin, the workspace directory should be write-protected from non-admin processes.
 
-			if (s_isNewWorkspace = !AFile.ExistsAsFile(xmlFile)) {
+			if (s_isNewWorkspace = !AFile.Exists(xmlFile).isFile) {
 				AFile.Copy(AFolders.ThisAppBS + @"Default\Workspace", wsDir);
 			}
 
@@ -276,7 +276,7 @@ partial class FilesModel
 				for (uint u = 1; u < uint.MaxValue; u++) if (!_idMap.ContainsKey(u)) { MaxId = u - 1; break; } //fast
 				goto g1;
 			} else if (_idMap.ContainsKey(id)) { //damaged XML file, or maybe a bug?
-				ADebug.Print("id already exists:" + id);
+				ADebug_.Print("id already exists:" + id);
 				MaxId = _idMap.Keys.Max();
 				id = 0;
 				goto g1;
@@ -285,7 +285,7 @@ partial class FilesModel
 		}
 		try { _idMap.Add(id, f); }
 		catch (ArgumentException) {
-			AWarning.Write($"Duplicate id of '{f.Name}'. Creating new.");
+			AOutput.Warning($"Duplicate id of '{f.Name}'. Creating new.");
 			id = 0;
 			goto g1;
 		}
@@ -308,10 +308,10 @@ partial class FilesModel
 		uint idf = (uint)id;
 		if (idf == 0) return null;
 		if (_idMap.TryGetValue(idf, out var f)) {
-			ADebug.PrintIf(f == null, "deleted: " + idf);
+			ADebug_.PrintIf(f == null, "deleted: " + idf);
 			return f;
 		}
-		ADebug.Print("id not found: " + idf);
+		ADebug_.Print("id not found: " + idf);
 		return null;
 	}
 
@@ -595,7 +595,7 @@ partial class FilesModel
 		}
 
 		foreach (var k in e) {
-			try { DB?.Execute("DELETE FROM _editor WHERE id=?", k.Id); } catch (SLException ex) { ADebug.Print(ex); }
+			try { DB?.Execute("DELETE FROM _editor WHERE id=?", k.Id); } catch (SLException ex) { ADebug_.Print(ex); }
 			Au.Compiler.Compiler.OnFileDeleted(this, k);
 			_idMap[k.Id] = null;
 			k.IsDeleted = true;
@@ -627,10 +627,10 @@ partial class FilesModel
 			//	//FUTURE
 			//	break;
 			case 3:
-				AFile.Run(f.FilePath);
+				ARun.Run(f.FilePath);
 				break;
 			case 4:
-				AFile.SelectInExplorer(f.FilePath);
+				ARun.SelectInExplorer(f.FilePath);
 				break;
 			}
 		}
@@ -856,7 +856,7 @@ partial class FilesModel
 				text = AFile.LoadText(FileNode.Templates.DefaultDirBS + relPath);
 			} else if (FileNode.Templates.IsStandardTemplateName(relPath, out var tt)) {
 				text = FileNode.Templates.Load(tt);
-				//if (tt == FileNode.ETempl.Script) text = text.RegexReplace(@"\bScript\s*:\s*AScript\s*\{", "Script {", 1); //no. The user will see warning when compiling, and let update custom template.
+				//if (tt == FileNode.ETempl.Script) text = text.RegexReplace(@"\bScript\s*\{", "Script {", 1); //no. The user will see warning when compiling, and let update custom template.
 			} else {
 				text = AFile.LoadText(FileNode.Templates.DefaultDirBS + relPath);
 				if (text.Length < 20 && text.Starts("//#")) { //load default or custom template?
@@ -986,7 +986,7 @@ partial class FilesModel
 	public void ImportWorkspace(string wsDirOrZip = null, (FileNode target, FNPosition pos)? where = null) {
 		try {
 			string wsDir, folderName;
-			bool isZip = wsDirOrZip.Ends(".zip") && AFile.ExistsAsFile(wsDirOrZip), notWorkspace = false;
+			bool isZip = wsDirOrZip.Ends(".zip") && AFile.Exists(wsDirOrZip).isFile, notWorkspace = false;
 
 			if (isZip) {
 				folderName = APath.GetNameNoExt(wsDirOrZip);
@@ -1056,13 +1056,13 @@ partial class FilesModel
 			var s = a[i] = APath.Normalize(a[i]);
 			if (s.Find(@"\$RECYCLE.BIN\", true) > 0) {
 				ADialog.Show("Files from Recycle Bin", $"At first restore the file to the <a href=\"{FilesDirectory}\">workspace folder</a> or other normal folder.",
-					icon: DIcon.Info, owner: TreeControl, onLinkClick: e => AFile.TryRun(e.LinkHref));
+					icon: DIcon.Info, owner: TreeControl, onLinkClick: e => ARun.RunSafe(e.LinkHref));
 				return;
 			}
 			var fd = FilesDirectory;
 			if (!fromWorkspaceDir) {
 				if (s.Starts(fd, true) && (s.Length == fd.Length || s[fd.Length] == '\\')) fromWorkspaceDir = true;
-				else if (!dirsDropped) dirsDropped = AFile.ExistsAsDirectory(s);
+				else if (!dirsDropped) dirsDropped = AFile.Exists(s).isDir;
 			}
 		}
 		int r;
@@ -1088,11 +1088,9 @@ partial class FilesModel
 			var (nf1, nd1, nc1) = _CountFilesFolders();
 
 			foreach (var path in a) {
-				bool isDir;
-				var itIs = AFile.ExistsAs2(path, true);
-				if (itIs == FileDir2.File) isDir = false;
-				else if (itIs == FileDir2.Directory && r != 1) isDir = true;
-				else continue; //skip symlinks or if does not exist
+				var g = AFile.Exists(path, true);
+				if (!g.exists || g.isSymlink) continue;
+				bool isDir = g.isDir && r != 1;
 
 				if (fromWorkspaceDir) {
 					var relPath = path[FilesDirectory.Length..];
@@ -1237,7 +1235,7 @@ partial class FilesModel
 				_watcher.Renamed += _watcher_Event;
 				_watcher.EnableRaisingEvents = true;
 			}
-			catch (Exception ex) { init = false; ADebug.Print(ex); }
+			catch (Exception ex) { init = false; ADebug_.Print(ex); }
 		}
 		if (!init) {
 			_watcher?.Dispose(); //disables raising events and sets all events = null
@@ -1248,10 +1246,10 @@ partial class FilesModel
 	private void _watcher_Event(object sender, FileSystemEventArgs e) //in thread pool
 	{
 		//if(e.Name.Ends("~temp") || e.Name.Ends("~backup")) return; //no such events, because we use other directory for temp files
-		if (e.ChangeType == WatcherChangeTypes.Changed && AFile.ExistsAs(e.FullPath, true) != FileDir.File) return; //we receive 'directory changed' after every 'file changed' etc
+		if (e.ChangeType == WatcherChangeTypes.Changed && !AFile.Exists(e.FullPath, true).isFile) return; //we receive 'directory changed' after every 'file changed' etc
 
 		try { TreeControl?.Dispatcher.InvokeAsync(() => _watcher_Event2(e)); }
-		catch (Exception ex) { ADebug.Print(ex); }
+		catch (Exception ex) { ADebug_.Print(ex); }
 	}
 
 	private void _watcher_Event2(FileSystemEventArgs e) //in main thread
@@ -1259,7 +1257,7 @@ partial class FilesModel
 		var f = Find("\\" + e.Name, null);
 		//if(e is RenamedEventArgs r) AOutput.Write(e.ChangeType, r.OldName, e.Name, r.OldFullPath, e.FullPath, f); else AOutput.Write(e.ChangeType, e.Name, e.FullPath, f);
 		if (f == null || f.IsLink) return;
-		//ADebug.Print($"<><c blue>File {e.ChangeType.ToString().Lower()} externally: {f}  ({e.FullPath})<>");
+		//ADebug_.Print($"<><c blue>File {e.ChangeType.ToString().Lower()} externally: {f}  ({e.FullPath})<>");
 		if (f.IsFolder) {
 			//if(e.ChangeType == WatcherChangeTypes.Changed) return;
 			foreach (var v in f.Descendants()) v.UnCacheText(fromWatcher: true);
@@ -1304,7 +1302,7 @@ partial class FilesModel
 		int nRemoved = 0;
 		for (int i = 0, n = ar?.Length ?? 0; i < n; i++) {
 			var path = ar[i];
-			if (sub.Items.Count >= 20 || !AFile.ExistsAsDirectory(path)) {
+			if (sub.Items.Count >= 20 || !AFile.Exists(path).isDir) {
 				ar[i] = null;
 				nRemoved++;
 			} else _Add(path, false);
@@ -1348,7 +1346,7 @@ partial class FilesModel
 					item.Click += (_, e) => App.Model.NewItemX(x, beginRenaming: true);
 					var ft = FileNode.XmlTagToFileType(tag, canThrow: false);
 					item.Icon = ft == EFileType.NotCodeFile
-						? new Image { Source = AIcon.OfFile(templDir + relPath)?.ToWpfImage() }
+						? new Image { Source = AIcon.Of(templDir + relPath)?.ToWpfImage() }
 						: AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(FileNode.GetFileTypeImageSource(ft));
 				}
 				mParent.Items.Add(item);
@@ -1423,14 +1421,14 @@ partial class FilesModel
 	/// </summary>
 	public static bool IsWorkspaceDirectoryOrZip(string path, out bool zip) {
 		zip = false;
-		switch (AFile.ExistsAs(path)) {
-		case FileDir.Directory:
+		switch (AFile.Exists(path)) {
+		case 2:
 			string xmlFile = path + @"\files.xml";
-			if (AFile.ExistsAsFile(xmlFile) && AFile.ExistsAsDirectory(path + @"\files")) {
+			if (AFile.Exists(xmlFile).isFile && AFile.Exists(path + @"\files").isDir) {
 				try { return AXml.LoadElem(xmlFile).Name == "files"; } catch { }
 			}
 			break;
-		case FileDir.File when path.Ends(".zip", true):
+		case 1 when path.Ends(".zip", true):
 			return zip = true;
 		}
 		return false;

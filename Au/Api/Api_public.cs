@@ -300,7 +300,7 @@ namespace Au.Types
 	/// Window long constants. Used with <see cref="AWnd.GetWindowLong"/> and <see cref="AWnd.SetWindowLong"/>.
 	/// See API <msdn>GetWindowLong</msdn>. See also API <msdn>SetWindowSubclass</msdn>.
 	/// </summary>
-	public static class GWLong
+	public static class GWL
 	{
 		public const int WNDPROC = -4;
 		public const int USERDATA = -21;
@@ -323,7 +323,7 @@ namespace Au.Types
 	/// Window class long constants. Used with <see cref="AWnd.More.GetClassLong"/>.
 	/// See API <msdn>WNDCLASSEX</msdn>, <msdn>GetClassLong</msdn>.
 	/// </summary>
-	public static class GCLong
+	public static class GCL
 	{
 		public const int ATOM = -32;
 		public const int WNDPROC = -24;

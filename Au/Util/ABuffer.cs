@@ -229,7 +229,7 @@ namespace Au.Types
 	//}
 
 	/// <summary>
-	/// Flags for <see cref="Au.Util.ABuffer{T}.GetString"/>.
+	/// Flags for <see cref="ABuffer{T}.GetString"/>.
 	/// </summary>
 	[Flags]
 	public enum BSFlags

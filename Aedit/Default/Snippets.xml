@@ -289,7 +289,7 @@ m.Submenu("", m => {
 	m[""] = o => {  };
 });
 m.Separator();
-m["Run program example"] = o => AFile.Run(AFolders.System + @"notepad.exe");
+m["Run program example"] = o => ARun.Run(AFolders.System + @"notepad.exe");
 m["Run script example"] = o => ATask.Run("Script123456789.cs");
 m["Copy-paste example"] = o => {
 	string s = AClipboard.Copy();
@@ -430,7 +430,7 @@ if (!b.ShowDialog()) return;
 		</snippet>
 
 		<snippet name="runSnippet" info="Run a program or open a document, folder, web page." more="Tip: drag and drop.">
-			<![CDATA[AFile.Run($end$AFolders.System + @"Notepad.exe"$end$);]]>
+			<![CDATA[ARun.Run($end$AFolders.System + @"Notepad.exe"$end$);]]>
 		</snippet>
 
 		<snippet name="scriptSnippet" info="Start to execute a script." more="Tip: drag and drop. See also: RunWait.">

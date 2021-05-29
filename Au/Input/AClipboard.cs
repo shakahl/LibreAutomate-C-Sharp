@@ -26,7 +26,7 @@ namespace Au
 	/// 
 	/// Don't copy/paste in windows of own thread. Call it from another thread. Example in <see cref="AKeys.Key"/>.
 	/// </remarks>
-	public static partial class AClipboard
+	public static class AClipboard
 	{
 		/// <summary>
 		/// Clears the clipboard.
@@ -483,7 +483,7 @@ namespace Au
 
 					//CONSIDER: option to return true for user-known windows, eg using a callback. Print warning that includes wOC info.
 
-					ADebug.Print(wOC.ToString());
+					ADebug_.Print(wOC.ToString());
 					return false;
 
 					//BlueStacks problems:
@@ -726,7 +726,7 @@ namespace Au
 					_a ??= new List<Handle_>();
 					_a.Add(ht);
 				}
-				ADebug.PrintIf(_a == null, "no suspended threads");
+				ADebug_.PrintIf(_a == null, "no suspended threads");
 			}
 
 			public void Restore() {

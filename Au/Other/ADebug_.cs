@@ -19,11 +19,11 @@ namespace Au
 	/// Functions useful to debug code.
 	/// </summary>
 	/// <remarks>
-	/// The ADebug.PrintX functions write to the same output as <see cref="AOutput.Write"/>, not to the trace listeners like <see cref="Debug.Print(string)"/> etc do. Also they add caller's name, file and line number.
+	/// The ADebug_.PrintX functions write to the same output as <see cref="AOutput.Write"/>, not to the trace listeners like <see cref="Debug.Print(string)"/> etc do. Also they add caller's name, file and line number.
 	/// Functions Print, PrintIf, PrintFunc and Dialog work only if DEBUG is defined, which normally is when the caller project is in Debug configuration. Else they are not called, and arguments not evaluated at run time. This is because they have [<see cref="ConditionalAttribute"/>("DEBUG")].
-	/// Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(AOpt.Warnings.Verbose) AWarning.Write("text");</c>; see <see cref="AWarning.Write"/>, AOpt.Warnings.<see cref="OWarnings.Verbose"/>.
+	/// Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(AOpt.Warnings.Verbose) AOutput.Warning("text");</c>; see <see cref="AOutput.Warning"/>, AOpt.Warnings.<see cref="OWarnings.Verbose"/>.
 	/// </remarks>
-	internal static class ADebug //FUTURE: make public, when will be more tested and if really need.
+	internal static class ADebug_ //FUTURE: make public, when will be more tested and if really need.
 	{
 		static void _Print(object text, string f_, int l_, string m_) {
 			string s = AOutput.ObjectToString_(text);
@@ -107,7 +107,7 @@ namespace Au
 		//	ADialog.Show("Debug", text, flags: DFlags.ExpandDown | DFlags.Wider, expandedText: x.ToString());
 		//}
 
-		//rejected: Not used in this library. Not useful for debug because don't show the stack trace. Instead use AWarning.Write; it supports prefix "Debug: ", "Note: ", "Info :"; it also supports disabling warnings etc.
+		//rejected: Not used in this library. Not useful for debug because don't show the stack trace. Instead use AOutput.Warning; it supports prefix "Debug: ", "Note: ", "Info :"; it also supports disabling warnings etc.
 		///// <summary>
 		///// If AOpt.Warnings.<see cref="OWarnings.Verbose"/> == true, calls <see cref="AOutput.Write(string)"/>.
 		///// Read more in class help.
@@ -117,15 +117,15 @@ namespace Au
 		//	if(AOpt.Warnings.Verbose) _Print("Debug: " + text);
 		//}
 
-		//rejected: Don't need multiple warning functions. Now AWarning.Write does not show more than 1 warning/second if AOpt.Warnings.Verbose is false.
+		//rejected: Don't need multiple warning functions. Now AOutput.Warning does not show more than 1 warning/second if AOpt.Warnings.Verbose is false.
 		///// <summary>
-		///// If AOpt.Warnings.<see cref="OWarnings.Verbose"/> == true, calls <see cref="AWarning.Write"/>.
+		///// If AOpt.Warnings.<see cref="OWarnings.Verbose"/> == true, calls <see cref="AOutput.Warning"/>.
 		///// Read more in class help.
 		///// </summary>
 		//[MethodImpl(MethodImplOptions.NoInlining)]
 		//public static void WarningOpt(string text)
 		//{
-		//	if(AOpt.Warnings.Verbose) AWarning.Write(text, 1);
+		//	if(AOpt.Warnings.Verbose) AOutput.Warning(text, 1);
 		//}
 
 		/// <summary>
@@ -158,7 +158,7 @@ namespace Au
 				s.Append(t.GetEnumName(i));
 			}
 			s.Append('.');
-			//AWarning.Write(s.ToString(), 1);
+			//AOutput.Warning(s.ToString(), 1);
 			throw new ArgumentException(s.ToString());
 		}
 

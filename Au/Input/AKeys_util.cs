@@ -464,13 +464,13 @@ namespace Au
 			/// <exception cref="AuException">No focused window when <i>requireFocus</i>.</exception>
 			internal static AWnd GetWndFocusedOrActive(bool requireFocus) {
 				for (int i = 0; i < (requireFocus ? 100 : 20); i++) {
-					AMiscInfo.GetGUIThreadInfo(out var g);
+					AInputInfo.GetGUIThreadInfo(out var g);
 					//AOutput.Write(i, g.hwndFocus, g.hwndActive);
 					if (!g.hwndFocus.Is0) return g.hwndFocus;
 					if (!requireFocus && !g.hwndActive.Is0) return g.hwndActive;
 					ATime.Sleep(i < 20 ? 1 : 10);
 				}
-				if (!AMiscInfo.IsInputDesktop()) throw new AuException("Other desktop is active");
+				if (!AInputInfo.IsInputDesktop()) throw new AuException("Other desktop is active");
 				if (requireFocus) throw new AuException("There is no focused window"); //SHOULDDO: test various windows and data types, maybe somewhere could work without focus
 				return default;
 

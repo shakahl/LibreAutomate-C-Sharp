@@ -67,7 +67,7 @@ namespace Au.Triggers
 	/// hk["Ctrl+K"] = o => AOutput.Write(o.Trigger); //it means: execute code "o => AOutput.Write(o.Trigger)" when I press Ctrl+K
 	/// hk["Ctrl+Shift+F11"] = o => {
 	/// 	AOutput.Write(o.Trigger);
-	/// 	var w1 = AWnd.FindOrRun("* Notepad", run: () => AFile.Run(AFolders.System + "notepad.exe"));
+	/// 	var w1 = AWnd.FindOrRun("* Notepad", run: () => ARun.Run(AFolders.System + "notepad.exe"));
 	/// 	AKeys.Text("text");
 	/// 	w1.Close();
 	/// };
@@ -178,8 +178,8 @@ namespace Au.Triggers
 		//public TriggerScopes Of {
 		//	get {
 		//		if(_test == false){
-		//			ADebug.MemorySetAnchor_();
-		//			ATimer.After(500, _ => ADebug.MemoryPrint_());
+		//			ADebug_.MemorySetAnchor_();
+		//			ATimer.After(500, _ => ADebug_.MemoryPrint_());
 		//		}
 
 		//		var k=new StackFrame(1, true);
@@ -278,7 +278,7 @@ namespace Au.Triggers
 		/// <exception cref="InvalidOperationException">Already running.</exception>
 		/// <exception cref="AuException">Something failed.</exception>
 		public unsafe void Run() {
-			//ADebug.PrintLoadedAssemblies(true, true, true);
+			//ADebug_.PrintLoadedAssemblies(true, true, true);
 
 			ThrowIfRunning_();
 
@@ -324,7 +324,7 @@ namespace Au.Triggers
 							AutotextTriggers.JitCompile();
 							MouseTriggers.JitCompile();
 						}
-						catch (Exception ex) { ADebug.Print(ex); }
+						catch (Exception ex) { ADebug_.Print(ex); }
 					});
 				}
 
@@ -380,7 +380,7 @@ namespace Au.Triggers
 					return 0;
 				}
 			}
-			catch (Exception ex) { ADebug.Print(ex.Message); return default; }
+			catch (Exception ex) { ADebug_.Print(ex.Message); return default; }
 
 			return Api.DefWindowProc(w, message, wParam, lParam);
 		}
@@ -780,7 +780,7 @@ namespace Au.Triggers
 				//And we cannot use AKeys.IsPressed, because our triggers release modifiers. Also Key() etc. Then triggers could not be auto-repeated.
 				//We use both. If IsPressed(mod), add mod to _mod. Else remove from _mod after >5 s since the last seen key event. The max auto-repeat delay that you can set in CP is ~1 s.
 				TrigUtil.GetModLR(out modL, out modR);
-				//ADebug.PrintIf(modL != _modL || modR != _modR, $"KEY={k.vkCode}    modL={modL}  _modL={_modL}    modR={modR}  _modR={_modR}"); //normally should be only when auto-repeating a trigger
+				//ADebug_.PrintIf(modL != _modL || modR != _modR, $"KEY={k.vkCode}    modL={modL}  _modL={_modL}    modR={modR}  _modR={_modR}"); //normally should be only when auto-repeating a trigger
 				_modL |= modL; _modR |= modR;
 				long time = ATime.WinMilliseconds;
 				if (time - _lastKeyTime > 5000) {

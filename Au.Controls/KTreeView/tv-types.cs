@@ -61,7 +61,7 @@ namespace Au.Controls
 		/// "imagefile:" - path of png/bmp/jpg/gif/tif or xaml file.
 		/// "resource:" - path of png/bmp/jpg/gif/tif or xaml resource. Don't need prefix if starts with "resources/", like "resources/file.png".
 		/// "image:" - Base-64 encoded png/bmp/jpg/gif/tif image.
-		/// If without prefix, gets file icon; see <see cref="AIcon.OfFile"/>.
+		/// If without prefix, gets file icon; see <see cref="AIcon.Of"/>.
 		/// </summary>
 		/// <remarks>
 		/// To load image the control calls <see cref="AImageUtil.LoadGdipBitmapFromFileOrResourceOrString"/> or <see cref="AImageUtil.LoadWpfImageElementFromFileOrResourceOrString"/>.

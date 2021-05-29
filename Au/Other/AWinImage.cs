@@ -1000,7 +1000,7 @@ namespace Au
 					//using(var areaBmp = new Bitmap(areaWidth, areaHeight, areaWidth * 4, PixelFormat.Format32bppRgb, (IntPtr)p)) {
 					//	areaBmp.Save(testFile);
 					//}
-					////AFile.Run(testFile);
+					////ARun.Run(testFile);
 				}
 			}
 		}

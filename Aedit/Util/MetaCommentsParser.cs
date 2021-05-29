@@ -15,6 +15,8 @@ using Au;
 using Au.Types;
 using Au.Compiler;
 
+//TODO: if was multiline, format multiline. At least if first meta was in new line.
+
 class MetaCommentsParser
 {
 	FileNode _fn;

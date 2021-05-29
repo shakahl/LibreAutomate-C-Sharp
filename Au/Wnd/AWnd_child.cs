@@ -205,7 +205,7 @@ namespace Au
 										return -1;
 									}
 									catch(AuException e) { //probably process of higher UAC integrity level
-										AWarning.Write($"Failed to get .NET control names. {e.Message}");
+										AOutput.Warning($"Failed to get .NET control names. {e.Message}");
 										return -1;
 									}
 								}
@@ -582,7 +582,7 @@ namespace Au
 			if((uint)(itemId - 1) >= 0xffff) throw new ArgumentOutOfRangeException();
 			ThrowIfInvalid();
 			var w = this;
-			if(ClassNameIs("#32768") && AMiscInfo.GetGUIThreadInfo(out var g, ThreadId) && !g.hwndMenuOwner.Is0) w = g.hwndMenuOwner;
+			if(ClassNameIs("#32768") && AInputInfo.GetGUIThreadInfo(out var g, ThreadId) && !g.hwndMenuOwner.Is0) w = g.hwndMenuOwner;
 			w.Post(systemMenu ? Api.WM_SYSCOMMAND : Api.WM_COMMAND, itemId);
 			w.MinimalSleepIfOtherThread_();
 		}
@@ -774,7 +774,7 @@ namespace Au.Types
 					if (a == null) return 0;
 					return _GetAccCheckState(a);
 				}
-				catch (Exception ex) { ADebug.Print(ex); } //CONSIDER: if fails, show warning. In all AWnd property-get functions.
+				catch (Exception ex) { ADebug_.Print(ex); } //CONSIDER: if fails, show warning. In all AWnd property-get functions.
 				return 0;
 			} else {
 				return (int)W.Send(BM_GETCHECK);

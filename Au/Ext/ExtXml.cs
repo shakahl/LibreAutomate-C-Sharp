@@ -286,7 +286,7 @@ namespace Au.Types
 namespace Au.Util
 {
 	/// <summary>
-	/// Extends some .NET XML classes.
+	/// Contains static functions to load <b>XElement</b> and <b>XDocument</b> in a safer way.
 	/// </summary>
 	public static class AXml
 	{
@@ -295,7 +295,7 @@ namespace Au.Util
 		/// Uses <see cref="XElement.Load(XmlReader, LoadOptions)"/> and <see cref="AFile.WaitIfLocked"/>.
 		/// </summary>
 		/// <param name="file">
-		/// File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.
+		/// File. Must be full path. Can contain environment variables etc, see <see cref="APath.Expand"/>.
 		/// If starts with '&lt;', loads from XML string instead.
 		/// </param>
 		/// <param name="options"></param>
@@ -312,7 +312,7 @@ namespace Au.Util
 		/// Uses <see cref="XDocument.Load(XmlReader, LoadOptions)"/> and <see cref="AFile.WaitIfLocked"/>.
 		/// </summary>
 		/// <param name="file">
-		/// File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.
+		/// File. Must be full path. Can contain environment variables etc, see <see cref="APath.Expand"/>.
 		/// If starts with '&lt;', loads from XML string instead.
 		/// </param>
 		/// <param name="options"></param>

@@ -1560,13 +1560,13 @@
             See API <msdn>SetWindowPos</msdn>.
             </summary>
         </member>
-        <member name="T:Au.Types.GWLong">
+        <member name="T:Au.Types.GWL">
             <summary>
             Window long constants. Used with <see cref="M:Au.AWnd.GetWindowLong(System.Int32)"/> and <see cref="M:Au.AWnd.SetWindowLong(System.Int32,System.IntPtr)"/>.
             See API <msdn>GetWindowLong</msdn>. See also API <msdn>SetWindowSubclass</msdn>.
             </summary>
         </member>
-        <member name="T:Au.Types.GCLong">
+        <member name="T:Au.Types.GCL">
             <summary>
             Window class long constants. Used with <see cref="M:Au.AWnd.More.GetClassLong(Au.AWnd,System.Int32)"/>.
             See API <msdn>WNDCLASSEX</msdn>, <msdn>GetClassLong</msdn>.
@@ -1597,7 +1597,7 @@
         </member>
         <member name="T:Au.Types.OWarnings">
             <summary>
-            Options for run-time warnings (<see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>).
+            Options for run-time warnings (<see cref="M:Au.AOutput.Warning(System.String,System.Int32,System.String)"/>).
             </summary>
         </member>
         <member name="M:Au.Types.OWarnings.#ctor(Au.Types.OWarnings)">
@@ -1618,7 +1618,7 @@
             </summary>
             <param name="warningsWild">One or more warnings as case-insensitive wildcard strings. See <see cref="M:Au.ExtString.Like(System.String,System.String,System.Boolean)"/>.</param>
             <remarks>
-            Adds the strings to an internal list. When <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/> is called, it looks in the list. If finds the warning in the list, does not show the warning.
+            Adds the strings to an internal list. When <see cref="M:Au.AOutput.Warning(System.String,System.Int32,System.String)"/> is called, it looks in the list. If finds the warning in the list, does not show the warning.
             It's easy to auto-restore warnings with 'using', like in the second example. Restoring is optional.
             </remarks>
             <example>
@@ -1629,11 +1629,11 @@
             Temporarily disable all warnings in this thread.
             <code><![CDATA[
             AOpt.Warnings.Verbose = true;
-            AWarning.Write("one");
+            AOutput.Warning("one");
             using(AOpt.Warnings.Disable("*")) {
-            	AWarning.Write("two");
+            	AOutput.Warning("two");
             }
-            AWarning.Write("three");
+            AOutput.Warning("three");
             ]]></code>
             Don't use code <c>using(AOpt.Static.Warnings.Disable...</c>, it's not thread-safe.
             </example>
@@ -3426,45 +3426,99 @@
             </summary>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:System.Xml.Linq.XDocument.Save(System.IO.Stream)"/> and <see cref="M:Au.AFile.Save(System.String,System.Action{System.String},System.Boolean,System.String,System.Int32)"/>.</exception>
         </member>
-        <member name="T:Au.Types.FileDir">
-            <summary>
-            File system entry type - file, directory, and whether it exists.
-            Returned by <see cref="M:Au.AFile.ExistsAs(System.String,System.Boolean)"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Types.FileDir.NotFound">
-            <summary>Does not exist, or failed to get attributes.</summary>
-        </member>
-        <member name="F:Au.Types.FileDir.File">
-            <summary>Is file, or symbolic link to a file.</summary>
-        </member>
-        <member name="F:Au.Types.FileDir.Directory">
-            <summary>Is directory, or symbolic link to a directory.</summary>
-        </member>
-        <member name="T:Au.Types.FileDir2">
+        <member name="T:Au.Types.FileIs_">
             <summary>
             File system entry type - file, directory, symbolic link, whether it exists and is accessible.
-            Returned by <see cref="M:Au.AFile.ExistsAs2(System.String,System.Boolean)"/>.
             The enum value NotFound is 0; AccessDenied is negative ((int)0x80000000); other values are greater than 0.
             </summary>
         </member>
-        <member name="F:Au.Types.FileDir2.NotFound">
+        <member name="F:Au.Types.FileIs_.NotFound">
             <summary>Does not exist.</summary>
         </member>
-        <member name="F:Au.Types.FileDir2.File">
+        <member name="F:Au.Types.FileIs_.File">
             <summary>Is file. Attributes: Directory no, ReparsePoint no.</summary>
         </member>
-        <member name="F:Au.Types.FileDir2.Directory">
+        <member name="F:Au.Types.FileIs_.Directory">
             <summary>Is directory. Attributes: Directory yes, ReparsePoint no.</summary>
         </member>
-        <member name="F:Au.Types.FileDir2.SymLinkFile">
+        <member name="F:Au.Types.FileIs_.SymLinkFile">
             <summary>Is symbolic link to a file. Attributes: Directory no, ReparsePoint yes.</summary>
         </member>
-        <member name="F:Au.Types.FileDir2.SymLinkDirectory">
+        <member name="F:Au.Types.FileIs_.SymLinkDirectory">
             <summary>Is symbolic link to a directory, or is a mounted folder. Attributes: Directory yes, ReparsePoint yes.</summary>
         </member>
-        <member name="F:Au.Types.FileDir2.AccessDenied">
+        <member name="F:Au.Types.FileIs_.AccessDenied">
             <summary>Exists but this process cannot access it and get attributes.</summary>
+        </member>
+        <member name="T:Au.Types.FAttr">
+            <summary>
+            Contains file or directory attributes. Tells whether it exists, is directory, symbolic link, readonly, hidden, system.
+            See <see cref="M:Au.AFile.Exists(System.String,System.Boolean)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.FAttr.#ctor(System.IO.FileAttributes,System.Nullable{System.Boolean})">
+            <param name="attributes">Attributes, or 0 if does not exist or can't get attributes.</param>
+            <param name="exists">True if exists and can get attributes. False if does not exist. null if exists but can't get attributes.</param>
+        </member>
+        <member name="P:Au.Types.FAttr.attr">
+            <summary>
+            Returns file or directory attributes. Returns 0 if <see cref="P:Au.Types.FAttr.exists"/> false.
+            </summary>
+        </member>
+        <member name="M:Au.Types.FAttr.op_Implicit(Au.Types.FAttr)~System.Boolean">
+            <summary>
+            Returns <see cref="P:Au.Types.FAttr.exists"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.FAttr.op_Implicit(Au.Types.FAttr)~System.Int32">
+            <summary>
+            Returns 0 if !<see cref="P:Au.Types.FAttr.exists"/>, 1 if <see cref="P:Au.Types.FAttr.isFile"/>, 2 if <see cref="P:Au.Types.FAttr.isDir"/>. Can be used with switch.
+            </summary>
+        </member>
+        <member name="P:Au.Types.FAttr.exists">
+            <summary>
+            Exists and is accessible (<see cref="P:Au.Types.FAttr.unknown"/> false).
+            See also <see cref="P:Au.Types.FAttr.isFile"/>, <see cref="P:Au.Types.FAttr.isDir"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Types.FAttr.unknown">
+            <summary>
+            Exists but this process cannot access it and get attributes (error "access denied"). Then other bool properties return false.
+            </summary>
+        </member>
+        <member name="P:Au.Types.FAttr.isFile">
+            <summary>
+            Is file (not directory), or symbolic link to a file (if <see cref="P:Au.Types.FAttr.isSymlink"/> true).
+            </summary>
+        </member>
+        <member name="P:Au.Types.FAttr.isDir">
+            <summary>
+            Is directory, or symbolic link to a directory (if <see cref="P:Au.Types.FAttr.isSymlink"/> true).
+            </summary>
+        </member>
+        <member name="P:Au.Types.FAttr.isSymlink">
+            <summary>
+            Has <see cref="F:System.IO.FileAttributes.ReparsePoint"/>.
+            If <see cref="P:Au.Types.FAttr.isFile"/> true, it is symbolic link to a file. If <see cref="P:Au.Types.FAttr.isDir"/> true, it is symbolic link to a directory or is a mounted folder.
+            </summary>
+        </member>
+        <member name="P:Au.Types.FAttr.isReadonly">
+            <summary>
+            Has <see cref="F:System.IO.FileAttributes.ReadOnly"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Types.FAttr.isHidden">
+            <summary>
+            Has <see cref="F:System.IO.FileAttributes.Hidden"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Types.FAttr.isSystem">
+            <summary>
+            Has <see cref="F:System.IO.FileAttributes.System"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.FAttr.ToString">
+            
         </member>
         <member name="T:Au.Types.FAFlags">
             <summary>
@@ -3660,15 +3714,73 @@
         <member name="F:Au.Types.FileId.FileIndex">
             <summary>An identifier that is associated with the file. It is unique in that volume.</summary>
         </member>
+        <member name="T:Au.Types.FolderPath">
+            <summary>
+            Most functions of <see cref="T:Au.AFolders"/> class return a value of this type.
+            Contains folder path (string) and has operator + to append a string with backslash if need. Has implicit conversions from/to string.
+            </summary>
+        </member>
+        <member name="M:Au.Types.FolderPath.op_Addition(Au.Types.FolderPath,System.String)">
+            <summary>
+            Calls <see cref="M:Au.APath.Combine(System.String,System.String,System.Boolean,System.Boolean)"/>(fp, append).
+            Example: <c>string s = AFolders.Desktop + "file.txt";</c>
+            </summary>
+            <exception cref="T:Au.Types.AuException">fp is empty. Most likely, used code <c>AFolders.X + "append"</c> and AFolders.X failed to get folder path.</exception>
+        </member>
+        <member name="T:Au.Types.IconGetFlags">
+            <summary>
+            Flags for <see cref="M:Au.AIcon.Of(System.String,System.Int32,Au.Types.IconGetFlags)"/> and similar functions.
+            </summary>
+        </member>
+        <member name="F:Au.Types.IconGetFlags.LiteralPath">
+            <summary>
+            The <i>file</i> argument is literal full path. Don't parse "path,index", don't support ".ext" (file type icon), don't make fully-qualified, etc.
+            </summary>
+        </member>
+        <member name="F:Au.Types.IconGetFlags.DontSearch">
+            <summary>
+            Don't call <see cref="M:Au.AFile.SearchPath(System.String,System.String[])"/>.
+            </summary>
+        </member>
+        <member name="T:Au.Types.StockIcon">
+            <summary>See <see cref="M:Au.AIcon.Stock(Au.Types.StockIcon,System.Int32)"/>, <msdn>SHSTOCKICONID</msdn>.</summary>
+        </member>
+        <member name="T:Au.Types.PNFlags">
+            <summary>
+            flags for <see cref="M:Au.APath.Normalize(System.String,System.String,Au.Types.PNFlags)"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.PNFlags.DontExpandDosPath">
+            <summary>Don't call API <msdn>GetLongPathName</msdn>.</summary>
+        </member>
+        <member name="F:Au.Types.PNFlags.DontPrefixLongPath">
+            <summary>Don't call <see cref="M:Au.APath.PrefixLongPathIfNeed(System.String)"/>.</summary>
+        </member>
+        <member name="F:Au.Types.PNFlags.DontRemoveEndSeparator">
+            <summary>Don't remove <c>\</c> character at the end.</summary>
+        </member>
+        <member name="F:Au.Types.PNFlags.CanBeUrlOrShell">
+            <summary>If path is not a file-system path but looks like URL (eg <c>"http:..."</c> or <c>"file:..."</c>) or starts with <c>"::"</c>, don't throw exception and don't process more (only expand environment variables).</summary>
+        </member>
+        <member name="T:Au.Types.ProcessInfo">
+            <summary>
+            Contains process name (like "notepad.exe"), id, name and user session id.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ProcessInfo.#ctor(System.String,System.Int32,System.Int32)">
+            <summary>
+            Contains process name (like "notepad.exe"), id, name and user session id.
+            </summary>
+        </member>
         <member name="T:Au.Types.RFlags">
             <summary>
-            Flags for <see cref="M:Au.AFile.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
+            Flags for <see cref="M:Au.ARun.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
             </summary>
         </member>
         <member name="F:Au.Types.RFlags.ShowErrorUI">
             <summary>
             Show error message box if fails, for example if file not found.
-            Note: this does not disable exceptions. To avoid exceptions use try/catch or <see cref="M:Au.AFile.TryRun(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
+            Note: this does not disable exceptions. To avoid exceptions use try/catch or <see cref="M:Au.ARun.RunSafe(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
             </summary>
         </member>
         <member name="F:Au.Types.RFlags.WaitForExit">
@@ -3696,7 +3808,7 @@
             If this process runs as administrator, run new process as administrator too.
             Without this flag, if this process runs as administrator:
             - Starts new process as non-administrator from the shell process (explorer.exe).
-            - If it fails (for example if shell process isn't running), calls <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/> and starts new process as administrator.
+            - If it fails (for example if shell process isn't running), calls <see cref="M:Au.AOutput.Warning(System.String,System.Int32,System.String)"/> and starts new process as administrator.
             - The new process does not inherit environment variables of this process.
             </summary>
         </member>
@@ -3707,7 +3819,7 @@
         </member>
         <member name="T:Au.Types.ROptions">
             <summary>
-            More parameters for <see cref="M:Au.AFile.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
+            More parameters for <see cref="M:Au.ARun.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
             </summary>
             <remarks>
             Implicit conversion from <b>string</b> sets <see cref="F:Au.Types.ROptions.CurrentDirectory"/>.
@@ -3758,7 +3870,7 @@
         </member>
         <member name="T:Au.Types.RResult">
             <summary>
-            Results of <see cref="M:Au.AFile.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
+            Results of <see cref="M:Au.ARun.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
             </summary>
         </member>
         <member name="P:Au.Types.RResult.ProcessExitCode">
@@ -3782,9 +3894,9 @@
             null if no flag or if did not start new process (eg opened the document in an existing process) or if cannot get it.
             </summary>
             <example>
-            This code does the same as <c>AFile.Run(@"notepad.exe", flags: SRFlags.WaitForExit);</c>
+            This code does the same as <c>ARun.Run(@"notepad.exe", flags: SRFlags.WaitForExit);</c>
             <code><![CDATA[
-            var r = AFile.Run(@"notepad.exe", flags: SRFlags.NeedProcessHandle);
+            var r = ARun.Run(@"notepad.exe", flags: SRFlags.NeedProcessHandle);
             using(var h = r.ProcessHandle) h?.WaitOne();
             ]]></code>
             </example>
@@ -3792,64 +3904,6 @@
         <member name="M:Au.Types.RResult.ToString">
             <summary>
             Returns <see cref="P:Au.Types.RResult.ProcessId"/> as string.
-            </summary>
-        </member>
-        <member name="T:Au.Types.FolderPath">
-            <summary>
-            Most functions of <see cref="T:Au.AFolders"/> class return a value of this type.
-            Contains folder path (string) and has operator + to append a string with backslash if need. Has implicit conversions from/to string.
-            </summary>
-        </member>
-        <member name="M:Au.Types.FolderPath.op_Addition(Au.Types.FolderPath,System.String)">
-            <summary>
-            Calls <see cref="M:Au.APath.Combine(System.String,System.String,System.Boolean,System.Boolean)"/>(fp, append).
-            Example: <c>string s = AFolders.Desktop + "file.txt";</c>
-            </summary>
-            <exception cref="T:Au.Types.AuException">fp is empty. Most likely, used code <c>AFolders.X + "append"</c> and AFolders.X failed to get folder path.</exception>
-        </member>
-        <member name="T:Au.Types.IconGetFlags">
-            <summary>
-            Flags for <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/> and similar functions.
-            </summary>
-        </member>
-        <member name="F:Au.Types.IconGetFlags.LiteralPath">
-            <summary>
-            The <i>file</i> argument is literal full path. Don't parse "path,index", don't support ".ext" (file type icon), don't make fully-qualified, etc.
-            </summary>
-        </member>
-        <member name="F:Au.Types.IconGetFlags.DontSearch">
-            <summary>
-            Don't call <see cref="M:Au.AFile.SearchPath(System.String,System.String[])"/>.
-            </summary>
-        </member>
-        <member name="T:Au.Types.StockIcon">
-            <summary>See <see cref="M:Au.AIcon.Stock(Au.Types.StockIcon,System.Int32)"/>, <msdn>SHSTOCKICONID</msdn>.</summary>
-        </member>
-        <member name="T:Au.Types.PNFlags">
-            <summary>
-            flags for <see cref="M:Au.APath.Normalize(System.String,System.String,Au.Types.PNFlags)"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Types.PNFlags.DontExpandDosPath">
-            <summary>Don't call API <msdn>GetLongPathName</msdn>.</summary>
-        </member>
-        <member name="F:Au.Types.PNFlags.DontPrefixLongPath">
-            <summary>Don't call <see cref="M:Au.APath.PrefixLongPathIfNeed(System.String)"/>.</summary>
-        </member>
-        <member name="F:Au.Types.PNFlags.DontRemoveEndSeparator">
-            <summary>Don't remove <c>\</c> character at the end.</summary>
-        </member>
-        <member name="F:Au.Types.PNFlags.CanBeUrlOrShell">
-            <summary>If path is not a file-system path but looks like URL (eg <c>"http:..."</c> or <c>"file:..."</c>) or starts with <c>"::"</c>, don't throw exception and don't process more (only expand environment variables).</summary>
-        </member>
-        <member name="T:Au.Types.ProcessInfo">
-            <summary>
-            Contains process name (like "notepad.exe"), id, name and user session id.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ProcessInfo.#ctor(System.String,System.Int32,System.Int32)">
-            <summary>
-            Contains process name (like "notepad.exe"), id, name and user session id.
             </summary>
         </member>
         <member name="T:Au.Types.SLTransaction">
@@ -4128,6 +4182,155 @@
         </member>
         <member name="F:Au.Types.UacElevation.Limited">
             <summary>Runs as standard user (Medium, UIAccess or Low integrity level) in administrator user session (because of UAC).</summary>
+        </member>
+        <member name="T:Au.Types.Pidl">
+            <summary>
+            Manages an ITEMIDLIST structure that is used to identify files and other shell objects instead of a file-system path.
+            </summary>
+            <remarks>
+            Wraps an ITEMIDLIST*, also known as PIDL or LPITEMIDLIST.
+            
+            When calling native shell API, virtual objects can be identified only by ITEMIDLIST*. Some API also support "parsing name", which may look like <c>"::{CLSID-1}\::{CLSID-2}"</c>. File-system objects can be identified by path as well as by ITEMIDLIST*. URLs can be identified by URL as well as by ITEMIDLIST*.
+            
+            The ITEMIDLIST structure is in unmanaged memory. You can dispose <b>Pidl</b> variables, or GC will do it later.
+            
+            This class has only ITEMIDLIST functions that are used in this library. Look for other functions in the MSDN library. Many of them are named with IL prefix, like ILClone, ILGetSize, ILFindLastID.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.Pidl.UnsafePtr">
+            <summary>
+            Gets the ITEMIDLIST* (PIDL).
+            </summary>
+            <remarks>
+            The ITEMIDLIST memory is managed by this variable and will be freed when disposing or GC-collecting it. Use <see cref="M:System.GC.KeepAlive(System.Object)"/> where need.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.Pidl.HandleRef">
+            <summary>
+            Gets the ITEMIDLIST* (PIDL).
+            </summary>
+            <remarks>
+            Use to pass to API where the parameter type is <b>HandleRef</b>. It is safer than <see cref="P:Au.Types.Pidl.UnsafePtr"/> because ensures that this variable will not be GC-collected during API call even if not referenced after the call.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.Pidl.IsNull">
+            <summary>
+            Returns true if the PIDL is null.
+            </summary>
+        </member>
+        <member name="M:Au.Types.Pidl.#ctor(System.IntPtr)">
+            <summary>
+            Assigns an ITEMIDLIST to this variable.
+            </summary>
+            <param name="pidl">
+            ITEMIDLIST* (PIDL).
+            It can be created by any API that creates ITEMIDLIST. They allocate the memory with API CoTaskMemAlloc. This variable will finally free it with Marshal.FreeCoTaskMem which calls API CoTaskMemFree.
+            </param>
+        </member>
+        <member name="M:Au.Types.Pidl.#ctor(System.IntPtr,System.IntPtr)">
+            <summary>
+            Combines two ITEMIDLIST (parent and child) and assigns the result to this variable.
+            </summary>
+            <param name="pidlAbsolute">Absolute PIDL (parent folder).</param>
+            <param name="pidlRelative">Relative PIDL (child object).</param>
+            <remarks>
+            Does not free <i>pidlAbsolute</i> and <i>pidlRelative</i>.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.Pidl.Dispose">
+            <summary>
+            Frees the ITEMIDLIST with Marshal.FreeCoTaskMem and clears this variable.
+            </summary>
+        </member>
+        <member name="M:Au.Types.Pidl.Dispose(System.Boolean)">
+            
+        </member>
+        <member name="M:Au.Types.Pidl.Finalize">
+            
+        </member>
+        <member name="M:Au.Types.Pidl.Detach">
+            <summary>
+            Gets the ITEMIDLIST and clears this variable so that it cannot be used and will not free the ITEMIDLIST memory. To free it use Marshal.FreeCoTaskMem.
+            </summary>
+        </member>
+        <member name="M:Au.Types.Pidl.FromString(System.String,System.Boolean)">
+            <summary>
+            Converts string to ITEMIDLIST and creates new Pidl variable that holds it.
+            Returns null if failed.
+            </summary>
+            <param name="s">A file-system path or URL or shell object parsing name (see <see cref="M:Au.Types.Pidl.ToShellString(Au.Types.SIGDN,System.Boolean)"/>) or ":: ITEMIDLIST" (see <see cref="M:Au.Types.Pidl.ToHexString"/>). Supports environment variables (see <see cref="M:Au.APath.Expand(System.String)"/>).</param>
+            <param name="throwIfFailed">Throw exception if failed.</param>
+            <exception cref="T:Au.Types.AuException">Failed, and throwIfFailed is true. Probably invalid s.</exception>
+            <remarks>
+            Calls <msdn>SHParseDisplayName</msdn>, except when string is ":: ITEMIDLIST".
+            When ":: ITEMIDLIST", does not check whether the shell object exists.
+            Note: Pidl is disposable.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.Pidl.FromString_(System.String,System.Boolean)">
+            <summary>
+            The same as <see cref="M:Au.Types.Pidl.FromString(System.String,System.Boolean)"/>, but returns unmanaged ITEMIDLIST*.
+            Later need to free it with Marshal.FreeCoTaskMem.
+            </summary>
+            <param name="s"></param>
+            <param name="throwIfFailed"></param>
+        </member>
+        <member name="M:Au.Types.Pidl._Normalize(System.String)">
+            <summary>
+            The same as <see cref="M:Au.APath.Normalize(System.String,System.String,Au.Types.PNFlags)"/>(CanBeUrlOrShell|DontPrefixLongPath), but ignores non-full path (returns s).
+            </summary>
+            <param name="s">File-system path or URL or "::...".</param>
+        </member>
+        <member name="M:Au.Types.Pidl.ToShellString(Au.Types.SIGDN,System.Boolean)">
+            <summary>
+            Converts the ITEMIDLIST to file path or URL or shell object parsing name or display name, depending on stringType argument.
+            Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
+            If failed, returns null or throws exception.
+            </summary>
+            <param name="stringType">
+            String format. API <msdn>SIGDN</msdn>.
+            Often used:
+            - SIGDN.NORMALDISPLAY - returns object name without path. It is best to display in UI but cannot be parsed to create ITEMIDLIST again.
+            - SIGDN.FILESYSPATH - returns path if the ITEMIDLIST identifies a file system object (file or directory). Else returns null.
+            - SIGDN.URL - if URL, returns URL. If file system object, returns its path like "file:///C:/a/b.txt". Else returns null.
+            - SIGDN.DESKTOPABSOLUTEPARSING - returns path (if file system object) or URL (if URL) or shell object parsing name (if virtual object eg Control Panel). Note: not all returned parsing names can actually be parsed to create ITEMIDLIST again, therefore usually it's better to use <see cref="M:Au.Types.Pidl.ToString"/> instead.
+            </param>
+            <param name="throwIfFailed">If failed, throw AuException.</param>
+            <exception cref="T:Au.Types.AuException">Failed, and throwIfFailed is true.</exception>
+            <remarks>
+            Calls <msdn>SHGetNameFromIDList</msdn>.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.Pidl.ToShellString(System.IntPtr,Au.Types.SIGDN,System.Boolean)">
+            <summary>
+            This overload uses an ITEMIDLIST* that is not stored in an Pidl variable.
+            </summary>
+        </member>
+        <member name="M:Au.Types.Pidl.ToString">
+            <summary>
+            Converts the ITEMIDLIST to string.
+            If it identifies an existing file-system object (file or directory), returns path. If URL, returns URL. Else returns ":: ITEMIDLIST" (see <see cref="M:Au.Types.Pidl.ToHexString"/>).
+            Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
+            </summary>
+        </member>
+        <member name="M:Au.Types.Pidl.ToString(System.IntPtr)">
+            <summary>
+            This overload uses an ITEMIDLIST* that is not stored in an Pidl variable.
+            </summary>
+        </member>
+        <member name="M:Au.Types.Pidl.ToHexString">
+            <summary>
+            Returns string ":: ITEMIDLIST".
+            Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
+            </summary>
+            <remarks>
+            The string can be used with some functions of this library, mostly of classes <b>AFile</b>, <b>Pidl</b> and <b>AIcon</b>. Cannot be used with native and .NET functions.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.Pidl.ToHexString(System.IntPtr)">
+            <summary>
+            This overload uses an ITEMIDLIST* that is not stored in an Pidl variable.
+            </summary>
         </member>
         <member name="T:Au.Types.DIcon">
             <summary>
@@ -4460,7 +4663,7 @@
         </member>
         <member name="T:Au.Types.OsdMode">
             <summary>
-            Whether <see cref="M:Au.AOsd.Show"/> waits or shows the OSD window in this or new thread.
+            Whether <see cref="M:Au.AOsdText.Show"/> waits or shows the OSD window in this or new thread.
             </summary>
             <remarks>
             If this thread has windows, any value can be used, but usually <b>Auto</b> (default) or <b>ThisThread</b> is the best.
@@ -4484,7 +4687,7 @@
         <member name="F:Au.Types.OsdMode.Wait">
             <summary>
             Show the OSD window in this thread and wait until it disappears.
-            Waits <see cref="P:Au.AOsd.SecondsTimeout"/> seconds. While waiting, dispatches messages etc; see <see cref="M:Au.ATime.SleepDoEvents(System.Int32)"/>.
+            Waits <see cref="P:Au.AOsdText.SecondsTimeout"/> seconds. While waiting, dispatches messages etc; see <see cref="M:Au.ATime.SleepDoEvents(System.Int32)"/>.
             </summary>
         </member>
         <member name="T:Au.Types.TBItemType">
@@ -6581,7 +6784,7 @@
         <member name="F:Au.Types.UExcept.Exit">
             <summary>
             Call <see cref="M:System.Environment.Exit(System.Int32)"/>. It prevents slow exit (Windows error reporting, writing events to the Windows event log, etc).
-            Note: then instead of <see cref="E:System.AppDomain.UnhandledException"/> event is <see cref="E:System.AppDomain.ProcessExit"/> event. But <see cref="E:Au.AProcess.Exit"/> indicates exception as usually.
+            Note: then instead of <see cref="E:System.AppDomain.UnhandledException"/> event is <see cref="E:System.AppDomain.ProcessExit"/> event. But <see cref="E:Au.AThisProcess.Exit"/> indicates exception as usually.
             Info: the editor setup program disables Windows error reporting for tasks with role miniProgram (default). See <msdn>WerAddExcludedApplication</msdn>.
             </summary>
         </member>
@@ -7279,8 +7482,8 @@
             <example>
             <code><![CDATA[
             AOpt.Warnings.Verbose = false;
-            AWarning.Write("Example");
-            AWarning.Write("Example");
+            AOutput.Warning("Example");
+            AOutput.Warning("Example");
             ]]></code>
             </example>
         </member>
@@ -7426,7 +7629,7 @@
         </member>
         <member name="T:Au.Util.AXml">
             <summary>
-            Extends some .NET XML classes.
+            Contains static functions to load <b>XElement</b> and <b>XDocument</b> in a safer way.
             </summary>
         </member>
         <member name="M:Au.Util.AXml.LoadElem(System.String,System.Xml.Linq.LoadOptions)">
@@ -7435,7 +7638,7 @@
             Uses <see cref="M:System.Xml.Linq.XElement.Load(System.Xml.XmlReader,System.Xml.Linq.LoadOptions)"/> and <see cref="M:Au.AFile.WaitIfLocked(System.Action,System.Int32)"/>.
             </summary>
             <param name="file">
-            File. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
+            File. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.Expand(System.String)"/>.
             If starts with '&lt;', loads from XML string instead.
             </param>
             <param name="options"></param>
@@ -7451,7 +7654,7 @@
             Uses <see cref="M:System.Xml.Linq.XDocument.Load(System.Xml.XmlReader,System.Xml.Linq.LoadOptions)"/> and <see cref="M:Au.AFile.WaitIfLocked(System.Action,System.Int32)"/>.
             </summary>
             <param name="file">
-            File. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
+            File. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.Expand(System.String)"/>.
             If starts with '&lt;', loads from XML string instead.
             </param>
             <param name="options"></param>
@@ -7498,7 +7701,7 @@
         </member>
         <member name="M:Au.Util.AStringUtil.CommandLineFromArray(System.String[])">
             <summary>
-            Converts array of command line arguments to string that can be passed to a "start process" function, for example <see cref="M:Au.AFile.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>, <see cref="M:System.Diagnostics.Process.Start"/>.
+            Converts array of command line arguments to string that can be passed to a "start process" function, for example <see cref="M:Au.ARun.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>, <see cref="M:System.Diagnostics.Process.Start"/>.
             Returns null if a is null or has 0 elements.
             </summary>
             <param name="a"></param>
@@ -8458,7 +8661,7 @@
         </member>
         <member name="M:Au.Util.AHelp.AuHelp(System.String)">
             <summary>
-            Opens an Au library help topic onine.
+            Opens an Au library help topic online.
             </summary>
             <param name="topic">Topic file name, like "Au.AAcc.Find" or "AAcc.Find" or "articles/Wildcard expression".</param>
         </member>
@@ -8483,7 +8686,7 @@
             <param name="dpi">DPI of window that will display the image.</param>
             <param name="isImage">
             true - load image from xaml/png/etc file, resource or string with <see cref="M:Au.Util.AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String,System.Nullable{System.ValueTuple{Au.Types.SIZE,System.Int32}})"/> or <see cref="M:Au.Util.AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.
-            false - get file icon with <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>.
+            false - get file icon with <see cref="M:Au.AIcon.Of(System.String,System.Int32,Au.Types.IconGetFlags)"/>.
             null (default) - call <see cref="M:Au.Util.AImageUtil.HasImageOrResourcePrefix(System.String)"/> to determine whether it is image.
             </param>
             <param name="asyncCompletion">
@@ -8493,7 +8696,7 @@
             Used only for icons, not for images.
             </param>
             <param name="acData">Something to pass to the <i>asyncCompletion</i> callback function. The function is called once for a unique asyncCompletion/acData.</param>
-            <param name="onException">Action to call when fails to load image. If null, calls <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>. Parameters are image source string and exception.</param>
+            <param name="onException">Action to call when fails to load image. If null, calls <see cref="M:Au.AOutput.Warning(System.String,System.Int32,System.String)"/>. Parameters are image source string and exception.</param>
         </member>
         <member name="M:Au.Util.AIconImageCache.Dispose">
             <summary>
@@ -8581,7 +8784,7 @@
             </summary>
             <param name="image">
             Can be:
-            - file path; can be .xaml, .png etc; supports environment variables etc, see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>; can have prefix "imagefile:".
+            - file path; can be .xaml, .png etc; supports environment variables etc, see <see cref="M:Au.APath.Expand(System.String)"/>; can have prefix "imagefile:".
             - resource path that starts with "resources/" or has prefix "resource:"; uses <see cref="M:Au.Util.AResources.GetXamlObject(System.String)"/> if ends with ".xaml", else <see cref="M:Au.Util.AResources.GetWpfImage(System.String)"/>.
             - Base-64 image with prefix "image:"; uses<see cref="M:Au.Util.AImageUtil.LoadWpfImageFromString(System.String)"/>.
             - XAML string that starts with "&lt;".
@@ -8625,6 +8828,194 @@
             <param name="type">Type containing the methods.</param>
             <param name="methods">Method names.</param>
             <exception cref="T:System.ArgumentException">Method does not exist.</exception>
+        </member>
+        <member name="T:Au.Util.AMath">
+            <summary>
+            Simple calculation functions.
+            </summary>
+        </member>
+        <member name="M:Au.Util.AMath.MakeLparam(System.UInt32,System.UInt32)">
+            <summary>
+            Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32. Returns it as nint, ready to use with Windows message API as lParam or wParam or return value.
+            Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
+            </summary>
+        </member>
+        <member name="M:Au.Util.AMath.MakeLparam(System.Int32,System.Int32)">
+            <summary>
+            Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32. Returns it as nint, ready to use with Windows message API as lParam or wParam or return value.
+            Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
+            </summary>
+        </member>
+        <member name="M:Au.Util.AMath.MakeLparam(Au.Types.POINT)">
+            <summary>
+            Creates uint by placing (ushort)p.x in bits 1-16 and (ushort)p.y in bits 17-32. Returns it as nint, ready to use with Windows message API as lParam or wParam or return value.
+            Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
+            </summary>
+        </member>
+        <member name="M:Au.Util.AMath.MakeWord(System.UInt32,System.UInt32)">
+            <summary>
+            Creates ushort by placing (byte)loByte in bits 1-8 and (byte)hiByte in bits 9-16.
+            Like C macro MAKEWORD.
+            </summary>
+        </member>
+        <member name="M:Au.Util.AMath.MakeWord(System.Int32,System.Int32)">
+            <summary>
+            Creates ushort by placing (byte)loByte in bits 1-8 and (byte)hiByte in bits 9-16.
+            Like C macro MAKEWORD.
+            </summary>
+        </member>
+        <member name="M:Au.Util.AMath.LoWord(System.IntPtr)">
+            <summary>
+            Gets bits 1-16 as ushort.
+            Like C macro LOWORD.
+            </summary>
+            <remarks>
+            The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr (and avoid OverflowException).
+            </remarks>
+        </member>
+        <member name="M:Au.Util.AMath.HiWord(System.IntPtr)">
+            <summary>
+            Gets bits 17-32 as ushort.
+            Like C macro HIWORD.
+            </summary>
+            <remarks>
+            The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr (and avoid OverflowException).
+            </remarks>
+        </member>
+        <member name="M:Au.Util.AMath.LoShort(System.IntPtr)">
+            <summary>
+            Gets bits 1-16 as short.
+            Like C macro GET_X_LPARAM.
+            </summary>
+            <remarks>
+            The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr (and avoid OverflowException).
+            </remarks>
+        </member>
+        <member name="M:Au.Util.AMath.HiShort(System.IntPtr)">
+            <summary>
+            Gets bits 17-32 as short.
+            Like C macro GET_Y_LPARAM.
+            </summary>
+            <remarks>
+            The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr (and avoid OverflowException).
+            </remarks>
+        </member>
+        <member name="M:Au.Util.AMath.LoByte(System.UInt16)">
+            <summary>
+            Gets bits 1-8 as byte.
+            Like C macro LOBYTE.
+            </summary>
+        </member>
+        <member name="M:Au.Util.AMath.HiByte(System.UInt16)">
+            <summary>
+            Gets bits 9-16 as byte.
+            Like C macro HIBYTE.
+            </summary>
+        </member>
+        <member name="M:Au.Util.AMath.NintToPOINT(System.IntPtr)">
+            <summary>
+            Converts <b>nint</b> containing x and y coordinates to <b>POINT</b>.
+            </summary>
+        </member>
+        <member name="M:Au.Util.AMath.MulDiv(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Returns <c>number * multiply / divide</c>.
+            Multiplies without overflow and rounds up or down to the nearest integer.
+            </summary>
+            <exception cref="T:System.OverflowException"></exception>
+            <exception cref="T:System.DivideByZeroException"></exception>
+        </member>
+        <member name="M:Au.Util.AMath.PercentFromValue(System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Calculates how many % of <i>whole</i> is <i>part</i>: <c>100L * part / whole</c>.
+            </summary>
+            <param name="whole"></param>
+            <param name="part"></param>
+            <param name="canRoundUp">Round down or up. If false (default), can only round down.</param>
+            <exception cref="T:System.OverflowException"></exception>
+        </member>
+        <member name="M:Au.Util.AMath.PercentFromValue(System.Double,System.Double)">
+            <summary>
+            Calculates how many % of <i>whole</i> is <i>part</i>: <c>100 * part / whole</c>.
+            </summary>
+        </member>
+        <member name="M:Au.Util.AMath.PercentToValue(System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Returns <i>percent</i> % of <i>whole</i>: <c>(long)whole * percent / 100</c>.
+            </summary>
+            <param name="whole"></param>
+            <param name="percent"></param>
+            <param name="canRoundUp">Use <see cref="M:Au.Util.AMath.MulDiv(System.Int32,System.Int32,System.Int32)"/>, which can round down or up. If false (default), can only round down.</param>
+            <exception cref="T:System.OverflowException"></exception>
+        </member>
+        <member name="M:Au.Util.AMath.PercentToValue(System.Double,System.Double)">
+            <summary>
+            Returns <i>percent</i> % of <i>whole</i>: <c>whole * percent / 100</c>.
+            </summary>
+        </member>
+        <member name="M:Au.Util.AMath.AlignUp(System.UInt32,System.UInt32)">
+            <summary>
+            If value is divisible by alignment, returns value. Else returns nearest bigger number that is divisible by alignment.
+            </summary>
+            <param name="value">An integer value.</param>
+            <param name="alignment">Alignment. Must be a power of two (2, 4, 8, 16...).</param>
+            <remarks>
+            For example if alignment is 4, returns 4 if value is 1-4, returns 8 if value is 5-8, returns 12 if value is 9-10, and so on.
+            </remarks>
+        </member>
+        <member name="M:Au.Util.AMath.AlignUp(System.Int32,System.UInt32)">
+            <summary>
+            If value is divisible by alignment, returns value. Else returns nearest bigger number that is divisible by alignment.
+            </summary>
+            <param name="value">An integer value.</param>
+            <param name="alignment">Alignment. Must be a power of two (2, 4, 8, 16...).</param>
+            <remarks>
+            For example if alignment is 4, returns 4 if value is 1-4, returns 8 if value is 5-8, returns 12 if value is 9-10, and so on.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            for (int i = 0; i <= 20; i++) AOutput.Write(i, AMath.AlignUp(i, 4));
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Util.AMath.Swap``1(``0@,``0@)">
+            <summary>
+            Swaps values of variables a and b: <c>T t = a; a = b; b = t;</c>
+            </summary>
+        </member>
+        <member name="M:Au.Util.AMath.SwapBits(System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Swaps two ranges of bits.
+            </summary>
+            <param name="value"></param>
+            <param name="i">Position of first range of bits.</param>
+            <param name="j">Position of second range of bits.</param>
+            <param name="n">Number of bits in each range.</param>
+        </member>
+        <member name="M:Au.Util.AMath.SwapBits(System.UInt32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Swaps two ranges of bits.
+            </summary>
+            <param name="value"></param>
+            <param name="i">Position of first range of bits.</param>
+            <param name="j">Position of second range of bits.</param>
+            <param name="n">Number of bits in each range.</param>
+        </member>
+        <member name="M:Au.Util.AMath.AngleFromXY(System.Int32,System.Int32)">
+            <summary>
+            Calculates angle degrees from coordinates x and y.
+            </summary>
+        </member>
+        <member name="M:Au.Util.AMath.Distance(Au.Types.POINT,Au.Types.POINT)">
+            <summary>
+            Calculates distance between two points.
+            </summary>
+        </member>
+        <member name="M:Au.Util.AMath.Distance(Au.Types.RECT,Au.Types.POINT)">
+            <summary>
+            Calculates distance between rectangle and point.
+            Returns 0 if point is in rectangle.
+            </summary>
         </member>
         <member name="T:Au.Util.AMemory">
             <summary>
@@ -8875,7 +9266,7 @@
             <param name="recorded">
             List of x y distances from previous.
             The first distance is from mouse position before the first movement; at run time it will be distance from <see cref="P:Au.AMouse.LastXY"/>.
-            To create uint value from distance dx dy use <see cref="M:Au.AMath.MakeLparam(System.UInt32,System.UInt32)"/> and cast to uint.
+            To create uint value from distance dx dy use <see cref="M:Au.Util.AMath.MakeLparam(System.UInt32,System.UInt32)"/> and cast to uint.
             </param>
             <param name="withSleepTimes">
             <i>recorded</i> also contains sleep times (milliseconds) alternating with distances.
@@ -8952,7 +9343,7 @@
             <remarks>
             Called implicitly when disposing this variable.
             Must be called from the same thread as when registering, and the window must be still alive.
-            If fails, calls <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>.
+            If fails, calls <see cref="M:Au.AOutput.Warning(System.String,System.Int32,System.String)"/>.
             </remarks>
         </member>
         <member name="M:Au.Util.ARegisteredHotkey.Dispose">
@@ -9414,7 +9805,7 @@
             Loads XML file and creates tree of nodes from it.
             Returns the root node.
             </summary>
-            <param name="file">XML file. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.</param>
+            <param name="file">XML file. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.Expand(System.String)"/>.</param>
             <param name="nodeReader">Callback function that reads current XML element and creates/returns new node. See example.</param>
             <exception cref="T:System.ArgumentException">Not full path.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:System.Xml.XmlReader.Create(System.String)"/>.</exception>
@@ -9436,7 +9827,7 @@
             <summary>
             Saves tree of nodes (this and descendants) to an XML file.
             </summary>
-            <param name="file">XML file. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.</param>
+            <param name="file">XML file. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.Expand(System.String)"/>.</param>
             <param name="nodeWriter">Callback function that writes node's XML start element (see <see cref="M:System.Xml.XmlWriter.WriteStartElement(System.String)"/>) and attributes (see <see cref="M:System.Xml.XmlWriter.WriteAttributeString(System.String,System.String)"/>). Must not write children and end element. Also should not write value, unless your reader knows how to read it.</param>
             <param name="sett">XML formatting settings. Optional.</param>
             <param name="children">If not null, writes these nodes as if they were children of this node.</param>
@@ -10046,7 +10437,7 @@
             - If null, uses <c>Directory.GetCurrentDirectory()</c>.
             - Else if <i>rawCurDir</i>==true, uses raw <i>curDir</i> value.
             - Else if "", calls <c>APath.GetDirectory(exe)</c>.
-            - Else calls <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
+            - Else calls <see cref="M:Au.APath.Expand(System.String)"/>.
             </param>
             <param name="envVar">null or environment variables to pass to the new process together with variables of this process. Format: "var1=value1\0var2=value2\0". If ends with "\0\0", will pass only these variables.</param>
             <param name="rawExe">Don't normalize <i>exe</i>.</param>
@@ -10254,17 +10645,16 @@
         </member>
         <member name="T:Au.AFile">
             <summary>
-            File system functions.
+            Contains static functions to work with files and directories, such as copy, move, delete, find, get properties, enumerate, create directory, safe load/save, wait if locked.
             </summary>
             <remarks>
-            Works with files and directories. Disk drives like <c>@"C:\"</c> or <c>"C:"</c> are directories too.
-            Extends .NET file system classes such as <see cref="T:System.IO.File"/> and <see cref="T:System.IO.Directory"/>.
+            Also you can use .NET file system classes, such as <see cref="T:System.IO.File"/> and <see cref="T:System.IO.Directory"/> in <b>System.IO</b> namespace. In the past they were too limited and unsafe to use, for example no long paths, too many exceptions, difficult to recursively enumerate directories containing protected items. Later improved, but this class still has something they don't, for example environment variables in path, safe load/save. This class does not have low-level functions to open/read/write files.
+            
             Most functions support only full path. Most of them throw <b>ArgumentException</b> if passed a filename or relative path, ie in "current directory". Using current directory is unsafe.
             Most functions support extended-length paths (longer than 259). Such local paths should have <c>@"\\?\"</c> prefix, like <c>@"\\?\C:\..."</c>. Such network path should be like <c>@"\\?\UNC\server\share\..."</c>. See <see cref="M:Au.APath.PrefixLongPath(System.String)"/>, <see cref="M:Au.APath.PrefixLongPathIfNeed(System.String)"/>. Many functions support long paths even without prefix.
+            
+            Disk drives like <c>@"C:\"</c> or <c>"C:"</c> are directories too.
             </remarks>
-            <summary>
-            This class contains static functions to execute or open programs, other files, folders, web pages, etc.
-            </summary>
         </member>
         <member name="M:Au.AFile._DisableDeviceNotReadyMessageBox">
             <summary>
@@ -10278,7 +10668,7 @@
             Returns false if the file/directory does not exist.
             Calls API <msdn>GetFileAttributesEx</msdn>.
             </summary>
-            <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag UseRawPath not used, supports environment variables (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>).</param>
+            <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag UseRawPath not used, supports environment variables (see <see cref="M:Au.APath.Expand(System.String)"/>).</param>
             <param name="properties">Receives properties.</param>
             <param name="flags"></param>
             <exception cref="T:System.ArgumentException">Not full path (when not used flag UseRawPath).</exception>
@@ -10294,7 +10684,7 @@
             Returns false if the file/directory does not exist.
             Calls API <msdn>GetFileAttributes</msdn>.
             </summary>
-            <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag UseRawPath not used, supports environment variables (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>).</param>
+            <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag UseRawPath not used, supports environment variables (see <see cref="M:Au.APath.Expand(System.String)"/>).</param>
             <param name="attributes">Receives attributes, or 0 if failed.</param>
             <param name="flags"></param>
             <exception cref="T:System.ArgumentException">Not full path (when not used flag UseRawPath).</exception>
@@ -10309,73 +10699,43 @@
             Returns false if INVALID_FILE_ATTRIBUTES or if relative path. No exceptions.
             </summary>
         </member>
-        <member name="M:Au.AFile.ExistsAs(System.String,System.Boolean)">
+        <member name="M:Au.AFile.Exists(System.String,System.Boolean)">
             <summary>
-            Gets file system entry type - file, directory, and whether it exists.
-            Returns NotFound (0) if does not exist or if fails to get attributes.
-            Calls API <msdn>GetFileAttributes</msdn>.
+            Gets file or directory attributes as <see cref="T:Au.Types.FAttr"/> that tells whether it exists, is directory, symbolic link, readonly, hidden, system. See examples.
             </summary>
-            <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>). Can be null.</param>
+            <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Au.APath.Expand(System.String)"/>). Can be null.</param>
             <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
             <remarks>
             Supports <see cref="T:Au.ALastError"/>. If you need exception when fails, instead call <see cref="M:Au.AFile.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and check attribute Directory.
-            Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
+            Always use full path. If path is not full: if useRawPath is false (default), can't find the file; if useRawPath is true, searches in "current directory".
+            For symbolic links gets attributes of the link, not target; does not care whether its target exists.
             </remarks>
+            <example>
+            <code><![CDATA[
+            var path = @"C:\Test\test.txt";
+            if (AFile.Exists(path)) AOutput.Write("exists");
+            if (AFile.Exists(path).isFile) AOutput.Write("exists as file");
+            if (AFile.Exists(path).isDir) AOutput.Write("exists as directory");
+            if (AFile.Exists(path) is FAttr { isFile: true, isReadonly: false }) AOutput.Write("exists as file and isn't readonly");
+            switch (AFile.Exists(path)) {
+            case 0: AOutput.Write("doesn't exist"); break;
+            case 1: AOutput.Write("file"); break;
+            case 2: AOutput.Write("dir"); break;
+            }
+            ]]></code>
+            </example>
         </member>
-        <member name="M:Au.AFile.ExistsAs2(System.String,System.Boolean)">
+        <member name="M:Au.AFile.ExistsAs_(System.String,System.Boolean)">
             <summary>
             Gets file system entry type - file, directory, symbolic link, whether it exists and is accessible.
             Returns NotFound (0) if does not exist. Returns AccessDenied (&lt; 0) if exists but this process cannot access it and get attributes.
             Calls API <msdn>GetFileAttributes</msdn>.
-            The same as <see cref="M:Au.AFile.ExistsAs(System.String,System.Boolean)"/> but provides more complete result. In most cases you can use ExistsAs, it's simpler.
             </summary>
-            <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>). Can be null.</param>
+            <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Au.APath.Expand(System.String)"/>). Can be null.</param>
             <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
             <remarks>
             Supports <see cref="T:Au.ALastError"/>. If you need exception when fails, instead call <see cref="M:Au.AFile.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and check attributes Directory and ReparsePoint.
             Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
-            </remarks>
-        </member>
-        <member name="M:Au.AFile.ExistsAsAny(System.String,System.Boolean)">
-            <summary>
-            Returns true if file or directory exists.
-            Calls <see cref="M:Au.AFile.ExistsAs2(System.String,System.Boolean)"/>, which calls API <msdn>GetFileAttributes</msdn>.
-            </summary>
-            <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>). Can be null.</param>
-            <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
-            <remarks>
-            Supports <see cref="T:Au.ALastError"/>. If you need exception when fails, instead call <see cref="M:Au.AFile.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/>.
-            Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
-            For symbolic links etc, returns true if the link exists. Does not care whether its target exists.
-            Unlike <see cref="M:Au.AFile.ExistsAsFile(System.String,System.Boolean)"/> and <see cref="M:Au.AFile.ExistsAsDirectory(System.String,System.Boolean)"/>, this function returns true when the file exists but cannot get its attributes. Then <c>ExistsAsAny(path)</c> is not the same as <c>ExistsAsFile(path) || ExistsAsDirectory(path)</c>.
-            </remarks>
-        </member>
-        <member name="M:Au.AFile.ExistsAsFile(System.String,System.Boolean)">
-            <summary>
-            Returns true if file exists and is not a directory.
-            Returns false if does not exist or if fails to get its attributes.
-            Calls <see cref="M:Au.AFile.ExistsAs(System.String,System.Boolean)"/>, which calls API <msdn>GetFileAttributes</msdn>.
-            </summary>
-            <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>). Can be null.</param>
-            <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
-            <remarks>
-            Supports <see cref="T:Au.ALastError"/>. If you need exception when fails, instead call <see cref="M:Au.AFile.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and check attribute Directory.
-            Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
-            For symbolic links etc, returns true if the link exists and its target is not a directory. Does not care whether its target exists.
-            </remarks>
-        </member>
-        <member name="M:Au.AFile.ExistsAsDirectory(System.String,System.Boolean)">
-            <summary>
-            Returns true if directory (folder or drive) exists.
-            Returns false if does not exist or if fails to get its attributes.
-            Calls <see cref="M:Au.AFile.ExistsAs(System.String,System.Boolean)"/>, which calls API <msdn>GetFileAttributes</msdn>.
-            </summary>
-            <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>). Can be null.</param>
-            <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
-            <remarks>
-            Supports <see cref="T:Au.ALastError"/>. If you need exception when fails, instead call <see cref="M:Au.AFile.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and check attribute Directory.
-            Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
-            For symbolic links etc, returns true if the link exists and its target is a directory. Does not care whether its target exists.
             </remarks>
         </member>
         <member name="M:Au.AFile.SearchPath(System.String,System.String[])">
@@ -10384,7 +10744,7 @@
             Returns null if cannot be found.
             </summary>
             <remarks>
-            If the path argument is full path, calls <see cref="M:Au.AFile.ExistsAsAny(System.String,System.Boolean)"/> and returns normalized path if exists, null if not.
+            If the path argument is full path, calls <see cref="M:Au.AFile.Exists(System.String,System.Boolean)"/> and returns normalized path if exists, null if not.
             Else searches in these places:
             1. <i>dirs</i>, if used.
             2. <see cref="P:Au.AFolders.ThisApp"/>.
@@ -10419,7 +10779,7 @@
             
             By default gets only direct children. Use flag <see cref="F:Au.Types.FEFlags.AndSubdirectories"/> to get all descendants.
             
-            The paths that this function gets are normalized, ie may not start with exact <i>directoryPath</i> string. Expanded environment variables (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>), "..", DOS path etc.
+            The paths that this function gets are normalized, ie may not start with exact <i>directoryPath</i> string. Expanded environment variables (see <see cref="M:Au.APath.Expand(System.String)"/>), "..", DOS path etc.
             Paths longer than <see cref="F:Au.APath.MaxDirectoryPathLength"/> have <c>@"\\?\"</c> prefix (see <see cref="M:Au.APath.PrefixLongPathIfNeed(System.String)"/>).
             
             For symbolic links and mounted folders, gets info of the link/folder and not of its target.
@@ -10618,7 +10978,7 @@
         </member>
         <member name="M:Au.AFile._PreparePath(System.String)">
             <summary>
-            Expands environment variables (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>). Throws ArgumentException if not full path. Normalizes. Removes or adds <c>'\\'</c> at the end.
+            Expands environment variables (see <see cref="M:Au.APath.Expand(System.String)"/>). Throws ArgumentException if not full path. Normalizes. Removes or adds <c>'\\'</c> at the end.
             </summary>
             <exception cref="T:System.ArgumentException">Not full path.</exception>
         </member>
@@ -10689,7 +11049,7 @@
             Loads text file in a safer way.
             Uses <see cref="M:System.IO.File.ReadAllText(System.String)"/> and <see cref="M:Au.AFile.WaitIfLocked``1(System.Func{``0},System.Int32)"/>.
             </summary>
-            <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.</param>
+            <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.Expand(System.String)"/>.</param>
             <param name="encoding">Text encoding in file. Default <b>Encoding.UTF8</b>.</param>
             <exception cref="T:System.ArgumentException">Not full path.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:System.IO.File.ReadAllText(System.String)"/>.</exception>
@@ -10699,7 +11059,7 @@
             Loads file in a safer way.
             Uses <see cref="M:System.IO.File.ReadAllBytes(System.String)"/> and <see cref="M:Au.AFile.WaitIfLocked``1(System.Func{``0},System.Int32)"/>.
             </summary>
-            <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.</param>
+            <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.Expand(System.String)"/>.</param>
             <exception cref="T:System.ArgumentException">Not full path.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:System.IO.File.ReadAllBytes(System.String)"/>.</exception>
         </member>
@@ -10708,7 +11068,7 @@
             Loads file in a safer way.
             Uses <see cref="M:System.IO.File.OpenRead(System.String)"/> and <see cref="M:Au.AFile.WaitIfLocked``1(System.Func{``0},System.Int32)"/>.
             </summary>
-            <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.</param>
+            <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.Expand(System.String)"/>.</param>
             <exception cref="T:System.ArgumentException">Not full path.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:System.IO.File.OpenRead(System.String)"/>.</exception>
         </member>
@@ -10717,7 +11077,7 @@
             Writes any data to a file in a safe way, using a callback function.
             </summary>
             <param name="file">
-            File. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
+            File. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.Expand(System.String)"/>.
             The file can exist or not; this function overwrites it. If the directory does not exist, this function creates it.
             </param>
             <param name="writer">
@@ -10771,7 +11131,7 @@
             Gets <see cref="T:Au.Types.FileId"/> of a file or directory.
             Returns false if fails. Supports <see cref="T:Au.ALastError"/>.
             </summary>
-            <param name="path">Full path. Supports environment variables (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>).</param>
+            <param name="path">Full path. Supports environment variables (see <see cref="M:Au.APath.Expand(System.String)"/>).</param>
             <param name="fileId"></param>
         </member>
         <member name="M:Au.AFile.More.IsSameFile_(System.String,System.String)">
@@ -10809,159 +11169,6 @@
             - subfolder "64" or "32" of <see cref="P:Au.AFolders.ThisAppTemp"/>. For example the dll may be extracted there from resources.
             </remarks>
         </member>
-        <member name="M:Au.AFile.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)">
-            <summary>
-            Runs/opens a program, document, directory (folder), URL, new email, Control Panel item etc.
-            The returned <see cref="T:Au.Types.RResult"/> variable contains some process info - process id etc.
-            </summary>
-            <param name="file">
-            Examples:
-            - <c>@"C:\file.txt"</c>
-            - <c>AFolders.Documents</c>
-            - <c>AFolders.System + "notepad.exe"</c>
-            - <c>@"%AFolders.System%\notepad.exe"</c>
-            - <c>@"%TMP%\file.txt"</c>
-            - <c>"notepad.exe"</c>
-            - <c>@"..\folder\x.exe"</c>
-            - <c>"http://a.b.c/d"</c>
-            - <c>"file:///path"</c>
-            - <c>"mailto:a@b.c"</c>
-            - <c>":: ITEMIDLIST"</c>
-            - <c>@"::{CLSID}"</c>
-            - <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>.
-            More info in Remarks.
-            </param>
-            <param name="args">
-            Command line arguments.
-            This function expands environment variables if starts with <c>"%"</c> or <c>"\"%"</c>.
-            </param>
-            <param name="flags"></param>
-            <param name="dirEtc">
-            Allows to specify more parameters: current directory, verb, etc.
-            If string, it sets initial current directory for the new process. If "", gets it from <i>file</i>. More info: <see cref="F:Au.Types.ROptions.CurrentDirectory"/>.
-            </param>
-            <exception cref="T:System.ArgumentException">Used both <b>ROptions.Verb</b> and <b>RFlags.Admin</b> and this process isn't admin.</exception>
-            <exception cref="T:Au.Types.AuException">Failed. For example, the file does not exist.</exception>
-            <remarks>
-            It works like when you double-click a file icon. It may start new process or not. For example it may just activate window if the program is already running.
-            Uses API <msdn>ShellExecuteEx</msdn>.
-            Similar to <see cref="M:System.Diagnostics.Process.Start(System.String,System.String)"/>.
-            
-            The <i>file</i> parameter can be:
-            - Full path of a file or directory. Examples: <c>@"C:\file.txt"</c>, <c>AFolders.Documents</c>, <c>AFolders.System + "notepad.exe"</c>, <c>@"%AFolders.System%\notepad.exe"</c>.
-            - Filename of a file or directory, like <c>"notepad.exe"</c>. The function calls <see cref="M:Au.AFile.SearchPath(System.String,System.String[])"/>.
-            - Path relative to <see cref="P:Au.AFolders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
-            - URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
-            - Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
-            - Shell object's ITEMIDLIST like <c>":: ITEMIDLIST"</c>. See <see cref="M:Au.APidl.ToHexString"/>, <see cref="T:Au.AFolders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
-            - Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="M:Au.APidl.ToShellString(Au.Types.SIGDN,System.Boolean)"/>, <see cref="T:Au.AFolders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
-            - To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="M:Au.AWnd.More.GetWindowsStoreAppId(Au.AWnd,System.Boolean,System.Boolean)"/> or Google.
-            
-            Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
-            </remarks>
-            <seealso cref="M:Au.AWnd.FindOrRun(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains,System.Action,System.Double,System.Boolean)"/>
-            <example>
-            Run notepad and wait for its window.
-            <code><![CDATA[
-            AFile.Run("notepad.exe");
-            AWnd w = AWnd.Wait(10, true, "*- Notepad", "Notepad");
-            ]]></code>
-            Run notepad or activate its window.
-            <code><![CDATA[
-            AWnd w = AWnd.FindOrRun("*- Notepad", run: () => AFile.Run("notepad.exe"));
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.AFile.TryRun(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)">
-            <summary>
-            Calls <see cref="M:Au.AFile.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/> and handles exceptions. All parameters are the same.
-            If <b>Run</b> throws exception, writes it to the output as warning and returns null.
-            </summary>
-            <remarks>
-            This is useful when you don't care whether <b>Run</b> succeeded and don't want to use try/catch.
-            Handles only exception of type <see cref="T:Au.Types.AuException"/>. It is thrown when fails, usually when the file does not exist.
-            </remarks>
-            <seealso cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>
-            <seealso cref="M:Au.Types.OWarnings.Disable(System.String[])"/>
-            <seealso cref="M:Au.AWnd.FindOrRun(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains,System.Action,System.Double,System.Boolean)"/>
-        </member>
-        <member name="M:Au.AFile.RunConsole(System.String,System.String,System.String,System.Text.Encoding)">
-            <summary>
-            Runs a console program, waits until its process ends, and gets its output text.
-            This overload writes text lines to the output in real time.
-            </summary>
-            <param name="exe">
-            Path or name of an .exe or .bat file. Can be:
-            - Full path. Examples: <c>@"C:\folder\x.exe"</c>, <c>AFolders.System + "x.exe"</c>, <c>@"%AFolders.System%\x.exe"</c>.
-            - Filename, like <c>"x.exe"</c>. This function calls <see cref="M:Au.AFile.SearchPath(System.String,System.String[])"/>.
-            - Path relative to <see cref="P:Au.AFolders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\folder\x.exe"</c>.
-            
-            Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
-            </param>
-            <param name="args">null or command line arguments.</param>
-            <param name="curDir">
-            Initial current directory of the new process.
-            - If null, uses <c>Directory.GetCurrentDirectory()</c>.
-            - Else if "", calls <c>APath.GetDirectory(exe)</c>.
-            - Else calls <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
-            </param>
-            <param name="encoding">
-            Console's text encoding.
-            If null (default), uses the default console text encoding (API <msdn>GetOEMCP</msdn>); it is not Unicode. Programs that display Unicode text use <see cref="P:System.Text.Encoding.UTF8"/>.
-            </param>
-            <returns>The process exit code. Usually a non-0 value means error.</returns>
-            <exception cref="T:Au.Types.AuException">Failed, for example file not found.</exception>
-            <remarks>
-            The console window is hidden. The text that would be displayed in it is redirected to this function.
-            
-            Console programs have two output text streams - standard output and standard error. This function gets both.
-            Alternatively use <see cref="M:System.Diagnostics.Process.Start"/>. It gets the output and error streams separately, and some lines may be received in incorrect order in time.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            string v = "example";
-            int r1 = AFile.RunConsole(@"Q:\Test\console1.exe", $@"/an ""{v}"" /etc");
-            
-            int r2 = AFile.RunConsole(s => AOutput.Write(s), @"Q:\Test\console2.exe");
-            
-            int r3 = AFile.RunConsole(out var text, @"Q:\Test\console3.exe", encoding: Encoding.UTF8);
-            AOutput.Write(text);
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.AFile.RunConsole(System.Action{System.String},System.String,System.String,System.String,System.Text.Encoding)">
-            <summary>
-            Runs a console program, waits until its process ends, and gets its output text.
-            This overload uses a callback function that receives text lines in real time.
-            </summary>
-            <param name="output">A callback function that receives the output text. It receives single full line at a time, without line break characters.</param>
-            <param name="exe"></param>
-            <param name="args"></param>
-            <param name="curDir"></param>
-            <param name="encoding"></param>
-            <exception cref="T:Au.Types.AuException">Failed, for example file not found.</exception>
-        </member>
-        <member name="M:Au.AFile.RunConsole(System.String@,System.String,System.String,System.String,System.Text.Encoding)">
-            <summary>
-            Runs a console program, waits until its process ends, and gets its output text when it ends.
-            </summary>
-            <param name="output">A variable that receives the output text.</param>
-            <param name="exe"></param>
-            <param name="args"></param>
-            <param name="curDir"></param>
-            <param name="encoding"></param>
-            <exception cref="T:Au.Types.AuException">Failed, for example file not found.</exception>
-        </member>
-        <member name="M:Au.AFile.SelectInExplorer(System.String)">
-            <summary>
-            Opens parent folder in Explorer and selects the specified file.
-            Returns null if fails, for example if the file does not exist.
-            </summary>
-            <param name="path">
-            Full path of a file or directory or other shell object.
-            Supports <c>@"%environmentVariable%\..."</c> (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>) and <c>"::..."</c> (see <see cref="M:Au.APidl.ToHexString"/>).
-            </param>
-        </member>
         <member name="T:Au.AFolders">
              <summary>
              Gets known/special folder paths (Desktop, Temp, etc).
@@ -10973,7 +11180,7 @@
              Some folders are known only on newer Windows versions or only on some computers. Some functions have a suffix like <b>_Win8</b> which means that the folder is unavailable on older Windows.
              Some known folders, although supported and registerd, may be still not created.
              
-             Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by a data structure called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="T:Au.AFolders.VirtualPidl"/> return it as <see cref="T:Au.APidl"/>. Functions of the nested class <see cref="T:Au.AFolders.Virtual"/> return it as string <c>":: ITEMIDLIST"</c> that can be used with some functions of this library (of classes <b>AFile</b>, <b>APidl</b>, <b>AIcon</b>) but not with .NET or native functions.
+             Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by a data structure called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="T:Au.AFolders.VirtualPidl"/> return it as <see cref="T:Au.Types.Pidl"/>. Functions of the nested class <see cref="T:Au.AFolders.Virtual"/> return it as string <c>":: ITEMIDLIST"</c> that can be used with some functions of this library (of classes <b>AFile</b>, <b>Pidl</b>, <b>AIcon</b>) but not with .NET or native functions.
             
              Most functions use Windows "Known Folders" API, such as <msdn>SHGetKnownFolderPath</msdn>.
              The list of Windows predefined known folders: <msdn>KNOWNFOLDERID</msdn>.
@@ -11040,7 +11247,7 @@
         </member>
         <member name="T:Au.AFolders.VirtualPidl">
             <summary>
-            Gets ITEMIDLIST of known/special virtual folders (eg Control Panel), as <see cref="T:Au.APidl"/>. 
+            Gets ITEMIDLIST of known/special virtual folders (eg Control Panel), as <see cref="T:Au.Types.Pidl"/>. 
             </summary>
         </member>
         <member name="P:Au.AFolders.Temp">
@@ -11055,7 +11262,7 @@
             <remarks>
             Uses <see cref="P:System.AppContext.BaseDirectory"/>.
             </remarks>
-            <seealso cref="P:Au.AProcess.ExePath"/>
+            <seealso cref="P:Au.AThisProcess.ExePath"/>
         </member>
         <member name="P:Au.AFolders.ThisAppBS">
             <summary>
@@ -11137,7 +11344,7 @@
             <summary>
             Gets the root directory of this application, like @"C:\" or @"\\network\folder\".
             </summary>
-            <seealso cref="P:Au.AProcess.ExeDriveType"/>
+            <seealso cref="P:Au.AThisProcess.ExeDriveType"/>
         </member>
         <member name="P:Au.AFolders.Workspace">
             <summary>
@@ -11228,7 +11435,7 @@
             </summary>
             <seealso cref="M:System.Environment.GetEnvironmentVariable(System.String)"/>
             <seealso cref="M:System.Environment.SetEnvironmentVariable(System.String,System.String)"/>
-            <seealso cref="M:Au.APath.ExpandEnvVar(System.String)"/>
+            <seealso cref="M:Au.APath.Expand(System.String)"/>
         </member>
         <member name="M:Au.AFolders.GetKnownFolders">
             <summary>
@@ -11246,20 +11453,20 @@
             Or name of a property of the nested class Virtual, like <c>"Virtual.ControlPanel"</c>. Gets <c>":: ITEMIDLIST"</c>.
             Or known folder canonical name. See <see cref="M:Au.AFolders.GetKnownFolders"/>. If has prefix <c>"Virtual."</c>, gets <c>":: ITEMIDLIST"</c>. Much slower, but allows to get paths of folders registered by applications.
             </param>
-            <seealso cref="M:Au.APath.ExpandEnvVar(System.String)"/>
+            <seealso cref="M:Au.APath.Expand(System.String)"/>
         </member>
         <member name="M:Au.AFolders.UnexpandPath(System.String,System.String@,System.String@)">
             <summary>
             If string starts with a known/special folder path, gets folder name + relative path and returns true.
             For example if string is <c>C:\Windows\System32\notepad.exe</c>, gets <c>AFolders.System</c> and <c>notepad.exe</c>.
             </summary>
-            <param name="path">Any string. Can be null. Case-insensitive. Supports ":: ITEMIDLIST" (see <see cref="M:Au.APidl.ToHexString"/>).</param>
+            <param name="path">Any string. Can be null. Case-insensitive. Supports ":: ITEMIDLIST" (see <see cref="M:Au.Types.Pidl.ToHexString"/>).</param>
             <param name="folder">Receives special folder string like <c>"AFolders.System"</c>.</param>
             <param name="name">Receives filename or relative path in the folder.</param>
             <remarks>
             Quite slow first time in process, eg 50 ms, because gets all folder paths. Later uses cached paths.
             </remarks>
-            <seealso cref="M:Au.APath.ExpandEnvVar(System.String)"/>
+            <seealso cref="M:Au.APath.Expand(System.String)"/>
         </member>
         <member name="T:Au.AIcon">
             <summary>
@@ -11298,15 +11505,14 @@
             Gets native icon handle.
             </summary>
         </member>
-        <member name="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)">
+        <member name="M:Au.AIcon.Of(System.String,System.Int32,Au.Types.IconGetFlags)">
             <summary>
-            Gets file icon.
-            Extracts icon directly from the file, or gets shell icon, depending on file type, icon index, etc.
+            Gets icon that can be displayed for a file, folder, shell object, URL or file type.
             </summary>
             <returns>Returns null if failed.</returns>
             <param name="file">
             Can be:
-            - Path of any file or folder. Supports environment variables.
+            - Path of any file or folder. Supports environment variables. If not full path, uses <see cref="P:Au.AFolders.ThisAppImages"/> and <see cref="M:Au.AFile.SearchPath(System.String,System.String[])"/>.
             - Any shell object, like <c>":: ITEMIDLIST"</c>, <c>@"::{CLSID-1}\::{CLSID-2}"</c>, <c>@"shell:AppsFolder\WinStoreAppId"</c>.
             - File type like <c>".txt"</c>, or protocol like <c>"http:"</c>. Use <c>"."</c> to get forder icon.
             - Path with icon resource index or negative id, like "c:\file.dll,4", "c:\file.exe,-4".
@@ -11315,12 +11521,10 @@
             <param name="size">Icon width and height. Default 16.</param>
             <param name="flags"></param>
             <remarks>
-            If not full path, uses <see cref="P:Au.AFolders.ThisAppImages"/> and <see cref="M:Au.AFile.SearchPath(System.String,System.String[])"/>.
-            
-            ITEMIDLIST can be of any file, folder, URL or a non-filesystem shell object. See <see cref="M:Au.APidl.ToHexString"/>.
+            ITEMIDLIST can be of any file, folder, URL or a non-filesystem shell object. See <see cref="M:Au.Types.Pidl.ToHexString"/>.
             </remarks>
         </member>
-        <member name="M:Au.AIcon.OfPidl(Au.APidl,System.Int32)">
+        <member name="M:Au.AIcon.OfPidl(Au.Types.Pidl,System.Int32)">
             <summary>
             Gets icon of a file or other shell object specified as ITEMIDLIST.
             </summary>
@@ -11333,7 +11537,7 @@
             Extracts icon directly from file that contains it.
             </summary>
             <returns>Returns null if failed.</returns>
-            <param name="file">.ico, .exe, .dll or other file that contains one or more icons. Also supports cursor files - .cur, .ani. Must be full path, without icon index. Supports environment variables (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>).</param>
+            <param name="file">.ico, .exe, .dll or other file that contains one or more icons. Also supports cursor files - .cur, .ani. Must be full path, without icon index. Supports environment variables (see <see cref="M:Au.APath.Expand(System.String)"/>).</param>
             <param name="size">Icon width and height. Default 16.</param>
             <param name="index">Icon index or negative icon resource id in the .exe/.dll file.</param>
         </member>
@@ -11459,10 +11663,13 @@
         </member>
         <member name="T:Au.APath">
             <summary>
-            Extends <see cref="T:System.IO.Path"/>.
+            Contains static functions to work with file paths. Parse, combine, make full, make unique, make valid, expand variables, etc.
             </summary>
+            <remarks>
+            Also you can use .NET class <see cref="T:System.IO.Path"/>. In the past it was too limited and unsafe to use, for example no long paths, too many exceptions. Later improved, but this class still has something it doesn't.
+            </remarks>
         </member>
-        <member name="M:Au.APath.ExpandEnvVar(System.String)">
+        <member name="M:Au.APath.Expand(System.String)">
              <summary>
              If path starts with <c>"%"</c> or <c>"\"%"</c>, expands environment variables enclosed in %, else just returns path.
              Also supports known folder names, like <c>"%AFolders.Documents%"</c>. More info in Remarks.
@@ -11496,17 +11703,17 @@
             
             Supports only file-system paths. Returns false if path is URL (<see cref="M:Au.APath.IsUrl(System.String)"/>) or starts with <c>"::"</c>.
             
-            If path starts with <c>"%environmentVariable%"</c>, shows warning and returns false. You should at first expand environment variables with <see cref="M:Au.APath.ExpandEnvVar(System.String)"/> or instead use <see cref="M:Au.APath.IsFullPathExpandEnvVar(System.String@)"/>.
+            If path starts with <c>"%environmentVariable%"</c>, shows warning and returns false. You should at first expand environment variables with <see cref="M:Au.APath.Expand(System.String)"/> or instead use <see cref="M:Au.APath.IsFullPathExpand(System.String@)"/>.
             </remarks>
         </member>
-        <member name="M:Au.APath.IsFullPathExpandEnvVar(System.String@)">
+        <member name="M:Au.APath.IsFullPathExpand(System.String@)">
             <summary>
             Expands environment variables and calls <see cref="M:Au.APath.IsFullPath(System.String)"/>.
             Returns true if the string is full path, like <c>@"C:\a\b.txt"</c> or <c>@"C:"</c> or <c>@"\\server\share\..."</c>:
             </summary>
             <param name="path">
             Any string. Can be null.
-            If starts with '%' character, calls <see cref="M:Au.APath.IsFullPath(System.String)"/> with expanded environment variables (<see cref="M:Au.APath.ExpandEnvVar(System.String)"/>). If it returns true, replaces the passed variable with the expanded path string.
+            If starts with '%' character, calls <see cref="M:Au.APath.IsFullPath(System.String)"/> with expanded environment variables (<see cref="M:Au.APath.Expand(System.String)"/>). If it returns true, replaces the passed variable with the expanded path string.
             </param>
             <remarks>
             Returns true if <i>path</i> matches one of these wildcard patterns:
@@ -11560,7 +11767,7 @@
             <param name="prefixLongPath">Call <see cref="M:Au.APath.PrefixLongPathIfNeed(System.String)"/> which may prepend <c>@"\\?\"</c> if the result path is very long. Default true.</param>
             <remarks>
             If s1 and s2 are null or "", returns "". Else if s1 is null or "", returns s2. Else if s2 is null or "", returns s1.
-            Does not expand environment variables. For it use <see cref="M:Au.APath.ExpandEnvVar(System.String)"/> before, or <see cref="M:Au.APath.Normalize(System.String,System.String,Au.Types.PNFlags)"/> instead. Path that starts with an environment variable here is considerd not full path.
+            Does not expand environment variables. For it use <see cref="M:Au.APath.Expand(System.String)"/> before, or <see cref="M:Au.APath.Normalize(System.String,System.String,Au.Types.PNFlags)"/> instead. Path that starts with an environment variable here is considerd not full path.
             Similar to <see cref="M:System.IO.Path.Combine(System.String,System.String)"/>. Main differences: has some options; supports null arguments.
             </remarks>
             <seealso cref="M:Au.APath.Normalize(System.String,System.String,Au.Types.PNFlags)"/>
@@ -11601,9 +11808,9 @@
             <exception cref="T:System.ArgumentException">path is not full path, and <i>defaultParentDirectory</i> is not used or does not make it full path.</exception>
             <remarks>
             The sequence of actions:
-            1. If path starts with '%' character, expands environment variables and special folder names. See <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
+            1. If path starts with '%' character, expands environment variables and special folder names. See <see cref="M:Au.APath.Expand(System.String)"/>.
             2. If path is not full path but looks like URL, and used flag CanBeUrl, returns path.
-            3. If path is not full path, and defaultParentDirectory is not null/"", combines path with ExpandEnvVar(defaultParentDirectory).
+            3. If path is not full path, and defaultParentDirectory is not null/"", combines path with Expand(defaultParentDirectory).
             4. If path is not full path, throws exception.
             5. Calls API <msdn>GetFullPathName</msdn>. It replaces <c>'/'</c> with <c>'\\'</c>, replaces multiple <c>'\\'</c> with single (where need), processes <c>@"\.."</c> etc, trims spaces, etc.
             6. If no flag DontExpandDosPath, if path looks like a short DOS path version (contains <c>'~'</c> etc), calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example <c>@"c:\progra~1"</c> to <c>@"c:\program files"</c>. It is slow. It converts path only if the file exists.
@@ -11623,14 +11830,14 @@
         <member name="M:Au.APath.NormalizeMinimally_(System.String,System.Boolean)">
             <summary>
             Prepares path for passing to API that support "..", DOS path etc.
-            Calls ExpandEnvVar, _AddRemoveSep, PrefixLongPathIfNeed. Optionally throws if !IsFullPath(path).
+            Calls Expand, _AddRemoveSep, PrefixLongPathIfNeed. Optionally throws if !IsFullPath(path).
             </summary>
             <exception cref="T:System.ArgumentException">Not full path (only if throwIfNotFullPath is true).</exception>
         </member>
         <member name="M:Au.APath.NormalizeForNET_(System.String)">
             <summary>
             Prepares path for passing to .NET file functions.
-            Calls ExpandEnvVar, _AddRemoveSep. Throws if !IsFullPath(path).
+            Calls Expand, _AddRemoveSep. Throws if !IsFullPath(path).
             </summary>
             <exception cref="T:System.ArgumentException">Not full path.</exception>
         </member>
@@ -11667,7 +11874,7 @@
             </summary>
             <param name="path">
             Path. Can be null.
-            Must not start with <c>"%environmentVariable%"</c>. This function does not expand it. See <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
+            Must not start with <c>"%environmentVariable%"</c>. This function does not expand it. See <see cref="M:Au.APath.Expand(System.String)"/>.
             </param>
             <remarks>
             Windows API kernel functions support extended-length paths, ie longer than 259 characters. But the path must have this prefix. Windows API shell functions don't support it.
@@ -11679,7 +11886,7 @@
             </summary>
             <param name="path">
             Path. Can be null.
-            Must not start with <c>"%environmentVariable%"</c>. This function does not expand it. See <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
+            Must not start with <c>"%environmentVariable%"</c>. This function does not expand it. See <see cref="M:Au.APath.Expand(System.String)"/>.
             </param>
         </member>
         <member name="M:Au.APath.UnprefixLongPath(System.String)">
@@ -11689,7 +11896,7 @@
             </summary>
             <param name="path">
             Path. Can be null.
-            Must not start with <c>"%environmentVariable%"</c>. This function does not expand it. See <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
+            Must not start with <c>"%environmentVariable%"</c>. This function does not expand it. See <see cref="M:Au.APath.Expand(System.String)"/>.
             </param>
         </member>
         <member name="M:Au.APath._GetPrefixLength(System.String)">
@@ -11882,160 +12089,13 @@
             <param name="path">Suggested full path.</param>
             <param name="isDirectory">The path is for a directory. The number is always appended at the very end, not before .extension.</param>
         </member>
-        <member name="T:Au.APidl">
-            <summary>
-            Manages an ITEMIDLIST structure that is used to identify files and other shell objects instead of a file-system path.
-            </summary>
-            <remarks>
-            Wraps an ITEMIDLIST*, also known as PIDL or LPITEMIDLIST.
-            
-            When calling native shell API, virtual objects can be identified only by ITEMIDLIST*. Some API also support "parsing name", which may look like <c>"::{CLSID-1}\::{CLSID-2}"</c>. File-system objects can be identified by path as well as by ITEMIDLIST*. URLs can be identified by URL as well as by ITEMIDLIST*.
-            
-            The ITEMIDLIST structure is in unmanaged memory. You can dispose <b>APidl</b> variables, or GC will do it later.
-            
-            This class has only ITEMIDLIST functions that are used in this library. Look for other functions in the MSDN library. Many of them are named with IL prefix, like ILClone, ILGetSize, ILFindLastID.
-            </remarks>
-        </member>
-        <member name="P:Au.APidl.UnsafePtr">
-            <summary>
-            Gets the ITEMIDLIST* (PIDL).
-            </summary>
-            <remarks>
-            The ITEMIDLIST memory is managed by this variable and will be freed when disposing or GC-collecting it. Use <see cref="M:System.GC.KeepAlive(System.Object)"/> where need.
-            </remarks>
-        </member>
-        <member name="P:Au.APidl.HandleRef">
-            <summary>
-            Gets the ITEMIDLIST* (PIDL).
-            </summary>
-            <remarks>
-            Use to pass to API where the parameter type is <b>HandleRef</b>. It is safer than <see cref="P:Au.APidl.UnsafePtr"/> because ensures that this variable will not be GC-collected during API call even if not referenced after the call.
-            </remarks>
-        </member>
-        <member name="P:Au.APidl.IsNull">
-            <summary>
-            Returns true if the PIDL is null.
-            </summary>
-        </member>
-        <member name="M:Au.APidl.#ctor(System.IntPtr)">
-            <summary>
-            Assigns an ITEMIDLIST to this variable.
-            </summary>
-            <param name="pidl">
-            ITEMIDLIST* (PIDL).
-            It can be created by any API that creates ITEMIDLIST. They allocate the memory with API CoTaskMemAlloc. This variable will finally free it with Marshal.FreeCoTaskMem which calls API CoTaskMemFree.
-            </param>
-        </member>
-        <member name="M:Au.APidl.#ctor(System.IntPtr,System.IntPtr)">
-            <summary>
-            Combines two ITEMIDLIST (parent and child) and assigns the result to this variable.
-            </summary>
-            <param name="pidlAbsolute">Absolute PIDL (parent folder).</param>
-            <param name="pidlRelative">Relative PIDL (child object).</param>
-            <remarks>
-            Does not free <i>pidlAbsolute</i> and <i>pidlRelative</i>.
-            </remarks>
-        </member>
-        <member name="M:Au.APidl.Dispose">
-            <summary>
-            Frees the ITEMIDLIST with Marshal.FreeCoTaskMem and clears this variable.
-            </summary>
-        </member>
-        <member name="M:Au.APidl.Dispose(System.Boolean)">
-            
-        </member>
-        <member name="M:Au.APidl.Finalize">
-            
-        </member>
-        <member name="M:Au.APidl.Detach">
-            <summary>
-            Gets the ITEMIDLIST and clears this variable so that it cannot be used and will not free the ITEMIDLIST memory. To free it use Marshal.FreeCoTaskMem.
-            </summary>
-        </member>
-        <member name="M:Au.APidl.FromString(System.String,System.Boolean)">
-            <summary>
-            Converts string to ITEMIDLIST and creates new APidl variable that holds it.
-            Returns null if failed.
-            </summary>
-            <param name="s">A file-system path or URL or shell object parsing name (see <see cref="M:Au.APidl.ToShellString(Au.Types.SIGDN,System.Boolean)"/>) or ":: ITEMIDLIST" (see <see cref="M:Au.APidl.ToHexString"/>). Supports environment variables (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>).</param>
-            <param name="throwIfFailed">Throw exception if failed.</param>
-            <exception cref="T:Au.Types.AuException">Failed, and throwIfFailed is true. Probably invalid s.</exception>
-            <remarks>
-            Calls <msdn>SHParseDisplayName</msdn>, except when string is ":: ITEMIDLIST".
-            When ":: ITEMIDLIST", does not check whether the shell object exists.
-            Note: APidl is disposable.
-            </remarks>
-        </member>
-        <member name="M:Au.APidl.FromString_(System.String,System.Boolean)">
-            <summary>
-            The same as <see cref="M:Au.APidl.FromString(System.String,System.Boolean)"/>, but returns unmanaged ITEMIDLIST*.
-            Later need to free it with Marshal.FreeCoTaskMem.
-            </summary>
-            <param name="s"></param>
-            <param name="throwIfFailed"></param>
-        </member>
-        <member name="M:Au.APidl._Normalize(System.String)">
-            <summary>
-            The same as <see cref="M:Au.APath.Normalize(System.String,System.String,Au.Types.PNFlags)"/>(CanBeUrlOrShell|DontPrefixLongPath), but ignores non-full path (returns s).
-            </summary>
-            <param name="s">File-system path or URL or "::...".</param>
-        </member>
-        <member name="M:Au.APidl.ToShellString(Au.Types.SIGDN,System.Boolean)">
-            <summary>
-            Converts the ITEMIDLIST to file path or URL or shell object parsing name or display name, depending on stringType argument.
-            Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
-            If failed, returns null or throws exception.
-            </summary>
-            <param name="stringType">
-            String format. API <msdn>SIGDN</msdn>.
-            Often used:
-            - SIGDN.NORMALDISPLAY - returns object name without path. It is best to display in UI but cannot be parsed to create ITEMIDLIST again.
-            - SIGDN.FILESYSPATH - returns path if the ITEMIDLIST identifies a file system object (file or directory). Else returns null.
-            - SIGDN.URL - if URL, returns URL. If file system object, returns its path like "file:///C:/a/b.txt". Else returns null.
-            - SIGDN.DESKTOPABSOLUTEPARSING - returns path (if file system object) or URL (if URL) or shell object parsing name (if virtual object eg Control Panel). Note: not all returned parsing names can actually be parsed to create ITEMIDLIST again, therefore usually it's better to use <see cref="M:Au.APidl.ToString"/> instead.
-            </param>
-            <param name="throwIfFailed">If failed, throw AuException.</param>
-            <exception cref="T:Au.Types.AuException">Failed, and throwIfFailed is true.</exception>
-            <remarks>
-            Calls <msdn>SHGetNameFromIDList</msdn>.
-            </remarks>
-        </member>
-        <member name="M:Au.APidl.ToShellString(System.IntPtr,Au.Types.SIGDN,System.Boolean)">
-            <summary>
-            This overload uses an ITEMIDLIST* that is not stored in an APidl variable.
-            </summary>
-        </member>
-        <member name="M:Au.APidl.ToString">
-            <summary>
-            Converts the ITEMIDLIST to string.
-            If it identifies an existing file-system object (file or directory), returns path. If URL, returns URL. Else returns ":: ITEMIDLIST" (see <see cref="M:Au.APidl.ToHexString"/>).
-            Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
-            </summary>
-        </member>
-        <member name="M:Au.APidl.ToString(System.IntPtr)">
-            <summary>
-            This overload uses an ITEMIDLIST* that is not stored in an APidl variable.
-            </summary>
-        </member>
-        <member name="M:Au.APidl.ToHexString">
-            <summary>
-            Returns string ":: ITEMIDLIST".
-            Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
-            </summary>
-            <remarks>
-            The string can be used with some functions of this library, mostly of classes <b>AFile</b>, <b>APidl</b> and <b>AIcon</b>. Cannot be used with native and .NET functions.
-            </remarks>
-        </member>
-        <member name="M:Au.APidl.ToHexString(System.IntPtr)">
-            <summary>
-            This overload uses an ITEMIDLIST* that is not stored in an APidl variable.
-            </summary>
-        </member>
         <member name="T:Au.AProcess">
             <summary>
-            Process functions. Extends <see cref="T:System.Diagnostics.Process"/>.
+            Contains static functions to work with processes (find, enumerate, get basic info, etc).
             </summary>
+            <seealso cref="T:Au.AThisProcess"/>
             <seealso cref="T:Au.ATask"/>
+            <seealso cref="T:System.Diagnostics.Process"/>
         </member>
         <member name="M:Au.AProcess.GetName(System.Int32,System.Boolean,System.Boolean)">
             <summary>
@@ -12101,57 +12161,6 @@
             </summary>
             <exception cref="T:System.ArgumentException"/>
         </member>
-        <member name="P:Au.AProcess.ProcessId">
-            <summary>
-            Gets current process id.
-            See API <msdn>GetCurrentProcessId</msdn>.
-            </summary>
-        </member>
-        <member name="P:Au.AProcess.ProcessHandle">
-            <summary>
-            Returns current process handle.
-            See API <msdn>GetCurrentProcess</msdn>.
-            Don't need to close the handle.
-            </summary>
-        </member>
-        <member name="P:Au.AProcess.ExePath">
-            <summary>
-            Gets full path of the program file of this process.
-            </summary>
-        </member>
-        <member name="P:Au.AProcess.ExeName">
-            <summary>
-            Gets file name of the program file of this process, like "name.exe".
-            </summary>
-        </member>
-        <member name="P:Au.AProcess.ExeDriveType">
-            <summary>
-            Gets drive type (fixed, removable, network, etc) of the program file of this process.
-            </summary>
-            <seealso cref="P:Au.AFolders.ThisAppDriveBS"/>
-        </member>
-        <member name="M:Au.AProcess.ProcessIdFromHandle(System.IntPtr)">
-            <summary>
-            Gets process id from handle.
-            Returns 0 if failed. Supports <see cref="T:Au.ALastError"/>.
-            Calls API <msdn>GetProcessId</msdn>.
-            </summary>
-            <param name="processHandle">Process handle.</param>
-        </member>
-        <member name="M:Au.AProcess.GetSessionId(System.Int32)">
-            <summary>
-            Gets user session id of a process.
-            Returns -1 if failed. Supports <see cref="T:Au.ALastError"/>.
-            Calls API <msdn>ProcessIdToSessionId</msdn>.
-            </summary>
-            <param name="processId">Process id.</param>
-        </member>
-        <member name="P:Au.AProcess.ProcessSessionId">
-            <summary>
-            Gets user session id of this process.
-            Calls API <msdn>ProcessIdToSessionId</msdn> and <msdn>GetCurrentProcessId</msdn>.
-            </summary>
-        </member>
         <member name="M:Au.AProcess.GetVersionInfo(System.Int32)">
             <summary>
             Gets version info of process executable file.
@@ -12169,29 +12178,13 @@
             Calls <see cref="M:Au.AProcess.GetVersionInfo(System.Int32)"/> and <see cref="P:System.Diagnostics.FileVersionInfo.FileDescription"/>.
             </remarks>
         </member>
-        <member name="E:Au.AProcess.Exit">
+        <member name="M:Au.AProcess.ProcessIdFromHandle(System.IntPtr)">
             <summary>
-            Before this process exits, either normally or on unhandled exception.
+            Gets process id from handle.
+            Returns 0 if failed. Supports <see cref="T:Au.ALastError"/>.
+            Calls API <msdn>GetProcessId</msdn>.
             </summary>
-            <remarks>
-            The event handler is called on <see cref="E:System.AppDomain.ProcessExit"/> (then the parameter is null) and <see cref="E:System.AppDomain.UnhandledException"/> (then the parameter is <b>Exception</b>).
-            </remarks>
-        </member>
-        <member name="P:Au.AProcess.CultureIsInvariant">
-            <summary>
-            Gets or sets whether <see cref="P:System.Globalization.CultureInfo.DefaultThreadCurrentCulture"/> and <see cref="P:System.Globalization.CultureInfo.DefaultThreadCurrentUICulture"/> are <see cref="P:System.Globalization.CultureInfo.InvariantCulture"/>.
-            </summary>
-            <remarks>
-            If your app doesn't want to use current culture (default in .NET apps), it can set these properties = <see cref="P:System.Globalization.CultureInfo.InvariantCulture"/> or set this property = true.
-            It prevents potential bugs when app/script/components don't specify invariant culture in string functions and 'number to/from string' functions.
-            Also, there is a bug in 'number to/from string' functions in some .NET versions with some cultures: they use wrong minus sign, not ASII '-' which is specified in Control Panel.
-            The default compiler sets this property = true; as well as <see cref="M:Au.ATask.Setup(System.Boolean,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Boolean,Au.Types.UExcept,System.String)"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.AProcess.MinimizePhysicalMemory_(System.Int32)">
-            <summary>
-            After afterMS milliseconds invokes GC and calls API SetProcessWorkingSetSize.
-            </summary>
+            <param name="processHandle">Process handle.</param>
         </member>
         <member name="M:Au.AProcess.Terminate(System.Int32,System.Int32)">
             <summary>
@@ -12202,7 +12195,7 @@
             <param name="exitCode">Process exit code.</param>
             <remarks>
             This function does not try to end process "softly" (close main window). Unsaved data will be lost.
-            Alternatives: run taskkill.exe or pskill.exe (download). See <see cref="M:Au.AFile.RunConsole(System.String,System.String,System.String,System.Text.Encoding)"/>. More info on the internet.
+            Alternatives: run taskkill.exe or pskill.exe (download). See <see cref="M:Au.ARun.Console(System.String,System.String,System.String,System.Text.Encoding)"/>. More info on the internet.
             </remarks>
         </member>
         <member name="M:Au.AProcess.Terminate(System.String,System.Boolean,System.Int32)">
@@ -12250,6 +12243,14 @@
             <remarks>
             If suspended multiple times, must be resumed the same number of times.
             </remarks>
+        </member>
+        <member name="M:Au.AProcess.GetSessionId(System.Int32)">
+            <summary>
+            Gets user session id of a process.
+            Returns -1 if failed. Supports <see cref="T:Au.ALastError"/>.
+            Calls API <msdn>ProcessIdToSessionId</msdn>.
+            </summary>
+            <param name="processId">Process id.</param>
         </member>
         <member name="T:Au.AProcessMemory">
             <summary>
@@ -12391,6 +12392,164 @@
             <param name="nBytes">Number of bytes to copy.</param>
             <seealso cref="M:Au.AProcessMemory.SetMem(System.IntPtr,System.Boolean)"/>
         </member>
+        <member name="T:Au.ARun">
+            <summary>
+            Contains static functions to execute or open programs, other files, folders, web pages, etc.
+            </summary>
+        </member>
+        <member name="M:Au.ARun.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)">
+            <summary>
+            Runs/opens a program, document, directory (folder), URL, new email, Control Panel item etc.
+            The returned <see cref="T:Au.Types.RResult"/> variable contains some process info - process id etc.
+            </summary>
+            <param name="file">
+            Examples:
+            - <c>@"C:\file.txt"</c>
+            - <c>AFolders.Documents</c>
+            - <c>AFolders.System + "notepad.exe"</c>
+            - <c>@"%AFolders.System%\notepad.exe"</c>
+            - <c>@"%TMP%\file.txt"</c>
+            - <c>"notepad.exe"</c>
+            - <c>@"..\folder\x.exe"</c>
+            - <c>"http://a.b.c/d"</c>
+            - <c>"file:///path"</c>
+            - <c>"mailto:a@b.c"</c>
+            - <c>":: ITEMIDLIST"</c>
+            - <c>@"::{CLSID}"</c>
+            - <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>.
+            More info in Remarks.
+            </param>
+            <param name="args">
+            Command line arguments.
+            This function expands environment variables if starts with <c>"%"</c> or <c>"\"%"</c>.
+            </param>
+            <param name="flags"></param>
+            <param name="dirEtc">
+            Allows to specify more parameters: current directory, verb, etc.
+            If string, it sets initial current directory for the new process. If "", gets it from <i>file</i>. More info: <see cref="F:Au.Types.ROptions.CurrentDirectory"/>.
+            </param>
+            <exception cref="T:System.ArgumentException">Used both <b>ROptions.Verb</b> and <b>RFlags.Admin</b> and this process isn't admin.</exception>
+            <exception cref="T:Au.Types.AuException">Failed. For example, the file does not exist.</exception>
+            <remarks>
+            It works like when you double-click a file icon. It may start new process or not. For example it may just activate window if the program is already running.
+            Uses API <msdn>ShellExecuteEx</msdn>.
+            Similar to <see cref="M:System.Diagnostics.Process.Start(System.String,System.String)"/>.
+            
+            The <i>file</i> parameter can be:
+            - Full path of a file or directory. Examples: <c>@"C:\file.txt"</c>, <c>AFolders.Documents</c>, <c>AFolders.System + "notepad.exe"</c>, <c>@"%AFolders.System%\notepad.exe"</c>.
+            - Filename of a file or directory, like <c>"notepad.exe"</c>. The function calls <see cref="M:Au.AFile.SearchPath(System.String,System.String[])"/>.
+            - Path relative to <see cref="P:Au.AFolders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
+            - URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
+            - Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
+            - Shell object's ITEMIDLIST like <c>":: ITEMIDLIST"</c>. See <see cref="M:Au.Types.Pidl.ToHexString"/>, <see cref="T:Au.AFolders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
+            - Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="M:Au.Types.Pidl.ToShellString(Au.Types.SIGDN,System.Boolean)"/>, <see cref="T:Au.AFolders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
+            - To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="M:Au.AWnd.More.GetWindowsStoreAppId(Au.AWnd,System.Boolean,System.Boolean)"/> or Google.
+            
+            Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="M:Au.APath.Expand(System.String)"/>.
+            </remarks>
+            <seealso cref="M:Au.AWnd.FindOrRun(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains,System.Action,System.Double,System.Boolean)"/>
+            <example>
+            Run notepad and wait for its window.
+            <code><![CDATA[
+            ARun.Run("notepad.exe");
+            AWnd w = AWnd.Wait(10, true, "*- Notepad", "Notepad");
+            ]]></code>
+            Run notepad or activate its window.
+            <code><![CDATA[
+            AWnd w = AWnd.FindOrRun("*- Notepad", run: () => ARun.Run("notepad.exe"));
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.ARun.RunSafe(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)">
+            <summary>
+            Calls <see cref="M:Au.ARun.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/> and handles exceptions. All parameters are the same.
+            If <b>Run</b> throws exception, writes it to the output as warning and returns null.
+            </summary>
+            <remarks>
+            This is useful when you don't care whether <b>Run</b> succeeded and don't want to use try/catch.
+            Handles only exception of type <see cref="T:Au.Types.AuException"/>. It is thrown when fails, usually when the file does not exist.
+            </remarks>
+            <seealso cref="M:Au.AOutput.Warning(System.String,System.Int32,System.String)"/>
+            <seealso cref="M:Au.Types.OWarnings.Disable(System.String[])"/>
+            <seealso cref="M:Au.AWnd.FindOrRun(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains,System.Action,System.Double,System.Boolean)"/>
+        </member>
+        <member name="M:Au.ARun.Console(System.String,System.String,System.String,System.Text.Encoding)">
+            <summary>
+            Runs a console program, waits until its process ends, and gets its output text.
+            This overload writes text lines to the output in real time.
+            </summary>
+            <param name="exe">
+            Path or name of an .exe or .bat file. Can be:
+            - Full path. Examples: <c>@"C:\folder\x.exe"</c>, <c>AFolders.System + "x.exe"</c>, <c>@"%AFolders.System%\x.exe"</c>.
+            - Filename, like <c>"x.exe"</c>. This function calls <see cref="M:Au.AFile.SearchPath(System.String,System.String[])"/>.
+            - Path relative to <see cref="P:Au.AFolders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\folder\x.exe"</c>.
+            
+            Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="M:Au.APath.Expand(System.String)"/>.
+            </param>
+            <param name="args">null or command line arguments.</param>
+            <param name="curDir">
+            Initial current directory of the new process.
+            - If null, uses <c>Directory.GetCurrentDirectory()</c>.
+            - Else if "", calls <c>APath.GetDirectory(exe)</c>.
+            - Else calls <see cref="M:Au.APath.Expand(System.String)"/>.
+            </param>
+            <param name="encoding">
+            Console's text encoding.
+            If null (default), uses the default console text encoding (API <msdn>GetOEMCP</msdn>); it is not Unicode. Programs that display Unicode text use <see cref="P:System.Text.Encoding.UTF8"/>.
+            </param>
+            <returns>The process exit code. Usually a non-0 value means error.</returns>
+            <exception cref="T:Au.Types.AuException">Failed, for example file not found.</exception>
+            <remarks>
+            The console window is hidden. The text that would be displayed in it is redirected to this function.
+            
+            Console programs have two output text streams - standard output and standard error. This function gets both.
+            Alternatively use <see cref="M:System.Diagnostics.Process.Start"/>. It gets the output and error streams separately, and some lines may be received in incorrect order in time.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            string v = "example";
+            int r1 = ARun.Console(@"Q:\Test\console1.exe", $@"/an ""{v}"" /etc");
+            
+            int r2 = ARun.Console(s => AOutput.Write(s), @"Q:\Test\console2.exe");
+            
+            int r3 = ARun.Console(out var text, @"Q:\Test\console3.exe", encoding: Encoding.UTF8);
+            AOutput.Write(text);
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.ARun.Console(System.Action{System.String},System.String,System.String,System.String,System.Text.Encoding)">
+            <summary>
+            Runs a console program, waits until its process ends, and gets its output text.
+            This overload uses a callback function that receives text lines in real time.
+            </summary>
+            <param name="output">A callback function that receives the output text. It receives single full line at a time, without line break characters.</param>
+            <param name="exe"></param>
+            <param name="args"></param>
+            <param name="curDir"></param>
+            <param name="encoding"></param>
+            <exception cref="T:Au.Types.AuException">Failed, for example file not found.</exception>
+        </member>
+        <member name="M:Au.ARun.Console(System.String@,System.String,System.String,System.String,System.Text.Encoding)">
+            <summary>
+            Runs a console program, waits until its process ends, and gets its output text when it ends.
+            </summary>
+            <param name="output">A variable that receives the output text.</param>
+            <param name="exe"></param>
+            <param name="args"></param>
+            <param name="curDir"></param>
+            <param name="encoding"></param>
+            <exception cref="T:Au.Types.AuException">Failed, for example file not found.</exception>
+        </member>
+        <member name="M:Au.ARun.SelectInExplorer(System.String)">
+            <summary>
+            Opens parent folder in Explorer and selects the file.
+            Returns null if fails, for example if the file does not exist.
+            </summary>
+            <param name="path">
+            Full path of a file or directory or other shell object.
+            Supports <c>@"%environmentVariable%\..."</c> (see <see cref="M:Au.APath.Expand(System.String)"/>) and <c>"::..."</c> (see <see cref="M:Au.Types.Pidl.ToHexString"/>).
+            </param>
+        </member>
         <member name="T:Au.AShortcutFile">
             <summary>
             Creates shell shortcuts (.lnk files) and gets shortcut properties.
@@ -12474,8 +12633,8 @@
         </member>
         <member name="P:Au.AShortcutFile.TargetAnyType">
             <summary>
-            Gets or sets target of any type - file/folder, URL, virtual shell object (see <see cref="T:Au.APidl"/>).
-            The string can be used with <see cref="M:Au.AFile.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
+            Gets or sets target of any type - file/folder, URL, virtual shell object (see <see cref="T:Au.Types.Pidl"/>).
+            The string can be used with <see cref="M:Au.ARun.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
             </summary>
             <exception cref="T:Au.Types.AuException">The 'set' function failed.</exception>
         </member>
@@ -12564,7 +12723,7 @@
             This class wraps a SQLite API object sqlite3* and related sqlite3_x functions. They are documented perfectly in the SQLite website.
             Uses this unmanaged dll: AFolders.ThisApp + @"64\sqlite3.dll". In 32-bit process - "32" instead of "64".
             
-            To correctly close the database file, at first need to dipose all child objects, such as <see cref="T:Au.ASqliteStatement"/>, then dispose the <b>ASqlite</b> object. To dispose a static <b>ASlite</b> variable, you may want to use <see cref="E:Au.AProcess.Exit"/> event. Although this class has a finalizer that disposes the object (closes database), you should always dispose explicitly. Finalizers don't run on process exit.
+            To correctly close the database file, at first need to dipose all child objects, such as <see cref="T:Au.ASqliteStatement"/>, then dispose the <b>ASqlite</b> object. To dispose a static <b>ASlite</b> variable, you may want to use <see cref="E:Au.AThisProcess.Exit"/> event. Although this class has a finalizer that disposes the object (closes database), you should always dispose explicitly. Finalizers don't run on process exit.
             </remarks>
             <seealso cref="T:Au.ASqliteStatement"/>
             <example>
@@ -12614,7 +12773,7 @@
             </summary>
             <param name="file">
             Database file. Can be:
-            - Full path. Supports environment variables etc, see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>
+            - Full path. Supports environment variables etc, see <see cref="M:Au.APath.Expand(System.String)"/>
             - ":memory:" - create a private, temporary in-memory database.
             - "" - create a private, temporary on-disk database.
             - Starts with "file:" - see <google>sqlite3_open_v2</google>.
@@ -12995,10 +13154,78 @@
             Does not throw exception because it is not thread-safe.
             </summary>
         </member>
+        <member name="T:Au.AThisProcess">
+            <summary>
+            Contains static functions to work with current process.
+            </summary>
+            <seealso cref="T:Au.AProcess"/>
+            <seealso cref="T:Au.ATask"/>
+            <seealso cref="T:System.Diagnostics.Process"/>
+        </member>
+        <member name="P:Au.AThisProcess.Id">
+            <summary>
+            Gets current process id.
+            See API <msdn>GetCurrentProcessId</msdn>.
+            </summary>
+        </member>
+        <member name="P:Au.AThisProcess.Handle">
+            <summary>
+            Returns current process handle.
+            See API <msdn>GetCurrentProcess</msdn>.
+            Don't need to close the handle.
+            </summary>
+        </member>
+        <member name="P:Au.AThisProcess.ExePath">
+            <summary>
+            Gets full path of the program file of this process.
+            </summary>
+        </member>
+        <member name="P:Au.AThisProcess.ExeName">
+            <summary>
+            Gets file name of the program file of this process, like "name.exe".
+            </summary>
+        </member>
+        <member name="P:Au.AThisProcess.ExeDriveType">
+            <summary>
+            Gets drive type (fixed, removable, network, etc) of the program file of this process.
+            </summary>
+            <seealso cref="P:Au.AFolders.ThisAppDriveBS"/>
+        </member>
+        <member name="P:Au.AThisProcess.SessionId">
+            <summary>
+            Gets user session id of this process.
+            Calls API <msdn>ProcessIdToSessionId</msdn> and <msdn>GetCurrentProcessId</msdn>.
+            </summary>
+        </member>
+        <member name="P:Au.AThisProcess.CultureIsInvariant">
+            <summary>
+            Gets or sets whether <see cref="P:System.Globalization.CultureInfo.DefaultThreadCurrentCulture"/> and <see cref="P:System.Globalization.CultureInfo.DefaultThreadCurrentUICulture"/> are <see cref="P:System.Globalization.CultureInfo.InvariantCulture"/>.
+            </summary>
+            <remarks>
+            If your app doesn't want to use current culture (default in .NET apps), it can set these properties = <see cref="P:System.Globalization.CultureInfo.InvariantCulture"/> or set this property = true.
+            It prevents potential bugs when app/script/components don't specify invariant culture in string functions and 'number to/from string' functions.
+            Also, there is a bug in 'number to/from string' functions in some .NET versions with some cultures: they use wrong minus sign, not ASII '-' which is specified in Control Panel.
+            The default compiler sets this property = true; as well as <see cref="M:Au.ATask.Setup(System.Boolean,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Boolean,Au.Types.UExcept,System.String)"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.AThisProcess.MinimizePhysicalMemory_(System.Int32)">
+            <summary>
+            After afterMS milliseconds invokes GC and calls API SetProcessWorkingSetSize.
+            </summary>
+        </member>
+        <member name="E:Au.AThisProcess.Exit">
+            <summary>
+            Before this process exits, either normally or on unhandled exception.
+            </summary>
+            <remarks>
+            The event handler is called on <see cref="E:System.AppDomain.ProcessExit"/> (then the parameter is null) and <see cref="E:System.AppDomain.UnhandledException"/> (then the parameter is <b>Exception</b>).
+            </remarks>
+        </member>
         <member name="T:Au.AThread">
             <summary>
-            Thread functions. Extends <see cref="T:System.Threading.Thread"/>.
+            Thread functions.
             </summary>
+            <seealso cref="T:System.Threading.Thread"/>
         </member>
         <member name="P:Au.AThread.Id">
             <summary>
@@ -13975,7 +14202,7 @@
             	m["Three"] = o => AOutput.Write(o);
             	m["Four"] = o => AOutput.Write(o);
             });
-            m["notepad"] = o => AFile.TryRun(AFolders.System + "notepad.exe");
+            m["notepad"] = o => ARun.RunSafe(AFolders.System + "notepad.exe");
             m.Show();
             ]]></code>
             </example>
@@ -14281,19 +14508,19 @@
              </summary>
              <remarks>
              <i>image</i> argument of "add item" functions can be:
-             - file/folder path (string) - the "show" function calls <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/> to get its icon. It also supports file type icons like ".txt", etc.
+             - file/folder path (string) - the "show" function calls <see cref="M:Au.AIcon.Of(System.String,System.Int32,Au.Types.IconGetFlags)"/> to get its icon. It also supports file type icons like ".txt", etc.
              - file path with prefix "imagefile:" or resource path that starts with "resources/" or has prefix "resource:" - the "show" function loads .png or .xaml image file or resource.
              - string with prefix "image:" - Base-64 encoded png file. Can be created with the "Find image..." dialog.
              - <see cref="T:Au.Types.FolderPath"/> - same as folder path string.
              - <see cref="T:System.Drawing.Image"/> - image.
              - <see cref="T:Au.AIcon"/> - icon. The "add item" function disposes it.
              - <see cref="T:Au.Types.StockIcon"/> - the "show" function calls <see cref="M:Au.AIcon.Stock(Au.Types.StockIcon,System.Int32)"/>.
-             - null - if <see cref="P:Au.MTBase.ExtractIconPathFromCode"/> true, the "show" function tries to extract a file path from action code; then calls <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>. Else no image.
+             - null - if <see cref="P:Au.MTBase.ExtractIconPathFromCode"/> true, the "show" function tries to extract a file path from action code; then calls <see cref="M:Au.AIcon.Of(System.String,System.Int32,Au.Types.IconGetFlags)"/>. Else no image.
              - string "" - no image, even if <b>ExtractIconPathFromCode</b> true.
              
              Item images should be of size 16x16 (small icon size). If high DPI, will scale images automatically, which makes them slightly blurred. To avoid scaling, can be used XAML images, but then slower.
             
-             Images are loaded on demand, when showing the menu or submenu etc. If fails to load, prints warning (<see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>).
+             Images are loaded on demand, when showing the menu or submenu etc. If fails to load, prints warning (<see cref="M:Au.AOutput.Warning(System.String,System.Int32,System.String)"/>).
              
              For icon/image files use full path, unless they are in <see cref="P:Au.AFolders.ThisAppImages"/>
              
@@ -14305,7 +14532,7 @@
         </member>
         <member name="P:Au.MTBase.ExtractIconPathFromCode">
             <summary>
-            When adding items without explicitly specified image, extract file path from item action code (for example <see cref="M:Au.AFile.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/> argument) and use icon of that file.
+            When adding items without explicitly specified image, extract file path from item action code (for example <see cref="M:Au.ARun.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/> argument) and use icon of that file.
             This property is applied to items added afterwards; submenus inherit it.
             </summary>
             <remarks>
@@ -14336,7 +14563,7 @@
         </member>
         <member name="P:Au.MTBase.ActionException">
             <summary>
-            Whether to handle exceptions in item action code. If false (default), handles exceptions and on exception calls <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>.
+            Whether to handle exceptions in item action code. If false (default), handles exceptions and on exception calls <see cref="M:Au.AOutput.Warning(System.String,System.Int32,System.String)"/>.
             This property is applied to items added afterwards; submenus inherit it.
             </summary>
         </member>
@@ -14577,7 +14804,7 @@
             Called when the OSD window must be drawn or redrawn. Draws rectangle. More info: <see cref="M:Au.AOsdWindow.OnPaint(System.IntPtr,System.Drawing.Graphics,Au.Types.RECT)"/>.
             </summary>
         </member>
-        <member name="T:Au.AOsd">
+        <member name="T:Au.AOsdText">
             <summary>
             Shows mouse-transparent text on screen. Its background can be visually transparent or opaque.
             </summary>
@@ -14586,89 +14813,89 @@
             Most properties cannot be changed after creating OSD window.
             </remarks>
         </member>
-        <member name="M:Au.AOsd.Dispose(System.Boolean)">
+        <member name="M:Au.AOsdText.Dispose(System.Boolean)">
             
         </member>
-        <member name="P:Au.AOsd.XY">
+        <member name="P:Au.AOsdText.XY">
             <summary>
             Coordinates.
             Default: null. Screen center.
             </summary>
             <remarks>
-            Not used if <see cref="P:Au.AOsd.Rect"/> is set.
+            Not used if <see cref="P:Au.AOsdText.Rect"/> is set.
             This property can be changed after creating OSD window.
             </remarks>
             <example>
             <code><![CDATA[
-            var m = new AOsd { Text = "Text" };
+            var m = new AOsdText { Text = "Text" };
             m.XY = new PopupXY(Coord.Center, Coord.Max); //bottom-center of the work area of the primary screen
             m.Show();
             ]]></code>
             </example>
         </member>
-        <member name="P:Au.AOsd.Rect">
+        <member name="P:Au.AOsdText.Rect">
             <summary>
             Gets or sets OSD window size and position in screen.
             </summary>
             <remarks>
-            Normally don't need to use this property. If not used, the OSD window size depends on text etc, and position on <see cref="P:Au.AOsd.XY"/>.
+            Normally don't need to use this property. If not used, the OSD window size depends on text etc, and position on <see cref="P:Au.AOsdText.XY"/>.
             This property can be changed after creating OSD window.
             </remarks>
-            <seealso cref="M:Au.AOsd.Measure"/>
+            <seealso cref="M:Au.AOsdText.Measure"/>
         </member>
-        <member name="P:Au.AOsd.ResizeWhenContentChanged">
+        <member name="P:Au.AOsdText.ResizeWhenContentChanged">
             <summary>
             When changing text, resize/move the OSD window if need.
             Default: false.
             </summary>
         </member>
-        <member name="P:Au.AOsd.Text">
+        <member name="P:Au.AOsdText.Text">
             <summary>
             Text in OSD window.
             </summary>
             <remarks>
-            This property can be changed after creating OSD window; then the window is not moved/resized, unless <see cref="P:Au.AOsd.ResizeWhenContentChanged"/> is true.
+            This property can be changed after creating OSD window; then the window is not moved/resized, unless <see cref="P:Au.AOsdText.ResizeWhenContentChanged"/> is true.
             </remarks>
         </member>
-        <member name="P:Au.AOsd.Font">
+        <member name="P:Au.AOsdText.Font">
             <summary>
             Font.
-            If not set, uses <see cref="P:Au.AOsd.DefaultSmallFont"/>.
+            If not set, uses <see cref="P:Au.AOsdText.DefaultSmallFont"/>.
             </summary>
             <remarks>
             This property cannot be changed after creating OSD window.
             </remarks>
         </member>
-        <member name="P:Au.AOsd.TextColor">
+        <member name="P:Au.AOsdText.TextColor">
             <summary>
             Text color.
-            Default: <see cref="P:Au.AOsd.DefaultTextColor"/>.
+            Default: <see cref="P:Au.AOsdText.DefaultTextColor"/>.
             </summary>
             <remarks>
             This property can be changed after creating OSD window.
             </remarks>
         </member>
-        <member name="P:Au.AOsd.BackColor">
+        <member name="P:Au.AOsdText.BackColor">
             <summary>
             Background color.
-            Default: <see cref="P:Au.AOsd.DefaultBackColor"/>.
+            Default: <see cref="P:Au.AOsdText.DefaultBackColor"/>.
             </summary>
             <remarks>
             This property can be changed after creating OSD window.
             Not used for completely transparent OSD.
             </remarks>
         </member>
-        <member name="P:Au.AOsd.BorderColor">
+        <member name="P:Au.AOsdText.BorderColor">
             <summary>
             Border color.
-            Default: <see cref="P:Au.AOsd.DefaultBorderColor"/>.
+            Default: <see cref="P:Au.AOsdText.DefaultBorderColor"/>.
             </summary>
             <remarks>
             This property can be changed after creating OSD window.
-            No border if <see cref="P:Au.AOsdWindow.Opacity"/>==0 or <b>BorderColor</b>==<see cref="P:Au.AOsd.BackColor"/>.
+            No border if <see cref="P:Au.AOsdWindow.Opacity"/>==0 or <b>BorderColor</b>==<see cref="P:Au.AOsdText.BackColor"/>.
             </remarks>
         </member>
-        <member name="P:Au.AOsd.BackgroundImage">
+        <member name="P:Au.AOsdText.BackgroundImage">
             <summary>
             Background image.
             </summary>
@@ -14676,16 +14903,16 @@
             This property cannot be changed after creating OSD window.
             </remarks>
         </member>
-        <member name="P:Au.AOsd.IsOfImageSize">
+        <member name="P:Au.AOsdText.IsOfImageSize">
             <summary>
-            When used <see cref="P:Au.AOsd.BackgroundImage"/>, the OSD window has the same size as the image, plus borders.
+            When used <see cref="P:Au.AOsdText.BackgroundImage"/>, the OSD window has the same size as the image, plus borders.
             Else OSD window size is calculated from sizes of text and icon. Then image is displayed scaled or clipped if need.
             </summary>
             <remarks>
             This property cannot be changed after creating OSD window.
             </remarks>
         </member>
-        <member name="P:Au.AOsd.WrapWidth">
+        <member name="P:Au.AOsdText.WrapWidth">
             <summary>
             Maximal text width.
             Default: 0 - no limit (depends on screen width etc).
@@ -14694,7 +14921,7 @@
             This property cannot be changed after creating OSD window.
             </remarks>
         </member>
-        <member name="P:Au.AOsd.TextFormatFlags">
+        <member name="P:Au.AOsdText.TextFormatFlags">
             <summary>
             Gets or sets text format flags.
             Default: TFFlags.NOPREFIX | TFFlags.WORDBREAK | TFFlags.EXPANDTABS.
@@ -14703,7 +14930,7 @@
             This property cannot be changed after creating OSD window.
             </remarks>
         </member>
-        <member name="P:Au.AOsd.Icon">
+        <member name="P:Au.AOsdText.Icon">
             <summary>
             Icon or image at the left. Can be <see cref="T:Au.AIcon"/>, <b>Icon</b> or <b>System.Drawing.Image</b>. Any size.
             For example <i>System.Drawing.SystemIcons.Information</i> or <c>AIcon.Stock(StockIcon.INFO)</c>.
@@ -14712,7 +14939,7 @@
             This property cannot be changed after creating OSD window.
             </remarks>
         </member>
-        <member name="P:Au.AOsd.Shadow">
+        <member name="P:Au.AOsdText.Shadow">
             <summary>
             If true, the OSD window will have shadow.
             </summary>
@@ -14721,7 +14948,7 @@
             Window shadows can be disabled. See <msdn>SPI_SETDROPSHADOW</msdn>.
             </remarks>
         </member>
-        <member name="P:Au.AOsd.ClickToClose">
+        <member name="P:Au.AOsdText.ClickToClose">
             <summary>
             If true, the OSD window receive mouse messages. Only completely transparent areas don't. The user can click to close the OSD (left, right or middle button).
             </summary>
@@ -14729,7 +14956,7 @@
             This property cannot be changed after creating OSD window.
             </remarks>
         </member>
-        <member name="P:Au.AOsd.SecondsTimeout">
+        <member name="P:Au.AOsdText.SecondsTimeout">
             <summary>
             Close the OSD window after this time, seconds.
             If 0 (default), depends on text length. Can be <see cref="F:System.Threading.Timeout.Infinite"/> (-1).
@@ -14738,7 +14965,7 @@
             This property cannot be changed after creating OSD window.
             </remarks>
         </member>
-        <member name="P:Au.AOsd.ShowMode">
+        <member name="P:Au.AOsdText.ShowMode">
             <summary>
             See <see cref="T:Au.Types.OsdMode"/>.
             </summary>
@@ -14746,110 +14973,110 @@
             This property cannot be changed after creating OSD window.
             </remarks>
         </member>
-        <member name="M:Au.AOsd.#ctor">
+        <member name="M:Au.AOsdText.#ctor">
             
         </member>
-        <member name="M:Au.AOsd.Show">
+        <member name="M:Au.AOsdText.Show">
             <summary>
             Shows the OSD window. Creates if need.
-            By default does not wait; the window will be closed after <see cref="P:Au.AOsd.SecondsTimeout"/>.
+            By default does not wait; the window will be closed after <see cref="P:Au.AOsdText.SecondsTimeout"/>.
             </summary>
             <remarks>
-            Depending on <see cref="P:Au.AOsd.ShowMode"/>, creates the OSD window in this or new thread.
+            Depending on <see cref="P:Au.AOsdText.ShowMode"/>, creates the OSD window in this or new thread.
             If the OSD window is already created, just shows it if hidden. Many properties can be changed only before creating OSD window; call <see cref="M:Au.AOsdWindow.Close"/> if need.
             </remarks>
         </member>
-        <member name="M:Au.AOsd.OnPaint(System.IntPtr,System.Drawing.Graphics,Au.Types.RECT)">
+        <member name="M:Au.AOsdText.OnPaint(System.IntPtr,System.Drawing.Graphics,Au.Types.RECT)">
             <summary>
             Draws OSD text etc.
             </summary>
         </member>
-        <member name="M:Au.AOsd.Measure">
+        <member name="M:Au.AOsdText.Measure">
             <summary>
             Calculates OSD window size and position.
             Can be called before showing OSD.
             </summary>
         </member>
-        <member name="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Object,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)">
+        <member name="M:Au.AOsdText.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Object,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)">
             <summary>
             Shows a tooltip-like OSD window with text and optionally icon.
             </summary>
-            <param name="text"><see cref="P:Au.AOsd.Text"/></param>
-            <param name="secondsTimeout"><see cref="P:Au.AOsd.SecondsTimeout"/></param>
-            <param name="xy"><see cref="P:Au.AOsd.XY"/></param>
-            <param name="icon"><see cref="P:Au.AOsd.Icon"/></param>
-            <param name="textColor"><see cref="P:Au.AOsd.TextColor"/></param>
-            <param name="backColor"><see cref="P:Au.AOsd.BackColor"/></param>
-            <param name="font">Font. If null, uses <see cref="P:Au.AOsd.DefaultSmallFont"/>.</param>
+            <param name="text"><see cref="P:Au.AOsdText.Text"/></param>
+            <param name="secondsTimeout"><see cref="P:Au.AOsdText.SecondsTimeout"/></param>
+            <param name="xy"><see cref="P:Au.AOsdText.XY"/></param>
+            <param name="icon"><see cref="P:Au.AOsdText.Icon"/></param>
+            <param name="textColor"><see cref="P:Au.AOsdText.TextColor"/></param>
+            <param name="backColor"><see cref="P:Au.AOsdText.BackColor"/></param>
+            <param name="font">Font. If null, uses <see cref="P:Au.AOsdText.DefaultSmallFont"/>.</param>
             <param name="name"><see cref="P:Au.AOsdWindow.Name"/></param>
-            <param name="showMode"><see cref="P:Au.AOsd.ShowMode"/></param>
-            <param name="dontShow">Don't call <see cref="M:Au.AOsd.Show"/>. The caller can use the return value to set some other properties and call <b>Show</b>.</param>
-            <returns>Returns an <see cref="T:Au.AOsd"/> object that can be used to change properties or close the OSD window.</returns>
+            <param name="showMode"><see cref="P:Au.AOsdText.ShowMode"/></param>
+            <param name="dontShow">Don't call <see cref="M:Au.AOsdText.Show"/>. The caller can use the return value to set some other properties and call <b>Show</b>.</param>
+            <returns>Returns an <see cref="T:Au.AOsdText"/> object that can be used to change properties or close the OSD window.</returns>
             <remarks>
-            Also sets these properties: <see cref="P:Au.AOsd.ClickToClose"/>=true, <see cref="P:Au.AOsd.Shadow"/>=true.
+            Also sets these properties: <see cref="P:Au.AOsdText.ClickToClose"/>=true, <see cref="P:Au.AOsdText.Shadow"/>=true.
             </remarks>
         </member>
-        <member name="M:Au.AOsd.ShowTransparentText(System.String,System.Int32,Au.Types.PopupXY,System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)">
+        <member name="M:Au.AOsdText.ShowTransparentText(System.String,System.Int32,Au.Types.PopupXY,System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)">
             <summary>
             Shows a big-font text with transparent background.
             </summary>
-            <param name="text"><see cref="P:Au.AOsd.Text"/></param>
-            <param name="secondsTimeout"><see cref="P:Au.AOsd.SecondsTimeout"/></param>
-            <param name="xy"><see cref="P:Au.AOsd.XY"/></param>
-            <param name="color"><see cref="P:Au.AOsd.TextColor"/>. Default: <see cref="P:Au.AOsd.DefaultTransparentTextColor"/>.</param>
-            <param name="font">Font. If null, uses <see cref="P:Au.AOsd.DefaultBigFont"/>.</param>
+            <param name="text"><see cref="P:Au.AOsdText.Text"/></param>
+            <param name="secondsTimeout"><see cref="P:Au.AOsdText.SecondsTimeout"/></param>
+            <param name="xy"><see cref="P:Au.AOsdText.XY"/></param>
+            <param name="color"><see cref="P:Au.AOsdText.TextColor"/>. Default: <see cref="P:Au.AOsdText.DefaultTransparentTextColor"/>.</param>
+            <param name="font">Font. If null, uses <see cref="P:Au.AOsdText.DefaultBigFont"/>.</param>
             <param name="name"><see cref="P:Au.AOsdWindow.Name"/></param>
-            <param name="showMode"><see cref="P:Au.AOsd.ShowMode"/></param>
-            <param name="dontShow">See <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Object,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/>.</param>
-            <returns>Returns an <see cref="T:Au.AOsd"/> object that can be used to change properties or close the OSD window.</returns>
+            <param name="showMode"><see cref="P:Au.AOsdText.ShowMode"/></param>
+            <param name="dontShow">See <see cref="M:Au.AOsdText.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Object,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/>.</param>
+            <returns>Returns an <see cref="T:Au.AOsdText"/> object that can be used to change properties or close the OSD window.</returns>
             <remarks>
             Also sets these properties: <see cref="P:Au.AOsdWindow.Opacity"/>=0.
             </remarks>
         </member>
-        <member name="M:Au.AOsd.ShowImage(System.Drawing.Image,System.Int32,Au.Types.PopupXY,System.String,Au.Types.OsdMode,System.Boolean)">
+        <member name="M:Au.AOsdText.ShowImage(System.Drawing.Image,System.Int32,Au.Types.PopupXY,System.String,Au.Types.OsdMode,System.Boolean)">
             <summary>
             Shows on-screen image.
             </summary>
-            <param name="image"><see cref="P:Au.AOsd.BackgroundImage"/></param>
-            <param name="secondsTimeout"><see cref="P:Au.AOsd.SecondsTimeout"/></param>
-            <param name="xy"><see cref="P:Au.AOsd.XY"/></param>
+            <param name="image"><see cref="P:Au.AOsdText.BackgroundImage"/></param>
+            <param name="secondsTimeout"><see cref="P:Au.AOsdText.SecondsTimeout"/></param>
+            <param name="xy"><see cref="P:Au.AOsdText.XY"/></param>
             <param name="name"><see cref="P:Au.AOsdWindow.Name"/></param>
-            <param name="showMode"><see cref="P:Au.AOsd.ShowMode"/></param>
-            <param name="dontShow">See <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Object,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/>.</param>
-            <returns>Returns an <see cref="T:Au.AOsd"/> object that can be used to change properties or close the OSD window.</returns>
+            <param name="showMode"><see cref="P:Au.AOsdText.ShowMode"/></param>
+            <param name="dontShow">See <see cref="M:Au.AOsdText.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Object,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/>.</param>
+            <returns>Returns an <see cref="T:Au.AOsdText"/> object that can be used to change properties or close the OSD window.</returns>
             <remarks>
-            Also sets these properties: <see cref="P:Au.AOsd.IsOfImageSize"/>=true, <see cref="P:Au.AOsdWindow.Opacity"/>=0, <see cref="P:Au.AOsd.ClickToClose"/>=true.
+            Also sets these properties: <see cref="P:Au.AOsdText.IsOfImageSize"/>=true, <see cref="P:Au.AOsdWindow.Opacity"/>=0, <see cref="P:Au.AOsdText.ClickToClose"/>=true.
             </remarks>
         </member>
-        <member name="P:Au.AOsd.DefaultSmallFont">
-            <summary>Default font for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Object,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/> and <b>AOsd</b>. Default: standard GUI font (usually Segoe UI), size 12.</summary>
+        <member name="P:Au.AOsdText.DefaultSmallFont">
+            <summary>Default font for <see cref="M:Au.AOsdText.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Object,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/> and <b>AOsdText</b>. Default: standard GUI font (usually Segoe UI), size 12.</summary>
             <exception cref="T:System.ArgumentNullException"></exception>
         </member>
-        <member name="P:Au.AOsd.DefaultBigFont">
-            <summary>Default font for <see cref="M:Au.AOsd.ShowTransparentText(System.String,System.Int32,Au.Types.PopupXY,System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/>. Default: standard GUI font (usually Segoe UI), size 24.</summary>
+        <member name="P:Au.AOsdText.DefaultBigFont">
+            <summary>Default font for <see cref="M:Au.AOsdText.ShowTransparentText(System.String,System.Int32,Au.Types.PopupXY,System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/>. Default: standard GUI font (usually Segoe UI), size 24.</summary>
             <exception cref="T:System.ArgumentNullException"></exception>
         </member>
-        <member name="P:Au.AOsd.DefaultTextColor">
-            <summary>Default text color for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Object,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/> and <b>AOsd</b>. Default: 0x(dark gray).</summary>
+        <member name="P:Au.AOsdText.DefaultTextColor">
+            <summary>Default text color for <see cref="M:Au.AOsdText.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Object,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/> and <b>AOsdText</b>. Default: 0x(dark gray).</summary>
         </member>
-        <member name="P:Au.AOsd.DefaultBorderColor">
-            <summary>Default border color for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Object,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/> and <b>AOsd</b>. Default: 0x404040 (dark gray).</summary>
+        <member name="P:Au.AOsdText.DefaultBorderColor">
+            <summary>Default border color for <see cref="M:Au.AOsdText.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Object,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/> and <b>AOsdText</b>. Default: 0x404040 (dark gray).</summary>
         </member>
-        <member name="P:Au.AOsd.DefaultBackColor">
-            <summary>Default background color for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Object,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/> and <b>AOsd</b>. Default: 0xFFFFF0 (light yellow).</summary>
+        <member name="P:Au.AOsdText.DefaultBackColor">
+            <summary>Default background color for <see cref="M:Au.AOsdText.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Object,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/> and <b>AOsdText</b>. Default: 0xFFFFF0 (light yellow).</summary>
         </member>
-        <member name="P:Au.AOsd.DefaultTransparentTextColor">
-            <summary>Default text color for <see cref="M:Au.AOsd.ShowTransparentText(System.String,System.Int32,Au.Types.PopupXY,System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/>. Default: 0x8A2BE2 (Color.BlueViolet).</summary>
+        <member name="P:Au.AOsdText.DefaultTransparentTextColor">
+            <summary>Default text color for <see cref="M:Au.AOsdText.ShowTransparentText(System.String,System.Int32,Au.Types.PopupXY,System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/>. Default: 0x8A2BE2 (Color.BlueViolet).</summary>
         </member>
-        <member name="P:Au.AOsd.DefaultScreen">
+        <member name="P:Au.AOsdText.DefaultScreen">
             <summary>
-            Default screen when <see cref="P:Au.AOsd.XY"/> is not set.
+            Default screen when <see cref="P:Au.AOsdText.XY"/> is not set.
             The <b>AScreen</b> must be lazy or empty.
             </summary>
             <exception cref="T:System.ArgumentException"><b>AScreen</b> with <b>Handle</b>. Must be lazy (with <b>LazyFunc</b>) or empty.</exception>
             <example>
             <code><![CDATA[
-            AOsd.DefaultScreen = AScreen.Index(1, lazy: true);
+            AOsdText.DefaultScreen = AScreen.Index(1, lazy: true);
             ]]></code>
             </example>
         </member>
@@ -15417,7 +15644,7 @@
         <member name="M:Au.ATrayIcon.#ctor(System.Int32,System.Boolean)">
             <param name="id">An id that helps Windows to distinguish multiple tray icons added by same program. Use 0, 1, 2, ... or all 0.</param>
             <param name="disposeOnExit">
-            Remove tray icon when process exits (<see cref="E:Au.AProcess.Exit"/>).
+            Remove tray icon when process exits (<see cref="E:Au.AThisProcess.Exit"/>).
             Note: can't remove if process killed from outside or with <see cref="M:System.Environment.FailFast(System.String)"/> or API <msdn>ExitProcess</msdn> etc. Removes only if process exits naturally or with <see cref="M:System.Environment.Exit(System.Int32)"/> or because of an unhandled exception.
             </param>
         </member>
@@ -16491,7 +16718,7 @@
             - <b>RichTextBox</b> source does not end with ".rtf".
             </exception>
             <remarks>
-            If fails to load, prints warning. See <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>.
+            If fails to load, prints warning. See <see cref="M:Au.AOutput.Warning(System.String,System.Int32,System.String)"/>.
             </remarks>
         </member>
         <member name="M:Au.AWpfBuilder.Image(System.Windows.Media.ImageSource,System.Windows.Media.Stretch,System.Windows.Controls.StretchDirection)">
@@ -16513,7 +16740,7 @@
             <param name="stretchDirection"><see cref="P:System.Windows.Controls.Image.StretchDirection"/>.</param>
             <exception cref="T:System.NotSupportedException">The last added element is not <b>Image</b>.</exception>
             <remarks>
-            If fails to load, prints warning. See <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>.
+            If fails to load, prints warning. See <see cref="M:Au.AOutput.Warning(System.String,System.Int32,System.String)"/>.
             </remarks>
         </member>
         <member name="M:Au.AWpfBuilder.Splitter(System.Boolean,System.Int32,System.Double)">
@@ -16872,7 +17099,7 @@
             var image = AClipboardData.GetImage();
             if(image == null) AOutput.Write("no image in clipboard"); else AOutput.Write(image.Size);
             ]]></code>
-            Set clipboard data of two formats: text and image.
+            Set clipboard data in two formats: text and image.
             <code><![CDATA[
             new AClipboardData().AddText("text").AddImage(Image.FromFile(@"q:\file.png")).SetClipboard();
             ]]></code>
@@ -16880,7 +17107,7 @@
             <code><![CDATA[
             AClipboard.PasteData(new AClipboardData().AddHtml("<b>text</b>").AddText("text"));
             ]]></code>
-            Copy data of two formats: HTML and text.
+            Copy data in two formats: HTML and text.
             <code><![CDATA[
             string html = null, text = null;
             AClipboard.CopyData(() => { html = AClipboardData.GetHtml(); text = AClipboardData.GetText(); });
@@ -19189,17 +19416,17 @@
             <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
             <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
         </member>
-        <member name="T:Au.ADebug">
+        <member name="T:Au.ADebug_">
             <summary>
             Functions useful to debug code.
             </summary>
             <remarks>
-            The ADebug.PrintX functions write to the same output as <see cref="M:Au.AOutput.Write(System.String)"/>, not to the trace listeners like <see cref="M:System.Diagnostics.Debug.Print(System.String)"/> etc do. Also they add caller's name, file and line number.
+            The ADebug_.PrintX functions write to the same output as <see cref="M:Au.AOutput.Write(System.String)"/>, not to the trace listeners like <see cref="M:System.Diagnostics.Debug.Print(System.String)"/> etc do. Also they add caller's name, file and line number.
             Functions Print, PrintIf, PrintFunc and Dialog work only if DEBUG is defined, which normally is when the caller project is in Debug configuration. Else they are not called, and arguments not evaluated at run time. This is because they have [<see cref="T:System.Diagnostics.ConditionalAttribute"/>("DEBUG")].
-            Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(AOpt.Warnings.Verbose) AWarning.Write("text");</c>; see <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>, AOpt.Warnings.<see cref="P:Au.Types.OWarnings.Verbose"/>.
+            Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(AOpt.Warnings.Verbose) AOutput.Warning("text");</c>; see <see cref="M:Au.AOutput.Warning(System.String,System.Int32,System.String)"/>, AOpt.Warnings.<see cref="P:Au.Types.OWarnings.Verbose"/>.
             </remarks>
         </member>
-        <member name="M:Au.ADebug.Print(System.Object,System.String,System.Int32,System.String)">
+        <member name="M:Au.ADebug_.Print(System.Object,System.String,System.Int32,System.String)">
             <summary>
             Calls <see cref="M:Au.AOutput.Write(System.String)"/> to show some debug info. Also shows current function name/file/line.
             Works only if DEBUG is defined. Read more in class help.
@@ -19207,7 +19434,7 @@
             If text starts with "&lt;&gt;", it can contain output tags.
             </summary>
         </member>
-        <member name="M:Au.ADebug.PrintIf(System.Boolean,System.Object,System.String,System.Int32,System.String)">
+        <member name="M:Au.ADebug_.PrintIf(System.Boolean,System.Object,System.String,System.Int32,System.String)">
             <summary>
             If condition is true, calls <see cref="M:Au.AOutput.Write(System.String)"/> to show some debug info. Also shows current function name/file/line.
             Works only if DEBUG is defined. Read more in class help.
@@ -19215,31 +19442,31 @@
             If text starts with "&lt;&gt;", it can contain output tags.
             </summary>
         </member>
-        <member name="M:Au.ADebug.PrintFunc(System.String)">
+        <member name="M:Au.ADebug_.PrintFunc(System.String)">
             <summary>
             Calls <see cref="M:Au.AOutput.Write(System.String)"/> with current function name.
             Works only if DEBUG is defined. Read more in class help.
             The optional argument is not used explicitly.
             </summary>
         </member>
-        <member name="M:Au.ADebug.PrintNativeError_(System.String,System.Int32,System.String)">
+        <member name="M:Au.ADebug_.PrintNativeError_(System.String,System.Int32,System.String)">
             <summary>
             In DEBUG config prints ALastError.Message.
             </summary>
         </member>
-        <member name="M:Au.ADebug.PrintNativeError_(System.Int32,System.String,System.Int32,System.String)">
+        <member name="M:Au.ADebug_.PrintNativeError_(System.Int32,System.String,System.Int32,System.String)">
             <summary>
             In DEBUG config prints ALastError.MessageFor(code).
             </summary>
         </member>
-        <member name="M:Au.ADebug.Dialog(System.Object,System.String,System.Int32,System.String)">
+        <member name="M:Au.ADebug_.Dialog(System.Object,System.String,System.Int32,System.String)">
             <summary>
             Calls <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> to show some debug info.
             Works only if DEBUG is defined. Read more in class help.
             The 3 optional arguments are not used explicitly.
             </summary>
         </member>
-        <member name="M:Au.ADebug.CheckFlagsOpt_``1(``0,``0)">
+        <member name="M:Au.ADebug_.CheckFlagsOpt_``1(``0,``0)">
             <summary>
             Checks flags and throws ArgumentException if some flags are invalid. The error message includes valid flag names.
             </summary>
@@ -19251,248 +19478,48 @@
             When flags are valid, this function is fast.
             </remarks>
         </member>
-        <member name="P:Au.ADebug.IsAuDebugConfiguration">
+        <member name="P:Au.ADebug_.IsAuDebugConfiguration">
             <summary>
             Returns true if using Debug configuration of Au.dll.
             </summary>
         </member>
-        <member name="M:Au.ADebug.MemoryGet_(System.Boolean)">
+        <member name="M:Au.ADebug_.MemoryGet_(System.Boolean)">
             <summary>
             Returns managed memory size as formatted string. Uses GC.GetTotalMemory.
             Works in Release too.
             </summary>
             <param name="fromAnchor">Get the difference from previous call to <b>MemorySetAnchor_</b>.</param>
         </member>
-        <member name="M:Au.ADebug.MemoryPrint_(System.Boolean)">
+        <member name="M:Au.ADebug_.MemoryPrint_(System.Boolean)">
             <summary>
             Prints managed memory size. Uses GC.GetTotalMemory.
             Works in Release too.
             </summary>
             <param name="fromAnchor">Get the difference from previous call to <b>MemorySetAnchor_</b>.</param>
         </member>
-        <member name="M:Au.ADebug.MemorySetAnchor_">
+        <member name="M:Au.ADebug_.MemorySetAnchor_">
             <summary>
             Memorizes current managed memory size, so that next call to another <b>MemoryX</b> function with fromAnchor=true (default) will get memory size difference from current memory size.
             </summary>
         </member>
-        <member name="M:Au.ADebug.PrintLoadedAssemblies(System.Boolean,System.Boolean,System.Boolean)">
+        <member name="M:Au.ADebug_.PrintLoadedAssemblies(System.Boolean,System.Boolean,System.Boolean)">
             <summary>
             Prints assemblies already loaded or/and loaded in the future.
             </summary>
         </member>
-        <member name="T:Au.AMath">
+        <member name="T:Au.AInputInfo">
             <summary>
-            Simple calculation functions.
+            Provides functions to get miscellaneous keyboard/mouse input information or current state.
             </summary>
         </member>
-        <member name="M:Au.AMath.MakeLparam(System.UInt32,System.UInt32)">
-            <summary>
-            Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32. Returns it as nint, ready to use with Windows message API as lParam or wParam or return value.
-            Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
-            </summary>
-        </member>
-        <member name="M:Au.AMath.MakeLparam(System.Int32,System.Int32)">
-            <summary>
-            Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32. Returns it as nint, ready to use with Windows message API as lParam or wParam or return value.
-            Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
-            </summary>
-        </member>
-        <member name="M:Au.AMath.MakeLparam(Au.Types.POINT)">
-            <summary>
-            Creates uint by placing (ushort)p.x in bits 1-16 and (ushort)p.y in bits 17-32. Returns it as nint, ready to use with Windows message API as lParam or wParam or return value.
-            Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
-            </summary>
-        </member>
-        <member name="M:Au.AMath.MakeWord(System.UInt32,System.UInt32)">
-            <summary>
-            Creates ushort by placing (byte)loByte in bits 1-8 and (byte)hiByte in bits 9-16.
-            Like C macro MAKEWORD.
-            </summary>
-        </member>
-        <member name="M:Au.AMath.MakeWord(System.Int32,System.Int32)">
-            <summary>
-            Creates ushort by placing (byte)loByte in bits 1-8 and (byte)hiByte in bits 9-16.
-            Like C macro MAKEWORD.
-            </summary>
-        </member>
-        <member name="M:Au.AMath.LoWord(System.IntPtr)">
-            <summary>
-            Gets bits 1-16 as ushort.
-            Like C macro LOWORD.
-            </summary>
-            <remarks>
-            The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr (and avoid OverflowException).
-            </remarks>
-        </member>
-        <member name="M:Au.AMath.HiWord(System.IntPtr)">
-            <summary>
-            Gets bits 17-32 as ushort.
-            Like C macro HIWORD.
-            </summary>
-            <remarks>
-            The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr (and avoid OverflowException).
-            </remarks>
-        </member>
-        <member name="M:Au.AMath.LoShort(System.IntPtr)">
-            <summary>
-            Gets bits 1-16 as short.
-            Like C macro GET_X_LPARAM.
-            </summary>
-            <remarks>
-            The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr (and avoid OverflowException).
-            </remarks>
-        </member>
-        <member name="M:Au.AMath.HiShort(System.IntPtr)">
-            <summary>
-            Gets bits 17-32 as short.
-            Like C macro GET_Y_LPARAM.
-            </summary>
-            <remarks>
-            The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr (and avoid OverflowException).
-            </remarks>
-        </member>
-        <member name="M:Au.AMath.LoByte(System.UInt16)">
-            <summary>
-            Gets bits 1-8 as byte.
-            Like C macro LOBYTE.
-            </summary>
-        </member>
-        <member name="M:Au.AMath.HiByte(System.UInt16)">
-            <summary>
-            Gets bits 9-16 as byte.
-            Like C macro HIBYTE.
-            </summary>
-        </member>
-        <member name="M:Au.AMath.NintToPOINT(System.IntPtr)">
-            <summary>
-            Converts <b>nint</b> containing x and y coordinates to <b>POINT</b>.
-            </summary>
-        </member>
-        <member name="M:Au.AMath.MulDiv(System.Int32,System.Int32,System.Int32)">
-            <summary>
-            Returns <c>number * multiply / divide</c>.
-            Multiplies without overflow and rounds up or down to the nearest integer.
-            </summary>
-            <exception cref="T:System.OverflowException"></exception>
-            <exception cref="T:System.DivideByZeroException"></exception>
-        </member>
-        <member name="M:Au.AMath.PercentFromValue(System.Int32,System.Int32,System.Boolean)">
-            <summary>
-            Calculates how many % of <i>whole</i> is <i>part</i>: <c>100L * part / whole</c>.
-            </summary>
-            <param name="whole"></param>
-            <param name="part"></param>
-            <param name="canRoundUp">Round down or up. If false (default), can only round down.</param>
-            <exception cref="T:System.OverflowException"></exception>
-        </member>
-        <member name="M:Au.AMath.PercentFromValue(System.Double,System.Double)">
-            <summary>
-            Calculates how many % of <i>whole</i> is <i>part</i>: <c>100 * part / whole</c>.
-            </summary>
-        </member>
-        <member name="M:Au.AMath.PercentToValue(System.Int32,System.Int32,System.Boolean)">
-            <summary>
-            Returns <i>percent</i> % of <i>whole</i>: <c>(long)whole * percent / 100</c>.
-            </summary>
-            <param name="whole"></param>
-            <param name="percent"></param>
-            <param name="canRoundUp">Use <see cref="M:Au.AMath.MulDiv(System.Int32,System.Int32,System.Int32)"/>, which can round down or up. If false (default), can only round down.</param>
-            <exception cref="T:System.OverflowException"></exception>
-        </member>
-        <member name="M:Au.AMath.PercentToValue(System.Double,System.Double)">
-            <summary>
-            Returns <i>percent</i> % of <i>whole</i>: <c>whole * percent / 100</c>.
-            </summary>
-        </member>
-        <member name="M:Au.AMath.AlignUp(System.UInt32,System.UInt32)">
-            <summary>
-            If value is divisible by alignment, returns value. Else returns nearest bigger number that is divisible by alignment.
-            </summary>
-            <param name="value">An integer value.</param>
-            <param name="alignment">Alignment. Must be a power of two (2, 4, 8, 16...).</param>
-            <remarks>
-            For example if alignment is 4, returns 4 if value is 1-4, returns 8 if value is 5-8, returns 12 if value is 9-10, and so on.
-            </remarks>
-        </member>
-        <member name="M:Au.AMath.AlignUp(System.Int32,System.UInt32)">
-            <summary>
-            If value is divisible by alignment, returns value. Else returns nearest bigger number that is divisible by alignment.
-            </summary>
-            <param name="value">An integer value.</param>
-            <param name="alignment">Alignment. Must be a power of two (2, 4, 8, 16...).</param>
-            <remarks>
-            For example if alignment is 4, returns 4 if value is 1-4, returns 8 if value is 5-8, returns 12 if value is 9-10, and so on.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            for (int i = 0; i <= 20; i++) AOutput.Write(i, AMath.AlignUp(i, 4));
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.AMath.Swap``1(``0@,``0@)">
-            <summary>
-            Swaps values of variables a and b: <c>T t = a; a = b; b = t;</c>
-            </summary>
-        </member>
-        <member name="M:Au.AMath.SwapBits(System.Int32,System.Int32,System.Int32,System.Int32)">
-            <summary>
-            Swaps two ranges of bits.
-            </summary>
-            <param name="value"></param>
-            <param name="i">Position of first range of bits.</param>
-            <param name="j">Position of second range of bits.</param>
-            <param name="n">Number of bits in each range.</param>
-        </member>
-        <member name="M:Au.AMath.SwapBits(System.UInt32,System.Int32,System.Int32,System.Int32)">
-            <summary>
-            Swaps two ranges of bits.
-            </summary>
-            <param name="value"></param>
-            <param name="i">Position of first range of bits.</param>
-            <param name="j">Position of second range of bits.</param>
-            <param name="n">Number of bits in each range.</param>
-        </member>
-        <member name="M:Au.AMath.AngleFromXY(System.Int32,System.Int32)">
-            <summary>
-            Calculates angle degrees from coordinates x and y.
-            </summary>
-        </member>
-        <member name="M:Au.AMath.Distance(Au.Types.POINT,Au.Types.POINT)">
-            <summary>
-            Calculates distance between two points.
-            </summary>
-        </member>
-        <member name="M:Au.AMath.Distance(Au.Types.RECT,Au.Types.POINT)">
-            <summary>
-            Calculates distance between rectangle and point.
-            Returns 0 if point is in rectangle.
-            </summary>
-        </member>
-        <member name="T:Au.AMiscInfo">
-            <summary>
-            Provides functions to get miscellaneous system information or current state. Text cursor rectangle, input desktop, etc.
-            </summary>
-            <seealso cref="T:Au.AVersion"/>
-            <seealso cref="T:Au.AFolders"/>
-            <seealso cref="T:Au.AProcess"/>
-            <seealso cref="T:Au.AThread"/>
-            <seealso cref="T:Au.AScreen"/>
-            <seealso cref="T:Au.ATask"/>
-            <seealso cref="T:Au.ATime"/>
-            <seealso cref="T:Au.AUac"/>
-            <seealso cref="T:Au.Util.ADpi"/>
-            <seealso cref="T:System.Environment"/>
-            <seealso cref="T:System.Windows.Forms.SystemInformation"/>
-            <seealso cref="T:System.Windows.SystemParameters"/>
-        </member>
-        <member name="M:Au.AMiscInfo.GetGUIThreadInfo(Au.Types.GUITHREADINFO@,System.Int32)">
+        <member name="M:Au.AInputInfo.GetGUIThreadInfo(Au.Types.GUITHREADINFO@,System.Int32)">
             <summary>
             Calls API <msdn>GetGUIThreadInfo</msdn>. It gets info about mouse capturing, menu mode, move/size mode, focus, caret, etc.
             </summary>
             <param name="g">API <msdn>GUITHREADINFO</msdn>.</param>
             <param name="idThread">Thread id. If 0 - the foreground (active window) thread. See <see cref="P:Au.AThread.Id"/>, <see cref="P:Au.AWnd.ThreadId"/>.</param>
         </member>
-        <member name="M:Au.AMiscInfo.GetTextCursorRect(Au.Types.RECT@,Au.AWnd@,System.Boolean)">
+        <member name="M:Au.AInputInfo.GetTextCursorRect(Au.Types.RECT@,Au.AWnd@,System.Boolean)">
             <summary>
             Gets text cursor (caret) position and size.
             Returns false if fails.
@@ -19505,7 +19532,7 @@
             Also fails if the text cursor currently is not displayed.
             </remarks>
         </member>
-        <member name="M:Au.AMiscInfo.IsInputDesktop(System.Boolean)">
+        <member name="M:Au.AInputInfo.IsInputDesktop(System.Boolean)">
             <summary>
             Returns true if current thread is on the input desktop and therefore can use mouse, keyboard, clipboard and window functions.
             </summary>
@@ -19642,6 +19669,21 @@
             Writes string value + "\r\n" to the output window or console (if <see cref="P:Au.AOutput.IsWritingToConsole"/>) or log file (if <see cref="P:Au.AOutput.LogFile"/> not null).
             Unlike <see cref="M:Au.AOutput.Write(System.String)"/>, the string is not passed to <see cref="P:Au.AOutput.Writer"/>.
             </summary>
+        </member>
+        <member name="M:Au.AOutput.Warning(System.String,System.Int32,System.String)">
+            <summary>
+            Writes warning text to the output.
+            By default appends the stack trace.
+            </summary>
+            <param name="text">Warning text.</param>
+            <param name="showStackFromThisFrame">If &gt;= 0, appends the stack trace, skipping this number of frames. Default 0.</param>
+            <param name="prefix">Text before <i>text</i>. Default <c>"&lt;&gt;Warning: "</c>.</param>
+            <remarks>
+            Calls <see cref="M:Au.AOutput.Write(System.String)"/>.
+            Does not show more than 1 warning/second, unless <b>AOpt.Warnings.Verbose</b> == true (see <see cref="P:Au.Types.OWarnings.Verbose"/>).
+            To disable some warnings, use code <c>AOpt.Warnings.Disable("warning text wildcard");</c> (see <see cref="M:Au.Types.OWarnings.Disable(System.String[])"/>).
+            </remarks>
+            <seealso cref="T:Au.Types.OWarnings"/>
         </member>
         <member name="P:Au.AOutput.RedirectConsoleOutput">
             <summary>
@@ -20166,26 +20208,6 @@
             Returns true if rectangle of window w intersects with some screen.
             </summary>
         </member>
-        <member name="T:Au.AWarning">
-            <summary>
-            Writes warnings to the output.
-            </summary>
-            <seealso cref="T:Au.Types.OWarnings"/>
-        </member>
-        <member name="M:Au.AWarning.Write(System.String,System.Int32,System.String)">
-            <summary>
-            Writes warning text to the output.
-            By default appends the stack trace.
-            </summary>
-            <param name="text">Warning text.</param>
-            <param name="showStackFromThisFrame">If &gt;= 0, appends the stack trace, skipping this number of frames. Default 0.</param>
-            <param name="prefix">Text before <i>text</i>. Default <c>"&lt;&gt;Warning: "</c>.</param>
-            <remarks>
-            Calls <see cref="M:Au.AOutput.Write(System.String)"/>.
-            Does not show more than 1 warning/second, unless <b>AOpt.Warnings.Verbose</b> == true (see <see cref="P:Au.Types.OWarnings.Verbose"/>).
-            To disable some warnings, use code <c>AOpt.Warnings.Disable("warning text wildcard");</c> (see <see cref="M:Au.Types.OWarnings.Disable(System.String[])"/>).
-            </remarks>
-        </member>
         <member name="T:Au.AWinImage">
             <summary>
             Captures, finds and clicks images and colors in windows.
@@ -20417,7 +20439,7 @@
             AWnd w = AWnd.Find("* Notepad");
             w.Activate();
             using(var b = AWinImage.Capture(w.Rect)) { b.Save(file); }
-            AFile.Run(file);
+            ARun.Run(file);
             ]]></code>
             </example>
         </member>
@@ -20626,7 +20648,7 @@
             <summary>
             Loads and parses a CSV file.
             </summary>
-            <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.</param>
+            <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.Expand(System.String)"/>.</param>
             <param name="separator">Field separator character used in CSV text. Default ','.</param>
             <param name="quote">Character used in CSV text to enclose some fields. Default '"'.</param>
             <param name="trimSpaces">Ignore ASCII space and tab characters surrounding fields in CSV text. Default true.</param>
@@ -20641,7 +20663,7 @@
             <summary>
             Composes CSV and saves to file.
             </summary>
-            <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>. The file can exist or not; this function overwrites it.</param>
+            <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.Expand(System.String)"/>. The file can exist or not; this function overwrites it.</param>
             <param name="backup">Create backup file named file + "~backup".</param>
             <exception cref="T:System.ArgumentException">Not full path.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:System.IO.File.WriteAllText(System.String,System.String)"/>.</exception>
@@ -21398,7 +21420,7 @@
             Some .NET <see cref="T:System.String"/> methods use <see cref="F:System.StringComparison.CurrentCulture"/> by default, while others use ordinal or invariant comparison. It is confusing (difficult to remember), dangerous (easy to make bugs), slower and rarely useful.
             Microsoft recommends to specify <b>StringComparison.Ordinal[IgnoreCase]</b> explicitly. See https://msdn.microsoft.com/en-us/library/ms973919.aspx.
             This class adds ordinal comparison versions of these methods. Same or similar name, for example <b>Ends</b> for <b>EndsWith</b>.
-            See also <see cref="P:Au.AProcess.CultureIsInvariant"/>.
+            See also <see cref="P:Au.AThisProcess.CultureIsInvariant"/>.
             
             This class also adds more methods.
             You also can find string functions in other classes of this library, including <see cref="T:Au.Util.AStringUtil"/>, <see cref="T:Au.ARegex"/>, <see cref="T:Au.APath"/>, <see cref="T:Au.ACsv"/>, <see cref="T:Au.AKeys.More"/>, <see cref="T:Au.Util.AConvert"/>, <see cref="T:Au.Util.AHash"/>.
@@ -22594,11 +22616,6 @@
             </example>
             <seealso cref="T:Au.ATrayIcon"/>
         </member>
-        <member name="T:Au.AScript">
-            <summary>
-            Obsolete. Use <see cref="M:Au.ATask.Setup(System.Boolean,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Boolean,Au.Types.UExcept,System.String)"/>. See Options -> Templates -> Default.
-            </summary>
-        </member>
         <member name="T:Au.APerf">
             <summary>
             Code speed measurement. Easier to use than <see cref="T:System.Diagnostics.Stopwatch"/>.
@@ -23673,7 +23690,7 @@
             hk["Ctrl+K"] = o => AOutput.Write(o.Trigger); //it means: execute code "o => AOutput.Write(o.Trigger)" when I press Ctrl+K
             hk["Ctrl+Shift+F11"] = o => {
             	AOutput.Write(o.Trigger);
-            	var w1 = AWnd.FindOrRun("* Notepad", run: () => AFile.Run(AFolders.System + "notepad.exe"));
+            	var w1 = AWnd.FindOrRun("* Notepad", run: () => ARun.Run(AFolders.System + "notepad.exe"));
             	AKeys.Text("text");
             	w1.Close();
             };
@@ -25380,7 +25397,7 @@
             </summary>
             <remarks>
             Supports <see cref="T:Au.ALastError"/>.
-            For index can be used constants from <see cref="T:Au.Types.GCLong"/>. All values are the same in 32-bit and 64-bit process.
+            For index can be used constants from <see cref="T:Au.Types.GCL"/>. All values are the same in 32-bit and 64-bit process.
             In 32-bit process actually calls <b>GetClassLong</b>, because <b>GetClassLongPtr</b> is unavailable.
             </remarks>
         </member>
@@ -26666,7 +26683,7 @@
             <summary>
             Calls API <msdn>GetWindowLongPtr</msdn>.
             </summary>
-            <param name="index">A constant from <see cref="T:Au.Types.GWLong"/>, or an offset in window memory reserved when registering window class.</param>
+            <param name="index">A constant from <see cref="T:Au.Types.GWL"/>, or an offset in window memory reserved when registering window class.</param>
             <remarks>
             Supports <see cref="T:Au.ALastError"/>.
             In 32-bit process actually calls <b>GetWindowLong</b>, because <b>GetWindowLongPtr</b> is unavailable.
@@ -26676,7 +26693,7 @@
             <summary>
             Calls API <msdn>SetWindowLongPtr</msdn>.
             </summary>
-            <param name="index">A constant from <see cref="T:Au.Types.GWLong"/>, or an offset in window memory reserved when registering window class.</param>
+            <param name="index">A constant from <see cref="T:Au.Types.GWL"/>, or an offset in window memory reserved when registering window class.</param>
             <param name="newValue">New value.</param>
             <exception cref="T:Au.Types.AuWndException"/>
             <remarks>
@@ -27801,7 +27818,7 @@
             null means 'can be any'. Cannot be "". Cannot be path.
             
             Or <see cref="M:Au.Types.WOwner.Process(System.Int32)"/>(process id), <see cref="M:Au.Types.WOwner.Thread(System.Int32)"/>(thread id), <see cref="M:Au.Types.WOwner.Window(Au.Types.AnyWnd)"/>(owner window).
-            See <see cref="P:Au.AWnd.ProcessId"/>, <see cref="P:Au.AProcess.ProcessId"/>, <see cref="P:Au.AWnd.ThreadId"/>, <see cref="P:Au.AThread.Id"/>, <see cref="P:Au.AWnd.OwnerWindow"/>.
+            See <see cref="P:Au.AWnd.ProcessId"/>, <see cref="P:Au.AThisProcess.Id"/>, <see cref="P:Au.AWnd.ThreadId"/>, <see cref="P:Au.AThread.Id"/>, <see cref="P:Au.AWnd.OwnerWindow"/>.
             </param>
             <param name="flags"></param>
             <param name="also">
@@ -27889,7 +27906,7 @@
         </member>
         <member name="M:Au.AWnd.FindOrRun(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains,System.Action,System.Double,System.Boolean)">
             <summary>
-            Finds a top-level window (calls <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains)"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="M:Au.AFile.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
+            Finds a top-level window (calls <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains)"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="M:Au.ARun.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
             Returns window handle as <b>AWnd</b>. Returns <c>default(AWnd)</c> if not found (if <i>runWaitS</i> is negative; else exception).
             </summary>
             <param name="name">See <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains)"/>.</param>
@@ -27914,7 +27931,7 @@
             </remarks>
             <example>
             <code><![CDATA[
-            AWnd w = AWnd.FindOrRun("* Notepad", run: () => AFile.Run("notepad.exe"));
+            AWnd w = AWnd.FindOrRun("* Notepad", run: () => ARun.Run("notepad.exe"));
             AOutput.Write(w);
             ]]></code>
             </example>
@@ -28088,7 +28105,7 @@
         </member>
         <member name="P:Au.AWnd.ParentGWL_">
             <summary>
-            Returns <c>(AWnd)GetWindowLong(GWLong.HWNDPARENT)</c>.
+            Returns <c>(AWnd)GetWindowLong(GWL.HWNDPARENT)</c>.
             </summary>
         </member>
         <member name="P:Au.AWnd.Active">

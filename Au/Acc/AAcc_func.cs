@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
+using Au.Util;
 //using System.Linq;
 
 namespace Au
@@ -547,7 +548,7 @@ namespace Au
 				if(ev == AccEVENT.OBJECT_CREATE && hwnd != w) return; //note: in Chrome hwnd is Chrome_RenderWidgetHostHWND
 				int di = ++debugIndex;
 				using(var a = AAcc.FromEvent(hwnd, idObject, idChild)) {
-					if(a == null) { /*ADebug.Print("AAcc.FromEvent null");*/ return; } //often IE, but these are not useful objects
+					if(a == null) { /*ADebug_.Print("AAcc.FromEvent null");*/ return; } //often IE, but these are not useful objects
 					if(eventNotify == null) { /*AOutput.Write("null 2");*/ return; }
 					if(ev == AccEVENT.IA2_DOCUMENT_LOAD_COMPLETE) { //Chrome, Firefox
 
@@ -557,7 +558,7 @@ namespace Au
 							using(a2) {
 								if(eventNotify == null) { /*AOutput.Write("null 3");*/ return; }
 								bool isFrame;
-								var hr = a2.GetRole(0, out var role, out var roleStr); if(hr != 0) ADebug.Print((uint)hr);
+								var hr = a2.GetRole(0, out var role, out var roleStr); if(hr != 0) ADebug_.Print((uint)hr);
 								if(eventNotify == null) { /*AOutput.Write("null 4");*/ return; }
 								if(hr != 0) isFrame = false;
 								else if(roleStr != null) isFrame = roleStr.Ends("frame", true);
@@ -584,7 +585,7 @@ namespace Au
 								aCLIENT.get_accName(0, out var URL2, 0); Debug.Assert(URL2.Length > 0);
 								if(URL1 != URL2) return;
 								if(eventNotify == null) { /*AOutput.Write("null 6");*/ return; }
-							} else ADebug.Print("aCLIENT null");
+							} else ADebug_.Print("aCLIENT null");
 						}
 					}
 
@@ -651,7 +652,7 @@ namespace Au
 
 			//Workaround for Windows controls bugs, part 2.
 			if (focusingControl && w.IsActive) {
-				//ADebug.Print("activated control");
+				//ADebug_.Print("activated control");
 				wTL.Activate();
 			}
 

@@ -47,13 +47,13 @@ namespace Au.Util
 					if(capacity <= b.Capacity) {
 						if(alt) t_cachedInstance2 = null; else t_cachedInstance = null;
 						b.Clear();
-						//ADebug.Print("StringBuilder cached, alt=" + alt);
+						//ADebug_.Print("StringBuilder cached, alt=" + alt);
 						sb = _sb = b;
 						return;
 					}
 				}
 			}
-			//ADebug.Print("StringBuilder new");
+			//ADebug_.Print("StringBuilder new");
 			sb = _sb = new StringBuilder(capacity);
 		}
 
@@ -63,7 +63,7 @@ namespace Au.Util
 		public void Dispose()
 		{
 			if(_sb.Capacity <= MAX_BUILDER_SIZE) {
-				//ADebug.Print("StringBuilder released, alt=" + (t_cachedInstance != null));
+				//ADebug_.Print("StringBuilder released, alt=" + (t_cachedInstance != null));
 				if(t_cachedInstance == null) t_cachedInstance = _sb; else t_cachedInstance2 = _sb;
 			}
 			_sb = null;

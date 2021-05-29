@@ -52,7 +52,7 @@ namespace Au.Compiler
 				if (_data == null && !_Open()) return false;
 
 				if (!_data.TryGetValue(f.Id, out string value)) return false;
-				//ADebug.Print(value);
+				//ADebug_.Print(value);
 				int iPipe = 0;
 
 				bool isScript = f.IsScript;
@@ -149,7 +149,7 @@ namespace Au.Compiler
 					if (projFolder == null) return false;
 					foreach (var f1 in projFolder.EnumProjectClassFiles(f)) return false; //project with single file?
 				}
-				//ADebug.Print("compiled");
+				//ADebug_.Print("compiled");
 
 				r.file = asmFile;
 				r.name = APath.GetNameNoExt(f.Name);
@@ -252,8 +252,8 @@ namespace Au.Compiler
 				}
 
 				uint id = f.Id;
-				if (_data.TryGetValue(id, out var oldValue) && value == oldValue) { /*ADebug.Print("same");*/ return; }
-				//ADebug.Print("different");
+				if (_data.TryGetValue(id, out var oldValue) && value == oldValue) { /*ADebug_.Print("same");*/ return; }
+				//ADebug_.Print("different");
 				_data[id] = value;
 				_Save();
 			}
@@ -267,14 +267,14 @@ namespace Au.Compiler
 					_Save();
 					if (deleteAsmFile) {
 						try { AFile.Delete(CacheDirectory + "\\" + f.IdString + ".dll"); }
-						catch (Exception ex) { ADebug.Print(ex); }
+						catch (Exception ex) { ADebug_.Print(ex); }
 					}
 				}
 			}
 
 			bool _Open() {
 				if (_data != null) return true;
-				if (!AFile.ExistsAsFile(_file)) return false;
+				if (!AFile.Exists(_file).isFile) return false;
 				string sData = AFile.LoadText(_file);
 				foreach (var v in sData.Segments(SegSep.Line, SegFlags.NoEmpty)) {
 					if (_data == null) {
@@ -315,7 +315,7 @@ namespace Au.Compiler
 			void _ClearCache() {
 				_data = null;
 				try { AFile.Delete(CacheDirectory); }
-				catch (AuException e) { AWarning.Write(e.ToString(), -1); }
+				catch (AuException e) { AOutput.Warning(e.ToString(), -1); }
 			}
 		}
 

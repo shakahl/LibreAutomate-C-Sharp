@@ -37,7 +37,7 @@ namespace Au
 		/// AWnd w = AWnd.Find("* Notepad");
 		/// w.Activate();
 		/// using(var b = AWinImage.Capture(w.Rect)) { b.Save(file); }
-		/// AFile.Run(file);
+		/// ARun.Run(file);
 		/// ]]></code>
 		/// </example>
 		public static Bitmap Capture(RECT rect) {
@@ -292,7 +292,7 @@ namespace Au
 			return true;
 
 			static bool _WaitForHotkey(string info) {
-				using (AOsd.ShowText(info, Timeout.Infinite)) {
+				using (AOsdText.ShowText(info, Timeout.Infinite)) {
 					//try { AKeys.WaitForHotkey(0, KKey.F3); }
 					//catch(AuException) { ADialog.ShowError("Failed to register hotkey F3"); return false; }
 

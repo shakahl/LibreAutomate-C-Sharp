@@ -72,7 +72,7 @@ static class App
 
 	static void _Main(string[] args) {
 		//#if !DEBUG
-		AProcess.CultureIsInvariant = true;
+		AThisProcess.CultureIsInvariant = true;
 		//#endif
 		ADefaultTraceListener.Setup(useAOutput: true);
 		AFolders.ThisAppDocuments = (FolderPath)(AFolders.Documents + "Aedit");
@@ -80,7 +80,7 @@ static class App
 
 #if true
 		AppDomain.CurrentDomain.UnhandledException += (ad, e) => AOutput.Write(e.ExceptionObject);
-		//ADebug.PrintLoadedAssemblies(true, true);
+		//ADebug_.PrintLoadedAssemblies(true, true);
 #else
 		AppDomain.CurrentDomain.UnhandledException += (ad, e) => ADialog.ShowError("Exception", e.ExceptionObject.ToString());
 #endif
@@ -255,7 +255,7 @@ static class App
 				_wNotify = AWnd.More.CreateWindow("Aedit.TrayNotify", null, WS.POPUP, WSE.NOACTIVATE);
 				//not message-only, because must receive s_msgTaskbarCreated and also used for context menu
 
-				AProcess.Exit += _ => {
+				AThisProcess.Exit += _ => {
 					var d = new Api.NOTIFYICONDATA(_wNotify);
 					Api.Shell_NotifyIcon(Api.NIM_DELETE, d);
 				};
@@ -264,7 +264,7 @@ static class App
 			} else {
 				var d = new Api.NOTIFYICONDATA(_wNotify, Api.NIF_ICON) { hIcon = _GetIcon() };
 				bool ok = Api.Shell_NotifyIcon(Api.NIM_MODIFY, d);
-				ADebug.PrintIf(!ok, ALastError.Message);
+				ADebug_.PrintIf(!ok, ALastError.Message);
 			}
 		}
 
@@ -283,7 +283,7 @@ static class App
 				//ATimer.After(3000, _ => Update(TrayIconState.Running));
 				//ATimer.After(4000, _ => Update(TrayIconState.Normal));
 			} else if(!restore) { //restore when "TaskbarCreated" message received. It is also received when taskbar DPI changed.
-				ADebug.Print(ALastError.Message);
+				ADebug_.Print(ALastError.Message);
 			}
 		}
 

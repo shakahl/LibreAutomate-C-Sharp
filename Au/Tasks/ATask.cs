@@ -226,7 +226,7 @@ namespace Au
 			}
 			return true;
 			ge:
-			ADebug.PrintNativeError_();
+			ADebug_.PrintNativeError_();
 			return false;
 		}
 
@@ -295,7 +295,7 @@ namespace Au
 			s_appModuleInit = true;
 
 			//#if !DEBUG
-			AProcess.CultureIsInvariant = true;
+			AThisProcess.CultureIsInvariant = true;
 			//#endif
 
 			AppDomain.CurrentDomain.UnhandledException += (_, u) => {
@@ -330,7 +330,7 @@ namespace Au
 
 		internal static AHookAcc HookDesktopSwitch_() {
 			return new AHookAcc(AccEVENT.SYSTEM_DESKTOPSWITCH, 0, k => {
-				if (AMiscInfo.IsInputDesktop()) return;
+				if (AInputInfo.IsInputDesktop()) return;
 				if (0 != AProcess.GetProcessId("consent.exe")) return; //UAC
 				k.hook.Dispose();
 				ExitOnSleepOrDesktopSwitch(sleep: false);
@@ -492,12 +492,6 @@ namespace Au
 		}
 #endif
 	}
-
-	/// <summary>
-	/// Obsolete. Use <see cref="ATask.Setup"/>. See Options -> Templates -> Default.
-	/// </summary>
-	[Obsolete("Delete code « : AScript». See Options -> Templates.", error: !true), NoDoc, EditorBrowsable(EditorBrowsableState.Never)]
-	public abstract class AScript { } //FUTURE: remove this class.
 }
 
 namespace Au.Types
@@ -543,7 +537,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Call <see cref="Environment.Exit"/>. It prevents slow exit (Windows error reporting, writing events to the Windows event log, etc).
-		/// Note: then instead of <see cref="AppDomain.UnhandledException"/> event is <see cref="AppDomain.ProcessExit"/> event. But <see cref="AProcess.Exit"/> indicates exception as usually.
+		/// Note: then instead of <see cref="AppDomain.UnhandledException"/> event is <see cref="AppDomain.ProcessExit"/> event. But <see cref="AThisProcess.Exit"/> indicates exception as usually.
 		/// Info: the editor setup program disables Windows error reporting for tasks with role miniProgram (default). See <msdn>WerAddExcludedApplication</msdn>.
 		/// </summary>
 		Exit = 4,

@@ -193,10 +193,10 @@ class RunningTask : ITreeViewItem
 			bool ok = Api.TerminateProcess(h, -1);
 			if (onProgramExit) return true;
 			if (ok) {
-				if (0 != Api.WaitForSingleObject(h, 2000)) { ADebug.Print("process not terminated"); return false; }
+				if (0 != Api.WaitForSingleObject(h, 2000)) { ADebug_.Print("process not terminated"); return false; }
 			} else {
 				var s = ALastError.Message;
-				if (0 != Api.WaitForSingleObject(h, 0)) { ADebug.Print(s); return false; }
+				if (0 != Api.WaitForSingleObject(h, 0)) { ADebug_.Print(s); return false; }
 			}
 			//note: TerminateProcess kills process not immediately. Need at least several ms.
 		}
@@ -307,7 +307,7 @@ class RunningTasks
 
 		int taskId = (int)wParam;
 		int i = _Find(taskId);
-		if (i < 0) { ADebug.Print("not found. It's OK, but should be very rare, mostly with 1-core CPU."); return; }
+		if (i < 0) { ADebug_.Print("not found. It's OK, but should be very rare, mostly with 1-core CPU."); return; }
 
 		RecentTT.TaskEvent(false, _a[i], (int)lParam);
 		_a.RemoveAt(i);
@@ -547,7 +547,7 @@ class RunningTasks
 				//start preloaded process for next task. Let it wait for pipe connection.
 				if(uac != _SpUac.admin) { //we don't want second UAC consent
 					try { (pre.pid, pre.hProcess) = _StartProcess(uac, exeFile, argsString, null); }
-					catch(Exception ex) { ADebug.Print(ex); }
+					catch(Exception ex) { ADebug_.Print(ex); }
 				}
 			}
 		}
@@ -705,7 +705,7 @@ class RunningTasks
 				//start preloaded process for next task. Let it wait for pipe connection.
 				if (uac != _SpUac.admin) { //we don't want second UAC consent
 					try { (pre.pid, pre.hProcess) = _StartProcess(uac, exeFile, argsString, null); }
-					catch (Exception ex) { ADebug.Print(ex); }
+					catch (Exception ex) { ADebug_.Print(ex); }
 				}
 			}
 		}
@@ -766,7 +766,7 @@ class RunningTasks
 		if (wrPipeName != null) wrPipeName = "ATask.WriteResult.pipe=" + wrPipeName;
 		if (uac == _SpUac.admin) {
 			if (wrPipeName != null) throw new AuException($"*start process '{exeFile}' as admin and enable ATask.WriteResult"); //cannot pass environment variables. //rare //FUTURE
-			var k = AFile.Run(exeFile, args, RFlags.Admin | RFlags.NeedProcessHandle, "");
+			var k = ARun.Run(exeFile, args, RFlags.Admin | RFlags.NeedProcessHandle, "");
 			return (k.ProcessId, k.ProcessHandle);
 			//note: don't try to start task without UAC consent. It is not secure.
 			//	Normally Au editor runs as admin in admin user account, and don't need to go through this.

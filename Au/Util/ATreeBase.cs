@@ -417,7 +417,7 @@ namespace Au.Util
 		/// Loads XML file and creates tree of nodes from it.
 		/// Returns the root node.
 		/// </summary>
-		/// <param name="file">XML file. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.</param>
+		/// <param name="file">XML file. Must be full path. Can contain environment variables etc, see <see cref="APath.Expand"/>.</param>
 		/// <param name="nodeReader">Callback function that reads current XML element and creates/returns new node. See example.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="XmlReader.Create(string)"/>.</exception>
@@ -464,7 +464,7 @@ namespace Au.Util
 		/// <summary>
 		/// Saves tree of nodes (this and descendants) to an XML file.
 		/// </summary>
-		/// <param name="file">XML file. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.</param>
+		/// <param name="file">XML file. Must be full path. Can contain environment variables etc, see <see cref="APath.Expand"/>.</param>
 		/// <param name="nodeWriter">Callback function that writes node's XML start element (see <see cref="XmlWriter.WriteStartElement(string)"/>) and attributes (see <see cref="XmlWriter.WriteAttributeString(string, string)"/>). Must not write children and end element. Also should not write value, unless your reader knows how to read it.</param>
 		/// <param name="sett">XML formatting settings. Optional.</param>
 		/// <param name="children">If not null, writes these nodes as if they were children of this node.</param>

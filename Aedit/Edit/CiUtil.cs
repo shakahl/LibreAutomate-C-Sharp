@@ -151,7 +151,7 @@ static class CiUtil
 			}
 			if (url != null) url = _GoogleURL(url);
 		}
-		if (url != null) AFile.TryRun(url);
+		if (url != null) ARun.RunSafe(url);
 	}
 
 	static string _GoogleURL(string query) => "https://www.google.com/search?q=" + Uri.EscapeDataString(query);

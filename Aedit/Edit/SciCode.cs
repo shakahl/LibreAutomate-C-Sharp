@@ -745,7 +745,7 @@ partial class SciCode : KScintilla
 		//AOutput.Write(fromUtf16, from, to, zCurrentPos8);
 #if DEBUG
 		if(!(zCurrentPos8 >= from && (flags.Has(ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) ? zCurrentPos8 == to : zCurrentPos8 <= to))) {
-			ADebug.Print("bad");
+			ADebug_.Print("bad");
 			//CiUtil.HiliteRange(from, to);
 		}
 #endif

@@ -73,9 +73,9 @@ namespace Au.Util
 		{
 			int i = _IsSystem64PathIn32BitProcess(path);
 			if(i == 0) return path;
-			if(ifExistsOnlyThere && AFile.ExistsAsAny(path)) return path;
+			if(ifExistsOnlyThere && AFile.Exists(path)) return path;
 			var s = path.ReplaceAt(0, i, AFolders.SystemX64);
-			if(ifExistsOnlyThere && !AFile.ExistsAsAny(s)) return path;
+			if(ifExistsOnlyThere && !AFile.Exists(s)) return path;
 			return s;
 		}
 

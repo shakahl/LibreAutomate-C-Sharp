@@ -306,9 +306,9 @@ class CiErrors
 							foreach (var m in nt.GetMembers().OfType<IMethodSymbol>()) { //fast; slightly slower than nt.MemberNames.Contains(errName) which gets member types etc too
 								if (m.Name == errName && m.IsExtensionMethod) {
 									emReceiverType ??= _GetExtensionMethodReceiverType(_semo, start);
-									ADebug.PrintIf(emReceiverType == null, "failed to get extension method receiver type");
+									ADebug_.PrintIf(emReceiverType == null, "failed to get extension method receiver type");
 									if (emReceiverType == null) continue;
-									if (null == m.ReduceExtensionMethod(emReceiverType)) { /*ADebug.Print(emReceiverType);*/ continue; }
+									if (null == m.ReduceExtensionMethod(emReceiverType)) { /*ADebug_.Print(emReceiverType);*/ continue; }
 									found = true;
 									sym = m;
 									break;
@@ -396,7 +396,7 @@ class CiErrors
 		ITypeSymbol t = null;
 		if (semo.SyntaxTree.GetRoot().FindToken(startOfMethodName).Parent.Parent is MemberAccessExpressionSyntax ma)
 			t = semo.GetTypeInfo(ma.Expression).Type;
-		ADebug.PrintIf(t == null, "failed to get extension method receiver type");
+		ADebug_.PrintIf(t == null, "failed to get extension method receiver type");
 		return t;
 	}
 }

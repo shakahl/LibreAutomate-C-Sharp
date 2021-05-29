@@ -38,7 +38,7 @@ namespace Au.Util
 		/// - If null, uses <c>Directory.GetCurrentDirectory()</c>.
 		/// - Else if <i>rawCurDir</i>==true, uses raw <i>curDir</i> value.
 		/// - Else if "", calls <c>APath.GetDirectory(exe)</c>.
-		/// - Else calls <see cref="APath.ExpandEnvVar"/>.
+		/// - Else calls <see cref="APath.Expand"/>.
 		/// </param>
 		/// <param name="envVar">null or environment variables to pass to the new process together with variables of this process. Format: "var1=value1\0var2=value2\0". If ends with "\0\0", will pass only these variables.</param>
 		/// <param name="rawExe">Don't normalize <i>exe</i>.</param>
@@ -49,7 +49,7 @@ namespace Au.Util
 			_exe = exe;
 			cl = (args == null ? ("\"" + exe + "\"" + "\0") : ("\"" + exe + "\" " + args + "\0")).ToCharArray();
 			if(curDir == null) this.curDir = Directory.GetCurrentDirectory(); //if null passed to CreateProcessWithTokenW, the new process does not inherit current directory of this process
-			else this.curDir = rawCurDir ? curDir : (curDir.Length == 0 ? APath.GetDirectory(exe) : APath.ExpandEnvVar(curDir));
+			else this.curDir = rawCurDir ? curDir : (curDir.Length == 0 ? APath.GetDirectory(exe) : APath.Expand(curDir));
 
 			si.cb = Api.SizeOf<Api.STARTUPINFO>();
 			si.dwFlags = Api.STARTF_FORCEOFFFEEDBACK;
@@ -78,7 +78,7 @@ namespace Au.Util
 		/// <param name="inheritHandles">API parameter <i>bInheritHandles</i>.</param>
 		public bool StartL(out Api.PROCESS_INFORMATION pi, bool inheritUiaccess = false, bool inheritHandles = false)
 		{
-			if(inheritUiaccess && Api.OpenProcessToken(AProcess.ProcessHandle, Api.TOKEN_QUERY | Api.TOKEN_DUPLICATE | Api.TOKEN_ASSIGN_PRIMARY, out Handle_ hToken)) {
+			if(inheritUiaccess && Api.OpenProcessToken(AThisProcess.Handle, Api.TOKEN_QUERY | Api.TOKEN_DUPLICATE | Api.TOKEN_ASSIGN_PRIMARY, out Handle_ hToken)) {
 				using(hToken) return Api.CreateProcessAsUser(hToken, null, cl, null, null, inheritHandles, flags, envVar, curDir, si, out pi);
 			} else {
 				return Api.CreateProcess(null, cl, null, null, inheritHandles, flags, envVar, curDir, si, out pi);

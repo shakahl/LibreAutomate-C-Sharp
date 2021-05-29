@@ -113,7 +113,7 @@ namespace Au
 							return true;
 						}
 					}
-					catch(AuException ex) when(!c.IsAlive) { ADebug.Print(ex.Message); } //don't throw AuWndException/AuException if the window or a control is destroyed while searching, but throw AuException if eg access denied
+					catch(AuException ex) when(!c.IsAlive) { ADebug_.Print(ex.Message); } //don't throw AuWndException/AuException if the window or a control is destroyed while searching, but throw AuException if eg access denied
 				}
 				return false;
 			}

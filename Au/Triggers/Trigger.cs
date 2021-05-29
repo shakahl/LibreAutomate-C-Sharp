@@ -135,7 +135,7 @@ namespace Au.Triggers
 						var t1 = ATime.PerfMilliseconds;
 						bool ok = v.f(args);
 						var td = ATime.PerfMilliseconds - t1;
-						if(td > 200) AWarning.Write($"Too slow Triggers.FuncOf function of a window trigger. Should be < 10 ms, now {td} ms. Task name: {ATask.Name}.", -1);
+						if(td > 200) AOutput.Warning($"Too slow Triggers.FuncOf function of a window trigger. Should be < 10 ms, now {td} ms. Task name: {ATask.Name}.", -1);
 						if(!ok) return false;
 					}
 				}

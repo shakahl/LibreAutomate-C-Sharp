@@ -92,7 +92,7 @@ namespace Au.Controls
 		/// - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or png image as Base-64 string with prefix "image:". Can be png or XAML file or resource. See <see cref="AImageUtil.LoadWpfImageElementFromFileOrResourceOrString"/>. Supports environment variables. If not full path, looks in <see cref="AFolders.ThisAppImages"/>.
 		/// - <see cref="Uri"/> - image file path, or resource pack URI, or URL. Does not support environment variables and <see cref="AFolders.ThisAppImages"/>.
 		/// 
-		/// If failed to find or load image file, prints warning (<see cref="AWarning.Write"/>).
+		/// If failed to find or load image file, prints warning (<see cref="AOutput.Warning"/>).
 		/// To create Base-64 string, use menu Code -> AWinImage.
 		/// To add an image resource in Visual Studio, use build action "Resource" for the image file.
 		/// </param>
@@ -154,7 +154,7 @@ namespace Au.Controls
 		public Action<MenuItem> ItemAdded { get; set; }
 
 		/// <summary>
-		/// Whether to handle exceptions in item action code. If false (default), handles exceptions and on exception calls <see cref="AWarning.Write"/>.
+		/// Whether to handle exceptions in item action code. If false (default), handles exceptions and on exception calls <see cref="AOutput.Warning"/>.
 		/// Applied to menu items added afterwards.
 		/// </summary>
 		public bool ActionException { get; set; }
@@ -166,7 +166,7 @@ namespace Au.Controls
 		/// <param name="byCaret">Show by caret (text cursor) position if possible.</param>
 		/// <param name="modal">Wait until closed.</param>
 		public void Show(UIElement owner, bool byCaret = false, bool modal = false) {
-			if (byCaret && AMiscInfo.GetTextCursorRect(out RECT cr, out _)) {
+			if (byCaret && AInputInfo.GetTextCursorRect(out RECT cr, out _)) {
 				var r = owner == null ? cr : new Rect(owner.PointFromScreen(new Point(cr.left, cr.top)), owner.PointFromScreen(new Point(cr.right, cr.bottom)));
 				r.Inflate(30, 2);
 				PlacementRectangle = r;
@@ -232,7 +232,7 @@ namespace Au.Controls
 					}
 					if (iso != null) return new Image { Source = iso };
 				}
-				catch (Exception ex) { AWarning.Write(ex.ToStringWithoutStack()); }
+				catch (Exception ex) { AOutput.Warning(ex.ToStringWithoutStack()); }
 			}
 			return null;
 			//rejected: cache, like AMenu.
@@ -300,7 +300,7 @@ namespace Au.Controls
 				_m._EndModal(); //workaround for: OnClosed called with 160 ms delay. Same with native message loop.
 				if (action != null) {
 					try { action(new WpfMenuActionArgs(this)); }
-					catch (Exception ex) when (!actionException) { AWarning.Write(ex.ToString(), -1); }
+					catch (Exception ex) when (!actionException) { AOutput.Warning(ex.ToString(), -1); }
 				}
 			}
 

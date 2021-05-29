@@ -333,7 +333,7 @@ namespace Au
 		public void Unhook() {
 			if (_hh != default) {
 				bool ok = Api.UnhookWindowsHookEx(_hh);
-				if (!ok) AWarning.Write($"AHookWin.Unhook failed ({_hookTypeString}). {ALastError.Message}");
+				if (!ok) AOutput.Warning($"AHookWin.Unhook failed ({_hookTypeString}). {ALastError.Message}");
 				_hh = default;
 			}
 		}
@@ -363,7 +363,7 @@ namespace Au
 		/// </summary>
 		~AHookWin() {
 			//unhooking in finalizer thread makes no sense. Must unhook in same thread, else fails.
-			if (_hh != default) AWarning.Write($"Non-disposed AHookWin ({_hookTypeString}) variable.");
+			if (_hh != default) AOutput.Warning($"Non-disposed AHookWin ({_hookTypeString}) variable.");
 			//ok if unhooked but not disposed. If we are here, the thread ended and therefore don't need to remove this from t_antiGC.
 		}
 
@@ -480,7 +480,7 @@ namespace Au
 						if (t1 > LowLevelHooksTimeout - 50) {
 							var s1 = _hookType == Api.WH_KEYBOARD_LL ? "key" : "mouse";
 							var s2 = eat ? $" On timeout the {s1} message is passed to the active window, other hooks, etc." : null;
-							//AWarning.Write($"Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}"); //too slow first time
+							//AOutput.Warning($"Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}"); //too slow first time
 							//AOutput.Write($"Warning: Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}\r\n{new StackTrace(0, false)}"); //first Write() JIT 30 ms
 							ThreadPool.QueueUserWorkItem(s3 => AOutput.Write(s3), $"Warning: Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}\r\n{new StackTrace(0, false)}"); //fast if with false. But async print can be confusing.
 						}
@@ -525,7 +525,7 @@ namespace Au
 		static int s_lowLevelHooksTimeout;
 
 		internal static void OnException_(Exception e) {
-			AWarning.Write("Unhandled exception in hook procedure. " + e.ToString());
+			AOutput.Warning("Unhandled exception in hook procedure. " + e.ToString());
 		}
 
 		[StructLayout(LayoutKind.Sequential, Size = 32)] //note: this struct is in shared memory. Size must be same in all library versions.

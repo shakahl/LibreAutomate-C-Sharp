@@ -40,7 +40,7 @@ static class Panels
 
 		//FUTURE: later remove this code. Now need to delete old custom Layout.xml. It uses wrong document etc.
 		var s1 = AppSettings.DirBS + "Layout.xml";
-		if (AFile.ExistsAsFile(s1)) {
+		if (AFile.Exists(s1).isFile) {
 			var s2 = AFile.LoadText(s1);
 			//AOutput.Write(s2);
 			if (s2.RegexIsMatch(@"<document name=""documents"" ?/>\s*</tab>")) AFile.Delete(s1);

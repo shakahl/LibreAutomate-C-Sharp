@@ -23,6 +23,10 @@ using Microsoft.CodeAnalysis.Text;
 
 //FUTURE: favorite meta r and c. Then can add favorite namespaces from these too.
 
+//TODO: support using static.
+//	Then users could create their common "functions.cs" files used with meta c and 'using static'.
+//	When sharing in forums, recommend to put their functions.cs in patebin and in forum signature add link to it.
+
 class CiFavorite
 {
 	record _NamespaceTypes(
@@ -125,7 +129,7 @@ class CiFavorite
 				var ns = nt.ns;
 				bool skip = groups.TryGetValue(ns, out var ati);
 				if (skip) {
-					//don't skip if the group contains single item "Unimported.Namespace.Type" for parameter enum or new, like in this code: AFile.Run("", "", RFlags, new ROptions);
+					//don't skip if the group contains single item "Unimported.Namespace.Type" for parameter enum or new, like in this code: ARun.Run("", "", RFlags, new ROptions);
 					if (ati.Count == 1 && items[ati[0]].Text.Contains('.')) skip = false;
 				}
 				int nExist = ati.Lenn_();

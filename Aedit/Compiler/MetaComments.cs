@@ -15,6 +15,10 @@ using Au.Types;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
+//CONSIDER: c https://..../file.cs
+//	Problem: security. These files could contain malicious code.
+//	It seems nuget supports source files, not only compiled assemblies: https://stackoverflow.com/questions/52880687/how-to-share-source-code-via-nuget-packages-for-use-in-net-core-projects
+
 namespace Au.Compiler
 {
 	/// <summary>
@@ -673,8 +677,8 @@ namespace Au.Compiler
 				_ErrorV($"file '{s}' does not exist in this workspace{s2}");
 				return null;
 			}
-			var v = AFile.ExistsAs(s = f.FilePath, true);
-			if (v != (f.IsFolder ? FileDir.Directory : FileDir.File)) { _ErrorV("file does not exist: " + s); return null; }
+			int v = AFile.Exists(s = f.FilePath, true);
+			if (v != (f.IsFolder ? 2 : 1)) { _ErrorV("file does not exist: " + s); return null; }
 			return f;
 		}
 
@@ -690,7 +694,7 @@ namespace Au.Compiler
 
 		string _GetOutPath(string s) {
 			s = s.TrimEnd('\\');
-			if (!APath.IsFullPathExpandEnvVar(ref s)) {
+			if (!APath.IsFullPathExpand(ref s)) {
 				if (s.Starts('\\')) s = _fn.Model.FilesDirectory + s;
 				else s = APath.GetDirectory(_fn.FilePath, true) + s;
 			}

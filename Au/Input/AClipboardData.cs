@@ -31,7 +31,7 @@ namespace Au
 	/// var image = AClipboardData.GetImage();
 	/// if(image == null) AOutput.Write("no image in clipboard"); else AOutput.Write(image.Size);
 	/// ]]></code>
-	/// Set clipboard data of two formats: text and image.
+	/// Set clipboard data in two formats: text and image.
 	/// <code><![CDATA[
 	/// new AClipboardData().AddText("text").AddImage(Image.FromFile(@"q:\file.png")).SetClipboard();
 	/// ]]></code>
@@ -39,7 +39,7 @@ namespace Au
 	/// <code><![CDATA[
 	/// AClipboard.PasteData(new AClipboardData().AddHtml("<b>text</b>").AddText("text"));
 	/// ]]></code>
-	/// Copy data of two formats: HTML and text.
+	/// Copy data in two formats: HTML and text.
 	/// <code><![CDATA[
 	/// string html = null, text = null;
 	/// AClipboard.CopyData(() => { html = AClipboardData.GetHtml(); text = AClipboardData.GetText(); });

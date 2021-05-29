@@ -228,13 +228,13 @@ namespace Au.Compiler
 		static string _ResolvePath(string re, bool isCOM)
 		{
 			if(re.NE()) return null;
-			bool isFull = APath.IsFullPathExpandEnvVar(ref re);
+			bool isFull = APath.IsFullPathExpand(ref re);
 			if(!isFull && isCOM) { isFull = true; re = AFolders.Workspace + @".interop\" + re; }
-			if(isFull) return AFile.ExistsAsFile(re) ? re : null;
+			if(isFull) return AFile.Exists(re).isFile ? re : null;
 
 			if(!re.Ends(".dll", true)) re += ".dll";
 			re = AFolders.ThisAppBS + re;
-			return AFile.ExistsAsFile(re) ? re : null;
+			return AFile.Exists(re).isFile ? re : null;
 
 			//note: we don't use Microsoft.CodeAnalysis.Scripting.ScriptMetadataResolver. It is very slow, makes compiling many times slower.
 		}
@@ -293,7 +293,7 @@ namespace Au.Compiler
 					var dbPath = AFolders.ThisAppTemp + md5.Hash.ToString() + ".db";
 					try {
 						if(!AFile.GetProperties(dbPath, out var pd) || pd.LastWriteTimeUtc != px.LastWriteTimeUtc) {
-							//ADebug.Print($"creating db: {asmPath}  ->  {dbPath}");
+							//ADebug_.Print($"creating db: {asmPath}  ->  {dbPath}");
 							AFile.Delete(dbPath);
 							using(var d = new ASqlite(dbPath)) {
 								using var trans = d.Transaction();
@@ -325,7 +325,7 @@ namespace Au.Compiler
 						s_d[asmPath] = dp = new _DocumentationProvider { _db = db };
 						return dp;
 					}
-					catch(Exception ex) { ADebug.Print(ex.ToStringWithoutStack()); }
+					catch(Exception ex) { ADebug_.Print(ex.ToStringWithoutStack()); }
 				}
 				return XmlDocumentationProvider.CreateFromFile(xmlPath);
 			}
@@ -338,9 +338,9 @@ namespace Au.Compiler
 						try {
 							_stat ??= _db.Statement("SELECT xml FROM doc WHERE name=?");
 							if(_stat.Bind(1, documentationMemberID).Step()) return _stat.GetText(0);
-							//ADebug.Print(documentationMemberID);
+							//ADebug_.Print(documentationMemberID);
 						}
-						catch(SLException ex) { ADebug.Print(ex.Message); }
+						catch(SLException ex) { ADebug_.Print(ex.Message); }
 						finally { _stat?.Reset(); }
 					}
 				}
@@ -349,13 +349,13 @@ namespace Au.Compiler
 
 			public override bool Equals(object obj)
 			{
-				ADebug.PrintIf(obj != this, "Equals");
+				ADebug_.PrintIf(obj != this, "Equals");
 				return obj == this;
 			}
 
 			public override int GetHashCode()
 			{
-				ADebug.Print("GetHashCode");
+				ADebug_.Print("GetHashCode");
 				return 1;
 			}
 		}
@@ -375,7 +375,7 @@ namespace Au.Compiler
 					_db = EdDatabases.OpenDoc(); //never mind: we don't dispose it on process exit
 					if(_db.Get(out string s, "SELECT xml FROM doc WHERE name='.'")) _refs = new HashSet<string>(s.Split('\n'));
 				}
-				catch(SLException ex) { ADebug.Print(ex.Message); }
+				catch(SLException ex) { ADebug_.Print(ex.Message); }
 			}
 
 			/// <summary>

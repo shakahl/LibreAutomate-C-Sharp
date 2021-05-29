@@ -1904,7 +1904,7 @@ namespace Au
 		/// - <b>RichTextBox</b> source does not end with ".rtf".
 		/// </exception>
 		/// <remarks>
-		/// If fails to load, prints warning. See <see cref="AWarning.Write"/>.
+		/// If fails to load, prints warning. See <see cref="AOutput.Warning"/>.
 		/// </remarks>
 		public AWpfBuilder LoadFile(string source) {
 			var c = Last;
@@ -1921,7 +1921,7 @@ namespace Au
 				default: bad = true; break;
 				}
 			}
-			catch (Exception ex) { AWarning.Write(ex.ToString(), -1); }
+			catch (Exception ex) { AOutput.Warning(ex.ToString(), -1); }
 			if (bad) throw new NotSupportedException("LoadFile(): Unsupported type of element or source.");
 			return this;
 		}
@@ -1939,7 +1939,7 @@ namespace Au
 
 		AWpfBuilder _Image(ImageSource source, string file, Stretch stretch, StretchDirection stretchDirection) {
 			var c = Last as Image ?? throw new NotSupportedException("Image(): Last added must be Image");
-			if (file != null) try { source = new BitmapImage(_Uri(file)); } catch (Exception ex) { AWarning.Write(ex.ToString(), -1); }
+			if (file != null) try { source = new BitmapImage(_Uri(file)); } catch (Exception ex) { AOutput.Warning(ex.ToString(), -1); }
 			c.Stretch = stretch; //default Uniform
 			c.StretchDirection = stretchDirection; //default Both
 			c.Source = source;
@@ -1954,7 +1954,7 @@ namespace Au
 		/// <param name="stretchDirection"><see cref="Image.StretchDirection"/>.</param>
 		/// <exception cref="NotSupportedException">The last added element is not <b>Image</b>.</exception>
 		/// <remarks>
-		/// If fails to load, prints warning. See <see cref="AWarning.Write"/>.
+		/// If fails to load, prints warning. See <see cref="AOutput.Warning"/>.
 		/// </remarks>
 		public AWpfBuilder Image(string source, Stretch stretch = Stretch.None, StretchDirection stretchDirection = StretchDirection.DownOnly)
 			=> _Image(null, source, stretch, stretchDirection);

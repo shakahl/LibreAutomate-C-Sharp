@@ -242,7 +242,7 @@ partial class CiCompletion
 									isDot = canGroup = false;
 									break;
 								default:
-									ADebug.Print(node.GetType());
+									ADebug_.Print(node.GetType());
 									isDot = canGroup = false;
 									break;
 								}
@@ -251,11 +251,11 @@ partial class CiCompletion
 #if true //need typeL
 									var ti = model.GetTypeInfo(node).Type;
 									if (ti == null) {
-										ADebug.PrintIf(model.GetSymbolInfo(node).Symbol is not INamespaceSymbol, node);
+										ADebug_.PrintIf(model.GetSymbolInfo(node).Symbol is not INamespaceSymbol, node);
 										canGroup = false;
 									} else {
 										symL = model.GetSymbolInfo(node).Symbol;
-										ADebug.PrintIf(symL is INamespaceSymbol, node);
+										ADebug_.PrintIf(symL is INamespaceSymbol, node);
 										//AOutput.Write(symL, symL is INamedTypeSymbol);
 										if (symL is INamedTypeSymbol) typenameStart = node.SpanStart;
 										else typeL = ti;
@@ -304,7 +304,7 @@ partial class CiCompletion
 										break;
 									default:
 										isDot = false;
-										ADebug.Print(node.GetType());
+										ADebug_.Print(node.GetType());
 										break;
 									}
 
@@ -362,7 +362,7 @@ partial class CiCompletion
 				noAutoSelect = r.SuggestionModeItem != null,
 			};
 
-			//ADebug.PrintIf(r.SuggestionModeItem != null && r.SuggestionModeItem.ToString() != "<lambda expression>" && !r.SuggestionModeItem.ToString().NE(), r.SuggestionModeItem); //in '#if X' non-nul but empty text
+			//ADebug_.PrintIf(r.SuggestionModeItem != null && r.SuggestionModeItem.ToString() != "<lambda expression>" && !r.SuggestionModeItem.ToString().NE(), r.SuggestionModeItem); //in '#if X' non-nul but empty text
 
 			//ISymbol enclosing = null;
 			//bool _IsAccessible(ISymbol symbol) {
@@ -494,7 +494,7 @@ partial class CiCompletion
 
 						//Roslyn bug: sometimes adds some garbage items.
 						//To reproduce: invoke global list. Then invoke list for a string variable. Adds String, Object, all local string variables, etc. Next time works well. After Enum dot adds the enum type, even in VS; in VS sometimes adds enum methods and extmethods.
-						//ADebug.PrintIf(nts == null, sym.Name);
+						//ADebug_.PrintIf(nts == null, sym.Name);
 						if (nts == null) continue;
 
 						if (groups.TryGetValue(nts, out var list)) list.Add(i); else groups.Add(nts, new List<int> { i });
@@ -554,7 +554,7 @@ partial class CiCompletion
 						var tk1 = t1.TypeKind; var tk2 = t2.TypeKind;
 						if (tk1 == TypeKind.Class && t1.BaseType == null) return 1; //t1 is object
 						if (tk2 == TypeKind.Class && t2.BaseType == null) return -1; //t2 is object
-						ADebug.Print($"{t1}, {t2},    {t1.BaseType}, {t2.BaseType},    {tk1}, {tk2}");
+						ADebug_.Print($"{t1}, {t2},    {t1.BaseType}, {t2.BaseType},    {tk1}, {tk2}");
 #else
 						//sort non-extension members by inheritance
 						var t1 = k1.Key as INamedTypeSymbol; var t2 = k2.Key as INamedTypeSymbol;
@@ -573,7 +573,7 @@ partial class CiCompletion
 							if (t1.AllInterfaces.Contains(t2)) return -1;
 						}
 						//fails for eg ObservableCollection<>. Uses 2 variables for t2 and t1.BaseType although it is the same type.
-						ADebug.Print($"{t1}, {t2}, {k1.Value.Count}, {k2.Value.Count}, {tk1}, {tk2}, {t1.BaseType}, {t2.BaseType}"); //usually because of Roslyn bugs
+						ADebug_.Print($"{t1}, {t2}, {k1.Value.Count}, {k2.Value.Count}, {tk1}, {tk2}, {t1.BaseType}, {t2.BaseType}"); //usually because of Roslyn bugs
 #endif
 
 						//SHOULDDO: workaround for Roslyn bug: in argument-lambda, on dot after lambda parameter, also adds members of types of parameter at that position of other overloads.
@@ -641,7 +641,7 @@ partial class CiCompletion
 			}
 			_popupList.Show(doc, span.Start, _data.items, groupsList); //and calls SelectBestMatch
 		}
-		catch (OperationCanceledException) { /*ADebug.Print("canceled");*/ return; }
+		catch (OperationCanceledException) { /*ADebug_.Print("canceled");*/ return; }
 		finally {
 			if (_data == null) {
 				p1.Next('z');
@@ -665,7 +665,7 @@ partial class CiCompletion
 			foreach (var v in d.items) {
 				if (v.kind == CiItemKind.None) continue; //eg regex completion
 				var s = v.ci.FilterText;
-				//ADebug.PrintIf(v.ci.FilterText != v.Text, $"{v.ci.FilterText}, {v.Text}");
+				//ADebug_.PrintIf(v.ci.FilterText != v.Text, $"{v.ci.FilterText}, {v.Text}");
 				//AOutput.Write(v.Text, v.ci.FilterText, v.ci.SortText, v.ci.ToString());
 				bool found = false;
 				int iFirst = _FilterFindChar(s, 0, c0Lower, c0Upper), iFirstFirst = iFirst;
@@ -781,7 +781,7 @@ partial class CiCompletion
 		var symbols = ci.Symbols;
 		if (symbols != null) return CiText.FromSymbols(symbols, iSelect, _data.model, _data.tempRange.CurrentFrom);
 		if (ci.kind == CiItemKind.Namespace) return null; //extern alias
-		ADebug.PrintIf(ci.kind != CiItemKind.None, ci.kind); //None if Regex
+		ADebug_.PrintIf(ci.kind != CiItemKind.None, ci.kind); //None if Regex
 		var r = _data.completionService.GetDescriptionAsync(_data.document, ci.ci).Result; //fast if Regex, else not tested
 		return r == null ? null : CiText.FromTaggedParts(r.TaggedParts);
 	}
@@ -849,7 +849,7 @@ partial class CiCompletion
 				return CiComplResult.Complex;
 			}
 		}
-		ADebug.PrintIf(i != _data.tempRange.CurrentFrom && item.Provider != CiComplProvider.Regex, $"{_data.tempRange.CurrentFrom}, {i}");
+		ADebug_.PrintIf(i != _data.tempRange.CurrentFrom && item.Provider != CiComplProvider.Regex, $"{_data.tempRange.CurrentFrom}, {i}");
 		//ci.DebugPrint();
 
 		//if typed space after method or keyword 'if' etc, replace the space with '(' etc. Also add if pressed Tab or Enter.
@@ -1040,7 +1040,7 @@ partial class CiCompletion
 
 	static CiComplProvider _GetProvider(CompletionItem ci) {
 		var s = ci.ProviderName;
-		ADebug.PrintIf(s == null, "ProviderName null");
+		ADebug_.PrintIf(s == null, "ProviderName null");
 		if (s == null) return CiComplProvider.Other;
 		int i = s.LastIndexOf('.') + 1;
 		Debug.Assert(i > 0);
@@ -1071,10 +1071,10 @@ struct NoGcRegion : IDisposable
 	{
 		_restore = false;
 		if(AVersion.Is32BitProcess) return;
-		ADebug.MemorySetAnchor_();
+		ADebug_.MemorySetAnchor_();
 		//AOutput.Write(System.Runtime.GCSettings.LatencyMode);
 		try { _restore = GC.TryStartNoGCRegion(memSize); }
-		catch(InvalidOperationException ex) { ADebug.Print(ex.Message); }
+		catch(InvalidOperationException ex) { ADebug_.Print(ex.Message); }
 	}
 
 	public void Dispose()
@@ -1084,8 +1084,8 @@ struct NoGcRegion : IDisposable
 			//AOutput.Write(System.Runtime.GCSettings.LatencyMode == System.Runtime.GCLatencyMode.NoGCRegion);
 			//if(System.Runtime.GCSettings.LatencyMode == System.Runtime.GCLatencyMode.NoGCRegion) GC.EndNoGCRegion();
 			try { GC.EndNoGCRegion(); } //note: need to call even if not in nogc region (then exception); else TryStartNoGCRegion will throw exception.
-			catch(InvalidOperationException ex) { ADebug.Print(ex.Message); }
-			ADebug.MemoryPrint_();
+			catch(InvalidOperationException ex) { ADebug_.Print(ex.Message); }
+			ADebug_.MemoryPrint_();
 			ThreadPool.QueueUserWorkItem(_ => GC.Collect());
 		}
 	}

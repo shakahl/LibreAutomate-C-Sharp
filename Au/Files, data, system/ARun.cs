@@ -17,9 +17,9 @@ using Au.Util;
 namespace Au
 {
 	/// <summary>
-	/// This class contains static functions to execute or open programs, other files, folders, web pages, etc.
+	/// Contains static functions to execute or open programs, other files, folders, web pages, etc.
 	/// </summary>
-	public static partial class AFile
+	public static class ARun
 	{
 		/// <summary>
 		/// Runs/opens a program, document, directory (folder), URL, new email, Control Panel item etc.
@@ -64,22 +64,22 @@ namespace Au
 		/// - Path relative to <see cref="AFolders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
 		/// - URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
 		/// - Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
-		/// - Shell object's ITEMIDLIST like <c>":: ITEMIDLIST"</c>. See <see cref="APidl.ToHexString"/>, <see cref="AFolders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
-		/// - Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="APidl.ToShellString"/>, <see cref="AFolders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
+		/// - Shell object's ITEMIDLIST like <c>":: ITEMIDLIST"</c>. See <see cref="Pidl.ToHexString"/>, <see cref="AFolders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
+		/// - Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="Pidl.ToShellString"/>, <see cref="AFolders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
 		/// - To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="AWnd.More.GetWindowsStoreAppId"/> or Google.
 		/// 
-		/// Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="APath.ExpandEnvVar"/>.
+		/// Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="APath.Expand"/>.
 		/// </remarks>
 		/// <seealso cref="AWnd.FindOrRun"/>
 		/// <example>
 		/// Run notepad and wait for its window.
 		/// <code><![CDATA[
-		/// AFile.Run("notepad.exe");
+		/// ARun.Run("notepad.exe");
 		/// AWnd w = AWnd.Wait(10, true, "*- Notepad", "Notepad");
 		/// ]]></code>
 		/// Run notepad or activate its window.
 		/// <code><![CDATA[
-		/// AWnd w = AWnd.FindOrRun("*- Notepad", run: () => AFile.Run("notepad.exe"));
+		/// AWnd w = AWnd.FindOrRun("*- Notepad", run: () => ARun.Run("notepad.exe"));
 		/// ]]></code>
 		/// </example>
 		public static RResult Run(string file, string args = null, RFlags flags = 0, ROptions dirEtc = null) {
@@ -95,7 +95,7 @@ namespace Au
 				if (x.lpVerb != null) x.fMask |= Api.SEE_MASK_INVOKEIDLIST; //makes slower. But verbs are rarely used.
 
 				if (more.CurrentDirectory is string cd) {
-					if (cd.Length == 0) curDirFromFile = true; else cd = APath.ExpandEnvVar(cd);
+					if (cd.Length == 0) curDirFromFile = true; else cd = APath.Expand(cd);
 					x.lpDirectory = cd;
 				}
 
@@ -117,9 +117,9 @@ namespace Au
 			}
 
 			file = _NormalizeFile(false, file, out bool isFullPath, out bool isShellPath);
-			APidl pidl = null;
+			Pidl pidl = null;
 			if (isShellPath) { //":: Base64ITEMIDLIST" or "::{CLSID}..." (we convert it too because the API does not support many)
-				pidl = APidl.FromString(file); //does not throw
+				pidl = Pidl.FromString(file); //does not throw
 				if (pidl != null) {
 					x.lpIDList = pidl.UnsafePtr;
 					x.fMask |= Api.SEE_MASK_INVOKEIDLIST;
@@ -130,7 +130,7 @@ namespace Au
 				if (curDirFromFile && isFullPath) x.lpDirectory = APath.GetDirectory(file);
 			}
 			x.lpDirectory ??= Directory.GetCurrentDirectory();
-			if (!args.NE()) x.lpParameters = APath.ExpandEnvVar(args);
+			if (!args.NE()) x.lpParameters = APath.Expand(args);
 
 			if (0 == (flags & RFlags.ShowErrorUI)) x.fMask |= Api.SEE_MASK_FLAG_NO_UI;
 			if (0 == (flags & RFlags.WaitForExit)) x.fMask |= Api.SEE_MASK_NO_CONSOLE;
@@ -148,7 +148,7 @@ namespace Au
 				ok = Cpp.Cpp_ShellExec(x, out pid, out int injectError, out int execError);
 				if (!ok) {
 					if (injectError != 0) {
-						AWarning.Write("Failed to run as non-admin.");
+						AOutput.Warning("Failed to run as non-admin.");
 						asUser = false;
 					} else errorCode = execError;
 				}
@@ -209,24 +209,23 @@ namespace Au
 		/// This is useful when you don't care whether <b>Run</b> succeeded and don't want to use try/catch.
 		/// Handles only exception of type <see cref="AuException"/>. It is thrown when fails, usually when the file does not exist.
 		/// </remarks>
-		/// <seealso cref="AWarning.Write"/>
+		/// <seealso cref="AOutput.Warning"/>
 		/// <seealso cref="OWarnings.Disable"/>
 		/// <seealso cref="AWnd.FindOrRun"/>
 		[MethodImpl(MethodImplOptions.NoInlining)] //uses stack
-		public static RResult TryRun(string s, string args = null, RFlags flags = 0, ROptions dirEtc = null) {
+		public static RResult RunSafe(string s, string args = null, RFlags flags = 0, ROptions dirEtc = null) {
 			try {
 				return Run(s, args, flags, dirEtc);
 			}
 			catch (AuException e) {
-				AWarning.Write(e.Message, 1);
+				AOutput.Warning(e.Message, 1);
 				return null;
 			}
 		}
 
-		//Used by Run and RunConsole.
 		static string _NormalizeFile(bool runConsole, string file, out bool isFullPath, out bool isShellPath) {
 			isShellPath = isFullPath = false;
-			file = APath.ExpandEnvVar(file);
+			file = APath.Expand(file);
 			if (file.NE()) throw new ArgumentException();
 			if (runConsole || !(isShellPath = APath.IsShellPath_(file))) {
 				if (isFullPath = APath.IsFullPath(file)) {
@@ -237,7 +236,7 @@ namespace Au
 					//Process.Start supports long path prefix, except when the exe is .NET.
 					if (!runConsole) file = APath.UnprefixLongPath(file);
 
-					if (ADisableFsRedirection.IsSystem64PathIn32BitProcess(file) && !AFile.ExistsAsAny(file)) {
+					if (ADisableFsRedirection.IsSystem64PathIn32BitProcess(file) && !AFile.Exists(file)) {
 						file = ADisableFsRedirection.GetNonRedirectedSystemPath(file);
 					}
 				} else if (!APath.IsUrl(file)) {
@@ -263,14 +262,14 @@ namespace Au
 		/// - Filename, like <c>"x.exe"</c>. This function calls <see cref="AFile.SearchPath"/>.
 		/// - Path relative to <see cref="AFolders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\folder\x.exe"</c>.
 		/// 
-		/// Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="APath.ExpandEnvVar"/>.
+		/// Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="APath.Expand"/>.
 		/// </param>
 		/// <param name="args">null or command line arguments.</param>
 		/// <param name="curDir">
 		/// Initial current directory of the new process.
 		/// - If null, uses <c>Directory.GetCurrentDirectory()</c>.
 		/// - Else if "", calls <c>APath.GetDirectory(exe)</c>.
-		/// - Else calls <see cref="APath.ExpandEnvVar"/>.
+		/// - Else calls <see cref="APath.Expand"/>.
 		/// </param>
 		/// <param name="encoding">
 		/// Console's text encoding.
@@ -287,15 +286,15 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// string v = "example";
-		/// int r1 = AFile.RunConsole(@"Q:\Test\console1.exe", $@"/an ""{v}"" /etc");
+		/// int r1 = ARun.Console(@"Q:\Test\console1.exe", $@"/an ""{v}"" /etc");
 		/// 
-		/// int r2 = AFile.RunConsole(s => AOutput.Write(s), @"Q:\Test\console2.exe");
+		/// int r2 = ARun.Console(s => AOutput.Write(s), @"Q:\Test\console2.exe");
 		/// 
-		/// int r3 = AFile.RunConsole(out var text, @"Q:\Test\console3.exe", encoding: Encoding.UTF8);
+		/// int r3 = ARun.Console(out var text, @"Q:\Test\console3.exe", encoding: Encoding.UTF8);
 		/// AOutput.Write(text);
 		/// ]]></code>
 		/// </example>
-		public static unsafe int RunConsole(string exe, string args = null, string curDir = null, Encoding encoding = null) {
+		public static unsafe int Console(string exe, string args = null, string curDir = null, Encoding encoding = null) {
 			return _RunConsole(s => AOutput.Write(s), null, exe, args, curDir, encoding);
 		}
 
@@ -309,7 +308,7 @@ namespace Au
 		/// <param name="curDir"></param>
 		/// <param name="encoding"></param>
 		/// <exception cref="AuException">Failed, for example file not found.</exception>
-		public static unsafe int RunConsole(Action<string> output, string exe, string args = null, string curDir = null, Encoding encoding = null) {
+		public static unsafe int Console(Action<string> output, string exe, string args = null, string curDir = null, Encoding encoding = null) {
 			return _RunConsole(output, null, exe, args, curDir, encoding);
 		}
 
@@ -322,7 +321,7 @@ namespace Au
 		/// <param name="curDir"></param>
 		/// <param name="encoding"></param>
 		/// <exception cref="AuException">Failed, for example file not found.</exception>
-		public static unsafe int RunConsole(out string output, string exe, string args = null, string curDir = null, Encoding encoding = null) {
+		public static unsafe int Console(out string output, string exe, string args = null, string curDir = null, Encoding encoding = null) {
 			var b = new StringBuilder();
 			var r = _RunConsole(null, b, exe, args, curDir, encoding);
 			output = b.ToString();
@@ -331,7 +330,7 @@ namespace Au
 
 		static unsafe int _RunConsole(Action<string> outAction, StringBuilder outStr, string exe, string args, string curDir, Encoding encoding) {
 			exe = _NormalizeFile(true, exe, out _, out _);
-			//args = APath.ExpandEnvVar(args); //rejected
+			//args = APath.Expand(args); //rejected
 
 			var ps = new ProcessStarter_(exe, args, curDir, rawExe: true);
 
@@ -441,15 +440,15 @@ namespace Au
 		static Encoding s_oemEncoding;
 
 		/// <summary>
-		/// Opens parent folder in Explorer and selects the specified file.
+		/// Opens parent folder in Explorer and selects the file.
 		/// Returns null if fails, for example if the file does not exist.
 		/// </summary>
 		/// <param name="path">
 		/// Full path of a file or directory or other shell object.
-		/// Supports <c>@"%environmentVariable%\..."</c> (see <see cref="APath.ExpandEnvVar"/>) and <c>"::..."</c> (see <see cref="APidl.ToHexString"/>).
+		/// Supports <c>@"%environmentVariable%\..."</c> (see <see cref="APath.Expand"/>) and <c>"::..."</c> (see <see cref="Pidl.ToHexString"/>).
 		/// </param>
 		public static bool SelectInExplorer(string path) {
-			using var pidl = APidl.FromString(path);
+			using var pidl = Pidl.FromString(path);
 			if (pidl == null) return false;
 			return 0 == Api.SHOpenFolderAndSelectItems(pidl.HandleRef, 0, null, 0);
 		}
@@ -459,14 +458,14 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Flags for <see cref="AFile.Run"/>.
+	/// Flags for <see cref="ARun.Run"/>.
 	/// </summary>
 	[Flags]
 	public enum RFlags
 	{
 		/// <summary>
 		/// Show error message box if fails, for example if file not found.
-		/// Note: this does not disable exceptions. To avoid exceptions use try/catch or <see cref="AFile.TryRun"/>.
+		/// Note: this does not disable exceptions. To avoid exceptions use try/catch or <see cref="ARun.RunSafe"/>.
 		/// </summary>
 		ShowErrorUI = 1,
 
@@ -494,7 +493,7 @@ namespace Au.Types
 		/// If this process runs as administrator, run new process as administrator too.
 		/// Without this flag, if this process runs as administrator:
 		///	- Starts new process as non-administrator from the shell process (explorer.exe).
-		///	- If it fails (for example if shell process isn't running), calls <see cref="AWarning.Write"/> and starts new process as administrator.
+		///	- If it fails (for example if shell process isn't running), calls <see cref="AOutput.Warning"/> and starts new process as administrator.
 		///	- The new process does not inherit environment variables of this process.
 		/// </summary>
 		InheritAdmin = 16,
@@ -506,7 +505,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// More parameters for <see cref="AFile.Run"/>.
+	/// More parameters for <see cref="ARun.Run"/>.
 	/// </summary>
 	/// <remarks>
 	/// Implicit conversion from <b>string</b> sets <see cref="CurrentDirectory"/>.
@@ -563,7 +562,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Results of <see cref="AFile.Run"/>.
+	/// Results of <see cref="ARun.Run"/>.
 	/// </summary>
 	public class RResult
 	{
@@ -587,9 +586,9 @@ namespace Au.Types
 		/// null if no flag or if did not start new process (eg opened the document in an existing process) or if cannot get it.
 		/// </summary>
 		/// <example>
-		/// This code does the same as <c>AFile.Run(@"notepad.exe", flags: SRFlags.WaitForExit);</c>
+		/// This code does the same as <c>ARun.Run(@"notepad.exe", flags: SRFlags.WaitForExit);</c>
 		/// <code><![CDATA[
-		/// var r = AFile.Run(@"notepad.exe", flags: SRFlags.NeedProcessHandle);
+		/// var r = ARun.Run(@"notepad.exe", flags: SRFlags.NeedProcessHandle);
 		/// using(var h = r.ProcessHandle) h?.WaitOne();
 		/// ]]></code>
 		/// </example>
@@ -602,16 +601,4 @@ namespace Au.Types
 			return ProcessId.ToString();
 		}
 	}
-
-	///// <summary>
-	///// Flags for <see cref="AFile.RunConsole"/>.
-	///// </summary>
-	//[Flags]
-	//public enum RCFlags
-	//{
-	//	/// <summary>
-	//	/// Let the <i>output</i> callback function receive raw text; it can be one or more lines of text with line break characters. If false (default), it is single line without line break characters.
-	//	/// </summary>
-	//	RawText = 1,
-	//}
 }

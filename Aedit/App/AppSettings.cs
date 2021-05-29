@@ -95,8 +95,14 @@ class AppSettings : ASettings
 	public int ci_complParen { get => _ci_complParen; set => Set(ref _ci_complParen, value); }
 	int _ci_complParen; //0 spacebar, 1 always, 2 never
 
-	public byte ci_correctStringEnter { get => _ci_correctStringEnter; set => Set(ref _ci_correctStringEnter, value); }
-	byte _ci_correctStringEnter;
+	public byte ci_shiftEnterAlways { get => _ci_shiftEnterAlways; set => Set(ref _ci_shiftEnterAlways, value); }
+	byte _ci_shiftEnterAlways;
+
+	public byte ci_shiftTabAlways { get => _ci_shiftTabAlways; set => Set(ref _ci_shiftTabAlways, value); }
+	byte _ci_shiftTabAlways;
+
+	//public byte ci_breakString { get => _ci_breakString; set => Set(ref _ci_breakString, value); }
+	//byte _ci_breakString;
 
 	public string ci_usings { get => _ci_usings; set => Set(ref _ci_usings, value); }
 	string _ci_usings = @"Au

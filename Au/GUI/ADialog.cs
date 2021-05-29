@@ -857,7 +857,7 @@ namespace Au
 
 		int _CallTDI(out int pnButton, out int pnRadioButton, out int pChecked) {
 #if DEBUG
-			//ADebug.PrintIf("1" != Environment.GetEnvironmentVariable("COMPlus_legacyCorruptedStateExceptionsPolicy"), "no env var COMPlus_legacyCorruptedStateExceptionsPolicy=1");
+			//ADebug_.PrintIf("1" != Environment.GetEnvironmentVariable("COMPlus_legacyCorruptedStateExceptionsPolicy"), "no env var COMPlus_legacyCorruptedStateExceptionsPolicy=1");
 			pnButton = pnRadioButton = pChecked = 0;
 			try {
 #endif
@@ -1248,7 +1248,7 @@ namespace Au
 			var pStyle = WS.CHILD | WS.VISIBLE | WS.CLIPCHILDREN | WS.CLIPSIBLINGS; //don't need WS_TABSTOP
 			var pExStyle = WSE.NOPARENTNOTIFY; //not WSE.CONTROLPARENT
 			_editParent = AWnd.More.CreateWindow("#32770", null, pStyle, pExStyle, r.left, r.top, r.Width, r.Height, parent);
-			Api.SetWindowLongPtr(_editParent, GWLong.DWL.DLGPROC, Marshal.GetFunctionPointerForDelegate(_editControlParentProcHolder = _EditControlParentProc));
+			Api.SetWindowLongPtr(_editParent, GWL.DWL.DLGPROC, Marshal.GetFunctionPointerForDelegate(_editControlParentProcHolder = _EditControlParentProc));
 
 			//Create Edit or ComboBox control.
 			string cn = "Edit";

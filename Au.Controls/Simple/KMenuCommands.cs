@@ -218,11 +218,11 @@ namespace Au.Controls
 					if (i < 0) _Add(keys); else foreach (var v in keys.Split(", ")) _Add(v);
 					void _Add(string s) {
 						if (!AKeys.More.ParseHotkeyString(s, out var mod, out var key, out var mouse)) {
-							AWarning.Write("Invalid key or mouse shortcut: " + s);
+							AOutput.Warning("Invalid key or mouse shortcut: " + s);
 							return;
 						}
 						if (key != default) target.InputBindings.Add(new KeyBinding(c, key, mod));
-						else if (target is System.Windows.Interop.HwndHost) AWarning.Write(s + ": mouse shortcuts don't work with HwndHost controls");
+						else if (target is System.Windows.Interop.HwndHost) AOutput.Warning(s + ": mouse shortcuts don't work with HwndHost controls");
 						else target.InputBindings.Add(new MouseBinding(c, new MouseGesture(mouse, mod)));
 
 						//FUTURE: support mouse shortcuts in HwndHost
@@ -415,7 +415,7 @@ namespace Au.Controls
 
 				if (_mi.IsCheckable) {
 					if (b is ToggleButton tb) tb.SetBinding(ToggleButton.IsCheckedProperty, new Binding("IsChecked") { Source = _mi });
-					else AWarning.Write($"Menu item {Name} is checkable, but button isn't a ToggleButton (CheckBox or RadioButton).");
+					else AOutput.Warning($"Menu item {Name} is checkable, but button isn't a ToggleButton (CheckBox or RadioButton).");
 				}
 			}
 
@@ -670,7 +670,7 @@ namespace Au.Controls
 			_customizedFile = xmlFileCustomized;
 			try {
 				var a = AXml.LoadElem(xmlFileDefault).Elements().ToArray(); //menu and toolbars
-				if (xmlFileCustomized != null && AFile.ExistsAsFile(xmlFileCustomized, true)) {
+				if (xmlFileCustomized != null && AFile.Exists(xmlFileCustomized, true).isFile) {
 					try { //replace a elements with elements that exist in xmlFileCustomized. If some toolbar does not exist there, use default.
 						var ac = AXml.LoadElem(xmlFileCustomized).Elements().ToArray();
 						for (int i = 0; i < a.Length; i++) {
@@ -720,8 +720,8 @@ namespace Au.Controls
 		}
 
 		void _Customize() {
-			if (!AFile.ExistsAsFile(_customizedFile, true)) AFile.Copy(_defaultFile, _customizedFile);
-			AFile.SelectInExplorer(_customizedFile);
+			if (!AFile.Exists(_customizedFile, true).isFile) AFile.Copy(_defaultFile, _customizedFile);
+			ARun.SelectInExplorer(_customizedFile);
 		}
 
 		private void AProcess_Exit(object sender, EventArgs e) {
@@ -735,7 +735,7 @@ namespace Au.Controls
 				if (sender is ToolBar tb) tb.IsOverflowOpen = false; //this was some workaround when using WPF menu, now don't know
 				switch (AMenu.ShowSimple("Edit commands file|Find default commands file")) {
 				case 1: _Customize(); break;
-				case 2: AFile.SelectInExplorer(_defaultFile); break;
+				case 2: ARun.SelectInExplorer(_defaultFile); break;
 				}
 			}
 		}

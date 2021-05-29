@@ -105,13 +105,13 @@ namespace Au.Util
 		/// <remarks>
 		/// Called implicitly when disposing this variable.
 		/// Must be called from the same thread as when registering, and the window must be still alive.
-		/// If fails, calls <see cref="AWarning.Write"/>.
+		/// If fails, calls <see cref="AOutput.Warning"/>.
 		/// </remarks>
 		public void Unregister() {
 			if (_id != 0) {
 				if (!Api.UnregisterHotKey(_w, _id)) {
 					var es = ALastError.Message;
-					AWarning.Write($"Failed to unregister hotkey, id={_id}. {es}");
+					AOutput.Warning($"Failed to unregister hotkey, id={_id}. {es}");
 					return;
 				}
 				_id = 0; _w = default;

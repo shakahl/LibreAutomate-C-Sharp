@@ -85,8 +85,8 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// AOpt.Warnings.Verbose = false;
-		/// AWarning.Write("Example");
-		/// AWarning.Write("Example");
+		/// AOutput.Warning("Example");
+		/// AOutput.Warning("Example");
 		/// ]]></code>
 		/// </example>
 		public static OWarnings Warnings => t_warnings ??= new OWarnings(AOpt.Static.Warnings);
@@ -110,7 +110,7 @@ namespace Au
 		/// <remarks>
 		/// You can change these options at the start of your script/program. Don't change later.
 		/// </remarks>
-		public static class Static
+		public static class Static //TODO: opt.defaultOptions
 		{
 			/// <summary>
 			/// Default option values for <see cref="AOpt.Key"/> of a thread.
@@ -312,7 +312,7 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Options for run-time warnings (<see cref="AWarning.Write"/>).
+	/// Options for run-time warnings (<see cref="AOutput.Warning"/>).
 	/// </summary>
 	public class OWarnings
 	{
@@ -356,7 +356,7 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="warningsWild">One or more warnings as case-insensitive wildcard strings. See <see cref="ExtString.Like(string, string, bool)"/>.</param>
 		/// <remarks>
-		/// Adds the strings to an internal list. When <see cref="AWarning.Write"/> is called, it looks in the list. If finds the warning in the list, does not show the warning.
+		/// Adds the strings to an internal list. When <see cref="AOutput.Warning"/> is called, it looks in the list. If finds the warning in the list, does not show the warning.
 		/// It's easy to auto-restore warnings with 'using', like in the second example. Restoring is optional.
 		/// </remarks>
 		/// <example>
@@ -367,11 +367,11 @@ namespace Au.Types
 		/// Temporarily disable all warnings in this thread.
 		/// <code><![CDATA[
 		/// AOpt.Warnings.Verbose = true;
-		/// AWarning.Write("one");
+		/// AOutput.Warning("one");
 		/// using(AOpt.Warnings.Disable("*")) {
-		/// 	AWarning.Write("two");
+		/// 	AOutput.Warning("two");
 		/// }
-		/// AWarning.Write("three");
+		/// AOutput.Warning("three");
 		/// ]]></code>
 		/// Don't use code <c>using(AOpt.Static.Warnings.Disable...</c>, it's not thread-safe.
 		/// </example>

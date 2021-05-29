@@ -11,10 +11,9 @@ using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
 
-using Au.Types;
 using Au.Util;
 
-namespace Au
+namespace Au.Types
 {
 	/// <summary>
 	/// Manages an ITEMIDLIST structure that is used to identify files and other shell objects instead of a file-system path.
@@ -24,11 +23,11 @@ namespace Au
 	/// 
 	/// When calling native shell API, virtual objects can be identified only by ITEMIDLIST*. Some API also support "parsing name", which may look like <c>"::{CLSID-1}\::{CLSID-2}"</c>. File-system objects can be identified by path as well as by ITEMIDLIST*. URLs can be identified by URL as well as by ITEMIDLIST*.
 	/// 
-	/// The ITEMIDLIST structure is in unmanaged memory. You can dispose <b>APidl</b> variables, or GC will do it later.
+	/// The ITEMIDLIST structure is in unmanaged memory. You can dispose <b>Pidl</b> variables, or GC will do it later.
 	/// 
 	/// This class has only ITEMIDLIST functions that are used in this library. Look for other functions in the MSDN library. Many of them are named with IL prefix, like ILClone, ILGetSize, ILFindLastID.
 	/// </remarks>
-	public unsafe class APidl : IDisposable
+	public unsafe class Pidl : IDisposable
 	{
 		IntPtr _pidl;
 
@@ -60,7 +59,7 @@ namespace Au
 		/// ITEMIDLIST* (PIDL).
 		/// It can be created by any API that creates ITEMIDLIST. They allocate the memory with API CoTaskMemAlloc. This variable will finally free it with Marshal.FreeCoTaskMem which calls API CoTaskMemFree.
 		/// </param>
-		public APidl(IntPtr pidl) => _pidl = pidl;
+		public Pidl(IntPtr pidl) => _pidl = pidl;
 
 		/// <summary>
 		/// Combines two ITEMIDLIST (parent and child) and assigns the result to this variable.
@@ -70,7 +69,7 @@ namespace Au
 		/// <remarks>
 		/// Does not free <i>pidlAbsolute</i> and <i>pidlRelative</i>.
 		/// </remarks>
-		public APidl(IntPtr pidlAbsolute, IntPtr pidlRelative) => _pidl = Api.ILCombine(pidlAbsolute, pidlRelative);
+		public Pidl(IntPtr pidlAbsolute, IntPtr pidlRelative) => _pidl = Api.ILCombine(pidlAbsolute, pidlRelative);
 
 		/// <summary>
 		/// Frees the ITEMIDLIST with Marshal.FreeCoTaskMem and clears this variable.
@@ -89,7 +88,7 @@ namespace Au
 		}
 
 		///
-		~APidl() { Dispose(false); }
+		~Pidl() { Dispose(false); }
 
 		/// <summary>
 		/// Gets the ITEMIDLIST and clears this variable so that it cannot be used and will not free the ITEMIDLIST memory. To free it use Marshal.FreeCoTaskMem.
@@ -101,20 +100,20 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Converts string to ITEMIDLIST and creates new APidl variable that holds it.
+		/// Converts string to ITEMIDLIST and creates new Pidl variable that holds it.
 		/// Returns null if failed.
 		/// </summary>
-		/// <param name="s">A file-system path or URL or shell object parsing name (see <see cref="ToShellString"/>) or ":: ITEMIDLIST" (see <see cref="ToHexString"/>). Supports environment variables (see <see cref="APath.ExpandEnvVar"/>).</param>
+		/// <param name="s">A file-system path or URL or shell object parsing name (see <see cref="ToShellString"/>) or ":: ITEMIDLIST" (see <see cref="ToHexString"/>). Supports environment variables (see <see cref="APath.Expand"/>).</param>
 		/// <param name="throwIfFailed">Throw exception if failed.</param>
 		/// <exception cref="AuException">Failed, and throwIfFailed is true. Probably invalid s.</exception>
 		/// <remarks>
 		/// Calls <msdn>SHParseDisplayName</msdn>, except when string is ":: ITEMIDLIST".
 		/// When ":: ITEMIDLIST", does not check whether the shell object exists.
-		/// Note: APidl is disposable.
+		/// Note: Pidl is disposable.
 		/// </remarks>
-		public static APidl FromString(string s, bool throwIfFailed = false) {
+		public static Pidl FromString(string s, bool throwIfFailed = false) {
 			IntPtr R = FromString_(s, throwIfFailed);
-			return (R == default) ? null : new APidl(R);
+			return (R == default) ? null : new Pidl(R);
 		}
 
 		/// <summary>
@@ -148,7 +147,7 @@ namespace Au
 		/// </summary>
 		/// <param name="s">File-system path or URL or "::...".</param>
 		static string _Normalize(string s) {
-			s = APath.ExpandEnvVar(s);
+			s = APath.Expand(s);
 			if (!APath.IsFullPath(s)) return s; //note: not EEV. Need to expand to ":: " etc, and EEV would not do it.
 			return APath.Normalize_(s, PNFlags.DontPrefixLongPath, true);
 		}
@@ -178,7 +177,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// This overload uses an ITEMIDLIST* that is not stored in an APidl variable.
+		/// This overload uses an ITEMIDLIST* that is not stored in an Pidl variable.
 		/// </summary>
 		public static string ToShellString(IntPtr pidl, SIGDN stringType, bool throwIfFailed = false) {
 			if (pidl == default) return null;
@@ -201,7 +200,7 @@ namespace Au
 
 #if true
 		/// <summary>
-		/// This overload uses an ITEMIDLIST* that is not stored in an APidl variable.
+		/// This overload uses an ITEMIDLIST* that is not stored in an Pidl variable.
 		/// </summary>
 		public static string ToString(IntPtr pidl) {
 			if (pidl == default) return null;
@@ -258,7 +257,7 @@ namespace Au
 		/// Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
 		/// </summary>
 		/// <remarks>
-		/// The string can be used with some functions of this library, mostly of classes <b>AFile</b>, <b>APidl</b> and <b>AIcon</b>. Cannot be used with native and .NET functions.
+		/// The string can be used with some functions of this library, mostly of classes <b>AFile</b>, <b>Pidl</b> and <b>AIcon</b>. Cannot be used with native and .NET functions.
 		/// </remarks>
 		public string ToHexString() {
 			var R = ToHexString(_pidl);
@@ -267,7 +266,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// This overload uses an ITEMIDLIST* that is not stored in an APidl variable.
+		/// This overload uses an ITEMIDLIST* that is not stored in an Pidl variable.
 		/// </summary>
 		public static string ToHexString(IntPtr pidl) {
 			if (pidl == default) return null;

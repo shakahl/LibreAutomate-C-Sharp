@@ -87,7 +87,7 @@ namespace Au
 				var es = $"*mouse-move to this x y in screen. " + p.ToString();
 				AWnd.Active.UacCheckAndThrow_(es + ". The active"); //it's a mystery for users. API SendInput fails even if the point is not in the window.
 																	//rejected: AWnd.GetWnd.Root.ActivateL()
-				if (!AMiscInfo.IsInputDesktop()) es += ". Other desktop is active";
+				if (!AInputInfo.IsInputDesktop()) es += ". Other desktop is active";
 				throw new AuException(es);
 				//known reasons:
 				//	Active window of higher UAC IL.
@@ -419,7 +419,7 @@ namespace Au
 		static void _Click(MButton button, POINT p, AWnd w = default) {
 			if (w.Is0) w = Api.WindowFromPoint(p);
 			bool windowOfThisThread = w.IsOfThisThread;
-			if (windowOfThisThread) AWarning.Write("Click(window of own thread) may not work. Use another thread.");
+			if (windowOfThisThread) AOutput.Warning("Click(window of own thread) may not work. Use another thread.");
 			//Sending a click to a window of own thread often does not work.
 			//Reason 1: often the window on down event enters a message loop that waits for up event. But then this func cannot send the up event because it is in the loop (if it does doevents).
 			//	Known workarounds:
@@ -488,7 +488,7 @@ namespace Au
 				var wTL = w.Window;
 				bool bad = !wTL.Rect.Contains(p);
 				if (!bad && !_CheckWindowFromPoint()) {
-					//ADebug.Print("need to activate");
+					//ADebug_.Print("need to activate");
 					//info: activating brings to the Z top and also uncloaks
 					if (!wTL.IsEnabled(false)) bad = true; //probably an owned modal dialog disabled the window
 					else if (wTL.ThreadId == AWnd.GetWnd.ShellWindow.ThreadId) bad = true; //desktop
@@ -955,7 +955,7 @@ namespace Au
 			var mb = (MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
 				& ~t_pressedButtons;
 			if (WaitForNoButtonsPressed(-5, mb)) return;
-			AWarning.Write("Info: Waiting for releasing mouse buttons. See AOpt.Mouse.Relaxed.");
+			AOutput.Warning("Info: Waiting for releasing mouse buttons. See AOpt.Mouse.Relaxed.");
 			WaitForNoButtonsPressed(0, mb);
 		}
 

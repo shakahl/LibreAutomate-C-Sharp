@@ -69,7 +69,7 @@ namespace Au.Util
 			Api.BP_PAINTPARAMS pp = new() { cbSize = sizeof(Api.BP_PAINTPARAMS) };
 			//var ru = wmPaint ? _ps.rcPaint : _r; //the buffer bitmap is smaller when rcPaint smaller, but in most cases don't need to change painting code, although GetViewportOrgEx etc get 0 offsets of the buffer DC. However problem with brush alignment.
 			_hb = Api.BeginBufferedPaint(_dcn, _r, Api.BP_BUFFERFORMAT.BPBF_TOPDOWNDIB, ref pp, out _dcb); //BPBF_COMPATIBLEBITMAP slower //tested: works with 16 and 8 bit colors too
-			ADebug.PrintIf(_hb == default && !_r.NoArea, "BeginBufferedPaint");
+			ADebug_.PrintIf(_hb == default && !_r.NoArea, "BeginBufferedPaint");
 			if (_hb == default) _dcb = _dcn;
 		}
 

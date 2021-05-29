@@ -28,7 +28,7 @@ static unsafe class RunAssembly
 	/// </summary>
 	/// <param name="asmFile">Full path of assembly file.</param>
 	/// <param name="args">To pass to Main.</param>
-	/// <param name="handleExceptions">Handle and print exception.</param>
+	/// <param name="handleExceptions">Handle/print exceptions.</param>
 	public static void Run(string asmFile, string[] args, bool handleExceptions) {
 		try {
 			//using var p1 = APerf.Create();

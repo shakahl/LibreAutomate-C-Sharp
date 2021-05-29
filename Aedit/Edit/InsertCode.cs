@@ -112,7 +112,7 @@ static class InsertCode
 			tb.SelectedText = s;
 			tb.CaretIndex = tb.SelectionStart + tb.SelectionLength - Math.Max(i, 0);
 		} else {
-			ADebug.Print(c);
+			ADebug_.Print(c);
 			Task.Run(() => {
 				var k = new AKeys(null);
 				k.AddText(s);

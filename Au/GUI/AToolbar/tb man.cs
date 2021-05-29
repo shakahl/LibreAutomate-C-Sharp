@@ -240,9 +240,9 @@ public partial class AToolbar
 					for (int j = ow.a.Count; --j >= 0; ) {
 						var tb=ow.a[j];
 						tb.Close();
-						bool rem1=_atb.Remove(tb); ADebug.PrintIf(rem1, "");
+						bool rem1=_atb.Remove(tb); ADebug_.PrintIf(rem1, "");
 					}
-					bool rem2=_aow.Remove(ow); ADebug.PrintIf(rem2, "");
+					bool rem2=_aow.Remove(ow); ADebug_.PrintIf(rem2, "");
 					//actually don't need these two Remove, because tb.Close calls Remove. Just don't use RemoveAt and foreach.
 				}
 			}
@@ -281,7 +281,7 @@ public partial class AToolbar
 			case AccEVENT.OBJECT_CLOAKED:
 			case AccEVENT.OBJECT_UNCLOAKED:
 			case AccEVENT.SYSTEM_MINIMIZESTART:
-				//ADebug.PrintIf(_inHook, "_inHook"); //it's ok
+				//ADebug_.PrintIf(_inHook, "_inHook"); //it's ok
 				if(!_inHook && _FindOW(d.wnd, out ow)) {
 					//prevent reenter.
 					//	The ITBOwnerObject may retrieve sent messages, eg when getting acc rect.
@@ -393,7 +393,7 @@ public partial class AToolbar
 					var ec=ALastError.Code;
 					if(!wt.ZorderIsAbove(_ow.w)) { //if owner is win store app and this process isn't admin, zorders but returns false
 						var es=ec==Api.ERROR_ACCESS_DENIED && _ow.w.UacAccessDenied ? "This process should run as admin, or owner's process not as admin." : ALastError.MessageFor(ec);
-						AWarning.Write($"Failed to Z-order toolbar '{_name}' above owner window. {es}");
+						AOutput.Warning($"Failed to Z-order toolbar '{_name}' above owner window. {es}");
 						AOutput.Write(wt.ZorderIsAbove(_ow.w));
 					}
 				}

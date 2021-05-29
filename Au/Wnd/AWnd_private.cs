@@ -197,7 +197,7 @@ namespace Au
 			public static AWnd CreateWindowDWP(bool messageOnly, WNDPROC wndProcUnsafe = null) {
 				var cn = WindowClassDWP;
 				var w = messageOnly ? More.CreateMessageOnlyWindow(cn) : More.CreateWindow(cn);
-				if (wndProcUnsafe != null) Api.SetWindowLongPtr(w, GWLong.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProcUnsafe));
+				if (wndProcUnsafe != null) Api.SetWindowLongPtr(w, GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProcUnsafe));
 				return w;
 			}
 			static int s_registeredDWP;
@@ -225,7 +225,7 @@ namespace Au
 			/// The caller must protect the delegate from GC.
 			/// </summary>
 			public static IntPtr SubclassUnsafe(AWnd w, WNDPROC wndProc) {
-				return Api.SetWindowLongPtr(w, GWLong.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
+				return Api.SetWindowLongPtr(w, GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
 			}
 
 			/// <summary>

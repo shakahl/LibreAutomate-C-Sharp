@@ -1033,7 +1033,7 @@ namespace Au.Types
 			public static implicit operator VarInt(int i) => new VarInt { _vt = 3, _int = i + 1 };
 			public static implicit operator int(VarInt v) {
 				if (v._vt == 3) return (int)v._int - 1;
-				ADebug.Print($"VarInt vt={v._vt}, value={v._int}, stack={new StackTrace(true)}");
+				ADebug_.Print($"VarInt vt={v._vt}, value={v._int}, stack={new StackTrace(true)}");
 				throw new ArgumentException();
 			}
 		}

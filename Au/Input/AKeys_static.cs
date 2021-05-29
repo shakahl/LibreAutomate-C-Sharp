@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
+using Au.Util;
 //using System.Linq;
 
 namespace Au
@@ -292,14 +293,14 @@ namespace Au
 		/// Registers a temporary hotkey and waits for it.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <param name="hotkey">See <see cref="Util.ARegisteredHotkey.Register"/>.</param>
+		/// <param name="hotkey">See <see cref="ARegisteredHotkey.Register"/>.</param>
 		/// <param name="waitModReleased">Also wait until hotkey modifier keys released.</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="ArgumentException">Error in hotkey string.</exception>
 		/// <exception cref="AuException">Failed to register hotkey.</exception>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>
-		/// Uses <see cref="Util.ARegisteredHotkey"/>; it uses API <msdn>RegisterHotKey</msdn>.
+		/// Uses <see cref="ARegisteredHotkey"/>; it uses API <msdn>RegisterHotKey</msdn>.
 		/// Fails if the hotkey is currently registered by this or another application or used by Windows. Also if F12.
 		/// <note>Most single-key and Shift+key hotkeys don't work when the active window has higher UAC integrity level (eg admin) than this process. Media keys may work.</note>
 		/// </remarks>
@@ -316,7 +317,7 @@ namespace Au
 		/// </example>
 		public static bool WaitForHotkey(double secondsTimeout, KHotkey hotkey, bool waitModReleased = false) {
 			if (s_atomWFH == 0) s_atomWFH = Api.GlobalAddAtom("Au.WaitForHotkey");
-			using (Util.ARegisteredHotkey rhk = default) {
+			using (ARegisteredHotkey rhk = default) {
 				if (!rhk.Register(s_atomWFH, hotkey)) throw new AuException(0, "*register hotkey");
 				if (!AWaitFor.PostedMessage(secondsTimeout, (ref MSG m) => m.message == Api.WM_HOTKEY && m.wParam == s_atomWFH)) return false;
 			}

@@ -25,6 +25,18 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 //SHOULDDO: decrease indent when typing }.
 //TODO: if TLS script, always ensure that at the end is a line with hidden semicolon.
 
+//TODO: Options -> Code -> Exit statement:
+//	combo "Enter (default)|Ctrl+Enter|Shift+Enter"
+
+
+//	check "Enter" (new line)
+//	check "Tab" (same line)
+
+//	Enter = check "Exit statement" (default)
+//	Ctrl+Enter = check "Exit statement"
+//	Shift+Enter = check "Exit statement"
+//	Tab = check "Exit statement" (default)
+
 class CiAutocorrect
 {
 	public class BeforeCharContext
@@ -266,6 +278,9 @@ class CiAutocorrect
 		else c.ignoreChar = true;
 	}
 
+	//TODO: implement App.Settings.ci_shiftEnterAlways and ci_shiftTabAlways.
+	//	Also exit from "..." (like var s="string";), '...', [...], <...>.
+
 	static bool _OnEnterOrSemicolon(bool anywhere, bool onSemicolon, out BeforeCharContext bcc) {
 		bcc = null; //need to return it only if onSemicolon==true and anywhere==false and returns true
 		bool onEnterWithoutMod = !(onSemicolon | anywhere);
@@ -505,7 +520,7 @@ class CiAutocorrect
 			case ExternAliasDirectiveSyntax:
 				break;
 			default:
-				ADebug.Print($"{nodeFromPos.Kind()}, '{nodeFromPos}'");
+				ADebug_.Print($"{nodeFromPos.Kind()}, '{nodeFromPos}'");
 				break;
 			}
 #endif
@@ -762,7 +777,8 @@ class CiAutocorrect
 		} else {
 			//CiUtil.PrintNode(token, pos);
 			if (pos == span.End) return false;
-			bool atStart = pos == span.Start, interpol = false;
+			bool atStart = pos == span.Start;
+			//bool interpol = false;
 
 			var node = token.Parent;
 			if (node.Parent is InterpolatedStringExpressionSyntax ise) {
@@ -773,14 +789,14 @@ class CiAutocorrect
 				default:
 					return false;
 				}
-				interpol = true;
+				//interpol = true;
 				node = ise;
 			} else {
 				switch (token.Kind()) {
 				case SyntaxKind.StringLiteralToken when !atStart:
 					break;
 				case SyntaxKind.InterpolatedStringEndToken when atStart:
-					interpol = true;
+					//interpol = true;
 					break;
 				case SyntaxKind.CharacterLiteralToken when !atStart:
 					suppress = !onSemicolon;
@@ -791,13 +807,15 @@ class CiAutocorrect
 			}
 			if (onSemicolon) return true;
 
-			span = node.Span;
-			if (0 != cd.code.Eq(span.Start, false, "@", "$@", "@$")) return true;
-			prefix = App.Settings.ci_correctStringEnter == 0 ? @"\r\n"" +" : "\" +"; //"A\r\n" + "B" (default) or "A" + "B" (like in VS)
-			suffix = interpol ? "$\"" : "\"";
-			//indent more, unless line starts with "
-			int i = cd.sciDoc.zLineStartFromPos(true, pos);
-			if (!cd.code.RegexIsMatch(@"[ \t]+\$?""", RXFlags.ANCHORED, i..)) indent++;
+			//rejected: split string into "abc" + "" or "abc\r\n" + "". Rarely used. Now simply break line, and then user can insert @ before the string.
+			return true;
+			//span = node.Span;
+			//if (0 != cd.code.Eq(span.Start, false, "@", "$@", "@$")) return true;
+			//prefix = App.Settings.ci_breakString == 0 ? @"\r\n"" +" : "\" +"; //"A\r\n" + "B" (default) or "A" + "B" (like in VS)
+			//suffix = interpol ? "$\"" : "\"";
+			////indent more, unless line starts with "
+			//int i = cd.sciDoc.zLineStartFromPos(true, pos);
+			//if (!cd.code.RegexIsMatch(@"[ \t]+\$?""", RXFlags.ANCHORED, i..)) indent++;
 		}
 
 		var doc = cd.sciDoc;

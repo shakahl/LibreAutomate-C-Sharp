@@ -372,7 +372,7 @@ namespace Au
 		/// <summary>
 		/// Loads and parses a CSV file.
 		/// </summary>
-		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.</param>
+		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="APath.Expand"/>.</param>
 		/// <param name="separator">Field separator character used in CSV text. Default ','.</param>
 		/// <param name="quote">Character used in CSV text to enclose some fields. Default '"'.</param>
 		/// <param name="trimSpaces">Ignore ASCII space and tab characters surrounding fields in CSV text. Default true.</param>
@@ -391,7 +391,7 @@ namespace Au
 		/// <summary>
 		/// Composes CSV and saves to file.
 		/// </summary>
-		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>. The file can exist or not; this function overwrites it.</param>
+		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="APath.Expand"/>. The file can exist or not; this function overwrites it.</param>
 		/// <param name="backup">Create backup file named file + "~backup".</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="File.WriteAllText(string, string)"/>.</exception>

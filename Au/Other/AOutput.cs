@@ -287,6 +287,40 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Writes warning text to the output.
+		/// By default appends the stack trace.
+		/// </summary>
+		/// <param name="text">Warning text.</param>
+		/// <param name="showStackFromThisFrame">If &gt;= 0, appends the stack trace, skipping this number of frames. Default 0.</param>
+		/// <param name="prefix">Text before <i>text</i>. Default <c>"&lt;&gt;Warning: "</c>.</param>
+		/// <remarks>
+		/// Calls <see cref="AOutput.Write"/>.
+		/// Does not show more than 1 warning/second, unless <b>AOpt.Warnings.Verbose</b> == true (see <see cref="OWarnings.Verbose"/>).
+		/// To disable some warnings, use code <c>AOpt.Warnings.Disable("warning text wildcard");</c> (see <see cref="OWarnings.Disable"/>).
+		/// </remarks>
+		/// <seealso cref="OWarnings"/>
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		public static void Warning(string text, int showStackFromThisFrame = 0, string prefix = "<>Warning: ") {
+			if (AOpt.Warnings.IsDisabled(text)) return;
+
+			if (!AOpt.Warnings.Verbose) {
+				var t = Api.GetTickCount64();
+				if (t - s_warningTime < 1000) return;
+				s_warningTime = t;
+			}
+
+			string s = text ?? "";
+			if (showStackFromThisFrame >= 0) {
+				var x = new StackTrace(showStackFromThisFrame + 1, true);
+				var st = x.ToString(); var rn = st.Ends('\n') ? "" : "\r\n";
+				s = $"{prefix}{s} <fold><\a>\r\n{st}{rn}</\a></fold>";
+			} else s = prefix + s;
+
+			Write(s);
+		}
+		static long s_warningTime;
+
+		/// <summary>
 		/// Let <b>Console.WriteX</b> methods in non-console process write to the same destination as <see cref="Write"/>.
 		/// </summary>
 		/// <remarks>
@@ -384,7 +418,7 @@ namespace Au
 						}
 						var logf = _logFile;
 						_logFile = null;
-						AWarning.Write($"Failed to create or open log file '{logf}'. {ALastError.MessageFor(e)}");
+						AOutput.Warning($"Failed to create or open log file '{logf}'. {ALastError.MessageFor(e)}");
 						WriteDirectly(s);
 						return;
 					}
@@ -454,7 +488,7 @@ namespace Au
 				if (!ok) {
 					string emsg = ALastError.Message;
 					LogFile = null;
-					AWarning.Write($"Failed to write to log file '{_name}'. {emsg}");
+					AOutput.Warning($"Failed to write to log file '{_name}'. {emsg}");
 					WriteDirectly(s);
 					//Debug.Assert(false);
 				}

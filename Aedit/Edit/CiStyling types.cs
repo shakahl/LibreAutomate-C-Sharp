@@ -149,7 +149,7 @@ partial class CiStyling
 		void _Load()
 		{
 			ACsv csv;
-			if(!AFile.ExistsAsFile(s_settingsFile)) return;
+			if(!AFile.Exists(s_settingsFile).isFile) return;
 			try { csv = ACsv.Load(s_settingsFile); }
 			catch(Exception e1) { AOutput.Write(e1.ToStringWithoutStack()); return; }
 			if(csv.ColumnCount < 2) return;

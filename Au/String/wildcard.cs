@@ -269,8 +269,8 @@ namespace Au
 			if(wildcardExpression == null) return null;
 
 			//rejected. It's job for code tools. This would be used mostly for 'name' parameter of AWnd.Find and AWnd.Child, where 'match any' is rare; but 'match any' is very often used for 'cn' and 'program' parameters, where "" causes exception, so they will quickly learn.
-			///// If the string is "", calls <see cref="AWarning.Write"/>. To match "", use "**empty" instead.
-			//	if(wildcardExpression.Length == 0) AWarning.Write("To match \"\", better use \"**empty\". To match any, use null, or omit the argument if it's optional.");
+			///// If the string is "", calls <see cref="AOutput.Warning"/>. To match "", use "**empty" instead.
+			//	if(wildcardExpression.Length == 0) AOutput.Warning("To match \"\", better use \"**empty\". To match any, use null, or omit the argument if it's optional.");
 
 			return new AWildex(wildcardExpression);
 		}

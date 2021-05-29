@@ -25,7 +25,7 @@ namespace Au
 		string IAccessible.get_accDescription(VarInt varChild) => _B(varChild, out _) ? null : "Floating toolbar";
 
 		VarInt IAccessible.get_accRole(VarInt varChild) {
-			ADebug.PrintIf(AThread.Id != _w.ThreadId, "thread");
+			ADebug_.PrintIf(AThread.Id != _w.ThreadId, "thread");
 			var r = !_B(varChild, out var b)
 				? AccROLE.TOOLBAR
 				: b.ItemType switch {

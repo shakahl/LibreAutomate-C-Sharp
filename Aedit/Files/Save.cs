@@ -159,7 +159,7 @@ partial class FilesModel
 			return true;
 		}
 		catch (SLException ex) {
-			ADebug.Print(ex);
+			ADebug_.Print(ex);
 			return false;
 		}
 	}
@@ -200,7 +200,7 @@ partial class FilesModel
 				}
 			}
 		}
-		catch (Exception ex) { ADebug.Print(ex); }
+		catch (Exception ex) { ADebug_.Print(ex); }
 		finally { Save.LoadingState = false; }
 	}
 }

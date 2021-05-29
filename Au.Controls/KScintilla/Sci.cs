@@ -556,7 +556,7 @@ namespace Au.Controls
 			ge:
 			_posState = _PosState.Error;
 			_aPos.Clear();
-			ADebug.Print("Invalid UTF-8 text");
+			ADebug_.Print("Invalid UTF-8 text");
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -675,7 +675,7 @@ namespace Au.Controls
 			ge:
 			_posState = _PosState.Error;
 			_aPos.Clear();
-			ADebug.Print("Invalid UTF-8 text");
+			ADebug_.Print("Invalid UTF-8 text");
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -1164,7 +1164,7 @@ namespace Au.Controls
 			public byte[] Load(string file) {
 				_enc = _Encoding.Binary;
 				if (0 != file.Ends(true, ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani")) {
-					if (!AFile.ExistsAsFile(file)) throw new FileNotFoundException($"Could not find file '{file}'.");
+					if (!AFile.Exists(file).isFile) throw new FileNotFoundException($"Could not find file '{file}'.");
 					return Encoding.UTF8.GetBytes($"//Image file @\"{file}\"\0");
 				}
 

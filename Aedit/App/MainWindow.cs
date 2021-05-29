@@ -73,7 +73,7 @@ partial class MainWindow : Window
 #if DEBUG
 		App.Timer1s += () => {
 			var e = Keyboard.FocusedElement as FrameworkElement;
-			ADebug.PrintIf(e != null && !e.IsVisible, "focused invisible");
+			ADebug_.PrintIf(e != null && !e.IsVisible, "focused invisible");
 			//AOutput.Write(e, FocusManager.GetFocusedElement(App.Wmain));
 		};
 #endif
@@ -89,7 +89,7 @@ partial class MainWindow : Window
 		if (App.Settings.runHidden && IsVisible) {
 			e.Cancel = true;
 			Hide();
-			AProcess.MinimizePhysicalMemory_(1000);
+			AThisProcess.MinimizePhysicalMemory_(1000);
 		}
 	}
 

@@ -13,34 +13,32 @@ using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
 
-//TODO: move methods to AComputer?
-
 namespace Au
 {
 	/// <summary>
-	/// Provides functions to get miscellaneous system information or current state. Text cursor rectangle, input desktop, etc.
+	/// Provides functions to get miscellaneous keyboard/mouse input information or current state.
 	/// </summary>
-	/// <seealso cref="AVersion"/>
-	/// <seealso cref="AFolders"/>
-	/// <seealso cref="AProcess"/>
-	/// <seealso cref="AThread"/>
-	/// <seealso cref="AScreen"/>
-	/// <seealso cref="ATask"/>
-	/// <seealso cref="ATime"/>
-	/// <seealso cref="AUac"/>
-	/// <seealso cref="ADpi"/>
-	/// <seealso cref="Environment"/>
-	/// <seealso cref="System.Windows.Forms.SystemInformation"/>
-	/// <seealso cref="System.Windows.SystemParameters"/>
-	public static class AMiscInfo
+	///// <seealso cref="AVersion"/>
+	///// <seealso cref="AFolders"/>
+	///// <seealso cref="AProcess"/>
+	///// <seealso cref="AThread"/>
+	///// <seealso cref="AScreen"/>
+	///// <seealso cref="ATask"/>
+	///// <seealso cref="ATime"/>
+	///// <seealso cref="AUac"/>
+	///// <seealso cref="ADpi"/>
+	///// <seealso cref="Environment"/>
+	///// <seealso cref="System.Windows.Forms.SystemInformation"/>
+	///// <seealso cref="System.Windows.SystemParameters"/>
+	public static class AInputInfo
 	{
 		/// <summary>
 		/// Calls API <msdn>GetGUIThreadInfo</msdn>. It gets info about mouse capturing, menu mode, move/size mode, focus, caret, etc.
 		/// </summary>
 		/// <param name="g">API <msdn>GUITHREADINFO</msdn>.</param>
 		/// <param name="idThread">Thread id. If 0 - the foreground (active window) thread. See <see cref="AThread.Id"/>, <see cref="AWnd.ThreadId"/>.</param>
-		public static bool GetGUIThreadInfo(out GUITHREADINFO g, int idThread = 0) {
-			g = new GUITHREADINFO(); g.cbSize = Api.SizeOf(g);
+		public static unsafe bool GetGUIThreadInfo(out GUITHREADINFO g, int idThread = 0) {
+			g = new GUITHREADINFO { cbSize = sizeof(GUITHREADINFO) };
 			return Api.GetGUIThreadInfo(idThread, ref g);
 		}
 

@@ -594,7 +594,7 @@ namespace Au.Tools
 				//	Noticed this in Office 2003 Word Options dialog and in Dreamweaver.
 				//	Also, WndContainer then may get the top-level window. Eg in Word.
 				//	Workaround: enum child controls and look for _acc in one them. Then add "class" row if need.
-				ADebug.Print("broken IAccessible branch");
+				ADebug_.Print("broken IAccessible branch");
 				foreach (var c in w.Get.Children(onlyVisible: true)) {
 					var m = _CreateTreeModel(c, in p, true);
 					if (m.xSelect != null) {
@@ -643,7 +643,7 @@ namespace Au.Tools
 				_SelectTreeItem(v);
 				return true;
 			}
-			ADebug.Print("recreating tree of same window");
+			ADebug_.Print("recreating tree of same window");
 			return false;
 
 			//Other ways to compare AAcc:
@@ -736,9 +736,9 @@ namespace Au.Tools
 
 				//if(!allUsers) {
 				string jabswitch = dir + @"\bin\jabswitch.exe", sout = null;
-				if (!AFile.ExistsAsFile(jabswitch)) return (false, "Cannot find jabswitch.exe.");
+				if (!AFile.Exists(jabswitch).isFile) return (false, "Cannot find jabswitch.exe.");
 				try {
-					AFile.RunConsole(out sout, jabswitch, en ? "-enable" : "-disable");
+					ARun.Console(out sout, jabswitch, en ? "-enable" : "-disable");
 					sout = sout?.Trim();
 				}
 				catch (Exception ex) {
@@ -751,8 +751,8 @@ namespace Au.Tools
 				sout += "\r\nRestart Java apps to apply the new settings.";
 
 				string dll64 = AFolders.SystemX64 + "WindowsAccessBridge-64.dll", dll32 = AFolders.SystemX86 + "WindowsAccessBridge-32.dll";
-				if (!AFile.ExistsAsFile(dll64)) sout += "\r\n\r\nWarning: dll not found: " + dll64 + ".  64-bit apps will not be able to use AOs of Java apps. Install 64-bit Java too.";
-				if (!AFile.ExistsAsFile(dll32)) sout += "\r\n\r\nNote: dll not found: " + dll32 + ".  32-bit apps will not be able to use AOs of Java apps. Install 32-bit Java too.";
+				if (!AFile.Exists(dll64).isFile) sout += "\r\n\r\nWarning: dll not found: " + dll64 + ".  64-bit apps will not be able to use AOs of Java apps. Install 64-bit Java too.";
+				if (!AFile.Exists(dll32).isFile) sout += "\r\n\r\nNote: dll not found: " + dll32 + ".  32-bit apps will not be able to use AOs of Java apps. Install 32-bit Java too.";
 
 				return (true, sout);
 

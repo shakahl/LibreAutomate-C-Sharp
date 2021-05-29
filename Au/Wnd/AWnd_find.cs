@@ -341,7 +341,7 @@ namespace Au
 							}
 						}
 						catch(Exception ex) {
-							if(!(ex is AuWndException)) AWarning.Write("Exception when tried to find the 'contains' object. " + ex.ToStringWithoutStack());
+							if(!(ex is AuWndException)) AOutput.Warning("Exception when tried to find the 'contains' object. " + ex.ToStringWithoutStack());
 						}
 						if(!found) { _stopProp = EProps.contains; continue; }
 					}
@@ -390,7 +390,7 @@ namespace Au
 		/// null means 'can be any'. Cannot be "". Cannot be path.
 		/// 
 		/// Or <see cref="WOwner.Process"/>(process id), <see cref="WOwner.Thread"/>(thread id), <see cref="WOwner.Window"/>(owner window).
-		/// See <see cref="ProcessId"/>, <see cref="AProcess.ProcessId"/>, <see cref="ThreadId"/>, <see cref="AThread.Id"/>, <see cref="OwnerWindow"/>.
+		/// See <see cref="ProcessId"/>, <see cref="AThisProcess.Id"/>, <see cref="ThreadId"/>, <see cref="AThread.Id"/>, <see cref="OwnerWindow"/>.
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="also">
@@ -454,7 +454,7 @@ namespace Au
 		///// This example is similar to what <see cref="FindOrRun"/> does.
 		///// <code><![CDATA[
 		///// AWnd w = AWnd.Find("*- Notepad", "Notepad");
-		///// if(w.Is0) { AFile.Run("notepad.exe"); w = AWnd.WaitAny(60, true, AWnd.LastFind).wnd; }
+		///// if(w.Is0) { ARun.Run("notepad.exe"); w = AWnd.WaitAny(60, true, AWnd.LastFind).wnd; }
 		///// ]]></code>
 		///// </example>
 		//[field: ThreadStatic]
@@ -527,7 +527,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds a top-level window (calls <see cref="Find"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="AFile.Run"/>.
+		/// Finds a top-level window (calls <see cref="Find"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="ARun.Run"/>.
 		/// Returns window handle as <b>AWnd</b>. Returns <c>default(AWnd)</c> if not found (if <i>runWaitS</i> is negative; else exception).
 		/// </summary>
 		/// <param name="name">See <see cref="Find"/>.</param>
@@ -552,7 +552,7 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// AWnd w = AWnd.FindOrRun("* Notepad", run: () => AFile.Run("notepad.exe"));
+		/// AWnd w = AWnd.FindOrRun("* Notepad", run: () => ARun.Run("notepad.exe"));
 		/// AOutput.Write(w);
 		/// ]]></code>
 		/// </example>
@@ -952,7 +952,7 @@ namespace Au.Types
 				if(s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null.");
 				if(!s.Starts("**")) { //can be regex
 					if(s.FindAny(@"\/") >= 0) throw new ArgumentException("Program name contains \\ or /.");
-					if(APath.FindExtension(s) < 0 && !AWildex.HasWildcardChars(s)) AWarning.Write("Program name without .exe.");
+					if(APath.FindExtension(s) < 0 && !AWildex.HasWildcardChars(s)) AOutput.Warning("Program name without .exe.");
 				}
 				program = s;
 				break;

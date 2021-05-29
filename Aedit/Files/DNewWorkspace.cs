@@ -44,7 +44,7 @@ partial class FilesModel
 
 			void _Browse(WBButtonClickArgs e) {
 				using var d = new System.Windows.Forms.FolderBrowserDialog {
-					SelectedPath = AFile.ExistsAsDirectory(tLocation.Text) ? tLocation.Text : AFolders.ThisAppDocuments,
+					SelectedPath = AFile.Exists(tLocation.Text).isDir ? tLocation.Text : AFolders.ThisAppDocuments,
 					ShowNewFolderButton = true
 				};
 				if (d.ShowDialog() == System.Windows.Forms.DialogResult.OK) tLocation.Text = d.SelectedPath;
@@ -53,11 +53,11 @@ partial class FilesModel
 			string _Validate(FrameworkElement e) {
 				var s = (e as TextBox).Text;
 				if (e == tLocation) {
-					if (!AFile.ExistsAsDirectory(s)) return "Folder does not exist";
+					if (!AFile.Exists(s).isDir) return "Folder does not exist";
 				} else {
 					if (APath.IsInvalidName(s)) return "Invalid filename";
 					ResultPath = APath.Combine(tLocation.Text, s); //validation is when OK clicked
-					if (AFile.ExistsAsAny(ResultPath)) return s + " already exists";
+					if (AFile.Exists(ResultPath)) return s + " already exists";
 				}
 				return null;
 			}

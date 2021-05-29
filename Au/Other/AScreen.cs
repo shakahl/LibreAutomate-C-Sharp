@@ -230,7 +230,7 @@ namespace Au
 				//	Anyway, then call it in other thread, then works.
 				//AOutput.Write(ALastError.Message); //0
 				AThread.Start(() => { bool ok = Api.EnumDisplayMonitors(default, default, _Enum, gch); Debug.Assert(ok); }).Join();
-				ADebug.Print(t_a.Count);
+				ADebug_.Print(t_a.Count);
 			}
 			gch.Free();
 			return t_a;
@@ -249,7 +249,7 @@ namespace Au
 			if (index > 0) {
 				var a = _All();
 				if (index < a.Count) return a[index];
-				//AWarning.Write("Invalid screen index.");
+				//AOutput.Warning("Invalid screen index.");
 			}
 			return Primary;
 		}

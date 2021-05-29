@@ -253,7 +253,7 @@ namespace Au
 			public AWnd DirectParent {
 				get {
 #if true
-					var p = _w.GetWindowLong(GWLong.HWNDPARENT);
+					var p = _w.GetWindowLong(GWL.HWNDPARENT);
 					if (p == default) {
 						//#if DEBUG
 						//						var p2 = Api.GetAncestor(_w, Api.GA_PARENT);
@@ -596,7 +596,7 @@ namespace Au
 		public AWnd OwnerWindow {
 			get => Api.GetWindow(this, Api.GW_OWNER);
 			set {
-				SetWindowLong(GWLong.HWNDPARENT, (nint)value);
+				SetWindowLong(GWL.HWNDPARENT, (nint)value);
 				if (!value.Is0) {
 					bool tm = value.IsTopmost;
 					if (tm != IsTopmost) { if (tm) ZorderTopmost(); else ZorderNoTopmost(); }
@@ -638,9 +638,9 @@ namespace Au
 		public bool IsChildOf(AWnd w) { return Api.IsChild(w, this); }
 
 		/// <summary>
-		/// Returns <c>(AWnd)GetWindowLong(GWLong.HWNDPARENT)</c>.
+		/// Returns <c>(AWnd)GetWindowLong(GWL.HWNDPARENT)</c>.
 		/// </summary>
-		internal AWnd ParentGWL_ => (AWnd)GetWindowLong(GWLong.HWNDPARENT);
+		internal AWnd ParentGWL_ => (AWnd)GetWindowLong(GWL.HWNDPARENT);
 
 		/// <summary>
 		/// Gets the active (foreground) window.

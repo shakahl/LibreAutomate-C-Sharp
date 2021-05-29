@@ -238,7 +238,7 @@ namespace Au
 		/// </summary>
 		/// <param name="name">If not null, closes only OSD windows whose <see cref="Name"/> matches this [](xref:wildcard_expression).</param>
 		public static void CloseAll([ParamString(PSFormat.AWildex)] string name = null) {
-			foreach (var w in AWnd.FindAll(name, "**m Au.OSD||Au.OSD2", WOwner.Process(AProcess.ProcessId))) w.Close(noWait: true);
+			foreach (var w in AWnd.FindAll(name, "**m Au.OSD||Au.OSD2", WOwner.Process(AThisProcess.Id))) w.Close(noWait: true);
 		}
 	}
 
@@ -319,7 +319,7 @@ namespace Au
 	/// Creates a temporary partially transparent window, and draws text in it.
 	/// Most properties cannot be changed after creating OSD window.
 	/// </remarks>
-	public class AOsd : AOsdWindow
+	public class AOsdText : AOsdWindow
 	{
 		NativeFont_ _font;
 
@@ -339,7 +339,7 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// var m = new AOsd { Text = "Text" };
+		/// var m = new AOsdText { Text = "Text" };
 		/// m.XY = new PopupXY(Coord.Center, Coord.Max); //bottom-center of the work area of the primary screen
 		/// m.Show();
 		/// ]]></code>
@@ -525,7 +525,7 @@ namespace Au
 		//CONSIDER: public AnyWnd Owner { get; set; }
 
 		///
-		public AOsd() {
+		public AOsdText() {
 			Font = DefaultSmallFont;
 			_textColor = DefaultTextColor;
 			_backColor = DefaultBackColor;
@@ -705,15 +705,15 @@ namespace Au
 		/// <param name="name"><see cref="AOsdWindow.Name"/></param>
 		/// <param name="showMode"><see cref="ShowMode"/></param>
 		/// <param name="dontShow">Don't call <see cref="Show"/>. The caller can use the return value to set some other properties and call <b>Show</b>.</param>
-		/// <returns>Returns an <see cref="AOsd"/> object that can be used to change properties or close the OSD window.</returns>
+		/// <returns>Returns an <see cref="AOsdText"/> object that can be used to change properties or close the OSD window.</returns>
 		/// <remarks>
 		/// Also sets these properties: <see cref="ClickToClose"/>=true, <see cref="Shadow"/>=true.
 		/// </remarks>
-		public static AOsd ShowText(string text,
+		public static AOsdText ShowText(string text,
 			int secondsTimeout = 0, PopupXY xy = null,
 			object icon = null, ColorInt? textColor = null, ColorInt? backColor = null, FontSizeEtc font = null,
 			string name = null, OsdMode showMode = default, bool dontShow = false) {
-			var o = new AOsd {
+			var o = new AOsdText {
 				_text = text,
 				SecondsTimeout = secondsTimeout,
 				_xy = xy,
@@ -742,15 +742,15 @@ namespace Au
 		/// <param name="name"><see cref="AOsdWindow.Name"/></param>
 		/// <param name="showMode"><see cref="ShowMode"/></param>
 		/// <param name="dontShow">See <see cref="ShowText"/>.</param>
-		/// <returns>Returns an <see cref="AOsd"/> object that can be used to change properties or close the OSD window.</returns>
+		/// <returns>Returns an <see cref="AOsdText"/> object that can be used to change properties or close the OSD window.</returns>
 		/// <remarks>
 		/// Also sets these properties: <see cref="AOsdWindow.Opacity"/>=0.
 		/// </remarks>
-		public static AOsd ShowTransparentText(string text,
+		public static AOsdText ShowTransparentText(string text,
 			int secondsTimeout = 0, PopupXY xy = null,
 			ColorInt? color = null, FontSizeEtc font = null,
 			string name = null, OsdMode showMode = default, bool dontShow = false) {
-			var o = new AOsd {
+			var o = new AOsdText {
 				_text = text,
 				SecondsTimeout = secondsTimeout,
 				_xy = xy,
@@ -774,14 +774,14 @@ namespace Au
 		/// <param name="name"><see cref="AOsdWindow.Name"/></param>
 		/// <param name="showMode"><see cref="ShowMode"/></param>
 		/// <param name="dontShow">See <see cref="ShowText"/>.</param>
-		/// <returns>Returns an <see cref="AOsd"/> object that can be used to change properties or close the OSD window.</returns>
+		/// <returns>Returns an <see cref="AOsdText"/> object that can be used to change properties or close the OSD window.</returns>
 		/// <remarks>
 		/// Also sets these properties: <see cref="IsOfImageSize"/>=true, <see cref="AOsdWindow.Opacity"/>=0, <see cref="ClickToClose"/>=true.
 		/// </remarks>
-		public static AOsd ShowImage(Image image,
+		public static AOsdText ShowImage(Image image,
 			int secondsTimeout = 0, PopupXY xy = null,
 			string name = null, OsdMode showMode = default, bool dontShow = false) {
-			var o = new AOsd {
+			var o = new AOsdText {
 				BackgroundImage = image,
 				SecondsTimeout = secondsTimeout,
 				_xy = xy,
@@ -797,7 +797,7 @@ namespace Au
 			return o;
 		}
 
-		/// <summary>Default font for <see cref="ShowText"/> and <b>AOsd</b>. Default: standard GUI font (usually Segoe UI), size 12.</summary>
+		/// <summary>Default font for <see cref="ShowText"/> and <b>AOsdText</b>. Default: standard GUI font (usually Segoe UI), size 12.</summary>
 		/// <exception cref="ArgumentNullException"></exception>
 		public static FontSizeEtc DefaultSmallFont { get => s_smallFont; set => s_smallFont = value ?? throw new ArgumentNullException(); }
 		static FontSizeEtc s_smallFont = new(12);
@@ -807,13 +807,13 @@ namespace Au
 		public static FontSizeEtc DefaultBigFont { get => s_bigFont; set => s_bigFont = value ?? throw new ArgumentNullException(); }
 		static FontSizeEtc s_bigFont = new(24);
 
-		/// <summary>Default text color for <see cref="ShowText"/> and <b>AOsd</b>. Default: 0x(dark gray).</summary>
+		/// <summary>Default text color for <see cref="ShowText"/> and <b>AOsdText</b>. Default: 0x(dark gray).</summary>
 		public static ColorInt DefaultTextColor { get; set; } = 0x404040;
 
-		/// <summary>Default border color for <see cref="ShowText"/> and <b>AOsd</b>. Default: 0x404040 (dark gray).</summary>
+		/// <summary>Default border color for <see cref="ShowText"/> and <b>AOsdText</b>. Default: 0x404040 (dark gray).</summary>
 		public static ColorInt DefaultBorderColor { get; set; } = 0x404040;
 
-		/// <summary>Default background color for <see cref="ShowText"/> and <b>AOsd</b>. Default: 0xFFFFF0 (light yellow).</summary>
+		/// <summary>Default background color for <see cref="ShowText"/> and <b>AOsdText</b>. Default: 0xFFFFF0 (light yellow).</summary>
 		public static ColorInt DefaultBackColor { get; set; } = 0xFFFFF0;
 
 		/// <summary>Default text color for <see cref="ShowTransparentText"/>. Default: 0x8A2BE2 (Color.BlueViolet).</summary>
@@ -826,7 +826,7 @@ namespace Au
 		/// <exception cref="ArgumentException"><b>AScreen</b> with <b>Handle</b>. Must be lazy (with <b>LazyFunc</b>) or empty.</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// AOsd.DefaultScreen = AScreen.Index(1, lazy: true);
+		/// AOsdText.DefaultScreen = AScreen.Index(1, lazy: true);
 		/// ]]></code>
 		/// </example>
 		public static AScreen DefaultScreen {
@@ -840,7 +840,7 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Whether <see cref="AOsd.Show"/> waits or shows the OSD window in this or new thread.
+	/// Whether <see cref="AOsdText.Show"/> waits or shows the OSD window in this or new thread.
 	/// </summary>
 	/// <remarks>
 	/// If this thread has windows, any value can be used, but usually <b>Auto</b> (default) or <b>ThisThread</b> is the best.
@@ -864,7 +864,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Show the OSD window in this thread and wait until it disappears.
-		/// Waits <see cref="AOsd.SecondsTimeout"/> seconds. While waiting, dispatches messages etc; see <see cref="ATime.SleepDoEvents"/>.
+		/// Waits <see cref="AOsdText.SecondsTimeout"/> seconds. While waiting, dispatches messages etc; see <see cref="ATime.SleepDoEvents"/>.
 		/// </summary>
 		Wait,
 	}

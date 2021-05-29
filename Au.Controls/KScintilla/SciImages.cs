@@ -355,7 +355,7 @@ namespace Au.Controls
 			//load
 			long t1 = ATime.WinMillisecondsWithoutSleep;
 			byte[] b = ImageUtil.BmpFileDataFromString(path, imType, !_isEditor);
-			t1 = ATime.WinMillisecondsWithoutSleep - t1; if (t1 > 1000) AWarning.Write($"Time to load image '{path}' is {t1} ms.", -1, prefix: "<>Note: "); //eg if network path unavailable, may wait ~7 s
+			t1 = ATime.WinMillisecondsWithoutSleep - t1; if (t1 > 1000) AOutput.Warning($"Time to load image '{path}' is {t1} ms.", -1, prefix: "<>Note: "); //eg if network path unavailable, may wait ~7 s
 			if (b == null) goto g1;
 			if (!ImageUtil.GetBitmapFileInfo_(b, out var q)) goto g1;
 
@@ -478,7 +478,7 @@ namespace Au.Controls
 					x += u.width + 30;
 				}
 			}
-			catch (Exception ex) { ADebug.Print(ex.Message); }
+			catch (Exception ex) { ADebug_.Print(ex.Message); }
 			finally { if (pen != default) Api.DeleteObject(Api.SelectObject(hdc, oldPen)); }
 			//APerf.NW();
 
@@ -529,7 +529,7 @@ namespace Au.Controls
 				if (from2 == from && to2 == to) {
 					s = n.textUTF8;
 				} else {
-					//ADebug.Print("need to get text");
+					//ADebug_.Print("need to get text");
 					s = _c.zRangePointer(from2, to2);
 				}
 				textPos = from2;

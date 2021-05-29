@@ -320,7 +320,7 @@ namespace Au.Triggers
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static void _OutOfMemory() {
-			AWarning.Write("There is not enough memory available to start the trigger action thread.", -1); //info: -1 because would need much memory for stack trace
+			AOutput.Warning("There is not enough memory available to start the trigger action thread.", -1); //info: -1 because would need much memory for stack trace
 		}
 
 		List<_Thread> _a = new List<_Thread>();

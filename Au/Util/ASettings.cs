@@ -53,7 +53,7 @@ namespace Au.Util
 		static ASettings _Load(string file, Type type, bool useDefault) {
 			ASettings R = null;
 			if (file != null) {
-				if (AFile.ExistsAsAny(file)) {
+				if (AFile.Exists(file)) {
 					try {
 						if (useDefault) {
 							AFile.Delete(file);
@@ -94,7 +94,7 @@ namespace Au.Util
 						}
 					}, sta: false);
 
-					AProcess.Exit += _ => _SaveAllIfNeed(); //info: now .NET does not call finalizers when process exits
+					AThisProcess.Exit += _ => _SaveAllIfNeed(); //info: now .NET does not call finalizers when process exits
 				}
 				lock (s_list) s_list.Add(R);
 			}
@@ -142,7 +142,7 @@ namespace Au.Util
 		public void SaveLater() {
 #if TRACE_JS
 			//if(_save == 0)
-				AWarning.Write("ASettings.SaveLater", 1, "<>Trace: ");
+				AOutput.Warning("ASettings.SaveLater", 1, "<>Trace: ");
 #endif
 			Interlocked.Exchange(ref _save, 1);
 		}

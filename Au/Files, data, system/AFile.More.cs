@@ -84,7 +84,7 @@ namespace Au
 			/// Gets <see cref="FileId"/> of a file or directory.
 			/// Returns false if fails. Supports <see cref="ALastError"/>.
 			/// </summary>
-			/// <param name="path">Full path. Supports environment variables (see <see cref="APath.ExpandEnvVar"/>).</param>
+			/// <param name="path">Full path. Supports environment variables (see <see cref="APath.Expand"/>).</param>
 			/// <param name="fileId"></param>
 			public static unsafe bool GetFileId(string path, out FileId fileId)
 			{
@@ -116,7 +116,7 @@ namespace Au
 				var ok1 = GetFileId(path1, out var fid1);
 				var ok2 = GetFileId(path2, out var fid2);
 				if(ok1 && ok2) return fid1 == fid2;
-				AWarning.Write("GetFileId failed"); //CONSIDER: throw
+				AOutput.Warning("GetFileId failed"); //CONSIDER: throw
 				return false;
 			}
 

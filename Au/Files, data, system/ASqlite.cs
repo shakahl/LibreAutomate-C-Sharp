@@ -24,7 +24,7 @@ namespace Au
 	/// This class wraps a SQLite API object sqlite3* and related sqlite3_x functions. They are documented perfectly in the SQLite website.
 	/// Uses this unmanaged dll: AFolders.ThisApp + @"64\sqlite3.dll". In 32-bit process - "32" instead of "64".
 	/// 
-	/// To correctly close the database file, at first need to dipose all child objects, such as <see cref="ASqliteStatement"/>, then dispose the <b>ASqlite</b> object. To dispose a static <b>ASlite</b> variable, you may want to use <see cref="AProcess.Exit"/> event. Although this class has a finalizer that disposes the object (closes database), you should always dispose explicitly. Finalizers don't run on process exit.
+	/// To correctly close the database file, at first need to dipose all child objects, such as <see cref="ASqliteStatement"/>, then dispose the <b>ASqlite</b> object. To dispose a static <b>ASlite</b> variable, you may want to use <see cref="AThisProcess.Exit"/> event. Although this class has a finalizer that disposes the object (closes database), you should always dispose explicitly. Finalizers don't run on process exit.
 	/// </remarks>
 	/// <seealso cref="ASqliteStatement"/>
 	/// <example>
@@ -76,7 +76,7 @@ namespace Au
 		/// </summary>
 		/// <param name="file">
 		/// Database file. Can be:
-		/// - Full path. Supports environment variables etc, see <see cref="APath.ExpandEnvVar"/>
+		/// - Full path. Supports environment variables etc, see <see cref="APath.Expand"/>
 		/// - ":memory:" - create a private, temporary in-memory database.
 		/// - "" - create a private, temporary on-disk database.
 		/// - Starts with "file:" - see <google>sqlite3_open_v2</google>.
@@ -97,7 +97,7 @@ namespace Au
 			bool isSpec = file != null && (file.Length == 0 || file == ":memory:" || file.Starts("file:"));
 			if(!isSpec) {
 				file = APath.Normalize(file);
-				if(flags.Has(SLFlags.SQLITE_OPEN_CREATE) && !AFile.ExistsAsFile(file, true)) AFile.CreateDirectoryFor(file);
+				if(flags.Has(SLFlags.SQLITE_OPEN_CREATE) && !AFile.Exists(file, true).isFile) AFile.CreateDirectoryFor(file);
 			}
 			var r = SLApi.sqlite3_open_v2(AConvert.ToUtf8(file), ref _db, flags, null);
 			if(r != 0) {
@@ -974,7 +974,7 @@ namespace Au.Types
 
 		internal static void Warn(SLError r, string func, string suffix = null)
 		{
-			if(r != 0) AWarning.Write(SLUtil.Concat(func, SLApi.Errstr(r), suffix));
+			if(r != 0) AOutput.Warning(SLUtil.Concat(func, SLApi.Errstr(r), suffix));
 		}
 
 		internal static string Concat(string s1, string s2, string s3)

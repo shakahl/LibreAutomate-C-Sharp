@@ -760,7 +760,7 @@ namespace Au
 			/// Does not work if the foreground process has higher UAC IL.
 			/// </summary>
 			static void _EnableActivate_SendKey(bool debugOut) {
-				if (debugOut) ADebug.Print("EnableActivate: need key");
+				if (debugOut) ADebug_.Print("EnableActivate: need key");
 
 				var x = new Api.INPUTK(0, 128, Api.KEYEVENTF_KEYUP);
 				Api.SendInput(&x);
@@ -772,7 +772,7 @@ namespace Au
 			/// Then sets 'no active window' to prevent auto-activating another window when destroying the temporary window.
 			/// </summary>
 			static void _EnableActivate_MinRes() {
-				ADebug.Print("EnableActivate: need min/res");
+				ADebug_.Print("EnableActivate: need min/res");
 
 				AWnd t = More.CreateWindow(WindowClassDWP, null, WS.POPUP | WS.MINIMIZE | WS.VISIBLE, WSE.TOOLWINDOW);
 				//info: When restoring, the window must be visible, or may not work.
@@ -954,7 +954,7 @@ namespace Au
 			}
 
 			if (!R) {
-				if (!AMiscInfo.IsInputDesktop(detectLocked: true)) ThrowNoNative("*activate window. Other desktop is active");
+				if (!AInputInfo.IsInputDesktop(detectLocked: true)) ThrowNoNative("*activate window. Other desktop is active");
 				ThrowNoNative("*activate*");
 			}
 			if (forScreenCapture) MinimalSleepIfOtherThread_();
@@ -1118,7 +1118,7 @@ namespace Au
 		/// <seealso cref="IsFocused"/>
 		public static AWnd Focused {
 			get {
-				AMiscInfo.GetGUIThreadInfo(out var g);
+				AInputInfo.GetGUIThreadInfo(out var g);
 				return g.hwndFocus;
 			}
 		}
@@ -2072,7 +2072,7 @@ namespace Au
 			for (int i = 0; i < 4; i++) {
 				if (!SetWindowPos(swp, 0, 0, 0, 0, after)) return false;
 				if (i == 0 && !IsTopmost) break;
-				ADebug.Print("retry");
+				ADebug_.Print("retry");
 			}
 			return true;
 		}
@@ -2120,7 +2120,7 @@ namespace Au
 		/// <seealso cref="HasStyle"/>
 		/// <seealso cref="SetStyle"/>
 		public WS Style {
-			get => (WS)(uint)GetWindowLong(GWLong.STYLE);
+			get => (WS)(uint)GetWindowLong(GWL.STYLE);
 		}
 
 		/// <summary>
@@ -2131,7 +2131,7 @@ namespace Au
 		/// <seealso cref="HasExStyle"/>
 		/// <seealso cref="SetExStyle"/>
 		public WSE ExStyle {
-			get => (WSE)(uint)GetWindowLong(GWLong.EXSTYLE);
+			get => (WSE)(uint)GetWindowLong(GWL.EXSTYLE);
 		}
 
 		/// <summary>
@@ -2180,7 +2180,7 @@ namespace Au
 			=> _SetStyle(true, (int)style, flags);
 
 		void _SetStyle(bool ex, int style, WSFlags flags) {
-			var gwl = ex ? GWLong.EXSTYLE : GWLong.STYLE;
+			var gwl = ex ? GWL.EXSTYLE : GWL.STYLE;
 			switch (flags & (WSFlags.Add | WSFlags.Remove)) {
 			case WSFlags.Add: style = (int)GetWindowLong(gwl) | style; break;
 			case WSFlags.Remove: style = (int)GetWindowLong(gwl) & ~style; break;
@@ -2216,7 +2216,7 @@ namespace Au
 		/// <summary>
 		/// Calls API <msdn>GetWindowLongPtr</msdn>.
 		/// </summary>
-		/// <param name="index">A constant from <see cref="GWLong"/>, or an offset in window memory reserved when registering window class.</param>
+		/// <param name="index">A constant from <see cref="GWL"/>, or an offset in window memory reserved when registering window class.</param>
 		/// <remarks>
 		/// Supports <see cref="ALastError"/>.
 		/// In 32-bit process actually calls <b>GetWindowLong</b>, because <b>GetWindowLongPtr</b> is unavailable.
@@ -2226,7 +2226,7 @@ namespace Au
 		/// <summary>
 		/// Calls API <msdn>SetWindowLongPtr</msdn>.
 		/// </summary>
-		/// <param name="index">A constant from <see cref="GWLong"/>, or an offset in window memory reserved when registering window class.</param>
+		/// <param name="index">A constant from <see cref="GWL"/>, or an offset in window memory reserved when registering window class.</param>
 		/// <param name="newValue">New value.</param>
 		/// <exception cref="AuWndException"/>
 		/// <remarks>
@@ -2250,7 +2250,7 @@ namespace Au
 		/// <exception cref="AuWndException">The 'set' function failed.</exception>
 		public int ControlId {
 			get => Api.GetDlgCtrlID(this);
-			set { SetWindowLong(GWLong.ID, value); }
+			set { SetWindowLong(GWL.ID, value); }
 		}
 
 		/// <summary>

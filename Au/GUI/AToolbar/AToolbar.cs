@@ -48,7 +48,7 @@ namespace Au
 		/// - <see cref="MTBase.ExtractIconPathFromCode"/> = true.
 		/// </remarks>
 		public AToolbar(string name, TBCtor flags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0) : base(name, f_, l_) {
-			if (s_treadId == 0) s_treadId = _threadId; else if (_threadId != s_treadId) AWarning.Write("All toolbars should be in single thread. Multiple threads use more CPU. If using triggers, insert this code before adding toolbar triggers: <code>Triggers.Options.ThreadMain();</code>");
+			if (s_treadId == 0) s_treadId = _threadId; else if (_threadId != s_treadId) AOutput.Warning("All toolbars should be in single thread. Multiple threads use more CPU. If using triggers, insert this code before adding toolbar triggers: <code>Triggers.Options.ThreadMain();</code>");
 
 			//rejected: [CallerMemberName] string name = null. Problem: if local func or lambda, it is parent method's name. And can be eg ".ctor" if directly in script.
 			var path = flags.Has(TBCtor.DontSaveSettings) ? null : GetSettingsFilePath(name);
@@ -686,7 +686,7 @@ namespace Au
 				void _ExecItem() {
 					var action = b.clicked as Action<ToolbarItem>;
 					try { action(b); }
-					catch (Exception ex) when (!b.actionException) { AWarning.Write(ex.ToString(), -1); }
+					catch (Exception ex) when (!b.actionException) { AOutput.Warning(ex.ToString(), -1); }
 				}
 			}
 		}

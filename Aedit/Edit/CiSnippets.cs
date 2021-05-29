@@ -23,6 +23,8 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 
+//TODO: remove parameter scope. Add attribute scope - inside [].
+
 static class CiSnippets
 {
 	class _CiComplItemSnippet : CiComplItem
@@ -129,7 +131,7 @@ static class CiSnippets
 
 		if (s_items == null) {
 			var a = new List<_CiComplItemSnippet>();
-			if (!AFile.ExistsAsFile(CustomFile)) {
+			if (!AFile.Exists(CustomFile).isFile) {
 				try { AFile.Copy(AFolders.ThisAppBS + @"Default\Snippets2.xml", CustomFile); }
 				catch { goto g1; }
 			}

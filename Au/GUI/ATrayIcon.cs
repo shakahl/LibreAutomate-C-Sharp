@@ -53,7 +53,7 @@ namespace Au
 
 		/// <param name="id">An id that helps Windows to distinguish multiple tray icons added by same program. Use 0, 1, 2, ... or all 0.</param>
 		/// <param name="disposeOnExit">
-		/// Remove tray icon when process exits (<see cref="AProcess.Exit"/>).
+		/// Remove tray icon when process exits (<see cref="AThisProcess.Exit"/>).
 		/// Note: can't remove if process killed from outside or with <see cref="Environment.FailFast"/> or API <msdn>ExitProcess</msdn> etc. Removes only if process exits naturally or with <see cref="Environment.Exit"/> or because of an unhandled exception.
 		/// </param>
 		public ATrayIcon(int id = 0, bool disposeOnExit = true) {
@@ -153,7 +153,7 @@ namespace Au
 		bool _Update(bool icon = false, bool tooltip = false, _Notification n = null, bool taskbarCreated = false) {
 			lock (this) {
 				if (_w.Is0) {
-					if (_disposeOnExit) AProcess.Exit += _ => _Delete();
+					if (_disposeOnExit) AThisProcess.Exit += _ => _Delete();
 					if (lockExit_) _hookDesktopSwitch = ATask.HookDesktopSwitch_();
 					_w = AWnd.More.CreateWindow(WndProc, true, "ATrayIcon", ATask.Name, WS.POPUP, WSE.NOACTIVATE);
 				}
@@ -183,7 +183,7 @@ namespace Au
 					//tested: Win7 displays XM_CXSMICON or SM_CXICON depending on NIIF_LARGE_ICON. Win8.1 too. Win10 displays SM_CXICON*1.5 regardless of NIIF_LARGE_ICON.
 					d.dwInfoFlags &= ~15u;
 					ok = Api.Shell_NotifyIcon(nim, d);
-					if (ok) AWarning.Write("Custom icon size must be >= ATrayIcon.NotificationIconSize");
+					if (ok) AOutput.Warning("Custom icon size must be >= ATrayIcon.NotificationIconSize");
 				}
 				if (!_visible) {
 					if (ok || taskbarCreated) ok = Api.Shell_NotifyIcon(Api.NIM_SETVERSION, d);
@@ -211,7 +211,7 @@ namespace Au
 		/// Users may choose to not show notifications, depending on various conditions. Look in Windows Settings app, Notifications &amp; actions.
 		/// </remarks>
 		public void ShowNotification(string title, string text, TINFlags flags = 0, AIcon icon = default) {
-			if (!_Update(n: new(title, text, flags, icon))) AWarning.Write("ShowNotification failed. " + ALastError.Message);
+			if (!_Update(n: new(title, text, flags, icon))) AOutput.Warning("ShowNotification failed. " + ALastError.Message);
 		}
 
 		record _Notification(string title, string text, TINFlags flags, AIcon icon);

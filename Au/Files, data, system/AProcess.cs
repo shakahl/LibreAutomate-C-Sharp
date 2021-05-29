@@ -20,9 +20,11 @@ using Au.Util;
 namespace Au
 {
 	/// <summary>
-	/// Process functions. Extends <see cref="Process"/>.
+	/// Contains static functions to work with processes (find, enumerate, get basic info, etc).
 	/// </summary>
+	/// <seealso cref="AThisProcess"/>
 	/// <seealso cref="ATask"/>
+	/// <seealso cref="Process"/>
 	public static unsafe class AProcess
 	{
 		/// <summary>
@@ -244,7 +246,7 @@ namespace Au
 				if (n == 0) throw new AuException();
 				int sessionId = 0, ns = n;
 				if (ofThisSession) {
-					sessionId = ProcessSessionId;
+					sessionId = AThisProcess.SessionId;
 					for (int i = 0; i < n; i++) if (p[i].sessionID != sessionId) ns--;
 				}
 				var a = new ProcessInfo[ns];
@@ -295,7 +297,7 @@ namespace Au
 		internal static int GetProcessesByName_(ref List<int> a, AWildex processName, bool fullPath = false, bool ofThisSession = false, bool first = false) {
 			a?.Clear();
 
-			int sessionId = ofThisSession ? ProcessSessionId : 0;
+			int sessionId = ofThisSession ? AThisProcess.SessionId : 0;
 
 			using (new _AllProcesses(out var p, out int n)) {
 				for (int i = 0; i < n; i++) {
@@ -326,91 +328,6 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets current process id.
-		/// See API <msdn>GetCurrentProcessId</msdn>.
-		/// </summary>
-		public static int ProcessId => Api.GetCurrentProcessId();
-
-		/// <summary>
-		/// Returns current process handle.
-		/// See API <msdn>GetCurrentProcess</msdn>.
-		/// Don't need to close the handle.
-		/// </summary>
-		public static IntPtr ProcessHandle => Api.GetCurrentProcess();
-
-		//rejected. Too simple and rare.
-		///// <summary>
-		///// Gets native module handle of the program file of this process.
-		///// </summary>
-		//public static IntPtr ExeModuleHandle => Api.GetModuleHandle(null);
-
-		/// <summary>
-		/// Gets full path of the program file of this process.
-		/// </summary>
-		[SkipLocalsInit]
-		public static unsafe string ExePath {
-			get {
-				if (s_exePath == null) {
-					var a = stackalloc char[500];
-					int n = Api.GetModuleFileName(default, a, 500);
-					s_exePath = new string(a, 0, n);
-					//documented and tested: can be C:\SHORT~1\NAME~1.exe or \\?\C:\long path\name.exe.
-					//tested: AppContext.BaseDirectory gets raw path, like above examples. Used by AFolders.ThisApp.
-					//tested: CreateProcessW supports long paths in lpApplicationName, but my tested apps then crash.
-					//tested: ShellExecuteW does not support long paths.
-					//tested: Windows Explorer cannot launch exe if long path.
-					//tested: When launched with path containing .\, ..\ or /, here we get normalized path.
-				}
-				return s_exePath;
-			}
-		}
-		static string s_exePath, s_exeName;
-
-		/// <summary>
-		/// Gets file name of the program file of this process, like "name.exe".
-		/// </summary>
-		public static string ExeName => s_exeName ??= APath.GetName(ExePath);
-
-		/// <summary>
-		/// Gets drive type (fixed, removable, network, etc) of the program file of this process.
-		/// </summary>
-		/// <seealso cref="AFolders.ThisAppDriveBS"/>
-		public static DriveType ExeDriveType => s_driveType ??= new DriveInfo(AFolders.ThisAppDriveBS).DriveType;
-		static DriveType? s_driveType;
-
-		/// <summary>
-		/// Gets process id from handle.
-		/// Returns 0 if failed. Supports <see cref="ALastError"/>.
-		/// Calls API <msdn>GetProcessId</msdn>.
-		/// </summary>
-		/// <param name="processHandle">Process handle.</param>
-		public static int ProcessIdFromHandle(IntPtr processHandle) => Api.GetProcessId(processHandle); //fast
-
-		//public static Process GetProcessObject(IntPtr processHandle)
-		//{
-		//	int pid = GetProcessId(processHandle);
-		//	if(pid == 0) return null;
-		//	return Process.GetProcessById(pid); //slow, makes much garbage, at first gets all processes just to throw exception if pid not found...
-		//}
-
-		/// <summary>
-		/// Gets user session id of a process.
-		/// Returns -1 if failed. Supports <see cref="ALastError"/>.
-		/// Calls API <msdn>ProcessIdToSessionId</msdn>.
-		/// </summary>
-		/// <param name="processId">Process id.</param>
-		public static int GetSessionId(int processId) {
-			if (!Api.ProcessIdToSessionId(processId, out var R)) return -1;
-			return R;
-		}
-
-		/// <summary>
-		/// Gets user session id of this process.
-		/// Calls API <msdn>ProcessIdToSessionId</msdn> and <msdn>GetCurrentProcessId</msdn>.
-		/// </summary>
-		public static int ProcessSessionId => GetSessionId(Api.GetCurrentProcessId());
-
-		/// <summary>
 		/// Gets version info of process executable file.
 		/// Return null if fails.
 		/// </summary>
@@ -433,90 +350,13 @@ namespace Au
 		/// </remarks>
 		public static string GetDescription(int processId) => GetVersionInfo(processId)?.FileDescription;
 
-
-		//internal static (long WorkingSet, long PageFile) GetCurrentProcessMemoryInfo_()
-		//{
-		//	Api.PROCESS_MEMORY_COUNTERS m = default; m.cb = sizeof(Api.PROCESS_MEMORY_COUNTERS);
-		//	Api.GetProcessMemoryInfo(ProcessHandle, ref m, m.cb);
-		//	return ((long)m.WorkingSetSize, (long)m.PagefileUsage);
-		//}
-
 		/// <summary>
-		/// Before this process exits, either normally or on unhandled exception.
+		/// Gets process id from handle.
+		/// Returns 0 if failed. Supports <see cref="ALastError"/>.
+		/// Calls API <msdn>GetProcessId</msdn>.
 		/// </summary>
-		/// <remarks>
-		/// The event handler is called on <see cref="AppDomain.ProcessExit"/> (then the parameter is null) and <see cref="AppDomain.UnhandledException"/> (then the parameter is <b>Exception</b>).
-		/// </remarks>
-		public static event Action<Exception> Exit {
-			add {
-				if (!_haveEventExit) {
-					lock ("AVCyoRcQCkSl+3W8ZTi5oA") {
-						if (!_haveEventExit) {
-							var d = AppDomain.CurrentDomain;
-							d.ProcessExit += _ProcessExit;
-							d.UnhandledException += _ProcessExit; //because ProcessExit is missing on exception
-							_haveEventExit = true;
-						}
-					}
-				}
-				_eventExit += value;
-			}
-			remove {
-				_eventExit -= value;
-			}
-		}
-		static Action<Exception> _eventExit;
-		static bool _haveEventExit;
-
-		static void _ProcessExit(object sender, EventArgs ea) //sender: AppDomain on process exit, null on unhandled exception
-		{
-			Exception e;
-			if (ea is UnhandledExceptionEventArgs u) {
-				if (!u.IsTerminating) return; //never seen, but anyway
-				e = (Exception)u.ExceptionObject; //probably non-Exception object is impossible in C#
-			} else {
-				e = ATask.s_unhandledException;
-			}
-			var k = _eventExit;
-			if (k != null) try { k(e); } catch { }
-		}
-
-		/// <summary>
-		/// Gets or sets whether <see cref="CultureInfo.DefaultThreadCurrentCulture"/> and <see cref="CultureInfo.DefaultThreadCurrentUICulture"/> are <see cref="CultureInfo.InvariantCulture"/>.
-		/// </summary>
-		/// <remarks>
-		/// If your app doesn't want to use current culture (default in .NET apps), it can set these properties = <see cref="CultureInfo.InvariantCulture"/> or set this property = true.
-		/// It prevents potential bugs when app/script/components don't specify invariant culture in string functions and 'number to/from string' functions.
-		/// Also, there is a bug in 'number to/from string' functions in some .NET versions with some cultures: they use wrong minus sign, not ASII '-' which is specified in Control Panel.
-		/// The default compiler sets this property = true; as well as <see cref="ATask.Setup"/>.
-		/// </remarks>
-		public static bool CultureIsInvariant {
-			get {
-				var ic = CultureInfo.InvariantCulture;
-				return CultureInfo.DefaultThreadCurrentCulture == ic && CultureInfo.DefaultThreadCurrentUICulture == ic;
-			}
-			set {
-				if (value) {
-					var ic = CultureInfo.InvariantCulture;
-					CultureInfo.DefaultThreadCurrentCulture = ic;
-					CultureInfo.DefaultThreadCurrentUICulture = ic;
-				} else {
-					CultureInfo.DefaultThreadCurrentCulture = null;
-					CultureInfo.DefaultThreadCurrentUICulture = null;
-				}
-			}
-		}
-
-		/// <summary>
-		/// After afterMS milliseconds invokes GC and calls API SetProcessWorkingSetSize.
-		/// </summary>
-		internal static void MinimizePhysicalMemory_(int afterMS) {
-			Task.Delay(afterMS).ContinueWith(_ => {
-				GC.Collect();
-				GC.WaitForPendingFinalizers();
-				Api.SetProcessWorkingSetSize(Api.GetCurrentProcess(), -1, -1);
-			});
-		}
+		/// <param name="processHandle">Process handle.</param>
+		public static int ProcessIdFromHandle(IntPtr processHandle) => Api.GetProcessId(processHandle); //fast
 
 		/// <summary>
 		/// Terminates (ends) the specified process.
@@ -526,7 +366,7 @@ namespace Au
 		/// <param name="exitCode">Process exit code.</param>
 		/// <remarks>
 		/// This function does not try to end process "softly" (close main window). Unsaved data will be lost.
-		/// Alternatives: run taskkill.exe or pskill.exe (download). See <see cref="AFile.RunConsole"/>. More info on the internet.
+		/// Alternatives: run taskkill.exe or pskill.exe (download). See <see cref="ARun.Console"/>. More info on the internet.
 		/// </remarks>
 		public static bool Terminate(int processId, int exitCode = 0) {
 			if (Api.WTSTerminateProcess(default, processId, exitCode)) return true;
@@ -605,6 +445,17 @@ namespace Au
 			}
 			return n;
 		}
+
+		/// <summary>
+		/// Gets user session id of a process.
+		/// Returns -1 if failed. Supports <see cref="ALastError"/>.
+		/// Calls API <msdn>ProcessIdToSessionId</msdn>.
+		/// </summary>
+		/// <param name="processId">Process id.</param>
+		public static int GetSessionId(int processId) {
+			if (!Api.ProcessIdToSessionId(processId, out var R)) return -1;
+			return R;
+		}
 	}
 }
 
@@ -613,7 +464,7 @@ namespace Au.Types
 	/// <summary>
 	/// Contains process name (like "notepad.exe"), id, name and user session id.
 	/// </summary>
-	public record ProcessInfo(string Name, int ProcessId, int SessionId);
+	public record ProcessInfo(string Name, int Id, int SessionId);
 	//use record to auto-implement ==, eg for code like var a=AProcess.AllProcesses(); 5.s(); AOutput.Write(AProcess.AllProcesses().Except(a));
 
 	///// <summary>
@@ -625,7 +476,7 @@ namespace Au.Types
 	//	public string Name;
 
 	//	/// <summary>Process id.</summary>
-	//	public int ProcessId;
+	//	public int Id;
 
 	//	/// <summary>User session id.</summary>
 	//	public int SessionId;
@@ -634,7 +485,7 @@ namespace Au.Types
 
 	//	///
 	//	public ProcessInfo(int session, int pid, string name) {
-	//		SessionId = session; ProcessId = pid; Name = name;
+	//		SessionId = session; Id = pid; Name = name;
 	//	}
 
 	//	///

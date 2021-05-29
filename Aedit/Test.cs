@@ -51,9 +51,11 @@ static unsafe class Test
 	public static void FromMenubar() {
 		//Cpp.Cpp_Test();
 
+		//ARun.Run("fffffffffffffffff.exe");
+
 		//InsertCode.UsingDirective("Test.Usings");
 
-		EdDatabases.CreateWinapi();
+		//EdDatabases.CreateWinapi();
 
 		//var code = App.Settings.ci_usings.RegexReplace(@"(?m)^.+$", "using $0;");
 		////var code = "using Au.Types;";

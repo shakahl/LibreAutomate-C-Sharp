@@ -16,19 +16,19 @@ namespace Au
 	/// </summary>
 	/// <remarks>
 	/// <i>image</i> argument of "add item" functions can be:
-	/// - file/folder path (string) - the "show" function calls <see cref="AIcon.OfFile"/> to get its icon. It also supports file type icons like ".txt", etc.
+	/// - file/folder path (string) - the "show" function calls <see cref="AIcon.Of"/> to get its icon. It also supports file type icons like ".txt", etc.
 	/// - file path with prefix "imagefile:" or resource path that starts with "resources/" or has prefix "resource:" - the "show" function loads .png or .xaml image file or resource.
 	/// - string with prefix "image:" - Base-64 encoded png file. Can be created with the "Find image..." dialog.
 	/// - <see cref="FolderPath"/> - same as folder path string.
 	/// - <see cref="Image"/> - image.
 	/// - <see cref="AIcon"/> - icon. The "add item" function disposes it.
 	/// - <see cref="StockIcon"/> - the "show" function calls <see cref="AIcon.Stock"/>.
-	/// - null - if <see cref="ExtractIconPathFromCode"/> true, the "show" function tries to extract a file path from action code; then calls <see cref="AIcon.OfFile"/>. Else no image.
+	/// - null - if <see cref="ExtractIconPathFromCode"/> true, the "show" function tries to extract a file path from action code; then calls <see cref="AIcon.Of"/>. Else no image.
 	/// - string "" - no image, even if <b>ExtractIconPathFromCode</b> true.
 	/// 
 	/// Item images should be of size 16x16 (small icon size). If high DPI, will scale images automatically, which makes them slightly blurred. To avoid scaling, can be used XAML images, but then slower.
 	///
-	/// Images are loaded on demand, when showing the menu or submenu etc. If fails to load, prints warning (<see cref="AWarning.Write"/>).
+	/// Images are loaded on demand, when showing the menu or submenu etc. If fails to load, prints warning (<see cref="AOutput.Warning"/>).
 	/// 
 	/// For icon/image files use full path, unless they are in <see cref="AFolders.ThisAppImages"/>
 	/// 
@@ -72,7 +72,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// When adding items without explicitly specified image, extract file path from item action code (for example <see cref="AFile.Run"/> argument) and use icon of that file.
+		/// When adding items without explicitly specified image, extract file path from item action code (for example <see cref="ARun.Run"/> argument) and use icon of that file.
 		/// This property is applied to items added afterwards; submenus inherit it.
 		/// </summary>
 		/// <remarks>
@@ -103,7 +103,7 @@ namespace Au
 		public bool ActionThread { get; set; }
 
 		/// <summary>
-		/// Whether to handle exceptions in item action code. If false (default), handles exceptions and on exception calls <see cref="AWarning.Write"/>.
+		/// Whether to handle exceptions in item action code. If false (default), handles exceptions and on exception calls <see cref="AOutput.Warning"/>.
 		/// This property is applied to items added afterwards; submenus inherit it.
 		/// </summary>
 		public bool ActionException { get; set; }
@@ -149,7 +149,7 @@ namespace Au
 					//} else if (isImage)
 					//	im = AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(s, (new(16, 16), _dpi));
 					//else
-					//	im = AIcon.OfFile(s)?.ToGdipBitmap();
+					//	im = AIcon.Of(s)?.ToGdipBitmap();
 
 					if (im == null) _OnException(s, null);
 				}
@@ -296,7 +296,7 @@ namespace Au
 
 			internal void GoToFile_() {
 				if (file.NE()) return;
-				if (extractIconPath == 2) AFile.SelectInExplorer(file);
+				if (extractIconPath == 2) ARun.SelectInExplorer(file);
 				else AScriptEditor.GoToEdit(file, 0);
 			}
 

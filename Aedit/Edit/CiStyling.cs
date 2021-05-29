@@ -180,7 +180,7 @@ partial class CiStyling
 			});
 		}
 		catch (OperationCanceledException) { }
-		catch (Exception e1) { ADebug.Print(e1); return; } //InvalidOperationException when this code: AWpfBuilder ... .Also(b=>b.Panel.for)
+		catch (Exception e1) { ADebug_.Print(e1); return; } //InvalidOperationException when this code: AWpfBuilder ... .Also(b=>b.Panel.for)
 		finally {
 			cancelTS.Dispose();
 			if (cancelTS == _cancelTS) _cancelTS = null;
@@ -286,7 +286,7 @@ partial class CiStyling
 				case ClassificationTypeNames.LabelName: break;
 				case ClassificationTypeNames.PreprocessorText: break;
 				case ClassificationTypeNames.StaticSymbol: break;
-				default: ADebug.PrintIf(!v.ClassificationType.Starts("regex"), $"<><c gray>{v.ClassificationType}, {v.TextSpan}<>"); break;
+				default: ADebug_.PrintIf(!v.ClassificationType.Starts("regex"), $"<><c gray>{v.ClassificationType}, {v.TextSpan}<>"); break;
 				}
 #endif
 				continue;
@@ -329,7 +329,7 @@ partial class CiStyling
 
 	void _Fold(bool firstTime, CodeInfo.Context cd, int start8, int end8) {
 		//var p1 = APerf.Create();
-		ADebug.PrintIf(!cd.document.TryGetSyntaxRoot(out _), "recreating syntax tree");
+		ADebug_.PrintIf(!cd.document.TryGetSyntaxRoot(out _), "recreating syntax tree");
 		var root = cd.document.GetSyntaxRootAsync().Result;
 		//p1.Next('r');
 
@@ -595,7 +595,7 @@ partial class SciCode
 					}
 				}
 			}
-			catch (SLException ex) { ADebug.Print(ex); }
+			catch (SLException ex) { ADebug_.Print(ex); }
 		}
 	}
 
@@ -633,7 +633,7 @@ partial class SciCode
 				_savedPos = pos;
 				_savedLinesMD5 = hash;
 			}
-			catch (SLException ex) { ADebug.Print(ex); }
+			catch (SLException ex) { ADebug_.Print(ex); }
 		}
 		//p1.NW('D');
 

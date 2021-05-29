@@ -200,7 +200,7 @@ namespace Au.Types
 							}
 						}
 					} else {
-						ADebug.Print(k.code); //didn't detect the window? Because unhooks when detects.
+						ADebug_.Print(k.code); //didn't detect the window? Because unhooks when detects.
 					}
 					return false;
 				});

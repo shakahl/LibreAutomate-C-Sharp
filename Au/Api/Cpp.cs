@@ -131,7 +131,7 @@ namespace Au.Types
 			GC.Collect();
 			GC.WaitForPendingFinalizers();
 			//Cpp_Unload(0); //in Setup32.dll, it's 32-bit
-			AFile.Run(@"Q:\app\Au\Other\Programs\unload AuCpp dll.exe", null, RFlags.WaitForExit); //loads Setup32.dll and calls Cpp_Unload
+			ARun.Run(@"Q:\app\Au\Other\Programs\unload AuCpp dll.exe", null, RFlags.WaitForExit); //loads Setup32.dll and calls Cpp_Unload
 		}
 #endif
 

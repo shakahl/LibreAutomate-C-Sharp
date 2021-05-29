@@ -83,7 +83,7 @@ unsafe class Program
 			bool serving = false;
 			try {
 #endif
-			int r = AFile.RunConsole(o => {
+			int r = ARun.Console(o => {
 				AOutput.Write(o);
 				if (o.Starts("Serving")) throw new OperationCanceledException();
 			}, docfx, $@"docfx.json --intermediateFolder ""{objDir}"""
@@ -285,7 +285,7 @@ unsafe class Program
 				var k = m[1].Value;
 				string href = null;
 				foreach (var ns in s_ns) {
-					if (AFile.ExistsAsFile(siteDir + "/api/" + ns + k + ".html")) {
+					if (AFile.Exists(siteDir + "/api/" + ns + k + ".html").isFile) {
 						href = "../api/" + ns + k + ".html";
 						break;
 					}
@@ -386,9 +386,9 @@ unsafe class Program
 		AFile.Delete(docDir + @"\_site.tar");
 		AFile.Delete(docDir + @"\_site.tar.gz");
 
-		int r1 = AFile.RunConsole(out var s, sevenZip, $@"a _site.tar .\_site", docDir);
+		int r1 = ARun.Console(out var s, sevenZip, $@"a _site.tar .\_site", docDir);
 		if (r1 != 0) { AOutput.Write(s); return; }
-		int r2 = AFile.RunConsole(out s, sevenZip, $@"a _site.tar.gz _site.tar", docDir);
+		int r2 = ARun.Console(out s, sevenZip, $@"a _site.tar.gz _site.tar", docDir);
 		if (r2 != 0) { AOutput.Write(s); return; }
 
 		AFile.Delete(docDir + @"\_site.tar");
@@ -450,9 +450,9 @@ unsafe class Program
 		AFile.Delete(docDir + @"\_site.tar");
 		AFile.Delete(docDir + @"\_site.tar.bz2");
 
-		int r1 = AFile.RunConsole(out var s, sevenZip, $@"a _site.tar .\_site\*", docDir);
+		int r1 = ARun.Console(out var s, sevenZip, $@"a _site.tar .\_site\*", docDir);
 		if(r1 != 0) { AOutput.Write(s); return; }
-		int r2 = AFile.RunConsole(out s, sevenZip, $@"a _site.tar.bz2 _site.tar", docDir);
+		int r2 = ARun.Console(out s, sevenZip, $@"a _site.tar.bz2 _site.tar", docDir);
 		if(r2 != 0) { AOutput.Write(s); return; }
 
 		AFile.Delete(docDir + @"\_site.tar");

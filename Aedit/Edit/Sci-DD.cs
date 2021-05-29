@@ -112,7 +112,7 @@ partial class SciCode
 
 					string mi = _data.scripts
 						? "1 var s = name;|2 var s = path;|3 ATask.Run(path);|4 t[name] = o => ATask.Run(path);"
-						: "11 var s = path;|12 AFile.Run(path);|13 t[name] = o => AFile.Run(path);";
+						: "11 var s = path;|12 ARun.Run(path);|13 t[name] = o => ARun.Run(path);";
 					what = AMenu.ShowSimple(mi);
 					if (what == 0) return;
 				}
@@ -189,7 +189,7 @@ partial class SciCode
 					case 1: case 2: case 11: b.Append("var s = "); break;
 					case 4: case 13: b.AppendFormat("t[\"{0}\"] = o => ", what == 4 ? name.RemoveSuffix(".cs") : name); break;
 					}
-					if (what == 12 || what == 13) b.Append("AFile.Run(");
+					if (what == 12 || what == 13) b.Append("ARun.Run(");
 					if ((what == 11 || what == 12) && (path.Starts("\":: ") || path.Starts("AFolders.Virtual."))) b.AppendFormat("/* {0} */ ", name);
 					if (!path.Ends('\"')) path = "@\"" + path + "\"";
 					switch (what) {
@@ -215,7 +215,7 @@ partial class SciCode
 					shells = new string[n]; names = new string[n];
 					IntPtr pidlFolder = (IntPtr)(p + *pi++);
 					for (int i = 0; i < n; i++) {
-						using var pidl = new APidl(pidlFolder, (IntPtr)(p + pi[i]));
+						using var pidl = new Pidl(pidlFolder, (IntPtr)(p + pi[i]));
 						shells[i] = pidl.ToString();
 						names[i] = pidl.ToShellString(SIGDN.NORMALDISPLAY);
 					}

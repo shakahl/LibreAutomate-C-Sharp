@@ -514,7 +514,7 @@ partial class TestScript
 		//Bitmap.FromFile(@"Q:\Test\qm small icon.png").Dispose();
 		//AOutput.Write("start");
 		//3.s();
-		//ADebug.MemorySetAnchor_();
+		//ADebug_.MemorySetAnchor_();
 		//for(int i = 0; i < 1000; i++) {
 		//	var b = Bitmap.FromFile(@"Q:\Test\qm small icon.png") as Bitmap;
 		//	//var d=b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
@@ -522,7 +522,7 @@ partial class TestScript
 		//	b.Dispose();
 		//	b.UnlockBits(d);
 		//}
-		//ADebug.MemoryAOutput.Write_();
+		//ADebug_.MemoryAOutput.Write_();
 		//while(AKeys.IsScrollLock) 100.ms();
 
 
@@ -697,7 +697,7 @@ partial class TestScript
 	//		k.Add("0");
 	//	}
 	//	for(int j = 0; j < 1; j++) {
-	//		ADebug.MemorySetAnchor_();
+	//		ADebug_.MemorySetAnchor_();
 
 	//		APerf.First();
 	//		var m = new ToolStripDropDownMenu();
@@ -717,12 +717,12 @@ partial class TestScript
 	//		//	APerf.Next();
 	//		//}
 
-	//		ADebug.MemoryPrint_();
+	//		ADebug_.MemoryPrint_();
 	//		APerf.Write();
 
 	//		//m.Show();
 
-	//		//ADebug.MemoryPrint_();
+	//		//ADebug_.MemoryPrint_();
 
 	//		100.ms();
 	//	}
@@ -844,9 +844,9 @@ partial class TestScript
 	struct BIGBIG { public override string ToString() => "TEST"; }
 	void TestStringInterpolationBoxing() {
 		BIGBIG r = default;
-		ADebug.MemorySetAnchor_();
+		ADebug_.MemorySetAnchor_();
 		var s = $"a {r}?"; //result: boxes, although .ToString() causes an IDE suggestion to remove it
-		ADebug.MemoryPrint_();
+		ADebug_.MemoryPrint_();
 		AOutput.Write(s);
 	}
 
@@ -921,7 +921,7 @@ partial class TestScript
 	unsafe void _Main() {
 		//Application.SetCompatibleTextRenderingDefault(false);
 		//AOutput.Write("before");
-		//ADebug.AOutput.WriteLoadedAssemblies(true, true, true);
+		//ADebug_.AOutput.WriteLoadedAssemblies(true, true, true);
 
 
 		//TestWMI();

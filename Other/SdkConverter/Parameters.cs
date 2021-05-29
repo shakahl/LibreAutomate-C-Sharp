@@ -407,7 +407,7 @@ namespace SdkConverter
 							name = "IntPtr";
 							isBlittable = true;
 						} else if (name is "IUnknown" or "IDispatch") {
-							ADebug.PrintIf(ptr > 1, context);
+							ADebug_.PrintIf(ptr > 1, context);
 							marshalAs = name;
 							name = "object";
 						}

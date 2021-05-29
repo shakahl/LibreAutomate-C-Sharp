@@ -400,8 +400,8 @@ static class Menus
 		//public static void Forum() { }
 
 		[Command]
-		//public static void Email() { AFile.TryRun("mailto:support@quickmacros.com?subject=" + App.AppName); }
-		public static void Email() { AFile.TryRun("mailto:support@quickmacros.com?subject=QM3"); } //FUTURE: use the above
+		//public static void Email() { ARun.RunSafe("mailto:support@quickmacros.com?subject=" + App.AppName); }
+		public static void Email() { ARun.RunSafe("mailto:support@quickmacros.com?subject=QM3"); } //FUTURE: use the above
 
 		//[Command(separator = true)]
 		//public static void About() { }

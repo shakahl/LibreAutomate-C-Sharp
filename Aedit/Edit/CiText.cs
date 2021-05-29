@@ -254,7 +254,7 @@ class CiText
 			case TextTags.ErrorType:
 				break;
 			default:
-				ADebug.Print($"{v.Tag}, '{v.Text}', {v.Style}");
+				ADebug_.Print($"{v.Tag}, '{v.Text}', {v.Style}");
 				break;
 #endif
 			}
@@ -698,11 +698,11 @@ class CiText
 					_Param(sy.TypeParameters[i], i);
 				}
 			} else {
-				ADebug.Print(sy);
+				ADebug_.Print(sy);
 			}
 			return;
 		default:
-			ADebug.Print(sym);
+			ADebug_.Print(sym);
 			return;
 		}
 

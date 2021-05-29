@@ -74,7 +74,7 @@ namespace Au.Util
 		public bool IsSystem => _OwnerSystem().sys;
 
 		(AWnd ow, bool sys) _OwnerSystem() {
-			if (_ow.Is0 && AMiscInfo.GetGUIThreadInfo(out var g)) {
+			if (_ow.Is0 && AInputInfo.GetGUIThreadInfo(out var g)) {
 				_ow = g.hwndMenuOwner;
 				_isSystem = g.flags.Has(GTIFlags.SYSTEMMENUMODE);
 			}

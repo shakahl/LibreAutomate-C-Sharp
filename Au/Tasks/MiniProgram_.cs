@@ -116,13 +116,13 @@ namespace Au.Util
 				_Hook();
 			}
 
-			//ADebug.PrintLoadedAssemblies(true, true);
+			//ADebug_.PrintLoadedAssemblies(true, true);
 
 			EFlags flags;
 
 			//using var p1 = APerf.Create();
 			using (var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ, 0, default, Api.OPEN_EXISTING, 0)) {
-				if (pipe.Is0) { ADebug.PrintNativeError_(); return; }
+				if (pipe.Is0) { ADebug_.PrintNativeError_(); return; }
 				//p1.Next();
 				int size; if (!Api.ReadFile(pipe, &size, 4, out int nr, default) || nr != 4) return;
 				//p1.Next();
@@ -158,7 +158,7 @@ namespace Au.Util
 
 			//if(0 != (flags & EFlags.Config)) { //this was with .NET 4
 			//	var config = asmFile + ".config";
-			//	if(AFile.ExistsAsFile(config, true)) AppDomain.CurrentDomain.SetData("APP_CONFIG_FILE", config);
+			//	if(AFile.Exists(config, true).isFile) AppDomain.CurrentDomain.SetData("APP_CONFIG_FILE", config);
 			//}
 
 			if (s_hook == null) _Hook();
@@ -172,10 +172,10 @@ namespace Au.Util
 			foreach (var v in s_refPaths ??= Assembly.GetEntryAssembly().GetCustomAttribute<RefPathsAttribute>().Paths.Split('|')) {
 				int iName = v.Length - name.Length - 4;
 				if (iName <= 0 || v[iName - 1] != '\\' || !v.Eq(iName, name, true)) continue;
-				if (!AFile.ExistsAsFile(v)) continue;
+				if (!AFile.Exists(v).isFile) continue;
 				//try {
 				return alc.LoadFromAssemblyPath(v);
-				//} catch(Exception ex) { ADebug.Print(ex.ToStringWithoutStack()); break; }
+				//} catch(Exception ex) { ADebug_.Print(ex.ToStringWithoutStack()); break; }
 			}
 			return null;
 		}

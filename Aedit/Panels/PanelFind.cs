@@ -654,7 +654,7 @@ class PanelFind : UserControl
 			expandedText: @"Replaces text in all files displayed in find results.
 Uses the same options and 'find' text. Uses current 'replace' text.
 Opens files to enable Undo.",
-			onLinkClick: e => AFile.SelectInExplorer(App.Model.WorkspaceDirectory))) return;
+			onLinkClick: e => ARun.SelectInExplorer(App.Model.WorkspaceDirectory))) return;
 
 		var d = ADialog.ShowProgress(marquee: false, "Replacing", owner: App.Hwnd);
 		try {
@@ -728,7 +728,7 @@ Opens files to enable Undo.",
 
 		static void _Add(bool replace, string text, int options) {
 			if (text.Length > 1000) {
-				//if(0 != (options & 4)) AWarning.Write("The find text of length > 1000 will not be saved to 'recent'.", -1);
+				//if(0 != (options & 4)) AOutput.Warning("The find text of length > 1000 will not be saved to 'recent'.", -1);
 				return;
 			}
 			var a = (replace ? App.Settings.find_recentReplace : App.Settings.find_recent) ?? new FRRecentItem[0];

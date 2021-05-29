@@ -85,7 +85,7 @@ namespace Au
 			RECT ru = default;
 			if (_MouseIsIn(this) || _MouseIsIn(_satellite)) return;
 			if (ru.Contains(p)) return;
-			if (AMiscInfo.GetGUIThreadInfo(out var g, AThread.Id) && g.flags.Has(GTIFlags.INMENUMODE)) return;
+			if (AInputInfo.GetGUIThreadInfo(out var g, AThread.Id) && g.flags.Has(GTIFlags.INMENUMODE)) return;
 
 			bool _MouseIsIn(AToolbar tb) {
 				var w = tb._w;
@@ -102,7 +102,7 @@ namespace Au
 
 		void _SatDestroying() {
 			if (_IsSatellite) _satPlanet.Satellite = null;
-			ADebug.PrintIf(_satellite != null, "_satellite");
+			ADebug_.PrintIf(_satellite != null, "_satellite");
 			//When destroying planet, OS at first destroys satellites (owned windows).
 		}
 

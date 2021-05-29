@@ -246,7 +246,7 @@ namespace Au.Tools
 					return a1;
 					//rejected: sort
 				}
-				catch (Exception ex) { ADebug.Print(ex); return null; }
+				catch (Exception ex) { ADebug_.Print(ex); return null; }
 			}
 		}
 
@@ -688,7 +688,7 @@ namespace Au.Tools
 				b.AppendLine(")");
 				var estyle = w.ExStyle;
 				b.Append("<i>ExStyle<>:  0x").Append(((uint)estyle).ToString("X8")).Append(" (").Append(estyle.ToString()).AppendLine(")");
-				//b.Append("<i>Class style<>:  0x").AppendLine(((uint)AWnd.More.GetClassLong(w, GCLong.STYLE)).ToString("X8"));
+				//b.Append("<i>Class style<>:  0x").AppendLine(((uint)AWnd.More.GetClassLong(w, GCL.STYLE)).ToString("X8"));
 				if (!isCon) {
 					b.Append("<i>Is...<>:    ");
 					_AppendIs(w.IsPopupWindow, "IsPopupWindow");

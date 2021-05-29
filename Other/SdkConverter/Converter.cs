@@ -20,7 +20,7 @@ namespace SdkConverter
 	{
 		[STAThread]
 		static void Main(string[] args) {
-			AProcess.CultureIsInvariant = true;
+			AThisProcess.CultureIsInvariant = true;
 			//#endif
 			ADefaultTraceListener.Setup(useAOutput: true);
 

@@ -80,7 +80,7 @@ class CiPopupText
 				} else if (s.Starts('|')) { //go to symbol source file/position or web page
 					CiGoTo.LinkGoTo(s);
 				} else {
-					AFile.TryRun(s);
+					ARun.RunSafe(s);
 				}
 			};
 

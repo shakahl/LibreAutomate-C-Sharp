@@ -59,7 +59,7 @@ namespace Au.Controls
 			string xmlFile = xmlFileCustomized; bool useDefaultXML = xmlFileCustomized == null;
 			gRetry:
 			if (useDefaultXML) xmlFile = xmlFileDefault;
-			else if (useDefaultXML = !AFile.ExistsAsFile(xmlFile)) goto gRetry;
+			else if (useDefaultXML = !AFile.Exists(xmlFile).isFile) goto gRetry;
 
 			try {
 				var x = AXml.LoadElem(xmlFile);
@@ -75,7 +75,7 @@ namespace Au.Controls
 						expandedText: e.StackTrace);
 					Environment.Exit(1);
 				} else {
-					AWarning.Write(sErr, -1);
+					AOutput.Warning(sErr, -1);
 				}
 				_dictLeaf.Clear(); _rootStack = null;
 				useDefaultXML = true; goto gRetry;
@@ -101,7 +101,7 @@ namespace Au.Controls
 					x.WriteStartDocument();
 					_rootStack.Save(x);
 				});
-				//AFile.Run("notepad.exe", _xmlFile); ATimer.After(1000, _ => DeleteSavedFile());
+				//ARun.Run("notepad.exe", _xmlFile); ATimer.After(1000, _ => DeleteSavedFile());
 			}
 			catch (Exception ex) { AOutput.QM2.Write(ex); }
 		}

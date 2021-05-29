@@ -102,7 +102,7 @@ If some really useful API are missing, tell about it: https://www.quickmacros.co
 					while (stat.Step()) a.Add((stat.GetText(0), stat.GetText(1)));
 					//APerf.NW(); //30 ms cold, 10 ms warm. Without index.
 				}
-				catch (SLException ex) { ADebug.Print(ex.Message); }
+				catch (SLException ex) { ADebug_.Print(ex.Message); }
 			}
 
 			string s = "";

@@ -33,7 +33,7 @@ namespace Au
 		/// The icon will be destroyed when disposing this variable or when converting to object of other type.
 		/// </summary>
 		public AIcon(IntPtr hicon) {
-			ADebug.PrintIf(hicon == default, "hicon == default");
+			ADebug_.PrintIf(hicon == default, "hicon == default");
 
 			//Don't allow to exceed the process handle limit when the program does not dispose them. Default limits are 10000, but min 200.
 			//Icons are USER objects. They also usually create 3 GDI objects (bitmaps?). So a process can have max ~3300 icons by default.
@@ -83,13 +83,12 @@ namespace Au
 		public static implicit operator IntPtr(AIcon icon) => icon?._handle ?? default;
 
 		/// <summary>
-		/// Gets file icon.
-		/// Extracts icon directly from the file, or gets shell icon, depending on file type, icon index, etc.
+		/// Gets icon that can be displayed for a file, folder, shell object, URL or file type.
 		/// </summary>
 		/// <returns>Returns null if failed.</returns>
 		/// <param name="file">
 		/// Can be:
-		/// - Path of any file or folder. Supports environment variables.
+		/// - Path of any file or folder. Supports environment variables. If not full path, uses <see cref="AFolders.ThisAppImages"/> and <see cref="AFile.SearchPath"/>.
 		/// - Any shell object, like <c>":: ITEMIDLIST"</c>, <c>@"::{CLSID-1}\::{CLSID-2}"</c>, <c>@"shell:AppsFolder\WinStoreAppId"</c>.
 		/// - File type like <c>".txt"</c>, or protocol like <c>"http:"</c>. Use <c>"."</c> to get forder icon.
 		/// - Path with icon resource index or negative id, like "c:\file.dll,4", "c:\file.exe,-4".
@@ -98,18 +97,16 @@ namespace Au
 		/// <param name="size">Icon width and height. Default 16.</param>
 		/// <param name="flags"></param>
 		/// <remarks>
-		/// If not full path, uses <see cref="AFolders.ThisAppImages"/> and <see cref="AFile.SearchPath"/>.
-		/// 
-		/// ITEMIDLIST can be of any file, folder, URL or a non-filesystem shell object. See <see cref="APidl.ToHexString"/>.
+		/// ITEMIDLIST can be of any file, folder, URL or a non-filesystem shell object. See <see cref="Pidl.ToHexString"/>.
 		/// </remarks>
-		public static AIcon OfFile(string file, int size = 16, IconGetFlags flags = 0) {
+		public static AIcon Of(string file, int size = 16, IconGetFlags flags = 0) {
 			using var ds = new _DebugSpeed(file);
 			return _OfFile(file, _NormalizeIconSizeArgument(size), flags);
 		}
 
 		static AIcon _OfFile(string file, int size = 16, IconGetFlags flags = 0) {
 			if (file.NE()) return null;
-			file = APath.ExpandEnvVar(file);
+			file = APath.Expand(file);
 			return _GetFileIcon(file, size, flags);
 		}
 
@@ -119,12 +116,12 @@ namespace Au
 		/// <returns>Returns null if failed.</returns>
 		/// <param name="pidl">ITEMIDLIST pointer (PIDL).</param>
 		/// <param name="size">Icon width and height. Default 16.</param>
-		public static AIcon OfPidl(APidl pidl, int size = 16) {
+		public static AIcon OfPidl(Pidl pidl, int size = 16) {
 			using var ds = new _DebugSpeed(pidl);
 			return _OfPidl(pidl, _NormalizeIconSizeArgument(size));
 		}
 
-		static AIcon _OfPidl(APidl pidl, int size) {
+		static AIcon _OfPidl(Pidl pidl, int size) {
 			if (pidl?.IsNull ?? true) return null;
 			return _GetShellIcon(true, null, pidl, size);
 		}
@@ -166,12 +163,12 @@ namespace Au
 				if (extractFromFile || ext > 0) {
 					var v = _Load(file, size, index);
 					if (v != null || extractFromFile) return v;
-					switch (AFile.ExistsAs(file, true)) {
-					case FileDir.NotFound:
+					switch (AFile.Exists(file, true)) {
+					case 0:
 						return null;
-					case FileDir.File:
+					case 1:
 						return Stock(ext == 2 || ext == 3 ? StockIcon.APPLICATION : StockIcon.DOCNOASSOC, size);
-						//case FileDir.Directory: //folder name ends with .ico etc
+						//case FileDir_.Directory: //folder name ends with .ico etc
 					}
 				} else if (file.Ends(".lnk", true)) {
 					var v = _GetLnkIcon(file, size);
@@ -239,7 +236,7 @@ namespace Au
 				}
 
 				if(icon != null) {
-					icon = APath.ExpandEnvVar(icon);
+					icon = APath.Expand(icon);
 					if(!APath.IsFullPath(icon)) icon = AFolders.System + icon;
 					vat v = _Load(icon, size, index);
 					if(v != null) return v;
@@ -252,7 +249,7 @@ namespace Au
 		}
 
 		//usePidl - if pidl not null/IsNull, use pidl, else convert file to PIDL. If false, pidl must be null.
-		static AIcon _GetShellIcon(bool usePidl, string file, APidl pidl, int size, bool freePidl = false) {
+		static AIcon _GetShellIcon(bool usePidl, string file, Pidl pidl, int size, bool freePidl = false) {
 			//info:
 			//	We support everything that can have icon - path, URL, protocol (eg "http:"), file extension (eg ".txt"), shell item parsing name (eg "::{CLSID}"), "shell:AppsFolder\WinStoreAppId".
 			//	We call PidlFromString here and pass it to SHGetFileInfo. It makes faster when using thread pool, because multiple threads can call PidlFromString (slow) simultaneously.
@@ -261,7 +258,7 @@ namespace Au
 			//	IExtractIcon for some types fails or gets wrong icon. Even cannot use it to get correct-size icons, because for most file types it uses system imagelists, which are DPI-dependent.
 			//	SHMapPIDLToSystemImageListIndex+SHGetImageList also is not better.
 
-			//FUTURE: make faster "shell:...". Now eg 100 ms for Settings first time (50 ms APidl.FromString_ and 50 ms SHGetFileInfo).
+			//FUTURE: make faster "shell:...". Now eg 100 ms for Settings first time (50 ms Pidl.FromString_ and 50 ms SHGetFileInfo).
 			//	Alternatives (not tested): https://stackoverflow.com/questions/32122679/getting-icon-of-modern-windows-app-from-a-desktop-application
 			//	Not a big problem when using caching.
 			//	Also some icons have incorrect background, eg Calculator.
@@ -269,7 +266,7 @@ namespace Au
 			var pidl2 = pidl?.UnsafePtr ?? default;
 			if (usePidl) {
 				if (pidl2 == default) {
-					pidl2 = APidl.FromString_(file);
+					pidl2 = Pidl.FromString_(file);
 					if (pidl2 == default) usePidl = false; else freePidl = true;
 				}
 			}
@@ -328,7 +325,7 @@ namespace Au
 					if (il != default) index = x.iIcon;
 					//Marshal.Release(il); //undocumented, but without it IImageList refcount grows. Probably it's ok, because it is static, never deleted until process exits.
 				}
-				catch { ADebug.Print("exception"); }
+				catch { ADebug_.Print("exception"); }
 				//Shell extensions may throw.
 				//By default .NET does not allow to handle eg access violation exceptions.
 				//	Previously we would add [HandleProcessCorruptedStateExceptions], but Core ignores it.
@@ -342,7 +339,7 @@ namespace Au
 
 			try {
 				if (ilIndex == Api.SHIL_SMALL || ilIndex == Api.SHIL_LARGE || _GetShellImageList(ilIndex, out il)) {
-					//AOutput.Write(il, ADebug.GetComObjRefCount(il));
+					//AOutput.Write(il, ADebug_.GetComObjRefCount(il));
 					var hi = Api.ImageList_GetIcon(il, index, 0);
 					if (hi != default) {
 						if (size != realSize) {
@@ -355,7 +352,7 @@ namespace Au
 					}
 				}
 			}
-			catch (Exception e) { ADebug.Print(e.Message); }
+			catch (Exception e) { ADebug_.Print(e.Message); }
 			//finally { if(il != default) Marshal.Release(il); }
 			return null;
 
@@ -388,7 +385,7 @@ namespace Au
 		/// Extracts icon directly from file that contains it.
 		/// </summary>
 		/// <returns>Returns null if failed.</returns>
-		/// <param name="file">.ico, .exe, .dll or other file that contains one or more icons. Also supports cursor files - .cur, .ani. Must be full path, without icon index. Supports environment variables (see <see cref="APath.ExpandEnvVar"/>).</param>
+		/// <param name="file">.ico, .exe, .dll or other file that contains one or more icons. Also supports cursor files - .cur, .ani. Must be full path, without icon index. Supports environment variables (see <see cref="APath.Expand"/>).</param>
 		/// <param name="size">Icon width and height. Default 16.</param>
 		/// <param name="index">Icon index or negative icon resource id in the .exe/.dll file.</param>
 		public static AIcon Load(string file, int size = 16, int index = 0) {
@@ -513,15 +510,15 @@ namespace Au
 
 			//support Windows Store apps
 			if (1 == AWnd.Internal_.GetWindowsStoreAppId(w, out var appId, true)) {
-				var v = OfFile(appId, size, IconGetFlags.DontSearch);
+				var v = Of(appId, size, IconGetFlags.DontSearch);
 				if (v != null) return v;
 			}
 
 			bool large = size >= 24; //SHOULDDO: make high-DPI-aware. How?
 			bool ok = w.SendTimeout(2000, out nint R, Api.WM_GETICON, large ? 1 : 0);
 			if (R == 0 && ok) w.SendTimeout(2000, out R, Api.WM_GETICON, large ? 0 : 1);
-			if (R == 0) R = AWnd.More.GetClassLong(w, large ? GCLong.HICON : GCLong.HICONSM);
-			if (R == 0) R = AWnd.More.GetClassLong(w, large ? GCLong.HICONSM : GCLong.HICON);
+			if (R == 0) R = AWnd.More.GetClassLong(w, large ? GCL.HICON : GCL.HICONSM);
+			if (R == 0) R = AWnd.More.GetClassLong(w, large ? GCL.HICONSM : GCL.HICON);
 			//tested this code with DPI 125%. Small icon of most windows match DPI (20), some 16, some 24.
 			//tested: undocumented API InternalGetWindowIcon does not get icon of winstore app.
 
@@ -582,7 +579,7 @@ namespace Au
 			Icon ic = Icon.FromHandle(_handle);
 			Bitmap im = null;
 			try { im = ic.ToBitmap(); }
-			catch (Exception e) { AWarning.Write(e.ToString(), -1); }
+			catch (Exception e) { AOutput.Warning(e.ToString(), -1); }
 			ic.Dispose(); //actually don't need
 			if (destroyIcon) Dispose();
 			return im;
@@ -600,7 +597,7 @@ namespace Au
 		public System.Windows.Media.Imaging.BitmapSource ToWpfImage(bool destroyIcon = true) {
 			if (_handle == default) return null;
 			try { return System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(_handle, default, default); }
-			catch (Exception e) { AWarning.Write(e.ToString(), -1); return null; }
+			catch (Exception e) { AOutput.Warning(e.ToString(), -1); return null; }
 			finally { if (destroyIcon) Dispose(); }
 		}
 
@@ -679,7 +676,7 @@ namespace Au
 		struct _DebugSpeed : IDisposable
 		{
 			long _time;
-			object _file; //string or APidl
+			object _file; //string or Pidl
 
 			public _DebugSpeed(object file) {
 				if (DebugSpeed > 0) {
@@ -696,7 +693,7 @@ namespace Au
 				if (_time != 0) {
 					long t = ATime.PerfMilliseconds - _time;
 					if (t >= DebugSpeed) {
-						//if (_file is APidl p) _file = p.ToShellString(SIGDN.NORMALDISPLAY);
+						//if (_file is Pidl p) _file = p.ToShellString(SIGDN.NORMALDISPLAY);
 						AOutput.Write($"AIcon.DebugSpeed: {t} ms, {_file}");
 					}
 				}
@@ -713,7 +710,7 @@ namespace Au
 			//	Opcodes: call(AFolders.System), ldstr("notepad.exe"), FolderPath.op_Addition.
 			//also code pattern like 'AFolders.System' or 'AFolders.Virtual.RecycleBin'.
 			//	Opcodes: call(AFolders.System), FolderPath.op_Implicit(FolderPath to string).
-			//also code pattern like 'AFile.TryRun("notepad.exe")'.
+			//also code pattern like 'ARun.RunSafe("notepad.exe")'.
 			//AOutput.Write(mi.Name);
 			cs = false;
 			int i = 0, patternStart = -1; MethodInfo f1 = null; string filename = null, filename2 = null;
@@ -730,7 +727,7 @@ namespace Au
 						//AOutput.Write(s);
 						if (i == patternStart + 1) filename = s;
 						else {
-							if (APath.IsFullPathExpandEnvVar(ref s)) return s; //eg AFile.TryRun(@"%AFolders.System%\notepad.exe");
+							if (APath.IsFullPathExpand(ref s)) return s; //eg ARun.RunSafe(@"%AFolders.System%\notepad.exe");
 							if (APath.IsShellPathOrUrl_(s)) return s;
 							filename = null; patternStart = -1;
 							if (i == 1) filename2 = s;
@@ -762,7 +759,7 @@ namespace Au
 					if (cs = filename2.Ends(".cs", true)) return filename2;
 				}
 			}
-			catch (Exception ex) { ADebug.Print(ex); }
+			catch (Exception ex) { ADebug_.Print(ex); }
 			return null;
 		}
 	}
@@ -771,7 +768,7 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Flags for <see cref="AIcon.OfFile"/> and similar functions.
+	/// Flags for <see cref="AIcon.Of"/> and similar functions.
 	/// </summary>
 	[Flags]
 	public enum IconGetFlags

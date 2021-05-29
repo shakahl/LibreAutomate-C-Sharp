@@ -14,6 +14,7 @@ using System.Reflection;
 using Au.Types;
 
 using Microsoft.CodeAnalysis;
+using Au.Util;
 
 namespace Au.Compiler
 {
@@ -73,7 +74,7 @@ namespace Au.Compiler
 		public void AddError(FileNode f, string code, int pos, string message, params object[] formatArgs)
 		{
 			_StartAdd();
-			Util.AStringUtil.LineAndColumn(code, pos, out int line, out int col);
+			AStringUtil.LineAndColumn(code, pos, out int line, out int col);
 			_Append(f, line, col, message, formatArgs);
 		}
 
