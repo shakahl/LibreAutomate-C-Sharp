@@ -1,4 +1,4 @@
 ﻿/*/ runSingle true; /*/ //.
 using Au;
-;ATask.Setup(trayIcon: true); //;
+;scriptt.setup(trayIcon: true); //;
 

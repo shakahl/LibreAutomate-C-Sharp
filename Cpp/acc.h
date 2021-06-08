@@ -179,7 +179,7 @@ public:
 	TempSetScreenReader(HWND w)
 	{
 		_restore = false;
-		if(w && wnd::ClassNameIs(w, L"SALFRAME")) Set(w);
+		if(w && wn::ClassNameIs(w, L"SALFRAME")) Set(w);
 	}
 
 	~TempSetScreenReader()
@@ -563,7 +563,7 @@ private:
 
 			DWORD bits = 1 << 3; //CLIENT
 
-			DWORD style = wnd::Style(w);
+			DWORD style = wn::Style(w);
 			if(style&WS_VSCROLL) bits |= 1 << 4;
 			if(style&WS_HSCROLL) bits |= 1 << 5;
 			if((style&(WS_VSCROLL | WS_HSCROLL)) == (WS_VSCROLL | WS_HSCROLL)) bits |= 1 << 6; //GRIP
@@ -581,7 +581,7 @@ private:
 				}
 			}
 
-			//wnd::PrintWnd(w); Print((uint)bits);
+			//wn::PrintWnd(w); Print((uint)bits);
 
 			int iMoveTo = 0;
 			for(int i = 0; i < 7; i++) {

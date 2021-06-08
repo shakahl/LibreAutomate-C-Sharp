@@ -26,7 +26,7 @@ void WindowToolbars() {
 #region toolbar examples
 
 void Toolbar_Notepad(WindowTriggerArgs ta = null) {
-	var t = new AToolbar("Toolbar_Notepad");
+	var t = new toolbar("Toolbar_Notepad");
 	if (t.FirstTime) {
 		
 	}

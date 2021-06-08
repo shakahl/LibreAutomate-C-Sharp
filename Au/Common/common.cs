@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
+using Au.Types;
 //using System.Linq;
 
 namespace Au.Types
@@ -36,7 +37,7 @@ namespace Au.Types
 
 	/// <summary>
 	/// Invokes specified action (calls callback function) at the end of <c>using(...) { ... }</c>.
-	/// Usually returned by functions. Example: <see cref="AOpt.Scope.Mouse"/>.
+	/// Usually returned by functions. Example: <see cref="opt.scope.mouse"/>.
 	/// </summary>
 	public struct UsingEndAction : IDisposable
 	{
@@ -58,29 +59,29 @@ namespace Au.Types
 		None,
 
 		/// <summary>
-		/// Keys. See <see cref="AKeys.Key(KKeysEtc[])"/>.
+		/// Keys. See <see cref="keys.send(KKeysEtc[])"/>.
 		/// </summary>
-		AKeys,
+		keys,
 
 		/// <summary>
 		/// [Wildcard expression](xref:wildcard_expression).
 		/// </summary>
-		AWildex,
+		wildex,
 
 		/// <summary>
 		/// PCRE regular expression.
 		/// </summary>
-		ARegex,
+		regexp,
 
 		/// <summary>
 		/// PCRE regular expression replacement string.
 		/// </summary>
-		ARegexReplacement,
+		regexpReplacement,
 
 		/// <summary>
 		/// .NET regular expression.
 		/// </summary>
-		Regex,
+		NetRegex,
 	}
 
 	/// <summary>
@@ -126,3 +127,27 @@ namespace System.Runtime.CompilerServices //the attribute must be in this namesp
 		public string AssemblyName { get; }
 	}
 }
+
+//rejected. Better use snippets. Also, users can create own classes for it and put whatever there.
+//namespace Au
+//{
+//	/// <summary>
+//	/// Aliases of some frequently used functions of various classes.
+//	/// To call them without <c>classname.</c>, you need <c>using static Au.func;</c>.
+//	/// </summary>
+//	public static class func
+//	{
+//		///// <summary><inheritdoc cref="print.it(string)"/></summary>
+//		//public static void print(string s) => Au.print.it(s);
+//		//cannot use function name = class name. Then cannot call other members of that class.
+
+//		/// <summary><inheritdoc cref="print.it(string)"/></summary>
+//		public static void write(string s) => print.it(s);
+
+//		/// <summary><inheritdoc cref="keys.send(KKeysEtc[])"/></summary>
+//		public static void key([ParamString(PSFormat.keys)] params KKeysEtc[] keysEtc) => keys.send(keysEtc);
+
+//		/// <summary><inheritdoc cref="keys.sendt(string, string)"/></summary>
+//		public static void keyt(string text, string html = null) => keys.sendt(text, html);
+//	}
+//}

@@ -13,7 +13,7 @@
 using Au.Types;
 using System;
 using System.Collections.Generic;
-using AccNAVDIR = Au.Types.Api.AccNAVDIR;
+using NAVDIR = Au.Types.Api.NAVDIR;
 
 namespace Au.Controls
 {
@@ -41,29 +41,29 @@ namespace Au.Controls
 				return k.DisplayText;
 			}
 
-			public override AccROLE Role(int child) {
-				return child == -1 ? AccROLE.TREE : AccROLE.TREEITEM;
+			public override ERole Role(int child) {
+				return child == -1 ? ERole.TREE : ERole.TREEITEM;
 			}
 
-			public override AccSTATE State(int child) {
+			public override EState State(int child) {
 				if (child == -1) return base.State(child);
 				var k = _Item(child);
-				AccSTATE r = 0;
+				EState r = 0;
 				if (_tv.Focusable) {
-					r |= AccSTATE.FOCUSABLE;
-					if (child == _tv._focusedIndex && _tv.IsKeyboardFocused) r |= AccSTATE.FOCUSED;
+					r |= EState.FOCUSABLE;
+					if (child == _tv._focusedIndex && _tv.IsKeyboardFocused) r |= EState.FOCUSED;
 				}
 				if (k.IsSelectable) {
-					r |= AccSTATE.SELECTABLE;
-					if (_tv.MultiSelect) r |= AccSTATE.MULTISELECTABLE;
-					if (_tv.IsSelected(child)) r |= AccSTATE.SELECTED;
+					r |= EState.SELECTABLE;
+					if (_tv.MultiSelect) r |= EState.MULTISELECTABLE;
+					if (_tv.IsSelected(child)) r |= EState.SELECTED;
 				}
-				if (k.IsFolder) r |= k.IsExpanded ? AccSTATE.EXPANDED : AccSTATE.COLLAPSED;
-				var (from, to) = _tv._GetViewRange(); if (child < from || child >= to) r |= AccSTATE.INVISIBLE | AccSTATE.OFFSCREEN;
-				if (k.IsDisabled) r |= AccSTATE.DISABLED;
-				switch (k.CheckState) { case TVCheck.Checked: case TVCheck.RadioChecked: r |= AccSTATE.CHECKED; break; case TVCheck.Mixed: r |= AccSTATE.MIXED; break; }
-				//if(child==_tv._hotIndex) r|=AccSTATE.HOTTRACKED;
-				//if(!k.IsEditable) r|=AccSTATE.READONLY;
+				if (k.IsFolder) r |= k.IsExpanded ? EState.EXPANDED : EState.COLLAPSED;
+				var (from, to) = _tv._GetViewRange(); if (child < from || child >= to) r |= EState.INVISIBLE | EState.OFFSCREEN;
+				if (k.IsDisabled) r |= EState.DISABLED;
+				switch (k.CheckState) { case TVCheck.Checked: case TVCheck.RadioChecked: r |= EState.CHECKED; break; case TVCheck.Mixed: r |= EState.MIXED; break; }
+				//if(child==_tv._hotIndex) r|=EState.HOTTRACKED;
+				//if(!k.IsEditable) r|=EState.READONLY;
 				return r;
 			}
 
@@ -78,28 +78,28 @@ namespace Au.Controls
 				return "Activate";
 			}
 
-			public override void SelectChild(AccSELFLAG flagsSelect, int child) {
-				//if(flagsSelect.HasAny(AccSELFLAG.ADDSELECTION|AccSELFLAG.EXTENDSELECTION) && !_tv.MultiSelect) throw new InvalidOperationException();
+			public override void SelectChild(ESelect flagsSelect, int child) {
+				//if(flagsSelect.HasAny(ESelect.ADDSELECTION|ESelect.EXTENDSELECTION) && !_tv.MultiSelect) throw new InvalidOperationException();
 				//int anchor=Math.Max(_tv.FocusedIndex, 0);
-				switch (flagsSelect & (AccSELFLAG.TAKESELECTION | AccSELFLAG.ADDSELECTION | AccSELFLAG.EXTENDSELECTION | AccSELFLAG.REMOVESELECTION)) {
+				switch (flagsSelect & (ESelect.TAKESELECTION | ESelect.ADDSELECTION | ESelect.EXTENDSELECTION | ESelect.REMOVESELECTION)) {
 				case 0: break;
-				case AccSELFLAG.TAKESELECTION:
+				case ESelect.TAKESELECTION:
 					_tv.SelectSingle(child, andFocus: false);
 					break;
-				case AccSELFLAG.REMOVESELECTION:
+				case ESelect.REMOVESELECTION:
 					_tv.Select(child, false);
 					break;
-				case AccSELFLAG.ADDSELECTION when _tv.MultiSelect:
+				case ESelect.ADDSELECTION when _tv.MultiSelect:
 					_tv.Select(child, true);
 					break;
-				//case AccSELFLAG.EXTENDSELECTION: //rarely used
-				//case AccSELFLAG.ADDSELECTION|AccSELFLAG.EXTENDSELECTION:
+				//case ESelect.EXTENDSELECTION: //rarely used
+				//case ESelect.ADDSELECTION|ESelect.EXTENDSELECTION:
 				//	break;
-				//case AccSELFLAG.REMOVESELECTION|AccSELFLAG.EXTENDSELECTION:
+				//case ESelect.REMOVESELECTION|ESelect.EXTENDSELECTION:
 				//	break;
 				default: throw new ArgumentException();
 				}
-				if (flagsSelect.Has(AccSELFLAG.TAKEFOCUS)) {
+				if (flagsSelect.Has(ESelect.TAKEFOCUS)) {
 					//_tv.Focus();
 					_tv.FocusedIndex = child;
 				}
@@ -107,18 +107,18 @@ namespace Au.Controls
 
 			public override RECT ChildRect(int child) => _tv.GetRectPhysical(child);
 
-			public override int? Navigate(AccNAVDIR navDir, int childStart) {
+			public override int? Navigate(NAVDIR navDir, int childStart) {
 				if (childStart == -1) { //navDir can be only first or last
 					int n = _tv.CountVisible; if (n == 0) return null;
-					return navDir == AccNAVDIR.FIRSTCHILD ? 0 : n - 1;
+					return navDir == NAVDIR.FIRSTCHILD ? 0 : n - 1;
 				} else { //navDir cannot be first or last
 					switch (navDir) {
-					case AccNAVDIR.PREVIOUS:
-					case AccNAVDIR.UP:
+					case NAVDIR.PREVIOUS:
+					case NAVDIR.UP:
 						if (childStart > 0) return childStart - 1;
 						break;
-					case AccNAVDIR.NEXT:
-					case AccNAVDIR.DOWN:
+					case NAVDIR.NEXT:
+					case NAVDIR.DOWN:
 						if (++childStart < _tv.CountVisible) return childStart;
 						break;
 					}

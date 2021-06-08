@@ -1,5 +1,5 @@
 ﻿using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -44,9 +44,9 @@ namespace Au.Controls
 						var c2 = _node._ParentIsTab ? _node.Parent._elem : _node._elem;
 						if (c2.IsVisible) {
 							rect = c2.RectInScreen();
-							ADpi.AdjustWindowRectEx(c2, ref rect, style, estyle);
+							Dpi.AdjustWindowRectEx(c2, ref rect, style, estyle);
 						} else {
-							var p = AMouse.XY;
+							var p = mouse.xy;
 							rect = (p.x - 10, p.y - 10, 200, 200);
 						}
 					}
@@ -57,7 +57,7 @@ namespace Au.Controls
 						if (_isToolbar) w.SetExStyle(estyle);
 					};
 
-					base.Title = ATask.Name + " - " + _node.ToString();
+					base.Title = scriptt.name + " - " + _node.ToString();
 					base.Owner = _owner;
 					base.WindowStartupLocation = WindowStartupLocation.Manual;
 					base.WindowStyle = WindowStyle.ToolWindow;
@@ -65,7 +65,7 @@ namespace Au.Controls
 					base.ShowActivated = false;
 
 					if (defaultRect) this.SetRect(rect);
-					else AWnd.More.SavedRect.Restore(this, _node._floatSavedRect);
+					else wnd.more.SavedRect.Restore(this, _node._floatSavedRect);
 
 					_owner.Closing += _Owner_Closing;
 					_owner.IsVisibleChanged += _Owner_IsVisibleChanged;
@@ -78,17 +78,17 @@ namespace Au.Controls
 				private void _Owner_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e) {
 					//never mind: no event if closed from outside.
 					bool visible = (bool)e.NewValue;
-					//AOutput.Write("owner visible", visible);
+					//print.it("owner visible", visible);
 					if (visible) Show(); else Hide();
 				}
 
 				private void _Owner_Closing(object sender, CancelEventArgs e) {
-					//AOutput.Write("owner closing");
+					//print.it("owner closing");
 					this.Close();
 				}
 
 				protected override void OnClosing(CancelEventArgs e) {
-					//AOutput.Write("closing");
+					//print.it("closing");
 					_owner.IsVisibleChanged -= _Owner_IsVisibleChanged;
 					Save();
 					Content = null;
@@ -98,8 +98,8 @@ namespace Au.Controls
 				}
 
 				public void Save() {
-					//AOutput.Write("save");
-					_node._floatSavedRect = new AWnd.More.SavedRect(this).ToString();
+					//print.it("save");
+					_node._floatSavedRect = new wnd.more.SavedRect(this).ToString();
 				}
 
 				protected override void OnSourceInitialized(EventArgs e) {
@@ -109,20 +109,20 @@ namespace Au.Controls
 				}
 
 				private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
-					//var w = (AWnd)hwnd;
-					//AWnd.More.PrintMsg(w, msg, wParam, lParam);
+					//var w = (wnd)hwnd;
+					//wnd.more.printMsg(w, msg, wParam, lParam);
 					switch (msg) {
 					case Api.WM_MOUSEACTIVATE:
-						bool no = AMath.LoWord(lParam) != Api.HTCLIENT;
+						bool no = Math2.LoWord(lParam) != Api.HTCLIENT;
 						if (!no) {
 							if (_isToolbar) { //activate if clicked a focusable element
 								var ie = Mouse.DirectlyOver;
 								if (ie == null) { //native child control?
-												  //no = AWnd.FromMouse(WXYFlags.Raw).Handle == hwnd;
+												  //no = wnd.fromMouse(WXYFlags.Raw).Handle == hwnd;
 								} else {
 									no = true;
 									for (var e = ie as UIElement; e != null && e != _node._elem; e = VisualTreeHelper.GetParent(e) as UIElement) {
-										//AOutput.Write(e, e.Focusable);
+										//print.it(e, e.Focusable);
 										if (e.Focusable) {
 											if (e is ButtonBase) {
 												//e.Focusable = false;
@@ -138,12 +138,12 @@ namespace Au.Controls
 								FrameworkElement e;
 								if (_node._IsTab) e = (_node._tab.tc.SelectedItem as TabItem)?.Content as FrameworkElement;
 								else e = _node._leaf.content;
-								no = e != null && !e.RectInScreen().Contains(AMouse.XY);
+								no = e != null && !e.RectInScreen().Contains(mouse.xy);
 							}
 						}
 						if (no) {
-							//AOutput.Write("MA_NOACTIVATE");
-							((AWnd)hwnd).ZorderTop();
+							//print.it("MA_NOACTIVATE");
+							((wnd)hwnd).ZorderTop();
 							handled = true;
 							return (IntPtr)Api.MA_NOACTIVATE;
 							//never mind: if clicked or dragged resizable border, on mouse up OS activates the window.
@@ -162,13 +162,13 @@ namespace Au.Controls
 					var w = this.Hwnd();
 					RECT r = w.Rect;
 					POINT offs = (p.x - r.left, p.y - r.top);
-					bool ok = ADragDrop.SimpleDragDrop(w, MButtons.Left, d => {
+					bool ok = wnd.more.dragLoop(w, MButtons.Left, d => {
 						if (d.Msg.message != Api.WM_MOUSEMOVE) return;
 
-						p = AMouse.XY;
+						p = mouse.xy;
 						w.MoveL(p.x - offs.x, p.y - offs.y);
 
-						//if (!canDock && AKeys.UI.IsAlt) {
+						//if (!canDock && keys.gui.isAlt) {
 						//	canDock = true;
 						//	//w.SetTransparency(true, 128);
 						//	//_dockIndic = new _DockIndicator(_manager, this);

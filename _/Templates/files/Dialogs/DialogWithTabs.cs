@@ -21,13 +21,13 @@ namespace Dialogs {
 /// ]]></code>
 /// </example>
 public class DialogWithTabs : Window {
-	AWpfBuilder _b;
+	wpfBuilder _b;
 	TabControl _tc;
 
 	///
 	public DialogWithTabs() {
 		Title = "Dialog";
-		_b = new AWpfBuilder(this).WinSize(400);
+		_b = new wpfBuilder(this).WinSize(400);
 		_b.Row(-1).Add(out _tc).Height(300..);
 		_b.R.AddOkCancel(apply: "_Apply");
 		_Page1();
@@ -37,10 +37,10 @@ public class DialogWithTabs : Window {
 		//_tc.SelectedIndex = 1;
 	}
 
-	AWpfBuilder _Page(string name, WBPanelType panelType = WBPanelType.Grid) {
+	wpfBuilder _Page(string name, WBPanelType panelType = WBPanelType.Grid) {
 		var tp = new TabItem { Header = name };
 		_tc.Items.Add(tp);
-		return new AWpfBuilder(tp, panelType).Margin("3");
+		return new wpfBuilder(tp, panelType).Margin("3");
 	}
 
 	void _Page1() {
@@ -58,7 +58,7 @@ public class DialogWithTabs : Window {
 		_b.OkApply += e => {
 //			if (!loaded) return;
 			
-			AOutput.Write($"Text: \"{text1.Text.Trim()}\"");
+			print.it($"Text: \"{text1.Text.Trim()}\"");
 		};
 	}
 
@@ -76,8 +76,8 @@ public class DialogWithTabs : Window {
 		_b.OkApply += e => {
 //			if (!loaded) return;
 			
-			AOutput.Write($"Combo index: {combo1.SelectedIndex}");
-			AOutput.Write($"Check: {c1.True()}");
+			print.it($"Combo index: {combo1.SelectedIndex}");
+			print.it($"Check: {c1.True()}");
 		};
 	}
 	

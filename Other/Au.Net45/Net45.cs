@@ -89,7 +89,7 @@ unsafe class Net45
 
 	static void Print(object o) => Console.WriteLine(o?.ToString());
 
-	//code copied from AHash
+	//code copied from Hash
 	static int Fnv1(byte* data, int lengthBytes)
 	{
 		uint hash = 2166136261;

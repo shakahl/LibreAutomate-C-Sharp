@@ -13,6 +13,7 @@ using System.Linq;
 
 using Au;
 using Au.Types;
+using Au.More;
 using Au.Controls;
 
 using Microsoft.CodeAnalysis.CSharp;
@@ -46,7 +47,7 @@ class CiErrors
 				if (d.IsSuppressed) continue;
 				var loc = d.Location; if (!loc.IsInSource) continue;
 				var span = loc.SourceSpan;
-				//AOutput.Write(d.Severity, span, d.Id);
+				//print.it(d.Severity, span, d.Id);
 				int start = span.Start, end = span.End;
 				if (end == start) {
 					if (end < code.Length && !(code[end] == '\r' || code[end] == '\n')) end++;
@@ -67,7 +68,7 @@ class CiErrors
 					//If unknown name, convert to ERR_NameNotInContext. Then on mouse hover will display tooltip with links to add using directive etc.
 					var d2 = cd.document.WithText(SourceText.From(code.Insert(end, ";"), Encoding.UTF8));
 					var m2 = d2.GetSemanticModelAsync().Result;
-					//AOutput.Write(m2.GetDiagnostics(span));
+					//print.it(m2.GetDiagnostics(span));
 					d = m2.GetDiagnostics(span).FirstOrDefault(o => (ErrorCode)o.Code == ErrorCode.ERR_NameNotInContext);
 					if (d == null) continue;
 					ec = ErrorCode.ERR_NameNotInContext;
@@ -130,28 +131,28 @@ class CiErrors
 	//static readonly string[] s_defaultUsings = new string[] { "Au;", "Au.Types;", "System;", "System.Collections.Generic;", "System.Linq", "System.IO" };
 
 	void _Strings(SemanticModel semo, CodeInfo.Context cd, int start16, int end16) {
-		//using var p1 = APerf.Create();
+		//using var p1 = perf.local();
 		_stringErrors.Clear();
 		var code = cd.code;
 		foreach (var node in semo.Root.DescendantNodes(TextSpan.FromBounds(start16, end16))) {
 			var format = CiUtil.GetParameterStringFormat(node, semo, false);
-			if (format == PSFormat.None || format == PSFormat.ARegexReplacement) continue;
+			if (format == PSFormat.None || format == PSFormat.regexpReplacement) continue;
 			var s = node.GetFirstToken().ValueText; //replaced escape sequences
 			string es = null;
 			try {
 				switch (format) {
-				case PSFormat.Regex:
+				case PSFormat.NetRegex:
 					new System.Text.RegularExpressions.Regex(s); //never mind: may have 'options' argument, eg ECMAScript or Compiled
 					break;
-				case PSFormat.ARegex:
-					new ARegex(s);
+				case PSFormat.regexp:
+					new regexp(s);
 					break;
-				case PSFormat.AWildex:
-					if (s.Starts("***")) s = s[(s.IndexOf(' ') + 1)..]; //eg AWnd.Child("***accName ...")
-					new AWildex(s);
+				case PSFormat.wildex:
+					if (s.Starts("***")) s = s[(s.IndexOf(' ') + 1)..]; //eg wnd.Child("***elmName ...")
+					new wildex(s);
 					break;
-				case PSFormat.AKeys:
-					new AKeys(null).AddKeys(s);
+				case PSFormat.keys:
+					new keys(null).AddKeys(s);
 					break;
 				}
 			}
@@ -197,7 +198,7 @@ class CiErrors
 		if (_codeDiag == null && _metaErrors.Count == 0 && _stringErrors.Count == 0) return null;
 		if (pos8 < 0) return null;
 		int all = doc.Call(Sci.SCI_INDICATORALLONFOR, pos8);
-		//AOutput.Write(all);
+		//print.it(all);
 		if (0 == (all & ((1 << SciCode.c_indicError) | (1 << SciCode.c_indicWarning) | (1 << SciCode.c_indicInfo) | (1 << SciCode.c_indicDiagHidden)))) return null;
 
 		var x = new CiText();
@@ -216,7 +217,7 @@ class CiErrors
 			var ec = (ErrorCode)d.Code;
 			if (d.Severity == DiagnosticSeverity.Error) {
 				if (_semo == null) continue;
-				//AOutput.Write(ec, d.Id);
+				//print.it(ec, d.Id);
 				bool extMethod = false;
 				switch (ec) {
 				case ErrorCode.ERR_NoSuchMemberOrExtension:
@@ -280,8 +281,8 @@ class CiErrors
 		var comp = _semo.Compilation;
 		var usings = new List<string>();
 		var stack = new List<string>();
-		//var p1 = APerf.Create();
-		//var p1 = new APerf.Local { Incremental = true };
+		//var p1 = perf.local();
+		//var p1 = new perf.Instance { Incremental = true };
 		_EnumNamespace(comp.GlobalNamespace);
 		//p1.Write();
 		//p1.NW();
@@ -291,7 +292,7 @@ class CiErrors
 			bool found = false;
 			foreach (var nt in ns.GetMembers()) {
 				string sn = nt.Name;
-				//AOutput.Write(sn);
+				//print.it(sn);
 				if (sn.NE() || sn[0] == '<') continue;
 				if (nt is INamespaceSymbol ins) {
 					stack.Add(sn);
@@ -306,9 +307,9 @@ class CiErrors
 							foreach (var m in nt.GetMembers().OfType<IMethodSymbol>()) { //fast; slightly slower than nt.MemberNames.Contains(errName) which gets member types etc too
 								if (m.Name == errName && m.IsExtensionMethod) {
 									emReceiverType ??= _GetExtensionMethodReceiverType(_semo, start);
-									ADebug_.PrintIf(emReceiverType == null, "failed to get extension method receiver type");
+									Debug_.PrintIf(emReceiverType == null, "failed to get extension method receiver type");
 									if (emReceiverType == null) continue;
-									if (null == m.ReduceExtensionMethod(emReceiverType)) { /*ADebug_.Print(emReceiverType);*/ continue; }
+									if (null == m.ReduceExtensionMethod(emReceiverType)) { /*Debug_.Print(emReceiverType);*/ continue; }
 									found = true;
 									sym = m;
 									break;
@@ -396,7 +397,7 @@ class CiErrors
 		ITypeSymbol t = null;
 		if (semo.SyntaxTree.GetRoot().FindToken(startOfMethodName).Parent.Parent is MemberAccessExpressionSyntax ma)
 			t = semo.GetTypeInfo(ma.Expression).Type;
-		ADebug_.PrintIf(t == null, "failed to get extension method receiver type");
+		Debug_.PrintIf(t == null, "failed to get extension method receiver type");
 		return t;
 	}
 }

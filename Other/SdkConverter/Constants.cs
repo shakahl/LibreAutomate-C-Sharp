@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel; //Win32Exception
 
 //using System.Reflection;
 //using System.Linq;
@@ -56,7 +52,7 @@ namespace SdkConverter
 			string name = new string(s, 0, lenName);
 			if(c == 'u') { //#undef
 				if(!_defineConst.Remove(name) && !_defineOther.Remove(name)) _defineW.Remove(name);
-				//AOutput.Write($"#undef {name}");
+				//print.it($"#undef {name}");
 			} else if(iValue < iNext) { //preprocessor removes some #define values, it's ok
 				if(isFunc) { //info: for func-style get parameters as part of value
 					__DefineAddToOther(iName, name, _TokToString(iParamOrValue, iNext));
@@ -70,9 +66,9 @@ namespace SdkConverter
 						if(!isFuncWA) {
 							//don't add '#define NAME1 NAME2'
 							if(iNext - iValue == 1 && _TokIsIdent(iValue)) {
-								//AOutput.Write(name, r.valueS);
+								//print.it(name, r.valueS);
 							} else {
-								//AOutput.Write(name, iNext-iValue);
+								//print.it(name, iNext-iValue);
 								__DefineAddToOther(iName, name, " " + r.valueS);
 							}
 						}
@@ -91,7 +87,7 @@ namespace SdkConverter
 		{
 			//remove those that match other identifiers
 			if(_SymbolExists(iName, false) || _func.ContainsKey(name)) {
-				//AOutput.Write(name);
+				//print.it(name);
 				return;
 			}
 
@@ -106,7 +102,7 @@ namespace SdkConverter
 			if(value.Length == name.Length + 1 && value.Ends("W")) suffixLen = 1;
 			else if(value.Length == name.Length + 2 && value.Ends("_W")) suffixLen = 2; //some struct
 			if(!(suffixLen > 0 && value.Starts(name))) {
-				//AOutput.Write($"<><c 0xff>{name}    {value}</c>");
+				//print.it($"<><c 0xff>{name}    {value}</c>");
 				return false;
 			}
 
@@ -115,7 +111,7 @@ namespace SdkConverter
 				_func.Remove(name + "A");
 				//most are FuncA+FuncW, but some Func/FuncW and even Func/FuncA/FuncW. Some just FuncW.
 				if(_func.Remove(name)) {
-					//AOutput.Write(1, def); //6 in SDK
+					//print.it(1, def); //6 in SDK
 				}
 
 				def = def.Replace("W(", "(");
@@ -126,29 +122,29 @@ namespace SdkConverter
 
 				_func[value] = def;
 
-				//AOutput.Write($"<><c 0xff0000>{name}    {value}</c>");
-				//AOutput.Write(def);
+				//print.it($"<><c 0xff0000>{name}    {value}</c>");
+				//print.it(def);
 				return true;
 			} else {
 				_Symbol x;
 				if(_ns[0].sym.TryGetValue(_TokenFromString(value), out x)) {
 					var t = x as _Struct;
 					if(t != null || x is _Callback) {
-						//if(x is _Struct) AOutput.Write($"<><c 0xff0000>{name}    {value}</c>");
-						//else AOutput.Write($"<><c 0x8000>{name}    {value}</c>");
+						//if(x is _Struct) print.it($"<><c 0xff0000>{name}    {value}</c>");
+						//else print.it($"<><c 0x8000>{name}    {value}</c>");
 						int v = (t == null) ? 2 : (t.isInterface ? 1 : 0);
 						if(suffixLen == 2) v |= 0x10000;
 						_defineW[name] = v; //later will replace all STRUCTW to STRUCT in the final string of struct/func/delegate/interface
 						return true;
 					}
 					//else if(x is _Typedef) {
-					//	AOutput.Write($"<><c 0x80>{name}    {value}</c>");
+					//	print.it($"<><c 0x80>{name}    {value}</c>");
 					//} else {
-					//	AOutput.Write($"<><c 0xFF>{name}    {value}</c>"); //0
+					//	print.it($"<><c 0xFF>{name}    {value}</c>"); //0
 					//}
 
 				} else {
-					//AOutput.Write($"<><c 0xff>{name}    {value}</c>");
+					//print.it($"<><c 0xff>{name}    {value}</c>");
 
 				}
 			}
@@ -163,19 +159,19 @@ namespace SdkConverter
 				//if string constant name ends with "W", remove this if non-W version exists, and remove A version
 				string s = v.Value;
 				if(s.Ends("\";") && v.Key.Ends("W")) {
-					//AOutput.Write($"{v.Key} = {s}");
+					//print.it($"{v.Key} = {s}");
 					string k = v.Key.Remove(v.Key.Length - 1); //name without "W"
 					
 					//remove A version from _defineOther
 					if(_defineOther.Remove(k + "A")) {
-						//AOutput.Write($"removed A version: {v.Key} = {s}");
+						//print.it($"removed A version: {v.Key} = {s}");
 					}
 					//remove this W version if non-W version exists
 					string s2;
 					if(_defineConst.TryGetValue(k, out s2) && s2.Length == s.Length - 1) {
 						int i = s.Find("W = ");
 						if(s2 == s.Remove(i, 1)) {
-							//AOutput.Write($"removed W version because non-W exists: {v.Key} = {s}");
+							//print.it($"removed W version because non-W exists: {v.Key} = {s}");
 							continue;
 						}
 					}
@@ -189,7 +185,7 @@ namespace SdkConverter
 			//'#define' function-style macros and other macros that cannot convert to C#
 			writer.Write("\r\n// CANNOT CONVERT\r\n\r\n");
 			foreach(var v in _defineOther) {
-				//if(v.Value.Starts(" \"")) AOutput.Write($"<><c 0xff>{v.Key} = {v.Value}</c>"); //11 in SDK (more removed by the above code)
+				//if(v.Value.Starts(" \"")) print.it($"<><c 0xff>{v.Key} = {v.Value}</c>"); //11 in SDK (more removed by the above code)
 
 				writer.Write("internal const string {0} = null; //#define {0}{1};\r\n\r\n", v.Key, v.Value);
 			}

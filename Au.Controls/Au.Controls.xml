@@ -1034,12 +1034,12 @@
         </member>
         <member name="M:Au.Controls.KScintilla.FileLoaderSaver.Save(Au.Controls.KScintilla,System.String,System.String)">
             <summary>
-            Saves control text with the same encoding/BOM as loaded. Uses <see cref="M:Au.AFile.Save(System.String,System.Action{System.String},System.Boolean,System.String,System.Int32)"/>.
+            Saves control text with the same encoding/BOM as loaded. Uses <see cref="M:Au.filesystem.save(System.String,System.Action{System.String},System.Boolean,System.String,System.Int32)"/>.
             </summary>
             <param name="z"></param>
-            <param name="file">To pass to AFile.Save.</param>
-            <param name="tempDirectory">To pass to AFile.Save.</param>
-            <exception cref="T:System.Exception">Exceptions of AFile.Save.</exception>
+            <param name="file">To pass to filesystem.save.</param>
+            <param name="tempDirectory">To pass to filesystem.save.</param>
+            <exception cref="T:System.Exception">Exceptions of filesystem.save.</exception>
             <exception cref="T:System.InvalidOperationException">The file is binary (then <b>SetText</b> made the control read-only), or <b>Load</b> not called.</exception>
         </member>
         <member name="M:Au.Controls.KScintilla.zGetSelectionLines(System.Boolean,System.ValueTuple{System.Int32,System.Int32,System.Int32,System.Int32,System.String}@,System.Boolean,System.Boolean)">
@@ -1245,18 +1245,18 @@
             <remarks>
             Links and formatting is specified in text, using tags like in HTML. Depending on control style, may need prefix <c><![CDATA[<>]]></c>.
             Reference: [](xref:output_tags).
-            Tags are supported by <see cref="M:Au.AOutput.Write(System.String)"/> when it writes to the Au script editor.
+            Tags are supported by <see cref="M:Au.print.it(System.String)"/> when it writes to the Au script editor.
             
             This control does not implement some predefined tags: open, script.
             If used, must be implemented by the program.
             Also you can register custom link tags that call your callback functions.
             See <see cref="M:Au.Controls.SciTags.AddLinkTag(System.String,System.Action{System.String})"/>, <see cref="M:Au.Controls.SciTags.AddCommonLinkTag(System.String,System.Action{System.String})"/>.
             
-            Tags are supported by some existing controls based on <see cref="T:Au.Controls.KScintilla"/>. In the Au editor it is the output (use <see cref="M:Au.AOutput.Write(System.String)"/>, like in the example below). In this library - the <see cref="T:Au.Controls.KSciInfoBox"/> control. To enable tags in other <see cref="T:Au.Controls.KScintilla"/> controls, use <see cref="P:Au.Controls.KScintilla.ZInitTagsStyle"/> and optionally <see cref="P:Au.Controls.KScintilla.ZInitImagesStyle"/>.
+            Tags are supported by some existing controls based on <see cref="T:Au.Controls.KScintilla"/>. In the Au editor it is the output (use <see cref="M:Au.print.it(System.String)"/>, like in the example below). In this library - the <see cref="T:Au.Controls.KSciInfoBox"/> control. To enable tags in other <see cref="T:Au.Controls.KScintilla"/> controls, use <see cref="P:Au.Controls.KScintilla.ZInitTagsStyle"/> and optionally <see cref="P:Au.Controls.KScintilla.ZInitImagesStyle"/>.
             </remarks>
             <example>
             <code><![CDATA[
-            AOutput.Write("<>Text with <i>tags<>.");
+            print.it("<>Text with <i>tags<>.");
             ]]></code>
             </example>
         </member>
@@ -1272,13 +1272,13 @@
             This func is usually called after clearing control text.
             </summary>
         </member>
-        <member name="M:Au.Controls.SciTags.OutputServerProcessMessages(Au.AOutput.Server,System.Action{Au.Types.OutputServerMessage})">
+        <member name="M:Au.Controls.SciTags.PrintServerProcessMessages(Au.print.Server,System.Action{Au.Types.PrintServerMessage})">
             <summary>
-            Displays <see cref="T:Au.AOutput.Server"/> messages that are currently in its queue.
+            Displays <see cref="T:Au.print.Server"/> messages that are currently in its queue.
             </summary>
-            <param name="os">The AOutput.Server instance.</param>
+            <param name="ps">The print.Server instance.</param>
             <param name="onMessage">
-            A callback function that can be called when this function gets/removes a message from os.
+            A callback function that can be called when this function gets/removes a message from ps.
             When message type is Write, it can change message text; if null, this function ignores the message.
             It also processes messages of type TaskEvent; this function ignores them.
             </param>
@@ -1288,7 +1288,7 @@
             Messages with tags must have prefix "&lt;&gt;".
             Limits text length to about 4 MB (removes oldest text when exceeded).
             </remarks>
-            <seealso cref="M:Au.AOutput.Server.SetNotifications(Au.AWnd,System.Int32)"/>
+            <seealso cref="M:Au.print.Server.SetNotifications(Au.wnd,System.Int32)"/>
         </member>
         <member name="M:Au.Controls.SciTags.AddText(System.String,System.Boolean,System.Boolean)">
             <summary>
@@ -1471,7 +1471,7 @@
             Processes keys such as arrow, page, Enter, Ctrl+A.
             Returns true if handled.
             </summary>
-            <seealso cref="M:Au.AKeys.More.KKeyToWpf(Au.Types.KKey)"/>
+            <seealso cref="M:Au.keys.more.KKeyToWpf(Au.Types.KKey)"/>
         </member>
         <member name="E:Au.Controls.KTreeView.ItemActivated">
             <summary>
@@ -1676,7 +1676,7 @@
         <member name="M:Au.Controls.KTreeView.GetDropInfo(Au.Controls.TVDropInfo@)">
             <summary>
             Can be called from "drag over" and "drop" overrides or event handlers to get drop info.
-            This overload uses mouse position (<see cref="P:Au.AWnd.MouseClientXY"/>).
+            This overload uses mouse position (<see cref="P:Au.wnd.MouseClientXY"/>).
             </summary>
             <param name="d"></param>
             <seealso cref="M:Au.Controls.KTreeView.OnDragOver2(System.Boolean)"/>
@@ -1823,11 +1823,11 @@
             "imagefile:" - path of png/bmp/jpg/gif/tif or xaml file.
             "resource:" - path of png/bmp/jpg/gif/tif or xaml resource. Don't need prefix if starts with "resources/", like "resources/file.png".
             "image:" - Base-64 encoded png/bmp/jpg/gif/tif image.
-            If without prefix, gets file icon; see <see cref="M:Au.AIcon.Of(System.String,System.Int32,Au.Types.IconGetFlags)"/>.
+            If without prefix, gets file icon; see <see cref="M:Au.icon.of(System.String,System.Int32,Au.Types.IconGetFlags)"/>.
             </summary>
             <remarks>
-            To load image the control calls <see cref="M:Au.Util.AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String,System.Nullable{System.ValueTuple{Au.Types.SIZE,System.Int32}})"/> or <see cref="M:Au.Util.AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.
-            The control uses <see cref="T:Au.Util.AIconImageCache"/>; see <see cref="P:Au.Controls.KTreeView.ImageCache"/>.
+            To load image the control calls <see cref="M:Au.More.ImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String,System.Nullable{System.ValueTuple{Au.Types.SIZE,System.Int32}})"/> or <see cref="M:Au.More.ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.
+            The control uses <see cref="T:Au.More.IconImageCache"/>; see <see cref="P:Au.Controls.KTreeView.ImageCache"/>.
             </remarks>
         </member>
         <member name="P:Au.Controls.ITreeViewItem.CheckState">
@@ -2339,7 +2339,7 @@
             <summary>
             Image string.
             The factory action receives this string in parameters. It can load image and set menu item's <b>Icon</b> property.
-            If factory action not used or does not set <b>Image</b> property and does not set image=null, this class loads image from exe or script resources and sets <b>Icon</b> property. The resource file can be xaml (for example converted from svg) or png etc. If using Visual Studio, to add an image to resources set its build action = Resource. More info: <see cref="T:Au.Util.AResources"/>.
+            If factory action not used or does not set <b>Image</b> property and does not set image=null, this class loads image from exe or script resources and sets <b>Icon</b> property. The resource file can be xaml (for example converted from svg) or png etc. If using Visual Studio, to add an image to resources set its build action = Resource. More info: <see cref="T:Au.More.ResourceUtil"/>.
             </summary>
         </member>
         <member name="F:Au.Controls.CommandAttribute.tooltip">
@@ -2391,7 +2391,7 @@
         </member>
         <member name="P:Au.Controls.KPopup.Hwnd">
             <summary>
-            Gets popup window handle. Returns default(AWnd) if not created (also after destroying).
+            Gets popup window handle. Returns default(wnd) if not created (also after destroying).
             </summary>
         </member>
         <member name="P:Au.Controls.KPopup.WindowName">
@@ -2430,7 +2430,7 @@
             <summary>
             Shows the popup window by a window, WPF element or rectangle.
             </summary>
-            <param name="owner">Provides owner window and optionally rectangle. Can be <b>FrameworkElement</b>, <b>KPopup</b>, <b>AWnd</b> or null.</param>
+            <param name="owner">Provides owner window and optionally rectangle. Can be <b>FrameworkElement</b>, <b>KPopup</b>, <b>wnd</b> or null.</param>
             <param name="side">Show at this side of rectangle, or opposite side if does not fit in screen. If null, shows in rectangle.</param>
             <param name="rScreen">Rectangle in screen (physical pixels). If null, uses owner's rectangle. Cannot be both null.</param>
             <param name="exactSize">If does not fit in screen, cover part of rectangle but don't make smaller.</param>
@@ -2519,13 +2519,13 @@
             <example>
             <code><![CDATA[
             var m = new KWpfMenu();
-            m["One"] = o => AOutput.Write(o);
+            m["One"] = o => print.it(o);
             using(m.Submenu("Sub")) {
-            	m["Three"] = o => AOutput.Write(o);
-            	m["Four"] = o => AOutput.Write(o);
+            	m["Three"] = o => print.it(o);
+            	m["Four"] = o => print.it(o);
             }
             m.Separator();
-            m["Two"] = o => { AOutput.Write(o); };
+            m["Two"] = o => { print.it(o); };
             m.Show(this); //or m.IsOpen=true;
             ]]></code>
             </example>
@@ -2548,7 +2548,7 @@
             </remarks>
             <example>
             <code><![CDATA[
-            m["Example"] = o => AOutput.Write(o);
+            m["Example"] = o => print.it(o);
             m.Last.IsChecked = true;
             ]]></code>
             </example>
@@ -2565,12 +2565,12 @@
             <param name="icon">
             Can be:
             - <see cref="T:System.Windows.Controls.Image"/> or other WPF control to assign directly to <see cref="P:System.Windows.Controls.MenuItem.Icon"/>.
-            - <see cref="T:System.Windows.Media.ImageSource"/> - a WPF image. To create image from icon, use <see cref="M:Au.AIcon.ToWpfImage(System.Boolean)"/>.
-            - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or png image as Base-64 string with prefix "image:". Can be png or XAML file or resource. See <see cref="M:Au.Util.AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>. Supports environment variables. If not full path, looks in <see cref="P:Au.AFolders.ThisAppImages"/>.
-            - <see cref="T:System.Uri"/> - image file path, or resource pack URI, or URL. Does not support environment variables and <see cref="P:Au.AFolders.ThisAppImages"/>.
+            - <see cref="T:System.Windows.Media.ImageSource"/> - a WPF image. To create image from icon, use <see cref="M:Au.icon.ToWpfImage(System.Boolean)"/>.
+            - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or png image as Base-64 string with prefix "image:". Can be png or XAML file or resource. See <see cref="M:Au.More.ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>. Supports environment variables. If not full path, looks in <see cref="P:Au.folders.ThisAppImages"/>.
+            - <see cref="T:System.Uri"/> - image file path, or resource pack URI, or URL. Does not support environment variables and <see cref="P:Au.folders.ThisAppImages"/>.
             
-            If failed to find or load image file, prints warning (<see cref="M:Au.AOutput.Warning(System.String,System.Int32,System.String)"/>).
-            To create Base-64 string, use menu Code -> AWinImage.
+            If failed to find or load image file, prints warning (<see cref="M:Au.print.warning(System.String,System.Int32,System.String)"/>).
+            To create Base-64 string, use menu Code -> uiimage.
             To add an image resource in Visual Studio, use build action "Resource" for the image file.
             </param>
             <value>Action called on click.</value>
@@ -2579,7 +2579,7 @@
             </remarks>
             <example>
             <code><![CDATA[
-            m["Example"] = o => AOutput.Write(o);
+            m["Example"] = o => print.it(o);
             m.Last.IsChecked = true;
             ]]></code>
             </example>
@@ -2618,7 +2618,7 @@
         </member>
         <member name="P:Au.Controls.KWpfMenu.ActionException">
             <summary>
-            Whether to handle exceptions in item action code. If false (default), handles exceptions and on exception calls <see cref="M:Au.AOutput.Warning(System.String,System.Int32,System.String)"/>.
+            Whether to handle exceptions in item action code. If false (default), handles exceptions and on exception calls <see cref="M:Au.print.warning(System.String,System.Int32,System.String)"/>.
             Applied to menu items added afterwards.
             </summary>
         </member>
@@ -2649,7 +2649,7 @@
             <remarks>
             The menu is modal; the function returns when closed.
             </remarks>
-            <seealso cref="M:Au.ADialog.ShowList(Au.Types.DStringList,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>
+            <seealso cref="M:Au.dialog.showList(Au.Types.DStringList,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>
         </member>
         <member name="T:Au.Controls.WpfMenuActionArgs">
             <summary>
@@ -2711,7 +2711,7 @@
             </summary>
             <param name="color">0xBBGGRR</param>
         </member>
-        <member name="M:Au.Controls.HwndHostAccessibleBase_.#ctor(System.Windows.FrameworkElement,Au.AWnd)">
+        <member name="M:Au.Controls.HwndHostAccessibleBase_.#ctor(System.Windows.FrameworkElement,Au.wnd)">
             <param name="e">HwndHost or its container control (if the HwndHost is part of the control).</param>
             <param name="w">Native control hosted by the HwndHost.</param>
         </member>
@@ -2768,7 +2768,7 @@
             Returns null.
             </summary>
         </member>
-        <member name="M:Au.Controls.HwndHostAccessibleBase_.SelectChild(Au.Types.AccSELFLAG,System.Int32)">
+        <member name="M:Au.Controls.HwndHostAccessibleBase_.SelectChild(Au.Types.ESelect,System.Int32)">
             <summary>
             Does nothing.
             Not called for self.
@@ -2781,7 +2781,7 @@
             Not called for self.
             </summary>
         </member>
-        <member name="M:Au.Controls.HwndHostAccessibleBase_.Navigate(Au.Types.Api.AccNAVDIR,System.Int32)">
+        <member name="M:Au.Controls.HwndHostAccessibleBase_.Navigate(Au.Types.Api.NAVDIR,System.Int32)">
             <summary>
             Returns null.
             If self (childStart==-1), navDir is FIRSTCHILD or LASTCHILD, else navDir is any except these.
@@ -2802,93 +2802,93 @@
         <member name="M:Au.Controls.HwndHostAccessibleBase_.WmGetobject(System.IntPtr,System.IntPtr)">
             <summary>
             Call in hook wndproc on WM_GETOBJECT like this: <c>handled = true; return (_acc ??= new _Accessible(this)).WmGetobject(wParam, lParam);</c>.
-            If lParam is AccOBJID.CLIENT, calls API LresultFromObject(this), else calls API DefWindowProc.
+            If lParam is EObjid.CLIENT, calls API LresultFromObject(this), else calls API DefWindowProc.
             </summary>
         </member>
-        <member name="F:Au.Controls.ImageUtil.BitmapFileInfo_.biHeader">
+        <member name="F:Au.Controls.KImageUtil.BitmapFileInfo_.biHeader">
             <summary>
             Can be BITMAPINFOHEADER/BITMAPV5HEADER or BITMAPCOREHEADER.
             </summary>
         </member>
-        <member name="M:Au.Controls.ImageUtil.GetBitmapFileInfo_(System.Byte[],Au.Controls.ImageUtil.BitmapFileInfo_@)">
+        <member name="M:Au.Controls.KImageUtil.GetBitmapFileInfo_(System.Byte[],Au.Controls.KImageUtil.BitmapFileInfo_@)">
             <summary>
             Gets some info from BITMAPINFOHEADER or BITMAPCOREHEADER.
             Checks if it is valid bitmap file header. Returns false if invalid.
             </summary>
         </member>
-        <member name="T:Au.Controls.ImageUtil.ImageType">
+        <member name="T:Au.Controls.KImageUtil.ImageType">
             <summary>
-            Image type as detected by <see cref="M:Au.Controls.ImageUtil.ImageTypeFromString(System.Boolean,System.Int32@,System.String)"/>.
+            Image type as detected by <see cref="M:Au.Controls.KImageUtil.ImageTypeFromString(System.Boolean,System.Int32@,System.String)"/>.
             </summary>
         </member>
-        <member name="F:Au.Controls.ImageUtil.ImageType.None">
+        <member name="F:Au.Controls.KImageUtil.ImageType.None">
             <summary>The string isn't image.</summary>
         </member>
-        <member name="F:Au.Controls.ImageUtil.ImageType.Base64CompressedBmp">
-            <summary>Compressed and Base64-encoded .bmp file data with "~:" prefix. See <see cref="M:Au.Controls.ImageUtil.ImageToString(System.String)"/>.</summary>
+        <member name="F:Au.Controls.KImageUtil.ImageType.Base64CompressedBmp">
+            <summary>Compressed and Base64-encoded .bmp file data with "~:" prefix. See <see cref="M:Au.Controls.KImageUtil.ImageToString(System.String)"/>.</summary>
         </member>
-        <member name="F:Au.Controls.ImageUtil.ImageType.Base64PngGifJpg">
+        <member name="F:Au.Controls.KImageUtil.ImageType.Base64PngGifJpg">
             <summary>Base64-encoded .png/gif/jpg file data with "image:" prefix.</summary>
         </member>
-        <member name="F:Au.Controls.ImageUtil.ImageType.Bmp">
+        <member name="F:Au.Controls.KImageUtil.ImageType.Bmp">
             <summary>.bmp file path.</summary>
         </member>
-        <member name="F:Au.Controls.ImageUtil.ImageType.PngGifJpg">
+        <member name="F:Au.Controls.KImageUtil.ImageType.PngGifJpg">
             <summary>.png, .gif or .jpg file path.</summary>
         </member>
-        <member name="F:Au.Controls.ImageUtil.ImageType.Ico">
+        <member name="F:Au.Controls.KImageUtil.ImageType.Ico">
             <summary>.ico file path.</summary>
         </member>
-        <member name="F:Au.Controls.ImageUtil.ImageType.Cur">
+        <member name="F:Au.Controls.KImageUtil.ImageType.Cur">
             <summary>.cur or .ani file path.</summary>
         </member>
-        <member name="F:Au.Controls.ImageUtil.ImageType.IconLib">
+        <member name="F:Au.Controls.KImageUtil.ImageType.IconLib">
             <summary>Icon from a .dll or other file containing icons, like @"C:\a\b.dll,15".</summary>
         </member>
-        <member name="F:Au.Controls.ImageUtil.ImageType.ShellIcon">
+        <member name="F:Au.Controls.KImageUtil.ImageType.ShellIcon">
             <summary>None of other image types, when <i>anyFile</i> is true.</summary>
         </member>
-        <member name="M:Au.Controls.ImageUtil.ImageTypeFromString(System.Boolean,System.Int32@,System.Byte*,System.Int32)">
+        <member name="M:Au.Controls.KImageUtil.ImageTypeFromString(System.Boolean,System.Int32@,System.Byte*,System.Int32)">
             <summary>
             Gets image type from string.
             </summary>
             <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
             <param name="prefixLength">Length of prefix "imagefile:" or "image:" or "~:".</param>
-            <param name="s">File path etc. See <see cref="T:Au.Controls.ImageUtil.ImageType"/>.</param>
+            <param name="s">File path etc. See <see cref="T:Au.Controls.KImageUtil.ImageType"/>.</param>
             <param name="length">If -1, calls CharPtr_.Length(s).</param>
         </member>
-        <member name="M:Au.Controls.ImageUtil.ImageTypeFromString(System.Boolean,System.Int32@,System.String)">
+        <member name="M:Au.Controls.KImageUtil.ImageTypeFromString(System.Boolean,System.Int32@,System.String)">
             <summary>
             Gets image type from string.
             </summary>
             <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
             <param name="prefixLength">Length of prefix "imagefile:" or "image:" or "~:".</param>
-            <param name="s">File path etc. See <see cref="T:Au.Controls.ImageUtil.ImageType"/>.</param>
+            <param name="s">File path etc. See <see cref="T:Au.Controls.KImageUtil.ImageType"/>.</param>
         </member>
-        <member name="M:Au.Controls.ImageUtil.BmpFileDataFromString(System.String,Au.Controls.ImageUtil.ImageType,System.Boolean)">
+        <member name="M:Au.Controls.KImageUtil.BmpFileDataFromString(System.String,Au.Controls.KImageUtil.ImageType,System.Boolean)">
             <summary>
             Loads image and returns its data in .bmp file format.
             Returns null if fails, for example file not found or invalid Base64 string.
             </summary>
             <param name="s">Depends on t. File path or resource name without prefix or Base64 image data without prefix.</param>
             <param name="t">Image type and string format.</param>
-            <param name="searchPath">Use <see cref="M:Au.AFile.SearchPath(System.String,System.String[])"/></param>
-            <remarks>Supports environment variables etc. If not full path, searches in <see cref="P:Au.AFolders.ThisAppImages"/>.</remarks>
+            <param name="searchPath">Use <see cref="M:Au.filesystem.searchPath(System.String,System.String[])"/></param>
+            <remarks>Supports environment variables etc. If not full path, searches in <see cref="P:Au.folders.ThisAppImages"/>.</remarks>
         </member>
-        <member name="M:Au.Controls.ImageUtil.BmpFileDataToString(System.Byte[])">
+        <member name="M:Au.Controls.KImageUtil.BmpFileDataToString(System.Byte[])">
             <summary>
-            Compresses .bmp file data (<see cref="M:Au.Util.AConvert.Compress(System.Byte[])"/>) and Base64-encodes.
+            Compresses .bmp file data (<see cref="M:Au.More.Convert2.Compress(System.Byte[])"/>) and Base64-encodes.
             Returns string with "~:" prefix.
             </summary>
         </member>
-        <member name="M:Au.Controls.ImageUtil.ImageToString(System.String)">
+        <member name="M:Au.Controls.KImageUtil.ImageToString(System.String)">
             <summary>
-            Converts image file data to string that can be used in source code instead of file path. It is supported by some functions of this library, for example <see cref="M:Au.AWinImage.Find(Au.Types.WIArea,Au.Types.WIImage,Au.Types.WIFlags,System.Int32,System.Func{Au.AWinImage,Au.Types.WIAlso})"/>.
+            Converts image file data to string that can be used in source code instead of file path. It is supported by some functions of this library, for example <see cref="M:Au.uiimage.find(Au.Types.IFArea,Au.Types.IFImage,Au.Types.IFFlags,System.Int32,System.Func{Au.uiimage,Au.Types.IFAlso})"/>.
             Returns string with prefix "image:" (Base-64 encoded .png/gif/jpg file data) or "~:" (Base-64 encoded compressed .bmp file data).
-            Supports all <see cref="T:Au.Controls.ImageUtil.ImageType"/> formats. For non-image files gets icon. Converts icons to bitmap.
+            Supports all <see cref="T:Au.Controls.KImageUtil.ImageType"/> formats. For non-image files gets icon. Converts icons to bitmap.
             Returns null if path is not a valid image string or the file does not exist or failed to load.
             </summary>
-            <remarks>Supports environment variables etc. If not full path, searches in <see cref="P:Au.AFolders.ThisAppImages"/> and standard directories.</remarks>
+            <remarks>Supports environment variables etc. If not full path, searches in <see cref="P:Au.folders.ThisAppImages"/> and standard directories.</remarks>
         </member>
         <member name="T:Au.Tools.KCheckTextBox">
             <summary>
@@ -2941,10 +2941,10 @@
         </member>
         <member name="T:Au.Tools.KExtWpf">
             <summary>
-            Util extension methods for dialogs.
+            Extension methods for dialogs.
             </summary>
         </member>
-        <member name="M:Au.Tools.KExtWpf.xAddCheck(Au.AWpfBuilder,System.String,System.Boolean)">
+        <member name="M:Au.Tools.KExtWpf.xAddCheck(Au.wpfBuilder,System.String,System.Boolean)">
             <summary>
             Adds KCheckBox that can be used with TextBox in a propertygrid row. Or alone in a grid or stack row.
             </summary>
@@ -2952,22 +2952,22 @@
             <param name="name">Checkbox text.</param>
             <param name="noNewRow"></param>
         </member>
-        <member name="M:Au.Tools.KExtWpf.xAddText(Au.AWpfBuilder,System.String)">
+        <member name="M:Au.Tools.KExtWpf.xAddText(Au.wpfBuilder,System.String)">
             <summary>
             Adds TextBox that can be used with KCheckBox in a propertygrid row. Or alone in a grid or stack row.
             </summary>
         </member>
-        <member name="M:Au.Tools.KExtWpf.xAddCheckText(Au.AWpfBuilder,System.String,System.String)">
+        <member name="M:Au.Tools.KExtWpf.xAddCheckText(Au.wpfBuilder,System.String,System.String)">
             <summary>
-            Adds KCheckBox (<see cref="M:Au.Tools.KExtWpf.xAddCheck(Au.AWpfBuilder,System.String,System.Boolean)"/>) and multiline TextBox (<see cref="M:Au.Tools.KExtWpf.xAddText(Au.AWpfBuilder,System.String)"/>) in a propertygrid row.
+            Adds KCheckBox (<see cref="M:Au.Tools.KExtWpf.xAddCheck(Au.wpfBuilder,System.String,System.Boolean)"/>) and multiline TextBox (<see cref="M:Au.Tools.KExtWpf.xAddText(Au.wpfBuilder,System.String)"/>) in a propertygrid row.
             </summary>
             <param name="b"></param>
             <param name="name">Checkbox text.</param>
             <param name="text">Textbox text.</param>
         </member>
-        <member name="M:Au.Tools.KExtWpf.xAddCheckTextDropdown(Au.AWpfBuilder,System.String,System.String)">
+        <member name="M:Au.Tools.KExtWpf.xAddCheckTextDropdown(Au.wpfBuilder,System.String,System.String)">
             <summary>
-            Adds KCheckBox (<see cref="M:Au.Tools.KExtWpf.xAddCheck(Au.AWpfBuilder,System.String,System.Boolean)"/>) and multiline TextBox (<see cref="M:Au.Tools.KExtWpf.xAddText(Au.AWpfBuilder,System.String)"/>) in a propertygrid row.
+            Adds KCheckBox (<see cref="M:Au.Tools.KExtWpf.xAddCheck(Au.wpfBuilder,System.String,System.Boolean)"/>) and multiline TextBox (<see cref="M:Au.Tools.KExtWpf.xAddText(Au.wpfBuilder,System.String)"/>) in a propertygrid row.
             Also adds ▾ button that shows a drop-down list (see <see cref="M:Au.Tools.KCheckTextBox.Set(System.Boolean,System.String,System.Collections.Generic.List{System.String})"/>).
             Unlike ComboBox, text can be multiline and isn't selected when receives focus.
             </summary>
@@ -2975,40 +2975,40 @@
             <param name="name">Checkbox text.</param>
             <param name="text">Textbox text.</param>
         </member>
-        <member name="M:Au.Tools.KExtWpf.xAddCheckCombo(Au.AWpfBuilder,System.String,System.String,System.Int32)">
+        <member name="M:Au.Tools.KExtWpf.xAddCheckCombo(Au.wpfBuilder,System.String,System.String,System.Int32)">
             <summary>
-            Adds KCheckBox (<see cref="M:Au.Tools.KExtWpf.xAddCheck(Au.AWpfBuilder,System.String,System.Boolean)"/>) and readonly ComboBox (<see cref="M:Au.Tools.KExtWpf.xAddOther``1(Au.AWpfBuilder,``0@,System.String)"/>) in a propertygrid row.
+            Adds KCheckBox (<see cref="M:Au.Tools.KExtWpf.xAddCheck(Au.wpfBuilder,System.String,System.Boolean)"/>) and readonly ComboBox (<see cref="M:Au.Tools.KExtWpf.xAddOther``1(Au.wpfBuilder,``0@,System.String)"/>) in a propertygrid row.
             </summary>
             <param name="b"></param>
             <param name="name">Checkbox text.</param>
             <param name="items">Combobox items like "One|Two".</param>
             <param name="index">Combobox selected index.</param>
         </member>
-        <member name="M:Au.Tools.KExtWpf.xAddOther``1(Au.AWpfBuilder,``0@,System.String)">
+        <member name="M:Au.Tools.KExtWpf.xAddOther``1(Au.wpfBuilder,``0@,System.String)">
             <summary>
             Adds any control that can be used in a propertygrid row.
             </summary>
         </member>
-        <member name="M:Au.Tools.KExtWpf.xAddButton(Au.AWpfBuilder,System.Windows.Controls.Button@,System.String,System.Action{Au.Types.WBButtonClickArgs})">
+        <member name="M:Au.Tools.KExtWpf.xAddButton(Au.wpfBuilder,System.Windows.Controls.Button@,System.String,System.Action{Au.Types.WBButtonClickArgs})">
             <summary>
             Adds button that can be used in a propertygrid row.
             </summary>
         </member>
-        <member name="M:Au.Tools.KExtWpf.xAddButton(Au.AWpfBuilder,System.String,System.Action{Au.Types.WBButtonClickArgs})">
+        <member name="M:Au.Tools.KExtWpf.xAddButton(Au.wpfBuilder,System.String,System.Action{Au.Types.WBButtonClickArgs})">
             <summary>
             Adds button that can be used in a propertygrid row.
             </summary>
         </member>
-        <member name="M:Au.Tools.KExtWpf.xAddCheckAnd``1(Au.AWpfBuilder,System.String,``0@,System.String)">
+        <member name="M:Au.Tools.KExtWpf.xAddCheckAnd``1(Au.wpfBuilder,System.String,``0@,System.String)">
             <summary>
-            Adds KCheckBox (<see cref="M:Au.Tools.KExtWpf.xAddCheck(Au.AWpfBuilder,System.String,System.Boolean)"/>) and other control (<see cref="M:Au.Tools.KExtWpf.xAddOther``1(Au.AWpfBuilder,``0@,System.String)"/>) in a propertygrid row.
+            Adds KCheckBox (<see cref="M:Au.Tools.KExtWpf.xAddCheck(Au.wpfBuilder,System.String,System.Boolean)"/>) and other control (<see cref="M:Au.Tools.KExtWpf.xAddOther``1(Au.wpfBuilder,``0@,System.String)"/>) in a propertygrid row.
             </summary>
             <param name="b"></param>
             <param name="name">Checkbox text.</param>
             <param name="other"></param>
             <param name="text">Other control text.</param>
         </member>
-        <member name="M:Au.Tools.KExtWpf.xAddInBorder``1(Au.AWpfBuilder,``0@,System.String)">
+        <member name="M:Au.Tools.KExtWpf.xAddInBorder``1(Au.wpfBuilder,``0@,System.String)">
             <summary>
             Adds Border with standard thickness/color and an element in it.
             </summary>
@@ -3016,29 +3016,29 @@
             <param name="var"></param>
             <param name="margin"></param>
         </member>
-        <member name="M:Au.Tools.KExtWpf.xStartPropertyGrid(Au.AWpfBuilder,System.String,System.Boolean)">
+        <member name="M:Au.Tools.KExtWpf.xStartPropertyGrid(Au.wpfBuilder,System.String,System.Boolean)">
             <summary>
             Adds ScrollViewer, adds 2-column grid or vertical stack panel in it (StartGrid, StartStack), and calls <c>Options(modifyPadding: false, margin: new(1))</c>.
             </summary>
         </member>
-        <member name="M:Au.Tools.KExtWpf.xEndPropertyGrid(Au.AWpfBuilder)">
+        <member name="M:Au.Tools.KExtWpf.xEndPropertyGrid(Au.wpfBuilder)">
             <summary>
-            Ends grid/stack set by <see cref="M:Au.Tools.KExtWpf.xStartPropertyGrid(Au.AWpfBuilder,System.String,System.Boolean)"/> and restores options.
+            Ends grid/stack set by <see cref="M:Au.Tools.KExtWpf.xStartPropertyGrid(Au.wpfBuilder,System.String,System.Boolean)"/> and restores options.
             </summary>
             <param name="b"></param>
         </member>
-        <member name="M:Au.Tools.KExtWpf.xSetHeaderProp(Au.AWpfBuilder)">
+        <member name="M:Au.Tools.KExtWpf.xSetHeaderProp(Au.wpfBuilder)">
             <summary>
             Sets header control properties: center, bold, dark gray text.
             It can be Label, TextBlock or CheckBox. Not tested others.
             </summary>
         </member>
-        <member name="M:Au.Tools.KExtWpf.xAddSplitterV(Au.AWpfBuilder,System.Int32,System.Double)">
+        <member name="M:Au.Tools.KExtWpf.xAddSplitterV(Au.wpfBuilder,System.Int32,System.Double)">
             <summary>
             Adds vertical splitter.
             </summary>
         </member>
-        <member name="M:Au.Tools.KExtWpf.xAddSplitterH(Au.AWpfBuilder,System.Int32,System.Double)">
+        <member name="M:Au.Tools.KExtWpf.xAddSplitterH(Au.wpfBuilder,System.Int32,System.Double)">
             <summary>
             Adds horizontal splitter.
             </summary>

@@ -70,7 +70,7 @@ Right-click an edit field - context menu. Middle-click - clear text; if empty - 
 Results of "Find in text". Displays files and text lines containing the text. With links to found text instances and to replace all found in a file. 
 
 #### Output
-The program writes various info here. For example script compilation errors. Scripts use [AOutput.Write]() for it.
+The program writes various info here. For example script compilation errors. Scripts use [print.it]() for it.
 
 Right-click - context menu. Middle-click - clear.
 

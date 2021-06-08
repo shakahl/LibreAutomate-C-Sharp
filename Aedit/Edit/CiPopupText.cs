@@ -1,6 +1,6 @@
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 using Au.Controls;
 using System;
 using System.Collections.Generic;
@@ -80,7 +80,7 @@ class CiPopupText
 				} else if (s.Starts('|')) { //go to symbol source file/position or web page
 					CiGoTo.LinkGoTo(s);
 				} else {
-					ARun.RunSafe(s);
+					run.itSafe(s);
 				}
 			};
 
@@ -104,9 +104,9 @@ class CiPopupText
 		_w.ShowByRect(ownerControl, side, anchorRect);
 
 		if (hideIfOutside) {
-			ATimer.Every(100, t => {
+			timerm.every(100, t => {
 				if (IsVisible) {
-					var p = AMouse.XY;
+					var p = mouse.xy;
 					if (anchorRect.Contains(p) || _w.Hwnd.Rect.Contains(p) || _c.IsMouseCaptureWithin) return;
 					Hide();
 				}
@@ -123,7 +123,7 @@ class CiPopupText
 
 	public bool Hide() {
 		if (!IsVisible) return false;
-		//AOutput.Write(new StackTrace());
+		//print.it(new StackTrace());
 		_w.Close();
 		_section = null;
 		_SetText();

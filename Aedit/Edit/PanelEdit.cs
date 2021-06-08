@@ -17,7 +17,7 @@ using System.Windows.Controls;
 
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 using Au.Controls;
 using static Au.Controls.Sci;
 using System.Windows.Input;
@@ -65,7 +65,7 @@ class PanelEdit : Grid
 
 		if (f == _activeDoc?.ZFile) return true;
 
-		//AOutput.Write(focusEditor, new StackTrace(true));
+		//print.it(focusEditor, new StackTrace(true));
 		bool focusNow = !newFile && (focusEditor == true || (_activeDoc?.Hwnd.IsFocused ?? false));
 
 		void _ShowHideActiveDoc(bool show) {
@@ -91,7 +91,7 @@ class PanelEdit : Grid
 			byte[] text = null;
 			KScintilla.FileLoaderSaver fls = default;
 			try { text = fls.Load(path); }
-			catch (Exception ex) { AOutput.Write("Failed to open file. " + ex.Message); }
+			catch (Exception ex) { print.it("Failed to open file. " + ex.Message); }
 			if (text == null) return false;
 
 			_ShowHideActiveDoc(false);
@@ -114,9 +114,9 @@ class PanelEdit : Grid
 			int count = 60 * 4; //60 s timeout
 			App.Timer025sWhenVisible += _Timer;
 			void _Timer() {
-				//AOutput.Write("timer");
+				//print.it("timer");
 				if (--count > 0 && f == _activeDoc?.ZFile && Panels.Files.TreeControl.IsFocused) {
-					if (AWnd.FromMouse() != doc.Hwnd
+					if (wnd.fromMouse() != doc.Hwnd
 						|| !Panels.Files.TreeControl.IsKeyboardFocused //editing item label
 						) return;
 					doc.Focus();
@@ -216,7 +216,7 @@ class PanelEdit : Grid
 		//if(0 == d.Call(SCI_CANPASTE)) disable |= EUpdateUI.Paste; //rejected. Often slow. Also need to see on focused etc.
 
 		var dif = disable ^ _editDisabled;
-		//AOutput.Write(dif);
+		//print.it(dif);
 		if (dif == 0) return;
 
 		_editDisabled = disable;

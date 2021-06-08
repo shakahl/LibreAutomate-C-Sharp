@@ -13,7 +13,7 @@ using System.Reflection;
 using System.Globalization;
 
 using Au.Types;
-using Au.Util;
+using Au.More;
 
 namespace Au
 {
@@ -24,10 +24,10 @@ namespace Au
 	/// Some .NET <see cref="String"/> methods use <see cref="StringComparison.CurrentCulture"/> by default, while others use ordinal or invariant comparison. It is confusing (difficult to remember), dangerous (easy to make bugs), slower and rarely useful.
 	/// Microsoft recommends to specify <b>StringComparison.Ordinal[IgnoreCase]</b> explicitly. See https://msdn.microsoft.com/en-us/library/ms973919.aspx.
 	/// This class adds ordinal comparison versions of these methods. Same or similar name, for example <b>Ends</b> for <b>EndsWith</b>.
-	/// See also <see cref="AThisProcess.CultureIsInvariant"/>.
+	/// See also <see cref="process.thisProcessCultureIsInvariant"/>.
 	/// 
 	/// This class also adds more methods.
-	/// You also can find string functions in other classes of this library, including <see cref="AStringUtil"/>, <see cref="ARegex"/>, <see cref="APath"/>, <see cref="ACsv"/>, <see cref="AKeys.More"/>, <see cref="AConvert"/>, <see cref="AHash"/>.
+	/// You also can find string functions in other classes of this library, including <see cref="StringUtil"/>, <see cref="regexp"/>, <see cref="pathname"/>, <see cref="csvTable"/>, <see cref="keys.more"/>, <see cref="Convert2"/>, <see cref="Hash"/>.
 	/// </remarks>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	public static unsafe partial class ExtString
@@ -497,8 +497,8 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// string s = "one * two three ";
-		/// foreach(var t in s.Segments(" ")) AOutput.Write(s[t.start..t.end]);
-		/// foreach(var t in s.Segments(SegSep.Word, SegFlags.NoEmpty)) AOutput.Write(s[t.start..t.end]);
+		/// foreach(var t in s.Segments(" ")) print.it(s[t.start..t.end]);
+		/// foreach(var t in s.Segments(SegSep.Word, SegFlags.NoEmpty)) print.it(s[t.start..t.end]);
 		/// ]]></code>
 		/// </example>
 		/// <seealso cref="Lines"/>
@@ -602,7 +602,7 @@ namespace Au
 		/// <param name="preferMore">Add 1 if the string ends with a line separator or its length is 0.</param>
 		/// <param name="range">Part of this string or null (default).</param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		/// <seealso cref="AStringUtil.LineAndColumn"/>
+		/// <seealso cref="StringUtil.LineAndColumn"/>
 		public static int LineCount(this string t, bool preferMore = false, Range? range = null) {
 			var (i, to) = range.GetStartEnd(t.Length);
 			if (to - i == 0) return preferMore ? 1 : 0;
@@ -1060,7 +1060,7 @@ namespace Au
 			if(_ScanFloatNumber(t, startIndex, out numberEndIndex)) {
 				var span = t.AsSpan(startIndex, numberEndIndex - startIndex);
 				if(double.TryParse(span, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out result)) return true;
-				ADebug_.Print("TryParse");
+				Debug_.Print("TryParse");
 			}
 			result = 0.0;
 			numberEndIndex = 0;
@@ -1089,7 +1089,7 @@ namespace Au
 			if(_ScanFloatNumber(t, startIndex, out numberEndIndex)) {
 				var span = t.AsSpan(startIndex, numberEndIndex - startIndex);
 				if(float.TryParse(span, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out result)) return true;
-				ADebug_.Print("TryParse");
+				Debug_.Print("TryParse");
 			}
 			result = 0f;
 			numberEndIndex = 0;
@@ -1142,7 +1142,7 @@ namespace Au
 			static bool _IsWhite(int ch) => ch == 0x20 || (uint)(ch - 0x09) <= (0x0D - 0x09) ? true : false;
 			static bool _IsDigit(int ch) => ((uint)ch - '0') <= 9;
 		}
-		//static ARegex s_rxNum = new ARegex(@"\s*[-+]?(?:\d[\d,]*\.?\d*|\.\d+)(?:[Ee][-+]?\d+)?", RXFlags.ANCHORED); //with regex 5 times slower
+		//static regexp s_rxNum = new regexp(@"\s*[-+]?(?:\d[\d,]*\.?\d*|\.\d+)(?:[Ee][-+]?\d+)?", RXFlags.ANCHORED); //with regex 5 times slower
 #endif
 
 		#endregion
@@ -1340,16 +1340,16 @@ namespace Au
 		//	return c;
 		//}
 
-		//rejected. Better call AConvert.Utf8FromString directly.
+		//rejected. Better call Convert2.Utf8FromString directly.
 		///// <summary>
 		///// Converts this string to '\0'-terminated UTF8 string as byte[].
 		///// </summary>
 		///// <remarks>
-		///// Calls <see cref="AConvert.Utf8FromString"/>.
+		///// Calls <see cref="Convert2.Utf8FromString"/>.
 		///// </remarks>
-		///// <seealso cref="AConvert.Utf8ToString"/>
+		///// <seealso cref="Convert2.Utf8ToString"/>
 		///// <seealso cref="Encoding.UTF8"/>
-		//public static byte[] ToUtf8And0(this string t) => AConvert.Utf8FromString(t);
+		//public static byte[] ToUtf8And0(this string t) => Convert2.Utf8FromString(t);
 
 
 		/// <summary>

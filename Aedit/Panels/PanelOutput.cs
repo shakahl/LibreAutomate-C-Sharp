@@ -17,19 +17,19 @@ using Au;
 using Au.Types;
 using Au.Controls;
 using static Au.Controls.Sci;
-using Au.Util;
+using Au.More;
 
 class PanelOutput : DockPanel
 {
 	_SciOutput _c;
-	Queue<OutputServerMessage> _history;
+	Queue<PrintServerMessage> _history;
 
 	public KScintilla ZOutput => _c;
 
 	public PanelOutput() {
 		_c = new _SciOutput(this) { Name = "Output_text" };
 		this.Children.Add(_c);
-		_history = new Queue<OutputServerMessage>();
+		_history = new Queue<PrintServerMessage>();
 		App.Commands.BindKeysTarget(this, "Output");
 	}
 
@@ -42,7 +42,7 @@ class PanelOutput : DockPanel
 	public void ZHistory() {
 		var p = new KPopupListBox { PlacementTarget = this, Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint };
 		p.Control.ItemsSource = _history;
-		p.OK += o => AOutput.Write((o as OutputServerMessage).Text);
+		p.OK += o => print.it((o as PrintServerMessage).Text);
 		Dispatcher.InvokeAsync(() => p.IsOpen = true);
 	}
 
@@ -94,7 +94,7 @@ class PanelOutput : DockPanel
 			w.OwnerWindow = default;
 			w.ZorderTopmost();
 			//w.SetExStyle(WSE.APPWINDOW, SetAddRemove.Add);
-			//AWnd.GetWnd.Root.ActivateL(); w.ActivateL(); //let taskbar add button
+			//wnd.getwnd.root.ActivateL(); w.ActivateL(); //let taskbar add button
 		} else {
 			w.ZorderNoTopmost();
 			w.OwnerWindow = App.Wmain.Hwnd();
@@ -132,16 +132,16 @@ class PanelOutput : DockPanel
 				Menus.File.Properties();
 			});
 
-			App.OutputServer.SetNotifications(Hwnd, Api.WM_APP);
+			App.PrintServer.SetNotifications(Hwnd, Api.WM_APP);
 
 			base.ZOnHandleCreated();
 		}
 
 		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
-			//AWnd.More.PrintMsg(out var s, default, msg, wParam, lParam); AOutput.QM2.Write(s);
+			//wnd.more.printMsg(out var s, default, msg, wParam, lParam); print.qm2.write(s);
 			switch (msg) {
 			case Api.WM_APP:
-				ZTags.OutputServerProcessMessages(App.OutputServer, _onServerMessage ??= _OnServerMessage);
+				ZTags.PrintServerProcessMessages(App.PrintServer, _onServerMessage ??= _OnServerMessage);
 				return default;
 			case Api.WM_MBUTTONDOWN:
 				zClearText();
@@ -155,10 +155,10 @@ class PanelOutput : DockPanel
 			return base.WndProc(hwnd, msg, wParam, lParam, ref handled);
 		}
 
-		Action<OutputServerMessage> _onServerMessage;
-		void _OnServerMessage(OutputServerMessage m) {
-			if (m.Type != OutputServerMessageType.Write) {
-				if (m.Type == OutputServerMessageType.TaskEvent) RecentTT.TriggerEvent(m);
+		Action<PrintServerMessage> _onServerMessage;
+		void _OnServerMessage(PrintServerMessage m) {
+			if (m.Type != PrintServerMessageType.Write) {
+				if (m.Type == PrintServerMessageType.TaskEvent) RecentTT.TriggerEvent(m);
 				return;
 			}
 
@@ -166,7 +166,7 @@ class PanelOutput : DockPanel
 			var s = m.Text; int i;
 			if (s.Length >= 22) {
 				if (s.Starts("<><Z #") && s.Eq(12, ">Compilation: ")) { //compilation
-					s_rx1 ??= new ARegex(@"(?m)^\[(.+?)(\((\d+),(\d+)\))?\]: ");
+					s_rx1 ??= new regexp(@"(?m)^\[(.+?)(\((\d+),(\d+)\))?\]: ");
 					m.Text = s_rx1.Replace(s, x => {
 						var f = App.Model.FindByFilePath(x[1].Value);
 						if (f == null) return x[0].Value;
@@ -175,7 +175,7 @@ class PanelOutput : DockPanel
 				} else if ((i = s.Find("\n   at ") + 1) > 0 && s.Find(":line ", i) > 0) { //stack trace with source file info
 					var b = _sb ??= new StringBuilder(s.Length + 2000);
 					b.Clear();
-					//AOutput.QM2.Write("'" + s + "'");
+					//print.qm2.write("'" + s + "'");
 					int iLiteral = 0;
 					if (!s.Starts("<>")) b.Append("<>");
 					else {
@@ -183,11 +183,11 @@ class PanelOutput : DockPanel
 						if (0 == s.Eq(iLiteral -= 3, false, "<_>", "<\a>")) iLiteral = 0;
 					}
 					if (iLiteral > 0) b.Append(s, 0, iLiteral).AppendLine(); else b.Append(s, 0, i);
-					s_rx2 ??= new ARegex(@" in (.+?):line (?=\d+$)");
+					s_rx2 ??= new regexp(@" in (.+?):line (?=\d+$)");
 					bool replaced = false, isMain = false;
 					int stackEnd = s.Length/*, stackEnd2 = 0*/;
 					foreach (var k in s.Segments(SegSep.Line, range: i..)) {
-						//AOutput.QM2.Write("'"+k+"'");
+						//print.qm2.write("'"+k+"'");
 						if (s.Eq(k.start, "   at ")) {
 							if (isMain) {
 								//if(stackEnd2 == 0 && s.Eq(k.start, "   at Script.Main(String[] args) in ")) stackEnd2 = k.start; //rejected. In some cases may cut something important.
@@ -200,7 +200,9 @@ class PanelOutput : DockPanel
 							.Append("<open \"").Append(f.IdStringWithWorkspace).Append('|').Append(s, i1, len1).Append("\">")
 							.Append("line ").Append(s, i1, len1).Append("<> in <z 0xFAFAD2>").Append(f.Name).Append("<>");
 
-							isMain = s.Eq(k.start, "   at Script..ctor(String[] args) in ")
+							isMain
+								= s.Eq(k.start, "   at Script..ctor(String[] args) in ")
+								|| s.Eq(k.start, "   at Program..ctor(String[] args) in ")
 								|| s.Eq(k.start, "   at <Program>$.<Main>$(String[] args) in "); //top-level statements
 							if (!isMain || !f.IsScript) b.Append(", <\a>").Append(s, k.start + 6, g.Start - k.start - 10).Append("</\a>");
 							b.AppendLine();
@@ -222,14 +224,14 @@ class PanelOutput : DockPanel
 							b.Append(s, stackEnd, more);
 						}
 						m.Text = b.ToString();
-						//AOutput.QM2.Write("'" + m.Text + "'");
+						//print.qm2.write("'" + m.Text + "'");
 					}
 					if (_sb.Capacity > 10_000) _sb = null; //let GC free it. Usually < 4000.
 				}
 			}
 
 			if (s.Length <= 10_000) { //* 50 = 1 MB
-				if (!ReferenceEquals(s, m.Text)) m = new OutputServerMessage(OutputServerMessageType.Write, s, m.TimeUtc, m.Caller);
+				if (!ReferenceEquals(s, m.Text)) m = new PrintServerMessage(PrintServerMessageType.Write, s, m.TimeUtc, m.Caller);
 				var h = _p._history;
 				h.Enqueue(m);
 				if (h.Count > 50) h.Dequeue();
@@ -237,11 +239,11 @@ class PanelOutput : DockPanel
 
 			(_iPanel ??= Panels.PanelManager["Output"]).Visible = true; //SHOULDDO: if(App.Win.IsVisible) ?
 		}
-		static ARegex s_rx1, s_rx2;
+		static regexp s_rx1, s_rx2;
 		KPanels.ILeaf _iPanel;
 
 		static void _OpenLink(string s) {
-			//AOutput.Write(s);
+			//print.it(s);
 			var a = s.Split('|');
 			App.Model.OpenAndGoTo2(a[0], a.Length > 1 ? a[1] : null, a.Length > 2 ? a[2] : null);
 		}

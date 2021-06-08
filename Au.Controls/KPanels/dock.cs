@@ -1,5 +1,5 @@
 ﻿using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -34,7 +34,7 @@ namespace Au.Controls
 
 			void _CaptionContextMenu(_Node thisOrParentTab) {
 				if (_IsDocument && !_leaf.addedLater) return;
-				var m = new AMenu();
+				var m = new popupMenu();
 
 				bool canClose = _leaf?.canClose ?? false;
 				if (canClose) m["Close\tM-click"] = _ => _UserClosing();
@@ -109,11 +109,11 @@ namespace Au.Controls
 				});
 
 				void _Invalidate(Window w) {
-					//if (AKeys.IsScrollLock) Api.InvalidateRect(w.Hwnd(), IntPtr.Zero, true); //works
+					//if (keys.isScrollLock) Api.InvalidateRect(w.Hwnd(), IntPtr.Zero, true); //works
 					////else w.UpdateLayout(); //no
 					//else w.InvalidateVisual(); //no
 
-					Api.InvalidateRect(w.Hwnd(), AKeys.IsScrollLock);
+					Api.InvalidateRect(w.Hwnd(), keys.isScrollLock);
 				}
 #endif
 			}
@@ -132,8 +132,8 @@ namespace Au.Controls
 				if (e.ChangedButton == MouseButton.Left) {
 					if (e.ClickCount == 1) {
 						e.Handled = false; //if tab item, let select it
-						ATimer.After(1, _ => { //Dispatcher.InvokeAsync does not work
-							POINT p = AMouse.XY;
+						timerm.after(1, _ => { //Dispatcher.InvokeAsync does not work
+							POINT p = mouse.xy;
 							if (Api.DragDetect(_elem.Hwnd(), p)) {
 								_SetDockState(_DockState.Float, onDrag: true);
 								_floatWindow?.Drag(p);
@@ -171,7 +171,7 @@ namespace Au.Controls
 			void _Unhide() => _SetDockState(_state & ~_DockState.Hide);
 
 			void _SetDockState(_DockState state, bool onDrag = false) {
-				//AOutput.QM2.Write(this, state, "                    ", _state);
+				//print.qm2.write(this, state, "                    ", _state);
 				_savedDockState = 0;
 				if (state == _DockState.Hide) state |= _state & _DockState.Float;
 				if (state == _state) {
@@ -212,7 +212,7 @@ namespace Au.Controls
 				if ((state ^ oldState).Has(_DockState.Float)) FloatingChanged?.Invoke(this, state.Has(_DockState.Float));
 			}
 
-			void _ContextMenu_Move(AMenu m) {
+			void _ContextMenu_Move(popupMenu m) {
 				m.Submenu("Move to", m => {
 					m.RawText = true;
 					string sThis = ToString();
@@ -314,10 +314,10 @@ namespace Au.Controls
 #if false //debug print
 				int i = 0;
 				foreach (var v in Parent.Children()) {
-					AOutput.Write(i++, v._index, v);
+					print.it(i++, v._index, v);
 					if (Parent._IsStack) {
-						if (v._splitter != null) AOutput.Write("splitter", _RC(v._splitter));
-						AOutput.Write("elem    ", _RC(v._elem), v._dockedSize, v._SizeDef);
+						if (v._splitter != null) print.it("splitter", _RC(v._splitter));
+						print.it("elem    ", _RC(v._elem), v._dockedSize, v._SizeDef);
 						int _RC(FrameworkElement e) => Parent._stack.isVertical ? Grid.GetRow(e) : Grid.GetColumn(e);
 					}
 				}

@@ -96,7 +96,7 @@ namespace Au.Controls
 			///// When opening context menu of this leaf item.
 			///// You can add menu items. All default items are already added.
 			///// </summary>
-			//event EventHandler<AMenu> ContextMenuOpening;
+			//event EventHandler<popupMenu> ContextMenuOpening;
 			//FUTURE: reenable this if useful when ContextMenu_ will be public
 
 			/// <summary>

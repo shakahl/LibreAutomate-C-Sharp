@@ -14,7 +14,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Input;
-using Au.Util;
+using Au.More;
 //using System.Linq;
 
 namespace Au.Controls
@@ -33,14 +33,14 @@ namespace Au.Controls
 	/// </remarks>
 	public unsafe partial class KScintilla : HwndHost
 	{
-		AWnd _w;
+		wnd _w;
 		nint _sciPtr;
 		Sci_NotifyCallback _notifyCallback;
 		internal int _dpi;
 
 		static KScintilla() {
 			//if (default == Api.GetModuleHandle("SciLexer.dll"))
-			AFile.More.LoadDll64or32Bit("SciLexer.dll");
+			filesystem.more.loadDll64or32Bit("SciLexer.dll");
 		}
 
 		public nint ZSciPtr => _sciPtr;
@@ -53,18 +53,18 @@ namespace Au.Controls
 
 		#region HwndHost
 
-		public AWnd Hwnd => _w; //not ZHwnd, to avoid accidental use of extension method Hwnd()
+		public wnd Hwnd => _w; //not ZHwnd, to avoid accidental use of extension method Hwnd()
 
 		public event Action ZHandleCreated;
 
 		protected virtual void ZOnHandleCreated() => ZHandleCreated?.Invoke();
 
 		protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
-			var wParent = (AWnd)hwndParent.Handle;
-			_dpi = ADpi.OfWindow(wParent);
+			var wParent = (wnd)hwndParent.Handle;
+			_dpi = Dpi.OfWindow(wParent);
 			WS style = WS.CHILD; if (ZInitBorder) style |= WS.BORDER;
 			//note: no WS_VISIBLE. WPF will manage it. It can cause visual artefacts occasionally, eg scrollbar in WPF area.
-			_w = AWnd.More.CreateWindow("Scintilla", Name, style, 0, 0, 0, 0, 0, wParent);
+			_w = wnd.more.createWindow("Scintilla", Name, style, 0, 0, 0, 0, 0, wParent);
 			//size 0 0 is not the best, but it is a workaround for WPF bugs
 
 			//CONSIDER: register window class "KScintilla"
@@ -81,9 +81,9 @@ namespace Au.Controls
 			}
 			_InitDocument();
 			Call(SCI_SETSCROLLWIDTHTRACKING, 1);
-			Call(SCI_SETSCROLLWIDTH, ADpi.Scale(100, _dpi));
+			Call(SCI_SETSCROLLWIDTH, Dpi.Scale(100, _dpi));
 			if (!ZInitUseDefaultContextMenu) Call(SCI_USEPOPUP);
-			Call(SCI_SETCARETWIDTH, ADpi.Scale(2, _dpi));
+			Call(SCI_SETCARETWIDTH, Dpi.Scale(2, _dpi));
 			if (ZInitWrapVisuals) {
 				Call(SCI_SETWRAPVISUALFLAGS, SC_WRAPVISUALFLAG_START | SC_WRAPVISUALFLAG_END);
 				Call(SCI_SETWRAPVISUALFLAGSLOCATION, SC_WRAPVISUALFLAGLOC_END_BY_TEXT);
@@ -121,7 +121,7 @@ namespace Au.Controls
 		}
 
 		protected override void DestroyWindowCore(HandleRef hwnd) {
-			AWnd.More.DestroyWindow((AWnd)hwnd.Handle);
+			wnd.more.destroyWindow((wnd)hwnd.Handle);
 			_w = default;
 			_acc?.Dispose(); _acc = null;
 		}
@@ -133,14 +133,14 @@ namespace Au.Controls
 		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam_, IntPtr lParam, ref bool handled) {
 			nint wParam = wParam_; //if parameters are nint, this func is OK, but somehow error if a derived class that overrides this method calls base.WndProc.
 
-			//if(Tag is string s1 && s1 == "test") AWnd.More.PrintMsg(_w, msg, wParam, lParam);
-			//if(this.Parent?.Name == "Output") AWnd.More.PrintMsg(_w, msg, wParam, lParam, Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_PAINT, Api.WM_IME_SETCONTEXT, Api.WM_IME_NOTIFY);
-			//if () AWnd.More.PrintMsg(_w, msg, wParam, lParam);
+			//if(Tag is string s1 && s1 == "test") wnd.more.printMsg(_w, msg, wParam, lParam);
+			//if(this.Parent?.Name == "Output") wnd.more.printMsg(_w, msg, wParam, lParam, Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_PAINT, Api.WM_IME_SETCONTEXT, Api.WM_IME_NOTIFY);
+			//if () wnd.more.printMsg(_w, msg, wParam, lParam);
 
 			bool call = false;
 			switch (msg) {
 			//case Api.WM_DESTROY:
-			//	AOutput.Write("destroy"); //no. It seems WPF removes the hook before destroying. Cleanup in DestroyWindowCore.
+			//	print.it("destroy"); //no. It seems WPF removes the hook before destroying. Cleanup in DestroyWindowCore.
 			//	break;
 			case Api.WM_LBUTTONDOWN:
 				if (Api.GetFocus() != _w) {
@@ -174,7 +174,7 @@ namespace Au.Controls
 		protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {
 			if (!_w.Is0 && newDpi.PixelsPerDip != oldDpi.PixelsPerDip) {
 				_dpi = newDpi.PixelsPerInchY.ToInt();
-				Call(SCI_SETCARETWIDTH, ADpi.Scale(2, _dpi));
+				Call(SCI_SETCARETWIDTH, Dpi.Scale(2, _dpi));
 				zMarginWidthsDpiChanged_();
 			}
 			base.OnDpiChanged(oldDpi, newDpi);
@@ -228,7 +228,7 @@ namespace Au.Controls
 		protected override bool TranslateAcceleratorCore(ref System.Windows.Interop.MSG msg, ModifierKeys modifiers) {
 			var m = msg.message;
 			var k = (KKey)msg.wParam;
-			//if (m == Api.WM_KEYDOWN) AOutput.Write(m, k);
+			//if (m == Api.WM_KEYDOWN) print.it(m, k);
 			if (m is Api.WM_KEYDOWN or Api.WM_KEYUP /*or Api.WM_SYSKEYDOWN or Api.WM_SYSKEYUP*/)
 				if (!modifiers.Has(ModifierKeys.Alt))
 					if (k == KKey.Left || k == KKey.Right || k == KKey.Up || k == KKey.Down
@@ -255,7 +255,7 @@ namespace Au.Controls
 
 		void _NotifyCallback(void* cbParam, ref SCNotification n) {
 			var code = n.nmhdr.code;
-			//if(code != NOTIF.SCN_PAINTED) AOutput.QM2.Write(code.ToString());
+			//if(code != NOTIF.SCN_PAINTED) print.qm2.write(code.ToString());
 			switch (code) {
 			case NOTIF.SCN_MODIFIED:
 				if ((n.modificationType & (MOD.SC_MULTISTEPUNDOREDO | MOD.SC_LASTSTEPINUNDOREDO)) == MOD.SC_MULTISTEPUNDOREDO) return;
@@ -272,12 +272,12 @@ namespace Au.Controls
 		//void _Print(object text)
 		//{
 		//	var t = Name ?? GetType().ToString();
-		//	if(Name != "Status_text") AOutput.QM2.Write($"{t}: {text}");
+		//	if(Name != "Status_text") print.qm2.write($"{t}: {text}");
 		//}
 
 		unsafe void _NotifyModified(in SCNotification n) {
 			var code = n.modificationType;
-			//if(this.Name!= "Output_text") AOutput.Write(code, n.position);
+			//if(this.Name!= "Output_text") print.it(code, n.position);
 			if (0 != (code & (MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT))) {
 				_text = null;
 				_posState = default;
@@ -376,14 +376,14 @@ namespace Au.Controls
 				s_debugPM = new Dictionary<int, string>();
 				foreach (var v in typeof(Sci).GetFields()) {
 					var s = v.Name;
-					//AOutput.Write(v.Name);
+					//print.it(v.Name);
 					if (s.Starts("SCI_")) s_debugPM.Add((int)v.GetRawConstantValue(), s);
 				}
 			}
 			if (!s_debugPM.TryGetValue(sciMessage, out var k)) {
 				k = sciMessage.ToString();
 			}
-			AOutput.QM2.Write(k);
+			print.qm2.write(k);
 		}
 		static Dictionary<int, string> s_debugPM;
 
@@ -506,7 +506,7 @@ namespace Au.Controls
 				_sci = sci;
 			}
 
-			public override AccROLE Role(int child) => _sci.ZAccessibleRole;
+			public override ERole Role(int child) => _sci.ZAccessibleRole;
 
 			public override string Name(int child) => _sci.ZAccessibleName;
 
@@ -514,14 +514,14 @@ namespace Au.Controls
 
 			public override string Value(int child) => _sci.ZAccessibleValue;
 
-			public override AccSTATE State(int child) {
+			public override EState State(int child) {
 				var r = base.State(child);
-				if (_sci.zIsReadonly) r |= AccSTATE.READONLY;
+				if (_sci.zIsReadonly) r |= EState.READONLY;
 				return r;
 			}
 		}
 
-		protected virtual AccROLE ZAccessibleRole => AccROLE.TEXT; //_sci.ZInitReadOnlyAlways ? AccROLE.STATICTEXT : AccROLE.TEXT;
+		protected virtual ERole ZAccessibleRole => ERole.TEXT; //_sci.ZInitReadOnlyAlways ? ERole.STATICTEXT : ERole.TEXT;
 
 		protected virtual string ZAccessibleName => Name;
 

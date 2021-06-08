@@ -4,7 +4,7 @@
 /*/ runSingle true; /*/ //.
 using Au;
 using System.Text;
-;ATask.Setup(trayIcon: true); //;
+;scriptt.setup(trayIcon: true); //;
 
 /*
 The programming language is C#.
@@ -16,7 +16,7 @@ Also you can create and use new functions, classes, libraries and .exe programs.
 A script can optionally start with a description as /// comments.
 Then can be /*/ /*/ comments with script properties used by the editor program.
 Then 'using' directives.
-Then ATask.Setup or/and other code that sets run time properties. Optional.
+Then scriptt.setup or/and other code that sets run time properties. Optional.
 Then your script. It can contain local functions anywhere.
 Then optionally you can define classes and other types.
 
@@ -31,13 +31,13 @@ Script properties are saved in /*/ /*/ comments at the start of script.
 You can change them in the Properties dialog or edit directly in script.
 Before /*/ /*/ comments can be only other comments, empty lines and spaces.
 
-More properties can be set in code with ATask.Setup and other functions.
+More properties can be set in code with scriptt.setup and other functions.
 For example, if don't need tray icon, remove 'trayIcon: true'.
 
 To change default properties and code for new scripts: Options -> Templates.
 
 To run a script, you can click the ► Run button on the toolbar, or use command line,
-or call ATask.Run from another script, or in Options set to run at startup.
+or call scriptt.run from another script, or in Options set to run at startup.
 
 Triggers such as hotkeys, autotext, mouse and window are used to execute code
 in a running script. That code also can launch other scripts.
@@ -47,21 +47,21 @@ To access triggers and toolbars you can use menu TT.
 
 //Examples of automation functions.
 
-AOutput.Write("Script example");
+print.it("Script example");
 
-ADialog.Show("Message box", "example");
+dialog.show("Message box", "example");
 
-AFile.Run(AFolders.System + "notepad.exe");
-var w = AWnd.Wait(0, true, "*- Notepad");
-AKeys.Key("F5 Enter*2");
-AKeys.Text(w.Name);
+run.it(folders.System + "notepad.exe");
+var w = wnd.wait(0, true, "*- Notepad");
+keys.send("F5 Enter*2");
+keys.sendt(w.Name);
 2.s();
 w.Close();
-var w2 = AWnd.Wait(-3, true, "Notepad", "#32770");
+var w2 = wnd.wait(-3, true, "Notepad", "#32770");
 if (!w2.Is0) {
 	500.ms();
 	var c = +w2.Child(null, "Button", skip: 1); // "Don't Save"
-	AMouse.Click(c);
+	mouse.click(c);
 	500.ms();
 }
 
@@ -81,9 +81,9 @@ System.Windows.Forms.MessageBox.Show(b.ToString());
 int variable = 1;
 
 FunctionExample("Function example"); //calls the function
-AOutput.Write(variable);
+print.it(variable);
 
 void FunctionExample(string s) { //a function
-	AOutput.Write(s, variable);
+	print.it(s, variable);
 	variable++;
 }

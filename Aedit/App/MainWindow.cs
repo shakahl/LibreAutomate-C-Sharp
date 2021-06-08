@@ -1,6 +1,6 @@
-﻿
-using Au;
+﻿using Au;
 using Au.Types;
+using Au.More;
 using Au.Controls;
 using System;
 using System.Collections.Generic;
@@ -27,7 +27,7 @@ partial class MainWindow : Window
 		App.Wmain = this;
 		Title = App.AppName; //don't append document name etc
 
-		AWnd.More.SavedRect.Restore(this, App.Settings.wndPos, o => App.Settings.wndPos = o);
+		wnd.more.SavedRect.Restore(this, App.Settings.wndPos, o => App.Settings.wndPos = o);
 		//SHOULDDO: now on Win8 first time very small if high DPI and small screen. Don't use default window size. Or test with small screen on all OS.
 
 		Panels.LoadAndCreateToolbars();
@@ -38,7 +38,7 @@ partial class MainWindow : Window
 		App.Commands[nameof(Menus.File.Workspace.Recent_workspaces)].SubmenuOpened = (o, _) => FilesModel.FillMenuRecentWorkspaces(o as MenuItem);
 
 		var atb = new ToolBar[7] { Panels.THelp, Panels.TTools, Panels.TFile, Panels.TRun, Panels.TEdit, Panels.TCustom1, Panels.TCustom2 };
-		App.Commands.InitToolbarsAndCustomize(AFolders.ThisAppBS + @"Default\Commands.xml", AppSettings.DirBS + "Commands.xml", atb);
+		App.Commands.InitToolbarsAndCustomize(folders.ThisAppBS + @"Default\Commands.xml", AppSettings.DirBS + "Commands.xml", atb);
 
 		Panels.CreatePanels();
 
@@ -47,34 +47,34 @@ partial class MainWindow : Window
 		Panels.PanelManager.Container = g => { this.Content = g; };
 
 
-		//ATimer.After(100, _ => DOptions.ZShow());
-		//ATimer.After(100, _ => App.Model.Properties());
-		//ATimer.After(100, _ => Menus.File.Workspace.New_workspace());
+		//timerm.after(100, _ => DOptions.ZShow());
+		//timerm.after(100, _ => App.Model.Properties());
+		//timerm.after(100, _ => Menus.File.Workspace.New_workspace());
 
-//		ATimer.After(100, _ => {
+//		timerm.after(100, _ => {
 //#if !true
-//					//var w = +AWnd.Find("Quick Macros -*");
+//					//var w = +wnd.find("Quick Macros -*");
 //					//w = +w.ChildById(2212);
-//					var w = +AWnd.Find("Character Map");
+//					var w = +wnd.find("Character Map");
 //					w = +w.ChildById(103);
-//					//AOutput.Write(w);
-//					//new Au.Tools.DAWnd(w).Show();
-//					//new Au.Tools.DAWnd(w, uncheckControl: true).Show();
-//					new Au.Tools.DAAcc(AAcc.FromWindow(w, AccOBJID.CLIENT)).Show();
+//					//print.it(w);
+//					//new Au.Tools.Dwnd(w).Show();
+//					//new Au.Tools.Dwnd(w, uncheckControl: true).Show();
+//					new Au.Tools.Delm(elm.fromWindow(w, EObjid.CLIENT)).Show();
 //#elif true
-//			new Au.Tools.DAWinImage().Show();
+//			new Au.Tools.Duiimage().Show();
 //#else
-//					var w = +AWnd.Find("Untitled Document - Google Chrome", "Chrome_WidgetWin_1");
-//					var a = +AAcc.Find(w, "web:BUTTON", "PayPal - The safer, easier way to pay online!");
-//					new Au.Tools.DAAcc(a).Show();
+//					var w = +wnd.find("Untitled Document - Google Chrome", "Chrome_WidgetWin_1");
+//					var e = +elm.find(w, "web:BUTTON", "PayPal - The safer, easier way to pay online!");
+//					new Au.Tools.Delm(e).Show();
 //#endif
 //		});
 
 #if DEBUG
 		App.Timer1s += () => {
 			var e = Keyboard.FocusedElement as FrameworkElement;
-			ADebug_.PrintIf(e != null && !e.IsVisible, "focused invisible");
-			//AOutput.Write(e, FocusManager.GetFocusedElement(App.Wmain));
+			Debug_.PrintIf(e != null && !e.IsVisible, "focused invisible");
+			//print.it(e, FocusManager.GetFocusedElement(App.Wmain));
 		};
 #endif
 	}
@@ -89,7 +89,7 @@ partial class MainWindow : Window
 		if (App.Settings.runHidden && IsVisible) {
 			e.Cancel = true;
 			Hide();
-			AThisProcess.MinimizePhysicalMemory_(1000);
+			process.ThisProcessMinimizePhysicalMemory_(1000);
 		}
 	}
 
@@ -105,7 +105,7 @@ partial class MainWindow : Window
 	protected override void OnSourceInitialized(EventArgs e) {
 		base.OnSourceInitialized(e);
 		var hs = PresentationSource.FromVisual(this) as HwndSource;
-		App.Hwnd = (AWnd)hs.Handle;
+		App.Hwnd = (wnd)hs.Handle;
 
 		Panels.PanelManager["Output"].Visible = true;
 
@@ -129,7 +129,7 @@ partial class MainWindow : Window
 	//public event EventHandler Load;
 
 	unsafe nint _WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled) {
-		var w = (AWnd)hwnd;
+		var w = (wnd)hwnd;
 
 		switch (msg) {
 		case Api.WM_DPICHANGED:
@@ -148,8 +148,8 @@ partial class MainWindow : Window
 	}
 
 	protected override void OnActivated(EventArgs e) {
-		//var w = this.Hwnd(); if (AWnd.Active != w) w.ActivateL(); //activates window, but this is a bad place for it, eg does not set focus correctly
-		var w = this.Hwnd(); if (AWnd.Active != w) Dispatcher.InvokeAsync(() => w.ActivateL());
+		//var w = this.Hwnd(); if (wnd.active != w) w.ActivateL(); //activates window, but this is a bad place for it, eg does not set focus correctly
+		var w = this.Hwnd(); if (wnd.active != w) Dispatcher.InvokeAsync(() => w.ActivateL());
 		base.OnActivated(e);
 	}
 
@@ -167,7 +167,7 @@ partial class MainWindow : Window
 	//		//var docPlaceholder = App.Panels["Open"]; //in stack
 	//		var docPlaceholder = Panels.DocPlaceholder_; //in tab
 	//		var v = docPlaceholder.AddSibling(false, KPanels.LeafType.Document, name, true);
-	//		v.Closing += (_, e) => { e.Cancel = !ADialog.ShowOkCancel("Close?"); };
+	//		v.Closing += (_, e) => { e.Cancel = !dialog.showOkCancel("Close?"); };
 	//		v.ContextMenuOpening += (o, m) => {
 	//			var k = o as KPanels.ILeaf;
 	//			m.Separator();
@@ -186,8 +186,8 @@ partial class MainWindow : Window
 
 	static void _StartProfileOptimization() {
 #if !DEBUG
-		var fProfile = AFolders.ThisAppDataLocal + "ProfileOptimization";
-		AFile.CreateDirectory(fProfile);
+		var fProfile = folders.ThisAppDataLocal + "ProfileOptimization";
+		filesystem.createDirectory(fProfile);
 		System.Runtime.ProfileOptimization.SetProfileRoot(fProfile);
 		System.Runtime.ProfileOptimization.StartProfile("Aedit.startup");
 #endif

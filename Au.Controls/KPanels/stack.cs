@@ -1,5 +1,5 @@
 ﻿using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -230,7 +230,7 @@ namespace Au.Controls
 			void _SplitterContextMenu(object sender, ContextMenuEventArgs e) {
 				e.Handled = true;
 				var parentStack = Parent._stack;
-				var m = new AMenu();
+				var m = new popupMenu();
 				m.Submenu("Splitter size", m => {
 					int z = _SplitterSize;
 					for (int i = 1; i <= 10; i++) {
@@ -253,14 +253,14 @@ namespace Au.Controls
 						Parent._ContextMenu_Move(m);
 					});
 				}
-				ATimer.After(100, _ => Mouse.SetCursor(Cursors.Arrow)); //workaround. 30 too small, 50 ok
+				timerm.after(100, _ => Mouse.SetCursor(Cursors.Arrow)); //workaround. 30 too small, 50 ok
 				m.Show();
 			}
 
-			void _SplitterContextMenu_Unit(AMenu m, string s1) {
+			void _SplitterContextMenu_Unit(popupMenu m, string s1) {
 				var unitNow = _SizeDef.GridUnitType;
 				//var unitNow = _dockedSize.GridUnitType;
-				//AOutput.Write(this, unitNow);
+				//print.it(this, unitNow);
 				bool allToolbars = _IsToolbarsNode;
 				bool disableFixed = !allToolbars && unitNow != GridUnitType.Pixel
 					&& Parent.Children().Count(o => o._SizeDef.GridUnitType == GridUnitType.Star) < (unitNow == GridUnitType.Star ? 2 : 1);
@@ -311,7 +311,7 @@ namespace Au.Controls
 				get => new _RowCol(this).SizeDef;
 				set => new _RowCol(this) { SizeDef = value };
 				//set {
-				//	AOutput.Write(this, value.GridUnitType);
+				//	print.it(this, value.GridUnitType);
 				//	new _RowCol(this) { SizeDef = value };
 				//}
 			}

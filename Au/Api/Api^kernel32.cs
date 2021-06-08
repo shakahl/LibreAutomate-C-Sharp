@@ -1,4 +1,4 @@
-using Au.Util;
+using Au.More;
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -21,7 +21,7 @@ namespace Au.Types
 		[DllImport("kernel32.dll", EntryPoint = "SetDllDirectoryW", SetLastError = true)]
 		internal static extern bool SetDllDirectory(string lpPathName);
 
-		[SuppressGCTransition] //makes slightly faster, eg 23 -> 18 ns when hot CPU. Not faster with [MethodImpl].
+		[SuppressGCTransition] //makes slightly faster. Not faster with [MethodImpl].
 		[DllImport("kernel32.dll")]
 		internal static extern bool QueryPerformanceCounter(out long lpPerformanceCount);
 
@@ -105,12 +105,14 @@ namespace Au.Types
 		[DllImport("kernel32.dll")]
 		internal static extern IntPtr GetCurrentThread();
 
+		[SuppressGCTransition]
 		[DllImport("kernel32.dll")]
 		internal static extern int GetCurrentThreadId();
 
 		[DllImport("kernel32.dll")]
 		internal static extern IntPtr GetCurrentProcess();
 
+		[SuppressGCTransition]
 		[DllImport("kernel32.dll")]
 		internal static extern int GetCurrentProcessId();
 
@@ -191,7 +193,7 @@ namespace Au.Types
 		/// </summary>
 		[SkipLocalsInit]
 		internal static bool GetFullPathName(string s, out string r) {
-			using ABuffer<char> b = new(null);
+			using FastBuffer<char> b = new(null);
 			for (; ; ) if (b.GetString(_GetFullPathName(s, b.n, b.p, null), out r, 0, s)) return (object)r != s;
 		}
 
@@ -205,7 +207,7 @@ namespace Au.Types
 		/// </summary>
 		[SkipLocalsInit]
 		internal static bool GetLongPathName(string s, out string r) {
-			using ABuffer<char> b = new(null);
+			using FastBuffer<char> b = new(null);
 			for (; ; ) if (b.GetString(_GetLongPathName(s, b.p, b.n), out r, 0, s)) return (object)r != s;
 		}
 
@@ -279,7 +281,7 @@ namespace Au.Types
 		/// <param name="lpExtension">null or extension like ".ext" to add if lpFileName is without extension.</param>
 		[SkipLocalsInit]
 		internal static string SearchPath(string lpPath, string lpFileName, string lpExtension = null) {
-			using ABuffer<char> b = new(null);
+			using FastBuffer<char> b = new(null);
 			for (; ; ) if (b.GetString(_SearchPath(lpPath, lpFileName, lpExtension, b.n, b.p, null), out var s)) return s;
 		}
 
@@ -441,7 +443,7 @@ namespace Au.Types
 		internal static extern bool WriteFile(IntPtr hFile, void* lpBuffer, int nBytesToWrite, out int nBytesWritten, void* lpOverlapped = null);
 		//note: lpNumberOfBytesWritten can be null only if lpOverlapped is not null.
 
-		//note: don't use overloads, because we AJit.Compile("WriteFile").
+		//note: don't use overloads, because we Jit_.Compile("WriteFile").
 		internal static bool WriteFile2(IntPtr hFile, ReadOnlySpan<byte> a, out int nBytesWritten) {
 			fixed (byte* p = a) return WriteFile(hFile, p, a.Length, out nBytesWritten);
 		}
@@ -550,12 +552,12 @@ namespace Au.Types
 		/// <summary>
 		/// Calls API GetEnvironmentVariable.
 		/// Returns null if variable not found.
-		/// Does not support AFolders.X.
+		/// Does not support folders.X.
 		/// </summary>
 		/// <param name="name">Case-insensitive name. Without %.</param>
 		[SkipLocalsInit]
 		internal static string GetEnvironmentVariable(string name) {
-			using ABuffer<char> b = new(null);
+			using FastBuffer<char> b = new(null);
 			for (; ; ) if (b.GetString(_GetEnvironmentVariable(name, b.p, b.n), out var s)) return s;
 		}
 
@@ -577,7 +579,7 @@ namespace Au.Types
 		/// </summary>
 		[SkipLocalsInit]
 		internal static bool ExpandEnvironmentStrings(string s, out string r) {
-			using ABuffer<char> b = new(null);
+			using FastBuffer<char> b = new(null);
 			for (; ; ) if (b.GetString(_ExpandEnvironmentStrings(s, b.p, b.n), out r, BSFlags.ReturnsLengthWith0, s)) return (object)r != s;
 		}
 

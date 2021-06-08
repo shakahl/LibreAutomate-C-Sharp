@@ -1217,7 +1217,7 @@ namespace Au.Controls
 
 		public struct Sci_NotifyHeader
 		{
-			public AWnd hwndFrom;
+			public wnd hwndFrom;
 			public nint idFrom;
 			public NOTIF code;
 		}

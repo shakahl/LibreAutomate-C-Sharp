@@ -15,7 +15,7 @@ using System.Reflection;
 
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 using Au.Controls;
 using static Au.Controls.Sci;
 using System.Windows.Input;
@@ -120,7 +120,7 @@ partial class SciCode : KScintilla
 				if (text[i] == '\r' && (i == n || text[i + 1] != '\n')) badCR = true;
 			}
 			if (badCR) {
-				AOutput.Write($@"<>Note: text of {_fn.Name} contains single \r (CR) as line end characters. It can create problems. <+badCR s>Show<>, <+badCR h>hide<>, <+badCR f>fix<>.");
+				print.it($@"<>Note: text of {_fn.Name} contains single \r (CR) as line end characters. It can create problems. <+badCR s>Show<>, <+badCR h>hide<>, <+badCR f>fix<>.");
 				if (!s_badCR) {
 					s_badCR = true;
 					Panels.Output.ZOutput.ZTags.AddLinkTag("+badCR", s1 => {
@@ -135,7 +135,7 @@ partial class SciCode : KScintilla
 
 	//protected override void Dispose(bool disposing)
 	//{
-	//	AOutput.QM2.Write($"Dispose disposing={disposing} IsHandleCreated={IsHandleCreated} Visible={Visible}");
+	//	print.qm2.write($"Dispose disposing={disposing} IsHandleCreated={IsHandleCreated} Visible={Visible}");
 	//	base.Dispose(disposing);
 	//}
 
@@ -150,10 +150,10 @@ partial class SciCode : KScintilla
 		//case NOTIF.SCN_NEEDSHOWN:
 		//	break;
 		//case NOTIF.SCN_MODIFIED:
-		//	AOutput.Write(n.nmhdr.code, n.modificationType);
+		//	print.it(n.nmhdr.code, n.modificationType);
 		//	break;
 		//default:
-		//	AOutput.Write(n.nmhdr.code);
+		//	print.it(n.nmhdr.code);
 		//	break;
 		//}
 
@@ -165,10 +165,10 @@ partial class SciCode : KScintilla
 			//never mind: we should cancel the 'save text later'
 			break;
 		case NOTIF.SCN_MODIFIED:
-			//AOutput.Write("SCN_MODIFIED", n.modificationType, n.position, n.FinalPosition, zCurrentPos8, n.Text);
-			//AOutput.Write(n.modificationType);
+			//print.it("SCN_MODIFIED", n.modificationType, n.position, n.FinalPosition, zCurrentPos8, n.Text);
+			//print.it(n.modificationType);
 			//if(n.modificationType.Has(MOD.SC_PERFORMED_USER | MOD.SC_MOD_BEFOREINSERT)) {
-			//	AOutput.Write($"'{n.Text}'");
+			//	print.it($"'{n.Text}'");
 			//	if(n.length == 2 && n.textUTF8!=null && n.textUTF8[0]=='\r' && n.textUTF8[1] == '\n') {
 			//		Call(SCI_BEGINUNDOACTION); Call(SCI_ENDUNDOACTION);
 			//	}
@@ -179,7 +179,7 @@ partial class SciCode : KScintilla
 				CodeInfo.SciModified(this, n);
 				Panels.Find.ZUpdateQuickResults(true);
 				//} else if(n.modificationType.Has(MOD.SC_MOD_INSERTCHECK)) {
-				//	//AOutput.Write(n.Text);
+				//	//print.it(n.Text);
 				//	//if(n.length==1 && n.textUTF8[0] == ')') {
 				//	//	Call(Sci.SCI_SETOVERTYPE, _testOvertype = true);
 
@@ -188,7 +188,7 @@ partial class SciCode : KScintilla
 			}
 			break;
 		case NOTIF.SCN_CHARADDED:
-			//AOutput.Write($"SCN_CHARADDED  {n.ch}  '{(char)n.ch}'");
+			//print.it($"SCN_CHARADDED  {n.ch}  '{(char)n.ch}'");
 			if (n.ch == '\n' /*|| n.ch == ';'*/) { //split scintilla Undo
 				zAddUndoPoint();
 			}
@@ -197,7 +197,7 @@ partial class SciCode : KScintilla
 			}
 			break;
 		case NOTIF.SCN_UPDATEUI:
-			//AOutput.Write((uint)n.updated, _modified);
+			//print.it((uint)n.updated, _modified);
 			if (0 != (n.updated & 1)) {
 				if (_modified) _modified = false; else n.updated &= ~1; //ignore notifications when changed styling or markers
 			}
@@ -232,12 +232,12 @@ partial class SciCode : KScintilla
 
 	protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
 		nint lResult = 0;
-		handled = _WndProc((AWnd)hwnd, msg, wParam, lParam, ref lResult);
+		handled = _WndProc((wnd)hwnd, msg, wParam, lParam, ref lResult);
 		if (handled) return lResult;
 		return base.WndProc(hwnd, msg, wParam, lParam, ref handled);
 	}
 
-	bool _WndProc(AWnd w, int msg, nint wParam, nint lParam, ref nint lResult) {
+	bool _WndProc(wnd w, int msg, nint wParam, nint lParam, ref nint lResult) {
 		switch (msg) {
 		case Api.WM_SETFOCUS:
 			if (!_noModelEnsureCurrentSelected) App.Model.EnsureCurrentSelected();
@@ -259,7 +259,7 @@ partial class SciCode : KScintilla
 			return true;
 		case Api.WM_RBUTTONDOWN: {
 				//workaround for Scintilla bug: when right-clicked a margin, if caret or selection start is at that line, goes to the start of line
-				POINT p = AMath.NintToPOINT(lParam);
+				POINT p = Math2.NintToPOINT(lParam);
 				int margin = zMarginFromPoint(p, false);
 				if (margin >= 0) {
 					var selStart = zSelectionStart8;
@@ -274,7 +274,7 @@ partial class SciCode : KScintilla
 			break;
 		case Api.WM_CONTEXTMENU: {
 				bool kbd = (int)lParam == -1;
-				int margin = kbd ? -1 : zMarginFromPoint(AMath.NintToPOINT(lParam), true);
+				int margin = kbd ? -1 : zMarginFromPoint(Math2.NintToPOINT(lParam), true);
 				switch (margin) {
 				case -1:
 					var m = new KWpfMenu();
@@ -298,7 +298,7 @@ partial class SciCode : KScintilla
 		//SHOULDDO: superclass and use normal wndproc instead of hook. Now possible various anomalies because of async.
 		switch (msg) {
 		//case Api.WM_MOUSEMOVE:
-		//	CodeInfo.SciMouseMoved(this, AMath.LoShort(m.LParam), AMath.HiShort(m.LParam));
+		//	CodeInfo.SciMouseMoved(this, Math2.LoShort(m.LParam), Math2.HiShort(m.LParam));
 		//	break;
 		case Api.WM_KILLFOCUS:
 			//Dispatcher.InvokeAsync(() => CodeInfo.SciKillFocus(this));//no, dangerous
@@ -361,7 +361,7 @@ partial class SciCode : KScintilla
 	//Called by PanelEdit.ZSaveText.
 	internal bool _SaveText() {
 		if (_IsUnsaved) {
-			//AOutput.QM2.Write("saving");
+			//print.qm2.write("saving");
 			_fn.UnCacheText();
 			if (!App.Model.TryFileOperation(() => _fls.Save(this, _fn.FilePath, tempDirectory: _fn.IsLink ? null : _fn.Model.TempDirectory))) return false;
 			//info: with tempDirectory less noise for FileSystemWatcher
@@ -377,7 +377,7 @@ partial class SciCode : KScintilla
 		var text = _fn.GetText(saved: true); if (text == this.zText) return;
 		ZReplaceTextGently(text);
 		Call(SCI_SETSAVEPOINT);
-		if (this == Panels.Editor.ZActiveDoc) AOutput.Write($"<>Info: file {_fn.Name} has been modified outside and therefore reloaded. You can Undo.");
+		if (this == Panels.Editor.ZActiveDoc) print.it($"<>Info: file {_fn.Name} has been modified outside and therefore reloaded. You can Undo.");
 	}
 
 	//never mind: not called when zoom changes.
@@ -413,11 +413,11 @@ partial class SciCode : KScintilla
 			}
 			b.AppendLine(isCS ? "[/cs]" : "[/code]");
 			s = b.ToString();
-			new AClipboardData().AddText(s).SetClipboard();
+			new clipboardData().AddText(s).SetClipboard();
 		} else {
 			if (!(isFragment || s_infoCopy)) {
 				s_infoCopy = true;
-				AOutput.Write("Info: To copy C# code for pasting in the forum, use menu Edit -> Forum Copy. Then simply paste there; don't use the Code button.");
+				print.it("Info: To copy C# code for pasting in the forum, use menu Edit -> Forum Copy. Then simply paste there; don't use the Code button.");
 			}
 			Call(SCI_COPY);
 		}
@@ -429,7 +429,7 @@ partial class SciCode : KScintilla
 	/// Caller must not insert text, and must not pass the event to Scintilla.
 	/// </summary>
 	public void ZPaste() {
-		var s = AClipboard.Text;
+		var s = clipboard.text;
 		if (s.NE()) return;
 		//string s0 = s;
 		if (s.Like("[cs]*[/cs]\r\n")) s = s[4..^7];
@@ -442,7 +442,7 @@ partial class SciCode : KScintilla
 			string buttons = _fn.FileType != (isClass ? EFileType.Class : EFileType.Script)
 				? "1 Create new file|0 Cancel"
 				: "1 Create new file|2 Replace all text|3 Paste|0 Cancel";
-			switch (ADialog.Show("Import C# file text from clipboard", "Source file: " + name, buttons, DFlags.CommandLinks, owner: this)) {
+			switch (dialog.show("Import C# file text from clipboard", "Source file: " + name, buttons, DFlags.CommandLinks, owner: this)) {
 			case 1: //Create new file
 				App.Model.NewItem(isClass ? "Class.cs" : "Script.cs", null, name, text: new EdNewFileText(replaceTemplate: true, s));
 				break;
@@ -465,10 +465,10 @@ partial class SciCode : KScintilla
 	#region script header
 
 	//const string c_usings = "using Au; using Au.Types; using System; using System.Collections.Generic; using System.IO; using System.Linq;";
-	//const string c_scriptMain = "class Script { [STAThread] static void Main(string[] a) { ATask.Setup(); new Script(a); } Script(string[] args) { //;;;";
+	//const string c_scriptMain = "class Script ... //;;;";
 
-	//static ARegex _RxScriptHeader => s_rxScript ??= new ARegex(@"(?sm)//\.(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q[\w ]*" + c_scriptMain + @"\E$");
-	//static ARegex s_rxScript;
+	//static regexp _RxScriptHeader => s_rxScript ??= new regexp(@"(?sm)//\.(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q[\w ]*" + c_scriptMain + @"\E$");
+	//static regexp s_rxScript;
 
 	//currently not used and does not work
 	///// <summary>
@@ -742,10 +742,10 @@ partial class SciCode : KScintilla
 	public ITempRange ZTempRanges_Add(object owner, int from, int to, Action onLeave = null, ZTempRangeFlags flags = 0) {
 		int fromUtf16 = from;
 		zNormalizeRange(true, ref from, ref to);
-		//AOutput.Write(fromUtf16, from, to, zCurrentPos8);
+		//print.it(fromUtf16, from, to, zCurrentPos8);
 #if DEBUG
 		if(!(zCurrentPos8 >= from && (flags.Has(ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) ? zCurrentPos8 == to : zCurrentPos8 <= to))) {
-			ADebug_.Print("bad");
+			Debug_.Print("bad");
 			//CiUtil.HiliteRange(from, to);
 		}
 #endif
@@ -811,13 +811,13 @@ partial class SciCode : KScintilla
 	}
 
 	[Conditional("TRACE_TEMP_RANGES")]
-	static void _TraceTempRange(string action, object owner) => AOutput.Write(action, owner);
+	static void _TraceTempRange(string action, object owner) => print.it(action, owner);
 
 	#endregion
 
 	#region acc
 
-	protected override AccROLE ZAccessibleRole => AccROLE.DOCUMENT;
+	protected override ERole ZAccessibleRole => ERole.DOCUMENT;
 
 	protected override string ZAccessibleName => "document - " + _fn.DisplayName;
 

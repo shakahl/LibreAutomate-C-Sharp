@@ -1,5 +1,5 @@
 using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -129,7 +129,7 @@ namespace Au.Triggers
 		/// </summary>
 		/// <param name="button"></param>
 		/// <param name="modKeys">
-		/// Modifier keys, like with the <see cref="AKeys.Key"/> function.
+		/// Modifier keys, like with the <see cref="keys.send"/> function.
 		/// Examples: "Ctrl", "Ctrl+Shift+Alt+Win".
 		/// To ignore modifiers: "?". Then the trigger works with any combination of modifiers.
 		/// To ignore a modifier: "Ctrl?". Then the trigger works with or without the modifier. More examples: "Ctrl?+Shift?", "Ctrl+Shift?".
@@ -172,7 +172,7 @@ namespace Au.Triggers
 		/// <param name="screen">
 		/// Let the trigger work only in this screen (display monitor). Also you can specify <b>All</b>.
 		/// Default: <b>Primary</b>.
-		/// Uses <see cref="AScreen.All"/> to get screen indices. They are different than in Windows Settings.
+		/// Uses <see cref="screen.all"/> to get screen indices. They are different than in Windows Settings.
 		/// </param>
 		/// <param name="f_">[](xref:caller_info)</param>
 		/// <param name="l_">[](xref:caller_info)</param>
@@ -219,14 +219,14 @@ namespace Au.Triggers
 					else if (screen == TMScreen.OfActiveWindow) b.Append(", screen of the active window");
 					else throw new ArgumentException();
 				}
-				ps = b.ToString(); //AOutput.Write(ps);
+				ps = b.ToString(); //print.it(ps);
 			}
 
 			KMod mod = 0, modAny = 0;
 			if (noMod) {
 				if (flags.HasAny(kind == TMKind.Click ? TMFlags.LeftMod | TMFlags.RightMod : TMFlags.LeftMod | TMFlags.RightMod | TMFlags.ButtonModUp)) throw new ArgumentException("Invalid flags.");
 			} else {
-				if (!AKeys.More.ParseHotkeyTriggerString_(modKeys, out mod, out modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
+				if (!keys.more.ParseHotkeyTriggerString_(modKeys, out mod, out modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
 			}
 			var t = new MouseTrigger(_triggers, f, kind, data, mod, modAny, flags, screen, ps, source);
 			t.DictAdd(_d, _DictKey(kind, data));
@@ -262,7 +262,7 @@ namespace Au.Triggers
 		}
 
 		internal bool HookProcClickWheel(HookData.Mouse k, TriggerHookContext thc) {
-			//AOutput.Write(k.Event, k.pt);
+			//print.it(k.Event, k.pt);
 			Debug.Assert(!k.IsInjectedByAu); //server must ignore
 
 			TMKind kind;
@@ -281,7 +281,7 @@ namespace Au.Triggers
 					if (k.Event == _eatUp) {
 						_eatUp = 0;
 						return true;
-						//To be safer, could return false if AMouse.IsPressed(k.Button), but then can interfere with the trigger action.
+						//To be safer, could return false if mouse.isPressed(k.Button), but then can interfere with the trigger action.
 					}
 					return false;
 					//CONSIDER: _upTimeout.
@@ -345,10 +345,10 @@ namespace Au.Triggers
 					}
 
 					if (isEdgeMove && x.ScreenIndex != TMScreen.Any) {
-						var screen = x.ScreenIndex == TMScreen.OfActiveWindow
-							? AScreen.Of(AWnd.Active)
-							: AScreen.Index((int)x.ScreenIndex);
-						if (!screen.Rect.Contains(pt)) continue;
+						var scrn = x.ScreenIndex == TMScreen.OfActiveWindow
+							? screen.of(wnd.active)
+							: screen.index((int)x.ScreenIndex);
+						if (!scrn.Rect.Contains(pt)) continue;
 					}
 
 					if (v.DisabledThisOrAll) continue;
@@ -374,10 +374,10 @@ namespace Au.Triggers
 					if (mod != 0) {
 						_SetTempKeybHook();
 						if (thc.trigger != null) thc.muteMod = TriggerActionThreads.c_modRelease;
-						else ThreadPool.QueueUserWorkItem(_ => AKeys.Internal_.ReleaseModAndDisableModMenu());
+						else ThreadPool.QueueUserWorkItem(_ => keys.Internal_.ReleaseModAndDisableModMenu());
 					}
 
-					//AOutput.Write(mEvent, pt, mod);
+					//print.it(mEvent, pt, mod);
 					if (isEdgeMove || 0 != (x.Flags & TMFlags.ShareEvent)) return false;
 					if (kind == TMKind.Click) _eatUp = mEvent;
 					return true;
@@ -399,7 +399,7 @@ namespace Au.Triggers
 		//this is used to eat modifier keys, regardless when the trigger is activated
 		KMod _eatMod;
 		//these are used to eat modifier keys and to activate trigger when modifiers released
-		AHookWin _keyHook;
+		WindowsHook _keyHook;
 		long _keyHookTimeout;
 		//this is used to eat button-up event, regardless when the trigger is activated
 		HookData.MouseEvent _eatUp;
@@ -413,7 +413,7 @@ namespace Au.Triggers
 
 		void _UnhookTempKeybHook() {
 			if (_keyHook != null) {
-				//AOutput.Write(". unhook");
+				//print.it(". unhook");
 				_keyHook.Unhook();
 				_keyHookTimeout = _keyHook.IgnoreModInOtherHooks_(0);
 			}
@@ -426,12 +426,12 @@ namespace Au.Triggers
 		}
 
 		void _SetTempKeybHook() {
-			//AOutput.Write(". hook");
+			//print.it(". hook");
 			if (_keyHook == null) {
-				_keyHook = AHookWin.Keyboard(k => {
-					if (ATime.WinMilliseconds >= _keyHookTimeout) {
+				_keyHook = WindowsHook.Keyboard(k => {
+					if (Environment.TickCount64 >= _keyHookTimeout) {
 						_ResetUpAndUnhookTempKeybHook();
-						ADebug_.Print("hook timeout");
+						Debug_.Print("hook timeout");
 					} else {
 						var mod = k.Mod;
 						if (0 != (mod & _upMod) && k.IsUp) {
@@ -442,7 +442,7 @@ namespace Au.Triggers
 							}
 						}
 						if (0 != (mod & _eatMod)) {
-							//AOutput.Write(k);
+							//print.it(k);
 							k.BlockEvent();
 							if (k.IsUp) _eatMod &= ~mod;
 						}
@@ -455,8 +455,8 @@ namespace Au.Triggers
 		}
 
 		internal static void JitCompile() {
-			AJit.Compile(typeof(MouseTriggers), nameof(HookProcClickWheel), nameof(HookProcEdgeMove), nameof(_HookProc2));
-			AWnd.FromXY(default, WXYFlags.NeedWindow);
+			Jit_.Compile(typeof(MouseTriggers), nameof(HookProcClickWheel), nameof(HookProcEdgeMove), nameof(_HookProc2));
+			wnd.fromXY(default, WXYFlags.NeedWindow);
 		}
 
 		/// <summary>
@@ -503,15 +503,15 @@ namespace Au.Triggers
 
 			public bool Detect(POINT pt) {
 				//get normal x y. In pt can be outside screen when cursor moved fast and was stopped by a screen edge. Tested: never for click/wheel events.
-				//AOutput.Write(pt, AMouse.XY);
-				//var screen = AScreen.Of(pt); //problem with empty corners between 2 unaligned screens: when mouse tries to quickly diagonally cut such a corner, may activate a wrong trigger
-				var screen = AScreen.Of(AMouse.XY); //smaller problem: AMouse.XY gets previous coordinates
-				var r = screen.Rect;
+				//print.it(pt, mouse.xy);
+				//var scrn = screen.of(pt); //problem with empty corners between 2 unaligned screens: when mouse tries to quickly diagonally cut such a corner, may activate a wrong trigger
+				var scrn = screen.of(mouse.xy); //smaller problem: mouse.xy gets previous coordinates
+				var r = scrn.Rect;
 				_xmin = r.left; _ymin = r.top; _xmax = r.right - 1; _ymax = r.bottom - 1;
 				_x = Math.Clamp(pt.x, _xmin, _xmax);
 				_y = Math.Clamp(pt.y, _ymin, _ymax);
-				//AOutput.Write(pt, _x, _y, r);
-				_sens = screen.Dpi / 4;
+				//print.it(pt, _x, _y, r);
+				_sens = scrn.Dpi / 4;
 
 				result = default;
 				result.pt = (_x, _y);
@@ -520,45 +520,45 @@ namespace Au.Triggers
 				_prev.xx = _x; _prev.yy = _y;
 
 #if DEBUG
-				//AOutput.Write(++_prev.debug, edgeEvent, moveEvent, (_x, _y));
+				//print.it(++_prev.debug, edgeEvent, moveEvent, (_x, _y));
 #endif
 				return result.edgeEvent != 0 || result.moveEvent != 0;
 			}
 
 			void _Detect() {
-				if (AMouse.IsPressed(MButtons.Left | MButtons.Right | MButtons.Middle)) {
+				if (mouse.isPressed(MButtons.Left | MButtons.Right | MButtons.Middle)) {
 					_prev.mDirection = 0;
 					return;
 				}
 
 				int x = _x, y = _y;
-				if (x == _prev.xx && y == _prev.yy) { /*AOutput.Write("same x y");*/ return; }
+				if (x == _prev.xx && y == _prev.yy) { /*print.it("same x y");*/ return; }
 
-				long time = ATime.PerfMilliseconds;
+				long time = perf.ms;
 				int dt = (int)(time - _prev.time);
 				_prev.time = time;
 				if (dt <= 0) return; //never noticed
 
-				//AOutput.Write((x, y), AMouse.XY, time%10000);
+				//print.it((x, y), mouse.xy, time%10000);
 
 				if (y == _ymin || y == _ymax || x == _xmin || x == _xmax) {
 					_prev.mDirection = 0;
 					if (time < _prev.eTimeout) return; //prevent double trigger when OS sometimes gives strange coords if some hook blocks the event
 					if (y == _ymin) { //top
 						if (_prev.yy <= _ymin) return;
-						if (AScreen.IsInAnyScreen((x, y - 1))) return;
+						if (screen.isInAnyScreen((x, y - 1))) return;
 						result.edgeEvent = (TMEdge)((int)(result.edgeEventAnyPart = TMEdge.Top) + _PartX(x));
 					} else if (y == _ymax) { //bottom
 						if (_prev.yy >= _ymax) return;
-						if (AScreen.IsInAnyScreen((x, y + 1))) return;
+						if (screen.isInAnyScreen((x, y + 1))) return;
 						result.edgeEvent = (TMEdge)((int)(result.edgeEventAnyPart = TMEdge.Bottom) + _PartX(x));
 					} else if (x == _xmin) { //left
 						if (_prev.xx <= _xmin) return;
-						if (AScreen.IsInAnyScreen((x - 1, y))) return;
+						if (screen.isInAnyScreen((x - 1, y))) return;
 						result.edgeEvent = (TMEdge)((int)(result.edgeEventAnyPart = TMEdge.Left) + _PartY(y));
 					} else /*if(x == _xmax)*/ { //right
 						if (_prev.xx >= _xmax) return;
-						if (AScreen.IsInAnyScreen((x + 1, y))) return;
+						if (screen.isInAnyScreen((x + 1, y))) return;
 						result.edgeEvent = (TMEdge)((int)(result.edgeEventAnyPart = TMEdge.Right) + _PartY(y));
 					}
 					_prev.eTimeout = time + 100;
@@ -598,7 +598,7 @@ namespace Au.Triggers
 							}
 						}
 						if (e != 0) {
-							//AOutput.Write(e);
+							//print.it(e);
 							_prev.mDirection = e;
 							_prev.mTimeout = time + 250;
 							_prev.mx1 = _prev.xx; _prev.my1 = _prev.yy; _prev.mx2 = x; _prev.my2 = y;
@@ -673,7 +673,7 @@ namespace Au.Triggers
 			//		if((uint)value > 10) throw new ArgumentOutOfRangeException(null, "0-10");
 			//		_sensPublic = value;
 			//		_sens = (int)(Math.Pow(1.414, 14 - value) * 1.3);
-			//		AOutput.Write(_sens); //29 when _sensPublic 5 (default)
+			//		print.it(_sens); //29 when _sensPublic 5 (default)
 			//	}
 			//}
 			//int _sensPublic;
@@ -711,7 +711,7 @@ namespace Au.Triggers
 		/// <summary>
 		/// The active window (Edge and Move triggers) or the mouse window (Click and Wheel triggers).
 		/// </summary>
-		public AWnd Window { get; }
+		public wnd Window { get; }
 
 		/// <summary>
 		/// The pressed modifier keys.
@@ -722,7 +722,7 @@ namespace Au.Triggers
 		public KMod Mod { get; }
 
 		///
-		public MouseTriggerArgs(MouseTrigger trigger, AWnd w, KMod mod) {
+		public MouseTriggerArgs(MouseTrigger trigger, wnd w, KMod mod) {
 			Trigger = trigger;
 			Window = w; Mod = mod;
 		}

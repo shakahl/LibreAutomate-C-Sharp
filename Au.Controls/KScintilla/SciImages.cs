@@ -12,7 +12,7 @@ using System.Reflection;
 //using System.Linq;
 
 using Au.Types;
-using Au.Util;
+using Au.More;
 
 //FUTURE: support mutiline images like @"image:line1 line2" and like "image:line1" + "line2";
 
@@ -73,7 +73,7 @@ namespace Au.Controls
 			/// </summary>
 			public void CompactCache() {
 				if (_a == null) return;
-				//AOutput.Write(_cacheSize);
+				//print.it(_cacheSize);
 				if (CacheSize < MaxCacheSize || _a.Count < 4) return;
 				CacheSize = 0;
 				int n = _a.Count, max = MaxCacheSize / 4;
@@ -150,7 +150,7 @@ namespace Au.Controls
 					//		if(text[imStrStart + 1] == '~') { imStrStart += 3; imStrEnd--; } else hide = false;
 					//	} else {
 					//		if(imStrEnd < iTo && text[imStrEnd] == '>') imStrEnd++;
-					//		//AOutput.Write(imStrStart, imStrEnd);
+					//		//print.it(imStrStart, imStrEnd);
 					//	}
 					//	if(hide) {
 					//		int len = imStrEnd - imStrStart;
@@ -171,9 +171,9 @@ namespace Au.Controls
 				//calculate n annotation lines from image height
 				int lineHeight = _c.zLineHeight(); if (lineHeight <= 0) continue;
 				int nAnnotLines = Math.Min((maxHeight + (lineHeight - 1)) / lineHeight, 255);
-				//AOutput.Write(lineHeight, maxHeight, nAnnotLines);
+				//print.it(lineHeight, maxHeight, nAnnotLines);
 
-				using ABuffer<byte> buffer = new(annotLen + nAnnotLines + 20);
+				using FastBuffer<byte> buffer = new(annotLen + nAnnotLines + 20);
 				var p = buffer.p;
 				*p++ = 3; Api._ltoa(totalWidth << 8 | nAnnotLines, p, 16); while (*(++p) != 0) { }
 				while (nAnnotLines-- > 1) *p++ = (byte)'\n';
@@ -190,7 +190,7 @@ namespace Au.Controls
 					var a = p + 1;
 					_c.Call(SCI_ANNOTATIONGETTEXT, iLine, a);
 					a[annotLen] = 0;
-					//AOutput.Write($"OLD: '{new string((sbyte*)a)}'");
+					//print.it($"OLD: '{new string((sbyte*)a)}'");
 
 					//is it our image info?
 					int imageLen = (int)(p - buffer.p);
@@ -212,20 +212,20 @@ namespace Au.Controls
 					}
 				} //else case 1
 
-				//AOutput.Write($"NEW: '{new string((sbyte*)b0.p)}'");
-				//APerf.First();
+				//print.it($"NEW: '{new string((sbyte*)b0.p)}'");
+				//perf.first();
 				if (!annotAdded) {
 					annotAdded = true;
 					if (allText) _c.Call(SCI_ANNOTATIONSETVISIBLE, (int)AnnotationsVisible.ANNOTATION_HIDDEN);
 				}
 				_c.Call(SCI_ANNOTATIONSETTEXT, iLine, buffer.p);
-				//APerf.NW();
+				//perf.nw();
 			}
 
 			if (annotAdded && allText) {
-				//APerf.First();
+				//perf.first();
 				_c.Call(SCI_ANNOTATIONSETVISIBLE, (int)_visible);
-				//APerf.NW();
+				//perf.nw();
 			}
 
 			//never mind: scintilla prints without annotations, therefore without images too.
@@ -262,7 +262,7 @@ namespace Au.Controls
 			int n = _c.Call(SCI_ANNOTATIONGETTEXT, line);
 			if (n > 0) {
 				int lens = (s == null) ? 0 : s.Length;
-				using ABuffer<byte> buffer = new(n + 1 + lens * 3);
+				using FastBuffer<byte> buffer = new(n + 1 + lens * 3);
 				var p = buffer.p;
 				_c.Call(SCI_ANNOTATIONGETTEXT, line, p); p[n] = 0;
 				int imageLen = _ParseAnnotText(p, n, out var _);
@@ -273,7 +273,7 @@ namespace Au.Controls
 						p[--imageLen] = 0; //remove "\nPrevText"
 					} else {
 						if (imageLen == n) p[imageLen++] = (byte)'\n'; //no "\nPrevText"
-																	   //AConvert.Utf8FromString(s, p + imageLen, lens * 3);
+																	   //Convert2.Utf8FromString(s, p + imageLen, lens * 3);
 						Encoding.UTF8.GetBytes(s, new Span<byte>(p + imageLen, lens * 3));
 					}
 					_c.Call(SCI_ANNOTATIONSETTEXT, line, p);
@@ -290,14 +290,14 @@ namespace Au.Controls
 		internal string AnnotationText_(int line) {
 			int n = _c.Call(SCI_ANNOTATIONGETTEXT, line);
 			if (n > 0) {
-				using ABuffer<byte> buffer = new(n);
+				using FastBuffer<byte> buffer = new(n);
 				var p = buffer.p;
 				_c.Call(SCI_ANNOTATIONGETTEXT, line, p); p[n] = 0;
 				int imageLen = _ParseAnnotText(p, n, out var _);
 				//info: now len<=n
 				if (imageLen < n) {
 					if (imageLen != 0) { p += imageLen; n -= imageLen; }
-					return AConvert.FromUtf8(p, n);
+					return Convert2.FromUtf8(p, n);
 				}
 			}
 			return "";
@@ -329,8 +329,8 @@ namespace Au.Controls
 			if (i3 >= i) { i2 = i3; iFrom = i3 + 1; isMulti = true; } else isMulti = false;
 
 			//is it an image string?
-			var imType = ImageUtil.ImageTypeFromString(!_isEditor, out int prefixLength, s + i, i2 - i);
-			if (imType == ImageUtil.ImageType.None) goto g1;
+			var imType = KImageUtil.ImageTypeFromString(!_isEditor, out int prefixLength, s + i, i2 - i);
+			if (imType == KImageUtil.ImageType.None) goto g1;
 			if (prefixLength == 10) { i += prefixLength; prefixLength = 0; } //"imagefile:"
 
 			//SHOULDDO: support XAML. But most XAML are not images.
@@ -341,23 +341,23 @@ namespace Au.Controls
 			var d = t_data;
 
 			//is already loaded?
-			long hash = AHash.Fnv1Long(s + i, i2 - i);
+			long hash = Hash.Fnv1Long(s + i, i2 - i);
 			var im = d.FindImage(hash);
-			//AOutput.Write(im != null, new string((sbyte*)s, i, i2 - i));
+			//print.it(im != null, new string((sbyte*)s, i, i2 - i));
 			if (im != null) return im;
 
 			//var test = s.Substring(i, i2 - i);
-			//AOutput.Write(test, EImageUtil.ImageToString(test));
+			//print.it(test, EImageUtil.ImageToString(test));
 
 			i += prefixLength;
 			string path = new((sbyte*)s, i, i2 - i, Encoding.UTF8);
 
 			//load
-			long t1 = ATime.WinMillisecondsWithoutSleep;
-			byte[] b = ImageUtil.BmpFileDataFromString(path, imType, !_isEditor);
-			t1 = ATime.WinMillisecondsWithoutSleep - t1; if (t1 > 1000) AOutput.Warning($"Time to load image '{path}' is {t1} ms.", -1, prefix: "<>Note: "); //eg if network path unavailable, may wait ~7 s
+			long t1 = computer.tickCountWithoutSleep;
+			byte[] b = KImageUtil.BmpFileDataFromString(path, imType, !_isEditor);
+			t1 = computer.tickCountWithoutSleep - t1; if (t1 > 1000) print.warning($"Time to load image '{path}' is {t1} ms.", -1, prefix: "<>Note: "); //eg if network path unavailable, may wait ~7 s
 			if (b == null) goto g1;
-			if (!ImageUtil.GetBitmapFileInfo_(b, out var q)) goto g1;
+			if (!KImageUtil.GetBitmapFileInfo_(b, out var q)) goto g1;
 
 			//create _Image
 			im = new _Image() {
@@ -428,16 +428,16 @@ namespace Au.Controls
 					hasImages = true;
 
 					//draw image
-					if (!ImageUtil.GetBitmapFileInfo_(u.data, out var q)) { Debug.Assert(false); continue; }
+					if (!KImageUtil.GetBitmapFileInfo_(u.data, out var q)) { Debug.Assert(false); continue; }
 					int isFirstLine = (c.annotLine == 0) ? 1 : 0, hLine = r.bottom - r.top;
 					int currentTop = c.annotLine * hLine, currentBottom = currentTop + hLine, imageBottom = q.height + IMAGE_MARGIN_TOP;
 					int y = r.top + isFirstLine * IMAGE_MARGIN_TOP, yy = Math.Min(currentBottom, imageBottom) - currentTop;
 
 					if (imageBottom > currentTop && q.width > 0 && q.height > 0) {
 						fixed (byte* bp = u.data) {
-							ImageUtil.BITMAPFILEHEADER* f = (ImageUtil.BITMAPFILEHEADER*)bp;
+							KImageUtil.BITMAPFILEHEADER* f = (KImageUtil.BITMAPFILEHEADER*)bp;
 							byte* pBits = bp + f->bfOffBits;
-							int bytesInLine = AMath.AlignUp(q.width * q.bitCount, 32) / 8;
+							int bytesInLine = Math2.AlignUp(q.width * q.bitCount, 32) / 8;
 							int sizF = u.data.Length - f->bfOffBits, siz = bytesInLine * q.height;
 							if (q.isCompressed) {
 								//this is slow with big images. It seems processes current line + all remaining lines. Such bitmaps are rare.
@@ -478,9 +478,9 @@ namespace Au.Controls
 					x += u.width + 30;
 				}
 			}
-			catch (Exception ex) { ADebug_.Print(ex.Message); }
+			catch (Exception ex) { Debug_.Print(ex.Message); }
 			finally { if (pen != default) Api.DeleteObject(Api.SelectObject(hdc, oldPen)); }
-			//APerf.NW();
+			//perf.nw();
 
 			//If there are no image strings (text edited), delete the annotation or just its part containing image info and '\n's.
 			if (!hasImages && c.annotLine == 0) {
@@ -524,12 +524,12 @@ namespace Au.Controls
 				if (!inserted && from2 == from) return; //deleted whole lines or characters at line start, which cannot create new image string in text
 				int to2 = (inserted && n.textUTF8[n.length - 1] == '\n') ? to : _c.zLineEndFromPos(false, to);
 				len = to2 - from2;
-				//AOutput.Write(inserted, from, to, from2, to2, len);
+				//print.it(inserted, from, to, from2, to2, len);
 				if (len < 10) return;
 				if (from2 == from && to2 == to) {
 					s = n.textUTF8;
 				} else {
-					//ADebug_.Print("need to get text");
+					//Debug_.Print("need to get text");
 					s = _c.zRangePointer(from2, to2);
 				}
 				textPos = from2;
@@ -539,7 +539,7 @@ namespace Au.Controls
 			if (r < 0) return;
 			//tested: all this is faster than SCI_FINDTEXT. Much faster when need to search in big text.
 
-			//AOutput.Write(firstLine, $"'{new string((sbyte*)s, 0, len, Encoding.UTF8)}'");
+			//print.it(firstLine, $"'{new string((sbyte*)s, 0, len, Encoding.UTF8)}'");
 			_SetImagesForTextRange(firstLine, s, len, allText, textPos);
 		}
 
@@ -561,12 +561,12 @@ namespace Au.Controls
 						for (int iLine = 0, nLines = _c.Call(SCI_GETLINECOUNT); iLine < nLines; iLine++) {
 							len = _c.Call(SCI_ANNOTATIONGETTEXT, iLine); //fast
 							if (len < 4) continue;
-							//APerf.First();
+							//perf.first();
 							if (!tempHidden) {
 								tempHidden = true;
 								_c.Call(SCI_ANNOTATIONSETVISIBLE, (int)AnnotationsVisible.ANNOTATION_HIDDEN); //makes many times faster
 							}
-							using ABuffer<byte> buffer = new(len);
+							using FastBuffer<byte> buffer = new(len);
 							var a = buffer.p;
 							_c.Call(SCI_ANNOTATIONGETTEXT, iLine, a); a[len] = 0;
 							var imageLen = _ParseAnnotText(a, len, out var _);
@@ -574,11 +574,11 @@ namespace Au.Controls
 								if (len > imageLen) a += imageLen; else a = null;
 								_c.Call(SCI_ANNOTATIONSETTEXT, iLine, a);
 							}
-							//APerf.NW(); //surprisingly fast
+							//perf.nw(); //surprisingly fast
 						}
-						//APerf.First();
+						//perf.first();
 						if (tempHidden) _c.Call(SCI_ANNOTATIONSETVISIBLE, (int)_visible);
-						//APerf.NW(); //fast
+						//perf.nw(); //fast
 					}
 				} else if (_visible == AnnotationsVisible.ANNOTATION_HIDDEN) {
 					_c.Call(SCI_SETANNOTATIONDRAWCALLBACK, 0, _callbackPtr);

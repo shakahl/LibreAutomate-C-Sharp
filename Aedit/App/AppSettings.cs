@@ -13,102 +13,47 @@ using System.Reflection;
 
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 
 /// <summary>
 /// Program settings.
-/// AFolders.ThisAppDocuments + @".settings\Settings.json"
+/// folders.ThisAppDocuments + @".settings\Settings.json"
 /// </summary>
-class AppSettings : ASettings
+record AppSettings : JSettings
 {
 	//This is loaded at startup and therefore must be fast.
 	//	Don't use types that would cause to load UI dlls (WPF etc). Eg when it is a nested type and its parent class is a WPF etc control.
 	//	Tested with .NET 5: first time takes ~40 ms. Mostly to load/jit/etc dlls used in JSON deserialization, which then is fast regardless of data size.
 
 	public static AppSettings Load() => Load<AppSettings>(DirBS + "Settings.json");
+	//CONSIDER: it takes 60 ms. We can Jit_ something in other thread. But it isn't good when runs at PC startup.
 
-	public static readonly string DirBS = AFolders.ThisAppDocuments + @".settings\";
+	public static readonly string DirBS = folders.ThisAppDocuments + @".settings\";
 
-	public string user { get => _user; set => Set(ref _user, value); }
-	string _user;
+	public string user, workspace;
+	public string[] recentWS;
 
-	public string workspace { get => _workspace; set => Set(ref _workspace, value); }
-	string _workspace;
+	public bool runHidden, files_multiSelect;
 
-	public string[] recentWS { get => _recent; set => SetNoCmp(ref _recent, value); }
-	string[] _recent;
+	public string wndPos, tools_Dwnd_wndPos, tools_Delm_wndPos, tools_Duiimage_wndPos;
 
-	public bool runHidden { get => _runHidden; set => Set(ref _runHidden, value); }
-	bool _runHidden;
+	public FRRecentItem[] find_recent, find_recentReplace;
+	public string find_skip;
+	public int find_searchIn, find_printSlow = 50;
 
-	public string wndPos { get => _wndpos; set => Set(ref _wndpos, value); }
-	string _wndpos;
+	public bool edit_wrap, edit_noImages, output_wrap, output_white, output_topmost;
 
-	public bool files_multiSelect { get => _files_multiSelect; set => Set(ref _files_multiSelect, value); }
-	bool _files_multiSelect;
+	public int templ_use;
 
-	public string tools_AWnd_wndPos { get => _tools_AWnd_wndPos; set => Set(ref _tools_AWnd_wndPos, value); }
-	string _tools_AWnd_wndPos;
-
-	public string tools_AAcc_wndPos { get => _tools_AAcc_wndPos; set => Set(ref _tools_AAcc_wndPos, value); }
-	string _tools_AAcc_wndPos;
-
-	public string tools_AWinImage_wndPos { get => _tools_AWinImage_wndPos; set => Set(ref _tools_AWinImage_wndPos, value); }
-	string _tools_AWinImage_wndPos;
-
-	public FRRecentItem[] find_recent { get => _find_recent; set => SetNoCmp(ref _find_recent, value); }
-	FRRecentItem[] _find_recent;
-
-	public FRRecentItem[] find_recentReplace { get => _find_recentReplace; set => SetNoCmp(ref _find_recentReplace, value); }
-	FRRecentItem[] _find_recentReplace;
-
-	public string find_skip { get => _find_skip; set => Set(ref _find_skip, value); }
-	string _find_skip;
-
-	public int find_searchIn { get => _find_searchIn; set => Set(ref _find_searchIn, value); }
-	int _find_searchIn;
-
-	public int find_printSlow { get => _find_printSlow; set => Set(ref _find_printSlow, value); }
-	int _find_printSlow = 50;
-
-	public bool edit_wrap { get => _edit_wrap; set => Set(ref _edit_wrap, value); }
-	bool _edit_wrap;
-
-	public bool edit_noImages { get => _edit_noImages; set => Set(ref _edit_noImages, value); }
-	bool _edit_noImages;
-
-	public bool output_wrap { get => _output_wrap; set => Set(ref _output_wrap, value); }
-	bool _output_wrap;
-
-	public bool output_white { get => _output_white; set => Set(ref _output_white, value); }
-	bool _output_white;
-
-	public bool output_topmost { get => _output_topmost; set => Set(ref _output_topmost, value); }
-	bool _output_topmost;
-
-	public int templ_use { get => _templ_use; set => Set(ref _templ_use, value); }
-	int _templ_use;
-
-	public bool ci_complGroup { get => _ci_complGroup; set => Set(ref _ci_complGroup, value); }
-	bool _ci_complGroup = true;
-
-	public int ci_complParen { get => _ci_complParen; set => Set(ref _ci_complParen, value); }
-	int _ci_complParen; //0 spacebar, 1 always, 2 never
-
-	public byte ci_shiftEnterAlways { get => _ci_shiftEnterAlways; set => Set(ref _ci_shiftEnterAlways, value); }
-	byte _ci_shiftEnterAlways;
-
-	public byte ci_shiftTabAlways { get => _ci_shiftTabAlways; set => Set(ref _ci_shiftTabAlways, value); }
-	byte _ci_shiftTabAlways;
-
-	//public byte ci_breakString { get => _ci_breakString; set => Set(ref _ci_breakString, value); }
-	//byte _ci_breakString;
-
-	public string ci_usings { get => _ci_usings; set => Set(ref _ci_usings, value); }
-	string _ci_usings = @"Au
+	public bool ci_complGroup = true;
+	public int ci_complParen; //0 spacebar, 1 always, 2 never
+	public byte ci_shiftEnterAlways, ci_shiftTabAlways;
+	public string ci_usings = @"Au
 Au.Types
+Au.More
 System
 System.Collections.Generic
+System.Collections.Concurrent
 System.Linq
 System.Text
 System.Threading.Tasks
@@ -118,38 +63,23 @@ System.Globalization
 System.IO
 System.IO.Compression
 System.Media
+System.Runtime.CompilerServices
 System.Runtime.InteropServices
 Microsoft.Win32
 ";
+	//public SIZE ci_sizeSignXaml, ci_sizeComplXaml, ci_sizeComplList;
 
-	//public SIZE ci_sizeSignXaml { get => _ci_sizeSignXaml; set => Set(ref _ci_sizeSignXaml, value); }
-	//SIZE _ci_sizeSignXaml;
-
-	//public SIZE ci_sizeComplXaml { get => _ci_sizeComplXaml; set => Set(ref _ci_sizeComplXaml, value); }
-	//SIZE _ci_sizeComplXaml;
-
-	//public SIZE ci_sizeComplList { get => _ci_sizeComplList; set => Set(ref _ci_sizeComplList, value); }
-	//SIZE _ci_sizeComplList;
-
-	public string db_copy_ref { get => _db_copy_ref; set => Set(ref _db_copy_ref, value); }
-	string _db_copy_ref;
-
-	public string db_copy_doc { get => _db_copy_doc; set => Set(ref _db_copy_doc, value); }
-	string _db_copy_doc;
-
-	public string db_copy_winapi { get => _db_winapi; set => Set(ref _db_winapi, value); }
-	string _db_winapi;
+	public string db_copy_ref, db_copy_doc, db_copy_winapi;
 }
 
 /// <summary>
 /// Workspace settings.
 /// WorkspaceDirectory + @"\settings.json"
 /// </summary>
-class WorkspaceSettings : ASettings
+record WorkspaceSettings : JSettings
 {
 	public static WorkspaceSettings Load(string jsonFile) => Load<WorkspaceSettings>(jsonFile);
 
-	public FilesModel.UserData[] users { get => _users; set => SetNoCmp(ref _users, value); }
-	FilesModel.UserData[] _users;
+	public FilesModel.UserData[] users;
 
 }

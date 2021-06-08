@@ -15,7 +15,7 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Au.Util;
+using Au.More;
 using System.Linq;
 
 class PanelOpen : DockPanel
@@ -50,7 +50,7 @@ class PanelOpen : DockPanel
 			break;
 		case MouseButton.Right:
 			_tv.Select(e.Item);
-			switch (AMenu.ShowSimple("Close\tM-click|Close all other|Close all")) {
+			switch (popupMenu.showSimple("Close\tM-click|Close all other|Close all")) {
 			case 1:
 				_CloseFile();
 				break;

@@ -46,8 +46,8 @@ namespace Au.Triggers
 
 		/// <summary>
 		/// Don't release modifier keys.
-		/// Without this flag, for example if trigger is ["Ctrl+K"], when the user presses Ctrl and K down, the trigger sends Ctrl key-up event, making the key logically released, although it is still physically pressed. Then modifier keys don't interfer with the action. However functions like <see cref="AKeys.GetMod"/> and <see cref="AKeys.WaitForKey"/> (and any such functions in any app) will not know that the key is physically pressed; there is no API to get physical key state.
-		/// <note>Unreleased modifier keys will interfere with mouse functions like <see cref="AMouse.Click"/>. Will not interfere with keyboard and clipboard functions of this library, because they release modifier keys, unless <b>AOpt.Key.NoModOff</b> is true. Will not interfere with functions that send text, unless <b>AOpt.Key.NoModOff</b> is true and <b>AOpt.Key.TextHow</b> is <b>OKeyText.KeysX</b>.</note>.
+		/// Without this flag, for example if trigger is ["Ctrl+K"], when the user presses Ctrl and K down, the trigger sends Ctrl key-up event, making the key logically released, although it is still physically pressed. Then modifier keys don't interfer with the action. However functions like <see cref="keys.getMod"/> and <see cref="keys.waitForKey"/> (and any such functions in any app) will not know that the key is physically pressed; there is no API to get physical key state.
+		/// <note>Unreleased modifier keys will interfere with mouse functions like <see cref="mouse.click"/>. Will not interfere with keyboard and clipboard functions of this library, because they release modifier keys, unless <b>opt.key.NoModOff</b> is true. Will not interfere with functions that send text, unless <b>opt.key.NoModOff</b> is true and <b>opt.key.TextHow</b> is <b>OKeyText.KeysX</b>.</note>.
 		/// Other flags that prevent releasing modifier keys: <b>KeyUp</b>, <b>ShareEvent</b>. Then don't need this flag.
 		/// </summary>
 		NoModOff = 16,
@@ -69,7 +69,7 @@ namespace Au.Triggers
 			modMask = ~modAny & csaw;
 			modMasked = mod & modMask;
 			this.flags = flags;
-			_paramsString = flags == 0 ? paramsString : paramsString + " (" + flags.ToString() + ")"; //AOutput.Write(_paramsString);
+			_paramsString = flags == 0 ? paramsString : paramsString + " (" + flags.ToString() + ")"; //print.it(_paramsString);
 		}
 
 		internal override void Run(TriggerArgs args) => RunT(args as HotkeyTriggerArgs);
@@ -106,7 +106,7 @@ namespace Au.Triggers
 		/// Adds a hotkey trigger.
 		/// </summary>
 		/// <param name="hotkey">
-		/// A hotkey, like with the <see cref="AKeys.Key"/> function.
+		/// A hotkey, like with the <see cref="keys.send"/> function.
 		/// Can contain 0 to 4 modifier keys (Ctrl, Shift, Alt, Win) and 1 non-modifier key.
 		/// Examples: "F11", "Ctrl+K", "Ctrl+Shift+Alt+Win+A".
 		/// To ignore modifiers: "?+K". Then the trigger works with any combination of modifiers.
@@ -121,19 +121,19 @@ namespace Au.Triggers
 		public Action<HotkeyTriggerArgs> this[string hotkey, TKFlags flags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 			set {
 				//This could be used instead of [CallerX] parameters, but can be too slow if many triggers. Definitely too slow for menus and toolbars.
-				//APerf.First();
+				//perf.first();
 				//var uu = new StackFrame(1, true); //first time 30 ms, then 30 mcs
-				//APerf.Next();
+				//perf.next();
 				//var us = uu.GetFileName(); //0
-				//APerf.Next();
+				//perf.next();
 				//var ui = uu.GetFileLineNumber(); //0
-				//APerf.Next();
+				//perf.next();
 				//uu = new StackFrame(2, true); //slow too
-				//APerf.NW();
-				////AOutput.Write(us, ui);
-				////AOutput.Write(uu);
+				//perf.nw();
+				////print.it(us, ui);
+				////print.it(uu);
 
-				if(!AKeys.More.ParseHotkeyTriggerString_(hotkey, out var mod, out var modAny, out var key, false)) throw new ArgumentException("Invalid hotkey string.");
+				if(!keys.more.ParseHotkeyTriggerString_(hotkey, out var mod, out var modAny, out var key, false)) throw new ArgumentException("Invalid hotkey string.");
 				_Add(value, key, mod, modAny, flags, hotkey, (f_, l_));
 			}
 		}
@@ -143,7 +143,7 @@ namespace Au.Triggers
 		/// </summary>
 		/// <param name="key"></param>
 		/// <param name="modKeys">
-		/// Modifier keys, like with the <see cref="AKeys.Key"/> function.
+		/// Modifier keys, like with the <see cref="keys.send"/> function.
 		/// Examples: "Ctrl", "Ctrl+Shift+Alt+Win".
 		/// To ignore modifiers: "?". Then the trigger works with any combination of modifiers.
 		/// To ignore a modifier: "Ctrl?". Then the trigger works with or without the modifier. More examples: "Ctrl?+Shift?", "Ctrl+Shift?".
@@ -158,7 +158,7 @@ namespace Au.Triggers
 				var ps = key.ToString(); if(ps[0].IsAsciiDigit()) ps = "VK" + ps;
 				if(!modKeys.NE()) ps = modKeys + "+" + ps;
 
-				if(!AKeys.More.ParseHotkeyTriggerString_(modKeys, out var mod, out var modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
+				if(!keys.more.ParseHotkeyTriggerString_(modKeys, out var mod, out var modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
 				_Add(value, key, mod, modAny, flags, ps, (f_, l_));
 			}
 		}
@@ -171,7 +171,7 @@ namespace Au.Triggers
 			//	Currently would need just lock(_d) in several places. Also some triggers of this type must be added before starting, else we would not have the hook etc.
 			//	But probably not so useful. Makes programming more difficult. If need, can Stop, add triggers, then Run again.
 
-			//AOutput.Write($"key={key}, mod={mod}, modAny={modAny}");
+			//print.it($"key={key}, mod={mod}, modAny={modAny}");
 			var t = new HotkeyTrigger(_triggers, action, mod, modAny, flags, paramsString, source);
 			t.DictAdd(_d, (int)key);
 			_lastAdded = t;
@@ -193,7 +193,7 @@ namespace Au.Triggers
 
 		internal bool HookProc(HookData.Keyboard k, TriggerHookContext thc)
 		{
-			//AOutput.Write(k.vkCode, !k.IsUp);
+			//print.it(k.vkCode, !k.IsUp);
 			Debug.Assert(!k.IsInjectedByAu); //server must ignore
 
 			KKey key = k.vkCode;
@@ -211,7 +211,7 @@ namespace Au.Triggers
 				if(key == _eatUp) {
 					_eatUp = 0;
 					return true;
-					//To be safer, could return false if AKeys.IsPressed(_eatUp), but then can interfere with the trigger action.
+					//To be safer, could return false if keys.isPressed(_eatUp), but then can interfere with the trigger action.
 				}
 				//CONSIDER: _upTimeout.
 			} else {
@@ -246,13 +246,13 @@ namespace Au.Triggers
 							}
 						}
 
-						//AOutput.Write(key, mod);
+						//print.it(key, mod);
 						if(0 != (x.flags & TKFlags.ShareEvent)) return false;
 
 						if(thc.trigger == null) { //KeyModUp or action==null
 							if(mod == KMod.Alt || mod == KMod.Win || mod == (KMod.Alt | KMod.Win)) {
-								//AOutput.Write("need Ctrl");
-								ThreadPool.QueueUserWorkItem(o => AKeys.Internal_.SendKey(KKey.Ctrl)); //disable Alt/Win menu
+								//print.it("need Ctrl");
+								ThreadPool.QueueUserWorkItem(o => keys.Internal_.SendKey(KKey.Ctrl)); //disable Alt/Win menu
 							}
 						} else if(mod != 0) {
 							if(0 == (x.flags & TKFlags.NoModOff)) thc.muteMod = TriggerActionThreads.c_modRelease;
@@ -320,7 +320,7 @@ namespace Au.Triggers
 		/// <summary>
 		/// The active window.
 		/// </summary>
-		public AWnd Window { get; }
+		public wnd Window { get; }
 
 		/// <summary>
 		/// The pressed key.
@@ -336,7 +336,7 @@ namespace Au.Triggers
 		public KMod Mod { get; }
 
 		///
-		public HotkeyTriggerArgs(HotkeyTrigger trigger, AWnd w, KKey key, KMod mod)
+		public HotkeyTriggerArgs(HotkeyTrigger trigger, wnd w, KKey key, KMod mod)
 		{
 			Trigger = trigger;
 			Window = w; Key = key; Mod = mod;

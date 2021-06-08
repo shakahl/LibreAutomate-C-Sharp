@@ -1,6 +1,6 @@
 ﻿using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -31,7 +31,7 @@ class DOptions : KDialogWindow
 		base.OnClosed(e);
 	}
 
-	AWpfBuilder _b;
+	wpfBuilder _b;
 	TabControl _tc;
 
 	public DOptions() {
@@ -40,7 +40,7 @@ class DOptions : KDialogWindow
 		WindowStartupLocation = WindowStartupLocation.CenterOwner;
 		ShowInTaskbar = false;
 
-		_b = new AWpfBuilder(this).WinSize(540);
+		_b = new wpfBuilder(this).WinSize(540);
 		_b.Row(-1).Add(out _tc).Height(300..);
 		_b.R.AddOkCancel(apply: "_Apply");
 
@@ -56,12 +56,12 @@ class DOptions : KDialogWindow
 	}
 
 	/// <summary>
-	/// Adds new TabItem to _tc. Creates and returns new AWpfBuilder for building the tab page.
+	/// Adds new TabItem to _tc. Creates and returns new wpfBuilder for building the tab page.
 	/// </summary>
-	AWpfBuilder _Page(string name, WBPanelType panelType = WBPanelType.Grid) {
+	wpfBuilder _Page(string name, WBPanelType panelType = WBPanelType.Grid) {
 		var tp = new TabItem { Header = name };
 		_tc.Items.Add(tp);
-		return new AWpfBuilder(tp, panelType).Margin("3");
+		return new wpfBuilder(tp, panelType).Margin("3");
 	}
 
 	void _General() {
@@ -92,9 +92,9 @@ class DOptions : KDialogWindow
 				try {
 					using var rk = Registry.CurrentUser.OpenSubKey(c_rkRun, true);
 					if (init_startWithWin) rk.DeleteValue("Aedit");
-					else rk.SetValue("Aedit", "\"" + AFolders.ThisAppBS + "Au.CL.exe\" /e");
+					else rk.SetValue("Aedit", "\"" + folders.ThisAppBS + "Au.CL.exe\" /e");
 				}
-				catch (Exception ex) { AOutput.Write("Failed to change 'Start with Windows'. " + ex.ToStringWithoutStack()); }
+				catch (Exception ex) { print.it("Failed to change 'Start with Windows'. " + ex.ToStringWithoutStack()); }
 			}
 			App.Settings.runHidden = startHidden.True();
 
@@ -103,19 +103,19 @@ class DOptions : KDialogWindow
 		};
 
 		static string _startupScripts_Validation(FrameworkElement fe) {
-			//AOutput.Write("validating");
-			string s = (fe as TextBox).Text; if (s.NE()) return null;
+			//print.it("validating");
+			string text = (fe as TextBox).Text; if (text.NE()) return null;
 			try {
-				var t = ACsv.Parse(s);
+				var t = csvTable.parse(text);
 				if (t.ColumnCount > 2) return "Too many commas in a line. If script name contains comma, enclose in \"\".";
-				ARegex rxDelay = null;
-				foreach (var v in t.Data) {
-					var script = v[0];
-					if (script.Starts("//")) continue;
-					if (App.Model.FindFile(script) == null) return "Script not found: " + script;
+				regexp rxDelay = null;
+				foreach (var v in t.Rows) {
+					var s0 = v[0];
+					if (s0.Starts("//")) continue;
+					if (App.Model.FindFile(s0) == null) return "Script not found: " + s0;
 					var delay = v.Length == 1 ? null : v[1];
 					if (!delay.NE()) {
-						rxDelay ??= new ARegex(@"(?i)^\d+ *m?s$");
+						rxDelay ??= new regexp(@"(?i)^\d+ *m?s$");
 						if (!rxDelay.IsMatch(delay)) return "Delay must be like 2 s or 500 ms";
 					}
 				}
@@ -142,7 +142,7 @@ class DOptions : KDialogWindow
 		var b = _Page("Templates").Columns(0, 100, -1, 0, 100);
 		b.R.Add("Template", out ComboBox template).Items("Script|Class")
 			.Skip().Add("Use", out ComboBox use).Items("Default|Custom");
-		b.Row(-1).Add(out KSciCodeBoxAWnd sci).Span(5); sci.ZInitBorder = true;
+		b.Row(-1).Add(out KSciCodeBoxWnd sci).Span(5); sci.ZInitBorder = true;
 		b.End();
 
 		string[] customText = new string[2];
@@ -162,12 +162,12 @@ class DOptions : KDialogWindow
 				var file = FileNode.Templates.FilePathRaw(tt, true);
 				try {
 					if (text == FileNode.Templates.Load(tt, false)) {
-						AFile.Delete(file);
+						filesystem.delete(file);
 					} else {
-						AFile.SaveText(file, text);
+						filesystem.saveText(file, text);
 					}
 				}
-				catch (Exception ex) { AOutput.Write(ex.ToStringWithoutStack()); }
+				catch (Exception ex) { print.it(ex.ToStringWithoutStack()); }
 			}
 			App.Settings.templ_use = (int)useCustom;
 		};
@@ -274,7 +274,7 @@ Line number";
 
 				} else {
 					if (i == (int)CiStyling.EToken.countUserDefined) i = Sci.STYLE_LINENUMBER;
-					//AOutput.Write(i, s[v.start..v.end]);
+					//print.it(i, s[v.start..v.end]);
 					sciStyles.Call(Sci.SCI_STARTSTYLING, v.start);
 					sciStyles.Call(Sci.SCI_SETSTYLING, v.end - v.start, i);
 				}
@@ -353,9 +353,8 @@ Line number";
 				styles.FontName = fname;
 				styles.FontSize = fsize;
 
-				if (!styles.Equals(CiStyling.TStyles.Settings)) {
+				if (styles != CiStyling.TStyles.Settings) {
 					CiStyling.TStyles.Settings = styles;
-					App.Settings.SaveLater();
 					foreach (var v in Panels.Editor.ZOpenDocs) {
 						styles.ToScintilla(v);
 						v._SetLineNumberMarginWidth();
@@ -366,7 +365,7 @@ Line number";
 			//[?] button
 			bInfo.Click += (_, _) => {
 				string link = CiStyling.TStyles.s_settingsFile;
-				ADialog.Show(null, $@"Changed font/color settings are saved in file
+				dialog.show(null, $@"Changed font/color settings are saved in file
 <a href=""{link}"">{link}</a>
 
 To reset: delete the file.
@@ -375,7 +374,7 @@ To change all: replace the file.
 To backup: copy the file.
 
 To apply changes after deleting etc, restart this application.
-", icon: DIcon.Info, onLinkClick: e => { ARun.SelectInExplorer(e.LinkHref); });
+", icon: DIcon.Info, onLinkClick: e => { run.selectInExplorer(e.LinkHref); });
 			};
 		};
 	}
@@ -394,7 +393,6 @@ Also on paste will add missing using directives.
 Supports only namespaces from default assemblies (.NET and Au).
 Examples:
 System.IO
-Au.Util
 //Commented.Out")
 			.Validation(o => usings.Text.FindAny("= ") >= 0 ? "contains = or space" : null);
 		b.End();
@@ -421,9 +419,9 @@ Au.Util
 		};
 
 		void _SnippetsButton(WBButtonClickArgs o) {
-			switch(AMenu.ShowSimple("1 Edit snippets|2 Find default snippets")) {
-			case 1: ARun.SelectInExplorer(AFolders.ThisAppDocuments + @".settings\Snippets.xml"); break;
-			case 2: ARun.SelectInExplorer(AFolders.ThisApp + @"Default\Snippets.xml"); break;
+			switch(popupMenu.showSimple("1 Edit snippets|2 Find default snippets")) {
+			case 1: run.selectInExplorer(folders.ThisAppDocuments + @".settings\Snippets.xml"); break;
+			case 2: run.selectInExplorer(folders.ThisApp + @"Default\Snippets.xml"); break;
 			}
 		}
 	}

@@ -1,5 +1,5 @@
 ﻿using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -77,7 +77,7 @@ namespace Au.Controls
 					var font = new Typeface(tc.FontFamily, tc.FontStyle, tc.FontWeight, tc.FontStretch);
 					var fsize = tc.FontSize;
 					var brush = SystemColors.ControlTextBrush;
-					//var ppd = VisualTreeHelper.GetDpi(tc).PixelsPerDip; AOutput.Write(ppd); //ignored, and we don't need it
+					//var ppd = VisualTreeHelper.GetDpi(tc).PixelsPerDip; print.it(ppd); //ignored, and we don't need it
 					double r = 4;
 					foreach (var v in tabs) {
 						var f = new FormattedText(v.Header.ToString(), cult, fdir, font, fsize, brush, 1);

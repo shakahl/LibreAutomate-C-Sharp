@@ -22,13 +22,13 @@ namespace Au.Tests
 		public Window1() {
 			InitializeComponent();
 			var c = (Content as Grid).Children[0] as FlowDocumentScrollViewer;
-			c.MouseLeftButtonUp += (_, _) => { AOutput.Write("c up"); };
-			c.MouseLeftButtonUp += (_, _) => { AOutput.Write("c preview up"); };
-			ATimer.After(600, _ => AOutput.Write("init", Keyboard.FocusedElement, _Focused(c), FocusManager.GetFocusScope(c)));
+			c.MouseLeftButtonUp += (_, _) => { print.it("c up"); };
+			c.MouseLeftButtonUp += (_, _) => { print.it("c preview up"); };
+			timerm.after(600, _ => print.it("init", Keyboard.FocusedElement, _Focused(c), FocusManager.GetFocusScope(c)));
 			c.ContextMenuOpening += (_, _) => {
-				AOutput.Write("menu", Keyboard.FocusedElement, _Focused(c), FocusManager.GetFocusScope(c));
-				ATimer.After(100, _ => AOutput.Write("100", Keyboard.FocusedElement, _Focused(c), FocusManager.GetFocusScope(c)));
-				//ATimer.After(500, _ => Keyboard.Focus(c));
+				print.it("menu", Keyboard.FocusedElement, _Focused(c), FocusManager.GetFocusScope(c));
+				timerm.after(100, _ => print.it("100", Keyboard.FocusedElement, _Focused(c), FocusManager.GetFocusScope(c)));
+				//timerm.after(500, _ => Keyboard.Focus(c));
 			};
 			IInputElement _Focused(FrameworkElement e) => FocusManager.GetFocusedElement(FocusManager.GetFocusScope(e));
 		}

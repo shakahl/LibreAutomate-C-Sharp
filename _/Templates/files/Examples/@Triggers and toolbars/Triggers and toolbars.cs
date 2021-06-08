@@ -5,7 +5,7 @@ using Au.Triggers;
 using System;
 using System.Reflection;
 partial class Script { static void Main(string[] a) => new Script(a); Script(string[] args) { //;;
-;ATask.Setup(trayIcon: !true); //;
+;scriptt.setup(trayIcon: !true); //;
 
 //Here you can add code that runs at startup. Set variables, etc.
 //Add triggers and toolbars in other files of this project. More info in "Readme.txt".
@@ -31,7 +31,7 @@ bool _enableToolbarExamples = true;
 partial class Script {
 
 /// <summary>
-/// Use this to add triggers, set trigger options, etc. Example:<br/> <c>Triggers.Hotkey["Ctrl+E"] = o => AOutput.Write(o.Trigger);</c>.
+/// Use this to add triggers, set trigger options, etc. Example:<br/> <c>Triggers.Hotkey["Ctrl+E"] = o => print.it(o.Trigger);</c>.
 /// </summary>
 ActionTriggers Triggers { get; } = new();
 
@@ -48,7 +48,7 @@ void RunTriggersAndToolbars() {
 //		if (!toolbars) {
 //			Triggers.Options.Thread(0, ifRunningWaitMS: 500);
 //			Triggers.Options.BeforeAction = o => {
-//				AOpt.Key.SleepFinally = 50;
+//				opt.key.SleepFinally = 50;
 //			};
 //		}
 	}
@@ -62,7 +62,7 @@ void RunTriggersAndToolbars() {
 		if(tb) Triggers.Options.ThreadMain();
 		
 		try { mi.Invoke(this, null); }
-		catch(TargetInvocationException ex) { AOutput.Write(ex.InnerException); return; }
+		catch(TargetInvocationException ex) { print.it(ex.InnerException); return; }
 	}
 	
 	Triggers.Run();

@@ -14,6 +14,7 @@ using System.Windows.Input;
 
 using Au;
 using Au.Types;
+using Au.More;
 using Au.Controls;
 
 using Microsoft.CodeAnalysis;
@@ -194,7 +195,7 @@ class CiAutocorrect
 			if (span.Start > pos) return; // > if pos is in node's leading trivia, eg comments or #if-disabled block
 
 			//CiUtil.PrintNode(node);
-			//AOutput.Write("ALL");
+			//print.it("ALL");
 			//CiUtil.PrintNode(root, false);
 
 			if (ch == '\"' || ch == '\'') {
@@ -219,7 +220,7 @@ class CiAutocorrect
 					tempRangeFrom = 0;
 				}
 			} else {
-				//AOutput.Write(kind);
+				//print.it(kind);
 				if (ch == '<' && !_IsGenericLessThan()) return; //can be operators
 				switch (kind) {
 				case SyntaxKind.CompilationUnit:
@@ -257,7 +258,7 @@ class CiAutocorrect
 					var semo = cd.document.GetSemanticModelAsync().Result;
 					var si = semo.GetSemanticInfo(tok2, cd.document.Project.Solution.Workspace, default);
 					foreach (var v in si.GetSymbols(includeType: true)) {
-						//AOutput.Write(v);
+						//print.it(v);
 						switch (v) {
 						case INamedTypeSymbol ints when ints.IsGenericType:
 						case IMethodSymbol ims when ims.IsGenericMethod:
@@ -310,7 +311,7 @@ class CiAutocorrect
 			canCorrect = (ch == ')' || ch == ']') && code[pos - 1] != ',';
 			if (!(canCorrect | canAutoindent)) return false;
 			//shoulddo?: don't correct after inner ']' etc, eg A(1, [In] 2)
-			//SHOULDDO: don't move ';' outside of lambda expression when user wants to enclose it. Example: ATimer.After(1, _=>{AOutput.Write(1)); (user cannot ype ';' after "AOutput.Write(1)".
+			//SHOULDDO: don't move ';' outside of lambda expression when user wants to enclose it. Example: timerm.after(1, _=>{print.it(1)); (user cannot ype ';' after "print.it(1)".
 		}
 
 		if (!cd.GetDocument()) return false;
@@ -334,7 +335,7 @@ class CiAutocorrect
 		bool needSemicolon = false, needBlock = false, canExitBlock = false, dontIndent = false;
 		SyntaxToken token = default; _Block block = null;
 		foreach (var v in nodeFromPos.AncestorsAndSelf()) {
-			//AOutput.Write(v.GetType().Name);
+			//print.it(v.GetType().Name);
 			if (v is StatementSyntax ss) {
 				node = v;
 				switch (ss) {
@@ -492,7 +493,7 @@ class CiAutocorrect
 				canAutoindent = true;
 				canExitBlock = anywhere && node == nodeFromPos && tok1.IsKind(SyntaxKind.CloseBraceToken) && pos <= tok1.SpanStart;
 			}
-			//AOutput.Write(canCorrect, canAutoindent, canExitBlock);
+			//print.it(canCorrect, canAutoindent, canExitBlock);
 
 			if (canCorrect) {
 				if (needSemicolon) {
@@ -508,7 +509,7 @@ class CiAutocorrect
 			break;
 		}
 
-		//AOutput.Write("----");
+		//print.it("----");
 		//CiUtil.PrintNode(nodeFromPos);
 		//CiUtil.PrintNode(node);
 
@@ -520,22 +521,22 @@ class CiAutocorrect
 			case ExternAliasDirectiveSyntax:
 				break;
 			default:
-				ADebug_.Print($"{nodeFromPos.Kind()}, '{nodeFromPos}'");
+				Debug_.Print($"{nodeFromPos.Kind()}, '{nodeFromPos}'");
 				break;
 			}
 #endif
 			return false;
 		}
 
-		if (canCorrect && AKeys.IsPressed(KKey.Escape)) canCorrect = false;
+		if (canCorrect && keys.isPressed(KKey.Escape)) canCorrect = false;
 		if (!(canCorrect | canAutoindent)) return false;
 
 		if (canCorrect) {
-			//AOutput.Write($"Span={ node.Span}, Span.End={node.Span.End}, FullSpan={ node.FullSpan}, SpanStart={ node.SpanStart}, EndPosition={ node.EndPosition}, FullWidth={ node.FullWidth}, HasTrailingTrivia={ node.HasTrailingTrivia}, Position={ node.Position}, Width={ node.Width}");
+			//print.it($"Span={ node.Span}, Span.End={node.Span.End}, FullSpan={ node.FullSpan}, SpanStart={ node.SpanStart}, EndPosition={ node.EndPosition}, FullWidth={ node.FullWidth}, HasTrailingTrivia={ node.HasTrailingTrivia}, Position={ node.Position}, Width={ node.Width}");
 			//return true;
 
 			int endOfSpan = token.Span.End, endOfFullSpan = token.FullSpan.End;
-			//AOutput.Write(endOfSpan, endOfFullSpan);
+			//print.it(endOfSpan, endOfFullSpan);
 
 			if (onSemicolon) {
 				if (anywhere) {
@@ -586,14 +587,14 @@ class CiAutocorrect
 				}
 
 				var s = b.ToString();
-				//AOutput.Write($"'{s}'");
+				//print.it($"'{s}'");
 				doc.zReplaceRange(true, endOfSpan, endOfSpan + replaceLen, s);
 				doc.zGoToPos(true, finalPos);
 			}
 		} else { //autoindent
 			int indent = 0;
 
-			//AOutput.Write(pos);
+			//print.it(pos);
 
 			//remove spaces and tabs around the line break
 			static bool _IsSpace(char c) => c == ' ' || c == '\t';
@@ -637,7 +638,7 @@ class CiAutocorrect
 					prevBlock = true;
 				} else {
 					if (prevBlock) { //don't indent block that is child of eg 'if' which adds indentation.
-									 //AOutput.Write("-");
+									 //print.it("-");
 						prevBlock = false;
 						indent--;
 					}
@@ -651,7 +652,7 @@ class CiAutocorrect
 					case AttributeListSyntax:
 					case NamespaceDeclarationSyntax: //don't indent namespaces
 					case IfStatementSyntax k3 when k3.Parent is ElseClauseSyntax:
-						//AOutput.Write("-" + v.GetType().Name, v.Span, pos);
+						//print.it("-" + v.GetType().Name, v.Span, pos);
 						continue;
 					case ExpressionSyntax:
 					case BaseArgumentListSyntax:
@@ -659,16 +660,16 @@ class CiAutocorrect
 					case EqualsValueClauseSyntax:
 					case VariableDeclaratorSyntax:
 					case VariableDeclarationSyntax:
-						//AOutput.Write("--" + v.GetType().Name, v.Span, pos);
+						//print.it("--" + v.GetType().Name, v.Span, pos);
 						continue; //these can be if we are in a lambda block. And maybe more, nevermind.
 					case CompilationUnitSyntax:
-					case ClassDeclarationSyntax k1 when k1.Identifier.Text == "Script": //don't indent script class content
-					case ConstructorDeclarationSyntax k2 when k2.Identifier.Text == "Script": //don't indent script constructor content
+					case ClassDeclarationSyntax k1 when k1.Identifier.Text is "Script" or "Program": //don't indent script class content
+					case ConstructorDeclarationSyntax k2 when k2.Identifier.Text is "Script" or "Program": //don't indent script constructor content
 					case GlobalStatementSyntax: //don't indent top-level statements
 						goto endLoop1;
 					}
 				}
-				//AOutput.Write(v.GetType().Name, v.Span, pos);
+				//print.it(v.GetType().Name, v.Span, pos);
 				indent++;
 			}
 			endLoop1:
@@ -698,8 +699,8 @@ class CiAutocorrect
 				static bool _IsBreaklessSection(SwitchSectionSyntax ss) => !ss.Statements.Any(o => o is BreakStatementSyntax);
 			}
 
-			//AOutput.Write($"from={from}, to={to}, nodeFromPos={nodeFromPos.GetType().Name}, node={node.GetType().Name}");
-			//AOutput.Write($"indent={indent}, isBraceLine={isBraceLine}, expandBraces={expandBraces}");
+			//print.it($"from={from}, to={to}, nodeFromPos={nodeFromPos.GetType().Name}, node={node.GetType().Name}");
+			//print.it($"indent={indent}, isBraceLine={isBraceLine}, expandBraces={expandBraces}");
 
 			if (indent < 1 && !(expandBraces | addBreak | canExitBlock)) return false;
 
@@ -740,7 +741,7 @@ class CiAutocorrect
 
 			//replace text and set caret position
 			var s = b.ToString();
-			//AOutput.Write($"'{s}'");
+			//print.it($"'{s}'");
 			doc.zReplaceRange(true, replaceFrom, replaceTo, s);
 			pos = replaceFrom + s.Length;
 			if (expandBraces) pos -= indent + 2; else if (isBraceLine && code.Eq(replaceFrom - 1, "\n")) pos -= indent;
@@ -924,7 +925,7 @@ class CiAutocorrect
 	static bool _IsInNonblankTrivia(SyntaxNode node, int pos) {
 		var trivia = node.FindTrivia(pos);
 		if (trivia.RawKind != 0) {
-			//AOutput.Write($"{trivia.Kind()}, {pos}, {trivia.FullSpan}, '{trivia}'");
+			//print.it($"{trivia.Kind()}, {pos}, {trivia.FullSpan}, '{trivia}'");
 			var ts = trivia.Span;
 			if (!(pos > ts.Start && pos < ts.End)) { //pos is not inside trivia; possibly at start or end.
 				bool lookBefore = pos == ts.Start && trivia.IsKind(SyntaxKind.EndOfLineTrivia) && node.FullSpan.Start < pos;

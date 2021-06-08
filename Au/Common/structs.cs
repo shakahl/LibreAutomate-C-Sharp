@@ -1,5 +1,5 @@
 ﻿using System;
-using Au.Util;
+using Au.More;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -54,17 +54,17 @@ namespace Au.Types
 		///// <summary>Specifies position relative to the primary screen or its work area. Calls <see cref="Coord.Normalize"/> with <i>centerIfEmpty</i> true.</summary>
 		//public static implicit operator POINT((Coord x, Coord y, bool workArea) t) => _Coord(t.x, t.y, t.workArea, default);
 		///// <summary>Specifies position relative to the specified screen or its work area. Calls <see cref="Coord.Normalize"/> with <i>centerIfEmpty</i> true.</summary>
-		//public static implicit operator POINT((Coord x, Coord y, AScreen screen, bool workArea) t) => _Coord(t.x, t.y, t.workArea, t.screen);
+		//public static implicit operator POINT((Coord x, Coord y, screen screen, bool workArea) t) => _Coord(t.x, t.y, t.workArea, t.screen);
 		///// <summary>Specifies position in the specified rectangle which is relative to the primary screen. Calls <see cref="Coord.NormalizeInRect"/> with <i>centerIfEmpty</i> true.</summary>
 		//public static implicit operator POINT((RECT r, Coord x, Coord y) t) => Coord.NormalizeInRect(t.x, t.y, t.r, centerIfEmpty: true);
-		//static POINT _Coord(Coord x, Coord y, bool workArea, AScreen screen) => Coord.Normalize(x, y, workArea, screen, centerIfEmpty: true);
+		//static POINT _Coord(Coord x, Coord y, bool workArea, screen screen) => Coord.Normalize(x, y, workArea, screen, centerIfEmpty: true);
 
 		//maybe in the future
 		///// <summary>
 		///// Converts <see cref="Coord"/> coordinates into real coodinates.
 		///// Calls <see cref="Coord.Normalize"/> with <i>centerIfEmpty</i> true.
 		///// </summary>
-		//public static POINT Normalize(Coord x, Coord y, bool workArea = false, AScreen screen = default)
+		//public static POINT Normalize(Coord x, Coord y, bool workArea = false, screen screen = default)
 		//	=> Coord.Normalize(x, y, workArea, screen, centerIfEmpty: true);
 
 		//public static POINT NormalizeIn(RECT r, Coord x = default, Coord y = default)
@@ -334,8 +334,8 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="swap">true - swap right/left, bottom/top; false - set right = left, bottom = top.</param>
 		public void Normalize(bool swap) {
-			if (right < left) { if (swap) AMath.Swap(ref left, ref right); else right = left; }
-			if (bottom < top) { if (swap) AMath.Swap(ref top, ref bottom); else bottom = top; }
+			if (right < left) { if (swap) Math2.Swap(ref left, ref right); else right = left; }
+			if (bottom < top) { if (swap) Math2.Swap(ref top, ref bottom); else bottom = top; }
 		}
 
 		/// <summary>
@@ -344,14 +344,14 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="x">X coordinate in the specified screen. If default(Coord) - center. Can be <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="y">Y coordinate in the specified screen. If default(Coord) - center. Can be <see cref="Coord.Reverse"/> etc.</param>
-		/// <param name="screen">Use this screen. If default, uses the primary screen. Example: <c>AScreen.Index(1)</c>.</param>
+		/// <param name="screen">Use this screen. If default, uses the primary screen. Example: <c>screen.index(1)</c>.</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <param name="ensureInScreen">If part of rectangle is not in screen, move and/or resize it so that entire rectangle would be in screen. Default true.</param>
 		/// <remarks>
-		/// This function can be used to calculate new window location before creating it. If window already exists, use <see cref="AWnd.MoveInScreen"/>.
+		/// This function can be used to calculate new window location before creating it. If window already exists, use <see cref="wnd.MoveInScreen"/>.
 		/// </remarks>
-		public void MoveInScreen(Coord x, Coord y, AScreen screen = default, bool workArea = true, bool ensureInScreen = true) {
-			AWnd.Internal_.MoveInScreen(false, x, y, false, default, ref this, screen, workArea, ensureInScreen);
+		public void MoveInScreen(Coord x, Coord y, screen screen = default, bool workArea = true, bool ensureInScreen = true) {
+			wnd.Internal_.MoveInScreen(false, x, y, false, default, ref this, screen, workArea, ensureInScreen);
 		}
 
 		/// <summary>
@@ -362,20 +362,20 @@ namespace Au.Types
 		/// <param name="y">Y coordinate relative to <i>r</i>. Default - center. Can be <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="ensureInRect">If part of rectangle is not in <i>r</i>, move and/or resize it so that entire rectangle would be in <i>r</i>.</param>
 		public void MoveInRect(RECT r, Coord x = default, Coord y = default, bool ensureInRect = false) {
-			AWnd.Internal_.MoveInScreen(false, x, y, false, default, ref this, default, false, ensureInRect, r);
+			wnd.Internal_.MoveInScreen(false, x, y, false, default, ref this, default, false, ensureInRect, r);
 		}
 
 		/// <summary>
 		/// Adjusts this rectangle to ensure that whole rectangle is in screen.
 		/// Initial and final rectangle coordinates are relative to the primary screen.
 		/// </summary>
-		/// <param name="screen">Use this screen (see <see cref="AScreen"/>). If default, uses screen of the rectangle (or nearest).</param>
+		/// <param name="screen">Use this screen (see <see cref="screen"/>). If default, uses screen of the rectangle (or nearest).</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <remarks>
-		/// This function can be used to calculate new window location before creating it. If window already exists, use <see cref="AWnd.EnsureInScreen"/>.
+		/// This function can be used to calculate new window location before creating it. If window already exists, use <see cref="wnd.EnsureInScreen"/>.
 		/// </remarks>
-		public void EnsureInScreen(AScreen screen = default, bool workArea = true) {
-			AWnd.Internal_.MoveInScreen(true, default, default, false, default, ref this, screen, workArea, true);
+		public void EnsureInScreen(screen screen = default, bool workArea = true) {
+			wnd.Internal_.MoveInScreen(true, default, default, false, default, ref this, screen, workArea, true);
 		}
 
 		/// <summary>
@@ -728,7 +728,7 @@ namespace Au.Types
 
 			//rejected:
 			//Some objects can return BSTR containing '\0's. Then probably the rest of string is garbage. I never noticed this but saw comments. Better allow '\0's, because in some cases it can be valid string. When invalid, it will not harm too much.
-			//int len2 = CharPtr_.Length(p, len); ADebug_.PrintIf(len2 != len, "BSTR with '\\0'"); len = len2;
+			//int len2 = CharPtr_.Length(p, len); Debug_.PrintIf(len2 != len, "BSTR with '\\0'"); len = len2;
 
 			string r = len == 0 ? "" : new string(p, 0, len);
 			Dispose();

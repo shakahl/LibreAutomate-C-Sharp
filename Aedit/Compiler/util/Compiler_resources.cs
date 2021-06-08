@@ -13,7 +13,7 @@ using System.Reflection;
 
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 
 namespace Au.Compiler
 {
@@ -134,7 +134,7 @@ namespace Au.Compiler
 					var m = new MemoryStream();
 					m.Position = exeData.Length; //reserve for updated exeData
 					if(!_WriteResources(m, resRva)) _Throw();
-					uint resSize = (uint)(m.Length - exeData.Length), resSizeAligned = AMath.AlignUp(resSize, fileAlignment);
+					uint resSize = (uint)(m.Length - exeData.Length), resSizeAligned = Math2.AlignUp(resSize, fileAlignment);
 					m.SetLength((uint)m.Length + resSizeAligned);
 
 					//The exe template does not contain resources, therefore .rsrc section does not exist and ImageDirectoryEntryToDataEx fails.
@@ -147,11 +147,11 @@ namespace Au.Compiler
 					for(int i = 0; i < 5; i++) ish->Name[i] = (byte)".rsrc"[i];
 					ish->VirtualSize = resSize;
 					ish->VirtualAddress = resRva;
-					ish->SizeOfRawData = AMath.AlignUp(resSize, fileAlignment);
+					ish->SizeOfRawData = Math2.AlignUp(resSize, fileAlignment);
 					ish->PointerToRawData = (uint)exeData.Length;
 					ish->Characteristics = 0x40000040;
 
-					uint resSize2 = AMath.AlignUp(resSize, oh->SectionAlignment);
+					uint resSize2 = Math2.AlignUp(resSize, oh->SectionAlignment);
 					if(!bit32) {
 						//in IMAGE_OPTIONAL_HEADER write RVA/size of .rsrc section
 						oh->DataDirectory_Resource.VirtualAddress = resRva;
@@ -263,7 +263,7 @@ namespace Au.Compiler
 						baseDataDir += sizeof(IMAGE_RESOURCE_DATA_ENTRY);
 						de->Size = (uint)r.data.Length;
 						de->OffsetToData = resRva + (uint)offsData; //RVA
-						offsData += AMath.AlignUp(r.data.Length, 4);
+						offsData += Math2.AlignUp(r.data.Length, 4);
 					}
 				}
 				m.Write(aDir);
@@ -271,7 +271,7 @@ namespace Au.Compiler
 				//write resource data
 				foreach(var r in _a) {
 					m.Write(r.data);
-					for(int k = AMath.AlignUp(r.data.Length, 4) - r.data.Length; k > 0; k--) m.WriteByte(0); //4-align
+					for(int k = Math2.AlignUp(r.data.Length, 4) - r.data.Length; k > 0; k--) m.WriteByte(0); //4-align
 				}
 
 				return true;

@@ -38,8 +38,8 @@ namespace Au.Compiler
 	/// <example>
 	/// <h3>References</h3>
 	/// <code><![CDATA[
-	/// r Assembly //assembly reference. With or without ".dll". Must be in AFolders.ThisApp.
-	/// r C:\X\Y\Assembly.dll //assembly reference using full path. If relative path, must be in AFolders.ThisApp.
+	/// r Assembly //assembly reference. With or without ".dll". Must be in folders.ThisApp.
+	/// r C:\X\Y\Assembly.dll //assembly reference using full path. If relative path, must be in folders.ThisApp.
 	/// r Alias=Assembly //assembly reference that can be used with C# keyword 'extern alias'.
 	/// ]]></code>
 	/// Don't need to add Au.dll and .NET runtime assemblies.
@@ -66,7 +66,7 @@ namespace Au.Compiler
 	/// com Accessibility 1.1 44782f49.dll
 	/// ]]></code>
 	/// How this different from option r:
-	/// 1. If not full path, must be in @"%AFolders.Workspace%\.interop".
+	/// 1. If not full path, must be in @"%folders.Workspace%\.interop".
 	/// 2. The interop assembly is used only when compiling, not at run time. It contains only metadata, not code. The compiler copies used parts of metadata to the output assembly. The real code is in native COM dll, which at run time must be registered as COM component and must match the bitness (64-bit or 32-bit) of the process that uses it. 
 	/// 
 	/// <h3>Files to add to managed resources</h3>
@@ -134,7 +134,7 @@ namespace Au.Compiler
 	/// <h3>Settings used to create assembly file</h3>
 	/// <code><![CDATA[
 	/// role miniProgram|exeProgram|editorExtension|classLibrary|classFile //purpose of this C# file. Also the type of the output assembly file (exe, dll, none). Default: miniProgram for scripts, classFile for class files. More info below.
-	/// outputPath path //create output files (.exe, .dll, etc) in this directory. Used with role exeProgram and classLibrary. Can be full path or relative path like with 'c'. Default for exeProgram: %AFolders.Workspace%\bin\filename. Default for classLibrary: %AFolders.ThisApp%\Libraries.
+	/// outputPath path //create output files (.exe, .dll, etc) in this directory. Used with role exeProgram and classLibrary. Can be full path or relative path like with 'c'. Default for exeProgram: %folders.Workspace%\bin\filename. Default for classLibrary: %folders.ThisApp%\Libraries.
 	/// console false|true //let the program run with console
 	/// icon file.ico //icon of the .exe file. Can be filename or relative path, like with 'c'.
 	/// manifest file.manifest //manifest file of the .exe file. Can be filename or relative path, like with 'c'.
@@ -149,7 +149,7 @@ namespace Au.Compiler
 	/// If role is 'classFile' (default for class files) does not create any output files from this C# file. Its purpose is to be compiled together with other C# code files.
 	/// If role is 'editorExtension', the task runs in the main UI thread of the editor process. Rarely used. Can be used to create editor extensions. The user cannot see and end the task. Creates memory leaks when executing recompiled assemblies (eg after editing the script), because old assembly versions cannot be unloaded until process exits.
 	/// 
-	/// Full path can be used with 'r', 'com', 'outputPath'. It can start with an environment variable or special folder name, like <c>%AFolders.ThisAppDocuments%\file.exe</c>.
+	/// Full path can be used with 'r', 'com', 'outputPath'. It can start with an environment variable or special folder name, like <c>%folders.ThisAppDocuments%\file.exe</c>.
 	/// Files used with other options ('c', 'resource' etc) must be in this workspace.
 	/// 
 	/// About native resources:
@@ -415,13 +415,13 @@ namespace Au.Compiler
 		/// <param name="f"></param>
 		/// <param name="isMain">If false, it is a file added through meta option 'c'.</param>
 		void _ParseFile(FileNode f, bool isMain) {
-			//var p1 = APerf.Create();
+			//var p1 = perf.local();
 			string code = f.GetText(cache: true);
 			//p1.Next();
 			bool isScript = f.IsScript;
 
 			if (_isMain = isMain) {
-				Name = APath.GetNameNoExt(f.Name);
+				Name = pathname.getNameNoExt(f.Name);
 				IsScript = isScript;
 
 				Optimize = DefaultOptimize;
@@ -444,9 +444,9 @@ namespace Au.Compiler
 				if (isMain) MetaRange = meta;
 
 				foreach (var t in EnumOptions(code, meta)) {
-					//var p1 = APerf.Create();
+					//var p1 = perf.local();
 					_ParseOption(t.Name(), t.Value(), t.nameStart, t.valueStart);
-					//p1.Next(); var t1 = p1.TimeTotal; if(t1 > 5) AOutput.Write(t1, t.Name(), t.Value());
+					//p1.Next(); var t1 = p1.TimeTotal; if(t1 > 5) print.it(t1, t.Name(), t.Value());
 				}
 			}
 			//p1.NW();
@@ -457,7 +457,7 @@ namespace Au.Compiler
 		string _code;
 
 		void _ParseOption(string name, string value, int iName, int iValue) {
-			//AOutput.Write(name, value);
+			//print.it(name, value);
 			_nameFrom = iName; _nameTo = iName + name.Length;
 			_valueFrom = iValue; _valueTo = iValue + value.Length;
 
@@ -474,7 +474,7 @@ namespace Au.Compiler
 				}
 
 				try {
-					//var p1 = APerf.Create();
+					//var p1 = perf.local();
 					if (!References.Resolve(value, name[0] == 'c')) {
 						_ErrorV("reference assembly not found: " + value); //FUTURE: need more info, or link to Help
 					}
@@ -673,11 +673,11 @@ namespace Au.Compiler
 		FileNode _GetFile(string s, bool? folder = false) {
 			var f = _fn.FindRelative(s, folder);
 			if (f == null) {
-				string s2 = APath.FindExtension(s) < 0 ? ". If it is a code file, append \".cs\"." : null;
+				string s2 = pathname.findExtension(s) < 0 ? ". If it is a code file, append \".cs\"." : null;
 				_ErrorV($"file '{s}' does not exist in this workspace{s2}");
 				return null;
 			}
-			int v = AFile.Exists(s = f.FilePath, true);
+			int v = filesystem.exists(s = f.FilePath, true);
 			if (v != (f.IsFolder ? 2 : 1)) { _ErrorV("file does not exist: " + s); return null; }
 			return f;
 		}
@@ -694,11 +694,11 @@ namespace Au.Compiler
 
 		string _GetOutPath(string s) {
 			s = s.TrimEnd('\\');
-			if (!APath.IsFullPathExpand(ref s)) {
+			if (!pathname.isFullPathExpand(ref s)) {
 				if (s.Starts('\\')) s = _fn.Model.FilesDirectory + s;
-				else s = APath.GetDirectory(_fn.FilePath, true) + s;
+				else s = pathname.getDirectory(_fn.FilePath, true) + s;
 			}
-			return APath.Normalize_(s, noExpandEV: true);
+			return pathname.Normalize_(s, noExpandEV: true);
 		}
 
 		bool _PR(ref string value) {
@@ -707,7 +707,7 @@ namespace Au.Compiler
 			foreach (var v in CodeFiles) if (v.f == f) return _ErrorV("circular reference");
 			if (!_flags.Has(EMPFlags.ForCodeInfo)) {
 				if (!Compiler.Compile(ECompReason.CompileIfNeed, out var r, f, projFolder)) return _ErrorV("failed to compile library");
-				//AOutput.Write(r.role, r.file);
+				//print.it(r.role, r.file);
 				if (r.role != ERole.classLibrary) return _ErrorV("it is not a class library (no meta role classLibrary)");
 				value = r.file;
 			}
@@ -756,8 +756,8 @@ namespace Au.Compiler
 		public static string GetDefaultOutputPath(FileNode f, ERole role, bool withEnvVar) {
 			Debug.Assert(role == ERole.exeProgram || role == ERole.classLibrary);
 			string r;
-			if (role == ERole.classLibrary) r = withEnvVar ? @"%AFolders.ThisApp%\Libraries" : AFolders.ThisApp + @"Libraries";
-			else r = (withEnvVar ? @"%AFolders.Workspace%\bin\" : AFolders.Workspace + @"bin\") + f.DisplayName;
+			if (role == ERole.classLibrary) r = withEnvVar ? @"%folders.ThisApp%\Libraries" : folders.ThisApp + @"Libraries";
+			else r = (withEnvVar ? @"%folders.Workspace%\bin\" : folders.Workspace + @"bin\") + f.DisplayName;
 			return r;
 		}
 

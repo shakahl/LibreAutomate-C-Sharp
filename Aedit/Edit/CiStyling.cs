@@ -19,7 +19,7 @@ using System.Reflection;
 
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 using static Au.Controls.Sci;
 
 using Microsoft.CodeAnalysis.CSharp;
@@ -65,7 +65,7 @@ partial class CiStyling
 	SciCode _doc; //to detect when the active document changed
 	bool _update;
 	Range _visibleLines;
-	ATimer _modTimer;
+	timerm _modTimer;
 	int _modFromEnd; //like _endStyling (SCI_GETENDSTYLED), but from end
 	int _diagCounter;
 	CancellationTokenSource _cancelTS;
@@ -114,12 +114,12 @@ partial class CiStyling
 		//Delay to avoid multiple styling/folding/canceling on multistep actions (replace text range, find/replace all, autocorrection) and fast automated text input.
 		_cancelTS?.Cancel(); _cancelTS = null;
 		_modFromEnd = Math.Min(_modFromEnd, doc.zLen8 - n.FinalPosition);
-		_modTimer ??= new ATimer(_Modified);
-		if (!_modTimer.IsRunning) _modTimer.After(25, doc);
+		_modTimer ??= new timerm(_Modified);
+		if (!_modTimer.IsRunning) { _modTimer.Tag = doc; _modTimer.After(25); }
 	}
 
-	void _Modified(ATimer t) {
-		//var p1=APerf.Create();
+	void _Modified(timerm t) {
+		//var p1=perf.local();
 		var doc = t.Tag as SciCode;
 		if (doc != Panels.Editor.ZActiveDoc) return;
 		if (_cancelTS != null) return;
@@ -135,7 +135,7 @@ partial class CiStyling
 
 	async void _StylingAndFolding(SciCode doc, bool fromStart = false, int end8 = -1, bool firstTime = false) {
 #if PRINT
-		var p1 = APerf.Create();
+		var p1 = perf.local();
 #endif
 		Sci_GetStylingInfo(doc.ZSciPtr, 2 | 4 | 8, out var si);
 
@@ -155,7 +155,7 @@ partial class CiStyling
 		if (!cd.GetDocument()) return;
 #if PRINT
 		p1.Next('d');
-		AOutput.Write($"<><c green>style needed: {start8}-{end8}, lines {doc.LineFromPos(false, start8) + 1}-{doc.LineFromPos(false, end8)}<>");
+		print.it($"<><c green>style needed: {start8}-{end8}, lines {doc.LineFromPos(false, start8) + 1}-{doc.LineFromPos(false, end8)}<>");
 #endif
 		int start16 = doc.zPos16(start8), end16 = doc.zPos16(end8);
 
@@ -180,7 +180,7 @@ partial class CiStyling
 			});
 		}
 		catch (OperationCanceledException) { }
-		catch (Exception e1) { ADebug_.Print(e1); return; } //InvalidOperationException when this code: AWpfBuilder ... .Also(b=>b.Panel.for)
+		catch (Exception e1) { Debug_.Print(e1); return; } //InvalidOperationException when this code: wpfBuilder ... .Also(b=>b.Panel.for)
 		finally {
 			cancelTS.Dispose();
 			if (cancelTS == _cancelTS) _cancelTS = null;
@@ -188,13 +188,13 @@ partial class CiStyling
 		if (cancelToken.IsCancellationRequested) {
 #if PRINT
 			p1.Next();
-			AOutput.Write($"<><c orange>canceled.  {p1.ToString()}<>");
+			print.it($"<><c orange>canceled.  {p1.ToString()}<>");
 #endif
 			return;
 		}
 		if (doc != Panels.Editor.ZActiveDoc) {
 #if PRINT
-			AOutput.Write("<><c red>switched doc<>");
+			print.it("<><c red>switched doc<>");
 #endif
 			return;
 		}
@@ -213,12 +213,12 @@ partial class CiStyling
 		//}
 		//if(startMin < start16) start16 = doc.zPos16(start8 = doc.zLineStartFromPos(false, doc.zPos8(startMin)));
 		//if(endMax > end16) end16 = doc.zPos16(end8 = doc.zLineEndFromPos(false, doc.zPos8(endMax), withRN: true));
-		////AOutput.Write(start8, end8, start16, end16);
+		////print.it(start8, end8, start16, end16);
 
 		var b = new byte[end8 - start8];
 
 		foreach (var v in a) {
-			//AOutput.Write(v.ClassificationType, v.TextSpan);
+			//print.it(v.ClassificationType, v.TextSpan);
 			EToken style = v.ClassificationType switch {
 				#region
 				ClassificationTypeNames.ClassName => EToken.Type,
@@ -267,7 +267,7 @@ partial class CiStyling
 				ClassificationTypeNames.XmlDocCommentName => EToken.XmlDocTag,
 				ClassificationTypeNames.XmlDocCommentProcessingInstruction => EToken.XmlDocTag,
 
-				//FUTURE: Regex. But how to apply it to ARegex?
+				//FUTURE: Regex. But how to apply it to regexp?
 				//ClassificationTypeNames. => EStyle.,
 				_ => EToken.None
 				#endregion
@@ -286,7 +286,7 @@ partial class CiStyling
 				case ClassificationTypeNames.LabelName: break;
 				case ClassificationTypeNames.PreprocessorText: break;
 				case ClassificationTypeNames.StaticSymbol: break;
-				default: ADebug_.PrintIf(!v.ClassificationType.Starts("regex"), $"<><c gray>{v.ClassificationType}, {v.TextSpan}<>"); break;
+				default: Debug_.PrintIf(!v.ClassificationType.Starts("regex"), $"<><c gray>{v.ClassificationType}, {v.TextSpan}<>"); break;
 				}
 #endif
 				continue;
@@ -318,7 +318,7 @@ partial class CiStyling
 			CodeInfo._diag.EraseIndicatorsInLine(doc, doc.zCurrentPos8);
 		}
 #if TRACE
-		//if(!s_debugPerf) { s_debugPerf = true; APerf.NW('s'); }
+		//if(!s_debugPerf) { s_debugPerf = true; perf.nw('s'); }
 #endif
 	}
 #if TRACE
@@ -328,8 +328,8 @@ partial class CiStyling
 	#region folding
 
 	void _Fold(bool firstTime, CodeInfo.Context cd, int start8, int end8) {
-		//var p1 = APerf.Create();
-		ADebug_.PrintIf(!cd.document.TryGetSyntaxRoot(out _), "recreating syntax tree");
+		//var p1 = perf.local();
+		Debug_.PrintIf(!cd.document.TryGetSyntaxRoot(out _), "recreating syntax tree");
 		var root = cd.document.GetSyntaxRootAsync().Result;
 		//p1.Next('r');
 
@@ -370,7 +370,7 @@ partial class CiStyling
 					commentEnd = k.End;
 					bool? inFunc = null;
 					foreach (var g in s_rxComments.FindAllG(code, 0, k.Start..k.End)) {
-						//AOutput.Write($"'{g}'");
+						//print.it($"'{g}'");
 						inFunc ??= t1.GetAncestor<BlockSyntax>() != null;
 						if (inFunc == true && code.LineCount(false, g.Start..g.End) < 10) continue;
 						_AddFoldPoint(g.Start, 1);
@@ -400,7 +400,7 @@ partial class CiStyling
 		//p1.Next('t');
 
 		void _AddFoldPoint(int pos16, int level) {
-			//AOutput.Write(doc.zLineFromPos(true, pos16)+1, level);
+			//print.it(doc.zLineFromPos(true, pos16)+1, level);
 			(a ??= new List<int>()).Add(doc.zPos8(pos16) | (level > 0 ? 0 : unchecked((int)0x80000000)));
 		}
 
@@ -448,7 +448,7 @@ partial class CiStyling
 				//add separator below
 				int li = doc.zLineFromPos(true, span.End);
 				_DeleteUnderlinedLineMarkers(li);
-				//if(underlinedLine != li) AOutput.Write("add", li + 1);
+				//if(underlinedLine != li) print.it("add", li + 1);
 				if (underlinedLine != li) doc.Call(SCI_MARKERADD, li, SciCode.c_markerUnderline);
 				else underlinedLine++;
 			}
@@ -463,7 +463,7 @@ partial class CiStyling
 			for (; ; underlinedLine++) {
 				underlinedLine = doc.Call(SCI_MARKERNEXT, underlinedLine, marker);
 				if ((uint)underlinedLine >= beforeLine) break;
-				//AOutput.Write("delete", underlinedLine + 1);
+				//print.it("delete", underlinedLine + 1);
 				do doc.Call(SCI_MARKERDELETE, underlinedLine, SciCode.c_markerUnderline);
 				while (0 != (marker & doc.Call(SCI_MARKERGET, underlinedLine)));
 			}
@@ -474,7 +474,7 @@ partial class CiStyling
 		//p1.Next('s');
 
 		int lineTo = doc.zLineFromPos(false, end8); if (end8 > doc.zLineStart(false, lineTo)) lineTo++;
-		//AOutput.Write(line + 1, lineTo + 1);
+		//print.it(line + 1, lineTo + 1);
 		unsafe { //we implement folding in Scintilla. Calling many SCI_SETFOLDLEVEL here would be slow.
 			fixed (int* ip = a?.ToArray()) Sci_SetFoldLevels(doc.ZSciPtr, line, lineTo, a?.Count ?? 0, ip);
 		}
@@ -482,7 +482,7 @@ partial class CiStyling
 		doc._RestoreEditorData();
 		//p1.NW('F');
 	}
-	static ARegex s_rxComments = new(@"(?m)^[ \t]*//(?!\.\s|;|/[^/]).*(\R\s*//(?!\.\s|;|/[^/]).*)+");
+	static regexp s_rxComments = new(@"(?m)^[ \t]*//(?!\.\s|;|/[^/]).*(\R\s*//(?!\.\s|;|/[^/]).*)+");
 
 	static void _InitFolding(SciCode doc) {
 		const int foldMrgin = SciCode.c_marginFold;
@@ -560,7 +560,7 @@ partial class SciCode
 	}
 
 	internal void _RestoreEditorData() {
-		//AOutput.Write(_openState);
+		//print.it(_openState);
 		if (_openState == _EOpenState.FoldingDone) return;
 		bool newFile = _openState == _EOpenState.NewFile, reopened = _openState == _EOpenState.Reopen;
 		_openState = _EOpenState.FoldingDone;
@@ -595,7 +595,7 @@ partial class SciCode
 					}
 				}
 			}
-			catch (SLException ex) { ADebug_.Print(ex); }
+			catch (SLException ex) { Debug_.Print(ex); }
 		}
 	}
 
@@ -614,7 +614,7 @@ partial class SciCode
 
 		if (_openState < _EOpenState.FoldingDone) return; //if did not have time to open editor data, better keep old data than delete. Also if not a code file.
 		var db = App.Model.DB; if (db == null) return;
-		//var p1 = APerf.Create();
+		//var p1 = perf.local();
 		var a = new List<int>();
 		_GetLines(c_markerBookmark, a);
 		_GetLines(c_markerBreakpoint, a);
@@ -625,7 +625,7 @@ partial class SciCode
 		//p1.Next();
 		int top = Call(SCI_GETFIRSTVISIBLELINE), pos = zCurrentPos8;
 		if (top != _savedTop || pos != _savedPos || hash != _savedLinesMD5) {
-			//AOutput.Write("changed", a.Count);
+			//print.it("changed", a.Count);
 			try {
 				using var p = db.Statement("REPLACE INTO _editor (id,top,pos,lines) VALUES (?,?,?,?)");
 				p.Bind(1, _fn.Id).Bind(2, top).Bind(3, pos).Bind(4, a).Step();
@@ -633,7 +633,7 @@ partial class SciCode
 				_savedPos = pos;
 				_savedLinesMD5 = hash;
 			}
-			catch (SLException ex) { ADebug_.Print(ex); }
+			catch (SLException ex) { Debug_.Print(ex); }
 		}
 		//p1.NW('D');
 
@@ -657,20 +657,20 @@ partial class SciCode
 	//unsafe void _TestSaveFolding()
 	//{
 	//	//int n = zLineCount;
-	//	//for(int i = 0; i < n; i++) AOutput.Write(i+1, (uint)Call(SCI_GETFOLDLEVEL, i));
+	//	//for(int i = 0; i < n; i++) print.it(i+1, (uint)Call(SCI_GETFOLDLEVEL, i));
 
 	//	var a = new List<POINT>();
 	//	for(int i = 0; ; i++) {
 	//		i = Call(SCI_CONTRACTEDFOLDNEXT, i);
 	//		if(i < 0) break;
 	//		int j = Call(SCI_GETLASTCHILD, i, -1);
-	//		//AOutput.Write(i, j);
+	//		//print.it(i, j);
 	//		a.Add((i, j));
 	//	}
 
 	//	Call(SCI_FOLDALL, SC_FOLDACTION_EXPAND);
 	//	Sci_SetFoldLevels(SciPtr, 0, zLineCount - 1, 0, null);
-	//	ATimer.After(1000, _ => _TestRestoreFolding(a));
+	//	timerm.after(1000, _ => _TestRestoreFolding(a));
 	//}
 
 	//unsafe void _TestRestoreFolding(List<POINT> lines)
@@ -686,11 +686,11 @@ partial class SciCode
 	//}
 
 	int _savedTop, _savedPos;
-	AHash.MD5Result _savedLinesMD5;
+	Hash.MD5Result _savedLinesMD5;
 
-	static AHash.MD5Result _Hash(List<int> a) {
+	static Hash.MD5Result _Hash(List<int> a) {
 		if (a.Count == 0) return default;
-		AHash.MD5 md5 = default;
+		Hash.MD5 md5 = default;
 		foreach (var v in a) md5.Add(v);
 		return md5.Hash;
 	}

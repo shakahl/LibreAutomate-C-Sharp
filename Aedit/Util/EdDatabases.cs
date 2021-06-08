@@ -13,38 +13,38 @@ using System.Linq;
 
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 
 /// <summary>
 /// Creates and opens databases ref.db, doc.db, winapi.db.
 /// </summary>
 static class EdDatabases
 {
-	public static ASqlite OpenRef() {
+	public static sqlite OpenRef() {
 		string copy = App.Settings.db_copy_ref;
 		if (copy != null) {
 			App.Settings.db_copy_ref = null;
-			AFile.CopyTo(copy, AFolders.ThisApp, FIfExists.Delete);
+			filesystem.copyTo(copy, folders.ThisApp, FIfExists.Delete);
 		}
-		return new ASqlite(AFolders.ThisAppBS + "ref.db", SLFlags.SQLITE_OPEN_READONLY);
+		return new sqlite(folders.ThisAppBS + "ref.db", SLFlags.SQLITE_OPEN_READONLY);
 	}
 
-	public static ASqlite OpenDoc() {
+	public static sqlite OpenDoc() {
 		string copy = App.Settings.db_copy_doc;
 		if (copy != null) {
 			App.Settings.db_copy_doc = null;
-			AFile.CopyTo(copy, AFolders.ThisApp, FIfExists.Delete);
+			filesystem.copyTo(copy, folders.ThisApp, FIfExists.Delete);
 		}
-		return new ASqlite(AFolders.ThisAppBS + "doc.db", SLFlags.SQLITE_OPEN_READONLY);
+		return new sqlite(folders.ThisAppBS + "doc.db", SLFlags.SQLITE_OPEN_READONLY);
 	}
 
-	public static ASqlite OpenWinapi() {
+	public static sqlite OpenWinapi() {
 		string copy = App.Settings.db_copy_winapi;
 		if (copy != null) {
 			App.Settings.db_copy_winapi = null;
-			AFile.CopyTo(copy, AFolders.ThisApp, FIfExists.Delete);
+			filesystem.copyTo(copy, folders.ThisApp, FIfExists.Delete);
 		}
-		return new ASqlite(AFolders.ThisAppBS + "winapi.db", SLFlags.SQLITE_OPEN_READONLY);
+		return new sqlite(folders.ThisAppBS + "winapi.db", SLFlags.SQLITE_OPEN_READONLY);
 	}
 
 	#region create ref and doc
@@ -54,8 +54,8 @@ static class EdDatabases
 	/// </summary>
 	/// <remarks>
 	/// Shows a list dialog.
-	///		If selected All, creates for all runtime versions starting from 3.1, with names ref.version.db (eg ref.3.1.0.db) and doc.version.db, in AFolders.ThisAppBS.
-	///		Else creates only for the selected runtime version, with names ref.db and doc.db, in dataDir, and sets to copy to AFolders.ThisAppBS when opening next time after process restarts.
+	///		If selected All, creates for all runtime versions starting from 3.1, with names ref.version.db (eg ref.3.1.0.db) and doc.version.db, in folders.ThisAppBS.
+	///		Else creates only for the selected runtime version, with names ref.db and doc.db, in dataDir, and sets to copy to folders.ThisAppBS when opening next time after process restarts.
 	/// We ship and at run time load databases of single version, named ref.db and doc.db. In the future should allow to download and use multiple versions.
 	/// Also this function allows users to create databases from SDKs installed on their PC, but currently this feature is not exposed. Would need to add UI and exception handling.
 	/// ref.db contains dlls from 'dotnet\packs' folder. They contain only metadata of public API, not all code like dlls in the 'dotnet\shared' folder.
@@ -71,10 +71,10 @@ static class EdDatabases
 	/// Need to run this after changing .NET version of C# projects (<TargetFramework>...</TargetFramework>). Also update COREVER2 etc in AppHost.cpp.
 	/// </remarks>
 	public static void CreateRefAndDoc(string dataDir = @"Q:\app\Au\Other\Data") {
-		string dirPacks = APath.Normalize_(AFolders.NetRuntimeBS + @"..\..\..\packs");
+		string dirPacks = pathname.Normalize_(folders.NetRuntimeBS + @"..\..\..\packs");
 		string dirCore = dirPacks + @"\Microsoft.NETCore.App.Ref\";
 		var a = new List<string>();
-		foreach (var f in AFile.Enumerate(dirCore, FEFlags.UseRawPath)) { //for each version
+		foreach (var f in filesystem.enumerate(dirCore, FEFlags.UseRawPath)) { //for each version
 			if (!f.IsDirectory) continue;
 			var s = f.Name;
 			int v1 = s.ToInt(0, out int ne), v2 = s.ToInt(ne + 1);
@@ -83,7 +83,7 @@ static class EdDatabases
 			a.Add(s);
 		}
 		a.Add("All");
-		int i = ADialog.ShowList(a, "Create database", "For runtime", footerText: "Note: These are .NET SDK reference assembly directories. Versions may not match versions of runtime and even SDK.") - 1;
+		int i = dialog.showList(a, "Create database", "For runtime", footer: "Note: These are .NET SDK reference assembly directories. Versions may not match versions of runtime and even SDK.") - 1;
 		if (i < 0) return;
 		int n = a.Count - 1;
 		if (i < n) {
@@ -91,33 +91,33 @@ static class EdDatabases
 		} else {
 			for (i = 0; i < n; i++) _CreateRefAndDoc(dirPacks, dirCore, a[i], true, dataDir);
 		}
-		AOutput.Write("CreateRefAndDoc done.");
+		print.it("CreateRefAndDoc done.");
 	}
 
 	static void _CreateRefAndDoc(string dirPacks, string dirCore, string version, bool all, string dataDir) {
 		string subdirRN = @"\ref\net" + version.RegexReplace(@"^\d+\.\d+\K.+", @"\", 1);
 
 		var dir1 = dirCore + version + subdirRN;
-		if (!AFile.Exists(dir1, true).isDir) throw new DirectoryNotFoundException("Not found: " + dir1);
+		if (!filesystem.exists(dir1, true).isDir) throw new DirectoryNotFoundException("Not found: " + dir1);
 
 		//find WindowsDesktop folder. Must have same X.X.X version. Preview version may be different.
 		bool preview; int i = version.Find("-p", true);
 		if (preview = i >= 0) version = version[..(i + 2)];
 		string verDesktop = null;
 		string dirDesktop = dirPacks + @"\Microsoft.WindowsDesktop.App.Ref\";
-		foreach (var f in AFile.Enumerate(dirDesktop, FEFlags.UseRawPath)) { //for each version
+		foreach (var f in filesystem.enumerate(dirDesktop, FEFlags.UseRawPath)) { //for each version
 			if (!f.IsDirectory) continue;
 			var s = f.Name;
 			if (preview ? s.Starts(version, true) : s == version) { verDesktop = s; break; }
 		}
 		if (verDesktop == null) throw new DirectoryNotFoundException("Not found: WindowsDesktop SDK");
 		var dir2 = dirDesktop + verDesktop + subdirRN;
-		if (!AFile.Exists(dir2, true).isDir) throw new DirectoryNotFoundException("Not found: " + dir2);
+		if (!filesystem.exists(dir2, true).isDir) throw new DirectoryNotFoundException("Not found: " + dir2);
 
 		string dbRef, dbDoc;
 		if (all) {
-			dbRef = AFolders.ThisAppBS + "ref." + version + ".db";
-			dbDoc = AFolders.ThisAppBS + "doc." + version + ".db";
+			dbRef = folders.ThisAppBS + "ref." + version + ".db";
+			dbDoc = folders.ThisAppBS + "doc." + version + ".db";
 		} else {
 			dbRef = dataDir + @"\ref.db";
 			dbDoc = dataDir + @"\doc.db";
@@ -132,8 +132,8 @@ static class EdDatabases
 	}
 
 	static void _CreateRef(string dbFile, string dir1, string dir2) {
-		AFile.Delete(dbFile);
-		using var d = new ASqlite(dbFile);
+		filesystem.delete(dbFile);
+		using var d = new sqlite(dbFile);
 		using var trans = d.Transaction();
 		d.Execute("CREATE TABLE ref (name TEXT PRIMARY KEY, data BLOB)");
 		using var statInsert = d.Statement("INSERT OR REPLACE INTO ref VALUES (?, ?)");
@@ -144,10 +144,10 @@ static class EdDatabases
 		trans.Commit();
 		d.Execute("VACUUM");
 
-		AOutput.Write("Created " + dbFile);
+		print.it("Created " + dbFile);
 
 		void _AddDir(string dir, params string[] skip) {
-			foreach (var f in AFile.Enumerate(dir)) {
+			foreach (var f in filesystem.enumerate(dir)) {
 				if (f.IsDirectory) continue;
 				if (!f.Name.Ends(".dll", true)) continue;
 				var asmName = f.Name[..^4];
@@ -158,7 +158,7 @@ static class EdDatabases
 		}
 
 		void _AddFile(string asmName, string asmFile) {
-			//AOutput.Write(asmName);
+			//print.it(asmName);
 			statInsert.Bind(1, asmName);
 			statInsert.Bind(2, File.ReadAllBytes(asmFile));
 			statInsert.Step();
@@ -167,8 +167,8 @@ static class EdDatabases
 	}
 
 	static void _CreateDoc(string dbFile, string dir1, string dir2) {
-		AFile.Delete(dbFile);
-		using var d = new ASqlite(dbFile, sql: "PRAGMA page_size = 8192;"); //8192 makes file smaller by 2-3 MB.
+		filesystem.delete(dbFile);
+		using var d = new sqlite(dbFile, sql: "PRAGMA page_size = 8192;"); //8192 makes file smaller by 2-3 MB.
 		using var trans = d.Transaction();
 		d.Execute("CREATE TABLE doc (name TEXT PRIMARY KEY, xml TEXT)");
 		using var statInsert = d.Statement("INSERT INTO doc VALUES (?, ?)");
@@ -186,16 +186,16 @@ static class EdDatabases
 		trans.Commit();
 		d.Execute("VACUUM");
 
-		AOutput.Write("Created " + dbFile);
+		print.it("Created " + dbFile);
 
 		void _AddDir(string dir, params string[] skip) {
-			foreach (var f in AFile.Enumerate(dir)) {
+			foreach (var f in filesystem.enumerate(dir)) {
 				if (f.IsDirectory) continue;
 				if (!f.Name.Ends(".xml", true)) continue;
 				var asmName = f.Name[..^4];
 				if (skip.Contains(asmName)) continue;
-				if (!AFile.Exists(dir + asmName + ".dll").isFile) {
-					AOutput.Write("<><c 0x808080>" + f.Name + "</c>");
+				if (!filesystem.exists(dir + asmName + ".dll").isFile) {
+					print.it("<><c 0x808080>" + f.Name + "</c>");
 					continue;
 				}
 				_AddFile(asmName, f.FullPath);
@@ -204,9 +204,9 @@ static class EdDatabases
 		}
 
 		void _AddFile(string asmName, string xmlFile) {
-			//AOutput.Write(asmName);
+			//print.it(asmName);
 			haveRefs.Add(asmName);
-			var xr = AXml.LoadElem(xmlFile);
+			var xr = XmlUtil.LoadElem(xmlFile);
 			foreach (var e in xr.Descendants("member")) {
 				var name = e.Attr("name");
 
@@ -217,14 +217,14 @@ static class EdDatabases
 				using var reader = e.CreateReader();
 				reader.MoveToContent();
 				var xml = reader.ReadInnerXml();
-				//AOutput.Write(name, xml);
+				//print.it(name, xml);
 
 				//textFile.WriteLine(name); textFile.WriteLine(xml); textFile.WriteLine("\f");
 
 				if (uniq.TryGetValue(name, out var prevRef)) {
 					if (!statDupl.Bind(1, name).Step()) throw new AuException();
 					var prev = statDupl.GetText(0);
-					if (xml != prev && asmName != "System.Linq") AOutput.Write($"<>\t{name} already defined in {prevRef}\r\n<c 0xc000>{prev}</c>\r\n<c 0xff0000>{xml}</c>");
+					if (xml != prev && asmName != "System.Linq") print.it($"<>\t{name} already defined in {prevRef}\r\n<c 0xc000>{prev}</c>\r\n<c 0xff0000>{xml}</c>");
 					statDupl.Reset();
 				} else {
 					statInsert.BindAll(name, xml).Step();
@@ -242,11 +242,11 @@ static class EdDatabases
 	/// </summary>
 	public static void CreateWinapi(string csDir = @"Q:\app\Au\Other\Api", string dataDir = @"Q:\app\Au\Other\Data") {
 		string dbFile = dataDir + @"\winapi.db";
-		AFile.Delete(dbFile);
+		filesystem.delete(dbFile);
 
 		string s = File.ReadAllText(csDir + @"\Api.cs");
 
-		using var d = new ASqlite(dbFile);
+		using var d = new sqlite(dbFile);
 		using var trans = d.Transaction();
 		d.Execute("CREATE TABLE api (name TEXT, code TEXT, kind INTEGER)"); //note: no PRIMARY KEY. Don't need index.
 		using var statInsert = d.Statement("INSERT INTO api VALUES (?, ?, ?)");
@@ -274,7 +274,7 @@ static class EdDatabases
 				"static" or "readonly" => CiItemKind.Field,
 				_ => CiItemKind.None
 			};
-			ADebug_.PrintIf(kind == CiItemKind.None, m[1].Value);
+			Debug_.PrintIf(kind == CiItemKind.None, m[1].Value);
 			statInsert.Bind(3, (int)kind);
 
 			statInsert.Step();
@@ -286,6 +286,6 @@ static class EdDatabases
 
 		App.Settings.db_copy_winapi = dbFile;
 
-		AOutput.Write("CreateWinapi done.");
+		print.it("CreateWinapi done.");
 	}
 }

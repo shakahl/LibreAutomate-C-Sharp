@@ -395,7 +395,7 @@ HRESULT AccWeb(IAccessible* iacc, STR what, out BSTR& sResult)
 				//Workaround:
 				//bool done = false; IAccessible2* ia2 = null; HWND w; RECT r;
 				//if(0 == bi.ff->QueryInterface(&ia2)) { //info: iacc->QI works with FF but not with Chrome (need QS)
-				//	if(0 == ia2->get_windowHandle(&w) && wnd::ClassNameIs(w, L"Chrome_RenderWidgetHostHWND")) {
+				//	if(0 == ia2->get_windowHandle(&w) && wn::ClassNameIs(w, L"Chrome_RenderWidgetHostHWND")) {
 				//		done = GetWindowRect(w, &r) && 0 == ia2->scrollToPoint(IA2CoordinateType::IA2_COORDTYPE_SCREEN_RELATIVE, r.left, r.top); //used to work, but now always scrolls to the very bottom-right
 				//		//Print(ia2->scrollTo(IA2ScrollType::IA2_SCROLL_TYPE_TOP_EDGE)); //does not work in Chrome. This and others work well in Firefox.
 				//		//Print(ia2->scrollToPoint(IA2CoordinateType::IA2_COORDTYPE_PARENT_RELATIVE, 20, 0)); //works, but: 1. Need to calculate. 2. Can stop working too.

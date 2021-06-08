@@ -13,7 +13,7 @@ using System.Linq;
 
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -94,7 +94,7 @@ class CiSignature
 
 #if true
 	async void _ShowSignature(SciCode doc, char ch) {
-		//APerf.First();
+		//perf.first();
 		if (!CodeInfo.GetContextAndDocument(out var cd, -2) || cd.pos16 < 2) return; //returns false if position is in meta comments
 
 		_cancelTS?.Cancel();
@@ -110,20 +110,20 @@ class CiSignature
 		try {
 			//could be sync, quite fast, but then sometimes reenters (GetItemsAsync waits/dispatches) and sometimes hangs
 			r = await Task.Run(async () => {
-				//APerf.Next();
+				//perf.next();
 				var providers = _SignatureHelpProviders;
-				//AOutput.Write(providers);
+				//print.it(providers);
 				SignatureHelpItems r = null;
 				var trigger = new SignatureHelpTriggerInfo(ch == default ? SignatureHelpTriggerReason.InvokeSignatureHelpCommand : SignatureHelpTriggerReason.TypeCharCommand, ch);
 				foreach (var p in providers) {
 					var r2 = await p.GetItemsAsync(cd.document, cd.pos16, trigger, cancelToken).ConfigureAwait(false);
-					if (cancelToken.IsCancellationRequested) { /*AOutput.Write("IsCancellationRequested");*/ return null; } //often
+					if (cancelToken.IsCancellationRequested) { /*print.it("IsCancellationRequested");*/ return null; } //often
 					if (r2 == null) continue;
 					if (r == null || r2.ApplicableSpan.Start > r.ApplicableSpan.Start) {
 						r = r2;
 						//provider = p;
 					}
-					//Example: 'AOutput.Write(new Something())'.
+					//Example: 'print.it(new Something())'.
 					//	The first provider probably is for Write (invocation).
 					//	Then the second is for Something (object creation).
 					//	We need the innermost, in this case Something.
@@ -131,12 +131,12 @@ class CiSignature
 				return r;
 			});
 		}
-		catch (OperationCanceledException) { /*ADebug_.Print("canceled");*/ return; } //never noticed
+		catch (OperationCanceledException) { /*Debug_.Print("canceled");*/ return; } //never noticed
 		finally {
 			cancelTS.Dispose();
 			if (cancelTS == _cancelTS) _cancelTS = null;
 		}
-		//AOutput.Write(r, cancelToken.IsCancellationRequested);
+		//print.it(r, cancelToken.IsCancellationRequested);
 
 		if (cancelToken.IsCancellationRequested) return;
 		if (r == null) {
@@ -146,14 +146,14 @@ class CiSignature
 		Debug.Assert(doc == Panels.Editor.ZActiveDoc); //when active doc changed, cancellation must be requested
 		if (cd.pos16 != doc.zCurrentPos16 || (object)cd.code != doc.zText) return; //changed while awaiting
 
-		//APerf.NW('s');
+		//perf.nw('s');
 
-		//AOutput.Write($"<><c orange>pos={cd.pos16}, span={r.ApplicableSpan},    nItems={r.Items.Count},  argCount={r.ArgumentCount}, argIndex={r.ArgumentIndex}, argName={r.ArgumentName}, sel={r.SelectedItemIndex},    provider={provider}<>");
+		//print.it($"<><c orange>pos={cd.pos16}, span={r.ApplicableSpan},    nItems={r.Items.Count},  argCount={r.ArgumentCount}, argIndex={r.ArgumentIndex}, argName={r.ArgumentName}, sel={r.SelectedItemIndex},    provider={provider}<>");
 
 		//get span of the arglist. r.ApplicableSpan.Start is of the statement, not of the arglist. In chained methods it is the chain start.
 		var root = cd.document.GetSyntaxRootAsync().Result;
 		var fullSpan = r.ApplicableSpan;
-		//CiUtil.HiliteRange(fullSpan); ATime.SleepDoEvents(500);
+		//CiUtil.HiliteRange(fullSpan); wait.doEvents(500);
 		var start = fullSpan.Start;
 		var tok = root.FindToken(cd.pos16);
 		if (tok.Kind() is SyntaxKind.OpenParenToken or SyntaxKind.OpenBracketToken or SyntaxKind.LessThanToken) tok = tok.GetPreviousToken();
@@ -168,7 +168,7 @@ class CiSignature
 			argNode = argNode.Parent;
 		}
 		var argSpan = new TextSpan(start, fullSpan.End - start);
-		//CiUtil.PrintNode(argNode); CiUtil.HiliteRange(argSpan); //AOutput.Write(argSpan);
+		//CiUtil.PrintNode(argNode); CiUtil.HiliteRange(argSpan); //print.it(argSpan);
 
 		var span = new _Span(argSpan, cd.code);
 		int iSel = _data?.GetUserSelectedItemIfSameSpan(span, r) ?? -1; //preserve user selection in same session
@@ -198,7 +198,7 @@ class CiSignature
 
 		var rect = RECT.Union(CiUtil.GetCaretRectFromPos(doc, fullSpan.Start), CiUtil.GetCaretRectFromPos(doc, cd.pos16));
 		doc.Hwnd.MapClientToScreen(ref rect);
-		rect.Width += ADpi.Scale(200, doc.Hwnd);
+		rect.Width += Dpi.Scale(200, doc.Hwnd);
 		rect.left -= 6;
 
 		_textPopup ??= new CiPopupText(CiPopupText.UsedBy.Signature, onHiddenOrDestroyed: (_, _) => _data = null) {
@@ -212,22 +212,22 @@ class CiSignature
 		}
 
 		_textPopup.Show(Panels.Editor.ZActiveDoc, rect, System.Windows.Controls.Dock.Bottom);
-		//APerf.NW();
+		//perf.nw();
 
 		//also show Keys/Regex tool?
 		//CiUtil.PrintNode(node);
 		if (argNode is ArgumentListSyntax && cd.code.Eq(cd.pos16 - 1, "\"\"")) {
-			//AOutput.Write("string");
+			//print.it("string");
 			var semo = cd.document.GetSemanticModelAsync().Result;
 			argNode = root.FindToken(cd.pos16).Parent;
 			var stringFormat = CiUtil.GetParameterStringFormat(argNode, semo, false);
-			//AOutput.Write(stringFormat);
+			//print.it(stringFormat);
 			if (stringFormat != default) CodeInfo._tools.ShowForStringParameter(stringFormat, cd, argNode.Span, _textPopup.PopupWindow.Hwnd);
 		}
 	}
 #else //old
 	async void _ShowSignature(SciCode doc, char ch) {
-		//APerf.First();
+		//perf.first();
 		if (!CodeInfo.GetContextAndDocument(out var cd, -2)) return; //returns false if position is in meta comments
 
 		_cancelTS?.Cancel();
@@ -243,20 +243,20 @@ class CiSignature
 		try {
 			//could be sync, quite fast, but then sometimes reenters (GetItemsAsync waits/dispatches) and sometimes hangs
 			r = await Task.Run(async () => {
-				//APerf.Next();
+				//perf.next();
 				var providers = _SignatureHelpProviders;
-				//AOutput.Write(providers);
+				//print.it(providers);
 				SignatureHelpItems r = null;
 				var trigger = new SignatureHelpTriggerInfo(ch == default ? SignatureHelpTriggerReason.InvokeSignatureHelpCommand : SignatureHelpTriggerReason.TypeCharCommand, ch);
 				foreach (var p in providers) {
 					var r2 = await p.GetItemsAsync(cd.document, cd.pos16, trigger, cancelToken).ConfigureAwait(false);
-					if (cancelToken.IsCancellationRequested) { /*AOutput.Write("IsCancellationRequested");*/ return null; } //often
+					if (cancelToken.IsCancellationRequested) { /*print.it("IsCancellationRequested");*/ return null; } //often
 					if (r2 == null) continue;
 					if (r == null || r2.ApplicableSpan.Start > r.ApplicableSpan.Start) {
 						r = r2;
 						//provider = p;
 					}
-					//Example: 'AOutput.Write(new Something())'.
+					//Example: 'print.it(new Something())'.
 					//	The first provider probably is for Write (invocation).
 					//	Then the second is for Something (object creation).
 					//	We need the innermost, in this case Something.
@@ -264,12 +264,12 @@ class CiSignature
 				return r;
 			});
 		}
-		catch (OperationCanceledException) { /*ADebug_.Print("canceled");*/ return; } //never noticed
+		catch (OperationCanceledException) { /*Debug_.Print("canceled");*/ return; } //never noticed
 		finally {
 			cancelTS.Dispose();
 			if (cancelTS == _cancelTS) _cancelTS = null;
 		}
-		//AOutput.Write(r, cancelToken.IsCancellationRequested);
+		//print.it(r, cancelToken.IsCancellationRequested);
 
 		if (cancelToken.IsCancellationRequested) return;
 		if (r == null) {
@@ -279,9 +279,9 @@ class CiSignature
 		Debug.Assert(doc == Panels.Editor.ZActiveDoc); //when active doc changed, cancellation must be requested
 		if (cd.pos16 != doc.zCurrentPos16 || (object)cd.code != doc.zText) return; //changed while awaiting
 
-		//APerf.NW('s');
+		//perf.nw('s');
 
-		//AOutput.Write($"<><c orange>pos={cd.pos16}, span={r.ApplicableSpan},    nItems={r.Items.Count},  argCount={r.ArgumentCount}, argIndex={r.ArgumentIndex}, argName={r.ArgumentName}, sel={r.SelectedItemIndex},    provider={provider}<>");
+		//print.it($"<><c orange>pos={cd.pos16}, span={r.ApplicableSpan},    nItems={r.Items.Count},  argCount={r.ArgumentCount}, argIndex={r.ArgumentIndex}, argName={r.ArgumentName}, sel={r.SelectedItemIndex},    provider={provider}<>");
 
 		//get span of the arglist. r.ApplicableSpan.Start is of the statement, not of the arglist. In chained methods it is the chain start.
 		var root = cd.document.GetSyntaxRootAsync().Result;
@@ -304,18 +304,18 @@ class CiSignature
 			default: //no closing )]>
 				toke = toke.GetPreviousToken(); //toke = root.FindToken(cd.pos16); //both don't work for eg List< (no closing >), because there is BinaryExpressionSyntax instead of TypeArgumentListSyntax
 				node = toke.Parent.FirstAncestorOrSelf<SyntaxNode>(o => _IsArglistNode(o), false);
-				if (node == null || node.SpanStart < start) { /*ADebug_.Print("todo");*/ return; } //eg List< (no closing >), difficult to detect. Never mind.
+				if (node == null || node.SpanStart < start) { /*Debug_.Print("todo");*/ return; } //eg List< (no closing >), difficult to detect. Never mind.
 				break;
 			}
 		}
 		bool _IsArglistNode(SyntaxNode sn) {
-			//AOutput.Write(sn.GetType());
+			//print.it(sn.GetType());
 			return sn is BaseArgumentListSyntax or AttributeArgumentListSyntax or TypeArgumentListSyntax; //includes ArgumentListSyntax and BracketedArgumentListSyntax
 		}
 
 		start = Math.Max(fullSpan.Start, node.SpanStart);
 		var argSpan = new TextSpan(start, fullSpan.End - start);
-		//CiUtil.PrintNode(node); CiUtil.HiliteRange(argSpan); AOutput.Write(argSpan);
+		//CiUtil.PrintNode(node); CiUtil.HiliteRange(argSpan); print.it(argSpan);
 
 		var span = new _Span(argSpan, cd.code);
 		int iSel = _data?.GetUserSelectedItemIfSameSpan(span, r) ?? -1; //preserve user selection in same session
@@ -345,7 +345,7 @@ class CiSignature
 
 		var rect = RECT.Union(CiUtil.GetCaretRectFromPos(doc, fullSpan.Start), CiUtil.GetCaretRectFromPos(doc, cd.pos16));
 		doc.Hwnd.MapClientToScreen(ref rect);
-		rect.Width += ADpi.Scale(200, doc.Hwnd);
+		rect.Width += Dpi.Scale(200, doc.Hwnd);
 		rect.left -= 6;
 
 		_textPopup ??= new CiPopupText(CiPopupText.UsedBy.Signature, onHiddenOrDestroyed: (_, _) => _data = null) {
@@ -359,16 +359,16 @@ class CiSignature
 		}
 
 		_textPopup.Show(Panels.Editor.ZActiveDoc, rect, System.Windows.Controls.Dock.Bottom);
-		//APerf.NW();
+		//perf.nw();
 
 		//also show Keys/Regex tool?
 		//CiUtil.PrintNode(node);
 		if (node is ArgumentListSyntax && cd.code.Eq(cd.pos16 - 1, "\"\"")) {
-			//AOutput.Write("string");
+			//print.it("string");
 			var semo = cd.document.GetSemanticModelAsync().Result;
 			node = root.FindToken(cd.pos16).Parent;
 			var stringFormat = CiUtil.GetParameterStringFormat(node, semo, false);
-			//AOutput.Write(stringFormat);
+			//print.it(stringFormat);
 			if (stringFormat != default) CodeInfo._tools.ShowForStringParameter(stringFormat, cd, node.Span, _textPopup.PopupWindow.Hwnd);
 		}
 	}
@@ -383,7 +383,7 @@ class CiSignature
 		SignatureHelpParameter currentParameter = null;
 		var x = new CiText();
 
-		//AOutput.Clear();
+		//print.clear();
 		for (int i = 0; i < r.Items.Count; i++) {
 			var sh = r.Items[i];
 			if (sh is AbstractSignatureHelpProvider.SymbolKeySignatureHelpItem kk) {
@@ -394,17 +394,17 @@ class CiSignature
 				x.AppendTaggedParts(sh.PrefixDisplayParts); //works, but formats not as I like (too much garbage). Has bugs with tuples.
 #else
 				//if(nt != null) {
-				//	AOutput.Write(1, nt.IsGenericType, nt.IsTupleType, nt.IsUnboundGenericType, nt.Arity, nt.CanBeReferencedByName);
-				//	AOutput.Write(2, nt.IsAnonymousType, nt.IsDefinition, nt.IsImplicitlyDeclared, nt.Kind, nt.TypeKind);
-				//	AOutput.Write(3, nt.MemberNames);
-				//	AOutput.Write(4, nt.Name, nt.MetadataName, nt.OriginalDefinition, nt.TupleUnderlyingType);
-				//	AOutput.Write("TypeParameters:");
-				//	AOutput.Write(nt.TypeParameters);
-				//	AOutput.Write("TypeArguments:");
-				//	AOutput.Write(nt.TypeArguments);
-				//	AOutput.Write("TupleElements:");
-				//	try { var te = nt.TupleElements; if(!te.IsDefault) AOutput.Write(te); } catch(Exception e1) { AOutput.Write(e1.ToStringWithoutStack()); }
-				//	AOutput.Write("---");
+				//	print.it(1, nt.IsGenericType, nt.IsTupleType, nt.IsUnboundGenericType, nt.Arity, nt.CanBeReferencedByName);
+				//	print.it(2, nt.IsAnonymousType, nt.IsDefinition, nt.IsImplicitlyDeclared, nt.Kind, nt.TypeKind);
+				//	print.it(3, nt.MemberNames);
+				//	print.it(4, nt.Name, nt.MetadataName, nt.OriginalDefinition, nt.TupleUnderlyingType);
+				//	print.it("TypeParameters:");
+				//	print.it(nt.TypeParameters);
+				//	print.it("TypeArguments:");
+				//	print.it(nt.TypeArguments);
+				//	print.it("TupleElements:");
+				//	try { var te = nt.TupleElements; if(!te.IsDefault) print.it(te); } catch(Exception e1) { print.it(e1.ToStringWithoutStack()); }
+				//	print.it("---");
 				//}
 
 				int isTuple = 0; //1 ValueTuple<...>, 2 (...)
@@ -437,7 +437,7 @@ class CiSignature
 				if (i == iSel && selParam >= 0) currentParameter = sh.Parameters[selParam];
 				x.EndOverload(i == iSel);
 			} else {
-				ADebug_.Print(sh);
+				Debug_.Print(sh);
 			}
 		}
 
@@ -477,9 +477,9 @@ class CiSignature
 			&& t.IsDefined(typeof(ExportSignatureHelpProviderAttribute))
 			//&& t.ImplementedInterfaces.Contains(typeof(ISignatureHelpProvider)) && !t.IsAbstract
 			)) {
-			//AOutput.Write(t);
+			//print.it(t);
 			var c = t.GetConstructor(Type.EmptyTypes);
-			ADebug_.PrintIf(c == null, t.ToString());
+			Debug_.PrintIf(c == null, t.ToString());
 			if (c == null) continue;
 			var o = c.Invoke(null) as ISignatureHelpProvider; Debug.Assert(o != null); if (o == null) continue;
 			a.Add(o);

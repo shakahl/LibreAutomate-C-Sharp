@@ -15,28 +15,28 @@ void HotkeyTriggers() {
 	if (_enableHotkeyTriggerExamples) {
 		//examples of hotkey triggers
 		
-		hk["Ctrl+Alt+K"] = o => AOutput.Write("trigger action example 1", o.Trigger); //it means: when I press Ctrl+Alt+K, execute trigger action AOutput.Write(...)
+		hk["Ctrl+Alt+K"] = o => print.it("trigger action example 1", o.Trigger); //it means: when I press Ctrl+Alt+K, execute trigger action print.it(...)
 		hk["Ctrl+Shift+F11"] = o => { //multiple statements. To hide the code, click the [-] box at the left.
-			var w1 = AWnd.FindOrRun("* Notepad", run: () => AFile.Run(AFolders.System + "notepad.exe"));
-			AKeys.Text("trigger action example 2");
+			var w1 = wnd.findOrRun("* Notepad", run: () => run.it(folders.System + "notepad.exe"));
+			keys.sendt("trigger action example 2");
 			500.ms();
 			w1.Close();
 		};
 		hk["Ctrl+Shift+1"] = o => TriggerActionExample(); //call other function. To find it quickly, Ctrl+click the function name here.
 		hk["Ctrl+Shift+2"] = o => TriggerActionExample2(o.Window); //the function can be in any class or partial file of this project
-		hk["Ctrl+Shift+3"] = o => ATask.Run("Script example1.cs"); //run script in separate process
+		hk["Ctrl+Shift+3"] = o => scriptt.run("Script example1.cs"); //run script in separate process
 		
 		//triggers that work only with some windows (when the window is active)
 		
 		Triggers.Of.Window("* WordPad", "WordPadClass");
 		
-		hk["Ctrl+F5"] = o => AOutput.Write("trigger action example 5", o.Trigger, o.Window);
+		hk["Ctrl+F5"] = o => print.it("trigger action example 5", o.Trigger, o.Window);
 		//hk[""] = o => {  };
 		//...
 
 		Triggers.Of.Windows(",,notepad.exe"); //all windows of notepad.exe process
 		
-		hk["Ctrl+F5"] = o => AOutput.Write("trigger action example 6", o.Trigger, o.Window);
+		hk["Ctrl+F5"] = o => print.it("trigger action example 6", o.Trigger, o.Window);
 		//hk[""] = o => {  };
 		//...
 		
@@ -51,7 +51,7 @@ void HotkeyTriggers() {
 
 
 void TriggerActionExample() {
-	AOutput.Write("trigger action example 3");
+	print.it("trigger action example 3");
 }
 
 }

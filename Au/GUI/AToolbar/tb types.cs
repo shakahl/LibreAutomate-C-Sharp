@@ -1,14 +1,14 @@
 using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 
 namespace Au
 {
-	public partial class AToolbar
+	public partial class toolbar
 	{
 		/// <summary>
-		/// Represents a button or separator in <see cref="AToolbar"/>.
+		/// Represents a button or separator in <see cref="toolbar"/>.
 		/// </summary>
 		/// <remarks>
 		/// Most properties cannot be changed while the toolbar is open. Can be changed <b>Tag</b>, <b>Tooltip</b>.
@@ -17,7 +17,7 @@ namespace Au
 		{
 			internal SIZE textSize;
 			internal TBItemType type;
-			internal AMenu menu;
+			internal popupMenu menu;
 
 			internal bool IsSeparator_ => type == TBItemType.Separator;
 			internal bool IsGroup_ => type == TBItemType.Group;
@@ -31,42 +31,19 @@ namespace Au
 			public Action<ToolbarItem> Clicked => base.clicked as Action<ToolbarItem>;
 		}
 
-		class _Settings : ASettings
+		record _Settings : JSettings
 		{
 			public static _Settings Load(string file, bool useDefault) => Load<_Settings>(file, useDefault);
 
-			public TBAnchor anchor { get => _anchor; set => Set(ref _anchor, value); }
-			TBAnchor _anchor = TBAnchor.TopLeft;
-
-			public TBLayout layout { get => _layout; set => Set(ref _layout, value); }
-			TBLayout _layout;
-
-			public TBBorder border { get => _border; set => Set(ref _border, value); }
-			TBBorder _border = TBBorder.Width2;
-
-			public bool dispText { get => _dispText; set => Set(ref _dispText, value); }
-			bool _dispText = true;
-
-			public bool sizable { get => _sizable; set => Set(ref _sizable, value); }
-			bool _sizable = true;
-
-			public bool autoSize { get => _autoSize; set => Set(ref _autoSize, value); }
-			bool _autoSize = true;
-
-			public TBFlags miscFlags { get => _miscFlags; set => Set(ref _miscFlags, value); }
-			TBFlags _miscFlags = TBFlags.HideWhenFullScreen | TBFlags.ActivateOwnerWindow;
-
-			public System.Windows.Size size { get => _size; set => Set(ref _size, value); }
-			System.Windows.Size _size = new(150, 24);
-
-			public double wrapWidth { get => _wrapWidth; set => Set(ref _wrapWidth, value); }
-			double _wrapWidth;
-
-			public TBOffsets offsets { get => _location; set => Set(ref _location, value); }
-			TBOffsets _location; // = new(150, 5, 7, 7);
-
-			public int screen { get => _screen; set => Set(ref _screen, value); }
-			int _screen;
+			public TBAnchor anchor = TBAnchor.TopLeft;
+			public TBLayout layout;
+			public TBBorder border = TBBorder.Width2;
+			public bool dispText = true, sizable = true, autoSize = true;
+			public TBFlags miscFlags = TBFlags.HideWhenFullScreen | TBFlags.ActivateOwnerWindow;
+			public System.Windows.Size size = new(150, 24);
+			public double wrapWidth;
+			public TBOffsets offsets; // = new(150, 5, 7, 7);
+			public int screen;
 		}
 	}
 }
@@ -74,7 +51,7 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Used with <see cref="AToolbar.ToolbarItem.ItemType"/>.
+	/// Used with <see cref="toolbar.ToolbarItem.ItemType"/>.
 	/// </summary>
 	public enum TBItemType : byte
 	{
@@ -87,7 +64,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Used with <see cref="AToolbar.MiscFlags"/>.
+	/// Used with <see cref="toolbar.MiscFlags"/>.
 	/// </summary>
 	[Flags]
 	public enum TBFlags
@@ -102,7 +79,7 @@ namespace Au.Types
 		/// </summary>
 		HideWhenFullScreen = 2,
 
-		//rejected: use SHQueryUserNotificationState to detect also presentation mode etc. Too slow, eg 1300 mcs, which is 100-500 times slower than AWnd.IsFullScreen.
+		//rejected: use SHQueryUserNotificationState to detect also presentation mode etc. Too slow, eg 1300 mcs, which is 100-500 times slower than wnd.isFullScreen.
 		//	HideWhenFullScreenActive
 		//	HideWhenFullScreenRunning (QUNS_BUSY) (in primary screen only)
 		//	HideWhenPresentation (QUNS_PRESENTATION_MODE)
@@ -112,7 +89,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Used with <see cref="AToolbar.Border"/>.
+	/// Used with <see cref="toolbar.Border"/>.
 	/// </summary>
 	public enum TBBorder
 	{
@@ -147,7 +124,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Used with <see cref="AToolbar.Anchor"/>.
+	/// Used with <see cref="toolbar.Anchor"/>.
 	/// </summary>
 	public enum TBAnchor
 	{
@@ -252,7 +229,7 @@ namespace Au.Types
 	//}
 
 	/// <summary>
-	/// Used with <see cref="AToolbar.Offsets"/>.
+	/// Used with <see cref="toolbar.Offsets"/>.
 	/// </summary>
 	public struct TBOffsets : IEquatable<TBOffsets>
 	{
@@ -292,7 +269,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Reasons to hide a toolbar. Used with <see cref="AToolbar.Hide"/>.
+	/// Reasons to hide a toolbar. Used with <see cref="toolbar.Hide"/>.
 	/// </summary>
 	[Flags]
 	public enum TBHide
@@ -310,22 +287,22 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Used with <see cref="AToolbar.Layout"/>.
+	/// Used with <see cref="toolbar.Layout"/>.
 	/// </summary>
 	public enum TBLayout
 	{
-		/// <summary>Default layout. Buttons are in single row. Wrapped when exceeds maximal row width. More rows can be added with <see cref="AToolbar.Group"/>.</summary>
+		/// <summary>Default layout. Buttons are in single row. Wrapped when exceeds maximal row width. More rows can be added with <see cref="toolbar.Group"/>.</summary>
 		HorizontalWrap,
 
 		/// <summary>Buttons are in single column, like in a popup menu. Separators are horizontal.</summary>
 		Vertical, //SHOULDDO: if some buttons don't fit, add overflow drop-down menu. Or scrollbar; or add VerticalScroll.
 
-		//	/// <summary>Buttons are in single row. When it exceeds maximal row width, buttons are moved to a drop-down menu. More rows can be added with <see cref="AToolbar.Group"/>.</summary>
+		//	/// <summary>Buttons are in single row. When it exceeds maximal row width, buttons are moved to a drop-down menu. More rows can be added with <see cref="toolbar.Group"/>.</summary>
 		//	Horizontal,//SHOULDDO
 	}
 
 	/// <summary>
-	/// Used with <see cref="AToolbar.NoContextMenu"/>.
+	/// Used with <see cref="toolbar.NoContextMenu"/>.
 	/// </summary>
 	[Flags]
 	public enum TBNoMenu
@@ -348,7 +325,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Flags for <see cref="AToolbar"/> constructor.
+	/// Flags for <see cref="toolbar"/> constructor.
 	/// </summary>
 	[Flags]
 	public enum TBCtor
@@ -365,7 +342,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Used with <see cref="AToolbar.DpiScaling"/>.
+	/// Used with <see cref="toolbar.DpiScaling"/>.
 	/// </summary>
 	public struct TBScaling
 	{
@@ -374,23 +351,23 @@ namespace Au.Types
 
 		/// <summary>
 		/// Scale toolbar size and related properties.
-		/// If default (null), scales size, except of empty toolbars created by <see cref="AToolbar.AutoHideScreenEdge"/>.
+		/// If default (null), scales size, except of empty toolbars created by <see cref="toolbar.AutoHideScreenEdge"/>.
 		/// </summary>
 		public bool? size;
 
 		/// <summary>
-		/// Scale toolbar offsets. See <see cref="AToolbar.Offsets"/>.
+		/// Scale toolbar offsets. See <see cref="toolbar.Offsets"/>.
 		/// If default (null), scales offsets, except when anchor is screen (not window etc).
 		/// </summary>
 		public bool? offsets;
 	}
 
 	/// <summary>
-	/// Used with <see cref="AToolbar.Show(AWnd, ITBOwnerObject)"/>.
+	/// Used with <see cref="toolbar.Show(wnd, ITBOwnerObject)"/>.
 	/// </summary>
 	/// <remarks>
-	/// Allows a toolbar to follow an object in the owner window, for example an accessible object or image. Or to hide in certain conditions.
-	/// Define a class that implements this interface. Create a variable of that class and pass it to <see cref="AToolbar.Show(AWnd, ITBOwnerObject)"/>.
+	/// Allows a toolbar to follow an object in the owner window, for example a UI element or image. Or to hide in certain conditions.
+	/// Define a class that implements this interface. Create a variable of that class and pass it to <see cref="toolbar.Show(wnd, ITBOwnerObject)"/>.
 	/// The interface functions are called every 250 ms, sometimes more frequently. Not called when the owner window is invisible or cloaked or minimized.
 	/// </remarks>
 	public interface ITBOwnerObject

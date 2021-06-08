@@ -1,7 +1,7 @@
 using Au.Types;
 using System;
 using System.Collections.Generic;
-using Au.Util;
+using Au.More;
 using System.Windows.Input;
 
 
@@ -61,11 +61,11 @@ namespace Au.Controls
 		/// "imagefile:" - path of png/bmp/jpg/gif/tif or xaml file.
 		/// "resource:" - path of png/bmp/jpg/gif/tif or xaml resource. Don't need prefix if starts with "resources/", like "resources/file.png".
 		/// "image:" - Base-64 encoded png/bmp/jpg/gif/tif image.
-		/// If without prefix, gets file icon; see <see cref="AIcon.Of"/>.
+		/// If without prefix, gets file icon; see <see cref="icon.of"/>.
 		/// </summary>
 		/// <remarks>
-		/// To load image the control calls <see cref="AImageUtil.LoadGdipBitmapFromFileOrResourceOrString"/> or <see cref="AImageUtil.LoadWpfImageElementFromFileOrResourceOrString"/>.
-		/// The control uses <see cref="AIconImageCache"/>; see <see cref="KTreeView.ImageCache"/>.
+		/// To load image the control calls <see cref="ImageUtil.LoadGdipBitmapFromFileOrResourceOrString"/> or <see cref="ImageUtil.LoadWpfImageElementFromFileOrResourceOrString"/>.
+		/// The control uses <see cref="IconImageCache"/>; see <see cref="KTreeView.ImageCache"/>.
 		/// </remarks>
 		string ImageSource => null;
 

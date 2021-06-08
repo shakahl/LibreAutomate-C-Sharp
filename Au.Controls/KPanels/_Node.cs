@@ -1,5 +1,5 @@
 ﻿using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -24,7 +24,7 @@ namespace Au.Controls
 {
 	public partial class KPanels
 	{
-		partial class _Node : ATreeBase<_Node>, ILeaf
+		partial class _Node : TreeBase<_Node>, ILeaf
 		{
 			readonly KPanels _pm;
 			readonly _StackFields _stack;
@@ -148,7 +148,7 @@ namespace Au.Controls
 					}
 				}
 
-				//AOutput.Write(new string('\t', parent?.Level ?? 0) + _ntype, _ptype, Name, _indexInParent);
+				//print.it(new string('\t', parent?.Level ?? 0) + _ntype, _ptype, Name, _indexInParent);
 
 				if (parent == null) { //the root XML element
 					int nVisible = 0; _Node firstHidden = null;
@@ -173,8 +173,8 @@ namespace Au.Controls
 						_stack.grid.IsVisibleChanged += eh;
 					}
 
-					//ATimer.After(1000, _ => _Test(5));
-					////ATimer.After(5000, _ => _Test(0));
+					//timerm.after(1000, _ => _Test(5));
+					////timerm.after(5000, _ => _Test(0));
 					//void _Test(int margin) {
 					//	foreach (var v in Descendants(true)) {
 					//		if (v._IsStack) v._stack.grid.Background = (v.Level & 3) switch { 0 => Brushes.CornflowerBlue, 1 => Brushes.Khaki, 2 => Brushes.YellowGreen, _ => Brushes.LightYellow };
@@ -520,7 +520,7 @@ namespace Au.Controls
 
 			public event CancelEventHandler Closing;
 
-			//public event EventHandler<AMenu> ContextMenuOpening;
+			//public event EventHandler<popupMenu> ContextMenuOpening;
 
 			public event EventHandler TabSelected;
 

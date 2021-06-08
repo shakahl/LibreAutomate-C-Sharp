@@ -14,8 +14,10 @@ using System.Windows;
 using System.Windows.Controls;
 
 using Au.Types;
+using Au.More;
 using Au.Controls;
-using System.Windows.Media;
+
+//TODO: KPopupListBox popup does not close on click outside, unless activated other window. Only in Dwnd. Tested: StaysOpen always false.
 
 namespace Au.Tools
 {
@@ -172,7 +174,7 @@ namespace Au.Tools
 	}
 
 	/// <summary>
-	/// Util extension methods for dialogs.
+	/// Extension methods for dialogs.
 	/// </summary>
 	public static class KExtWpf
 	{
@@ -182,7 +184,7 @@ namespace Au.Tools
 		/// <param name="b"></param>
 		/// <param name="name">Checkbox text.</param>
 		/// <param name="noNewRow"></param>
-		public static KCheckBox xAddCheck(this AWpfBuilder b, string name, bool noNewRow = false) {
+		public static KCheckBox xAddCheck(this wpfBuilder b, string name, bool noNewRow = false) {
 			if (!noNewRow && b.Panel is Grid) b.Row(0);
 			b.Add(out KCheckBox c, name).Height(18).AlignContent(y: "C");
 			return c;
@@ -191,7 +193,7 @@ namespace Au.Tools
 		/// <summary>
 		/// Adds TextBox that can be used with KCheckBox in a propertygrid row. Or alone in a grid or stack row.
 		/// </summary>
-		public static TextBox xAddText(this AWpfBuilder b, string text = null) {
+		public static TextBox xAddText(this wpfBuilder b, string text = null) {
 			b.Add(out TextBox t, text).Multiline(..55, wrap: TextWrapping.NoWrap).Padding(new Thickness(0, -1, 0, 1)).Margin(left: 4);
 			return t;
 		}
@@ -202,7 +204,7 @@ namespace Au.Tools
 		/// <param name="b"></param>
 		/// <param name="name">Checkbox text.</param>
 		/// <param name="text">Textbox text.</param>
-		public static KCheckTextBox xAddCheckText(this AWpfBuilder b, string name, string text = null) => new(xAddCheck(b, name), xAddText(b, text));
+		public static KCheckTextBox xAddCheckText(this wpfBuilder b, string name, string text = null) => new(xAddCheck(b, name), xAddText(b, text));
 
 		/// <summary>
 		/// Adds KCheckBox (<see cref="xAddCheck"/>) and multiline TextBox (<see cref="xAddText"/>) in a propertygrid row.
@@ -212,7 +214,7 @@ namespace Au.Tools
 		/// <param name="b"></param>
 		/// <param name="name">Checkbox text.</param>
 		/// <param name="text">Textbox text.</param>
-		public static KCheckTextBox xAddCheckTextDropdown(this AWpfBuilder b, string name, string text = null) {
+		public static KCheckTextBox xAddCheckTextDropdown(this wpfBuilder b, string name, string text = null) {
 			var c = xAddCheck(b, name);
 			var t = xAddText(b, text);
 			b.And(14).Add(out Button k, "▾").Padding(new Thickness(0)).Border(); //tested: ok on Win7
@@ -227,7 +229,7 @@ namespace Au.Tools
 		/// <param name="name">Checkbox text.</param>
 		/// <param name="items">Combobox items like "One|Two".</param>
 		/// <param name="index">Combobox selected index.</param>
-		public static KCheckComboBox xAddCheckCombo(this AWpfBuilder b, string name, string items, int index = 0) {
+		public static KCheckComboBox xAddCheckCombo(this wpfBuilder b, string name, string items, int index = 0) {
 			var c = xAddCheck(b, name);
 			xAddOther(b, out ComboBox t);
 			b.Items(items);
@@ -238,12 +240,12 @@ namespace Au.Tools
 		/// <summary>
 		/// Adds any control that can be used in a propertygrid row.
 		/// </summary>
-		public static void xAddOther<T>(this AWpfBuilder b, out T other, string text = null) where T : FrameworkElement, new() {
+		public static void xAddOther<T>(this wpfBuilder b, out T other, string text = null) where T : FrameworkElement, new() {
 			b.Add(out other, text);
 			_xSetOther(b, other);
 		}
 
-		static void _xSetOther(AWpfBuilder b, FrameworkElement e) {
+		static void _xSetOther(wpfBuilder b, FrameworkElement e) {
 			b.Height(18).Margin(left: 4);
 			if (e is Control) b.Padding(new Thickness(4, 0, 4, 0)); //tested with Button and ComboBox
 		}
@@ -251,7 +253,7 @@ namespace Au.Tools
 		/// <summary>
 		/// Adds button that can be used in a propertygrid row.
 		/// </summary>
-		public static void xAddButton(this AWpfBuilder b, out Button button, string text, Action<WBButtonClickArgs> click) {
+		public static void xAddButton(this wpfBuilder b, out Button button, string text, Action<WBButtonClickArgs> click) {
 			b.AddButton(out button, text, click);
 			_xSetOther(b, button);
 		}
@@ -259,7 +261,7 @@ namespace Au.Tools
 		/// <summary>
 		/// Adds button that can be used in a propertygrid row.
 		/// </summary>
-		public static void xAddButton(this AWpfBuilder b, string text, Action<WBButtonClickArgs> click) => xAddButton(b, out _, text, click);
+		public static void xAddButton(this wpfBuilder b, string text, Action<WBButtonClickArgs> click) => xAddButton(b, out _, text, click);
 
 		/// <summary>
 		/// Adds KCheckBox (<see cref="xAddCheck"/>) and other control (<see cref="xAddOther"/>) in a propertygrid row.
@@ -268,7 +270,7 @@ namespace Au.Tools
 		/// <param name="name">Checkbox text.</param>
 		/// <param name="other"></param>
 		/// <param name="text">Other control text.</param>
-		public static KCheckBox xAddCheckAnd<T>(this AWpfBuilder b, string name, out T other, string text = null) where T : FrameworkElement, new() {
+		public static KCheckBox xAddCheckAnd<T>(this wpfBuilder b, string name, out T other, string text = null) where T : FrameworkElement, new() {
 			var c = xAddCheck(b, name);
 			xAddOther(b, out other, text);
 			return c;
@@ -280,7 +282,7 @@ namespace Au.Tools
 		/// <param name="b"></param>
 		/// <param name="var"></param>
 		/// <param name="margin"></param>
-		public static Border xAddInBorder<T>(this AWpfBuilder b, out T var, string margin = null) where T : FrameworkElement, new() {
+		public static Border xAddInBorder<T>(this wpfBuilder b, out T var, string margin = null) where T : FrameworkElement, new() {
 			b.Add(out Border c).Border();
 			if (margin != null) b.Margin(margin);
 			b.Add(out var, flags: WBAdd.ChildOfLast);
@@ -290,7 +292,7 @@ namespace Au.Tools
 		/// <summary>
 		/// Adds ScrollViewer, adds 2-column grid or vertical stack panel in it (StartGrid, StartStack), and calls <c>Options(modifyPadding: false, margin: new(1))</c>.
 		/// </summary>
-		public static ScrollViewer xStartPropertyGrid(this AWpfBuilder b, string margin = null, bool stack = false) {
+		public static ScrollViewer xStartPropertyGrid(this wpfBuilder b, string margin = null, bool stack = false) {
 			b.Add(out ScrollViewer v);
 			if (margin != null) b.Margin(margin);
 			v.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
@@ -304,7 +306,7 @@ namespace Au.Tools
 		/// Ends grid/stack set by <see cref="xStartPropertyGrid"/> and restores options.
 		/// </summary>
 		/// <param name="b"></param>
-		public static void xEndPropertyGrid(this AWpfBuilder b) {
+		public static void xEndPropertyGrid(this wpfBuilder b) {
 			b.Options(modifyPadding: true, margin: new Thickness(3));
 			b.End();
 		}
@@ -313,10 +315,10 @@ namespace Au.Tools
 		/// Sets header control properties: center, bold, dark gray text.
 		/// It can be Label, TextBlock or CheckBox. Not tested others.
 		/// </summary>
-		public static void xSetHeaderProp(this AWpfBuilder b) {
+		public static void xSetHeaderProp(this wpfBuilder b) {
 			b.Font(bold: true).Brush(foreground: SystemColors.ControlDarkDarkBrush).Align("C");
 		}
-		//public static void xSetHeaderProp(this AWpfBuilder b, bool vertical = false) {
+		//public static void xSetHeaderProp(this wpfBuilder b, bool vertical = false) {
 		//	b.Font(bold: true).Brush(foreground: SystemColors.ControlDarkDarkBrush);
 		//	if (vertical) {
 		//		b.Align(y: "C");
@@ -329,14 +331,14 @@ namespace Au.Tools
 		/// <summary>
 		/// Adds vertical splitter.
 		/// </summary>
-		public static void xAddSplitterV(this AWpfBuilder b, int span = 1, double thickness = 4) {
+		public static void xAddSplitterV(this wpfBuilder b, int span = 1, double thickness = 4) {
 			b.Add<GridSplitter2>().Splitter(true, span, thickness);
 		}
 
 		/// <summary>
 		/// Adds horizontal splitter.
 		/// </summary>
-		public static void xAddSplitterH(this AWpfBuilder b, int span = 1, double thickness = 4) {
+		public static void xAddSplitterH(this wpfBuilder b, int span = 1, double thickness = 4) {
 			b.R.Add<GridSplitter2>().Splitter(false, span, thickness);
 		}
 	}

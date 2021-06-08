@@ -10,7 +10,7 @@ using System.Diagnostics;
 using System.Windows;
 using IAccessible = Au.Types.Api.IAccessible;
 using VarInt = Au.Types.Api.VarInt;
-using AccNAVDIR = Au.Types.Api.AccNAVDIR;
+using NAVDIR = Au.Types.Api.NAVDIR;
 
 namespace Au.Controls
 {
@@ -21,18 +21,18 @@ namespace Au.Controls
 	abstract class HwndHostAccessibleBase_ : IAccessible, IDisposable/*, IReflect*/
 	{
 		FrameworkElement _e;
-		AWnd _w;
+		wnd _w;
 
 		/// <param name="e">HwndHost or its container control (if the HwndHost is part of the control).</param>
 		/// <param name="w">Native control hosted by the HwndHost.</param>
-		public HwndHostAccessibleBase_(FrameworkElement e, AWnd w) {
+		public HwndHostAccessibleBase_(FrameworkElement e, wnd w) {
 			_e = e;
 			_w = w;
 		}
 
 		IAccessible _StdAO {
 			get {
-				if (_stdAO == null) Api.CreateStdAccessibleObject(_w, AccOBJID.CLIENT, typeof(IAccessible).GUID, out _stdAO);
+				if (_stdAO == null) Api.CreateStdAccessibleObject(_w, EObjid.CLIENT, typeof(IAccessible).GUID, out _stdAO);
 				return _stdAO;
 				//note: not in ctor. It is called om WM_GETOBJECT, and CreateStdAccessibleObject sends WM_GETOBJECT too when called there (but not when called later).
 			}
@@ -81,7 +81,7 @@ namespace Au.Controls
 		public virtual string Description(int child) => null;
 		string IAccessible.get_accDescription(VarInt varChild) => Description(varChild);
 
-		public abstract AccROLE Role(int child);
+		public abstract ERole Role(int child);
 		VarInt IAccessible.get_accRole(VarInt varChild) => (int)Role(varChild) - 1;
 
 		/// <summary>
@@ -89,15 +89,15 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="child"></param>
 		/// <returns></returns>
-		public virtual AccSTATE State(int child) {
+		public virtual EState State(int child) {
 			if (child != -1) return 0;
-			AccSTATE r = 0;
+			EState r = 0;
 			if (_e.Focusable) {
-				r |= AccSTATE.FOCUSABLE;
-				if (AWnd.ThisThread.IsFocused(_w) || _e.IsKeyboardFocused) r |= AccSTATE.FOCUSED;
+				r |= EState.FOCUSABLE;
+				if (wnd.thisThread.isFocused(_w) || _e.IsKeyboardFocused) r |= EState.FOCUSED;
 			}
-			if (!_e.IsEnabled) r |= AccSTATE.DISABLED;
-			if (!_e.IsVisible) r |= AccSTATE.INVISIBLE;
+			if (!_e.IsEnabled) r |= EState.DISABLED;
+			if (!_e.IsVisible) r |= EState.INVISIBLE;
 			return r;
 		}
 		VarInt IAccessible.get_accState(VarInt varChild) => (int)State(varChild) - 1;
@@ -121,10 +121,10 @@ namespace Au.Controls
 		/// Called only if the control is focused.
 		/// </summary>
 		public virtual int FocusedChild => -1;
-		object IAccessible.get_accFocus() => AWnd.ThisThread.IsFocused(_w) ? FocusedChild + 1 : null;
+		object IAccessible.get_accFocus() => wnd.thisThread.isFocused(_w) ? FocusedChild + 1 : null;
 		//object IAccessible.get_accFocus() {
-		//	AOutput.Write("get_accFocus", AWnd.ThisThread.IsFocused(_w));//SHOULDDO. Now this not called for KTreeView. The native control normally is never focused. IAccessible.get_accFocus called by QM2 returns unknown error 0x80131509.
-		//	return AWnd.ThisThread.IsFocused(_w) ? FocusedChild + 1 : null;
+		//	print.it("get_accFocus", wnd.thisThread.isFocused(_w));//SHOULDDO. Now this not called for KTreeView. The native control normally is never focused. IAccessible.get_accFocus called by QM2 returns unknown error 0x80131509.
+		//	return wnd.thisThread.isFocused(_w) ? FocusedChild + 1 : null;
 		//}
 
 		/// <summary>
@@ -182,12 +182,12 @@ namespace Au.Controls
 		/// Does nothing.
 		/// Not called for self.
 		/// </summary>
-		public virtual void SelectChild(AccSELFLAG flagsSelect, int child) { }
-		void IAccessible.accSelect(AccSELFLAG flagsSelect, VarInt varChild) {
+		public virtual void SelectChild(ESelect flagsSelect, int child) { }
+		void IAccessible.accSelect(ESelect flagsSelect, VarInt varChild) {
 			int child = varChild;
-			if (flagsSelect.Has(AccSELFLAG.TAKEFOCUS)) Api.SetFocus(_w); // _e.Focus();//SHOULDDO: now Api.SetFocus makes KTreeView item nonfocused (works like focused but displayed like not)
+			if (flagsSelect.Has(ESelect.TAKEFOCUS)) Api.SetFocus(_w); // _e.Focus();//SHOULDDO: now Api.SetFocus makes KTreeView item nonfocused (works like focused but displayed like not)
 			if (child == -1) {
-				if (flagsSelect is not (AccSELFLAG.TAKEFOCUS or 0)) throw new ArgumentException();
+				if (flagsSelect is not (ESelect.TAKEFOCUS or 0)) throw new ArgumentException();
 			} else {
 				SelectChild(flagsSelect, child);
 			}
@@ -214,13 +214,13 @@ namespace Au.Controls
 		/// Returns null.
 		/// If self (childStart==-1), navDir is FIRSTCHILD or LASTCHILD, else navDir is any except these.
 		/// </summary>
-		public virtual int? Navigate(AccNAVDIR navDir, int childStart) => null;
-		object IAccessible.accNavigate(AccNAVDIR navDir, VarInt varStart) {
+		public virtual int? Navigate(NAVDIR navDir, int childStart) => null;
+		object IAccessible.accNavigate(NAVDIR navDir, VarInt varStart) {
 			int i = varStart;
-			if (navDir == AccNAVDIR.FIRSTCHILD || navDir == AccNAVDIR.LASTCHILD) {
+			if (navDir == NAVDIR.FIRSTCHILD || navDir == NAVDIR.LASTCHILD) {
 				if (i != -1) return null;
 			} else {
-				if (i == -1) return _StdAO.accNavigate(navDir, varStart);//never mind: gets some not adjacent AO
+				if (i == -1) return _StdAO.accNavigate(navDir, varStart); //never mind: gets some not adjacent UI element
 			}
 			var v = Navigate(navDir, i);
 			if (v == null) return null;
@@ -271,12 +271,12 @@ namespace Au.Controls
 
 		/// <summary>
 		/// Call in hook wndproc on WM_GETOBJECT like this: <c>handled = true; return (_acc ??= new _Accessible(this)).WmGetobject(wParam, lParam);</c>.
-		/// If lParam is AccOBJID.CLIENT, calls API LresultFromObject(this), else calls API DefWindowProc.
+		/// If lParam is EObjid.CLIENT, calls API LresultFromObject(this), else calls API DefWindowProc.
 		/// </summary>
 		public nint WmGetobject(nint wParam, nint lParam) {
-			var oid = (AccOBJID)lParam;
-			//AOutput.Write(oid);
-			if (oid != AccOBJID.CLIENT) return Api.DefWindowProc(_w, Api.WM_GETOBJECT, wParam, lParam);
+			var oid = (EObjid)lParam;
+			//print.it(oid);
+			if (oid != EObjid.CLIENT) return Api.DefWindowProc(_w, Api.WM_GETOBJECT, wParam, lParam);
 
 			return Cpp.Cpp_AccWorkaround(this, wParam, ref _accWorkaround);
 
@@ -284,7 +284,7 @@ namespace Au.Controls
 			//var accIP = Marshal.GetIUnknownForObject(this);
 			////var accIP=Marshal.GetIDispatchForObject(this);
 			//var r = Api.LresultFromObject(typeof(IAccessible).GUID, wParam, accIP);
-			////Marshal.AddRef(accIP); AOutput.Write(Marshal.Release(accIP));
+			////Marshal.AddRef(accIP); print.it(Marshal.Release(accIP));
 			//Marshal.Release(accIP);
 			//return r;
 		}

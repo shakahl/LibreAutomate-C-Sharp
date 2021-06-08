@@ -18,7 +18,7 @@ class DProperties : KDialogWindow
 	readonly FileNode _f;
 	readonly MetaCommentsParser _meta;
 	readonly bool _isClass;
-	ERole _role;
+	Au.Compiler.ERole _role;
 
 	//controls
 	readonly KSciInfoBox info;
@@ -35,7 +35,7 @@ class DProperties : KDialogWindow
 		Owner = App.Wmain;
 		Title = "Properties of " + _f.Name;
 
-		var b = new AWpfBuilder(this).Columns(440.., 0);
+		var b = new wpfBuilder(this).Columns(440.., 0);
 		b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
 		b.R.Add(out info).Height(80).Margin("B8").Span(-1);
 		b.R.StartStack(vertical: true); //left column
@@ -97,12 +97,12 @@ class DProperties : KDialogWindow
 		_meta = new MetaCommentsParser(_f);
 
 		_role = _meta.role switch {
-			"miniProgram" => ERole.miniProgram,
-			"exeProgram" => ERole.exeProgram,
-			"editorExtension" => ERole.editorExtension,
-			"classLibrary" when _isClass => ERole.classLibrary,
-			"classFile" when _isClass => ERole.classFile,
-			_ => _isClass ? ERole.classFile : ERole.miniProgram,
+			"miniProgram" => Au.Compiler.ERole.miniProgram,
+			"exeProgram" => Au.Compiler.ERole.exeProgram,
+			"editorExtension" => Au.Compiler.ERole.editorExtension,
+			"classLibrary" when _isClass => Au.Compiler.ERole.classLibrary,
+			"classFile" when _isClass => Au.Compiler.ERole.classFile,
+			_ => _isClass ? Au.Compiler.ERole.classFile : Au.Compiler.ERole.miniProgram,
 		};
 		_InitCombo(role, _isClass ? "miniProgram|exeProgram|editorExtension|classLibrary|classFile" : "miniProgram|exeProgram|editorExtension", null, (int)_role);
 		testScript.Text = _f.TestScript?.ItemPath;
@@ -114,7 +114,7 @@ class DProperties : KDialogWindow
 		//Assembly
 		outputPath.Text = _meta.outputPath;
 		void _ButtonClick_outputPath(WBButtonClickArgs e) {
-			var m = new AMenu();
+			var m = new popupMenu();
 			m[_GetOutputPath(getDefault: true)] = o => outputPath.Text = o.ToString();
 			m["Browse..."] = o => {
 				using var fd = new System.Windows.Forms.FolderBrowserDialog {
@@ -151,22 +151,22 @@ class DProperties : KDialogWindow
 		gAssembly.IsExpanded = true;
 		gCompile.IsExpanded = true;
 #else
-		gAssembly.IsExpanded = _role is ERole.exeProgram or ERole.classLibrary;
+		gAssembly.IsExpanded = _role is Au.Compiler.ERole.exeProgram or Au.Compiler.ERole.classLibrary;
 #endif
 
 		_ChangedRole();
 		role.SelectionChanged += (_, _) => {
-			_role = (ERole)role.SelectedIndex;
+			_role = (Au.Compiler.ERole)role.SelectedIndex;
 			_ChangedRole();
 		};
 		void _ChangedRole() {
-			_ShowHide(testScript, _role is ERole.classLibrary or ERole.classFile);
-			_ShowCollapse(_role is ERole.miniProgram or ERole.exeProgram, gRun, console, icon, bit32);
+			_ShowHide(testScript, _role is Au.Compiler.ERole.classLibrary or Au.Compiler.ERole.classFile);
+			_ShowCollapse(_role is Au.Compiler.ERole.miniProgram or Au.Compiler.ERole.exeProgram, gRun, console, icon, bit32);
 			_ChangedRunSingle();
-			_ShowCollapse(_role is ERole.exeProgram or ERole.classLibrary, outputPath, outputPathB, xmlDoc);
-			_ShowCollapse(_role == ERole.exeProgram, manifest);
-			_ShowCollapse(_role != ERole.classFile, gAssembly, gCompile);
-			addProject.IsEnabled = _role != ERole.classFile;
+			_ShowCollapse(_role is Au.Compiler.ERole.exeProgram or Au.Compiler.ERole.classLibrary, outputPath, outputPathB, xmlDoc);
+			_ShowCollapse(_role == Au.Compiler.ERole.exeProgram, manifest);
+			_ShowCollapse(_role != Au.Compiler.ERole.classFile, gAssembly, gCompile);
+			addProject.IsEnabled = _role != Au.Compiler.ERole.classFile;
 		}
 		void _ChangedRunSingle() {
 			_ShowHide(ifRunning2, _IsChecked(runSingle));
@@ -221,11 +221,11 @@ class DProperties : KDialogWindow
 
 		_meta.role = null;
 		_meta.outputPath = null;
-		if (_role != ERole.classFile) {
-			if (_isClass || _role != ERole.miniProgram) _meta.role = _role.ToString();
+		if (_role != Au.Compiler.ERole.classFile) {
+			if (_isClass || _role != Au.Compiler.ERole.miniProgram) _meta.role = _role.ToString();
 			switch (_role) {
-			case ERole.exeProgram:
-			case ERole.classLibrary:
+			case Au.Compiler.ERole.exeProgram:
+			case Au.Compiler.ERole.classLibrary:
 				_meta.outputPath = _GetOutputPath(getDefault: false);
 				break;
 			}
@@ -258,7 +258,7 @@ class DProperties : KDialogWindow
 	}
 
 	private void _ButtonClick_addNet(WBButtonClickArgs e) {
-		var dir = AFolders.ThisApp + "Libraries"; if (!AFile.Exists(dir).isDir) dir = AFolders.ThisApp;
+		var dir = folders.ThisApp + "Libraries"; if (!filesystem.exists(dir).isDir) dir = folders.ThisApp;
 		var d = new OpenFileDialog { InitialDirectory = dir, Filter = "Dll|*.dll|All files|*.*", Multiselect = true };
 		if (d.ShowDialog(this) != true) return;
 
@@ -266,12 +266,12 @@ class DProperties : KDialogWindow
 
 		foreach (var v in a) {
 			if (MetaReferences.IsDotnetAssembly(v)) continue;
-			ADialog.ShowError("Not a .NET assembly.", v, owner: this);
+			dialog.showError("Not a .NET assembly.", v, owner: this);
 			return;
 		}
 
 		//remove path and ext if need
-		var thisApp = AFolders.ThisAppBS;
+		var thisApp = folders.ThisAppBS;
 		if (a[0].Starts(thisApp, true)) {
 			for (int i = 0; i < a.Length; i++) a[i] = a[i][thisApp.Length..];
 		}
@@ -345,12 +345,12 @@ class DProperties : KDialogWindow
 	private void _bAddComRegistry_Click(WBButtonClickArgs e) {
 		//HKCU\TypeLib\typelibGuid\version\
 		var sFind = findInLists.Text;
-		var rx = new ARegex(@"(?i) (?:Type |Object )?Library[ \d\.]*$");
+		var rx = new regexp(@"(?i) (?:Type |Object )?Library[ \d\.]*$");
 		var a = new List<_RegTypelib>(1000);
 		using (var tlKey = Registry.ClassesRoot.OpenSubKey("TypeLib")) { //guids
 			foreach (var sGuid in tlKey.GetSubKeyNames()) {
 				if (sGuid.Length != 38) continue;
-				//AOutput.Write(sGuid);
+				//print.it(sGuid);
 				using var guidKey = tlKey.OpenSubKey(sGuid);
 				foreach (var sVer in guidKey.GetSubKeyNames()) {
 					using var verKey = guidKey.OpenSubKey(sVer);
@@ -358,7 +358,7 @@ class DProperties : KDialogWindow
 						if (rx.MatchG(description, out var g)) description = description.Remove(g.Start);
 						if (sFind.Length > 0 && description.Find(sFind, true) < 0) continue;
 						a.Add(new _RegTypelib { guid = sGuid, text = description + ", " + sVer, version = sVer });
-					} //else AOutput.Write(sGuid); //some Microsoft typelibs. VS does not show these too.
+					} //else print.it(sGuid); //some Microsoft typelibs. VS does not show these too.
 				}
 			}
 		}
@@ -374,7 +374,7 @@ class DProperties : KDialogWindow
 	}
 
 	//To convert a COM type library we use TypeLibConverter class. However .NET Core does not have it (not tested .NET 5).
-	//Workaround: the code is in Au.Net45.exe. It uses .NET Framework 4.5. We call it through ARun.Console.
+	//Workaround: the code is in Au.Net45.exe. It uses .NET Framework 4.5. We call it through run.console.
 	//We don't use tlbimp.exe:
 	//	1. If some used interop assemblies are in GAC (eg MS Office PIA), does not create files for them. But we cannot use GAC in Core/5 app.
 	//	2. Does not tell what files created.
@@ -391,7 +391,7 @@ class DProperties : KDialogWindow
 		public string GetPath(string locale) {
 			var k0 = $@"TypeLib\{guid}\{version}\{locale}\win";
 			for (int i = 0; i < 2; i++) {
-				var bits = AVersion.Is32BitProcess == (i == 1) ? "32" : "64";
+				var bits = osVersion.is32BitProcess == (i == 1) ? "32" : "64";
 				using var hk = Registry.ClassesRoot.OpenSubKey(k0 + bits);
 				if (hk?.GetValue("") is string path) return path.Trim('\"');
 			}
@@ -426,43 +426,43 @@ class DProperties : KDialogWindow
 			string locale;
 			if (aloc.Count == 1) locale = aloc[0];
 			else {
-				int i = ADialog.ShowList(aloc2, "Locale", owner: this);
+				int i = dialog.showList(aloc2, "Locale", owner: this);
 				if (i == 0) return;
 				locale = aloc[i - 1];
 			}
 			comDll = r.GetPath(locale);
-			if (comDll == null || !AFile.Exists(comDll).isFile) {
-				ADialog.ShowError(comDll == null ? "Failed to get file path." : "File does not exist.", owner: this);
+			if (comDll == null || !filesystem.exists(comDll).isFile) {
+				dialog.showError(comDll == null ? "Failed to get file path." : "File does not exist.", owner: this);
 				return;
 			}
 			break;
 		}
 
-		AOutput.Write($"Converting COM type library to .NET assembly.");
+		print.it($"Converting COM type library to .NET assembly.");
 		List<string> converted = new();
 		int rr = -1;
 		this.IsEnabled = false;
 		try {
 			await Task.Run(() => {
 				if (s_comConvertedDir == null) {
-					s_comConvertedDir = AFolders.Workspace + @".interop\";
-					AFile.CreateDirectory(s_comConvertedDir);
+					s_comConvertedDir = folders.Workspace + @".interop\";
+					filesystem.createDirectory(s_comConvertedDir);
 				}
 				void _Callback(string s) {
-					AOutput.Write(s);
+					print.it(s);
 					if (s.Starts("Converted: ")) {
 						s.RegexMatch(@"""(.+?)"".$", 1, out s);
 						converted.Add(s);
 					}
 				}
-				rr = ARun.Console(_Callback, AFolders.ThisAppBS + "Au.Net45.exe", $"/typelib \"{s_comConvertedDir}|{comDll}\"", encoding: Encoding.UTF8);
+				rr = run.console(_Callback, folders.ThisAppBS + "Au.Net45.exe", $"/typelib \"{s_comConvertedDir}|{comDll}\"", encoding: Encoding.UTF8);
 			});
 		}
-		catch (Exception ex) { ADialog.ShowError("Failed to convert type library", ex.ToStringWithoutStack(), owner: this); }
+		catch (Exception ex) { dialog.showError("Failed to convert type library", ex.ToStringWithoutStack(), owner: this); }
 		this.IsEnabled = true;
 		if (rr == 0) {
 			foreach (var v in converted) if (!_meta.com.Contains(v)) _meta.com.Add(v);
-			AOutput.Write(@"<>Converted and saved in <link>%AFolders.Workspace%\.interop<>.");
+			print.it(@"<>Converted and saved in <link>%folders.Workspace%\.interop<>.");
 			_ShowInfo_Added(button, _meta.com);
 		}
 	}
@@ -518,7 +518,7 @@ class DProperties : KDialogWindow
 
 	string _GetOutputPath(bool getDefault, bool expandEnvVar = false) {
 		if (!getDefault && _Get(outputPath) is string r) {
-			if (expandEnvVar) r = APath.Expand(r);
+			if (expandEnvVar) r = pathname.expand(r);
 		} else {
 			r = MetaComments.GetDefaultOutputPath(_f, _role, withEnvVar: !expandEnvVar);
 		}
@@ -585,7 +585,7 @@ This option is ignored when the task runs as .exe program started not from edito
 		info.AddElem(runSingle,
 @"<b>runSingle</b> - whether tasks can run simultaneously, etc.
  • <i>false</i> (default) - multiple tasks can run simultaneously (see ifRunning).
- • <i>true</i> (checked in Properties) - multiple such tasks cannot run simultaneously. The editor's tray icon is green when running; also green text in the ""Tasks"" panel. By default ATask.Setup ends the task on PC sleep and desktop switch (Ctrl+Alt+Delete, Win+L, etc).
+ • <i>true</i> (checked in Properties) - multiple such tasks cannot run simultaneously. The editor's tray icon is green when running; also green text in the ""Tasks"" panel. By default scriptt.setup ends the task on PC sleep and desktop switch (Ctrl+Alt+Delete, Win+L, etc).
 
 This option is ignored when the task runs as .exe program started not from editor.
 ");
@@ -613,7 +613,7 @@ This option is ignored when the task runs as .exe program started not from edito
 ");
 		info.AddElem(outputPath,
 @"<b>outputPath</b> - directory for the output assembly file and related files (used dlls, etc).
-Full path. Can start with %environmentVariable% or %AFolders.SomeFolder%. Can be path relative to this file or workspace, like with other options. Default if role exeProgram: <link>%AFolders.Workspace%\bin\filename<>. Default if role classLibrary: <link>%AFolders.ThisApp%\Libraries<>. The compiler creates the folder if does not exist.
+Full path. Can start with %environmentVariable% or %folders.SomeFolder%. Can be path relative to this file or workspace, like with other options. Default if role exeProgram: <link>%folders.Workspace%\bin\filename<>. Default if role classLibrary: <link>%folders.ThisApp%\Libraries<>. The compiler creates the folder if does not exist.
 
 If role exeProgram, the exe file is named like the script. The 32-bit version has suffix ""-32"". If optimize true (checked in Properties), creates both 64-bit and 32-bit versions. Else creates only 32-bit if bit32 true (checked in Properties) or 32-bit OS, else only 64-bit.
 If role classLibrary, the dll file is named like the class file. It can be used by 64-bit and 32-bit processes.
@@ -622,7 +622,7 @@ If role classLibrary, the dll file is named like the class file. It can be used 
 @"<b>icon</b> - icon of the output exe file.
 The .ico file must be in this workspace. Can be path relative to this file (examples: App.ico, Folder\App.ico, ..\Folder\App.ico) or path in the workspace (examples: \App.ico, \Folder\App.ico).
 
-The icon will be added as a native resource and displayed in File Explorer etc. If role exeProgram, can add multiple icons from folder. Resource ids start from IDI_APPLICATION (32512). Native resources can be used with AIcon.OfThisApp etc and ADialog functions.
+The icon will be added as a native resource and displayed in File Explorer etc. If role exeProgram, can add multiple icons from folder. Resource ids start from IDI_APPLICATION (32512). Native resources can be used with icon.ofThisApp etc and dialog functions.
 ");
 		info.AddElem(manifest,
 @"<b>manifest</b> - <google manifest file site:microsoft.com>manifest<> of the output exe or dll file.
@@ -717,10 +717,10 @@ Don't need to add Au.dll and .NET runtime dlls.
 To use 'extern alias', edit in the code editor like this: <c green>r Alias=Assembly<>
 To remove this meta comment, edit the code.
 
-If the file is in <link>%AFolders.ThisApp%<> or its subfolders, use file name or relative path, else need full path. If role of the script is not miniProgram, at run time the file must be directly in AFolders.ThisApp or AFolders.ThisApp\Libraries. If role is editorExtension, may need to restart editor.
+If the file is in <link>%folders.ThisApp%<> or its subfolders, use file name or relative path, else need full path. If role of the script is not miniProgram, at run time the file must be directly in folders.ThisApp or folders.ThisApp\Libraries. If role is editorExtension, may need to restart editor.
 ");
 		const string c_com = @" COM component's type library to an <i>interop assembly<>.
-Adds meta comment <c green>com FileName.dll<>. Saves the assembly file in <link>%AFolders.Workspace%\.interop<>.
+Adds meta comment <c green>com FileName.dll<>. Saves the assembly file in <link>%folders.Workspace%\.interop<>.
 
 An interop assembly is a .NET assembly without real code. Not used at run time. At run time is used the COM component (registered native dll or exe file). Check bit32 if 64-bit dll unavailable.
 
@@ -732,7 +732,7 @@ To remove this meta comment, edit the code. Optionally delete unused interop ass
 @"<b>Project<> - add a reference to a class library created in this workspace.
 Adds meta comment <c green>pr File.cs<>. The compiler will compile it if need and use the created dll file as a reference.
 
-The recommended outputPath of the library project is <link>%AFolders.ThisApp%\Libraries<>. Else may not find the dll at run time.
+The recommended outputPath of the library project is <link>%folders.ThisApp%\Libraries<>. Else may not find the dll at run time.
 
 To remove this meta comment, edit the code. Optionally delete unused dll files.
 ");
@@ -758,7 +758,7 @@ Can be added only files that are in this workspace. Import files if need, for ex
 Can be path relative to this file (examples: File.png, Folder\File.png, ..\Folder\File.png) or path in the workspace (examples: \File.png, \Folder\File.png).
 To remove this meta comment, edit the code.
 
-To load resources directly, use <help>Au.Util.AResources<>, like <code>var s = Au.Util.AResources.GetString(""file.txt"");</code>. Or <google>ResourceManager<>. To load WPF resources can be used ""pack:..."" URI.
+To load resources directly, use <help>Au.More.ResourceUtil<>, like <code>var s = Au.More.ResourceUtil.GetString(""file.txt"");</code>. Or <google>ResourceManager<>. To load WPF resources can be used ""pack:..."" URI.
 To load embedded resources, use <google>Assembly.GetManifestResourceStream<>.
 Compiled names of non-embedded resource files are lowercase, like ""file.png"" or ""subfolder/file.png"".
 To browse .NET assembly resources, types, etc can be used for example <google>ILSpy<>.

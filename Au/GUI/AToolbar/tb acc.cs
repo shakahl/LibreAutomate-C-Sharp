@@ -1,16 +1,16 @@
 using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using IAccessible = Au.Types.Api.IAccessible;
 using VarInt = Au.Types.Api.VarInt;
-using AccNAVDIR = Au.Types.Api.AccNAVDIR;
+using NAVDIR = Au.Types.Api.NAVDIR;
 
 namespace Au
 {
 	[ComVisible(true)]
-	partial class AToolbar : IAccessible
+	partial class toolbar : IAccessible
 	{
 		IAccessible IAccessible.get_accParent() => _StdAO.get_accParent();
 
@@ -25,28 +25,28 @@ namespace Au
 		string IAccessible.get_accDescription(VarInt varChild) => _B(varChild, out _) ? null : "Floating toolbar";
 
 		VarInt IAccessible.get_accRole(VarInt varChild) {
-			ADebug_.PrintIf(AThread.Id != _w.ThreadId, "thread");
+			Debug_.PrintIf(Api.GetCurrentThreadId() != _w.ThreadId, "thread");
 			var r = !_B(varChild, out var b)
-				? AccROLE.TOOLBAR
+				? ERole.TOOLBAR
 				: b.ItemType switch {
-					TBItemType.Separator => AccROLE.SEPARATOR,
-					TBItemType.Group => AccROLE.GROUPING,
-					TBItemType.Menu => AccROLE.BUTTONMENU,
-					_ => AccROLE.BUTTON
+					TBItemType.Separator => ERole.SEPARATOR,
+					TBItemType.Group => ERole.GROUPING,
+					TBItemType.Menu => ERole.BUTTONMENU,
+					_ => ERole.BUTTON
 				};
 			return (int)r - 1;
 		}
 
 		VarInt IAccessible.get_accState(VarInt varChild) {
-			AccSTATE r = 0;
-			if (!_w.IsEnabled()) r |= AccSTATE.DISABLED;
+			EState r = 0;
+			if (!_w.IsEnabled()) r |= EState.DISABLED;
 			if (!_B(varChild, out var b)) {
-				if (!_w.IsVisible) r |= AccSTATE.INVISIBLE;
+				if (!_w.IsVisible) r |= EState.INVISIBLE;
 			} else {
-				if (b.IsSeparatorOrGroup_) r |= AccSTATE.DISABLED;
-				if (b.IsMenu_) r |= AccSTATE.HASPOPUP;
-				//SHOULDDO: if offscreen, r |= AccSTATE.INVISIBLE | AccSTATE.OFFSCREEN;
-				//no: AccSTATE.HOTTRACKED;
+				if (b.IsSeparatorOrGroup_) r |= EState.DISABLED;
+				if (b.IsMenu_) r |= EState.HASPOPUP;
+				//SHOULDDO: if offscreen, r |= EState.INVISIBLE | EState.OFFSCREEN;
+				//no: EState.HOTTRACKED;
 			}
 			return (int)r - 1;
 		}
@@ -64,7 +64,7 @@ namespace Au
 		string IAccessible.get_accDefaultAction(VarInt varChild)
 			=> _B(varChild, out var b) && b.clicked != null ? (b.IsMenu_ ? "Open" : "Execute") : null;
 
-		void IAccessible.accSelect(AccSELFLAG flagsSelect, VarInt varChild) => throw new NotImplementedException();
+		void IAccessible.accSelect(ESelect flagsSelect, VarInt varChild) => throw new NotImplementedException();
 
 		void IAccessible.accLocation(out int pxLeft, out int pyTop, out int pcxWidth, out int pcyHeight, VarInt varChild) {
 			if (!_B(varChild, out var b)) {
@@ -75,18 +75,18 @@ namespace Au
 			}
 		}
 
-		object IAccessible.accNavigate(AccNAVDIR navDir, VarInt varStart) {
+		object IAccessible.accNavigate(NAVDIR navDir, VarInt varStart) {
 			int i = varStart;
 			var a = _a;
-			if (navDir == AccNAVDIR.FIRSTCHILD || navDir == AccNAVDIR.LASTCHILD) {
-				if (i == -1) return navDir == AccNAVDIR.FIRSTCHILD ? 1 : a.Count;
+			if (navDir == NAVDIR.FIRSTCHILD || navDir == NAVDIR.LASTCHILD) {
+				if (i == -1) return navDir == NAVDIR.FIRSTCHILD ? 1 : a.Count;
 			} else {
 				if (i == -1) return _StdAO.accNavigate(navDir, varStart);
 				switch (navDir) {
-				case AccNAVDIR.PREVIOUS:
+				case NAVDIR.PREVIOUS:
 					if (i > 0) return i;
 					break;
-				case AccNAVDIR.NEXT:
+				case NAVDIR.NEXT:
 					if (++i < a.Count) return i + 1;
 					break;
 				}

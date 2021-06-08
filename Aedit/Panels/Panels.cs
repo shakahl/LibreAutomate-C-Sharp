@@ -1,6 +1,6 @@
 ﻿using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 using Au.Controls;
 using System;
 using System.Collections.Generic;
@@ -40,15 +40,15 @@ static class Panels
 
 		//FUTURE: later remove this code. Now need to delete old custom Layout.xml. It uses wrong document etc.
 		var s1 = AppSettings.DirBS + "Layout.xml";
-		if (AFile.Exists(s1).isFile) {
-			var s2 = AFile.LoadText(s1);
-			//AOutput.Write(s2);
-			if (s2.RegexIsMatch(@"<document name=""documents"" ?/>\s*</tab>")) AFile.Delete(s1);
+		if (filesystem.exists(s1).isFile) {
+			var s2 = filesystem.loadText(s1);
+			//print.it(s2);
+			if (s2.RegexIsMatch(@"<document name=""documents"" ?/>\s*</tab>")) filesystem.delete(s1);
 		}
 
 		pm.BorderBrush = SystemColors.ActiveBorderBrush;
-		//pm.Load(AFolders.ThisAppBS + @"Default\Layout.xml", null);
-		pm.Load(AFolders.ThisAppBS + @"Default\Layout.xml", AppSettings.DirBS + "Layout.xml");
+		//pm.Load(folders.ThisAppBS + @"Default\Layout.xml", null);
+		pm.Load(folders.ThisAppBS + @"Default\Layout.xml", AppSettings.DirBS + "Layout.xml");
 
 		pm["Menu"].Content = Menu = new Menu();
 		TFile = _TB("File");

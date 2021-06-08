@@ -318,7 +318,7 @@ public:
 	}
 };
 
-namespace wnd
+namespace wn
 {
 inline DWORD Style(HWND w) { return (DWORD)GetWindowLongPtrW(w, GWL_STYLE); }
 bool ClassName(HWND w, out Bstr& s);

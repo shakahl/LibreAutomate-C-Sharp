@@ -292,7 +292,7 @@ Often used in a group like <.r>(one|two)<> or in a "followed/preceded by" assert
 
 Groups are used:
 1. To localize/isolate several <+p or>alternatives<> like <.r>(one|two)<> or <+p>options<> like <.r>((?i)...)<>.
-2. To get the matched substring with a regex function such as <help>ARegex.Match<>.
+2. To get the matched substring with a regex function such as <help>regexp.Match<>.
 3. To use the matched substring as a backreference, like <.r>\g{1}<>.
 4. To use the matched substring in the <+p replace>replacement<>, like <.r>$1<> or <.r>${name}<>.
 5. To reuse the group in regex as a <+p subroutines>subroutine<> or recursive pattern.
@@ -420,7 +420,7 @@ A capturing group <.r>(...)<> can be reused in other parts of regular expression
 
 <b>Links<>
 <link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC27>Callouts<>
-<help>ARegex.Callout<>
+<help>regexp.Callout<>
 
 -- backtracking --
 
@@ -540,7 +540,9 @@ A script run is a sequence of characters that are all from the same script.
 <+a>$'<>  -  string part after match.
 <+a>$_<>  -  whole string.
 <+a>$*<>  -  the name of the last reached mark or other named <+p backtracking>verb<> like <.r>(*MARK:NAME)<>.
-<+a ${+%}>${+func}<>  -  call a function added with <help>ARegex.AddReplaceFunc<> and use its return value.
+<+a ${+%}>${+func}<>  -  call a function added with <help>regexp.addReplaceFunc<> and use its return value.
+<+a ${+%}>${+func(group)}<>  -  call function with group number or name.
+<+a ${+%}>${+func(group, string)}<>  -  call function with some string.
 <+a>$$<>  -  $ character.
 
 These are used in the replacement text, not in the regular expression.
@@ -552,6 +554,6 @@ Replacement: <.r>$3-$1-$2<>
 Result: <c green>2020-10-08<>
 
 <b>Links<>
-<help>ARegex.Replace<>
+<help>regexp.Replace<>
 
 -- end --

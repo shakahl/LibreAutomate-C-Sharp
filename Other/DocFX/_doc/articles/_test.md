@@ -8,8 +8,8 @@ var s=@"\\?\ "; //comment
 ```
 
 ```csharp
-var v = ADialog.ShowEx("", "Text <a href=\"example\">link</a>.", onLinkClick: e => { AOutput.Write(e.LinkHref); });
-var v = ADialog.ShowEx("", @"Text <a href=""example"">link</a>.", onLinkClick: e => { AOutput.Write(e.LinkHref); });
+var v = dialog.showEx("", "Text <a href=\"example\">link</a>.", onLinkClick: e => { print.it(e.LinkHref); });
+var v = dialog.showEx("", @"Text <a href=""example"">link</a>.", onLinkClick: e => { print.it(e.LinkHref); });
 ```
 
 a `"code"` b

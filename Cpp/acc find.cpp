@@ -329,16 +329,16 @@ public:
 				}
 			}
 		} else if(!!(_flags2 & eAF2::InControls)) {
-			wnd::EnumChildWindows(w, [this, w](HWND c)
+			wn::EnumChildWindows(w, [this, w](HWND c)
 			{
-				if(!(_flags & eAF::HiddenToo) && !wnd::IsVisibleInWindow(c, w)) return true; //not IsWindowVisible, because we want to find controls in invisible windows
+				if(!(_flags & eAF::HiddenToo) && !wn::IsVisibleInWindow(c, w)) return true; //not IsWindowVisible, because we want to find controls in invisible windows
 				if(!!(_flags2 & eAF2::IsId) && GetDlgCtrlID(c) != _controlId) return true;
-				if(_controlClass.Is() && !wnd::ClassNameIs(c, _controlClass)) return true;
-				if(_controlWF != null && !wnd::WinformsNameIs(c, _controlWF)) return true;
+				if(_controlClass.Is() && !wn::ClassNameIs(c, _controlClass)) return true;
+				if(_controlWF != null && !wn::WinformsNameIs(c, _controlWF)) return true;
 				return 0 != _FindInWnd(c, true);
 			});
 		} else {
-			_wTL = (wnd::Style(w) & WS_CHILD) ? 0 : w;
+			_wTL = (wn::Style(w) & WS_CHILD) ? 0 : w;
 			_FindInWnd(w);
 		}
 
@@ -391,7 +391,7 @@ private:
 			if(_wTL) {
 				//Java?
 				if(level == (!!(_flags & eAF::ClientArea) ? 0 : 1) && aParent.misc.role == ROLE_SYSTEM_CLIENT) {
-					if(wnd::ClassNameIs(_wTL, L"SunAwt*")) {
+					if(wn::ClassNameIs(_wTL, L"SunAwt*")) {
 						AccDtorIfElem0 aw(AccJavaFromWindow(_wTL), 0, eAccMiscFlags::Java);
 						if(aw.acc) {
 							_wTL = 0;
@@ -640,7 +640,7 @@ private:
 		IAccessible* ap = ap_.acc;
 
 		if(!(_flags2 & (eAF2::InFirefoxPage | eAF2::InChromePage))) {
-			switch(wnd::ClassNameIs(w, { L"Mozilla*", L"Chrome*" })) {
+			switch(wn::ClassNameIs(w, { L"Mozilla*", L"Chrome*" })) {
 			case 1: _flags2 |= eAF2::InFirefoxPage; break;
 			case 2: _flags2 |= eAF2::InChromePage; break;
 			}
@@ -794,9 +794,9 @@ namespace outproc
 //Returns: 0 not Chrome, 1 Chrome was already enabled, 2 Chrome enabled now.
 int AccEnableChrome(HWND w, bool checkClassName)
 {
-	assert(!(wnd::Style(w) & WS_CHILD));
+	assert(!(wn::Style(w) & WS_CHILD));
 
-	if(checkClassName && !wnd::ClassNameIs(w, L"Chrome*")) return 0;
+	if(checkClassName && !wn::ClassNameIs(w, L"Chrome*")) return 0;
 
 	auto wf = WinFlags::Get(w);
 	if(!!(wf & eWinFlags::AccEnableYes)) return 1;

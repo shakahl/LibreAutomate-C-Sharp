@@ -13,7 +13,7 @@ using System.Reflection;
 
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 using static Au.Controls.Sci;
 using System.Windows;
 using Au.Tools;
@@ -111,9 +111,9 @@ partial class SciCode
 					//}
 
 					string mi = _data.scripts
-						? "1 var s = name;|2 var s = path;|3 ATask.Run(path);|4 t[name] = o => ATask.Run(path);"
-						: "11 var s = path;|12 ARun.Run(path);|13 t[name] = o => ARun.Run(path);";
-					what = AMenu.ShowSimple(mi);
+						? "1 var s = name;|2 var s = path;|3 scriptt.run(path);|4 t[name] = o => scriptt.run(path);"
+						: "11 var s = path;|12 run.it(path);|13 t[name] = o => run.it(path);";
+					what = popupMenu.showSimple(mi);
 					if (what == 0) return;
 				}
 
@@ -162,7 +162,7 @@ partial class SciCode
 
 			if (!s.NE()) {
 				var z = new Sci_DragDropData { x = xy.x, y = xy.y };
-				var s8 = AConvert.ToUtf8(s);
+				var s8 = Convert2.ToUtf8(s);
 				fixed (byte* p8 = s8) {
 					z.text = p8;
 					z.len = s8.Length - 1;
@@ -189,13 +189,13 @@ partial class SciCode
 					case 1: case 2: case 11: b.Append("var s = "); break;
 					case 4: case 13: b.AppendFormat("t[\"{0}\"] = o => ", what == 4 ? name.RemoveSuffix(".cs") : name); break;
 					}
-					if (what == 12 || what == 13) b.Append("ARun.Run(");
-					if ((what == 11 || what == 12) && (path.Starts("\":: ") || path.Starts("AFolders.Virtual."))) b.AppendFormat("/* {0} */ ", name);
+					if (what == 12 || what == 13) b.Append("run.it(");
+					if ((what == 11 || what == 12) && (path.Starts("\":: ") || path.Starts("folders.shell."))) b.AppendFormat("/* {0} */ ", name);
 					if (!path.Ends('\"')) path = "@\"" + path + "\"";
 					switch (what) {
 					case 1: b.AppendFormat("\"{0}\"", name); break;
 					case 2 or 11: b.Append(path); break;
-					case 3 or 4: b.AppendFormat("ATask.Run({0})", path); break;
+					case 3 or 4: b.AppendFormat("scriptt.run({0})", path); break;
 					case 12 or 13:
 						b.Append(path);
 						if (!args.NE()) b.AppendFormat(", \"{0}\"", args.Escape());

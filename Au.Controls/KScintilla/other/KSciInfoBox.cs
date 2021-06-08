@@ -1,5 +1,5 @@
 using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -44,7 +44,7 @@ namespace Au.Controls
 			zMarginWidth(1, 0);
 
 			SIZE z = ZInitBlankMargins;
-			z = ADpi.Scale(z, this.Hwnd);
+			z = Dpi.Scale(z, this.Hwnd);
 			Call(Sci.SCI_SETMARGINLEFT, 0, z.width);
 			Call(Sci.SCI_SETMARGINRIGHT, 0, z.height);
 		}

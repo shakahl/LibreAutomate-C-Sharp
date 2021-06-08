@@ -5,21 +5,21 @@ using System.Windows.Controls;
 
 namespace Au
 {
-public partial class AToolbar
+public partial class toolbar
 {
 	/// <summary>
 	/// Creates dialog with a list of toolbars of this thread. Just creates, does not show. Can be used to find lost toolbars.
 	/// </summary>
 	/// <example>
 	/// <code><![CDATA[
-	/// AToolbar.ToolbarsDialog().Show();
+	/// toolbar.toolbarsDialog().Show();
 	/// ]]></code>
 	/// </example>
-	public static Window ToolbarsDialog() {
-//		var s = ATask.Name;
+	public static Window toolbarsDialog() {
+//		var s = scriptt.name;
 //		s = s == "Triggers and toolbars" ? "Toolbars" : "Toolbars of " + s;
 
-		var b = new AWpfBuilder("Toolbars").WinSize(400, 250).Columns(-1, 0);
+		var b = new wpfBuilder("Toolbars").WinSize(400, 250).Columns(-1, 0);
 		b.Row(-1).Add(out ListBox lb).Focus();
 		b.StartStack(vertical: true);
 		b.AddButton(out var bShow, "Show rectangle", e=> _Click(1));
@@ -46,26 +46,26 @@ public partial class AToolbar
 		}
 		
 		void _Click(int action) {
-			if(lb.SelectedItem is not AToolbar tb) return;
+			if(lb.SelectedItem is not toolbar tb) return;
 			var dlg=b.Window.Hwnd();
 			if(!tb.IsOpen) {
-				ADialog.Show("Closed", owner: dlg);
+				dialog.show("Closed", owner: dlg);
 				return;
 			}
 			var w = tb._w;
 			var r = w.Rect;
 			if(action==1) {
-				if(AScreen.IsInAnyScreen(r)) {
+				if(screen.isInAnyScreen(r)) {
 					r.Inflate(2, 2);
-					var osd = new AOsdRect { Rect = r, Color = 0xff0000 };
+					var osd = new osdRect { Rect = r, Color = 0xff0000 };
 					osd.Show();
-					ATimer.After(1000, _ => osd.Dispose());
+					timerm.after(1000, _ => osd.Dispose());
 				} else {
-					ADialog.Show("Offscreen", "Rectangle: " + r.ToString(), owner: dlg);
+					dialog.show("Offscreen", "Rectangle: " + r.ToString(), owner: dlg);
 				}
 			} else if(action==2) {
-				if(!w.IsVisible && !ADialog.ShowOkCancel("Hidden", "Move this hidden toolbar?", owner: dlg)) return;
-				w.MoveL_(AMouse.XY);
+				if(!w.IsVisible && !dialog.showOkCancel("Hidden", "Move this hidden toolbar?", owner: dlg)) return;
+				w.MoveL_(mouse.xy);
 				if(!w.ZorderIsAbove(dlg)) w.ZorderAbove(dlg);
 			}
 		}

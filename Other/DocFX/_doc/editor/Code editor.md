@@ -8,18 +8,18 @@ In the code editor you edit automation scripts and other C# code. It is a text e
 
 C# code may look like this:
 ```csharp
-AMouse.Click(10, 20);
-if (AKeys.IsCtrl) {
-	AOutput.Write("text");
+mouse.click(10, 20);
+if (keys.isCtrl) {
+	print.it("text");
 }
 ```
 
 You can type this text instead:
 ```csharp
-amo.c 10, 20
-if ak.isct
+mo.c 10, 20
+if ke.isct
 
-out "text
+pi "text
 ```
 
 While typing, editor completes words, inserts code snippets, adds `()`, `;`, `{}` and indentation. The result is the first code.
@@ -85,7 +85,7 @@ Editor draws horizontal lines at the end of each function and type definition.
 Whenever code contains a string or comment that looks like an image file path or image embedded in code, editor draws the image below. Image file paths are strings like `@"C:\a\b.png"` (or bmp, jpg, gif). Images embedded in code are strings that start with `"image:"`, created by the "Find image" tool dialog.
 
 #### Snippets
-Autocompletion lists also contain snippets. For example the outSnippet inserts code `AOutput.Write();` when you type `out` and space or Tab or Enter or click it.
+Autocompletion lists also contain snippets. For example the outSnippet inserts code `print.it();` when you type `out` and space or Tab or Enter or click it.
 
 #### Comment/uncomment/indent/unindent lines
 Often you'll want to disable or enable one or more lines of code by converting them to/from comments. The easiest way - right click the selection margin. If multiple lines are selected, it converst all.
@@ -99,7 +99,7 @@ You can drag and drop files from File Explorer etc to the code editor. It insert
 Use the Find panel to find and replace text in editor. It marks all matches in editor with yellow. Also can find files by name and files containing text.
 
 #### Code creation tools
-There are several code creation tools in menu Code. Some tools create code to find the captured window, control, accessible object or image. Other tools help to insert parts of regular expression or keys string.
+There are several code creation tools in menu Code. Some tools create code to find the captured window, control, UI element or image. Other tools help to insert parts of regular expression or keys string.
 
 #### Focus
 To focus the code editor control without changing selection: middle-click.

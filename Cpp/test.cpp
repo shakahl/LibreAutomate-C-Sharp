@@ -671,11 +671,11 @@ EXPORT void Cpp_Test()
 
 
 		//HWND w = FindWindowW(L"QM_Editor", null);
-		//wnd::PrintWnd(w);
-		////Print(wnd::ClassNameIs(w, L"QM_Editor"));
-		////Print(wnd::ClassNameIs(w, L"QM_Edito"));
-		////Print(wnd::ClassNameIs(w, L"QM_*"));
-		////Print(wnd::ClassNameIs(w, L"-QM_*"));
+		//wn::PrintWnd(w);
+		////Print(wn::ClassNameIs(w, L"QM_Editor"));
+		////Print(wn::ClassNameIs(w, L"QM_Edito"));
+		////Print(wn::ClassNameIs(w, L"QM_*"));
+		////Print(wn::ClassNameIs(w, L"-QM_*"));
 
 		//str::Wildex x;
 		////STR s = L"**k kkk";
@@ -692,7 +692,7 @@ EXPORT void Cpp_Test()
 		//if(!x.Parse(s, wcslen(s), true, &es)) {
 		//	Print(es); return;
 		//}
-		//Print(wnd::ClassNameIs(w, x));
+		//Print(wn::ClassNameIs(w, x));
 		//Print(x.Match(L"QM_Editor", 9));
 
 		//str::StringBuilder t;
@@ -753,13 +753,13 @@ EXPORT void Cpp_Test()
 
 		//HWND w = FindWindowW(L"QM_Editor", null);
 		////int x = 7;
-		////wnd::EnumChildWindows(w, [](HWND c) { wnd::PrintWnd(c); return true; });
+		////wn::EnumChildWindows(w, [](HWND c) { wn::PrintWnd(c); return true; });
 
 		//STR s_testSTR = L"thames";
 
 		//Print(str::Switch(s_testSTR, 6, { L"moo", L"te", L"thames", L"notin" }));
 
-		////Print(wnd::ClassNameIs(w, { L"moo", L"qm_*itor", L"khy" }));
+		////Print(wn::ClassNameIs(w, { L"moo", L"qm_*itor", L"khy" }));
 
 		//TestStringBuilder();
 
@@ -769,9 +769,9 @@ EXPORT void Cpp_Test()
 		//Print(b2);
 
 		//Bstr s;
-		//Print(wnd::ClassName(w, s));
+		//Print(wn::ClassName(w, s));
 		//Print(s);
-		//Print(wnd::Name(w, s));
+		//Print(wn::Name(w, s));
 		//Print(s);
 
 		//Print(sizeof(CSimpleArray<int>));

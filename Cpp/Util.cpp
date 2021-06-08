@@ -137,7 +137,7 @@ bool IsProcess64Bit(DWORD pid, out bool& is)
 	return true;
 }
 
-namespace wnd
+namespace wn
 {
 bool ClassName(HWND w, out Bstr& s)
 {
@@ -205,7 +205,7 @@ bool IsVisibleInWindow(HWND c, HWND wTL)
 	int i;
 	for(i = 0; i < 10000; i++) {
 		//PrintWnd(c);
-		if(!(wnd::Style(c) & WS_VISIBLE)) return false;
+		if(!(wn::Style(c) & WS_VISIBLE)) return false;
 		c = (HWND)(LPARAM)GetWindowLongPtrW(c, GWLP_HWNDPARENT);
 		if(c == wTL) return true;
 		if(c == 0) break;
@@ -223,10 +223,10 @@ BOOL EnumChildWindows(HWND w, WNDENUMPROCL& callback)
 HWND FindChildByClassName(HWND w, STR className, bool visible)
 {
 	HWND R = 0;
-	wnd::EnumChildWindows(w, [&R, className, visible, w](HWND c)
+	wn::EnumChildWindows(w, [&R, className, visible, w](HWND c)
 	{
 		if(visible && !IsVisibleInWindow(c, w)) return 1;
-		if(!wnd::ClassNameIs(c, className)) return 1;
+		if(!wn::ClassNameIs(c, className)) return 1;
 		R = c;
 		return 0;
 	});
@@ -299,7 +299,7 @@ bool QueryService_(IUnknown* iFrom, OUT void** iTo, REFIID iid, const GUID* guid
 //	while(PeekMessageW(&m, 0, 0, 0, PM_REMOVE)) {
 //		//while(PeekMessageW(&m, 0, 0, 0, PM_REMOVE| PM_QS_SENDMESSAGE)) { //does not work
 //		//Print(m.message);
-//		//Bstr s; if(wnd::ClassName(m.hwnd, s)) Print(s);
+//		//Bstr s; if(wn::ClassName(m.hwnd, s)) Print(s);
 //		if(m.message == WM_QUIT) { PostQuitMessage((int)m.wParam); return; }
 //		TranslateMessage(&m);
 //		DispatchMessageW(&m);

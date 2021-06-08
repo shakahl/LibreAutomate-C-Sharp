@@ -1,4 +1,4 @@
-﻿using Au.Util;
+﻿using Au.More;
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -504,7 +504,7 @@ namespace Au.Types
 		//internal static extern int SHBindToParent(IntPtr pidl, in Guid riid, out IShellFolder ppv, out IntPtr ppidlLast);
 
 		[DllImport("shell32.dll", PreserveSig = true)]
-		internal static extern int SHGetPropertyStoreForWindow(AWnd hwnd, in Guid riid, out IPropertyStore ppv);
+		internal static extern int SHGetPropertyStoreForWindow(wnd hwnd, in Guid riid, out IPropertyStore ppv);
 
 		internal static PROPERTYKEY PKEY_AppUserModel_ID = new PROPERTYKEY() { fmtid = new Guid(0x9F4C2855, 0x9F79, 0x4B39, 0xA8, 0xD0, 0xE1, 0xD4, 0x2D, 0xE1, 0xD5, 0xF3), pid = 5 };
 
@@ -541,14 +541,14 @@ namespace Au.Types
 			/// </summary>
 			/// <param name="wNotify"></param>
 			/// <param name="nifFlags"></param>
-			public NOTIFYICONDATA(AWnd wNotify, uint nifFlags = 0) : this() {
+			public NOTIFYICONDATA(wnd wNotify, uint nifFlags = 0) : this() {
 				cbSize = Api.SizeOf<Api.NOTIFYICONDATA>();
 				hWnd = wNotify;
 				uFlags = nifFlags;
 			}
 
 			public int cbSize;
-			public AWnd hWnd;
+			public wnd hWnd;
 			public int uID;
 			public uint uFlags;
 			public int uCallbackMessage;
@@ -578,7 +578,7 @@ namespace Au.Types
 		internal struct NOTIFYICONIDENTIFIER
 		{
 			public int cbSize;
-			public AWnd hWnd;
+			public wnd hWnd;
 			public int uID;
 			public Guid guidItem;
 		}
@@ -662,7 +662,7 @@ namespace Au.Types
 		{
 			public int cbSize;
 			public uint fMask;
-			public AWnd hwnd;
+			public wnd hwnd;
 			public string lpVerb;
 			public string lpFile;
 			public string lpParameters;
@@ -714,7 +714,7 @@ namespace Au.Types
 
 		internal struct SHFILEOPSTRUCT
 		{
-			public AWnd hwnd;
+			public wnd hwnd;
 			public uint wFunc;
 			public string pFrom;
 			public string pTo;
@@ -734,7 +734,7 @@ namespace Au.Types
 					get
 					{
 						if(_fAnyOperationsAborted_common != 0) return true;
-						var v = AVersion.Is32BitProcess ? _fAnyOperationsAborted_32 : _fAnyOperationsAborted_64;
+						var v = osVersion.is32BitProcess ? _fAnyOperationsAborted_32 : _fAnyOperationsAborted_64;
 						return v != 0;
 					}
 				}
@@ -748,7 +748,7 @@ namespace Au.Types
 
 		//internal struct SHFILEOPSTRUCT
 		//{
-		//	public AWnd hwnd;
+		//	public wnd hwnd;
 		//	public uint wFunc;
 		//	public string pFrom;
 		//	public string pTo;
@@ -761,7 +761,7 @@ namespace Au.Types
 		//[StructLayout(LayoutKind.Sequential, Pack = 1)]
 		//internal struct SHFILEOPSTRUCT__32
 		//{
-		//	public AWnd hwnd;
+		//	public wnd hwnd;
 		//	public uint wFunc;
 		//	public string pFrom;
 		//	public string pTo;
@@ -793,7 +793,7 @@ namespace Au.Types
 
 		//[DllImport("shlwapi.dll", EntryPoint = "PathIsDirectoryEmptyW")]
 		//internal static extern bool PathIsDirectoryEmpty(string pszPath);
-		//speed: slightly faster than with AFile.Enumerate.
+		//speed: slightly faster than with filesystem.enumerate.
 
 		[DllImport("shlwapi.dll")]
 		internal static extern uint ColorAdjustLuma(uint clrRGB, int n, bool fScale);
@@ -860,10 +860,10 @@ namespace Au.Types
 		{
 			public int cbSize;
 			public uint dwFlags;
-			public AWnd hwndTrack;
+			public wnd hwndTrack;
 			public int dwHoverTime;
 
-			public TRACKMOUSEEVENT(AWnd w, uint flags, int hoverTime = 0) {
+			public TRACKMOUSEEVENT(wnd w, uint flags, int hoverTime = 0) {
 				cbSize = sizeof(TRACKMOUSEEVENT);
 				hwndTrack = w;
 				dwFlags = flags;
@@ -879,22 +879,22 @@ namespace Au.Types
 
 		/// <summary>API <msdn>SetWindowSubclass</msdn></summary>
 		[DllImport("comctl32.dll", EntryPoint = "#410")]
-		internal static extern bool SetWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, nint uIdSubclass, nint dwRefData = 0);
+		internal static extern bool SetWindowSubclass(wnd w, SUBCLASSPROC pfnSubclass, nint uIdSubclass, nint dwRefData = 0);
 
 		/// <summary>API <msdn>GetWindowSubclass</msdn></summary>
 		[DllImport("comctl32.dll", EntryPoint = "#411")] //this is exported only by ordinal
-		internal static extern bool GetWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, nint uIdSubclass, out nint pdwRefData);
+		internal static extern bool GetWindowSubclass(wnd w, SUBCLASSPROC pfnSubclass, nint uIdSubclass, out nint pdwRefData);
 
 		/// <summary>API <msdn>RemoveWindowSubclass</msdn></summary>
 		[DllImport("comctl32.dll", EntryPoint = "#412")]
-		internal static extern bool RemoveWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, nint uIdSubclass);
+		internal static extern bool RemoveWindowSubclass(wnd w, SUBCLASSPROC pfnSubclass, nint uIdSubclass);
 
 		/// <summary>API <msdn>DefSubclassProc</msdn></summary>
 		[DllImport("comctl32.dll", EntryPoint = "#413")]
-		internal static extern nint DefSubclassProc(AWnd w, int msg, nint wParam, nint lParam);
+		internal static extern nint DefSubclassProc(wnd w, int msg, nint wParam, nint lParam);
 
 		/// <summary>API <msdn>SUBCLASSPROC</msdn></summary>
-		internal delegate nint SUBCLASSPROC(AWnd w, int msg, nint wParam, nint lParam, nint uIdSubclass, nint dwRefData);
+		internal delegate nint SUBCLASSPROC(wnd w, int msg, nint wParam, nint lParam, nint uIdSubclass, nint dwRefData);
 
 
 
@@ -962,10 +962,10 @@ namespace Au.Types
 		}
 
 		[DllImport("ole32.dll", PreserveSig = true)]
-		internal static extern int RegisterDragDrop(AWnd hwnd, IDropTarget pDropTarget);
+		internal static extern int RegisterDragDrop(wnd hwnd, IDropTarget pDropTarget);
 
 		[DllImport("ole32.dll", PreserveSig = true)]
-		internal static extern int RevokeDragDrop(AWnd hwnd);
+		internal static extern int RevokeDragDrop(wnd hwnd);
 
 		[DllImport("ole32.dll")]
 		internal static extern void ReleaseStgMedium(ref System.Runtime.InteropServices.ComTypes.STGMEDIUM medium);
@@ -980,22 +980,22 @@ namespace Au.Types
 		//internal static Guid IID_IAccessible2 = new Guid(0xE89F726E, 0xC4F4, 0x4c19, 0xBB, 0x19, 0xB6, 0x47, 0xD7, 0xFA, 0x84, 0x78);
 
 		//[DllImport("oleacc.dll", PreserveSig = true)]
-		//internal static extern int AccessibleObjectFromWindow(AWnd hwnd, AccOBJID dwId, in Guid riid, out IAccessible ppvObject);
+		//internal static extern int AccessibleObjectFromWindow(wnd hwnd, EObjid dwId, in Guid riid, out IAccessible ppvObject);
 
 		//[DllImport("oleacc.dll", PreserveSig = true)]
-		//internal static extern int WindowFromAccessibleObject(IntPtr iacc, out AWnd phwnd);
+		//internal static extern int WindowFromAccessibleObject(IntPtr iacc, out wnd phwnd);
 
 		//[DllImport("oleacc.dll", PreserveSig = true)]
 		//internal static extern int AccessibleObjectFromPoint(POINT ptScreen, out IntPtr ppacc, out VARIANT pvarChild);
 
 		[DllImport("oleacc.dll", PreserveSig = true)]
-		internal static extern int AccessibleObjectFromEvent(AWnd hwnd, AccOBJID dwObjectId, int dwChildId, out IntPtr ppacc, out VARIANT pvarChild);
+		internal static extern int AccessibleObjectFromEvent(wnd hwnd, EObjid dwObjectId, int dwChildId, out IntPtr ppacc, out VARIANT pvarChild);
 
 		[DllImport("oleacc.dll")]
-		internal static extern Handle_ GetProcessHandleFromHwnd(AWnd hwnd);
+		internal static extern Handle_ GetProcessHandleFromHwnd(wnd hwnd);
 
 		[DllImport("oleacc.dll", PreserveSig = true)]
-		internal static extern int CreateStdAccessibleObject(AWnd hwnd, AccOBJID idObject, in Guid riid, out IAccessible ppvObject);
+		internal static extern int CreateStdAccessibleObject(wnd hwnd, EObjid idObject, in Guid riid, out IAccessible ppvObject);
 
 		[ComImport, Guid("618736e0-3c3d-11cf-810c-00aa00389b71"), InterfaceType(ComInterfaceType.InterfaceIsDual)]
 		internal interface IAccessible
@@ -1014,9 +1014,9 @@ namespace Au.Types
 			object get_accFocus();
 			object get_accSelection();
 			string get_accDefaultAction(VarInt varChild);
-			void accSelect(AccSELFLAG flagsSelect, VarInt varChild);
+			void accSelect(ESelect flagsSelect, VarInt varChild);
 			void accLocation(out int pxLeft, out int pyTop, out int pcxWidth, out int pcyHeight, VarInt varChild);
-			object accNavigate(AccNAVDIR navDir, VarInt varStart);
+			object accNavigate(NAVDIR navDir, VarInt varStart);
 			VarInt accHitTest(int xLeft, int yTop);
 			void accDoDefaultAction(VarInt varChild);
 			void put_accName(VarInt varChild, string szName);
@@ -1033,13 +1033,13 @@ namespace Au.Types
 			public static implicit operator VarInt(int i) => new VarInt { _vt = 3, _int = i + 1 };
 			public static implicit operator int(VarInt v) {
 				if (v._vt == 3) return (int)v._int - 1;
-				ADebug_.Print($"VarInt vt={v._vt}, value={v._int}, stack={new StackTrace(true)}");
+				Debug_.Print($"VarInt vt={v._vt}, value={v._int}, stack={new StackTrace(true)}");
 				throw new ArgumentException();
 			}
 		}
 #pragma warning restore 169
 
-		internal enum AccNAVDIR { UP = 1, DOWN, LEFT, RIGHT, NEXT, PREVIOUS, FIRSTCHILD, LASTCHILD }
+		internal enum NAVDIR { UP = 1, DOWN, LEFT, RIGHT, NEXT, PREVIOUS, FIRSTCHILD, LASTCHILD }
 
 
 		#endregion
@@ -1177,7 +1177,7 @@ namespace Au.Types
 		}
 
 		[DllImport("dwmapi.dll")]
-		internal static extern int DwmGetWindowAttribute(AWnd hwnd, DWMWA dwAttribute, void* pvAttribute, int cbAttribute);
+		internal static extern int DwmGetWindowAttribute(wnd hwnd, DWMWA dwAttribute, void* pvAttribute, int cbAttribute);
 
 
 
@@ -1187,7 +1187,7 @@ namespace Au.Types
 		#region uxtheme
 
 		[DllImport("uxtheme.dll")]
-		internal static extern IntPtr OpenThemeData(AWnd hwnd, string pszClassList);
+		internal static extern IntPtr OpenThemeData(wnd hwnd, string pszClassList);
 
 		[DllImport("uxtheme.dll", PreserveSig = true)]
 		internal static extern int CloseThemeData(IntPtr hTheme);
@@ -1205,7 +1205,7 @@ namespace Au.Types
 		internal static extern int DrawThemeBackground(IntPtr hTheme, IntPtr hdc, int iPartId, int iStateId, in RECT pRect, RECT* pClipRect = null);
 
 		//[DllImport("uxtheme.dll", PreserveSig = true)]
-		//internal static extern int SetWindowTheme(AWnd hwnd, string pszSubAppName, string pszSubIdList);
+		//internal static extern int SetWindowTheme(wnd hwnd, string pszSubAppName, string pszSubIdList);
 
 		[DllImport("uxtheme.dll", PreserveSig = true)]
 		internal static extern int BufferedPaintInit();
@@ -1273,13 +1273,13 @@ namespace Au.Types
 		//info: NtSetTimerResolution can set min 0.5 ms resolution. timeBeginPeriod min 1.
 
 		[DllImport("ntdll.dll")]
-		internal static extern void MD5Init(out AHash.MD5 context);
+		internal static extern void MD5Init(out Hash.MD5 context);
 
 		[DllImport("ntdll.dll")]
-		internal static extern void MD5Update(ref AHash.MD5 context, void* data, int dataLen);
+		internal static extern void MD5Update(ref Hash.MD5 context, void* data, int dataLen);
 
 		[DllImport("ntdll.dll")]
-		internal static extern void MD5Final(ref AHash.MD5 context);
+		internal static extern void MD5Final(ref Hash.MD5 context);
 
 #pragma warning disable 169
 		internal struct SYSTEM_PROCESS_INFORMATION

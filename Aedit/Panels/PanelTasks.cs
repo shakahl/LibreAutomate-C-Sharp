@@ -1,6 +1,6 @@
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 using Au.Controls;
 using System;
 using System.Collections.Generic;
@@ -48,7 +48,7 @@ class PanelTasks : DockPanel
 		case MouseButton.Right:
 			_tv.Select(t);
 			var name = f.DisplayName;
-			var m = new AMenu { RawText = true };
+			var m = new popupMenu { RawText = true };
 			m["End task  '" + name + "'"] = _ => App.Tasks.EndTask(t);
 			m["End all  '" + name + "'"] = _ => App.Tasks.EndTasksOf(f);
 			m.Separator();

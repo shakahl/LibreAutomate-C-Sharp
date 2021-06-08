@@ -8,96 +8,7 @@ using System.Collections.Generic;
 
 using Au.Types;
 
-namespace Au.Types
-{
-	/// <summary>
-	/// Contains several string constants that can be used with some 'split string' functions of this library to specify separators.
-	/// </summary>
-	public static class SegSep
-	{
-		/// <summary>
-		/// Specifies that separators are spaces, tabs, newlines and other characters for which <see cref="char.IsWhiteSpace(char)"/> returns true.
-		/// </summary>
-		public const string Whitespace = "SSlkGrJUMUutrbSK3s6Crw";
-
-		/// <summary>
-		/// Specifies that separators are all characters for which <see cref="char.IsLetterOrDigit(char)"/> returns false.
-		/// </summary>
-		public const string Word = "WWVL0EtrK0ShqYWb4n1CmA";
-
-		/// <summary>
-		/// Specifies that separators are substrings "\r\n", as well as single characters '\r' and '\n'.
-		/// </summary>
-		public const string Line = "LLeg5AWCNkGTZDkWuyEa2g";
-
-		//note: all must be of length 22.
-	}
-
-	/// <summary>
-	/// Flags for <see cref="ExtString.Segments"/> and some other functions.
-	/// </summary>
-	[Flags]
-	public enum SegFlags : byte
-	{
-		/// <summary>
-		/// Don't return empty substrings.
-		/// For example, is string is "one  two " and separators is " ", return {"one", "two"} instead of {"one", "", "two", ""}.
-		/// </summary>
-		NoEmpty = 1,
-
-		///// <summary>
-		///// Remove spaces around separators. Only ASCII space characters.
-		///// </summary>
-		//TrimSpace = 2,
-		//SHOULDDO: implement
-
-		//rejected. Rarely used, makes slower, let use String.Split.
-		///// <summary>
-		///// The separators argument is string separator, not separator characters.
-		///// </summary>
-		//StringSeparator = ,
-	}
-
-	/// <summary>
-	/// struct with fields int start and int end.
-	/// </summary>
-	public struct StartEnd
-	{
-		///
-		public int start;
-		///
-		public int end;
-
-		///
-		public StartEnd(int start, int end) { this.start = start; this.end = end; }
-
-		/// <summary>
-		/// Returns <c>end - start</c>.
-		/// </summary>
-		public int Length => end - start;
-
-		/// <summary>
-		/// Converts this to <see cref="Range"/>.
-		/// Can be used to get substring, like <c>s[x.Range]</c> instead of <c>s[x.start..x.end]</c>.
-		/// </summary>
-		public Range Range => start..end;
-
-		//public static implicit operator Range(StartEnd s) => s.start..s.end; //could be used to get substring like s[se], but error
-
-		/// <summary>
-		/// Gets string span.
-		/// </summary>
-		public ReadOnlySpan<char> Span(string s) => s.AsSpan(start, end - start);
-
-		///
-		public override string ToString() => $"({start}, {end})";
-
-		///// <summary>
-		///// Returns <c>s[Range]</c>.
-		///// </summary>
-		//public string ToString(string s) => s[Range];
-	}
-
+namespace Au.More {
 	/// <summary>
 	/// Splits a string into substrings as start/end offsets or strings.
 	/// </summary>
@@ -247,5 +158,93 @@ namespace Au.Types
 
 		//rejected. Not useful. Can use LINQ ToArray.
 		//public StartEnd[] ToSegmentArray(int maxCount = -1)
+	}
+}
+
+namespace Au.Types
+{
+	/// <summary>
+	/// Contains several string constants that can be used with some 'split string' functions of this library to specify separators.
+	/// </summary>
+	public static class SegSep {
+		/// <summary>
+		/// Specifies that separators are spaces, tabs, newlines and other characters for which <see cref="char.IsWhiteSpace(char)"/> returns true.
+		/// </summary>
+		public const string Whitespace = "SSlkGrJUMUutrbSK3s6Crw";
+
+		/// <summary>
+		/// Specifies that separators are all characters for which <see cref="char.IsLetterOrDigit(char)"/> returns false.
+		/// </summary>
+		public const string Word = "WWVL0EtrK0ShqYWb4n1CmA";
+
+		/// <summary>
+		/// Specifies that separators are substrings "\r\n", as well as single characters '\r' and '\n'.
+		/// </summary>
+		public const string Line = "LLeg5AWCNkGTZDkWuyEa2g";
+
+		//note: all must be of length 22.
+	}
+
+	/// <summary>
+	/// Flags for <see cref="ExtString.Segments"/> and some other functions.
+	/// </summary>
+	[Flags]
+	public enum SegFlags : byte {
+		/// <summary>
+		/// Don't return empty substrings.
+		/// For example, is string is "one  two " and separators is " ", return {"one", "two"} instead of {"one", "", "two", ""}.
+		/// </summary>
+		NoEmpty = 1,
+
+		///// <summary>
+		///// Remove spaces around separators. Only ASCII space characters.
+		///// </summary>
+		//TrimSpace = 2,
+		//SHOULDDO: implement
+
+		//rejected. Rarely used, makes slower, let use String.Split.
+		///// <summary>
+		///// The separators argument is string separator, not separator characters.
+		///// </summary>
+		//StringSeparator = ,
+	}
+
+	/// <summary>
+	/// struct with fields int start and int end.
+	/// </summary>
+	public struct StartEnd {
+		///
+		public int start;
+		///
+		public int end;
+
+		///
+		public StartEnd(int start, int end) { this.start = start; this.end = end; }
+
+		/// <summary>
+		/// Returns <c>end - start</c>.
+		/// </summary>
+		public int Length => end - start;
+
+		/// <summary>
+		/// Converts this to <see cref="Range"/>.
+		/// Can be used to get substring, like <c>s[x.Range]</c> instead of <c>s[x.start..x.end]</c>.
+		/// </summary>
+		public Range Range => start..end;
+
+		//public static implicit operator Range(StartEnd s) => s.start..s.end; //could be used to get substring like s[se], but error
+
+		/// <summary>
+		/// Gets string span.
+		/// </summary>
+		public ReadOnlySpan<char> Span(string s) => s.AsSpan(start, end - start);
+
+		///
+		public override string ToString() => $"({start}, {end})";
+
+		///// <summary>
+		///// Returns <c>s[Range]</c>.
+		///// </summary>
+		//public string ToString(string s) => s[Range];
 	}
 }

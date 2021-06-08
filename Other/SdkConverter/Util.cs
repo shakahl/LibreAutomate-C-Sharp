@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel; //Win32Exception
 
 //using System.Reflection;
 //using System.Linq;
@@ -73,7 +69,7 @@ namespace SdkConverter
 		/// <param name="addToGlobal">Add to _ns[0].sym.</param>
 		void _AddSymbol(string name, _Symbol x, int iTokError, bool addToGlobal = false)
 		{
-			//AOutput.Write(name);
+			//print.it(name);
 			__AddSymbol(_TokenFromString(name), x, iTokError, addToGlobal);
 		}
 
@@ -88,7 +84,7 @@ namespace SdkConverter
 			Debug.Assert(_IsCharIdentStart(*name.s));
 			if(_keywords.ContainsKey(name)) _Err(iTokError, "name already exists (keyword)");
 			int ns = addToGlobal ? 0 : _nsCurrent;
-			//AOutput.Write(name);
+			//print.it(name);
 			try {
 				_ns[ns].sym.Add(name, x);
 			}

@@ -13,6 +13,7 @@ using System.Linq;
 
 using Au;
 using Au.Types;
+using Au.More;
 using Au.Controls;
 
 using Microsoft.CodeAnalysis;
@@ -41,7 +42,7 @@ static class InsertCode
 		static void _Action(string s, bool goToPercent) {
 			var d = Panels.Editor.ZActiveDoc;
 			if (d == null || d.zIsReadonly) {
-				AOutput.Write(s);
+				print.it(s);
 			} else {
 				d.Focus();
 				int start = d.zLineStartFromPos(false, d.zCurrentPos8);
@@ -112,12 +113,12 @@ static class InsertCode
 			tb.SelectedText = s;
 			tb.CaretIndex = tb.SelectionStart + tb.SelectionLength - Math.Max(i, 0);
 		} else {
-			ADebug_.Print(c);
+			Debug_.Print(c);
 			Task.Run(() => {
-				var k = new AKeys(null);
+				var k = new keys(null);
 				k.AddText(s);
 				if (i > 0) k.AddKey(KKey.Left).AddRepeat(i);
-				k.Send();
+				k.SendIt();
 			});
 		}
 	}
@@ -159,7 +160,7 @@ static class InsertCode
 	static (int start, int end) _FindUsings(CodeInfo.Context k, string[] namespaces = null) {
 		int start = -1, end = -1, end2 = -1;
 		var cu = k.document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
-		//AOutput.Write(cu.Externs, cu.Usings, cu.AttributeLists, cu.Members);
+		//print.it(cu.Externs, cu.Usings, cu.AttributeLists, cu.Members);
 		if (cu.Usings.Any()) {
 			if (namespaces != null) {
 				foreach (var u in cu.Usings) {
@@ -213,7 +214,7 @@ static class InsertCode
 				if (span.Start != pos || span.Length > 2) return; //when single ///, span includes only newline after ///
 			}
 		}
-		//AOutput.Write(pos);
+		//print.it(pos);
 		//CiUtil.PrintNode(node);
 
 		string s = @" <summary>
@@ -255,7 +256,7 @@ static class InsertCode
 
 		bool haveBaseType = false;
 		for (var n = node; n != null; n = n.Parent) {
-			//AOutput.Write(n.Kind());
+			//print.it(n.Kind());
 			if (n is BaseTypeSyntax bts) {
 				node = bts.Type;
 				haveBaseType = true;
@@ -300,7 +301,7 @@ static class InsertCode
 
 		void _Base(INamedTypeSymbol type, bool explicitly) {
 			foreach (var v in type.GetMembers()) {
-				//AOutput.Write(v, v.IsStatic, v.GetType().GetInterfaces());
+				//print.it(v, v.IsStatic, v.GetType().GetInterfaces());
 				bool isAbstract = v.IsAbstract;
 				if (!isAbstract && !isInterface) continue;
 				if (v.IsStatic) continue;
@@ -355,8 +356,8 @@ static class InsertCode
 	set {  }
 }"); //write-only properties
 
-		//AOutput.Write(text);
-		//AClipboard.Text = text;
+		//print.it(text);
+		//clipboard.text = text;
 
 		cd.sciDoc.zInsertText(true, position, text, addUndoPointAfter: true);
 		cd.sciDoc.zGoToPos(true, position);

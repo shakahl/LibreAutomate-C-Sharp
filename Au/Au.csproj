@@ -47,7 +47,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Util\Internal\unused\" />
+    <Folder Include="Internal\unused\" />
   </ItemGroup>
 
 </Project>

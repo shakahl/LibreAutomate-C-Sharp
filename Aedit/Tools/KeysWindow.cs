@@ -2,7 +2,7 @@
 
 using Au.Types;
 using Au.Controls;
-using Au.Util;
+using Au.More;
 
 namespace Au.Tools
 {
@@ -20,7 +20,7 @@ namespace Au.Tools
 			c.ZTags.AddLinkTag("+a", o => _Insert(o)); //link that inserts a key etc
 			c.ZTags.SetLinkStyle(new SciTags.UserDefinedStyle { textColor = 0x0080FF, underline = false }); //remove underline from links
 
-			var s = AResources.GetString("tools/keys.txt").RegexReplace(@"\{(.+?)\}(?!\})", "<+a>$1<>");
+			var s = ResourceUtil.GetString("tools/keys.txt").RegexReplace(@"\{(.+?)\}(?!\})", "<+a>$1<>");
 			this.Text = s;
 
 			base.OnHandleCreated();
@@ -36,7 +36,7 @@ namespace Au.Tools
 			case "sleepMs": _AddArg(sci, pos8, ", 100"); return;
 			case "keyCode": _AddArg(sci, pos8, ", KKey.Left"); return;
 			case "scanCode": _AddArg(sci, pos8, ", new KKeyScan(1, false)"); return;
-			case "action": _AddArg(sci, pos8, ", new Action(() => { AMouse.RightClick(); })"); return;
+			case "action": _AddArg(sci, pos8, ", new Action(() => { mouse.rightClick(); })"); return;
 			}
 
 			static void _AddArg(KScintilla sci, int pos8, string s) {
@@ -66,7 +66,7 @@ namespace Au.Tools
 			if (!ok) return;
 
 			bool _Menu(params string[] a) {
-				int j = AMenu.ShowSimple(a) - 1;
+				int j = popupMenu.showSimple(a) - 1;
 				if (j < 0) return false;
 				s = a[j];
 				j = s.IndexOf(' '); if (j > 0) s = s[..j];

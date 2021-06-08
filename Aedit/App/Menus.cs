@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using Au.Util;
+using Au.More;
 using Au.Tools;
 using System.Windows.Input;
 using System.Linq;
@@ -131,7 +131,7 @@ static class Menus
 			public static void Import_workspace() {
 				var d = new OpenFileDialog { Title = "Import workspace", Filter = "files.xml|files.xml" };
 				if (d.ShowDialog(App.Wmain) != true) return;
-				App.Model.ImportWorkspace(APath.GetDirectory(d.FileName));
+				App.Model.ImportWorkspace(pathname.getDirectory(d.FileName));
 			}
 
 			[Command("...")]
@@ -240,14 +240,14 @@ static class Menus
 	[Command(target = "Edit")]
 	public static class Code
 	{
-		[Command('W')]
-		public static void AWnd() { new DAWnd().Show(); }
+		[Command("wnd (find window)")]
+		public static void wnd() { new Dwnd().Show(); }
 
-		[Command('A')]
-		public static void AAcc() { DAAcc.Dialog(); }
+		[Command("elm (find UI element)")]
+		public static void elm() { Delm.Dialog(); }
 
-		[Command('I')]
-		public static void AWinImage() { new DAWinImage().Show(); }
+		[Command("u_iimage (find image)")]
+		public static void uiimage() { new Duiimage().Show(); }
 
 		[Command(separator = true, keysText = "Ctrl+Space in string")]
 		public static void Keys() { CiTools.CmdShowKeysWindow(); }
@@ -259,7 +259,7 @@ static class Menus
 		public static void Windows_API() { new DWinapi().Show(); }
 
 		[Command(keysText = "Ctrl+Shift+Win+W")]
-		public static void Quick_capture() { AOutput.Write("Info: To quickly capture a window and insert code to find it etc, move the mouse to the window and press Ctrl+Shift+Win+W."); }
+		public static void Quick_capture() { print.it("Info: To quickly capture a window and insert code to find it etc, move the mouse to the window and press Ctrl+Shift+Win+W."); }
 	}
 
 	[Command(target = "Edit")]
@@ -277,7 +277,7 @@ static class Menus
 			}
 			var a = App.Tasks.Items;
 			if (a.Count > 0) {
-				var m = new AMenu { RawText = true };
+				var m = new popupMenu { RawText = true };
 				m.Submenu("End task", m => {
 					foreach (var t in a) m[t.f.DisplayName] = o => App.Tasks.EndTask(t);
 				});
@@ -380,10 +380,10 @@ static class Menus
 	public static class Help
 	{
 		[Command]
-		public static void Program_help() { AHelp.AuHelp(""); }
+		public static void Program_help() { HelpUtil.AuHelp(""); }
 
 		[Command]
-		public static void Library_help() { AHelp.AuHelp("api/"); }
+		public static void Library_help() { HelpUtil.AuHelp("api/"); }
 
 		[Command(keys = "F1", image = "resources/images/statushelp_16x.xaml")]
 		public static void Context_help() {
@@ -400,8 +400,8 @@ static class Menus
 		//public static void Forum() { }
 
 		[Command]
-		//public static void Email() { ARun.RunSafe("mailto:support@quickmacros.com?subject=" + App.AppName); }
-		public static void Email() { ARun.RunSafe("mailto:support@quickmacros.com?subject=QM3"); } //FUTURE: use the above
+		//public static void Email() { run.itSafe("mailto:support@quickmacros.com?subject=" + App.AppName); }
+		public static void Email() { run.itSafe("mailto:support@quickmacros.com?subject=QM3"); } //FUTURE: use the above
 
 		//[Command(separator = true)]
 		//public static void About() { }

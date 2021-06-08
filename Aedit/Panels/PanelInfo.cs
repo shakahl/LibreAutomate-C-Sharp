@@ -13,7 +13,7 @@ using System.Reflection;
 
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 using Au.Controls;
 using System.Windows;
 using System.Windows.Controls;
@@ -45,7 +45,7 @@ class PanelInfo : Grid
 		_sci.Call(Sci.SCI_SETWRAPMODE, Sci.SC_WRAP_WORD);
 
 		App.MousePosChangedWhenProgramVisible += _MouseInfo;
-		ATimer.After(50, _ => ZSetAboutInfo());
+		timerm.after(50, _ => ZSetAboutInfo());
 	}
 
 	void _SetVisibleControl(UIElement e) {
@@ -62,7 +62,7 @@ class PanelInfo : Grid
 		if (s == "?") {
 			ZSetAboutInfo(About.Panel);
 		} else {
-			ARun.RunSafe(s);
+			run.itSafe(s);
 		}
 	}
 
@@ -119,7 +119,7 @@ In other windows - x, y, window, control.");
 
 	void _MouseInfo(POINT p) {
 		if (!this.IsVisible) return;
-		var c = AWnd.FromXY(p);
+		var c = wnd.fromXY(p);
 		var w = c.Window;
 		if (!_isSci) {
 			if (w.IsOfThisProcess) return;
@@ -141,11 +141,11 @@ In other windows - x, y, window, control.");
 					var ct = c.Name;
 					if (!ct.NE()) b.Append("  .  <b>name</b>  ").Append(ct.Escape(200));
 				} else if (cn == "#32768") {
-					var m = AMenuItemInfo.FromXY(p, w, 50);
+					var m = MenuItemInfo.FromXY(p, w, 50);
 					if (m != null) {
 						b.AppendFormat("\r\n<b>Menu   id</b>  {0}", m.ItemId);
 						if (m.IsSystem) b.Append(" (system)");
-						//AOutput.Write(m.GetText(true, true));
+						//print.it(m.GetText(true, true));
 					}
 				}
 #else //old version. Too many lines; part invisible if control height is smaller.
@@ -159,11 +159,11 @@ In other windows - x, y, window, control.");
 					var ct = c.Name;
 					if (!ct.NE()) b.Append("\r\n\t<b>name</b>  ").Append(ct.Escape(200));
 				} else if (cn == "#32768") {
-					var m = AMenuItemInfo.FromXY(p, w, 50);
+					var m = MenuItemInfo.FromXY(p, w, 50);
 					if (m != null) {
 						b.AppendFormat("\r\n<b>Menu   id</b>  {0}", m.ItemId);
 						if (m.IsSystem) b.Append(" (system)");
-						//AOutput.Write(m.GetText(true, true));
+						//print.it(m.GetText(true, true));
 					}
 				}
 #endif

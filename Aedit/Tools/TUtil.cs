@@ -18,7 +18,7 @@ using Au.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Controls.Primitives;
-using Au.Util;
+using Au.More;
 
 namespace Au.Tools
 {
@@ -131,7 +131,7 @@ namespace Au.Tools
 		/// s can be null.
 		/// </summary>
 		public static string EscapeWildex(string s) {
-			if (AWildex.HasWildcardChars(s)) s = "**t " + s;
+			if (wildex.hasWildcardChars(s)) s = "**t " + s;
 			return s;
 		}
 
@@ -143,10 +143,10 @@ namespace Au.Tools
 		/// </summary>
 		public static string EscapeWindowName(string s, bool canMakeVerbatim) {
 			if (s == null) return s;
-			if (AWildex.HasWildcardChars(s)) {
+			if (wildex.hasWildcardChars(s)) {
 				int i = s.IndexOf('*');
 				if (i >= 0 && s.IndexOf('*', i + 1) < 0) {
-					s = "**r " + ARegex.EscapeQE(s[..i]) + @"\*?" + ARegex.EscapeQE(s[++i..]);
+					s = "**r " + regexp.escapeQE(s[..i]) + @"\*?" + regexp.escapeQE(s[++i..]);
 				} else s = "**t " + s;
 			}
 			if (canMakeVerbatim) MakeVerbatim(ref s);
@@ -165,7 +165,7 @@ namespace Au.Tools
 				if (tbValue[0] == '$') return false;
 				tbValue = tbValue[2..^1].Replace("\"\"", "\"");
 			}
-			AWildex x = tbValue;
+			wildex x = tbValue;
 			return !x.Match(newRawValue);
 		}
 
@@ -207,16 +207,16 @@ namespace Au.Tools
 					bool orThrowW = orThrow || NeedControl;
 					bool isWait = waitW != null && !Test;
 
-					b.Append(Test ? "AWnd " : "var ").Append(VarWindow);
+					b.Append(Test ? "wnd " : "var ").Append(VarWindow);
 					if (Test) b.AppendLine(";").Append(VarWindow);
 					b.Append(" = ");
 
 					if (isWait) {
-						b.Append("AWnd.Wait(").AppendWaitTime(waitW, orThrowW);
+						b.Append("wnd.wait(").AppendWaitTime(waitW, orThrowW);
 						b.Append(", active: true");
 					} else {
 						if (orThrowW) b.Append('+');
-						b.Append("AWnd.Find(");
+						b.Append("wnd.find(");
 					}
 
 					b.AppendStringArg(nameW, noComma: !isWait);
@@ -275,7 +275,7 @@ namespace Au.Tools
 					}
 				}
 
-				if (!orThrow && !Test) b.AppendLine().Append("if(").Append(NeedControl ? VarControl : VarWindow).Append(".Is0) { AOutput.Write(\"not found\"); }");
+				if (!orThrow && !Test) b.AppendLine().Append("if(").Append(NeedControl ? VarControl : VarWindow).Append(".Is0) { print.it(\"not found\"); }");
 
 				return b.ToString();
 			}
@@ -288,7 +288,7 @@ namespace Au.Tools
 		/// <summary>
 		/// Gets control id. Returns true if it can be used to identify the control in window wWindow.
 		/// </summary>
-		public static bool GetUsefulControlId(AWnd wControl, AWnd wWindow, out int id) {
+		public static bool GetUsefulControlId(wnd wControl, wnd wWindow, out int id) {
 			id = wControl.ControlId;
 			if (id == 0 || id == -1 || id > 0xffff || id < -0xffff) return false;
 			//info: some apps use negative ids, eg FileZilla. Usually >= -0xffff. Id -1 is often used for group buttons and separators.
@@ -310,7 +310,7 @@ namespace Au.Tools
 		/// <param name="comboToo">Register for ComboBox too.</param>
 		public static void OnAnyCheckTextBoxValueChanged<T>(Action<T, object> changed, bool comboToo = false) where T : KDialogWindow {
 			var h = new RoutedEventHandler((sender, e) => {
-				//AOutput.Write(sender, e.Source, e.OriginalSource);
+				//print.it(sender, e.Source, e.OriginalSource);
 				var source = e.Source;
 				if (source == e.OriginalSource) {
 					switch (source) {
@@ -338,10 +338,10 @@ namespace Au.Tools
 
 			public PathInfo(string path) {
 				filePath = path;
-				_name = APath.GetNameNoExt(path);
+				_name = pathname.getNameNoExt(path);
 				if (path.Ends(".lnk", true)) {
 					try {
-						var g = AShortcutFile.Open(path);
+						var g = shortcutFile.open(path);
 						string target = g.TargetAnyType;
 						if (target.Starts("::")) {
 							using var pidl = Pidl.FromString(target);
@@ -349,7 +349,7 @@ namespace Au.Tools
 						} else {
 							_args = g.Arguments;
 							if (!target.Ends(".exe", true) || _name.Contains("Shortcut"))
-								_name2 = APath.GetNameNoExt(target);
+								_name2 = pathname.getNameNoExt(target);
 						}
 						lnkPath = path;
 						filePath = target;
@@ -361,7 +361,7 @@ namespace Au.Tools
 				if (lnkPath != null) _Format(ref lnkPath, out lnkUnexpanded);
 
 				static void _Format(ref string s, out string unexpanded) {
-					if (AFolders.UnexpandPath(s, out unexpanded, out var sn) && !sn.NE()) unexpanded = unexpanded + " + " + _Str(sn);
+					if (folders.unexpandPath(s, out unexpanded, out var sn) && !sn.NE()) unexpanded = unexpanded + " + " + _Str(sn);
 					s = _Str(s);
 				}
 
@@ -380,10 +380,10 @@ namespace Au.Tools
 				if (lnkPath != null || fileUnexpanded != null) {
 					var b = new StringBuilder();
 					_Append("1 Path", filePath);
-					_Append("|2 Path with AFolders", fileUnexpanded);
+					_Append("|2 Unexpanded path", fileUnexpanded);
 					_Append("|3 Shortcut path", lnkPath);
-					_Append("|4 Shortcut path with AFolders", lnkUnexpanded);
-					return ADialog.Show("Path format", buttons: b.ToString(), flags: DFlags.CommandLinks | DFlags.XCancel | DFlags.CenterMouse, owner: owner);
+					_Append("|4 Unexpanded shortcut path", lnkUnexpanded);
+					return dialog.show("Path format", buttons: b.ToString(), flags: DFlags.CommandLinks | DFlags.XCancel | DFlags.CenterMouse, owner: owner);
 
 					void _Append(string label, string path) {
 						if (path != null) b.Append(label).Append('\n').Append(path.Limit(50));
@@ -396,7 +396,7 @@ namespace Au.Tools
 
 			/// <summary>
 			/// Gets path/name/args that match or are nearest to the return value of <see cref="SelectFormatUI"/>.
-			/// Paths are unexpanded/escaped/enclosed, like <c>@"x:\a\b.c"</c> or <c>AFolders.Example + @"a\b.c"</c>.
+			/// Paths are unexpanded/escaped/enclosed, like <c>@"x:\a\b.c"</c> or <c>folders.Example + @"a\b.c"</c>.
 			/// </summary>
 			public (string path, string name, string args) GetResult(int i) => (
 				i switch { 1 => filePath, 2 => fileUnexpanded ?? filePath, 3 => lnkPath ?? filePath, 4 => lnkUnexpanded ?? lnkPath ?? filePath, _ => null },
@@ -410,9 +410,9 @@ namespace Au.Tools
 		#region OnScreenRect
 
 		/// <summary>
-		/// Creates standard <see cref="AOsdRect"/>.
+		/// Creates standard <see cref="osdRect"/>.
 		/// </summary>
-		public static AOsdRect CreateOsdRect(int thickness = 4) => new() { Color = 0xFF8A2BE2, Thickness = thickness }; //Color.BlueViolet
+		public static osdRect CreateOsdRect(int thickness = 4) => new() { Color = 0xFF8A2BE2, Thickness = thickness }; //Color.BlueViolet
 
 		/// <summary>
 		/// Briefly shows standard blinking on-screen rectangle.
@@ -421,14 +421,14 @@ namespace Au.Tools
 			var osr = CreateOsdRect();
 			r.Inflate(2, 2); //2 pixels inside, 2 outside
 			if (limitToScreen) {
-				var k = AScreen.Of(r).Rect;
+				var k = screen.of(r).Rect;
 				r.Intersect(k);
 			}
 			osr.Rect = r;
 			osr.Show();
 
 			int i = 0;
-			ATimer.Every(250, t => {
+			timerm.every(250, t => {
 				if (i++ < 5) {
 					osr.Color = (i & 1) != 0 ? 0xFFFFFF00 : 0xFF8A2BE2;
 				} else {
@@ -451,10 +451,10 @@ namespace Au.Tools
 			readonly Action _cbCapture;
 			readonly Func<RECT?> _cbGetRect;
 			HwndSource _hs;
-			ATimer _timer;
+			timerm _timer;
 			long _prevTime;
-			//AWnd _prevWnd;
-			AOsdRect _osr;
+			//wnd _prevWnd;
+			osdRect _osr;
 			bool _capturing;
 			const string c_propName = "Au.Capture";
 			readonly static int s_stopMessage = Api.RegisterWindowMessage(c_propName);
@@ -481,13 +481,13 @@ namespace Au.Tools
 						//let other dialogs stop capturing
 						//could instead use a static collection, but this code allows to have such tools in multiple processes, although currently it not used
 						wDialog.Prop.Set(c_propName, 1);
-						AWnd.Find(null, "HwndWrapper[*", flags: WFlags.HiddenToo | WFlags.CloakedToo, also: o => {
+						wnd.find(null, "HwndWrapper[*", flags: WFlags.HiddenToo | WFlags.CloakedToo, also: o => {
 							if (o != wDialog && o.Prop[c_propName] == 1) o.Send(s_stopMessage);
 							return false;
 						});
 
 						if (!(Api.RegisterHotKey(wDialog, c_hotkeyId, 0, KKey.F3) | Api.RegisterHotKey(wDialog, c_hotkeyId + 1, 2, KKey.F3))) {
-							ADialog.ShowError("Failed to register hotkey F3 and Ctrl+F3", owner: wDialog);
+							dialog.showError("Failed to register hotkey F3 and Ctrl+F3", owner: wDialog);
 							return;
 						}
 						_capturing = true;
@@ -501,16 +501,16 @@ namespace Au.Tools
 						}
 						_hs.AddHook(_WndProc);
 
-						//set timer that shows AO rect
+						//set timer that shows UI element rect
 						if (_timer == null) {
 							_osr = TUtil.CreateOsdRect();
-							_timer = new ATimer(t => {
+							_timer = new timerm(t => {
 								//Don't capture too frequently.
 								//	Eg if the callback is very slow. Or if multiple timer messages are received without time interval (possible in some conditions).
-								long t1 = ATime.PerfMilliseconds, t2 = t1 - _prevTime; _prevTime = t1; if (t2 < 100) return;
+								long t1 = perf.ms, t2 = t1 - _prevTime; _prevTime = t1; if (t2 < 100) return;
 
 								//show rect of UI object from mouse
-								AWnd w = AWnd.FromMouse(WXYFlags.NeedWindow);
+								wnd w = wnd.fromMouse(WXYFlags.NeedWindow);
 								RECT? r = default;
 								if (!(w.Is0 || w == wDialog || w.OwnerWindow == wDialog)) {
 									r = _cbGetRect();
@@ -519,7 +519,7 @@ namespace Au.Tools
 									//Shift+F3 too. But Ctrl+F3 works.
 									//if (w!=_prevWnd && w.IsActive) {
 									//	w = _prevWnd;
-									//	if(w.UacAccessDenied)AOutput.Write("F3 ");
+									//	if(w.UacAccessDenied)print.it("F3 ");
 									//}
 								}
 								if (r.HasValue) {
@@ -566,36 +566,36 @@ namespace Au.Tools
 		/// Returns the found object and speed.
 		/// </summary>
 		/// <param name="code">
-		/// Must start with one or more lines that find window or control and set AWnd variable named wndVar. Can be any code.
-		/// The last line must be a 'find object' function call. Example: <c>AAcc.Find(...);</c>. Without 'var obj = ', without +, without Wait.
+		/// Must start with one or more lines that find window or control and set wnd variable named wndVar. Can be any code.
+		/// The last line must be a 'find object' function call. Example: <c>elm.find(...);</c>. Without 'var obj = ', without +, without Wait.
 		/// </param>
-		/// <param name="wndVar">Name of AWnd variable of the window or control in which to search.</param>
-		/// <param name="wnd">Window or control in which to search.</param>
+		/// <param name="wndVar">Name of wnd variable of the window or control in which to search.</param>
+		/// <param name="w">Window or control in which to search.</param>
 		/// <param name="bTest">The 'Test' button. This function disables it while executing code.</param>
 		/// <param name="lSpeed">Label control that displays speed.</param>
 		/// <param name="getRect">Callback function that returns object's rectangle in screen. Called when object has been found.</param>
 		/// <remarks>
-		/// The test code is executed in this thread. Else would get invalid AO etc. If need, caller can use Task.Run.
+		/// The test code is executed in this thread. Else would get invalid UI element etc. If need, caller can use Task.Run.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// var r = await TUtil.RunTestFindObject(code, _wndVar, _wnd, _bTest, _lSpeed, o => (o as AAcc).Rect);
+		/// var r = await TUtil.RunTestFindObject(code, _wndVar, _wnd, _bTest, _lSpeed, o => (o as elm).Rect);
 		/// ]]></code>
 		/// </example>
 		public static (object obj, long speed) RunTestFindObject(
-			string code, string wndVar, AWnd wnd, Button bTest, Label lSpeed, Func<object, RECT> getRect, bool activateWindow = false) {
+			string code, string wndVar, wnd w, Button bTest, Label lSpeed, Func<object, RECT> getRect, bool activateWindow = false) {
 			if (code.NE()) return default;
-			AWnd dialog = lSpeed.Hwnd();
+			wnd dlg = lSpeed.Hwnd();
 			lSpeed.Content = "";
 
-			//AOutput.Write(code);
-			//APerf.First();
+			//print.it(code);
+			//perf.first();
 
 			//FUTURE: #line
 			var b = new StringBuilder();
 			b.AppendLine(@"static object[] __TestFunc__() {");
-			if (activateWindow) b.Append("((AWnd)").Append(wnd.Window.Handle).Append(").ActivateL(); 200.ms(); ");
-			b.AppendLine("var _p_ = APerf.Create();");
+			if (activateWindow) b.Append("((wnd)").Append(w.Window.Handle).Append(").ActivateL(); 200.ms(); ");
+			b.AppendLine("var _p_ = perf.local();");
 			var lines = code.Lines(true);
 			int lastLine = lines.Length - 1;
 			for (int i = 0; i < lastLine; i++) b.AppendLine(lines[i]);
@@ -603,75 +603,75 @@ namespace Au.Tools
 			b.AppendLine(lines[lastLine]);
 			b.AppendLine($"_p_.Next(); return new object[] {{ _p_.ToArray(), _a_, {wndVar} }};");
 			b.AppendLine("\r\n}");
-			code = b.ToString(); //AOutput.Write(code);
+			code = b.ToString(); //print.it(code);
 
-			(long[] speed, object obj, AWnd wnd) r = default;
+			(long[] speed, object obj, wnd w) r = default;
 			bool ok = false;
 			try {
 				bTest.IsEnabled = false;
 				if (!Au.Compiler.Scripting.Compile(code, out var c, wrap: true, load: true)) {
-					ADebug_.Print("---- CODE ----\r\n" + code + "--------------");
-					ADialog.ShowError("Errors in code", c.errors, owner: dialog, flags: DFlags.CenterOwner | DFlags.Wider/*, expandedText: code*/);
+					Debug_.Print("---- CODE ----\r\n" + code + "--------------");
+					dialog.showError("Errors in code", c.errors, owner: dlg, flags: DFlags.CenterOwner | DFlags.Wider/*, expandedText: code*/);
 				} else {
 					var rr = (object[])c.method.Invoke(null, null); //use array because fails to cast tuple, probably because in that assembly it is new type
-					r = ((long[])rr[0], rr[1], (AWnd)rr[2]);
+					r = ((long[])rr[0], rr[1], (wnd)rr[2]);
 					ok = true;
 				}
 
 				//note: the script runs in this thread.
 				//	Bad: blocks current UI thread. But maybe not so bad.
-				//	Good: we get valid AAcc result. Else it would be marshalled for a script thread.
+				//	Good: we get valid elm result. Else it would be marshalled for a script thread.
 			}
 			catch (Exception e) {
 				if (e is TargetInvocationException tie) e = tie.InnerException;
 				string s1, s2;
-				if (e is NotFoundException) { s1 = "Window not found"; s2 = "Tip: If part of window name changes, replace it with *"; } //info: throws only when window not found. This is to show time anyway when acc etc not found.
+				if (e is NotFoundException) { s1 = "Window not found"; s2 = "Tip: If part of window name changes, replace it with *"; } //info: throws only when window not found. This is to show time anyway when elm etc not found.
 				else { s1 = e.GetType().Name; s2 = e.Message; }
-				ADialog.ShowError(s1, s2, owner: dialog, flags: DFlags.CenterOwner);
+				dialog.showError(s1, s2, owner: dlg, flags: DFlags.CenterOwner);
 			}
 			finally {
 				bTest.IsEnabled = true;
 			}
 			if (!ok) return default;
 
-			//APerf.NW();
-			//AOutput.Write(r);
+			//perf.nw();
+			//print.it(r);
 
 			static double _SpeedMcsToMs(long tn) => Math.Round(tn / 1000d, tn < 1000 ? 2 : (tn < 10000 ? 1 : 0));
-			double t0 = _SpeedMcsToMs(r.speed[0]), t1 = _SpeedMcsToMs(r.speed[1]); //times of AWnd.Find and Object.Find
+			double t0 = _SpeedMcsToMs(r.speed[0]), t1 = _SpeedMcsToMs(r.speed[1]); //times of wnd.find and Object.Find
 			string sTime;
-			if (lastLine == 1 && lines[0].Length == 7) sTime = t1.ToStringInvariant() + " ms"; //only AWnd.Find: "AWnd w;\r\nw = AWnd.Find(...);"
+			if (lastLine == 1 && lines[0].Length == 7) sTime = t1.ToStringInvariant() + " ms"; //only wnd.find: "wnd w;\r\nw = wnd.find(...);"
 			else sTime = t0.ToStringInvariant() + " + " + t1.ToStringInvariant() + " ms";
 
-			if (r.obj is AWnd w1 && w1.Is0) r.obj = null;
+			if (r.obj is wnd w1 && w1.Is0) r.obj = null;
 			if (r.obj != null) {
 				lSpeed.Foreground = SystemColors.ControlTextBrush;
 				lSpeed.Content = sTime;
 				var re = getRect(r.obj);
-				TUtil.ShowOsdRect(re);
+				ShowOsdRect(re);
 
 				//if dialog or its visible owners cover the found object, temporarily activate object's window
-				foreach (var ow in dialog.Get.Owners(andThisWindow: true, onlyVisible: true)) {
+				foreach (var ow in dlg.Get.Owners(andThisWindow: true, onlyVisible: true)) {
 					if (re.IntersectsWith(ow.Rect)) {
-						r.wnd.Window.ActivateL();
-						ATime.SleepDoEvents(1500);
+						r.w.Window.ActivateL();
+						wait.doEvents(1500);
 						break;
 					}
 				}
 			} else {
-				//ADialog.Show("Not found", owner: dialog, flags: DFlags.OwnerCenter, icon: DIcon.Info, secondsTimeout: 2);
+				//dialog.show("Not found", owner: dialog, flags: DFlags.OwnerCenter, icon: DIcon.Info, secondsTimeout: 2);
 				lSpeed.Foreground = Brushes.Red;
 				lSpeed.Content = "Not found,";
-				ATimer.After(700, _ => lSpeed.Content = sTime);
+				timerm.after(700, _ => lSpeed.Content = sTime);
 			}
 
-			dialog.ActivateL();
+			dlg.ActivateL();
 
-			if (r.wnd != wnd && !r.wnd.Is0) {
-				ADialog.ShowWarning("The code finds another " + (r.wnd.IsChild ? "control" : "window"),
-				$"Need:  {wnd}\r\n\r\nFound:  {r.wnd}",
-				owner: dialog, flags: DFlags.CenterOwner | DFlags.Wider);
-				TUtil.ShowOsdRect(r.wnd.Rect, true);
+			if (r.w != w && !r.w.Is0) {
+				dialog.showWarning("The code finds another " + (r.w.IsChild ? "control" : "window"),
+				$"Need:  {w}\r\n\r\nFound:  {r.w}",
+				owner: dlg, flags: DFlags.CenterOwner | DFlags.Wider);
+				ShowOsdRect(r.w.Rect, true);
 				return default;
 			}
 			return (r.obj, r.speed[1]);
@@ -688,9 +688,9 @@ namespace Au.Tools
 
 		public static void InfoC(this KSciInfoBox t, ContentControl k, string text) => Info(t, k, _ControlName(k), text);
 
-		public static void InfoCT(this KSciInfoBox t, KCheckTextBox k, string text, bool wildex = false, string wildexPart = null) {
+		public static void InfoCT(this KSciInfoBox t, KCheckTextBox k, string text, bool isWildex = false, string wildexPart = null) {
 			text = CommonInfos.PrependName(_ControlName(k.c), text);
-			if (wildex) text = CommonInfos.AppendWildexInfo(text, wildexPart);
+			if (isWildex) text = CommonInfos.AppendWildexInfo(text, wildexPart);
 			t.AddElem(k.c, text);
 			t.AddElem(k.t, text);
 		}
@@ -704,7 +704,7 @@ namespace Au.Tools
 		/// <summary>
 		/// Returns k text without '_' character used for Alt+underline.
 		/// </summary>
-		static string _ControlName(ContentControl k) => AStringUtil.RemoveUnderlineChar(k.Content as string, '_');
+		static string _ControlName(ContentControl k) => StringUtil.RemoveUnderlineChar(k.Content as string, '_');
 
 		/// <summary>
 		/// Can be used by tool dialogs to display common info in <see cref="KSciInfoBox"/> control.
@@ -783,7 +783,7 @@ time ??:??
 	///// </summary>
 	//class CodeToolDialog : KDialogWindow
 	//{
-	//	protected AWpfBuilder _builder;
+	//	protected wpfBuilder _builder;
 	//	public virtual string ZResultCode { get; protected set; }
 
 	//	public CodeToolDialog() {

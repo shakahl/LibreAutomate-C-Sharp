@@ -14,7 +14,7 @@ using System.Net;
 
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Shared.Extensions;
@@ -89,7 +89,7 @@ class CiGoTo
 
 	int _FindSourceSite(bool download) {
 		int R = -1;
-		ARegex rx = null;
+		regexp rx = null;
 		for (int i = 0; i < s_sources.Length; i++) {
 			if (download && s_sources[i].data == null) {
 				try {
@@ -99,7 +99,7 @@ class CiGoTo
 				catch (WebException) { }
 			}
 			if (R >= 0) continue;
-			rx ??= new ARegex($@"(?m)^{_assembly};\d");
+			rx ??= new regexp($@"(?m)^{_assembly};\d");
 			if (rx.IsMatch(s_sources[i].data)) {
 				R = i;
 				if (!download) break;
@@ -166,7 +166,7 @@ class CiGoTo
 			if (_sourceLocations.Count == 1) {
 				_GoTo(_sourceLocations[0]);
 			} else {
-				int i = AMenu.ShowSimple(_sourceLocations.Select(v => v.file + ", line " + v.line.ToString()).ToArray());
+				int i = popupMenu.showSimple(_sourceLocations.Select(v => v.file + ", line " + v.line.ToString()).ToArray());
 				if (i > 0) _GoTo(_sourceLocations[i - 1]);
 			}
 
@@ -178,11 +178,11 @@ class CiGoTo
 				int i = _FindSourceSite(download: true);
 				if (i < 0) return;
 
-				AHash.MD5 md5 = default;
+				Hash.MD5 md5 = default;
 				md5.Add(_docId);
 				var hash = md5.Hash.ToString().Remove(16);
 
-				ARun.RunSafe(s_sources[i].site + $"/{_assembly}/a.html#{hash}");
+				run.itSafe(s_sources[i].site + $"/{_assembly}/a.html#{hash}");
 			});
 		}
 	}
@@ -193,8 +193,8 @@ class CiGoTo
 	/// Speed: usually < 10 ms.
 	/// </summary>
 	void _GetAssemblyNameOfForwardedType() {
-		var path = AFolders.NetRuntimeBS + _assembly + ".dll";
-		if (!(AFile.Exists(path).isFile || AFile.Exists(path = AFolders.NetRuntimeDesktopBS + _assembly + ".dll").isFile)) return;
+		var path = folders.NetRuntimeBS + _assembly + ".dll";
+		if (!(filesystem.exists(path).isFile || filesystem.exists(path = folders.NetRuntimeDesktopBS + _assembly + ".dll").isFile)) return;
 
 		var alc = new System.Runtime.Loader.AssemblyLoadContext(null, true);
 		try {
@@ -202,14 +202,14 @@ class CiGoTo
 			var ft = asm.GetForwardedTypes()?.FirstOrDefault(ty => ty.FullName == _typeName);
 			if (ft != null) _assembly = ft.Assembly.GetName().Name;
 		}
-		catch (Exception ex) { ADebug_.Print(ex); }
+		catch (Exception ex) { Debug_.Print(ex); }
 		finally { alc.Unload(); }
 	}
 
 	public static void GoToSymbolFromPos(bool onCtrlClick = false) {
 		var (sym, _, helpKind, token) = CiUtil.GetSymbolEtcFromPos(out _);
 		if (sym != null) {
-			//AOutput.Write(sym);
+			//print.it(sym);
 			var g = new CiGoTo(sym, onlyIfInSource: onCtrlClick);
 			if (g.CanGoTo) g.GoTo();
 		} else if (helpKind == CiUtil.HelpKind.String && token.IsKind(SyntaxKind.StringLiteralToken)) {
@@ -217,30 +217,4 @@ class CiGoTo
 			if (s.Ends(".cs", true)) App.Model.OpenAndGoTo(s);
 		}
 	}
-
-	//public static void EditMenuOrToolbar(string sourceFile, int line)
-	//{
-	//	var f1 = App.Model.FindByFilePath(sourceFile);
-	//	if(f1 != null) App.Model.OpenAndGoTo(f1, line);
-	//}
-
-	//public static void EditMenuOrToolbar(byte[] data)
-	//{
-	//	var a = Serializer_.Deserialize(data);
-	//	bool isTB = a[0] != 0;
-	//	string sourceFile = a[1];
-	//	int line = a[2]; //ctor line
-	//	string itemText = a[3];
-	//	AOutput.Write(isTB, sourceFile, line, itemText);
-	//	var f1 = App.Model.FindByFilePath(sourceFile); if(f1 == null) return;
-	//	if(!App.Model.OpenAndGoTo(f1, line)) return;
-	//	if(itemText != null) { //go to item
-	//		var doc = Panels.Editor.ZActiveDoc;
-	//		string code = doc.Text;
-	//		int i = doc.zLineStart(true, line);
-	//		string tn = isTB ? "AToolbar" : "AMenu";
-	//		if(!code.RegexMatch($@"\b([a-zA-Z_]\w*)\s*=\s*new\s+{tn}\s*\(", 1, out string v, RXFlags.FIRSTLINE, i..)) return; //get variable name
-	//		AOutput.Write(v);
-	//	}
-	//}
 }

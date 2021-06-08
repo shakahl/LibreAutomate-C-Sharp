@@ -1,5 +1,5 @@
 ﻿using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,8 +13,6 @@ using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
 using System.Text.RegularExpressions;
-
-//TODO: test System.IO.Enumeration.FileSystemName. Has functions to match wildcard expressions.
 
 namespace Au
 {
@@ -48,15 +46,15 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// string s = @"C:\abc\mno.xyz";
-		/// if(s.Like(@"C:\abc\mno.xyz")) AOutput.Write("matches whole text (no wildcard characters)");
-		/// if(s.Like(@"C:\abc\*")) AOutput.Write("starts with");
-		/// if(s.Like(@"*.xyz")) AOutput.Write("ends with");
-		/// if(s.Like(@"*mno*")) AOutput.Write("contains");
-		/// if(s.Like(@"C:\*.xyz")) AOutput.Write("starts and ends with");
-		/// if(s.Like(@"?:*")) AOutput.Write("any character, : and possibly more text");
+		/// if(s.Like(@"C:\abc\mno.xyz")) print.it("matches whole text (no wildcard characters)");
+		/// if(s.Like(@"C:\abc\*")) print.it("starts with");
+		/// if(s.Like(@"*.xyz")) print.it("ends with");
+		/// if(s.Like(@"*mno*")) print.it("contains");
+		/// if(s.Like(@"C:\*.xyz")) print.it("starts and ends with");
+		/// if(s.Like(@"?:*")) print.it("any character, : and possibly more text");
 		/// ]]></code>
 		/// </example>
-		/// <seealso cref="AWildex"/>
+		/// <seealso cref="wildex"/>
 #if false //somehow speed depends on dll version. With some versions same as C# code, with some slower. Also depends on string. With shortest strings 50% slower.
 		public static bool Like(this string t, string pattern, bool ignoreCase = false)
 		{
@@ -78,9 +76,8 @@ namespace Au
 				return _WildcardCmp(str, pat, t.Length, patLen, ignoreCase ? Tables_.LowerCase : null);
 			}
 
-			//info:
-			//	Similar .NET function Microsoft.VisualBasic.CompilerServices.Operators.LikeString()
-			//	supports more wildcard characters etc, depends on current culture, is 6-250 times slower, has bugs.
+			//Microsoft.VisualBasic.CompilerServices.Operators.LikeString() supports more wildcard characters etc. Depends on current culture, has bugs, slower 6-250 times.
+			//System.IO.Enumeration.FileSystemName.MatchesSimpleExpression supports \escaping. Slower 2 - 100 times.
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -165,8 +162,8 @@ namespace Au
 	/// Parses and compares [](xref:wildcard_expression).
 	/// </summary>
 	/// <remarks>
-	/// Used in 'find' functions. For example in <see cref="AWnd.Find"/> to compare window name, class name and program.
-	/// The 'find' function creates an <b>AWildex</b> instance (which parses the wildcard expression), then calls <see cref="Match"/> for each item (eg window) to compare some its property text.
+	/// Used in 'find' functions. For example in <see cref="wnd.find"/> to compare window name, class name and program.
+	/// The 'find' function creates a <b>wildex</b> instance (which parses the wildcard expression), then calls <see cref="Match"/> for each item (eg window) to compare some its property text.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -180,7 +177,7 @@ namespace Au
 	/// //null-string arguments are not compared.
 	/// Document Find2(string name, string date)
 	/// {
-	/// 	AWildex n = name, d = date; //null if the string is null
+	/// 	wildex n = name, d = date; //null if the string is null
 	/// 	return Documents.Find(x => (n == null || n.Match(x.Name)) && (d == null || d.Match(x.Date)));
 	/// }
 	/// 
@@ -189,11 +186,11 @@ namespace Au
 	/// var item = x.Find2("example", "2017-*");
 	/// ]]></code>
 	/// </example>
-	public class AWildex
+	public class wildex
 	{
 		//note: could be struct, but somehow then slower. Slower instance creation, calling methods, in all cases.
 
-		readonly object _o; //string, ARegex, Regex or AWildex[]. Tested: getting string etc with '_obj as string' is fast.
+		readonly object _o; //string, regexp, Regex or wildex[]. Tested: getting string etc with '_obj as string' is fast.
 		readonly WXType _type;
 		readonly bool _ignoreCase; //CONSIDER: default true. In find-window class/program ignore and use false.
 		readonly bool _not;
@@ -205,7 +202,7 @@ namespace Au
 		/// </param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentException">Invalid <c>"**options "</c> or regular expression.</exception>
-		public AWildex([ParamString(PSFormat.AWildex)] string wildcardExpression)
+		public wildex([ParamString(PSFormat.wildex)] string wildcardExpression)
 		{
 			var w = wildcardExpression;
 			if(w == null) throw new ArgumentNullException();
@@ -242,41 +239,41 @@ namespace Au
 					_o = new Regex(w, ro);
 					return;
 				case WXType.RegexPcre:
-					_o = new ARegex(w);
+					_o = new regexp(w);
 					return;
 				case WXType.Multi:
 					var a = w.Split(split ?? _splitMulti, StringSplitOptions.None);
-					var multi = new AWildex[a.Length];
-					for(int i = 0; i < a.Length; i++) multi[i] = new AWildex(a[i]);
+					var multi = new wildex[a.Length];
+					for(int i = 0; i < a.Length; i++) multi[i] = new wildex(a[i]);
 					_o = multi;
 					return;
 				}
 			}
 
-			if(_type == WXType.Wildcard && !HasWildcardChars(w)) _type = WXType.Text;
+			if(_type == WXType.Wildcard && !hasWildcardChars(w)) _type = WXType.Text;
 			_o = w;
 		}
 		static readonly string[] _splitMulti = { "||" };
 
 		/// <summary>
-		/// Creates new <b>AWildex</b> from wildcard expression string.
+		/// Creates new <b>wildex</b> from wildcard expression string.
 		/// If the string is null, returns null.
 		/// </summary>
 		/// <param name="wildcardExpression">[Wildcard expression](xref:wildcard_expression). </param>
 		/// <exception cref="ArgumentException">Invalid <c>"**options "</c> or regular expression.</exception>
-		public static implicit operator AWildex([ParamString(PSFormat.AWildex)] string wildcardExpression)
+		public static implicit operator wildex([ParamString(PSFormat.wildex)] string wildcardExpression)
 		{
 			if(wildcardExpression == null) return null;
 
-			//rejected. It's job for code tools. This would be used mostly for 'name' parameter of AWnd.Find and AWnd.Child, where 'match any' is rare; but 'match any' is very often used for 'cn' and 'program' parameters, where "" causes exception, so they will quickly learn.
-			///// If the string is "", calls <see cref="AOutput.Warning"/>. To match "", use "**empty" instead.
-			//	if(wildcardExpression.Length == 0) AOutput.Warning("To match \"\", better use \"**empty\". To match any, use null, or omit the argument if it's optional.");
+			//rejected. It's job for code tools. This would be used mostly for 'name' parameter of wnd.find and wnd.Child, where 'match any' is rare; but 'match any' is very often used for 'cn' and 'program' parameters, where "" causes exception, so they will quickly learn.
+			///// If the string is "", calls <see cref="print.warning"/>. To match "", use "**empty" instead.
+			//	if(wildcardExpression.Length == 0) print.warning("To match \"\", better use \"**empty\". To match any, use null, or omit the argument if it's optional.");
 
-			return new AWildex(wildcardExpression);
+			return new wildex(wildcardExpression);
 		}
 
 		/// <summary>
-		/// Compares a string with the [](xref:wildcard_expression) used to create this <see cref="AWildex"/>.
+		/// Compares a string with the [](xref:wildcard_expression) used to create this <see cref="wildex"/>.
 		/// Returns true if they match.
 		/// </summary>
 		/// <param name="s">String. If null, returns false. If "", returns true if it was "" or "*" or a regular expression that matches "".</param>
@@ -294,13 +291,13 @@ namespace Au
 				R = s.Eq(t, _ignoreCase);
 				break;
 			case WXType.RegexPcre:
-				R = (_o as ARegex).IsMatch(s);
+				R = (_o as regexp).IsMatch(s);
 				break;
 			case WXType.RegexNet:
 				R = (_o as Regex).IsMatch(s);
 				break;
 			case WXType.Multi:
-				var multi = _o as AWildex[];
+				var multi = _o as wildex[];
 				//[n] parts: all must match (with their option n applied)
 				int nNot = 0;
 				for(int i = 0; i < multi.Length; i++) {
@@ -341,10 +338,10 @@ namespace Au
 		public Regex RegexNet => _o as Regex;
 
 		/// <summary>
-		/// Array of <b>AWildex</b> variables, one for each part in multi-part text.
+		/// Array of <b>wildex</b> variables, one for each part in multi-part text.
 		/// null if TextType is not Multi (no option m).
 		/// </summary>
-		public AWildex[] MultiArray => _o as AWildex[];
+		public wildex[] MultiArray => _o as wildex[];
 
 		/// <summary>
 		/// Gets the type of text (wildcard, regex, etc).
@@ -371,7 +368,7 @@ namespace Au
 		/// Returns true if string contains wildcard characters: '*', '?'.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		public static bool HasWildcardChars(string s)
+		public static bool hasWildcardChars(string s)
 		{
 			if(s == null) return false;
 			for(int i = 0; i < s.Length; i++) {
@@ -385,11 +382,11 @@ namespace Au
 
 namespace Au.Types
 {
-	//rejected: struct WildexStruct - struct version of AWildex class. Moved to the Unused project.
+	//rejected: struct WildexStruct - struct version of wildex class. Moved to the Unused project.
 	//	Does not make faster, although in most cases creates less garbage.
 
 	/// <summary>
-	/// The type of text (wildcard expression) of an <see cref="AWildex"/> variable.
+	/// The type of text (wildcard expression) of an <see cref="wildex"/> variable.
 	/// </summary>
 	public enum WXType : byte
 	{
@@ -406,7 +403,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// PCRE regular expression (option r).
-		/// <b>Match</b> calls <see cref="ARegex.IsMatch"/>.
+		/// <b>Match</b> calls <see cref="regexp.IsMatch"/>.
 		/// </summary>
 		RegexPcre,
 
@@ -418,8 +415,8 @@ namespace Au.Types
 
 		/// <summary>
 		/// Multiple parts (option m).
-		/// <b>Match</b> calls <b>Match</b> for each part (see <see cref="AWildex.MultiArray"/>) and returns true if all negative (option n) parts return true (or there are no such parts) and some positive (no option n) part returns true (or there are no such parts).
-		/// If you want to implement a different logic, call <b>Match</b> for each <see cref="AWildex.MultiArray"/> element (instead of calling <b>Match</b> for this variable).
+		/// <b>Match</b> calls <b>Match</b> for each part (see <see cref="wildex.MultiArray"/>) and returns true if all negative (option n) parts return true (or there are no such parts) and some positive (no option n) part returns true (or there are no such parts).
+		/// If you want to implement a different logic, call <b>Match</b> for each <see cref="wildex.MultiArray"/> element (instead of calling <b>Match</b> for this variable).
 		/// </summary>
 		Multi,
 	}

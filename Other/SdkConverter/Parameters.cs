@@ -1,14 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel; //Win32Exception
 
 //using System.Reflection;
 //using System.Linq;
@@ -192,7 +187,7 @@ namespace SdkConverter
 
 			//escape names that are C# keywords
 			if (_csKeywords.Contains(t.name)) {
-				//AOutput.Write(t.name);
+				//print.it(t.name);
 				t.name = "@" + t.name;
 			}
 		}
@@ -291,7 +286,7 @@ namespace SdkConverter
 
 			bool _In_ = false, _Out_ = false, _Inout_ = false;
 			if (iSAL > 0) {
-				//AOutput.Write(_tok[iSAL]);
+				//print.it(_tok[iSAL]);
 				if (_TokStarts(iSAL, "_In_")) _In_ = true;
 				else if (_TokStarts(iSAL, "_Out")) _Out_ = true;
 				else if (_TokStarts(iSAL, "_Inout_")) _Inout_ = true;
@@ -326,7 +321,7 @@ namespace SdkConverter
 									} else {
 										//string dangerous, because if the callee changes member pointer, .NET tries to free the new string with CoTaskMemFree.
 										ptr = 1;
-										//AOutput.Write(_DebugGetLine(iTokTypename));
+										//print.it(_DebugGetLine(iTokTypename));
 										isRawPtr = true;
 									}
 									break;
@@ -344,7 +339,7 @@ namespace SdkConverter
 									Debug.Assert(!(isConst && (_Out_ || _Inout_)));
 									if (isConst || _In_ || isBSTR) {
 										name = "string";
-										//if (ptr == 1) AOutput.Write(_DebugGetLine(iTokTypename));
+										//if (ptr == 1) print.it(_DebugGetLine(iTokTypename));
 										if (isCOM) {
 											if (!isBSTR) marshalAs = "LPWStr";
 										} else {
@@ -401,19 +396,19 @@ namespace SdkConverter
 				var ts = t as _Struct;
 				if (ts != null) {
 					if (ts.isInterface) {
-						//AOutput.Write(ptr, ts.csTypename);
+						//print.it(ptr, ts.csTypename);
 						if (ptr == 0) _Err(iTokTypename, "unexpected");
 						if (--ptr > 0 && context == _TypeContext.Member) {
 							name = "IntPtr";
 							isBlittable = true;
 						} else if (name is "IUnknown" or "IDispatch") {
-							ADebug_.PrintIf(ptr > 1, context);
+							Debug_.PrintIf(ptr > 1, context);
 							marshalAs = name;
 							name = "object";
 						}
 					} else if (!ts.isClass) {
 						switch (name) {
-						case "AWnd": case "LPARAM": isBlittable = true; break;
+						case "wnd": case "LPARAM": isBlittable = true; break;
 						case "GUID": name = "Guid"; break;
 						case "DECIMAL": name = "decimal"; break;
 						case "VARIANT":
@@ -423,7 +418,7 @@ namespace SdkConverter
 							}
 							break;
 						//case "SAFEARRAY": //in SDK used only with SafeArrayX functions, with several other not-important functions and as [PROP]VARIANT members
-						//AOutput.Write(ptr);
+						//print.it(ptr);
 						//break;
 						case "ITEMIDLIST":
 							if (ptr > 0) { ptr--; name = "IntPtr"; isBlittable = true; }
@@ -447,17 +442,17 @@ namespace SdkConverter
 
 					if (iSAL > 0 && ptr == 1) { //if ptr>1, can be TYPE[]* or TYPE*[]
 						if (_In_ && (sal.Contains("_reads_") || sal.Contains("count"))) {
-							//AOutput.Write(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
+							//print.it(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 							isArray = true;
 							__ctn.Append("[In] ");
 						}
 						if (_Inout_ && (sal.Contains("_updates_") || sal.Contains("count"))) {
-							//AOutput.Write(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
+							//print.it(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 							isArray = true;
 							__ctn.Append("[In,Out] ");
 						}
 						if (_Out_ && (sal.Contains("_writes_") || sal.Contains("count"))) {
-							//AOutput.Write(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
+							//print.it(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 							isArray = true;
 							__ctn.Append("[Out] ");
 						}
@@ -475,17 +470,17 @@ namespace SdkConverter
 						} else if (_In_ || isConst) {
 							if (isBlittable) {
 								if (isConst && ptr == 0 && name != "IntPtr") {
-									//AOutput.Write(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
+									//print.it(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 									isArray = true; //usually array, because there is no sense for eg 'const int* param', unless it is a 64-bit value (SDK usually then uses LARGE_INTEGER etc, not __int64). Those with just _In_ usually are not arrays, because for arrays are used _In_reads_ etc.
 								} else {
 									__ctn.Append("in ");
-									//AOutput.Write(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
+									//print.it(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 								}
 							} else {
 								if (isConst) {
 									__ctn.Append("in "); //prevents copying non-blittable types back to the caller when don't need
 								} else {
-									//AOutput.Write(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
+									//print.it(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 									//__ctn.Append("in "); //no, because there are many errors in SDK where inout parameters have _In_
 									__ctn.Append("ref ");
 								}
@@ -506,7 +501,7 @@ namespace SdkConverter
 							ptr++;
 							__ctn.Clear();
 							//maybe can be array, not tested. Never mind, in SDK only 4 rarely used.
-							//AOutput.Write(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
+							//print.it(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 						} else if (marshalAs != null) useMarshalAsSubtype = true;
 
 						if (useMarshalAsSubtype) marshalAs = "LPArray, ArraySubType = UnmanagedType." + marshalAs;
@@ -540,7 +535,7 @@ namespace SdkConverter
 		/// <param name="t.attributes">If !isParameter, receives attribute like "[MarshalAs(UnmanagedType.ByValArray, SizeConst = {x})]". If already is MarshalAs attribute, uses it as ArraySubType.</param>
 		/// <param name="isParameter">Just skip [..] or [...][...] and append "[]" to t.typeName. Used for parameters, because the attribute can be used only with struct fields; C++ arguments for parameters 'TYPE param[n]' are passed like 'TYPE* param', and n is ignored, can be empty.</param>
 		void _ConvertCArray(ref _PARAMDATA t, bool isParameter = false) {
-			//if (!isParameter) AOutput.Write(t.typeName);
+			//if (!isParameter) print.it(t.typeName);
 
 			uint elemCount = 1;
 			for (; _TokIsChar(_i, '['); _i++) { //support [a][b]
@@ -574,7 +569,7 @@ namespace SdkConverter
 				marshalAs = "ByValTStr";
 			} else {
 				if (elemCount < 8 && (t.name.Find("Reserved", true) >= 0 || t.name.Find("pad", true) >= 0 || t.name.Starts("Spare", true))) {
-					//AOutput.Write(t.name);
+					//print.it(t.name);
 					var sb = new StringBuilder();
 					for (int i = 0; i < elemCount; i++) {
 						if (i > 0) sb.Append(", ");
@@ -585,7 +580,7 @@ namespace SdkConverter
 					t.name = sb.ToString();
 					comment = "/*"; comment2 = "*/";
 				} else {
-					//if(elemCount<8) AOutput.Write(t.name);
+					//if(elemCount<8) print.it(t.name);
 					if (t.typeName is "byte" or "sbyte" or "int" or "uint" or "long" or "ulong" or "short" or "ushort" or "float" or "double")
 						t.comment = $"//public fixed {t.typeName} {t.name}[{elemCount}];";
 					t.typeName += "[]";

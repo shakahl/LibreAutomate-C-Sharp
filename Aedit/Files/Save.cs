@@ -1,6 +1,6 @@
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -127,12 +127,12 @@ partial class FilesModel
 	/// </summary>
 	bool _SaveWorkspaceNow() {
 		try {
-			//AOutput.Write("saving");
+			//print.it("saving");
 			Root.Save(WorkspaceFile);
 			return true;
 		}
 		catch (Exception ex) { //XElement.Save exceptions are undocumented
-			ADialog.ShowError("Failed to save", WorkspaceFile, expandedText: ex.Message);
+			dialog.showError("Failed to save", WorkspaceFile, expandedText: ex.Message);
 			return false;
 		}
 	}
@@ -159,7 +159,7 @@ partial class FilesModel
 			return true;
 		}
 		catch (SLException ex) {
-			ADebug_.Print(ex);
+			Debug_.Print(ex);
 			return false;
 		}
 	}
@@ -187,20 +187,20 @@ partial class FilesModel
 					//format: indexOfActiveDocOrMinusOne id1 id2 ...
 					int i = -2, iActive = s.ToInt();
 					FileNode fnActive = null;
-					//APerf.First();
+					//perf.first();
 					foreach (var v in s.Segments(" ")) {
 						i++; if (i < 0) continue;
 						var fn = FindById(s[v.Range]); if (fn == null) continue;
 						OpenFiles.Add(fn);
 						if (i == iActive) fnActive = fn;
 					}
-					//APerf.Next();
+					//perf.next();
 					if (fnActive == null || !SetCurrentFile(fnActive)) _UpdateOpenFiles(null); //disable Previous command
-					//APerf.NW();
+					//perf.nw();
 				}
 			}
 		}
-		catch (Exception ex) { ADebug_.Print(ex); }
+		catch (Exception ex) { Debug_.Print(ex); }
 		finally { Save.LoadingState = false; }
 	}
 }

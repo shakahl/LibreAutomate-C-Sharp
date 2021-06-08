@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using Au.Types;
-using Au.Util;
+using Au.More;
 
 namespace Au.Tools
 {
 	static class QuickCapture
 	{
-		static ARegisteredHotkey _rk;
+		static keys.more.Hotkey _rk;
 
 		//public static void Dialog() {
 
@@ -18,23 +18,23 @@ namespace Au.Tools
 		}
 
 		public static void WmHotkey() {
-			var p = AMouse.XY;
-			AWnd w0 = AWnd.FromXY(p), w = w0.Window, c = w == w0 ? default : w0;
+			var p = mouse.xy;
+			wnd w0 = wnd.fromXY(p), w = w0.Window, c = w == w0 ? default : w0;
 			//int color = 0; using (var dc = new ScreenDC_()) { color = Api.GetPixel(dc, p.x, p.y); }
-			string path = AWnd.More.GetWindowsStoreAppId(w, true, true);
+			string path = wnd.more.getWindowsStoreAppId(w, true, true);
 
-			var m = new AMenu();
-			m["Find window"] = o => _Insert(_AWnd_Find(w, default, false));
-			m["Find control"] = o => _Insert(_AWnd_Find(w, c, false));
+			var m = new popupMenu();
+			m["Find window"] = o => _Insert(_Wnd_Find(w, default, false));
+			m["Find control"] = o => _Insert(_Wnd_Find(w, c, false));
 			m.Last.IsDisabled = c.Is0;
-			m["Wait for window"] = o => _Insert(_AWnd_Find(w, c, true));
-			m["Activate window"] = o => _Insert(_AWnd_Find(w, default, false) + "\r\nw.Activate();");
+			m["Wait for window"] = o => _Insert(_Wnd_Find(w, c, true));
+			m["Activate window"] = o => _Insert(_Wnd_Find(w, default, false) + "\r\nw.Activate();");
 			m.Submenu("Click", m => {
-				m["Window"] = o => _Insert(_AWnd_Find(w, default, false) + _Click(w, "w"));
-				m["Control"] = o => _Insert(_AWnd_Find(w, c, false) + _Click(c, "c"));
+				m["Window"] = o => _Insert(_Wnd_Find(w, default, false) + _Click(w, "w"));
+				m["Control"] = o => _Insert(_Wnd_Find(w, c, false) + _Click(c, "c"));
 				m.Last.IsDisabled = c.Is0;
-				m["Screen"] = o => _Insert($"AMouse.Click({p.x}, {p.y});");
-				string _Click(AWnd w, string v) {
+				m["Screen"] = o => _Insert($"mouse.click({p.x}, {p.y});");
+				string _Click(wnd w, string v) {
 					w.MapScreenToClient(ref p);
 					return $"\r\nAMouse.Click({v}, {p.x}, {p.y});";
 				}
@@ -54,24 +54,24 @@ namespace Au.Tools
 			if (path != null)
 				m.Submenu("Program path", m => {
 					m["var s = path;"] = o => _Path(0);
-					m["ARun.Run(path);"] = o => _Path(1);
-					m["t[name] = o => ARun.Run(path);"] = o => _Path(2);
+					m["run.it(path);"] = o => _Path(1);
+					m["t[name] = o => run.it(path);"] = o => _Path(2);
 					void _Path(int what) {
 						if (path.Ends(@"\explorer.exe") && w.ClassNameIs("CabinetWClass")) { //if folder window, try to get folder path
 							var tb = w.Child("***id 1001", "ToolbarWindow32"); // @"Address: C:\Program Files (x86)\Windows Kits\10\bin\x86"
-							if (!tb.Is0 && tb.Name is string sa && sa.RegexMatch(@"^\S+: +(.+)", 1, out RXGroup rg) && AFile.Exists(sa = rg.Value, useRawPath: true).isDir) path = sa;
+							if (!tb.Is0 && tb.Name is string sa && sa.RegexMatch(@"^\S+: +(.+)", 1, out RXGroup rg) && filesystem.exists(sa = rg.Value, useRawPath: true).isDir) path = sa;
 						}
 						var g = new TUtil.PathInfo(path);
 						int f = g.SelectFormatUI(); if (f == 0) return;
 						var r = g.GetResult(f);
 						var s = r.path;
 						if (what == 2 && path.Starts("shell:")) r.name = w.Name;
-						_Insert(what switch { 1 => $"ARun.Run({s});", 2 => $"t[{_Str(r.name)}] = o => ARun.Run({s});", _ => $"var s = {s};" });
+						_Insert(what switch { 1 => $"run.it({s});", 2 => $"t[{_Str(r.name)}] = o => run.it({s});", _ => $"var s = {s};" });
 					}
 				});
 			m.Separator();
-			m["AWnd dialog"] = o => new DAWnd(w0).Show();
-			m["AAcc dialog"] = o => DAAcc.Dialog(p: p);
+			m["wnd dialog"] = o => new Dwnd(w0).Show();
+			m["elm dialog"] = o => Delm.Dialog(p: p);
 			m.Separator();
 			m.Add("Cancel");
 
@@ -84,7 +84,7 @@ namespace Au.Tools
 			return s;
 		}
 
-		static string _AWnd_Find(AWnd w, AWnd c, bool wait) {
+		static string _Wnd_Find(wnd w, wnd c, bool wait) {
 			string wName = w.Name;
 			var f = new TUtil.WindowFindCodeFormatter {
 				Throw = true,
@@ -97,7 +97,7 @@ namespace Au.Tools
 			};
 			if (!c.Is0) {
 				string cName = null, cClass = TUtil.StripWndClassName(c.ClassName, true);
-				_ = _ConName("", c.Name) || _ConName("***wfName ", c.NameWinforms) || _ConName("***accName ", c.NameAcc);
+				_ = _ConName("", c.Name) || _ConName("***wfName ", c.NameWinforms) || _ConName("***elmName ", c.NameElm);
 
 				bool _ConName(string prefix, string value) {
 					if (value.NE()) return false;
@@ -118,7 +118,7 @@ namespace Au.Tools
 		}
 
 		static void _Insert(string s) {
-			//AOutput.Write(s);
+			//print.it(s);
 			InsertCode.Statements(s);
 		}
 	}

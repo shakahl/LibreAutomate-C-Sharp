@@ -35,14 +35,14 @@ unsafe class Program
 {
 	static void Main(string[] args) {
 		try { _Main(); }
-		catch (Exception e) { AOutput.Write(e); }
+		catch (Exception e) { print.it(e); }
 	}
 
 	static void _Main() {
-		bool isConsole = AOutput.IsConsoleProcess;
+		bool isConsole = print.isConsoleProcess;
 		if (!isConsole) {
-			AOutput.QM2.UseQM2 = true;
-			AOutput.Clear();
+			print.qm2.use = true;
+			print.clear();
 		}
 
 		var docfx = @"Q:\Programs\DocFx\docfx.exe";
@@ -63,17 +63,17 @@ unsafe class Program
 		foreach (var v in Process.GetProcessesByName("docfx")) v.Kill();
 		if (isConsole) {
 			int k = 0;
-			foreach (var v in AWnd.FindAll(@"C:\WINDOWS\system32\cmd.exe", "ConsoleWindowClass")) { if (k++ > 0) v.Close(); }
+			foreach (var v in wnd.findAll(@"C:\WINDOWS\system32\cmd.exe", "ConsoleWindowClass")) { if (k++ > 0) v.Close(); }
 		}
 
-		AFile.Delete(siteDir);
+		filesystem.delete(siteDir);
 		Directory.SetCurrentDirectory(docDir);
 
-		var t1 = ATime.PerfMilliseconds;
+		var t1 = perf.ms;
 
 		using (var fw = new FileSystemWatcher(apiDir, "*.yml")) {
 			fw.Changed += (sen, e) => {
-				//AOutput.Write(e.Name);
+				//print.it(e.Name);
 				if (e.Name.Starts("Au.", true)) ProcessYamlFile(e.FullPath, false);
 			};
 			fw.EnableRaisingEvents = true;
@@ -83,8 +83,8 @@ unsafe class Program
 			bool serving = false;
 			try {
 #endif
-			int r = ARun.Console(o => {
-				AOutput.Write(o);
+			int r = run.console(o => {
+				print.it(o);
 				if (o.Starts("Serving")) throw new OperationCanceledException();
 			}, docfx, $@"docfx.json --intermediateFolder ""{objDir}"""
 				//+ " --force"
@@ -97,28 +97,28 @@ unsafe class Program
 			catch(OperationCanceledException) {
 				serving = true;
 			}
-			//if(!serving) { ADialog.Show("error?"); return; } //need if this process is not hosted
+			//if(!serving) { dialog.show("error?"); return; } //need if this process is not hosted
 			if(!serving) return;
 #else
-			//AOutput.Write(r);
+			//print.it(r);
 			if (r != 0) return;
 #endif
 		}
 
-		var t2 = ATime.PerfMilliseconds;
+		var t2 = perf.ms;
 
 		ProcessHtmlFiles(siteDir, false);
 
-		var t3 = ATime.PerfMilliseconds; AOutput.Write("speed (s):", (t2 - t1) / 1000, (t3 - t2) / 1000);
+		var t3 = perf.ms; print.it("speed (s):", (t2 - t1) / 1000, (t3 - t2) / 1000);
 
-		//AWnd.Find("* Chrome").Activate();
-		//AKeys.Key("F5");
+		//wnd.find("* Chrome").Activate();
+		//keys.send("F5");
 
 		1.s();
-		if (1 == ADialog.Show("Upload?", null, "1 Yes|2 No"/*, secondsTimeout: 5*/)) CompressAndUpload(docDir);
+		if (1 == dialog.show("Upload?", null, "1 Yes|2 No"/*, secondsTimeout: 5*/)) CompressAndUpload(docDir);
 
 		//Delete obj folder if big. Each time it grows by 10 MB, and after a day or two can be > 1 GB. After deleting builds slower by ~50%.
-		if (AFile.More.CalculateDirectorySize(objDir) / 1024 / 1024 > 500) { AOutput.Write("Deleting obj folder."); AFile.Delete(objDir); }
+		if (filesystem.more.calculateDirectorySize(objDir) / 1024 / 1024 > 500) { print.it("Deleting obj folder."); filesystem.delete(objDir); }
 		//info: if DocFX starts throwing stack overflow exception, delete the obj folder manually. It is likely to happen after many refactorings in the project.
 	}
 
@@ -127,7 +127,7 @@ unsafe class Program
 	/// Also something more.
 	/// </summary>
 	static void ProcessYamlFile(string path, bool test) {
-		//AOutput.Write(path);
+		//print.it(path);
 		try {
 			//var text = File.ReadAllText(path);
 			var yaml = new YamlStream();
@@ -142,7 +142,7 @@ unsafe class Program
 			foreach (YamlMappingNode item in (YamlSequenceNode)root.Children[new YamlScalarNode("items")]) {
 				foreach (var name in s_names) {
 					if (!item.Children.TryGetValue(name, out var node)) continue;
-					//AOutput.Write("----", name, node.NodeType);
+					//print.it("----", name, node.NodeType);
 					if (node is YamlScalarNode scalar) { //summary, remarks
 						if (ProcessYamlValue(scalar)) save = true;
 					} else if (node is YamlMappingNode map) { //syntax
@@ -181,12 +181,12 @@ unsafe class Program
 				yaml.Save(sw, false);
 			}
 			if (test) {
-				//AOutput.Write(File.ReadAllText(tmp));
+				//print.it(File.ReadAllText(tmp));
 			} else {
-				AFile.Move(tmp, path, FIfExists.Delete);
+				filesystem.move(tmp, path, FIfExists.Delete);
 			}
 		}
-		catch (Exception e) { AOutput.Write(e); }
+		catch (Exception e) { print.it(e); }
 	}
 	static string[] s_names = { "summary", "remarks", "example", "syntax", "exceptions" };
 
@@ -195,7 +195,7 @@ unsafe class Program
 		var s = scalar.Value;
 		int R = 0;
 
-		//AOutput.Write(s);
+		//print.it(s);
 		//To avoid applying markdown in <c>...</c> (now <code>...</code>), enclose in <au><!--...--></au>.
 		//	Markdown is not applied inside any <...>, including HTML comment. Also add <au>, else may not add <p> etc.
 		//	Will remove the enclosing later, when processing HTML.
@@ -206,7 +206,7 @@ unsafe class Program
 		if (0 != s.RegexReplace(@"<pre><code>", @"<pre><code class=""cs"">", out s)) R |= 2;
 
 		if (R == 0) return false;
-		//if(0 != (R & 2)) AOutput.Write(s);
+		//if(0 != (R & 2)) print.it(s);
 		scalar.Value = s;
 		return true;
 	}
@@ -215,17 +215,17 @@ unsafe class Program
 		string files = "*.html";
 		if (test) {
 			//files = @"\api\Au.AaaDocFX*";
-			//files = @"\api\Au.ARegex.Replace";
-			files = @"\api\Au.AAcc.Find";
-			files = @"\api\Au.ADialog.Show";
+			//files = @"\api\Au.regexp.Replace";
+			files = @"\api\Au.elm.find";
+			files = @"\api\Au.dialog.show";
 			files = @"\articles\Wildcard expression";
 			files += ".html";
 		}
-		foreach (var f in AFile.Enumerate(siteDir, FEFlags.AndSubdirectories | FEFlags.NeedRelativePaths)) {
+		foreach (var f in filesystem.enumerate(siteDir, FEFlags.AndSubdirectories | FEFlags.NeedRelativePaths)) {
 			if (f.IsDirectory) continue;
 			var name = f.Name; if (!name.Like(files, true) || name.Ends(@"\toc.html")) continue;
 			var file = f.FullPath;
-			//if(test) AOutput.Write($"<><c 0xff>{file}</c>");
+			//if(test) print.it($"<><c 0xff>{file}</c>");
 			var s = File.ReadAllText(file);
 			bool modified = ProcessHtmlFile(ref s, name.Starts(@"\api"), siteDir);
 			if (modified) File.WriteAllText(!test ? file : file.Remove(file.Length - 1), s);
@@ -243,12 +243,12 @@ unsafe class Program
 
 			//Link Method(parameters) -> Type.Method. And remove #jump. Works for properties too.
 			//Exclude those in auto-generated tables of class methods and properties.
-			nr += s.RegexReplace(@"(<a class=""xref"" href=""Au\.(?:Types\.|Triggers\.|Util\.)?+([\w\.\-]+\.\w+)\.html)#\w+"">.+?</a>(?!\s*</td>\s*<td class=""markdown level1 summary"">)", @"$1"">$2</a>", out s);
+			nr += s.RegexReplace(@"(<a class=""xref"" href=""Au\.(?:Types\.|Triggers\.|More\.)?+([\w\.\-]+\.\w+)\.html)#\w+"">.+?</a>(?!\s*</td>\s*<td class=""markdown level1 summary"">)", @"$1"">$2</a>", out s);
 			//the same for enum
-			nr += s.RegexReplace(@"(<a class=""xref"" href=""Au\.(?:Types\.|Triggers\.|Util\.)?+(\w+)\.html)#\w+"">(\w+</a>)", @"$1"">$2.$3", out s); //note: enums must not be nested in types
+			nr += s.RegexReplace(@"(<a class=""xref"" href=""Au\.(?:Types\.|Triggers\.|More\.)?+(\w+)\.html)#\w+"">(\w+</a>)", @"$1"">$2.$3", out s); //note: enums must not be nested in types
 
 			//In class member pages, in title insert a link to the type.
-			nr += s.RegexReplace(@"<h1\b[^>]* data-uid=""(Au\.(?:Types\.|Triggers\.|Util\.)?+([\w\.`]+))\.\w+\*?""[^>]*>(?:Method|Property|Field|Event|Operator|Constructor) (?=\w)",
+			nr += s.RegexReplace(@"<h1\b[^>]* data-uid=""(Au\.(?:Types\.|Triggers\.|More\.)?+([\w\.`]+))\.\w+\*?""[^>]*>(?:Method|Property|Field|Event|Operator|Constructor) (?=\w)",
 				m => m.ExpandReplacement(@"$0<a href=""$1.html"">$2</a>.").Replace("`", "-"),
 				out s);
 
@@ -285,12 +285,12 @@ unsafe class Program
 				var k = m[1].Value;
 				string href = null;
 				foreach (var ns in s_ns) {
-					if (AFile.Exists(siteDir + "/api/" + ns + k + ".html").isFile) {
+					if (filesystem.exists(siteDir + "/api/" + ns + k + ".html").isFile) {
 						href = "../api/" + ns + k + ".html";
 						break;
 					}
 				}
-				if (href == null) { AOutput.Write($"cannot resolve link: [{k}]()"); return m.Value; }
+				if (href == null) { print.it($"cannot resolve link: [{k}]()"); return m.Value; }
 				return m.ExpandReplacement($@"<a href=""{href}"">$1</a>");
 			}, out s);
 		}
@@ -327,7 +327,7 @@ unsafe class Program
 
 		return nr > 0;
 	}
-	static string[] s_ns = { "Au.", "Au.Triggers.", "Au.Types.", "Au.Util.", };
+	static string[] s_ns = { "Au.", "Au.Triggers.", "Au.Types.", "Au.More.", };
 
 	//static void ProcessToc(string siteDir)
 	//{
@@ -337,7 +337,7 @@ unsafe class Program
 	//	//
 	//	if(0==s.RegexReplace(@"", @"", out s)) throw new Exception("regex failed");
 
-	//	AOutput.Write(s);
+	//	print.it(s);
 	//	//File.WriteAllText(file, s);
 	//}
 
@@ -365,12 +365,12 @@ unsafe class Program
 		var b = new StringBuilder();
 		var s = File.ReadAllText(siteDir + @"\xrefmap.yml");
 		foreach(var m in s.RegexFindAll(@"(?m)^- uid:.+\R.+\R  href: (?!api/).+\R", 0)) {
-			//AOutput.Write(m);
+			//print.it(m);
 			b.Append(m);
 		}
 
-		string f2 = APath.Normalize(siteDir + @"..\..\..\..\..\_\xrefmap.yml");
-		//AOutput.Write(f2);
+		string f2 = pathname.normalize(siteDir + @"..\..\..\..\..\_\xrefmap.yml");
+		//print.it(f2);
 		File.WriteAllText(f2, b.ToString());
 	}
 
@@ -383,17 +383,17 @@ unsafe class Program
 	static void Compress(string docDir) {
 		var sevenZip = @"C:\Program Files\7-Zip\7z.exe";
 
-		AFile.Delete(docDir + @"\_site.tar");
-		AFile.Delete(docDir + @"\_site.tar.gz");
+		filesystem.delete(docDir + @"\_site.tar");
+		filesystem.delete(docDir + @"\_site.tar.gz");
 
-		int r1 = ARun.Console(out var s, sevenZip, $@"a _site.tar .\_site", docDir);
-		if (r1 != 0) { AOutput.Write(s); return; }
-		int r2 = ARun.Console(out s, sevenZip, $@"a _site.tar.gz _site.tar", docDir);
-		if (r2 != 0) { AOutput.Write(s); return; }
+		int r1 = run.console(out var s, sevenZip, $@"a _site.tar .\_site", docDir);
+		if (r1 != 0) { print.it(s); return; }
+		int r2 = run.console(out s, sevenZip, $@"a _site.tar.gz _site.tar", docDir);
+		if (r2 != 0) { print.it(s); return; }
 
-		AFile.Delete(docDir + @"\_site.tar");
+		filesystem.delete(docDir + @"\_site.tar");
 
-		AOutput.Write("Compressed");
+		print.it("Compressed");
 	}
 
 	static void Upload(string docDir) {
@@ -405,7 +405,7 @@ unsafe class Program
 		if (ip == null || user == null || pass == null) throw new FileNotFoundException("connection info not found in registry");
 
 		//upload. Use SFTP. Maybe possible with SSH, but I tried scp command and failed.
-		pass = Encoding.UTF8.GetString(Convert.FromBase64String(pass)); //to encode: AOutput.Write(Convert.ToBase64String(Encoding.UTF8.GetBytes(pass)));
+		pass = Encoding.UTF8.GetString(Convert.FromBase64String(pass)); //to encode: print.it(Convert.ToBase64String(Encoding.UTF8.GetBytes(pass)));
 		var name = @"\_site.tar.gz";
 		var path = docDir + name;
 		using (var client = new WebClient()) {
@@ -413,32 +413,32 @@ unsafe class Program
 			//client.UploadFile("ftp://quickmacros.com/public_html/au" + name, WebRequestMethods.Ftp.UploadFile, path);
 			client.UploadFile("ftp://185.224.138.106/au" + name, WebRequestMethods.Ftp.UploadFile, path); //public_html is default at hostinger
 		}
-		AFile.Delete(path);
-		AOutput.Write("Uploaded");
+		filesystem.delete(path);
+		print.it("Uploaded");
 
 		//extract
-		//APerf.First();
+		//perf.first();
 		using (var client = new SshClient(ip, port, user, pass)) {
 			client.Connect();
 			//_Cmd("cd public_html/test"); _Cmd("pwd"); //cd does not work when separate command. Not tested: ShellStream.
 			//_Cmd("cd public_html/test && pwd"); //ok
-			//APerf.Next();
+			//perf.next();
 			_Cmd2("tar -zxf _site.tar.gz");
 			_Cmd2("rm -r help", silent: true);
 			_Cmd2("mv _site help");
 			_Cmd2("rm _site.tar.gz", silent: true);
-			//APerf.NW(); //tar ~20 s, others fast
+			//perf.nw(); //tar ~20 s, others fast
 			client.Disconnect();
 
 			void _Cmd(string s, bool silent = false) {
 				var c = client.RunCommand(s);
-				//AOutput.Write($"ec={c.ExitStatus}, result={c.Result}, error={c.Error}");
+				//print.it($"ec={c.ExitStatus}, result={c.Result}, error={c.Error}");
 				if (!silent && c.ExitStatus != 0) throw new Exception(c.Error);
 			}
 
 			void _Cmd2(string s, bool silent = false) => _Cmd("cd public_html/au && " + s, silent);
 		}
-		AOutput.Write("<>Extracted to <link>https://www.quickmacros.com/au/help/</link>");
+		print.it("<>Extracted to <link>https://www.quickmacros.com/au/help/</link>");
 	}
 
 }
@@ -447,17 +447,17 @@ unsafe class Program
 	{
 		var sevenZip = @"C:\Program Files\7-Zip\7z.exe";
 
-		AFile.Delete(docDir + @"\_site.tar");
-		AFile.Delete(docDir + @"\_site.tar.bz2");
+		filesystem.delete(docDir + @"\_site.tar");
+		filesystem.delete(docDir + @"\_site.tar.bz2");
 
-		int r1 = ARun.Console(out var s, sevenZip, $@"a _site.tar .\_site\*", docDir);
-		if(r1 != 0) { AOutput.Write(s); return; }
-		int r2 = ARun.Console(out s, sevenZip, $@"a _site.tar.bz2 _site.tar", docDir);
-		if(r2 != 0) { AOutput.Write(s); return; }
+		int r1 = run.console(out var s, sevenZip, $@"a _site.tar .\_site\*", docDir);
+		if(r1 != 0) { print.it(s); return; }
+		int r2 = run.console(out s, sevenZip, $@"a _site.tar.bz2 _site.tar", docDir);
+		if(r2 != 0) { print.it(s); return; }
 
-		AFile.Delete(docDir + @"\_site.tar");
+		filesystem.delete(docDir + @"\_site.tar");
 
-		AOutput.Write("Compressed");
+		print.it("Compressed");
 	}
 
 	static void Upload(string docDir)
@@ -468,7 +468,7 @@ unsafe class Program
 		if(user == null || pass == null || pass2 == null) throw new FileNotFoundException("user or password not found in registry");
 
 		//upload
-		pass = Encoding.UTF8.GetString(Convert.FromBase64String(pass)); //to encode: AOutput.Write(Convert.ToBase64String(Encoding.UTF8.GetBytes(pass)));
+		pass = Encoding.UTF8.GetString(Convert.FromBase64String(pass)); //to encode: print.it(Convert.ToBase64String(Encoding.UTF8.GetBytes(pass)));
 		var name = @"\_site.tar.bz2";
 		var path = docDir + name;
 		using(var client = new WebClient()) {
@@ -476,17 +476,17 @@ unsafe class Program
 			//client.UploadFile("ftp://quickmacros.com/public_html/au" + name, WebRequestMethods.Ftp.UploadFile, path);
 			client.UploadFile("ftp://185.224.138.106/au" + name, WebRequestMethods.Ftp.UploadFile, path);
 		}
-		AFile.Delete(path);
-		AOutput.Write("Uploaded");
+		filesystem.delete(path);
+		print.it("Uploaded");
 
 		//extract
 		using(var client = new WebClient()) {
 			string r1 = client.DownloadString($"https://www.quickmacros.com/au/extract_help.php?kaip={pass2}");
-			if(r1 != "done") { AOutput.Write(r1); return; }
+			if(r1 != "done") { print.it(r1); return; }
 			//extracting used to be few seconds, but now with Hostinger maybe several minutes, and sometimes WebException: The operation has timed out.
 			//	The slowness is not in rrmdir, because first time was slow too. Or maybe partially in rrmdir.
 		}
-		AOutput.Write("<>Extracted to <link>https://www.quickmacros.com/au/help/</link>");
+		print.it("<>Extracted to <link>https://www.quickmacros.com/au/help/</link>");
 	}
 
 }

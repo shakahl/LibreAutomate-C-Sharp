@@ -1,5 +1,5 @@
 using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -7,7 +7,7 @@ using System.Drawing.Drawing2D;
 
 namespace Au
 {
-	public partial class AToolbar
+	public partial class toolbar
 	{
 		/// <summary>
 		/// Border style.
@@ -30,7 +30,7 @@ namespace Au
 					const WS mask = WS.CAPTION | WS.THICKFRAME | WS.SYSMENU;
 					WS s1 = _w.Style, s2 = _BorderStyle(value);
 					if (s2 != (s1 & mask)) _w.SetStyle(s1 = ((s1 & ~mask) | s2));
-					ADpi.AdjustWindowRectEx(r, ref r, s1, _w.ExStyle);
+					Dpi.AdjustWindowRectEx(r, ref r, s1, _w.ExStyle);
 					_w.MoveL(r, SWPFlags.FRAMECHANGED | SWPFlags.HIDEWINDOW);
 					if (bpDiff != 0) _Measure(); //update button rectangles
 					_w.ShowL(true);
@@ -79,11 +79,11 @@ namespace Au
 		/// <remarks>
 		/// Cannot be changed after showing toolbar window.
 		/// </remarks>
-		public FontSizeEtc Font {
+		public FontNSS Font {
 			get => _font ??= new();
 			set { _font = value; }
 		}
-		FontSizeEtc _font;
+		FontNSS _font;
 
 		/// <summary>
 		/// Text color.
@@ -177,17 +177,17 @@ namespace Au
 		{
 			public int bBorder, tbBorder, tbPadding, textPaddingR, textPaddingY, image, dot, triangle, imagePaddingX;
 
-			public _Metrics(AToolbar tb) {
+			public _Metrics(toolbar tb) {
 				int dpi = tb._dpi;
 				bBorder = dpi / 96;
 				tbPadding = tb._BorderPadding();
 				tbBorder = tbPadding > 0 ? bBorder : 0;
-				textPaddingR = ADpi.Scale(4, dpi);
-				textPaddingY = ADpi.Scale(1, dpi);
-				image = ADpi.Scale(16, dpi);
-				dot = ADpi.Scale(5, dpi);
-				triangle = ADpi.Scale(8, dpi);
-				imagePaddingX = ADpi.Scale(2, dpi);
+				textPaddingR = Dpi.Scale(4, dpi);
+				textPaddingY = Dpi.Scale(1, dpi);
+				image = Dpi.Scale(16, dpi);
+				dot = Dpi.Scale(5, dpi);
+				triangle = Dpi.Scale(8, dpi);
+				imagePaddingX = Dpi.Scale(2, dpi);
 
 				//tbBorder += 1; //test border thickness
 				//bBorder += 1;
@@ -201,7 +201,7 @@ namespace Au
 		/// Returns size of client area.
 		/// </summary>
 		SIZE _Measure(int? width = null) {
-			//		AOutput.Write("measure");
+			//		print.it("measure");
 			SIZE R = default;
 			bool autoSize = AutoSize && _a.Count > 0;
 			bool vert = Layout == TBLayout.Vertical;
@@ -249,7 +249,7 @@ namespace Au
 			} else {
 				R = new(ww + tbp * 2, _Scale(_sett.size.Height, false));
 			}
-			//		AOutput.Write(R);
+			//		print.it(R);
 
 			foreach (var b in _a) {
 				b.rect.Offset(tbp, tbp);

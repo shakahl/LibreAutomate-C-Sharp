@@ -35,7 +35,7 @@ using Au.Controls;
 using Au;
 using Au.Types;
 using System.Resources;
-using Au.Util;
+using Au.More;
 
 [module: System.Runtime.InteropServices.DefaultCharSet(System.Runtime.InteropServices.CharSet.Unicode)]
 
@@ -46,7 +46,7 @@ using Au.Util;
 // TOP-LEVEL PROGRAMS
 
 //int i = 7;
-//AOutput.Write("no class", LocFunc(), args.Length, Thread.CurrentThread.GetApartmentState());
+//print.it("no class", LocFunc(), args.Length, Thread.CurrentThread.GetApartmentState());
 
 //var v = new Abc();
 //v.Test();
@@ -59,7 +59,7 @@ using Au.Util;
 //class Abc
 //{
 //	public void Test() {
-//		AOutput.Write("test", typeof(Abc).FullName);
+//		print.it("test", typeof(Abc).FullName);
 //	}
 //}
 
@@ -68,7 +68,7 @@ using Au.Util;
 
 //var p = new Product { Name = "asd", CategoryId = 4 };
 //p = p with { CategoryId = 10 };
-//AOutput.Write(p.Name, p.CategoryId);
+//print.it(p.Name, p.CategoryId);
 
 //public record Product
 //{
@@ -87,18 +87,18 @@ using Au.Util;
 
 //object o = "asdf";
 //switch (o) {
-//	case int: AOutput.Write("int"); break;
-//	case string: AOutput.Write("string"); break;
+//	case int: print.it("int"); break;
+//	case string: print.it("string"); break;
 //}
 
 //int i = 15;
 //switch (i) {
-//	case < 10: AOutput.Write("<10"); break;
-//	case >= 10 and <=20: AOutput.Write("10..20"); break;
+//	case < 10: print.it("<10"); break;
+//	case >= 10 and <=20: print.it("10..20"); break;
 //}
 
-//if (o is not int) AOutput.Write("not");
-////if (o is not int and i is not double) AOutput.Write("not"); //no
+//if (o is not int) print.it("not");
+////if (o is not int and i is not double) print.it("not"); //no
 ////if(i>=10 and i<=20) //no
 
 
@@ -120,14 +120,14 @@ using Au.Util;
 //unsafe void Skiiip() {
 //	var v = stackalloc long[1000];
 
-//	AOutput.Write(v[0]);
+//	print.it(v[0]);
 //}
 
 
 // NATIVE INT
 
 //nint i = 5;
-////AOutput.Write(sizeof(nint));
+////print.it(sizeof(nint));
 
 
 //////////////////////////////
@@ -144,8 +144,8 @@ partial class TestScript
 		~TestGC() {
 			if (Environment.HasShutdownStarted) return;
 			if (AppDomain.CurrentDomain.IsFinalizingForUnload()) return;
-			AOutput.Write("GC", GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2));
-			//ATimer.After(1, _ => new TestGC());
+			print.it("GC", GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2));
+			//timerm.after(1, _ => new TestGC());
 			//var f = Program.MainForm; if(!f.IsHandleCreated) return;
 			//f.BeginInvoke(new Action(() => new TestGC()));
 			new TestGC();
@@ -159,73 +159,17 @@ partial class TestScript
 			s_debug2 = true;
 			new TestGC();
 
-			//ATimer.Every(50, _ => {
+			//timerm.every(50, _ => {
 			//	if(!s_debug) {
 			//		s_debug = true;
-			//		ATimer.After(100, _ => new TestGC());
+			//		timerm.after(100, _ => new TestGC());
 			//	}
 			//});
 		}
 	}
 
-	//unsafe class MapArray
-	//{
-	//	public int[] _a;
-	//	public Vector128<int>[] _v;
 
-	//	public MapArray(int n)
-	//	{
-	//		_a = new int[n];
-	//		for(int i = 0; i < _a.Length; i++) _a[i] = i;
-
-	//		_v = new Vector128<int>[n];
-	//	}
-
-	//	public void Move(int i)
-	//	{
-	//		int n = _a.Length - i - 1;
-	//		Array.Copy(_a, i, _a, i + 1, n);
-
-	//		//fixed(int* p = _a) Api.memmove(p + i + 1, p + 1, n * 4); //same speed
-	//	}
-
-	//	[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
-	//	public void Inc(int i, int add)
-	//	{
-	//		//for(; i < _a.Length; i++) _a[i]+=add;
-
-	//		long add2 = add; add2 = add2 << 32 | add2;
-	//		fixed(int* ip = _a) {
-	//			var p = (long*)ip;
-	//			for(int n = _a.Length / 2; i < n; i++) {
-	//				//var v = p[i];
-	//				p[i] += add2;
-	//			}
-
-	//		}
-
-	//		//var va = Vector128.Create(add);
-	//		//for(;  i < _v.Length; i++) {
-	//		//	_v[i]=Sse2.Add(_v[i], va);
-	//		//}
-	//	}
-
-	//	//public void Insert(int i, int add)
-	//	//{
-	//	//	for(; i < _a.Length; i++) _a[i]+=add;
-	//	//}
-
-	//	public void AOutput.WriteVector()
-	//	{
-	//		AOutput.Write(_a);
-
-	//		//for(int i=0; i < _v.Length; i++) {
-	//		//	AOutput.Write(_v[i].GetElement(0), _v[i].GetElement(1), _v[i].GetElement(2), _v[i].GetElement(3));
-	//		//}
-	//	}
-	//}
-
-	//class JSettings
+	//class _Settings
 	//{
 	//	public string OneTwo { get; set; }
 	//	public int ThreeFour { get; set; }
@@ -240,49 +184,49 @@ partial class TestScript
 	//	var file = @"Q:\test\sett.json";
 	//	var file2 = @"Q:\test\sett.xml";
 
-	//	var v = new JSettings { OneTwo = "text ąčę", ThreeFour = 100 };
+	//	var v = new _Settings { OneTwo = "text ąčę", ThreeFour = 100 };
 
 	//	for(int i = 0; i < 5; i++) {
 	//		//100.ms();
-	//		//APerf.First();
+	//		//perf.first();
 	//		//var k1 = new JsonSerializerOptions { IgnoreNullValues = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true };
 	//		//var b1 = JsonSerializer.SerializeToUtf8Bytes(v, k1);
-	//		//APerf.Next();
+	//		//perf.next();
 	//		//File.WriteAllBytes(file, b1);
-	//		//APerf.NW();
+	//		//perf.nw();
 
 	//		100.ms();
-	//		APerf.First();
+	//		perf.first();
 	//		var b2 = File.ReadAllBytes(file);
-	//		APerf.Next();
+	//		perf.next();
 	//		var k2 = new JsonSerializerOptions { IgnoreNullValues = true };
-	//		APerf.Next();
-	//		v = JsonSerializer.Deserialize<JSettings>(b2, k2);
-	//		APerf.NW('J');
+	//		perf.next();
+	//		v = JsonSerializer.Deserialize<_Settings>(b2, k2);
+	//		perf.nw('J');
 	//	}
 
 	//	for(int i = 0; i < 5; i++) {
 	//		//100.ms();
-	//		//APerf.First();
+	//		//perf.first();
 	//		//var r1 = new XElement("r");
 	//		//r1.Add(new XElement("OneTwo", v.OneTwo));
 	//		//r1.Add(new XElement("ThreeFour", v.ThreeFour.ToString()));
-	//		//APerf.Next();
+	//		//perf.next();
 	//		//r1.Save(file2);
-	//		//APerf.NW();
+	//		//perf.nw();
 
 	//		100.ms();
-	//		APerf.First();
+	//		perf.first();
 	//		var r2 = XElement.Load(file2);
-	//		APerf.Next();
-	//		v = new JSettings();
+	//		perf.next();
+	//		v = new _Settings();
 	//		v.OneTwo = r2.Element("OneTwo").Value;
 	//		var s2 = r2.Element("ThreeFour").Value;
-	//		APerf.NW('X');
+	//		perf.nw('X');
 	//		v.ThreeFour = s2.ToInt();
 	//	}
 
-	//	AOutput.Write(v.OneTwo, v.ThreeFour, v.Five, v.Six, v.Seven, v.Eight);
+	//	print.it(v.OneTwo, v.ThreeFour, v.Five, v.Six, v.Seven, v.Eight);
 
 	//	//JsonDocument d; d.RootElement.
 	//}
@@ -298,29 +242,29 @@ partial class TestScript
 	void TestToolbar()
 	{
 		for(int i = 0; i < 1; i++) {
-			var t = new AToolbar("123");
+			var t = new toolbar("123");
 			//t.NoText = true;
 			//t.Border= TBBorder.Sizable3;t.Control.Text = "Toolbar";
 			//t.Border = TBBorder.SizableWithCaptionX;
 
-			//t["Find", @"Q:\app\find.ico"] = o => AOutput.Write(o);
-			//t["Copy", @"Q:\app\copy.ico"] = o => AOutput.Write(o);
+			//t["Find", @"Q:\app\find.ico"] = o => print.it(o);
+			//t["Copy", @"Q:\app\copy.ico"] = o => print.it(o);
 			//t.Separator("Tpi group");
-			//t["Delete", @"Q:\app\delete.ico"] = o => AOutput.Write(o);
-			//t["No image"] = o => AOutput.Write(o);
-			//t["TT", tooltip: "WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW "] = o => AOutput.Write(o);
+			//t["Delete", @"Q:\app\delete.ico"] = o => print.it(o);
+			//t["No image"] = o => print.it(o);
+			//t["TT", tooltip: "WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW "] = o => print.it(o);
 			////t.LastButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
 			////t.LastButton.AutoToolTip = false;
 			////t.LastButton.ToolTipText = "ggg";
 			//t.Separator();
-			//t["Run", @"Q:\app\run.ico"] = o => AOutput.Write(o);
+			//t["Run", @"Q:\app\run.ico"] = o => print.it(o);
 			//t.Separator("");
-			//t["Paste text", @"Q:\app\paste.ico"] = o => AOutput.Write(o);
+			//t["Paste text", @"Q:\app\paste.ico"] = o => print.it(o);
 			//t.LastButton.ToolTipText = "Toooooltip";
 
 			//t.ExtractIconPathFromCode = true;
-			//t["Auto icon"] = o => AOutput.Write("notepad.exe");
-			//t["Failed icon", @"Q:\app\-.ico"] = o => AOutput.Write(o);
+			//t["Auto icon"] = o => print.it("notepad.exe");
+			//t["Failed icon", @"Q:\app\-.ico"] = o => print.it(o);
 			////t.LastButton.DisplayStyle = ToolStripItemDisplayStyle.ImageAndText;
 			////t.Separator("");
 			////t.Add(new ToolStripTextBox { ToolTipText= "ToolStripTextBox", AutoSize=false, Width=50 });
@@ -330,7 +274,7 @@ partial class TestScript
 			////t.Add(new ToolStripTextBox());
 			////t.Add(new ToolStripButton("aaa"));
 			////t.Add(new ToolStripButton("bbb"));
-			////t["Multi\r\nline"] = o => AOutput.Write(o);
+			////t["Multi\r\nline"] = o => print.it(o);
 
 			//t["None"] = o => _B(TBBorder.None);
 			//t["SWC"] = o => _B(TBBorder.SizableWithCaption);
@@ -347,123 +291,123 @@ partial class TestScript
 			var dd = new ToolStripDropDownButton("DD");
 			t.Add(dd, @"Q:\app\find.ico");
 			dd.DropDownOpening += (_, _) => {
-				var m = new AMenu(dd);
-				m["one"] = o => AOutput.Write(o);
+				var m = new popupMenu(dd);
+				m["one"] = o => print.it(o);
 				using(m.Submenu("Sub")) {
-					m["si"] = o => AOutput.Write(o);
+					m["si"] = o => print.it(o);
 				}
 			};
 			var sb = new ToolStripSplitButton("SB");
-			t.Add(sb, @"Q:\app\copy.ico", o => AOutput.Write(o));
+			t.Add(sb, @"Q:\app\copy.ico", o => print.it(o));
 #elif true
 			//t.Control.Font = new Font("Courier New", 16);
 			//t.Control.RightToLeft = RightToLeft.Yes;
 			t.MenuButton("DD", m => {
-				AOutput.Write("dd");
+				print.it("dd");
 				//m.MultiShow = false;
-				m["one"] = o => AOutput.Write(o);
+				m["one"] = o => print.it(o);
 				using(m.Submenu("Sub")) {
-					m["si"] = o => AOutput.Write(o);
+					m["si"] = o => print.it(o);
 				}
 			}, @"Q:\app\find.ico", "MenuButton");
 			t.SplitButton("SB", m => {
-				m["one"] = o => AOutput.Write(o);
+				m["one"] = o => print.it(o);
 				//var sb = m.Control.OwnerItem as ToolStripSplitButton;
-				//AOutput.Write(sb);
+				//print.it(sb);
 				//sb.DefaultItem = m.LastItem;
 				using(m.Submenu("Sub")) {
-					m["si"] = o => AOutput.Write(o);
+					m["si"] = o => print.it(o);
 				}
-			}, @"Q:\app\copy.ico", "SplitButton", o => AOutput.Write(o));
+			}, @"Q:\app\copy.ico", "SplitButton", o => print.it(o));
 			t.Separator("");
 			t[true, "DD2", @"Q:\app\delete.ico"] = m => {
-				AOutput.Write("create menu");
+				print.it("create menu");
 				//m.MultiShow = false;
-				m["one"] = o => AOutput.Write(o);
+				m["one"] = o => print.it(o);
 				using(m.Submenu("Sub")) {
-					m["si"] = o => AOutput.Write(o);
+					m["si"] = o => print.it(o);
 				}
 			};
 			//t.SplitButton("SB", o => {
-			//	AOutput.Write(o);
+			//	print.it(o);
 			//}, m => {
-			//	m["one"] = o => AOutput.Write(o);
+			//	m["one"] = o => print.it(o);
 			//	using(m.Submenu("Sub")) {
-			//		m["si"] = o => AOutput.Write(o);
+			//		m["si"] = o => print.it(o);
 			//	}
 			//}, @"Q:\app\copy.ico", "SplitButton");
-			//Action<AMenu> menu1 = m => {
-			//	m["one"] = o => AOutput.Write(o);
+			//Action<popupMenu> menu1 = m => {
+			//	m["one"] = o => print.it(o);
 			//	using(m.Submenu("Sub")) {
-			//		m["si"] = o => AOutput.Write(o);
+			//		m["si"] = o => print.it(o);
 			//	}
 			//};
 			//t.MenuButton("DD", menu1, @"Q:\app\find.ico", "MenuButton");
 #elif false
 			t.MenuButton("DD", @"Q:\app\find.ico");
 			t.Menu = m => {
-				m["one"] = o => AOutput.Write(o);
+				m["one"] = o => print.it(o);
 				using(m.Submenu("Sub")) {
-					m["si"] = o => AOutput.Write(o);
+					m["si"] = o => print.it(o);
 				}
 			};
 #else
 			t.MenuButton("DD", @"Q:\app\find.ico").Menu = m => {
-				AOutput.Write("dd");
+				print.it("dd");
 				//m.MultiShow = false;
-				m["one"] = o => AOutput.Write(o);
+				m["one"] = o => print.it(o);
 				using(m.Submenu("Sub")) {
-					m["two"] = o => AOutput.Write(o);
+					m["two"] = o => print.it(o);
 				}
 			};
-			t.SplitButton("SB", o => AOutput.Write(o), @"Q:\app\copy.ico").Menu = m => {
-				AOutput.Write("dd");
-				m["one"] = o => AOutput.Write(o);
+			t.SplitButton("SB", o => print.it(o), @"Q:\app\copy.ico").Menu = m => {
+				print.it("dd");
+				m["one"] = o => print.it(o);
 				using(m.Submenu("Sub")) {
-					m["two"] = o => AOutput.Write(o);
+					m["two"] = o => print.it(o);
 				}
 			};
 #endif
 			//t.Separator("");
 			////t["GC"] = o => GC.Collect();
 
-			//var dd = new ToolStripSplitButton("SB2", null, (_, _)=>AOutput.Write("click"));
+			//var dd = new ToolStripSplitButton("SB2", null, (_, _)=>print.it("click"));
 			//t.Add(dd, @"Q:\app\delete.ico");
 			//dd.DropDownOpening += (_, _) => {
-			//	var m = new AMenu();
+			//	var m = new popupMenu();
 			//	dd.DropDown = m.Control;
-			//	m["one"] = o => AOutput.Write(o);
+			//	m["one"] = o => print.it(o);
 			//};
-			//dd.ButtonClick += (_, _) => AOutput.Write("button click");
+			//dd.ButtonClick += (_, _) => print.it("button click");
 			//dd.DoubleClickEnabled = true;
-			//dd.ButtonDoubleClick += (_, _) => AOutput.Write("button double click");
+			//dd.ButtonDoubleClick += (_, _) => print.it("button double click");
 
-			//ATimer.After(3000, _ => {
+			//timerm.after(3000, _ => {
 			//	var c = t.Control.Items[0];
 			//	c.Select();
 			//});
 
 			//void _B(TBBorder b){
 			//	t.Border = b;
-			//	//AOutput.Write(AWnd.More.BorderWidth((AWnd)t.Control));
+			//	//print.it(wnd.more.borderWidth((wnd)t.Control));
 			//}
 
 			//t.Bounds = new Rectangle(i * 300 + 700, 200, 200, 200);
 			t.Show();
 			//t.Window.ActivateL();
-			ATime.SleepDoEvents(200);
+			wait.doEvents(200);
 
 			//for(int j = 1; j <= (int)TBBorder.SizableWithCaptionX; j++) {
-			//	ATime.SleepDoEvents(1000);
+			//	wait.doEvents(1000);
 			//	t.Border = (TBBorder)j;
 			//}
 
-			//ATime.SleepDoEvents(1000);
+			//wait.doEvents(1000);
 			//t.Border = TBBorder.FixedWithCaption;
-			//ATime.SleepDoEvents(3000);
+			//wait.doEvents(3000);
 			//t.Border = TBBorder.SizableWithCaption;
 
-			//var m = new AMenu();
+			//var m = new popupMenu();
 			//using(m.Submenu("Sub")) {
 
 			//}
@@ -471,17 +415,17 @@ partial class TestScript
 		}
 
 		//var c = new System.Windows.Forms.VisualStyles.VisualStyleRenderer(VisualStyleElement.Window.FrameLeft.Inactive).GetColor(ColorProperty.BorderColor);
-		//AOutput.Write((uint)c.ToArgb());
+		//print.it((uint)c.ToArgb());
 
-		//ATimer.After(500, _ => {
-		//	var w = (AWnd)t.Control;
+		//timerm.after(500, _ => {
+		//	var w = (wnd)t.Control;
 		//	//w.SetStyle(WS.DLGFRAME, SetAddRemove.Add);
 		//});
 
-		ADialog.Options.TopmostIfNoOwnerWindow = true;
-		ADialog.Show();
+		dialog.options.topmostIfNoOwnerWindow = true;
+		dialog.show();
 
-		//ATimer.After(10000, _ => Application.Exit());
+		//timerm.after(10000, _ => Application.Exit());
 		//Application.Run();
 	}
 #endif
@@ -489,32 +433,14 @@ partial class TestScript
 	//[MethodImpl(MethodImplOptions.NoInlining)]
 	//void TestCallerArgumentExpression(string so, [CallerArgumentExpression("so")] string ca = null) //does not work
 	//{
-	//	AOutput.Write(so, ca);
+	//	print.it(so, ca);
 	//}
-
-	class Se : Au.Util.ASettings
-	{
-		public static Se Load() => Load<Se>(@"q:\test\JSettings.json");
-
-		public string user { get => _user; set => Set(ref _user, value); }
-		string _user;
-
-	}
-
-	void TestJSettings() {
-		var se = Se.Load();
-		AOutput.Write(se.user);
-		//ATimer.After(1000, _ => se.user = AKeys.IsScrollLock ? "scroll" : "no");
-		se.user = AKeys.IsScrollLock ? "scroll" : "no";
-		//ADialog.Show("JSettings");
-		Api.MessageBox(default, "JSettings", "test", 0x00040000);
-	}
 
 	void TestBitmapLockBitsDispose() {
 		//Bitmap.FromFile(@"Q:\Test\qm small icon.png").Dispose();
-		//AOutput.Write("start");
+		//print.it("start");
 		//3.s();
-		//ADebug_.MemorySetAnchor_();
+		//Debug_.MemorySetAnchor_();
 		//for(int i = 0; i < 1000; i++) {
 		//	var b = Bitmap.FromFile(@"Q:\Test\qm small icon.png") as Bitmap;
 		//	//var d=b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
@@ -522,31 +448,31 @@ partial class TestScript
 		//	b.Dispose();
 		//	b.UnlockBits(d);
 		//}
-		//ADebug_.MemoryAOutput.Write_();
-		//while(AKeys.IsScrollLock) 100.ms();
+		//Debug_.MemoryPrint_();
+		//while(keys.isScrollLock) 100.ms();
 
 
-		var w = +AWnd.Find("Au - Microsoft Visual Studio", "HwndWrapper[DefaultDomain;*");
+		var w = +wnd.find("Au - Microsoft Visual Studio", "HwndWrapper[DefaultDomain;*");
 		string image = @"image:iVBORw0KGgoAAAANSUhEUgAAAA0AAAAQCAYAAADNo/U5AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAC2SURBVDhPYzhz9cN/DHzlw/+Hp1b8v7osHisGazoNVISOr6/N+39rZ+f/k6efY2C4Jmwm4sJDRdPNjSVgGobvH56BVQMIwzX1rz36nzd40n8Grx4w3bfh3P8Hxxfg1wRSuHzvZXCQgmgQ/+Hj8/g1gWxAjgvpmGlgcYKa0G0CiWPDDCDCo2krWBMMgzTM3XkZnJxAhqJjBpgGEI1sGjbFMAzWBNOATQE2DHYeKRpAGBwQpOEP/wF46o8knB4kYgAAAABJRU5ErkJggg==";
 		//string image = @"Q:\Test\find.bmp";
 
 		//for(int i = 0; i < 10; i++) {
-		//	var im = +AWinImage.Find(w, image, WIFlags.WindowDC);
-		//	AOutput.Write(im);
+		//	var im = +uiimage.find(w, image, IFFlags.WindowDC);
+		//	print.it(im);
 		//}
 
-		var im = +AWinImage.Find(w, image, WIFlags.WindowDC);
+		var im = +uiimage.find(w, image, IFFlags.WindowDC);
 
-		//var b = AWinImage.LoadImage(image);
+		//var b = uiimage.more.loadImage(image);
 
 		//var h = Api.LoadImage(default, image, Api.IMAGE_BITMAP, 0, 0, Api.LR_LOADFROMFILE);
 		//var b = Bitmap.FromHbitmap(h);
 		//var d = b.LockBits(new Rectangle(default, b.Size), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
-		//AOutput.Write(d.Stride);
+		//print.it(d.Stride);
 		//b.UnlockBits(d);
 
-		//var im = +AWinImage.Find(w, b, WIFlags.WindowDC);
-		AOutput.Write(im);
+		//var im = +uiimage.find(w, b, IFFlags.WindowDC);
+		print.it(im);
 
 	}
 
@@ -558,21 +484,21 @@ partial class TestScript
 		var a = new object[100];
 		for (int i = 0; i < a.Length; i++) a[i] = new object();
 
-		APerf.Cpu();
+		perf.cpu();
 		for (int i1 = 0; i1 < 7; i1++) {
 			int n2 = a.Length;
-			APerf.First();
+			perf.first();
 			for (int i2 = 0; i2 < n2; i2++) { hs.Add(a[i2]); }
 			for (int i2 = 0; i2 < n2; i2++) { hs.Remove(a[i2]); }
-			APerf.Next();
+			perf.next();
 			for (int i2 = 0; i2 < n2; i2++) { lock (hs2) hs2.Add(a[i2]); } //20% slower
 			for (int i2 = 0; i2 < n2; i2++) { lock (hs2) hs2.Remove(a[i2]); }
-			APerf.Next();
+			perf.next();
 			for (int i2 = 0; i2 < n2; i2++) { cd.TryAdd(a[i2], default); } //50% slower
 			for (int i2 = 0; i2 < n2; i2++) { cd.TryRemove(a[i2], out _); }
-			APerf.Next();
+			perf.next();
 			for (int i2 = 0; i2 < n2; i2++) { var gc = GCHandle.Alloc(a[i2]); gc.Free(); } //50% faster
-			APerf.NW();
+			perf.nw();
 			Thread.Sleep(100);
 		}
 	}
@@ -589,55 +515,55 @@ partial class TestScript
 	//	unsafe void TestMemoryAllocSpeed()
 	//	{
 	//		byte[] a;
-	//		byte* p1 = (byte*)Au.Util.AMemory.Alloc(1000); Au.Util.AMemory.Free(p1);
+	//		byte* p1 = (byte*)Au.More.MemoryUtil.Alloc(1000); Au.More.MemoryUtil.Free(p1);
 	//		byte* p2 = (byte*)Api.VirtualAlloc(default, 1000); Api.VirtualFree(p2);
 	//		int n = 10_000_000;
 	//		//n = 100_000_000;
 	//		n = 0x10000;
 
-	//		APerf.Cpu();
+	//		perf.cpu();
 	//		for(int i1 = 0; i1 < 10; i1++) {
-	//			APerf.First();
+	//			perf.first();
 
 	//			//	a = new byte[n];
-	//			//	APerf.Next();
+	//			//	perf.next();
 	//			//	fixed(byte* bp = a) {
 	//			//		var ip = (long*)bp; for(int j = 0; j < n / 8; j++) ip[j] = j;
 	//			//	}
 
-	//			//APerf.Next();
+	//			//perf.next();
 
-	//			//	p1 = (byte*)Au.Util.AMemory.Alloc(n);
-	//			//	APerf.Next();
+	//			//	p1 = (byte*)Au.More.MemoryUtil.Alloc(n);
+	//			//	perf.next();
 	//			//	var ip = (long*)p1; for(int j = 0; j < n / 8; j++) ip[j] = j;
-	//			//	APerf.Next();
-	//			//	Au.Util.AMemory.Free(p1);
+	//			//	perf.next();
+	//			//	Au.More.MemoryUtil.Free(p1);
 
-	//			//APerf.Next();
+	//			//perf.next();
 
 	//			//	//p2 = (byte*)Api.VirtualAlloc(default, n);
 	//			//	p2 = (byte*)Api.VirtualAlloc(default, n, Api.MEM_COMMIT | Api.MEM_RESERVE, Api.PAGE_READWRITE);
-	//			//	APerf.Next();
+	//			//	perf.next();
 	//			//	var ip = (long*)p2; for(int j = 0; j < n / 8; j++) ip[j] = j;
-	//			//	APerf.Next();
+	//			//	perf.next();
 	//			//	Api.VirtualFree(p2);
 
 	////			//test realloc speed
-	////			p1 = (byte*)Au.Util.AMemory.Alloc(n);
-	////			APerf.Next();
+	////			p1 = (byte*)Au.More.MemoryUtil.Alloc(n);
+	////			perf.next();
 	////			var ip = (long*)p1; for(int j = 0; j < n / 8; j++) ip[j] = j;
-	////			APerf.Next();
+	////			perf.next();
 	////#if true
-	////			Au.Util.AMemory.Free(p1);
-	////			var p1c = (byte*)Au.Util.AMemory.Alloc(n + 20000);
+	////			Au.More.MemoryUtil.Free(p1);
+	////			var p1c = (byte*)Au.More.MemoryUtil.Alloc(n + 20000);
 	////#else
-	////			var p1c = (byte*)Au.Util.AMemory.ReAlloc(p1, n + 20000);
+	////			var p1c = (byte*)Au.More.MemoryUtil.ReAlloc(p1, n + 20000);
 	////#endif
-	////			APerf.Next();
-	////			Au.Util.AMemory.Free(p1c);
+	////			perf.next();
+	////			Au.More.MemoryUtil.Free(p1c);
 
-	//			APerf.NW();
-	//			//AOutput.Write(p1c == p1);
+	//			perf.nw();
+	//			//print.it(p1c == p1);
 	//			Thread.Sleep(100);
 	//		}
 	//	}
@@ -685,21 +611,21 @@ partial class TestScript
 
 		string html = Markdig.Markdown.ToHtml(markdown);
 		html = html.RegexReplace(@"(?m)^", "/// ");
-		AOutput.Write(html);
+		print.it(html);
 	}
 
 	//void TestMenuDropdownBug()
 	//{
-	//	bool test = AKeys.IsScrollLock;
+	//	bool test = keys.isScrollLock;
 	//	{
 	//		var m = new ToolStripDropDownMenu();
 	//		var k = m.Items;
 	//		k.Add("0");
 	//	}
 	//	for(int j = 0; j < 1; j++) {
-	//		ADebug_.MemorySetAnchor_();
+	//		Debug_.MemorySetAnchor_();
 
-	//		APerf.First();
+	//		perf.first();
 	//		var m = new ToolStripDropDownMenu();
 	//		var k = m.Items;
 	//		if(test) m.ShowItemToolTips = false;
@@ -707,22 +633,22 @@ partial class TestScript
 	//		for(int i = 0; i < 100; i++) {
 	//			k.Add("0");
 	//		}
-	//		APerf.Next();
+	//		perf.next();
 	//		//foreach(ToolStripMenuItem v in m.Items) {
-	//		//	if(v.HasDropDown) AOutput.Write("has");
+	//		//	if(v.HasDropDown) print.it("has");
 	//		//}
-	//		//APerf.Next();
+	//		//perf.next();
 	//		//if(test) {
 	//		//	m.ShowItemToolTips = true;
-	//		//	APerf.Next();
+	//		//	perf.next();
 	//		//}
 
-	//		ADebug_.MemoryPrint_();
-	//		APerf.Write();
+	//		Debug_.MemoryPrint_();
+	//		perf.write();
 
 	//		//m.Show();
 
-	//		//ADebug_.MemoryPrint_();
+	//		//Debug_.MemoryPrint_();
 
 	//		100.ms();
 	//	}
@@ -774,22 +700,22 @@ partial class TestScript
 	//void One(bool two) { }
 	//bool Two() => false;
 
-	void TestFirefoxAcc() {
+	void TestFirefoxElm() {
 		try {
-			//var w = +AWnd.Find("*- Mozilla Firefox", "MozillaWindowClass");
-			//var a = AAcc.FromWindow(w);
+			//var w = +wnd.find("*- Mozilla Firefox", "MozillaWindowClass");
+			//var a = elm.fromWindow(w);
 
-			var w = +AWnd.Find("Au automation library and editor | Au - Mozilla Firefox", "MozillaWindowClass");
-			//var a = +AAcc.Find(w, "web:LINK", "Library");
-			var a = +AAcc.Find(w, "web:DOCUMENT");
+			var w = +wnd.find("Au automation library and editor | Au - Mozilla Firefox", "MozillaWindowClass");
+			//var a = +elm.find(w, "web:LINK", "Library");
+			var a = +elm.find(w, "web:DOCUMENT");
 			a = +a.Navigate("ch2");
 			//a = +a.Navigate("fi ne fi4 ne fi ne fi2");
 			//a=a.Find("LINK", "Library");
 
-			AOutput.Write(a.MiscFlags, a);
+			print.it(a.MiscFlags, a);
 
 			if (a.GetProperties("@", out var p)) {
-				AOutput.Write(p.HtmlAttributes);
+				print.it(p.HtmlAttributes);
 			}
 
 		}
@@ -804,61 +730,61 @@ partial class TestScript
 	void TestUnsafe() {
 		//var a = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
 		//ulong k = Unsafe.As<byte, ulong>(ref a[0]);
-		//AOutput.Write(k);
+		//print.it(k);
 
 		//a[2] = Unsafe.As<ulong, byte>(ref k);
-		//AOutput.Write(a);
+		//print.it(a);
 
-		var f = AKeys.IsScrollLock ? FAFlags.DontThrow : FAFlags.UseRawPath;
-		//f.SetFlag2(AFFlags.Reverse, true);
-		//AOutput.Write(f);
-		//f.SetFlag2(AFFlags.Reverse, false);
-		//AOutput.Write(f);
+		var f = keys.isScrollLock ? FAFlags.DontThrow : FAFlags.UseRawPath;
+		//f.SetFlag2(EFFlags.Reverse, true);
+		//print.it(f);
+		//f.SetFlag2(EFFlags.Reverse, false);
+		//print.it(f);
 
 		int k1 = 0, k2 = 0, k3 = 0, k4 = 0, k5 = 0;
-		APerf.Cpu();
-		//if(f.HasAny(AFFlags.HiddenToo)) k3++;
+		perf.cpu();
+		//if(f.HasAny(EFFlags.HiddenToo)) k3++;
 		for (int i1 = 0; i1 < 7; i1++) {
 			int n2 = 10000;
-			APerf.First();
+			perf.first();
 			for (int i2 = 0; i2 < n2; i2++) { f.SetFlag(FAFlags.DontThrow, true); f.SetFlag(FAFlags.DontThrow, false); }
-			APerf.Next();
+			perf.next();
 			for (int i2 = 0; i2 < n2; i2++) { if (f.HasFlag(FAFlags.UseRawPath)) k1++; }
-			APerf.Next();
+			perf.next();
 			for (int i2 = 0; i2 < n2; i2++) { if (f.Has(FAFlags.UseRawPath)) k2++; }
-			APerf.Next();
+			perf.next();
 			for (int i2 = 0; i2 < n2; i2++) { if (f.HasAny(FAFlags.UseRawPath)) k3++; }
-			//APerf.Next();
-			//for(int i2 = 0; i2 < n2; i2++) { if(f.HasAny5(AFFlags.HiddenToo)) k5++; }
-			APerf.NW();
+			//perf.next();
+			//for(int i2 = 0; i2 < n2; i2++) { if(f.HasAny5(EFFlags.HiddenToo)) k5++; }
+			perf.nw();
 			Thread.Sleep(200);
 		}
-		AOutput.Write(f, k1, k2, k3, k4, k5);
+		print.it(f, k1, k2, k3, k4, k5);
 	}
 
 	void TestNetCoreVersion() {
-		AOutput.Write(AFolders.NetRuntime);
+		print.it(folders.NetRuntime);
 	}
 
 	[StructLayout(LayoutKind.Explicit, Size = 500000)]
 	struct BIGBIG { public override string ToString() => "TEST"; }
 	void TestStringInterpolationBoxing() {
 		BIGBIG r = default;
-		ADebug_.MemorySetAnchor_();
+		Debug_.MemorySetAnchor_();
 		var s = $"a {r}?"; //result: boxes, although .ToString() causes an IDE suggestion to remove it
-		ADebug_.MemoryPrint_();
-		AOutput.Write(s);
+		Debug_.MemoryPrint_();
+		print.it(s);
 	}
 
 	void TestMinusSign() {
-		AOutput.Clear();
+		print.clear();
 		var v = -5;
 		var s = v.ToString();
-		AOutput.Write((uint)s[0]);
-		AOutput.Write(Convert.ToInt32(s), int.Parse(s), s.ToInt());
+		print.it((uint)s[0]);
+		print.it(Convert.ToInt32(s), int.Parse(s), s.ToInt());
 		s = "-6";
-		AOutput.Write((uint)s[0]);
-		AOutput.Write(Convert.ToInt32(s), int.Parse(s), s.ToInt());
+		print.it((uint)s[0]);
+		print.it(Convert.ToInt32(s), int.Parse(s), s.ToInt());
 
 	}
 
@@ -867,7 +793,7 @@ partial class TestScript
 		//nint n = i;
 		//var s1 = n.ToString();
 		//var s2 = n.ToStringInvariant();
-		//AOutput.Write(n, s1, s2, (uint)s1[0], (uint)s2[0]);
+		//print.it(n, s1, s2, (uint)s1[0], (uint)s2[0]);
 
 		////int i =unchecked((int) uint.MaxValue);
 		long i = long.MaxValue;
@@ -876,7 +802,7 @@ partial class TestScript
 		//IntPtr n = (IntPtr)i;
 		nint n = (nint)i;
 		int k = (int)n;
-		AOutput.Write(n, k);
+		print.it(n, k);
 
 		//nint n = (uint)8;
 		//nint n = (IntPtr)5;
@@ -895,7 +821,7 @@ partial class TestScript
 
 	//System.PlatformNotSupportedException: System.Management currently is only supported for Windows desktop applications.
 //	void TestWMI() {
-//AOutput.Clear();
+//print.clear();
 
 //var interval = new TimeSpan( 0, 0, 1 );
 //const string isWin32Process = "TargetInstance isa \"Win32_Process\"";
@@ -905,23 +831,23 @@ partial class TestScript
 //    = new WqlEventQuery( "__InstanceCreationEvent", interval, isWin32Process );
 //var _startWatcher = new ManagementEventWatcher( startQuery );
 //_startWatcher.Start();
-//_startWatcher.EventArrived += (_,e)=> { AOutput.Write("start", e.Context, e.NewEvent); };
+//_startWatcher.EventArrived += (_,e)=> { print.it("start", e.Context, e.NewEvent); };
 
 //// Listen for closed processes.
 //WqlEventQuery stopQuery
 //    = new WqlEventQuery( "__InstanceDeletionEvent", interval, isWin32Process );
 //var _stopWatcher = new ManagementEventWatcher( stopQuery );
 //_stopWatcher.Start();
-//_stopWatcher.EventArrived += (_,e)=> { AOutput.Write("end", e.Context, e.NewEvent); };
+//_stopWatcher.EventArrived += (_,e)=> { print.it("end", e.Context, e.NewEvent); };
 
 
-//ADialog.Show("");
+//dialog.show("");
 //	}
 
 	unsafe void _Main() {
 		//Application.SetCompatibleTextRenderingDefault(false);
-		//AOutput.Write("before");
-		//ADebug_.AOutput.WriteLoadedAssemblies(true, true, true);
+		//print.it("before");
+		//Debug_.WriteLoadedAssemblies(true, true, true);
 
 
 		//TestWMI();
@@ -936,14 +862,14 @@ partial class TestScript
 
 	[STAThread] static void Main(string[] args) { new TestScript(args); }
 	TestScript(string[] args) {
-		AOutput.QM2.UseQM2 = true;
-		//AOutput.Clear();
+		print.qm2.use = true;
+		//print.clear();
 
-		//APerf.First();
+		//perf.first();
 		try {
 			_Main();
 		}
-		catch (Exception ex) { AOutput.Write(ex); }
+		catch (Exception ex) { print.it(ex); }
 	}
 }
 #endif

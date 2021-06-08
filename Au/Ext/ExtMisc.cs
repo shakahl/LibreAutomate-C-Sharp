@@ -169,7 +169,7 @@ namespace Au.Types
 		///// </summary>
 		//public static string ToBase64(this Guid t) => Convert.ToBase64String(new ReadOnlySpan<byte>((byte*)&t, sizeof(Guid)));
 
-		//rejected: too simple. We have AOutput.Write(uint), also can use $"0x{t:X}" or "0x" + t.ToString("X").
+		//rejected: too simple. We have print.it(uint), also can use $"0x{t:X}" or "0x" + t.ToString("X").
 		///// <summary>
 		///// Converts int to hexadecimal string like "0x3A".
 		///// </summary>
@@ -187,12 +187,12 @@ namespace Au.Types
 		///// <example>
 		///// <code><![CDATA[
 		///// for(int i = 0; i < 3; i++) {
-		///// 	AOutput.Write(1);
+		///// 	print.it(1);
 		///// }
 		///// 
 		///// //this can be used instead of the above code with 'for'
 		///// 3.Times(() => {
-		///// 	AOutput.Write(2);
+		///// 	print.it(2);
 		///// });
 		///// ]]></code>
 		///// </example>
@@ -212,12 +212,12 @@ namespace Au.Types
 		///// <example>
 		///// <code><![CDATA[
 		///// for(int i = 0; i < 3; i++) {
-		///// 	AOutput.Write(i);
+		///// 	print.it(i);
 		///// }
 		///// 
 		///// //this can be used instead of the above code with 'for'
 		///// 3.Times(i => {
-		///// 	AOutput.Write(i);
+		///// 	print.it(i);
 		///// });
 		///// ]]></code>
 		///// </example>
@@ -265,9 +265,9 @@ namespace Au.Types
 #if false //Enum.HasFlag used to be slow, but now compiler for it creates the same code as with operator
 			return t.HasFlag(flag);
 			//However cannot use this because of JIT compiler bug: in some cases Has returns true when no flag.
-			//Noticed it in TriggerActionThreads.Run in finally{} of actionWrapper, code opt.flags.Has(TOFlags.SingleInstance).
+			//Noticed it in TriggerActionThreads.Run in finally{} of actionWrapper, code o.flags.Has(TOFlags.Single).
 			//It was elusive, difficult to debug, only in Release, and only after some time/times, when tiered JIT fully optimizes.
-			//When Has returned true, AOutput.Write showed that flags is 0.
+			//When Has returned true, print.it showed that flags is 0.
 			//No bug if HasFlag called directly, not in extension method.
 #elif true //slightly slower than Enum.HasFlag and code as with operator
 			var m = _ToLong(flag);
@@ -682,18 +682,18 @@ namespace Au.Types
 		#region winforms
 
 		/// <summary>
-		/// Gets window handle as <see cref="AWnd"/>.
+		/// Gets window handle as <see cref="wnd"/>.
 		/// </summary>
 		/// <param name="t">A <b>Control</b> or <b>Form</b> etc. Cannot be null.</param>
 		/// <param name="create">
-		/// Create handle if still not created. Default false (return default(AWnd)).
+		/// Create handle if still not created. Default false (return default(wnd)).
 		/// Unlike <see cref="System.Windows.Forms.Control.CreateControl"/>, creates handle even if invisible. Does not create child control handles.
 		/// </param>
 		/// <remarks>
 		/// Should be called in control's thread. Calls <see cref="System.Windows.Forms.Control.IsHandleCreated"/> and <see cref="System.Windows.Forms.Control.Handle"/>.
 		/// </remarks>
-		public static AWnd Hwnd(this System.Windows.Forms.Control t, bool create = false)
-			=> create || t.IsHandleCreated ? new AWnd(t.Handle) : default;
+		public static wnd Hwnd(this System.Windows.Forms.Control t, bool create = false)
+			=> create || t.IsHandleCreated ? new wnd(t.Handle) : default;
 
 		#endregion
 

@@ -15,14 +15,15 @@ using System.Linq;
 
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 using Au.Compiler;
 using Au.Controls;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System.Windows.Input;
-using static Menus;
+
+//TODO: support <inheritdoc>. VS supports it partially (shows only summary, no parameters/remarks/exceptions).
 
 static class CodeInfo
 {
@@ -49,12 +50,12 @@ static class CodeInfo
 		//warm up
 		//Task.Delay(100).ContinueWith(_1 => {
 		Task.Run(() => {
-			//var p1 = APerf.Create();
+			//var p1 = perf.local();
 			try {
 				var code = @"//.
 using Au; using Au.Types; using System; using System.Collections.Generic;
-class Script { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) {
-AOutput.Write(""t"" + 'c' + 1);
+class Script { static void Main(string[] a) => new Script(a); Script(string[] args) {
+print.it(""t"" + 'c' + 1);
 }}";
 
 				var refs = new MetaReferences().Refs;
@@ -71,7 +72,7 @@ AOutput.Write(""t"" + 'c' + 1);
 				//_ = document.GetSemanticModelAsync().Result;
 				//p1.Next();
 				App.Wmain.Dispatcher.InvokeAsync(() => {
-					//APerf.Next('w');
+					//perf.next('w');
 					_isWarm = true;
 					ReadyForStyling?.Invoke();
 					Panels.Editor.ZActiveDocChanged += Stop;
@@ -82,12 +83,12 @@ AOutput.Write(""t"" + 'c' + 1);
 				//p1.Next();
 				//Compiler.Warmup(document); //don't need. Later fast enough. Now just uses more memory and CPU at startup.
 				//p1.NW('w');
-				//APerf.NW();
+				//perf.nw();
 
 				//EdUtil.MinimizeProcessPhysicalMemory(500); //with this later significantly slower
 			}
 			catch (Exception ex) {
-				ADebug_.Print(ex);
+				Debug_.Print(ex);
 			}
 		});
 	}
@@ -112,7 +113,7 @@ AOutput.Write(""t"" + 'c' + 1);
 	}
 
 	static void _Uncache() {
-		//AOutput.Write("_Uncache");
+		//print.it("_Uncache");
 		CurrentWorkspace = null;
 		_solution = null;
 		_projectId = null;
@@ -148,7 +149,7 @@ AOutput.Write(""t"" + 'c' + 1);
 		if (Debugger.IsAttached) return;
 #endif
 		//hide code info windows, except when a code info window is focused. Code info window names start with "Ci.".
-		var aw = AWnd.ThisThread.Active;
+		var aw = wnd.thisThread.active;
 		if (aw.Is0) Stop(); else if (!(KPopup.FromHwnd(aw) is KPopup p && p.Name.Starts("Ci."))) Cancel();
 	}
 
@@ -255,7 +256,7 @@ AOutput.Write(""t"" + 'c' + 1);
 #if NO_COMPL_CORR_SIGN
 		return;
 #endif
-		//AOutput.Write("SciUpdateUI", modified, _tempNoAutoComplete);
+		//print.it("SciUpdateUI", modified, _tempNoAutoComplete);
 		if (!_CanWork(doc)) return;
 
 		if (0 != (updated & 3)) { //text (1), selection/click (2)
@@ -380,7 +381,7 @@ AOutput.Write(""t"" + 'c' + 1);
 				}
 			}
 			catch (Exception ex) {
-				ADebug_.Print(ex);
+				Debug_.Print(ex);
 				return false;
 			}
 
@@ -410,10 +411,10 @@ AOutput.Write(""t"" + 'c' + 1);
 		void _ModifySource() {
 			//var r = document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
 
-			//AOutput.Write("Externs:", r.Externs);
-			//AOutput.Write("Usings:", r.Usings);
-			//AOutput.Write("Members:", r.Members);
-			//AOutput.Write("AttributeLists:", r.AttributeLists);
+			//print.it("Externs:", r.Externs);
+			//print.it("Usings:", r.Usings);
+			//print.it("Members:", r.Members);
+			//print.it("AttributeLists:", r.AttributeLists);
 
 			//var st = SyntaxFactory.ParseCompilationUnit("using Microsoft.Win32;\n");
 			//root = root.AddUsings(st.ChildNodes().Cast<UsingDirectiveSyntax>().ToArray());
@@ -433,12 +434,12 @@ AOutput.Write(""t"" + 'c' + 1);
 			//		if(u.Alias == null && u.StaticKeyword.RawKind == 0) {
 			//			var span = u.Name.Span;
 			//			var s = code[span.Start..span.End];
-			//			//AOutput.Write(s);
+			//			//print.it(s);
 
 			//		}
-			//		//APerf.First();
-			//		//APerf.Next();
-			//		//APerf.NW();
+			//		//perf.first();
+			//		//perf.next();
+			//		//perf.nw();
 			//		break;
 			//	//case AttributeListSyntax als when als.Target.Identifier.Text is "module" or "assembly":
 			//	//	break;
@@ -580,7 +581,7 @@ AOutput.Write(""t"" + 'c' + 1);
 	//	_textPopup ??= new CiPopupText(CiPopupText.UsedBy.Info, onHiddenOrDestroyed: (_, _) => _tpVisible = false);
 	//	_textPopup.Text = text;
 	//	_textPopup.OnLinkClick = onLinkClick;
-	//	if (AKeys.IsScrollLock && Panels.Output.IsVisible) {
+	//	if (keys.isScrollLock && Panels.Output.IsVisible) {
 	//		var r = Panels.Output.RectInScreen();
 	//		_textPopup.Show(doc, r, null);
 	//	} else {

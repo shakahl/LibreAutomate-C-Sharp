@@ -90,7 +90,7 @@ namespace Au
 		/// </code>
 		/// 
 		/// <code><![CDATA[
-		/// var v = ADialog.Show("", "Text <a href=\"example\">link</a>.", onLinkClick: e => { AOutput.Write(e.LinkHref); });
+		/// var v = dialog.show("", "Text <a href=\"example\">link</a>.", onLinkClick: e => { print.it(e.LinkHref); });
 		/// ]]></code>
 		/// 
 		///  C# keywords
@@ -115,13 +115,13 @@ namespace Au
 		/// Test property.
 		/// </summary>
 		/// <remarks>
-		/// type <see cref="AAcc"/>
+		/// type <see cref="elm"/>
 		/// 
-		/// method <see cref="AAcc.Find"/>
+		/// method <see cref="elm.find"/>
 		/// 
-		/// property <see cref="AAcc.Name"/>
+		/// property <see cref="elm.Name"/>
 		/// 
-		/// enum <see cref="AFFlags.NotInProc"/>
+		/// enum <see cref="EFFlags.NotInProc"/>
 		/// 
 		/// API <msdn>GetTickCount</msdn>
 		/// 

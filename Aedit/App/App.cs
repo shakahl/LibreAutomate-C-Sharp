@@ -1,7 +1,7 @@
 ﻿using Au;
 using Au.Controls;
 using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,30 +14,30 @@ using System.Windows;
 
 static class App
 {
-	//public const string AppName = "Automate C#ly";//TODO: also change in eg Au postbuild, now "$(SolutionDir)Other\Programs\nircmd.exe" win close etitle Aedit
+	//public const string AppName = "...";//TODO: also change in eg Au postbuild, now "$(SolutionDir)Other\Programs\nircmd.exe" win close etitle Aedit
 	public const string AppName = "Aedit";
 	public static string UserGuid;
-	internal static AOutput.Server OutputServer;
+	internal static print.Server PrintServer;
 	public static AppSettings Settings;
 
 	/// <summary>Main window</summary>
 	public static MainWindow Wmain;
 
 	/// <summary>Handle of main window (<b>Wmain</b>).</summary>
-	public static AWnd Hwnd;
+	public static wnd Hwnd;
 
 	public static KMenuCommands Commands;
 	public static FilesModel Model;
 	public static RunningTasks Tasks;
-	public static AIconImageCache ImageCache;
+	public static IconImageCache ImageCache;
 
 #if TRACE
 	static App() {
-		APerf.First();
-		ATimer.After(1, _ => APerf.NW());
-		AOutput.QM2.UseQM2 = true;
-		AOutput.Clear();
-		AOutput.RedirectConsoleOutput = true;
+		perf.first();
+		timerm.after(1, _ => perf.nw());
+		print.qm2.use = true;
+		print.clear();
+		print.redirectConsoleOutput = true;
 	}
 #endif
 
@@ -60,7 +60,7 @@ static class App
 		//restart as admin if started as non-admin on admin user account
 		if (args.Length > 0 && args[0] == "/n") {
 			args = args.RemoveAt(0);
-		} else if (AUac.OfThisProcess.Elevation == UacElevation.Limited) {
+		} else if (uacInfo.ofThisProcess.Elevation == UacElevation.Limited) {
 #if !DEBUG
 			if(_RestartAsAdmin(args)) return;
 #endif
@@ -72,61 +72,61 @@ static class App
 
 	static void _Main(string[] args) {
 		//#if !DEBUG
-		AThisProcess.CultureIsInvariant = true;
+		process.thisProcessCultureIsInvariant = true;
 		//#endif
-		ADefaultTraceListener.Setup(useAOutput: true);
-		AFolders.ThisAppDocuments = (FolderPath)(AFolders.Documents + "Aedit");
-		Directory.SetCurrentDirectory(AFolders.ThisApp); //because it is c:\windows\system32 when restarted as admin
+		DebugTraceListener.Setup(usePrint: true);
+		folders.ThisAppDocuments = (FolderPath)(folders.Documents + "Aedit");
+		Directory.SetCurrentDirectory(folders.ThisApp); //because it is c:\windows\system32 when restarted as admin
 
 #if true
-		AppDomain.CurrentDomain.UnhandledException += (ad, e) => AOutput.Write(e.ExceptionObject);
-		//ADebug_.PrintLoadedAssemblies(true, true);
+		AppDomain.CurrentDomain.UnhandledException += (ad, e) => print.it(e.ExceptionObject);
+		//Debug_.PrintLoadedAssemblies(true, true);
 #else
-		AppDomain.CurrentDomain.UnhandledException += (ad, e) => ADialog.ShowError("Exception", e.ExceptionObject.ToString());
+		AppDomain.CurrentDomain.UnhandledException += (ad, e) => dialog.showError("Exception", e.ExceptionObject.ToString());
 #endif
 
 		if (CommandLine.OnProgramStarted(args)) return;
 
-		OutputServer = new AOutput.Server(true) { NoNewline = true };
-		OutputServer.Start();
+		PrintServer = new print.Server(true) { NoNewline = true };
+		PrintServer.Start();
 
 		Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
 		Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
 
-		APerf.Next('o');
+		perf.next('o');
 		Settings = AppSettings.Load(); //the slowest part, >37 ms. Loads many dlls used in JSON deserialization.
-		APerf.Next('s');
+		perf.next('s');
 		UserGuid = Settings.user; if (UserGuid == null) Settings.user = UserGuid = Guid.NewGuid().ToString();
 
 		Tasks = new RunningTasks();
-		APerf.Next('t');
+		perf.next('t');
 
 		FilesModel.LoadWorkspace(CommandLine.WorkspaceDirectory);
-		APerf.Next('W');
+		perf.next('W');
 		CommandLine.OnProgramLoaded();
-		APerf.Next('c');
+		perf.next('c');
 		Loaded = EProgramState.LoadedWorkspace;
 		Model.RunStartupScripts();
 
-		ATimer.Every(1000, t => _TimerProc(t));
+		timerm.every(1000, t => _TimerProc(t));
 		//note: timer can make Process Hacker/Explorer show CPU usage, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, <0.01 if 1000.
-		//Timer1s += () => AOutput.Write("1 s");
-		//Timer1sOr025s += () => AOutput.Write("0.25 s");
+		//Timer1s += () => print.it("1 s");
+		//Timer1sOr025s += () => print.it("0.25 s");
 
 		TrayIcon.Update_();
-		APerf.Next('i');
-		//APerf.Write();
+		perf.next('i');
+		//perf.write();
 		//return;
 
 		if (!App.Settings.runHidden || CommandLine.StartVisible || TrayIcon.WaitForShow_()) {
-			//AOutput.Write("-- loading UI --");
+			//print.it("-- loading UI --");
 #if TRACE
-			AOutput.QM2.UseQM2 = false;
+			print.qm2.use = false;
 #endif
 			_LoadUI();
 		}
 
-		OutputServer.Stop();
+		PrintServer.Stop();
 
 		//#if TRACE
 		//		//50 -> 36 -> 5 (5/40/9)
@@ -148,10 +148,10 @@ static class App
 	static void _LoadUI() {
 		var app = new Aedit.WpfApp { ShutdownMode = ShutdownMode.OnMainWindowClose };
 		app.InitializeComponent(); //FUTURE: remove if not used. Adds 2 MB (10->12) when running hidden at startup.
-		ImageCache = new AIconImageCache();
+		ImageCache = new IconImageCache();
 		new MainWindow();
 		app.DispatcherUnhandledException += (_, e) => {
-			e.Handled = 1 == ADialog.ShowError("Exception", e.Exception.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, Wmain, e.Exception.ToString());
+			e.Handled = 1 == dialog.showError("Exception", e.Exception.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, Wmain, e.Exception.ToString());
 		};
 		app.Run(Wmain);
 	}
@@ -177,7 +177,7 @@ static class App
 	public static bool IsTimer025 => s_timerCounter > 0;
 	static uint s_timerCounter;
 
-	static void _TimerProc(ATimer t) {
+	static void _TimerProc(timerm t) {
 		Timer1sOr025s?.Invoke();
 		bool needFast = Wmain?.IsVisible ?? false;
 		if (needFast != (s_timerCounter > 0)) t.Every(needFast ? 250 : 1000);
@@ -185,7 +185,7 @@ static class App
 			Timer025sWhenVisible?.Invoke();
 			s_timerCounter++;
 			if (MousePosChangedWhenProgramVisible != null) {
-				var p = AMouse.XY;
+				var p = mouse.xy;
 				if (p != s_mousePos) {
 					s_mousePos = p;
 					MousePosChangedWhenProgramVisible(p);
@@ -214,14 +214,14 @@ static class App
 		get {
 			var v = System.Windows.Input.Keyboard.FocusedElement;
 			if (v != null) return v as FrameworkElement;
-			return AWnd.Internal_.ToWpfElement(Api.GetFocus());
+			return wnd.Internal_.ToWpfElement(Api.GetFocus());
 		}
 	}
 
 	static bool _RestartAsAdmin(string[] args) {
 		if (Debugger.IsAttached) return false; //very fast
 		try {
-			bool isAuHomePC = Api.EnvironmentVariableExists("Au.Home<PC>") && !AFolders.ThisAppBS.Starts(@"C:\Program Files", true);
+			bool isAuHomePC = Api.EnvironmentVariableExists("Au.Home<PC>") && !folders.ThisAppBS.Starts(@"C:\Program Files", true);
 			//int pid = 
 			WinTaskScheduler.RunTask("Au",
 				isAuHomePC ? "_Aedit" : "Aedit", //run Q:\app\Au\_\Au.CL.exe or <installed path>\Au.CL.exe
@@ -229,7 +229,7 @@ static class App
 			//Api.AllowSetForegroundWindow(pid); //fails and has no sense, because it's Au.CL.exe running as SYSTEM
 		}
 		catch (Exception ex) { //probably this program is not installed (no scheduled task)
-			AOutput.QM2.Write(ex);
+			print.qm2.write(ex);
 			return false;
 		}
 		return true;
@@ -239,7 +239,7 @@ static class App
 	{
 		static IntPtr[] _icons;
 		static bool _disabled, _running;
-		static AWnd _wNotify;
+		static wnd _wNotify;
 
 		const int c_msgBreakMessageLoop = Api.WM_APP;
 		const int c_msgNotify = Api.WM_APP + 1;
@@ -249,13 +249,13 @@ static class App
 			if (_icons == null) {
 				_icons = new IntPtr[3];
 
-				s_msgTaskbarCreated = AWnd.More.RegisterMessage("TaskbarCreated", uacEnable: true);
+				s_msgTaskbarCreated = wnd.more.registerMessage("TaskbarCreated", uacEnable: true);
 
-				AWnd.More.RegisterWindowClass("Aedit.TrayNotify", _WndProc);
-				_wNotify = AWnd.More.CreateWindow("Aedit.TrayNotify", null, WS.POPUP, WSE.NOACTIVATE);
+				wnd.more.registerWindowClass("Aedit.TrayNotify", _WndProc);
+				_wNotify = wnd.more.createWindow("Aedit.TrayNotify", null, WS.POPUP, WSE.NOACTIVATE);
 				//not message-only, because must receive s_msgTaskbarCreated and also used for context menu
 
-				AThisProcess.Exit += _ => {
+				process.thisProcessExit += _ => {
 					var d = new Api.NOTIFYICONDATA(_wNotify);
 					Api.Shell_NotifyIcon(Api.NIM_DELETE, d);
 				};
@@ -264,7 +264,7 @@ static class App
 			} else {
 				var d = new Api.NOTIFYICONDATA(_wNotify, Api.NIF_ICON) { hIcon = _GetIcon() };
 				bool ok = Api.Shell_NotifyIcon(Api.NIM_MODIFY, d);
-				ADebug_.PrintIf(!ok, ALastError.Message);
+				Debug_.PrintIf(!ok, lastError.message);
 			}
 		}
 
@@ -279,11 +279,11 @@ static class App
 				//d.uVersion = Api.NOTIFYICON_VERSION_4;
 				//Api.Shell_NotifyIcon(Api.NIM_SETVERSION, d);
 
-				//ATimer.After(2000, _ => Update(TrayIconState.Disabled));
-				//ATimer.After(3000, _ => Update(TrayIconState.Running));
-				//ATimer.After(4000, _ => Update(TrayIconState.Normal));
+				//timerm.after(2000, _ => Update(TrayIconState.Disabled));
+				//timerm.after(3000, _ => Update(TrayIconState.Running));
+				//timerm.after(4000, _ => Update(TrayIconState.Normal));
 			} else if(!restore) { //restore when "TaskbarCreated" message received. It is also received when taskbar DPI changed.
-				ADebug_.Print(ALastError.Message);
+				Debug_.Print(lastError.message);
 			}
 		}
 
@@ -297,8 +297,8 @@ static class App
 		}
 
 		static void _Notified(nint wParam, nint lParam) {
-			int msg = AMath.LoWord(lParam);
-			//if (msg != Api.WM_MOUSEMOVE) AWnd.More.PrintMsg(default, msg, 0, 0);
+			int msg = Math2.LoWord(lParam);
+			//if (msg != Api.WM_MOUSEMOVE) wnd.more.printMsg(default, msg, 0, 0);
 			switch (msg) {
 			case Api.WM_LBUTTONUP:
 				_ShowWindow();
@@ -312,8 +312,8 @@ static class App
 			}
 		}
 
-		static nint _WndProc(AWnd w, int m, nint wParam, nint lParam) {
-			//AWnd.More.PrintMsg(w, m, wParam, lParam);
+		static nint _WndProc(wnd w, int m, nint wParam, nint lParam) {
+			//wnd.more.printMsg(w, m, wParam, lParam);
 			if (m == c_msgNotify) _Notified(wParam, lParam);
 			else if (m == s_msgTaskbarCreated) _Add(true); //when explorer restarted or taskbar DPI changed
 			else if (m == Api.WM_DESTROY) _Exit();
@@ -334,7 +334,7 @@ static class App
 		}
 
 		static void _ContextMenu() {
-			var m = new AMenu();
+			var m = new popupMenu();
 			m.AddCheck("Disable triggers\tM-click", check: _disabled, _ => TriggersAndToolbars.DisableTriggers(null));
 			m.Separator();
 			m.Add("Exit", _ => _Exit());

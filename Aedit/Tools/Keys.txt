@@ -10,4 +10,4 @@
 <b>Operator:<><mono>   <+a *>*nTimes<>  {*down}  {*up}  <+a +>+key<>  <+a +(%)>+(keys)<><>
 <b>Argument:<><mono>   {text}  {html}  {sleepMs}  {keyCode}  {scanCode}  {action}<>
 
-<help AKeys.Key>Help<>    Example:  <code>AKeys.Key("Ctrl+A Del Tab*3", "!text", 100, "Enter");</code>
+<help keys.send>Help<>    Example:  <code>keys.send("Ctrl+A Del Tab*3", "!text", 100, "Enter");</code>

@@ -1,7 +1,7 @@
 using Au.Types;
 using System;
 using System.Collections.Generic;
-using Au.Util;
+using Au.More;
 
 namespace Au.Controls
 {
@@ -15,7 +15,7 @@ namespace Au.Controls
 			EndEditLabel();
 			_labeltip?.Hide();
 
-			int sbV = ADpi.ScrollbarV_(_dpi), sbH = ADpi.ScrollbarH_(_dpi);
+			int sbV = More.Dpi.ScrollbarV_(_dpi), sbH = More.Dpi.ScrollbarH_(_dpi);
 			var rw = _w.Rect; //never mind: minus border. Currently we don't use border. OK even if used, if just 1-pixel border and no caption.
 			int width = rw.Width, height = rw.Height;
 			if (width <= sbV || height <= sbH || _avi.NE_()) {
@@ -24,7 +24,7 @@ namespace Au.Controls
 			}
 			var range = _GetViewRange(onScroll ? _height : height);
 
-			//AOutput.Write("_Measure", range.from, range.to);
+			//print.it("_Measure", range.from, range.to);
 			int maxWidth = _itemsWidth;
 			GdiTextRenderer tr = null;
 			for (int i = range.from; i < range.to; i++) {
@@ -45,7 +45,7 @@ namespace Au.Controls
 			bool needH = _itemsWidth > width && height >= _imageSize + sbH; if (needH) height -= sbH;
 			bool needV = itemsHeight > height && _avi.Length > 1;
 			if (needV) { width -= sbV; if (!needH) needH = _itemsWidth > width && height >= _imageSize + sbH; }
-			//AOutput.Write(needH, needV);
+			//print.it(needH, needV);
 			if (_scrollCorrection = (needH && onScroll && _inScrollbarScroll && !_hscroll.Visible)) needH = false;
 			_dontMeasure = true;
 			NativeScrollbar_.ShowVH(_vscroll, needV, _hscroll, needH);
@@ -179,7 +179,7 @@ namespace Au.Controls
 				IntPtr checkTheme = HasCheckboxes ? Api.OpenThemeData(_w, "Button") : default;
 				try {
 					graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-					SIZE cSize = default; if (HasCheckboxes) if (checkTheme == default || 0 != Api.GetThemePartSize(checkTheme, dc, 3, 1, null, Api.THEMESIZE.TS_TRUE, out cSize)) cSize.width = cSize.height = ADpi.Scale(13, _dpi);
+					SIZE cSize = default; if (HasCheckboxes) if (checkTheme == default || 0 != Api.GetThemePartSize(checkTheme, dc, 3, 1, null, Api.THEMESIZE.TS_TRUE, out cSize)) cSize.width = cSize.height = More.Dpi.Scale(13, _dpi);
 
 					var cd = CustomDraw;
 					var cdi = cd == null ? null : new TVDrawInfo(this, dc, graphics, _dpi) {
@@ -197,7 +197,7 @@ namespace Au.Controls
 						int y = i * _itemHeight;
 						var r = new RECT(0, y, _width, _itemHeight);
 						if(!r.IntersectsWith(rUpdate)) continue;
-						//AOutput.Write(i);
+						//print.it(i);
 						int indent = _imageSize * v.level, xLeft = indent + xLefts;
 						int xImage = indent + xImages, yImage = y + yyImages;
 						int xText = xImage + _imageSize + _imageMarginX, yText = y + yyText;
@@ -264,7 +264,7 @@ namespace Au.Controls
 						if (b == null) {
 							var imageSource = item.ImageSource;
 							if (!imageSource.NE()) {
-								bool isImage = AImageUtil.HasImageOrResourcePrefix(imageSource);
+								bool isImage = ImageUtil.HasImageOrResourcePrefix(imageSource);
 								b = ImageCache.Get(imageSource, _dpi, isImage, isImage ? null : _imageAsyncCompletion ??= _ImageAsyncCompletion, item);
 							}
 						}
@@ -289,7 +289,7 @@ namespace Au.Controls
 
 						//drag & drop insertion mark
 						if (_dd != null && _dd.insertIndex == index) {
-							int thick = ADpi.Scale(3, _dpi);
+							int thick = More.Dpi.Scale(3, _dpi);
 							using var pen = new System.Drawing.Pen(System.Drawing.SystemColors.WindowText, thick);
 							y += thick / 2; int h1 = _itemHeight - thick;
 							if (_dd.insertFolder) {
@@ -319,11 +319,11 @@ namespace Au.Controls
 		/// For example you can use single cache for all controls.
 		/// If not set, the 'get' function auto-creates new instance when called first time.
 		/// </summary>
-		public AIconImageCache ImageCache {
-			get => _imageCache ??= new AIconImageCache();
+		public IconImageCache ImageCache {
+			get => _imageCache ??= new IconImageCache();
 			set { _imageCache = value; }
 		}
-		AIconImageCache _imageCache;
+		IconImageCache _imageCache;
 
 		/// <summary>
 		/// Width of custom-draw area before image. For example for state images.

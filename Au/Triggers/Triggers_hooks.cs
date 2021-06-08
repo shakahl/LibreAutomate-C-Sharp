@@ -12,12 +12,13 @@ using System.Reflection;
 //using System.Linq;
 
 using Au.Types;
+using Au.More;
 
 //Key/mouse/autotext triggers use low-level keyboard and mouse hooks. The hooks are in a separate thread, because:
 //	1. Safer when user code is slow or incorrect.
-//	2. Works well with COM. In LL hook procedure some COM functions fail, eg AAcc.Find with some windows.
+//	2. Works well with COM. In LL hook procedure some COM functions fail, eg elm.find with some windows.
 //		Error "An outgoing call cannot be made since the application is dispatching an input-synchronous call". Like when using SendMessage for IPC.
-//		It is important because scripts often use acc in scope context functions etc that run in the main thread.
+//		It is important because scripts often use UI elements in scope context functions etc that run in the main thread.
 
 //Low-level key/mouse hooks also have other problems, but not too big:
 //	1. UAC. Hooks of non-admin processes don't work when an admin window is active.
@@ -29,9 +30,9 @@ using Au.Types;
 //		Actually in real conditions even 10 hooks don't use a significant part of CPU compared to CPU used by the target app and OS.
 //Rejected: single hook server in editor process. It would mitigate some of these problems. Tested. Much code and little benefit.
 
-//For window triggers we use acc hooks. They use less CPU for IPC.
+//For window triggers we use winevent hooks. They use less CPU for IPC.
 //	Tested: renaming a captionless toolwindow every 1-2 ms in loop:
-//		CPU usage with no acc hooks is 4%. With 1 hook - 7%. With 10 hooks in different processes - 7%.
+//		CPU usage with no winevent hooks is 4%. With 1 hook - 7%. With 10 hooks in different processes - 7%.
 
 namespace Au.Triggers
 {
@@ -52,15 +53,15 @@ namespace Au.Triggers
 
 		int _tid;
 		UsedEvents _usedEvents;
-		AWnd _wMsg;
+		wnd _wMsg;
 		MouseTriggers.EdgeMoveDetector_ _emDetector;
 		Handle_ _eventStartStop = Api.CreateEvent(false);
 
-		public HooksThread(UsedEvents usedEvents, AWnd wMsg)
+		public HooksThread(UsedEvents usedEvents, wnd wMsg)
 		{
 			_usedEvents = usedEvents;
 			_wMsg = wMsg;
-			AThread.Start(_Thread, sta: false); //important: not STA, because we use lock, which dispatches sent messages if STA
+			run.thread(_Thread, sta: false); //important: not STA, because we use lock, which dispatches sent messages if STA
 			Api.WaitForSingleObject(_eventStartStop, -1);
 		}
 
@@ -74,14 +75,14 @@ namespace Au.Triggers
 
 		void _Thread()
 		{
-			_tid = AThread.Id;
+			_tid = Api.GetCurrentThreadId();
 
-			AHookWin hookK = null, hookM = null;
+			WindowsHook hookK = null, hookM = null;
 			if(_usedEvents.Has(UsedEvents.Keyboard)) {
-				hookK = AHookWin.Keyboard(_KeyboardHookProc); //note: don't use lambda, because then very slow JIT on first hook event
+				hookK = WindowsHook.Keyboard(_KeyboardHookProc); //note: don't use lambda, because then very slow JIT on first hook event
 			}
 			if(_usedEvents.Has(UsedEvents.Mouse)) {
-				hookM = AHookWin.MouseRaw_(_MouseHookProc);
+				hookM = WindowsHook.MouseRaw_(_MouseHookProc);
 			}
 			if(_usedEvents.Has(UsedEvents.MouseEdgeMove)) {
 				_emDetector = new MouseTriggers.EdgeMoveDetector_();
@@ -92,7 +93,7 @@ namespace Au.Triggers
 
 			while(Api.GetMessage(out var m) > 0) Api.DispatchMessage(m);
 
-			//AOutput.Write("hooks thread ended");
+			//print.it("hooks thread ended");
 			hookK?.Dispose();
 			hookM?.Dispose();
 			_emDetector = null;
@@ -134,7 +135,7 @@ namespace Au.Triggers
 		/// </summary>
 		bool _Send(UsedEvents eventType)
 		{
-			//using var p1 = APerf.Create();
+			//using var p1 = perf.local();
 			_wMsg.SendNotify(Api.WM_USER + 1, _messageId, (int)eventType);
 			bool timeout = Api.WaitForSingleObject(_eventSendData, 1100) == Api.WAIT_TIMEOUT;
 			lock(this) {

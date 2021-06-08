@@ -11,7 +11,7 @@ Most command names are like default menu item text, with _ instead of space and 
 Command XML attributes:
 color - text color. Value: .NET color name or #RRGGBB or #RGB.
 text - menu item text. Also button text, if btext not specified. Insert _ before Alt-underlined character.
-image - image file. Can be xaml, png or other format supported by WPF. Path can start with %EnvVariable% or %AFolders.Folder%.
+image - image file. Can be xaml, png or other format supported by WPF. Path can start with %EnvVariable% or %folders.Folder%.
 keys - keyboard or/and mouse shortcut(s), like "Ctrl+E, Shift+M-click". Mouse can be: Click, D-click, R-click, M-click, Wheel.
 
 These attributes are used only for toolbar buttons:

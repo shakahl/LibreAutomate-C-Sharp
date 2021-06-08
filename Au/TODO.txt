@@ -1,11 +1,11 @@
 ﻿Add these functions and classes. All are in QM2.
 
-AMiscInfo:
-	IsLoggedOn. Maybe .NET has it.
-	GetIpAddress. See https://stackoverflow.com/questions/6803073/get-local-ip-address
-	GetCpuUsage, GetDiskUsage.
-AProcess:
-	GetCpuUsage, GetStartupTime.
+computer:
+	isLoggedOn. Maybe .NET has it.
+	getIpAddress. See https://stackoverflow.com/questions/6803073/get-local-ip-address
+	getCpuUsage, getDiskUsage.
+process:
+	getCpuUsage, getStartupTime.
 IntCheckConnection, IntGetFile, IntGoOnline, IntIsOnline.
 Ftp, if .NET does not have it.
 HtmlDoc.

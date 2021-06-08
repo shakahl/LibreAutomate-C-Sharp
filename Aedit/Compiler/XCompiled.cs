@@ -11,7 +11,7 @@ using System.ComponentModel;
 using System.Reflection;
 
 using Au.Types;
-using Au.Util;
+using Au.More;
 
 namespace Au.Compiler
 {
@@ -52,7 +52,7 @@ namespace Au.Compiler
 				if (_data == null && !_Open()) return false;
 
 				if (!_data.TryGetValue(f.Id, out string value)) return false;
-				//ADebug_.Print(value);
+				//Debug_.Print(value);
 				int iPipe = 0;
 
 				bool isScript = f.IsScript;
@@ -63,9 +63,9 @@ namespace Au.Compiler
 					iPipe = value.IndexOf('|', 2); if (iPipe < 0) iPipe = value.Length;
 					asmFile = value[2..iPipe];
 				} else asmFile = CacheDirectory + "\\" + f.IdString + ".dll";
-				//AOutput.Write(asmFile);
+				//print.it(asmFile);
 
-				if (!AFile.GetProperties(asmFile, out var asmProp, FAFlags.UseRawPath)) return false;
+				if (!filesystem.getProperties(asmFile, out var asmProp, FAFlags.UseRawPath)) return false;
 				DateTime asmTime = asmProp.LastWriteTimeUtc;
 
 				if (_IsFileModified(f)) return false;
@@ -101,8 +101,8 @@ namespace Au.Compiler
 						case 'p':
 							isMultiFileProject = true;
 							if (projFolder != null) {
-								if (!AHash.MD5Result.FromString(value.AsSpan(offs, v.end - offs), out var md5)) return false;
-								AHash.MD5 md = default;
+								if (!Hash.MD5Result.FromString(value.AsSpan(offs, v.end - offs), out var md5)) return false;
+								Hash.MD5 md = default;
 								foreach (var f1 in projFolder.EnumProjectClassFiles(f)) {
 									if (_IsFileModified(f1)) return false;
 									md.Add(f1.Id);
@@ -112,7 +112,7 @@ namespace Au.Compiler
 							break;
 						case '*':
 							var dll = value[offs..v.end];
-							if (!APath.IsFullPath(dll)) dll = AFolders.ThisApp + dll;
+							if (!pathname.isFullPath(dll)) dll = folders.ThisApp + dll;
 							if (_IsFileModified2(dll)) return false;
 							break;
 						case 'l':
@@ -129,9 +129,9 @@ namespace Au.Compiler
 							if (ch == 'l') {
 								if (f2.FindProject(out var projFolder2, out var projMain2)) f2 = projMain2;
 								if (f2 == f) return false; //will be compiler error "circular reference"
-														   //AOutput.Write(f2, projFolder2);
+														   //print.it(f2, projFolder2);
 								if (!IsCompiled(f2, out _, projFolder2)) return false;
-								//AOutput.Write("library is compiled");
+								//print.it("library is compiled");
 							} else {
 								if (_IsFileModified(f2)) return false;
 								//switch(ch) {
@@ -149,18 +149,18 @@ namespace Au.Compiler
 					if (projFolder == null) return false;
 					foreach (var f1 in projFolder.EnumProjectClassFiles(f)) return false; //project with single file?
 				}
-				//ADebug_.Print("compiled");
+				//Debug_.Print("compiled");
 
 				r.file = asmFile;
-				r.name = APath.GetNameNoExt(f.Name);
+				r.name = pathname.getNameNoExt(f.Name);
 				return true;
 
 				bool _IsFileModified(FileNode f_) => _IsFileModified2(f_.FilePath);
 
 				bool _IsFileModified2(string path_) {
-					if (!AFile.GetProperties(path_, out var prop_, FAFlags.UseRawPath)) return true;
+					if (!filesystem.getProperties(path_, out var prop_, FAFlags.UseRawPath)) return true;
 					Debug.Assert(!prop_.Attributes.Has(FileAttributes.Directory));
-					//AOutput.Write(prop_.LastWriteTimeUtc, asmDate);
+					//print.it(prop_.LastWriteTimeUtc, asmDate);
 					if (prop_.LastWriteTimeUtc > asmTime) return true;
 					return false;
 				}
@@ -213,7 +213,7 @@ namespace Au.Compiler
 
 					int nAll = m.CodeFiles.Count, nNoC = nAll - m.CountC;
 					if (nNoC > 1) { //add MD5 hash of project files, except main
-						AHash.MD5 md = default;
+						Hash.MD5 md = default;
 						for (int i = 1; i < nNoC; i++) md.Add(m.CodeFiles[i].f.Id);
 						b.Append("|p").Append(md.Hash.ToString());
 					}
@@ -230,7 +230,7 @@ namespace Au.Compiler
 					var refs = m.References.Refs;
 					int j = MetaReferences.DefaultReferences.Count;
 					if (refs.Count > j) {
-						string appDir = AFolders.ThisAppBS;
+						string appDir = folders.ThisAppBS;
 						for (; j < refs.Count; j++) {
 							var s1 = refs[j].FilePath;
 							if (s1.Starts(appDir, true)) s1 = s1[appDir.Length..];
@@ -240,20 +240,20 @@ namespace Au.Compiler
 
 					if (b.Length != 0) value = b.ToString();
 
-					void _AppendFile(string opt, FileNode f_) {
+					void _AppendFile(string m, FileNode f_) {
 						if (f_ == null) return;
 						if (f_.IsFolder) {
-							Debug.Assert(opt is "|x" or "|k");
-							foreach (var des in f_.Descendants()) if (!des.IsFolder) b.Append(opt).Append(des.IdString);
+							Debug.Assert(m is "|x" or "|k");
+							foreach (var des in f_.Descendants()) if (!des.IsFolder) b.Append(m).Append(des.IdString);
 						} else {
-							b.Append(opt).Append(f_.IdString);
+							b.Append(m).Append(f_.IdString);
 						}
 					}
 				}
 
 				uint id = f.Id;
-				if (_data.TryGetValue(id, out var oldValue) && value == oldValue) { /*ADebug_.Print("same");*/ return; }
-				//ADebug_.Print("different");
+				if (_data.TryGetValue(id, out var oldValue) && value == oldValue) { /*Debug_.Print("same");*/ return; }
+				//Debug_.Print("different");
 				_data[id] = value;
 				_Save();
 			}
@@ -266,16 +266,16 @@ namespace Au.Compiler
 				if (_data.Remove(f.Id)) {
 					_Save();
 					if (deleteAsmFile) {
-						try { AFile.Delete(CacheDirectory + "\\" + f.IdString + ".dll"); }
-						catch (Exception ex) { ADebug_.Print(ex); }
+						try { filesystem.delete(CacheDirectory + "\\" + f.IdString + ".dll"); }
+						catch (Exception ex) { Debug_.Print(ex); }
 					}
 				}
 			}
 
 			bool _Open() {
 				if (_data != null) return true;
-				if (!AFile.Exists(_file).isFile) return false;
-				string sData = AFile.LoadText(_file);
+				if (!filesystem.exists(_file).isFile) return false;
+				string sData = filesystem.loadText(_file);
 				foreach (var v in sData.Segments(SegSep.Line, SegFlags.NoEmpty)) {
 					if (_data == null) {
 						//first line contains .NET version and Au.dll version, like 5.0.4|1.2.3.4
@@ -290,7 +290,7 @@ namespace Au.Compiler
 				if (_data == null) return false; //empty file
 
 				//delete temp files
-				foreach (var f in AFile.Enumerate(CacheDirectory, FEFlags.UseRawPath | FEFlags.IgnoreInaccessible)) {
+				foreach (var f in filesystem.enumerate(CacheDirectory, FEFlags.UseRawPath | FEFlags.IgnoreInaccessible)) {
 					if (f.Name.Like("*'*")) Api.DeleteFile(f.FullPath);
 				}
 
@@ -300,11 +300,11 @@ namespace Au.Compiler
 				return false;
 			}
 
-			static readonly string s_versions = Environment.Version.ToString() + "|" + typeof(AWnd).Assembly.GetName().Version.ToString();
+			static readonly string s_versions = Environment.Version.ToString() + "|" + typeof(wnd).Assembly.GetName().Version.ToString();
 
 			void _Save() {
-				AFile.CreateDirectory(CacheDirectory);
-				using var b = AFile.WaitIfLocked(() => File.CreateText(_file));
+				filesystem.createDirectory(CacheDirectory);
+				using var b = filesystem.waitIfLocked(() => File.CreateText(_file));
 				b.WriteLine(s_versions);
 				foreach (var v in _data) {
 					if (v.Value == null) b.WriteLine(v.Key); else { b.Write(v.Key); b.WriteLine(v.Value); }
@@ -314,8 +314,8 @@ namespace Au.Compiler
 
 			void _ClearCache() {
 				_data = null;
-				try { AFile.Delete(CacheDirectory); }
-				catch (AuException e) { AOutput.Warning(e.ToString(), -1); }
+				try { filesystem.delete(CacheDirectory); }
+				catch (AuException e) { print.warning(e.ToString(), -1); }
 			}
 		}
 

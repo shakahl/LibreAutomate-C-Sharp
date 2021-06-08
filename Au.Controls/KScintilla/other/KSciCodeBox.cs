@@ -25,7 +25,7 @@ namespace Au.Controls
 		protected override void ZOnSciNotify(ref Sci.SCNotification n) {
 			//switch(n.nmhdr.code) {
 			//case Sci.NOTIF.SCN_PAINTED: case Sci.NOTIF.SCN_UPDATEUI: break;
-			//default: AOutput.Write(n.nmhdr.code, n.modificationType); break;
+			//default: print.it(n.nmhdr.code, n.modificationType); break;
 			//}
 
 			switch (n.nmhdr.code) {

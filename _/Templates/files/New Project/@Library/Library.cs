@@ -1,4 +1,4 @@
-﻿/*/ role classLibrary; outputPath %AFolders.ThisApp%\Libraries; /*/
+﻿/*/ role classLibrary; outputPath %folders.ThisApp%\Libraries; /*/
 using System.Reflection;
 
 [assembly: AssemblyVersion("1.0.0.0")]

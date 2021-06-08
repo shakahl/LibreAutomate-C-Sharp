@@ -1,5 +1,5 @@
 using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -112,7 +112,7 @@ namespace Au.Triggers
 					_paramsString = b.ToString();
 				}
 			}
-			//AOutput.Write(this);
+			//print.it(this);
 		}
 
 		internal override void Run(TriggerArgs args) => RunT(args as AutotextTriggerArgs);
@@ -172,7 +172,7 @@ namespace Au.Triggers
 					var c = text[i]; if (matchCase) c = char.ToLowerInvariant(c);
 					k |= (byte)c << j;
 				}
-				//AOutput.Write((uint)k);
+				//print.it((uint)k);
 				t.DictAdd(_d, k);
 				_lastAdded = t;
 			}
@@ -228,7 +228,7 @@ namespace Au.Triggers
 				if (c == '\r') k |= 1;
 				if (c == '\n') k |= 2;
 			}
-			if (k == 2) AOutput.Warning("Postfix characters contains \\n (Ctrl+Enter) but no \\r (Enter).");
+			if (k == 2) print.warning("Postfix characters contains \\n (Ctrl+Enter) but no \\r (Enter).");
 			return s;
 		}
 
@@ -243,7 +243,7 @@ namespace Au.Triggers
 		public KKey PostfixKey {
 			get => _postfixKey;
 			set {
-				var mod = AKeys.Internal_.KeyToMod(value);
+				var mod = keys.Internal_.KeyToMod(value);
 				switch (mod) {
 				case KMod.Ctrl: case KMod.Shift: break;
 				default: throw new ArgumentException("Must be Ctrl, Shift, LCtrl, RCtrl, LShift or RShift.");
@@ -296,8 +296,8 @@ namespace Au.Triggers
 		internal unsafe void HookProc(HookData.Keyboard k, TriggerHookContext thc) {
 			Debug.Assert(!k.IsInjectedByAu); //server must ignore
 
-			//AOutput.Write(k);
-			//APerf.First();
+			//print.it(k);
+			//perf.first();
 
 			if (ResetEverywhere) { //set by mouse hooks on click left|right and by keyboard hooks on Au-injected key events. In shared memory.
 				ResetEverywhere = false;
@@ -308,7 +308,7 @@ namespace Au.Triggers
 				if (_singlePK) {
 					_singlePK = false;
 					if (_IsPostfixMod(thc.ModThis)) {
-						//AOutput.Write("< Ctrl up >");
+						//print.it("< Ctrl up >");
 						_Trigger(default, true, _GetFocusedWindow(), thc);
 						//goto gReset; //no, resets if triggered, else don't reset
 					}
@@ -330,7 +330,7 @@ namespace Au.Triggers
 			var vk = k.vkCode;
 			if (vk >= KKey.PageUp && vk <= KKey.Down) goto gReset; //PageUp, PageDown, End, Home, Left, Up, Right, Down
 
-			AWnd wFocus = _GetFocusedWindow();
+			wnd wFocus = _GetFocusedWindow();
 			if (wFocus.Is0) goto gReset;
 
 			var c = stackalloc char[8]; int n;
@@ -345,7 +345,7 @@ namespace Au.Triggers
 				}
 				if (n < 0) return; //dead key
 			}
-			//AOutput.Write(n, c[0], c[1]);
+			//print.it(n, c[0], c[1]);
 
 			for (int i = 0; i < n; i++) _Trigger(c[i], false, wFocus, thc);
 
@@ -354,15 +354,15 @@ namespace Au.Triggers
 			_Reset();
 		}
 
-		static AWnd _GetFocusedWindow() {
-			if (!AInputInfo.GetGUIThreadInfo(out var gt)) return AWnd.Active;
+		static wnd _GetFocusedWindow() {
+			if (!miscInfo.getGUIThreadInfo(out var gt)) return wnd.active;
 			if (0 != (gt.flags & (GTIFlags.INMENUMODE | GTIFlags.INMOVESIZE))) return default; //the character will not be typed when showing menu (or just Alt or F10 pressed) or moving/resizing window. Of course this will not work with nonstandard menus, eg in Word, as well as with other controls that don't accept text.
 			return gt.hwndFocus; //if no focus, the thread will not receive wm-keydown etc
 		}
 
 		int _len; //count of valid user-typed characters in _text
 		bool _singlePK; //used to detect postfix key (Ctrl or Shift)
-		AWnd _wFocus; //the focused window/control. Used to reset if focus changed.
+		wnd _wFocus; //the focused window/control. Used to reset if focus changed.
 
 		void _Reset() {
 			_len = 0;
@@ -375,8 +375,8 @@ namespace Au.Triggers
 			set => SharedMemory_.Ptr->triggers.resetAutotext = value;
 		}
 
-		unsafe void _Trigger(char c, bool isPK, AWnd wFocus, TriggerHookContext thc) {
-			//APerf.Next();
+		unsafe void _Trigger(char c, bool isPK, wnd wFocus, TriggerHookContext thc) {
+			//perf.next();
 			if (wFocus != _wFocus) {
 				_Reset();
 				_wFocus = wFocus;
@@ -389,7 +389,7 @@ namespace Au.Triggers
 			if (isPK) {
 				postfixType = _DetectedPostfix.Key;
 			} else {
-				//AOutput.Write((int)c);
+				//print.it((int)c);
 
 				if (c < ' ' || c == 127) {
 					switch (c) {
@@ -431,11 +431,11 @@ namespace Au.Triggers
 			}
 
 			if (nc == 0) return;
-			//APerf.Next();
+			//perf.next();
 			g1:
 			for (int k = 0, ii = nc - 1, jj = 0; ii >= 0 && jj <= 24; ii--, jj += 8) { //create dictionary key from 1-4 last characters lowercase
 				k |= (byte)_text[ii].cLow << jj;
-				//AOutput.Write((uint)k);
+				//print.it((uint)k);
 				if (_d.TryGetValue(k, out var v)) {
 					AutotextTriggerArgs args = null;
 					for (; v != null; v = v.next) {
@@ -494,10 +494,10 @@ namespace Au.Triggers
 				nc++;
 				goto g1;
 			}
-			//APerf.NW(); //about 90% of time takes _KeyToChar (ToUnicodeEx and GetKeyboardLayout).
+			//perf.nw(); //about 90% of time takes _KeyToChar (ToUnicodeEx and GetKeyboardLayout).
 		}
 
-		unsafe int _KeyToChar(char* c, KKey vk, uint sc, AWnd wFocus, KMod mod) {
+		unsafe int _KeyToChar(char* c, KKey vk, uint sc, wnd wFocus, KMod mod) {
 			var hkl = Api.GetKeyboardLayout(wFocus.ThreadId);
 			var ks = stackalloc byte[256];
 			_SetKS(mod);
@@ -519,7 +519,7 @@ namespace Au.Triggers
 				ks[(int)KKey.Ctrl] = (byte)((0 != (m & KMod.Ctrl)) ? 0x80 : 0);
 				ks[(int)KKey.Alt] = (byte)((0 != (m & KMod.Alt)) ? 0x80 : 0);
 				ks[(int)KKey.Win] = (byte)((0 != (m & KMod.Win)) ? 0x80 : 0);
-				ks[(int)KKey.CapsLock] = (byte)(AKeys.IsCapsLock ? 1 : 0); //don't need this for num lock
+				ks[(int)KKey.CapsLock] = (byte)(keys.isCapsLock ? 1 : 0); //don't need this for num lock
 			}
 
 			return n;
@@ -531,7 +531,7 @@ namespace Au.Triggers
 			//	On Alt up could call tounicodeex with sc with flag 0x8000. It gets the char, but resets keyboard state, and the char is not typed.
 			//4. In console windows does not work with Unicode characters.
 
-			//if(MapVirtualKeyEx(vk, MAPVK_VK_TO_CHAR, hkl)&0x80000000) { AOutput.Write("DEAD"); return -1; } //this cannot be used because resets dead key
+			//if(MapVirtualKeyEx(vk, MAPVK_VK_TO_CHAR, hkl)&0x80000000) { print.it("DEAD"); return -1; } //this cannot be used because resets dead key
 		}
 
 		_DeadKey _deadKey;
@@ -565,18 +565,18 @@ namespace Au.Triggers
 		bool _IsWordChar(char c) {
 			if (char.IsLetterOrDigit(c)) return true; //speed: 4 times faster than Api.IsCharAlphaNumeric. Tested with a string containing 90% ASCII chars.
 			var v = WordCharsPlus;
-			return v != null && v.IndexOf(c) >= 0;
+			return v != null && v.Contains(c);
 		}
 
 		[Conditional("DEBUG")]
 		unsafe void _DebugPrintText() {
 			var s = new string(' ', _len);
 			fixed (char* p = s) for (int i = 0; i < s.Length; i++) p[i] = _text[i].c;
-			AOutput.Write(s);
+			print.it(s);
 		}
 
 		internal static unsafe void JitCompile() {
-			AJit.Compile(typeof(AutotextTriggers), nameof(HookProc), nameof(_Trigger), nameof(_KeyToChar));
+			Jit_.Compile(typeof(AutotextTriggers), nameof(HookProc), nameof(_Trigger), nameof(_KeyToChar));
 		}
 
 		/// <summary>
@@ -612,7 +612,7 @@ namespace Au.Triggers
 		/// <summary>
 		/// The active window.
 		/// </summary>
-		public AWnd Window { get; }
+		public wnd Window { get; }
 
 		/// <summary>
 		/// The user-typed text. If <see cref="HasPostfixChar"/>==true, the last character is the postfix delimiter character.
@@ -631,14 +631,14 @@ namespace Au.Triggers
 		public bool ShiftLeft { get; set; }
 
 		///
-		public AutotextTriggerArgs(AutotextTrigger trigger, AWnd w, string text, bool hasPChar) {
+		public AutotextTriggerArgs(AutotextTrigger trigger, wnd w, string text, bool hasPChar) {
 			Trigger = trigger;
 			Window = w;
 			Text = text;
 			HasPostfixChar = hasPChar;
 			ShiftLeft = trigger.flags.Has(TAFlags.ShiftLeft);
 
-			//AOutput.Write($"'{text}'", hasPChar);
+			//print.it($"'{text}'", hasPChar);
 		}
 
 		/// <summary>
@@ -646,7 +646,7 @@ namespace Au.Triggers
 		/// </summary>
 		/// <param name="text">The replacement text. Can be null.</param>
 		/// <param name="html">
-		/// The replacement HTML. Can be full HTML or fragment. See <see cref="AClipboardData.AddHtml"/>.
+		/// The replacement HTML. Can be full HTML or fragment. See <see cref="clipboardData.AddHtml"/>.
 		/// Can be specified only <i>text</i> or only <i>html</i> or both. If both, will paste <i>html</i> in apps that support it, elsewhere <i>text</i>. If only <i>html</i>, in apps that don't support HTML will paste <i>html</i> as text.
 		/// </param>
 		/// <remarks>
@@ -669,13 +669,13 @@ namespace Au.Triggers
 		/// <summary>
 		/// Replaces the user-typed text with the specified text, keys, cliboard data, etc.
 		/// </summary>
-		/// <param name="keysEtc">The same as with <see cref="AKeys.Key"/>.</param>
+		/// <param name="keysEtc">The same as with <see cref="keys.send"/>.</param>
 		/// <remarks>
 		/// Options for this function can be specified when adding triggers, in the <i>flags</i> parameter. Or before adding triggers, with <see cref="AutotextTriggers.DefaultFlags"/>. This function uses <see cref="TAFlags.Confirm"/>, <see cref="TAFlags.DontErase"/>, <see cref="TAFlags.ShiftLeft"/>, <see cref="TAFlags.RemovePostfix"/>.
 		/// 
 		/// If used flag <see cref="TAFlags.Confirm"/>, for label can be used first argument with prefix "!!"; else displays all string arguments.
 		/// </remarks>
-		public void Replace2([ParamString(PSFormat.AKeys)] params KKeysEtc[] keysEtc) {
+		public void Replace2([ParamString(PSFormat.keys)] params KKeysEtc[] keysEtc) {
 			_Replace(null, null, keysEtc ?? throw new ArgumentNullException());
 		}
 
@@ -719,24 +719,24 @@ namespace Au.Triggers
 				if (!Confirm(confirmText)) return;
 			}
 
-			var k = new AKeys(AOpt.Key);
-			var opt = k.Options;
+			var k = new keys(opt.key);
+			var optk = k.Options;
 			bool uwp = 0 != this.Window.Window.IsUwpApp;
 			if (uwp) {
-				opt.KeySpeed = Math.Clamp(opt.KeySpeed * 2, 20, 100); //default 1
-				opt.KeySpeedClipboard = Math.Clamp(opt.KeySpeedClipboard * 2, 20, 100);
-				opt.TextSpeed = Math.Clamp(opt.TextSpeed * 2, 10, 50); //default 0
-				int n1 = opt.PasteLength - 100; if (n1 > 0) opt.PasteLength = 100 + n1 / 5; //default 200 -> 120
+				optk.KeySpeed = Math.Clamp(optk.KeySpeed * 2, 20, 100); //default 1
+				optk.KeySpeedClipboard = Math.Clamp(optk.KeySpeedClipboard * 2, 20, 100);
+				optk.TextSpeed = Math.Clamp(optk.TextSpeed * 2, 10, 50); //default 0
+				int n1 = optk.PasteLength - 100; if (n1 > 0) optk.PasteLength = 100 + n1 / 5; //default 200 -> 120
 			} else {
-				opt.KeySpeed = Math.Clamp(opt.KeySpeed, 2, 20);
-				opt.TextSpeed = Math.Min(opt.TextSpeed, 10);
+				optk.KeySpeed = Math.Clamp(optk.KeySpeed, 2, 20);
+				optk.TextSpeed = Math.Min(optk.TextSpeed, 10);
 			}
-			opt.PasteWorkaround = true;
+			optk.PasteWorkaround = true;
 			//info: later Options.Hook can override these values.
 
 			int erase = flags.Has(TAFlags.DontErase) ? (this.HasPostfixChar ? 1 : 0) : t.Length;
 			if (erase > 0) {
-				bool shiftLeft = this.ShiftLeft && !AWnd.Active.IsConsole;
+				bool shiftLeft = this.ShiftLeft && !wnd.active.IsConsole;
 				if (shiftLeft) { k.AddKey(KKey.Shift, true); k.AddKey(KKey.Left); } else k.AddKey(KKey.Back);
 				if (erase > 1) k.AddRepeat(erase);
 				if (shiftLeft) k.AddKey(KKey.Shift, false);
@@ -746,9 +746,9 @@ namespace Au.Triggers
 				//	UWP is the champion. Also noticed in Chrome address bar (rare), Dreamweaver when pasting (1/5 times), etc.
 				int sleep = 5 + erase; if (uwp) sleep *= 10;
 				k.AddSleep(sleep);
-				k.Pasting += (_, _) => ATime.Sleep(sleep * 2);
+				k.Pasting += (_, _) => wait.ms(sleep * 2);
 			} else if (uwp) {
-				k.Pasting += (_, _) => ATime.Sleep(50);
+				k.Pasting += (_, _) => wait.ms(50);
 			}
 
 			KKey pKey = default; char pChar = default;
@@ -780,14 +780,14 @@ namespace Au.Triggers
 				}
 			}
 
-			k.Send();
+			k.SendIt();
 		}
 
 		/// <summary>
 		/// If <see cref="HasPostfixChar"/>==true, sends the postfix character (last character of <see cref="Text"/>) to the active window.
 		/// </summary>
 		public void SendPostfix() {
-			if (this.HasPostfixChar) new AKeys(AOpt.Key).AddText(this.Text[^1..], OKeyText.KeysOrChar).Send();
+			if (this.HasPostfixChar) new keys(opt.key).AddText(this.Text[^1..], OKeyText.KeysOrChar).SendIt();
 		}
 
 		/// <summary>
@@ -809,7 +809,7 @@ namespace Au.Triggers
 		/// </example>
 		public bool Confirm(string text = "Autotext") {
 			text ??= "Autotext";
-			var m = new AMenu { RawText = true };
+			var m = new popupMenu { RawText = true };
 			m.Add(1, text.Limit(300));
 			m.KeyboardHook = (m, g) => {
 				if (g.Key is KKey.Enter or KKey.Tab or KKey.Escape) {

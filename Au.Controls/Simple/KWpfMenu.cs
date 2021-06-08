@@ -1,5 +1,5 @@
 ﻿using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -24,13 +24,13 @@ namespace Au.Controls
 	/// <example>
 	/// <code><![CDATA[
 	/// var m = new KWpfMenu();
-	/// m["One"] = o => AOutput.Write(o);
+	/// m["One"] = o => print.it(o);
 	/// using(m.Submenu("Sub")) {
-	/// 	m["Three"] = o => AOutput.Write(o);
-	/// 	m["Four"] = o => AOutput.Write(o);
+	/// 	m["Three"] = o => print.it(o);
+	/// 	m["Four"] = o => print.it(o);
 	/// }
 	/// m.Separator();
-	/// m["Two"] = o => { AOutput.Write(o); };
+	/// m["Two"] = o => { print.it(o); };
 	/// m.Show(this); //or m.IsOpen=true;
 	/// ]]></code>
 	/// </example>
@@ -54,7 +54,7 @@ namespace Au.Controls
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// m["Example"] = o => AOutput.Write(o);
+		/// m["Example"] = o => print.it(o);
 		/// m.Last.IsChecked = true;
 		/// ]]></code>
 		/// </example>
@@ -88,12 +88,12 @@ namespace Au.Controls
 		/// <param name="icon">
 		/// Can be:
 		/// - <see cref="Image"/> or other WPF control to assign directly to <see cref="MenuItem.Icon"/>.
-		/// - <see cref="ImageSource"/> - a WPF image. To create image from icon, use <see cref="AIcon.ToWpfImage"/>.
-		/// - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or png image as Base-64 string with prefix "image:". Can be png or XAML file or resource. See <see cref="AImageUtil.LoadWpfImageElementFromFileOrResourceOrString"/>. Supports environment variables. If not full path, looks in <see cref="AFolders.ThisAppImages"/>.
-		/// - <see cref="Uri"/> - image file path, or resource pack URI, or URL. Does not support environment variables and <see cref="AFolders.ThisAppImages"/>.
+		/// - <see cref="ImageSource"/> - a WPF image. To create image from icon, use <see cref="icon.ToWpfImage"/>.
+		/// - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or png image as Base-64 string with prefix "image:". Can be png or XAML file or resource. See <see cref="ImageUtil.LoadWpfImageElementFromFileOrResourceOrString"/>. Supports environment variables. If not full path, looks in <see cref="folders.ThisAppImages"/>.
+		/// - <see cref="Uri"/> - image file path, or resource pack URI, or URL. Does not support environment variables and <see cref="folders.ThisAppImages"/>.
 		/// 
-		/// If failed to find or load image file, prints warning (<see cref="AOutput.Warning"/>).
-		/// To create Base-64 string, use menu Code -> AWinImage.
+		/// If failed to find or load image file, prints warning (<see cref="print.warning"/>).
+		/// To create Base-64 string, use menu Code -> uiimage.
 		/// To add an image resource in Visual Studio, use build action "Resource" for the image file.
 		/// </param>
 		/// <value>Action called on click.</value>
@@ -102,7 +102,7 @@ namespace Au.Controls
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// m["Example"] = o => AOutput.Write(o);
+		/// m["Example"] = o => print.it(o);
 		/// m.Last.IsChecked = true;
 		/// ]]></code>
 		/// </example>
@@ -154,7 +154,7 @@ namespace Au.Controls
 		public Action<MenuItem> ItemAdded { get; set; }
 
 		/// <summary>
-		/// Whether to handle exceptions in item action code. If false (default), handles exceptions and on exception calls <see cref="AOutput.Warning"/>.
+		/// Whether to handle exceptions in item action code. If false (default), handles exceptions and on exception calls <see cref="print.warning"/>.
 		/// Applied to menu items added afterwards.
 		/// </summary>
 		public bool ActionException { get; set; }
@@ -166,7 +166,7 @@ namespace Au.Controls
 		/// <param name="byCaret">Show by caret (text cursor) position if possible.</param>
 		/// <param name="modal">Wait until closed.</param>
 		public void Show(UIElement owner, bool byCaret = false, bool modal = false) {
-			if (byCaret && AInputInfo.GetTextCursorRect(out RECT cr, out _)) {
+			if (byCaret && miscInfo.getTextCursorRect(out RECT cr, out _)) {
 				var r = owner == null ? cr : new Rect(owner.PointFromScreen(new Point(cr.left, cr.top)), owner.PointFromScreen(new Point(cr.right, cr.bottom)));
 				r.Inflate(30, 2);
 				PlacementRectangle = r;
@@ -181,7 +181,7 @@ namespace Au.Controls
 			//	Also tried to redirect key messages with a hook, but it does not work for arrow keys.
 			//	Also tried to remove focus in OnOpened, but it closes the menu.
 			//	Never mind: hides caret. In notepad etc menus don't hide caret. But eg in VS hide too.
-			if (owner is HwndHost hh && hh.IsFocused && Api.GetFocus() == (AWnd)hh.Handle && FocusManager.GetFocusScope(hh) is UIElement fs) {
+			if (owner is HwndHost hh && hh.IsFocused && Api.GetFocus() == (wnd)hh.Handle && FocusManager.GetFocusScope(hh) is UIElement fs) {
 				_hh = hh;
 				fs.Focus();
 			}
@@ -206,7 +206,7 @@ namespace Au.Controls
 		///
 		protected override void OnClosed(RoutedEventArgs e) {
 			if (_hh != null) {
-				Api.SetFocus((AWnd)_hh.Handle);
+				Api.SetFocus((wnd)_hh.Handle);
 				_hh = null;
 			}
 
@@ -220,7 +220,7 @@ namespace Au.Controls
 					ImageSource iso = null;
 					switch (icon) {
 					case string s:
-						return AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(s);
+						return ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(s);
 					case Uri s:
 						iso = BitmapFrame.Create(s);
 						break;
@@ -232,10 +232,10 @@ namespace Au.Controls
 					}
 					if (iso != null) return new Image { Source = iso };
 				}
-				catch (Exception ex) { AOutput.Warning(ex.ToStringWithoutStack()); }
+				catch (Exception ex) { print.warning(ex.ToStringWithoutStack()); }
 			}
 			return null;
-			//rejected: cache, like AMenu.
+			//rejected: cache, like popupMenu.
 		}
 
 		/// <summary>
@@ -253,7 +253,7 @@ namespace Au.Controls
 		/// <remarks>
 		/// The menu is modal; the function returns when closed.
 		/// </remarks>
-		/// <seealso cref="ADialog.ShowList"/>
+		/// <seealso cref="dialog.showList"/>
 		public static int ShowSimple(DStringList items, UIElement owner, bool byCaret = false, Action<KWpfMenu> beforeShow = null) {
 			var a = items.ToArray();
 			var m = new KWpfMenu();
@@ -300,7 +300,7 @@ namespace Au.Controls
 				_m._EndModal(); //workaround for: OnClosed called with 160 ms delay. Same with native message loop.
 				if (action != null) {
 					try { action(new WpfMenuActionArgs(this)); }
-					catch (Exception ex) when (!actionException) { AOutput.Warning(ex.ToString(), -1); }
+					catch (Exception ex) when (!actionException) { print.warning(ex.ToString(), -1); }
 				}
 			}
 

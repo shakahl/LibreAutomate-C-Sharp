@@ -16,7 +16,7 @@ using System.Xml;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Au.Util;
+using Au.More;
 
 namespace Au.Controls
 {
@@ -59,10 +59,10 @@ namespace Au.Controls
 			string xmlFile = xmlFileCustomized; bool useDefaultXML = xmlFileCustomized == null;
 			gRetry:
 			if (useDefaultXML) xmlFile = xmlFileDefault;
-			else if (useDefaultXML = !AFile.Exists(xmlFile).isFile) goto gRetry;
+			else if (useDefaultXML = !filesystem.exists(xmlFile).isFile) goto gRetry;
 
 			try {
-				var x = AXml.LoadElem(xmlFile);
+				var x = XmlUtil.LoadElem(xmlFile);
 				if (!useDefaultXML) _AutoUpdateXml(x, xmlFileDefault);
 				new _Node(this, x); //creates all and sets _rootStack
 			}
@@ -70,12 +70,12 @@ namespace Au.Controls
 				var sErr = $"Failed to load file '{xmlFile}'.\r\n\t{e.ToStringWithoutStack()}";
 				if (useDefaultXML) {
 					_xmlFile = null;
-					ADialog.ShowError("Cannot load window layout from XML file.",
+					dialog.showError("Cannot load window layout from XML file.",
 						$"{sErr}\r\n\r\nReinstall the application.",
 						expandedText: e.StackTrace);
 					Environment.Exit(1);
 				} else {
-					AOutput.Warning(sErr, -1);
+					print.warning(sErr, -1);
 				}
 				_dictLeaf.Clear(); _rootStack = null;
 				useDefaultXML = true; goto gRetry;
@@ -90,24 +90,24 @@ namespace Au.Controls
 		public void Save() {
 			if (_xmlFile == null) return;
 			try {
-				AFile.CreateDirectoryFor(_xmlFile);
+				filesystem.createDirectoryFor(_xmlFile);
 				var sett = new XmlWriterSettings() {
 					OmitXmlDeclaration = true,
 					Indent = true,
 					IndentChars = "\t"
 				};
-				AFile.Save(_xmlFile, temp => {
+				filesystem.save(_xmlFile, temp => {
 					using var x = XmlWriter.Create(temp, sett);
 					x.WriteStartDocument();
 					_rootStack.Save(x);
 				});
-				//ARun.Run("notepad.exe", _xmlFile); ATimer.After(1000, _ => DeleteSavedFile());
+				//run.it("notepad.exe", _xmlFile); timerm.after(1000, _ => DeleteSavedFile());
 			}
-			catch (Exception ex) { AOutput.QM2.Write(ex); }
+			catch (Exception ex) { print.qm2.write(ex); }
 		}
 
 		void _AutoUpdateXml(XElement rootStack, string xmlFileDefault) {
-			var defRootStack = AXml.LoadElem(xmlFileDefault);
+			var defRootStack = XmlUtil.LoadElem(xmlFileDefault);
 			var eOld = rootStack.Descendants("panel").Concat(rootStack.Descendants("toolbar"))/*.Concat(rootStack.Descendants("document"))*/; //same speed as with .Where(cached delegate)
 			var eNew = defRootStack.Descendants("panel").Concat(defRootStack.Descendants("toolbar"))/*.Concat(defRootStack.Descendants("document"))*/;
 			var cmp = new _XmlNameAttrComparer();
@@ -116,7 +116,7 @@ namespace Au.Controls
 			if (removed.Any()) {
 				foreach (var x in removed.ToArray()) {
 					_Remove(x);
-					AOutput.Write($"Info: {x.Name} {x.Attr("name")} has been removed in this app version.");
+					print.it($"Info: {x.Name} {x.Attr("name")} has been removed in this app version.");
 				}
 				//removes x and ancestor stacks/tabs that would then have <= 1 child
 				static void _Remove(XElement x) {
@@ -139,17 +139,17 @@ namespace Au.Controls
 				foreach (var x in added) {
 					x.SetAttributeValue("z", 50); //note: set even if was no "z", because maybe was in a tab
 					rootStack.Add(x);
-					AOutput.Write($"Info: {x.Name} {x.Attr("name")} has been added in this app version. You can right-click caption and move it to a better place.");
+					print.it($"Info: {x.Name} {x.Attr("name")} has been added in this app version. You can right-click caption and move it to a better place.");
 				}
 			}
-			//AOutput.Write(rootStack);
+			//print.it(rootStack);
 		}
 
 		///// <summary>
 		///// Deletes the user's saved layout file. Then next time will use the default file.
 		///// </summary>
 		//public void DeleteSavedFile() {
-		//	AFile.Delete(_xmlFile);
+		//	filesystem.delete(_xmlFile);
 		//}
 
 		/// <summary>

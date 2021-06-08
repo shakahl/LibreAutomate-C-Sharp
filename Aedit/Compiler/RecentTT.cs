@@ -1,6 +1,6 @@
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -39,7 +39,7 @@ static class RecentTT
 		else _Ended(t.taskId, time, exitCode < 0);
 	}
 
-	public static void TriggerEvent(OutputServerMessage m) {
+	public static void TriggerEvent(PrintServerMessage m) {
 		string s = m.Text, z = m.Caller;
 		//z format: "id\0sourceFilePath\0line1based"
 		//	id identifies that action instance in time (start/end/fail events have same id).
@@ -58,7 +58,7 @@ static class RecentTT
 	static void _Started(long id, FileNode fn, int line, long time, string trigger) {
 		//remove oldest ended items
 		if (s_a.Count > 250) {
-			var t1 = ATime.WinMilliseconds;
+			var t1 = Environment.TickCount64;
 			if (t1 - s_shrinkTime > 1000) {
 				s_shrinkTime = t1;
 				var ar = new List<_Item>(); //running
@@ -83,7 +83,7 @@ static class RecentTT
 			}
 		}
 		if (last != null) {
-			//AOutput.Write("same");
+			//print.it("same");
 			last.id = id; last.startTime = time; last.endTime = 0; last.repeated++;
 		} else {
 			s_a.Add(new() { id = id, file = fn, line = line, startTime = time, trigger = trigger });
@@ -106,7 +106,7 @@ static class RecentTT
 
 	public static void Show() {
 		if (s_a.Count == 0) return;
-		var m = new AMenu();
+		var m = new popupMenu();
 		for (int i = s_a.Count; --i >= 0;) {
 			var v = s_a[i];
 			var s = $"{v.trigger ?? v.file.DisplayName}\t{_Time(v.startTime)} - {_Time(v.endTime)}";

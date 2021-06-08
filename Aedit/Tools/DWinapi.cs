@@ -15,13 +15,14 @@ using System.Linq;
 
 using Au;
 using Au.Types;
+using Au.More;
 using Au.Controls;
 
 namespace Au.Tools
 {
 	class DWinapi : KDialogWindow
 	{
-		ASqlite _db;
+		sqlite _db;
 		TextBox tName;
 		KSciCodeBox code;
 
@@ -37,7 +38,7 @@ namespace Au.Tools
 				}
 			}
 
-			var b = new AWpfBuilder(this).WinSize(800, 500);
+			var b = new wpfBuilder(this).WinSize(800, 500);
 			b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
 			b.R.Add("Name", out tName, name);
 			b.Row(-1).Add(out code); code.ZInitBorder = true;
@@ -98,11 +99,11 @@ If some really useful API are missing, tell about it: https://www.quickmacros.co
 				else sql = $"= '{name}'";
 				try {
 					using var stat = _db.Statement("SELECT name, code FROM api WHERE name " + sql);
-					//APerf.First();
+					//perf.first();
 					while (stat.Step()) a.Add((stat.GetText(0), stat.GetText(1)));
-					//APerf.NW(); //30 ms cold, 10 ms warm. Without index.
+					//perf.nw(); //30 ms cold, 10 ms warm. Without index.
 				}
-				catch (SLException ex) { ADebug_.Print(ex.Message); }
+				catch (SLException ex) { Debug_.Print(ex.Message); }
 			}
 
 			string s = "";

@@ -19,25 +19,27 @@ using Microsoft.CodeAnalysis.CSharp.QuickInfo;
 using System.Windows.Documents;
 using Microsoft.CodeAnalysis;
 
+//TODO: displayed parameter types are with undeclared namespace. Remove namespace if it is in favorites. Maybe always.
+
 class CiQuickInfo
 {
 	public async Task<Section> GetTextAt(int pos16) {
-		//APerf.First();
+		//perf.first();
 		if (!CodeInfo.GetContextAndDocument(out var cd, pos16)) return null;
 
-		//APerf.Next();
+		//perf.next();
 		var context = new QuickInfoContext(cd.document, pos16, default);
 
-		//APerf.Next();
+		//perf.next();
 		//var provider = new CSharpSemanticQuickInfoProvider(); //error in new roslyn: obsolete ctor, use MEF
 		var provider = typeof(CSharpSemanticQuickInfoProvider).GetConstructor(Type.EmptyTypes).Invoke(null) as CSharpSemanticQuickInfoProvider;
 		//var r = await provider.GetQuickInfoAsync(context); //not async
 		var r = await Task.Run(async () => await provider.GetQuickInfoAsync(context));
-		//APerf.Next();
+		//perf.next();
 		if (r == null) return null;
 
-		//AOutput.Write(r.Span, r.RelatedSpans);
-		//AOutput.Write(r.Tags);
+		//print.it(r.Span, r.RelatedSpans);
+		//print.it(r.Tags);
 
 		var x = new CiText();
 
@@ -46,7 +48,7 @@ class CiQuickInfo
 		var a = r.Sections;
 		for (int i = 0; i < a.Length; i++) {
 			var se = a[i];
-			//AOutput.Write(se.Kind, se.Text);
+			//print.it(se.Kind, se.Text);
 			x.StartParagraph();
 
 			if (i == 0) { //image

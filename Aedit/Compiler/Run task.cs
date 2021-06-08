@@ -14,7 +14,7 @@ using System.Reflection;
 
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 using Au.Compiler;
 using Au.Controls;
 
@@ -26,13 +26,13 @@ static class CompileRun
 	/// <summary>
 	/// Compiles and/or executes C# file or its project.
 	/// If <paramref name="run"/> is false, returns 1 if compiled, 0 if failed to compile.
-	/// Else returns: process id if started now, 0 if failed, (int)ATask.ERunResult.deferred if scheduled to run later, (int)ATask.ERunResult.editorThread if runs in editor thread.
+	/// Else returns: process id if started now, 0 if failed, (int)scriptt.ERunResult.deferred if scheduled to run later, (int)scriptt.ERunResult.editorThread if runs in editor thread.
 	/// </summary>
 	/// <param name="run">If true, compiles if need and executes. If false, always compiles and does not execute.</param>
 	/// <param name="f">C# file. Does nothing if null or not C# file.</param>
 	/// <param name="args">To pass to Main.</param>
 	/// <param name="noDefer">Don't schedule to run later.</param>
-	/// <param name="wrPipeName">Pipe name for ATask.WriteResult.</param>
+	/// <param name="wrPipeName">Pipe name for scriptt.writeResult.</param>
 	/// <param name="runFromEditor">Starting from the Run button or menu Run command. Can restart etc.</param>
 	/// <remarks>
 	/// Saves editor text if need.
@@ -41,7 +41,7 @@ static class CompileRun
 	/// </remarks>
 	public static int CompileAndRun(bool run, FileNode f, string[] args = null, bool noDefer = false, string wrPipeName = null, bool runFromEditor = false) {
 #if TEST_STARTUP_SPEED
-		args = new string[] { ATime.PerfMilliseconds.ToString() }; //and in script use this code: AOutput.Write(ATime.PerfMilliseconds-Convert.ToInt64(args[0]));
+		args = new string[] { perf.ms.ToString() }; //and in script use this code: print.it(perf.ms-Convert.ToInt64(args[0]));
 #endif
 
 		App.Model.Save.TextNowIfNeed(onlyText: true);
@@ -57,7 +57,7 @@ static class CompileRun
 			if (f2 != null) {
 				if (!f2.FindProject(out projFolder, out projMain)) f = f2;
 				else if (projMain != f) f = projMain;
-				else { AOutput.Write($"<>The test script {f2.SciLink} cannot be in the project folder {projFolder.SciLink}"); return 0; }
+				else { print.it($"<>The test script {f2.SciLink} cannot be in the project folder {projFolder.SciLink}"); return 0; }
 			}
 		}
 
@@ -65,7 +65,7 @@ static class CompileRun
 
 		bool ok = Compiler.Compile(run ? ECompReason.Run : ECompReason.CompileAlways, out var r, f, projFolder);
 
-		if (run && (r.role == ERole.classFile || r.role == ERole.classLibrary)) { //info: if classFile, compiler sets r.role and returns false (does not compile)
+		if (run && (r.role == Au.Compiler.ERole.classFile || r.role == Au.Compiler.ERole.classLibrary)) { //info: if classFile, compiler sets r.role and returns false (does not compile)
 			_OnRunClassFile(f, projFolder);
 			return 0;
 		}
@@ -73,9 +73,9 @@ static class CompileRun
 		if (!ok) return 0;
 		if (!run) return 1;
 
-		if (r.role == ERole.editorExtension) {
+		if (r.role == Au.Compiler.ERole.editorExtension) {
 			RunAssembly.Run(r.file, args, handleExceptions: true);
-			return (int)ATask.RunResult_.editorThread;
+			return (int)scriptt.RunResult_.editorThread;
 		}
 
 		return App.Tasks.RunCompiled(f, r, args, noDefer, wrPipeName, runFromEditor: runFromEditor);
@@ -85,7 +85,7 @@ static class CompileRun
 		if (!s_isRegisteredLinkRCF) { s_isRegisteredLinkRCF = true; SciTags.AddCommonLinkTag("+runClass", _SciLink_RunClassFile); }
 		var ids = f.IdStringWithWorkspace;
 		var s2 = projFolder != null ? "" : $", project (<+runClass \"2|{ids}\">create<>) or role exeProgram (<+runClass \"1|{ids}\">add<>)";
-		AOutput.Write($"<>Cannot run '{f.Name}'. It is a class file without a test script (<+runClass \"3|{ids}\">create<>){s2}.");
+		print.it($"<>Cannot run '{f.Name}'. It is a class file without a test script (<+runClass \"3|{ids}\">create<>){s2}.");
 	}
 
 	static void _SciLink_RunClassFile(string s) {
@@ -100,7 +100,7 @@ static class CompileRun
 				if (!_NewItem(out f2, @"New Project\@@Script")) return;
 				f.FileMove(f2, FNPosition.After);
 			} else { //create test script
-				s = "test " + APath.GetNameNoExt(f.Name);
+				s = "test " + pathname.getNameNoExt(f.Name);
 				if (!_NewItem(out f2, "Script.cs", s)) return;
 				f.TestScript = f2;
 			}
@@ -127,7 +127,7 @@ static class CompileRun
 }
 
 /// <summary>
-/// A running automation task.
+/// A running script task.
 /// Starts/ends task, watches/notifies when ended.
 /// </summary>
 class RunningTask : ITreeViewItem
@@ -182,9 +182,9 @@ class RunningTask : ITreeViewItem
 			var h = p.SafeWaitHandle.DangerousGetHandle();
 
 			//let it remove tray icon and call Environment.Exit
-			int pid = AProcess.ProcessIdFromHandle(h);
+			int pid = process.processIdFromHandle(h);
 			if (pid != 0) {
-				var wti = AWnd.Find(null, "ATrayIcon", WOwner.Process(pid), WFlags.HiddenToo | WFlags.CloakedToo);
+				var wti = wnd.find(null, "trayIcon", WOwner.Process(pid), WFlags.HiddenToo | WFlags.CloakedToo);
 				if (!wti.Is0 && wti.Post(Api.WM_CLOSE, 1)) {
 					if (0 == Api.WaitForSingleObject(h, onProgramExit ? 100 : 1000)) return true;
 				}
@@ -193,10 +193,10 @@ class RunningTask : ITreeViewItem
 			bool ok = Api.TerminateProcess(h, -1);
 			if (onProgramExit) return true;
 			if (ok) {
-				if (0 != Api.WaitForSingleObject(h, 2000)) { ADebug_.Print("process not terminated"); return false; }
+				if (0 != Api.WaitForSingleObject(h, 2000)) { Debug_.Print("process not terminated"); return false; }
 			} else {
-				var s = ALastError.Message;
-				if (0 != Api.WaitForSingleObject(h, 0)) { ADebug_.Print(s); return false; }
+				var s = lastError.message;
+				if (0 != Api.WaitForSingleObject(h, 0)) { Debug_.Print(s); return false; }
 			}
 			//note: TerminateProcess kills process not immediately. Need at least several ms.
 		}
@@ -226,7 +226,7 @@ class RunningTask : ITreeViewItem
 }
 
 /// <summary>
-/// Manages running automation tasks.
+/// Manages running script tasks.
 /// </summary>
 class RunningTasks
 {
@@ -252,7 +252,7 @@ class RunningTasks
 		_a = new List<RunningTask>();
 		_q = new List<_WaitingTask>();
 		App.Timer1sOr025s += _TimerUpdateUI;
-		ATask.s_role = ATRole.EditorExtension;
+		scriptt.s_role = ATRole.EditorExtension;
 	}
 
 	public void OnWorkspaceClosed() {
@@ -307,7 +307,7 @@ class RunningTasks
 
 		int taskId = (int)wParam;
 		int i = _Find(taskId);
-		if (i < 0) { ADebug_.Print("not found. It's OK, but should be very rare, mostly with 1-core CPU."); return; }
+		if (i < 0) { Debug_.Print("not found. It's OK, but should be very rare, mostly with 1-core CPU."); return; }
 
 		RecentTT.TaskEvent(false, _a[i], (int)lParam);
 		_a.RemoveAt(i);
@@ -424,13 +424,13 @@ class RunningTasks
 #if false //use shared memory instead of pipe. Works, but unfinished, used only to compare speed. Same speed.
 	/// <summary>
 	/// Executes the compiled assembly in new process.
-	/// Returns: process id if started now, 0 if failed, (int)ATask.ERunResult.deferred if scheduled to run later.
+	/// Returns: process id if started now, 0 if failed, (int)scriptt.ERunResult.deferred if scheduled to run later.
 	/// </summary>
 	/// <param name="f"></param>
 	/// <param name="r"></param>
 	/// <param name="args"></param>
 	/// <param name="noDefer">Don't schedule to run later. If cannot run now, just return 0.</param>
-	/// <param name="wrPipeName">Pipe name for ATask.WriteResult.</param>
+	/// <param name="wrPipeName">Pipe name for scriptt.writeResult.</param>
 	/// <param name="ignoreLimits">Don't check whether the task can run now.</param>
 	/// <param name="runFromEditor">Starting from the Run button or menu Run command. Can restart etc.</param>
 	public unsafe int RunCompiled(FileNode f, Compiler.CompResults r, string[] args,
@@ -451,28 +451,28 @@ class RunningTasks
 				if (runFromEditor) ifRunning = EIfRunning.restart;
 				else ifRunning |= EIfRunning._norestartFlag;
 			}
-			//AOutput.Write(same, ifRunning);
+			//print.it(same, ifRunning);
 			switch(ifRunning) {
 			case EIfRunning.cancel:
 				break;
 			case EIfRunning.wait when !noDefer:
 				_q.Insert(0, new _WaitingTask(f, r, args));
-				return (int)ATask.ERunResult.deferred; //-1
+				return (int)scriptt.ERunResult.deferred; //-1
 			case EIfRunning.restart when _EndTask(running):
 				goto g1;
 			default: //warn
 				string s1 = same ? "it" : $"{running.f.SciLink}";
-				AOutput.Write($"<>Cannot start {f.SciLink} because {s1} is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>ifRunning<>, <c green>ifRunning2<>, <c green>runSingle<>.");
+				print.it($"<>Cannot start {f.SciLink} because {s1} is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>ifRunning<>, <c green>ifRunning2<>, <c green>runSingle<>.");
 				break;
 			}
 			return 0;
 		}
 
 		_SpUac uac = _SpUac.normal; int preIndex = 0;
-		if(!AUac.IsUacDisabled) {
+		if(!uacInfo.isUacDisabled) {
 			//info: to completely disable UAC on Win7: gpedit.msc/Computer configuration/Windows settings/Security settings/Local policies/Security options/User Account Control:Run all administrators in Admin Approval Mode/Disabled. Reboot.
 			//note: when UAC disabled, if our uac is System, IsUacDisabled returns false (we probably run as SYSTEM user). It's OK.
-			var IL = AUac.OfThisProcess.IntegrityLevel;
+			var IL = uacInfo.ofThisProcess.IntegrityLevel;
 			if(r.uac == EUac.inherit) {
 				switch(IL) {
 				case UacIL.High: preIndex = 1; break;
@@ -493,7 +493,7 @@ class RunningTasks
 				//break;
 				case UacIL.System:
 				case UacIL.Protected:
-					AOutput.Write($"<>Cannot run {f.SciLink}. Meta comment option <c green>uac {r.uac}<> cannot be used when the UAC integrity level of this process is {IL}. Supported levels are Medium, High and uiAccess.");
+					print.it($"<>Cannot run {f.SciLink}. Meta comment option <c green>uac {r.uac}<> cannot be used when the UAC integrity level of this process is {IL}. Supported levels are Medium, High and uiAccess.");
 					return 0;
 					//info: cannot start Medium IL process from System process. Would need another function. Never mind.
 				}
@@ -503,21 +503,21 @@ class RunningTasks
 
 		string exeFile, argsString;
 		_Preloaded pre = null; byte[] taskArgs = null;
-		bool bit32 = r.bit32 || AVersion.Is32BitOS;
+		bool bit32 = r.bit32 || osVersion.is32BitOS;
 		if(r.notInCache) { //meta role exeProgram
 			exeFile = Compiler.DllNameToAppHostExeName(r.file, bit32);
-			argsString = args == null ? null : AStringUtil.CommandLineFromArray(args);
+			argsString = args == null ? null : StringUtil.CommandLineFromArray(args);
 		} else {
-			exeFile = AFolders.ThisAppBS + (bit32 ? "Au.Task32.exe" : "Au.Task.exe");
+			exeFile = folders.ThisAppBS + (bit32 ? "Au.Task32.exe" : "Au.Task.exe");
 
 			//int iFlags = r.hasConfig ? 1 : 0;
 			int iFlags = 0;
 			if(r.mtaThread) iFlags |= 2;
 			if(r.console) iFlags |= 4;
-			taskArgs = Serializer_.Serialize(r.name, r.file, iFlags, args, r.fullPathRefs, wrPipeName, (string)AFolders.Workspace);
+			taskArgs = Serializer_.Serialize(r.name, r.file, iFlags, args, r.fullPathRefs, wrPipeName, (string)folders.Workspace);
 			wrPipeName = null;
 
-			if(bit32 && !AVersion.Is32BitOS) preIndex += 3;
+			if(bit32 && !osVersion.is32BitOS) preIndex += 3;
 			pre = _preloaded[preIndex] ??= new _Preloaded(preIndex);
 			argsString = pre.eventName;
 		}
@@ -536,10 +536,10 @@ class RunningTasks
 
 			if(pre != null) {
 				if(taskArgs.Length > SharedMemory_.TasksDataSize_) throw new ArgumentException("Too long task arguments data."); //todo
-																																		 //AOutput.Write(taskArgs.Length);
+																																		 //print.it(taskArgs.Length);
 				var m = SharedMemory_.Ptr;
 				m->tasks.size = taskArgs.Length;
-				//AOutput.Write(taskArgs.Length, taskArgs);
+				//print.it(taskArgs.Length, taskArgs);
 				fixed(byte* p = taskArgs) Buffer.MemoryCopy(p, m->tasks.data, SharedMemory_.TasksDataSize_, taskArgs.Length);
 				Api.SetEvent(pre.hEvent);
 				//500.ms();
@@ -547,12 +547,12 @@ class RunningTasks
 				//start preloaded process for next task. Let it wait for pipe connection.
 				if(uac != _SpUac.admin) { //we don't want second UAC consent
 					try { (pre.pid, pre.hProcess) = _StartProcess(uac, exeFile, argsString, null); }
-					catch(Exception ex) { ADebug_.Print(ex); }
+					catch(Exception ex) { Debug_.Print(ex); }
 				}
 			}
 		}
 		catch(Exception ex) {
-			AOutput.Write(ex);
+			print.it(ex);
 			//if(disconnectPipe) Api.DisconnectNamedPipe(pre.hPipe);
 			hProcess?.Dispose();
 			return 0;
@@ -580,13 +580,13 @@ class RunningTasks
 #else
 	/// <summary>
 	/// Executes the compiled assembly in new process.
-	/// Returns: process id if started now, 0 if failed, (int)ATask.ERunResult.deferred if scheduled to run later.
+	/// Returns: process id if started now, 0 if failed, (int)scriptt.ERunResult.deferred if scheduled to run later.
 	/// </summary>
 	/// <param name="f"></param>
 	/// <param name="r"></param>
 	/// <param name="args"></param>
 	/// <param name="noDefer">Don't schedule to run later. If cannot run now, just return 0.</param>
-	/// <param name="wrPipeName">Pipe name for ATask.WriteResult.</param>
+	/// <param name="wrPipeName">Pipe name for scriptt.writeResult.</param>
 	/// <param name="ignoreLimits">Don't check whether the task can run now.</param>
 	/// <param name="runFromEditor">Starting from the Run button or menu Run command. Can restart etc.</param>
 	public unsafe int RunCompiled(FileNode f, Compiler.CompResults r, string[] args,
@@ -606,28 +606,28 @@ class RunningTasks
 				if (runFromEditor) ifRunning = EIfRunning.restart;
 				else ifRunning |= EIfRunning._norestartFlag;
 			}
-			//AOutput.Write(same, ifRunning);
+			//print.it(same, ifRunning);
 			switch (ifRunning) {
 			case EIfRunning.cancel:
 				break;
 			case EIfRunning.wait when !noDefer:
 				_q.Insert(0, new _WaitingTask(f, r, args));
-				return (int)ATask.RunResult_.deferred; //-1
+				return (int)scriptt.RunResult_.deferred; //-1
 			case EIfRunning.restart when _EndTask(running):
 				goto g1;
 			default: //warn
 				string s1 = same ? "it" : $"{running.f.SciLink}";
-				AOutput.Write($"<>Cannot start {f.SciLink} because {s1} is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>ifRunning<>, <c green>ifRunning2<>, <c green>runSingle<>.");
+				print.it($"<>Cannot start {f.SciLink} because {s1} is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>ifRunning<>, <c green>ifRunning2<>, <c green>runSingle<>.");
 				break;
 			}
 			return 0;
 		}
 
 		_SpUac uac = _SpUac.normal; int preIndex = 0;
-		if (!AUac.IsUacDisabled) {
+		if (!uacInfo.isUacDisabled) {
 			//info: to completely disable UAC on Win7: gpedit.msc/Computer configuration/Windows settings/Security settings/Local policies/Security options/User Account Control:Run all administrators in Admin Approval Mode/Disabled. Reboot.
 			//note: when UAC disabled, if our uac is System, IsUacDisabled returns false (we probably run as SYSTEM user). It's OK.
-			var IL = AUac.OfThisProcess.IntegrityLevel;
+			var IL = uacInfo.ofThisProcess.IntegrityLevel;
 			if (r.uac == EUac.inherit) {
 				switch (IL) {
 				case UacIL.High: preIndex = 1; break;
@@ -648,7 +648,7 @@ class RunningTasks
 				//break;
 				case UacIL.System:
 				case UacIL.Protected:
-					AOutput.Write($"<>Cannot run {f.SciLink}. Meta comment option <c green>uac {r.uac}<> cannot be used when the UAC integrity level of this process is {IL}. Supported levels are Medium, High and uiAccess.");
+					print.it($"<>Cannot run {f.SciLink}. Meta comment option <c green>uac {r.uac}<> cannot be used when the UAC integrity level of this process is {IL}. Supported levels are Medium, High and uiAccess.");
 					return 0;
 					//info: cannot start Medium IL process from System process. Would need another function. Never mind.
 				}
@@ -658,17 +658,17 @@ class RunningTasks
 
 		string exeFile, argsString;
 		_Preloaded pre = null; byte[] taskParams = null;
-		bool bit32 = r.bit32 || AVersion.Is32BitOS;
+		bool bit32 = r.bit32 || osVersion.is32BitOS;
 		if (r.notInCache) { //meta role exeProgram
 			exeFile = Compiler.DllNameToAppHostExeName(r.file, bit32);
-			argsString = args == null ? null : AStringUtil.CommandLineFromArray(args);
+			argsString = args == null ? null : StringUtil.CommandLineFromArray(args);
 		} else {
-			exeFile = AFolders.ThisAppBS + (bit32 ? "Au.Task32.exe" : "Au.Task.exe");
+			exeFile = folders.ThisAppBS + (bit32 ? "Au.Task32.exe" : "Au.Task.exe");
 
-			taskParams = Serializer_.SerializeWithSize(r.name, r.file, (int)r.flags, args, wrPipeName, (string)AFolders.Workspace, f.IdString);
+			taskParams = Serializer_.SerializeWithSize(r.name, r.file, (int)r.flags, args, wrPipeName, (string)folders.Workspace, f.IdString);
 			wrPipeName = null;
 
-			if (bit32 && !AVersion.Is32BitOS) preIndex += 3;
+			if (bit32 && !osVersion.is32BitOS) preIndex += 3;
 			pre = s_preloaded[preIndex] ??= new _Preloaded(preIndex);
 			argsString = pre.pipeName;
 		}
@@ -688,11 +688,11 @@ class RunningTasks
 			if (pre != null) {
 				var o = new Api.OVERLAPPED { hEvent = pre.overlappedEvent };
 				if (!Api.ConnectNamedPipe(pre.hPipe, &o)) {
-					int e = ALastError.Code;
+					int e = lastError.code;
 					if (e != Api.ERROR_PIPE_CONNECTED) {
 						if (e != Api.ERROR_IO_PENDING) throw new AuException(e);
 						var ha = stackalloc IntPtr[2] { pre.overlappedEvent, hProcess.SafeWaitHandle.DangerousGetHandle() };
-						//APerf.Shared.Next('r');
+						//perf.shared.Next('r');
 						int wr = Api.WaitForMultipleObjectsEx(2, ha, false, -1, false);
 						if (wr != 0) { Api.CancelIo(pre.hPipe); throw new AuException("*start task. Preloaded task process ended"); } //note: if fails when 32-bit process, rebuild solution with platform x86
 						disconnectPipe = true;
@@ -705,12 +705,12 @@ class RunningTasks
 				//start preloaded process for next task. Let it wait for pipe connection.
 				if (uac != _SpUac.admin) { //we don't want second UAC consent
 					try { (pre.pid, pre.hProcess) = _StartProcess(uac, exeFile, argsString, null); }
-					catch (Exception ex) { ADebug_.Print(ex); }
+					catch (Exception ex) { Debug_.Print(ex); }
 				}
 			}
 		}
 		catch (Exception ex) {
-			AOutput.Write(ex);
+			print.it(ex);
 			if (disconnectPipe) Api.DisconnectNamedPipe(pre.hPipe);
 			hProcess?.Dispose();
 			return 0;
@@ -763,10 +763,10 @@ class RunningTasks
 	/// Returns (processId, processHandle). Throws if failed.
 	/// </summary>
 	static (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string args, string wrPipeName) {
-		if (wrPipeName != null) wrPipeName = "ATask.WriteResult.pipe=" + wrPipeName;
+		if (wrPipeName != null) wrPipeName = "scriptt.writeResult.pipe=" + wrPipeName;
 		if (uac == _SpUac.admin) {
-			if (wrPipeName != null) throw new AuException($"*start process '{exeFile}' as admin and enable ATask.WriteResult"); //cannot pass environment variables. //rare //FUTURE
-			var k = ARun.Run(exeFile, args, RFlags.Admin | RFlags.NeedProcessHandle, "");
+			if (wrPipeName != null) throw new AuException($"*start process '{exeFile}' as admin and enable scriptt.writeResult"); //cannot pass environment variables. //rare //FUTURE
+			var k = run.it(exeFile, args, RFlags.Admin | RFlags.NeedProcessHandle, "");
 			return (k.ProcessId, k.ProcessHandle);
 			//note: don't try to start task without UAC consent. It is not secure.
 			//	Normally Au editor runs as admin in admin user account, and don't need to go through this.

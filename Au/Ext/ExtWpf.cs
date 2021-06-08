@@ -17,6 +17,7 @@ using System.Windows.Interop;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
+using Au.More;
 
 namespace Au.Types
 {
@@ -27,39 +28,39 @@ namespace Au.Types
 	{
 		/// <summary>
 		/// Gets native window handle of this <b>Window</b> or <b>Popup</b>, or container window handle of this child object.
-		/// Returns <c>default(AWnd)</c> if: called before creating or after closing real window; failed; <i>t</i> is null.
+		/// Returns <c>default(wnd)</c> if: called before creating or after closing real window; failed; <i>t</i> is null.
 		/// </summary>
 		/// <param name="t"></param>
-		public static AWnd Hwnd(this DependencyObject t) {
+		public static wnd Hwnd(this DependencyObject t) {
 			bool isPopup = false;
 			switch (t) {
 			case null: return default;
-			case Window w: return (AWnd)new WindowInteropHelper(w).Handle; //FromDependencyObject works too, but this is usually slightly faster
+			case Window w: return (wnd)new WindowInteropHelper(w).Handle; //FromDependencyObject works too, but this is usually slightly faster
 			case Popup p: t = p.Child; if (t == null) return default; isPopup = true; break; //FromVisual(Popup) returns null, FromDependencyObject too
 			}
-			if (PresentationSource.FromDependencyObject(t) is HwndSource hs) return (AWnd)hs.Handle;
+			if (PresentationSource.FromDependencyObject(t) is HwndSource hs) return (wnd)hs.Handle;
 			if (isPopup) return default;
 			return Hwnd(LogicalTreeHelper.GetParent(t));
 		}
 		//rejected: notPopup. Not useful.
 		///// <summary>
 		///// Gets window handle of this <b>Window</b>, <b>Popup</b> or container window handle of this child object.
-		///// Returns <c>default(AWnd)</c> if: called before creating real window; failed; <i>t</i> is null.
+		///// Returns <c>default(wnd)</c> if: called before creating real window; failed; <i>t</i> is null.
 		///// </summary>
 		///// <param name="t"></param>
 		///// <param name="notPopup">If this is <b>Popup</b> or in a <b>Popup</b>, get handle of popup's owner <b>Window</b>.</param>
-		//public static AWnd Hwnd(this DependencyObject t, bool notPopup = false)
+		//public static wnd Hwnd(this DependencyObject t, bool notPopup = false)
 		//{
 		//	switch(t) {
 		//	case null: return default;
-		//	case Window w: return (AWnd)new WindowInteropHelper(w).Handle; //FromDependencyObject works too, but this is usually slightly faster
+		//	case Window w: return (wnd)new WindowInteropHelper(w).Handle; //FromDependencyObject works too, but this is usually slightly faster
 		//	case Popup p when !notPopup: t = p.Child; if(t == null) return default; break; //FromVisual(Popup) returns null; or maybe owner window, not tested.
 		//	}
 		//	if(notPopup) {
 		//		var w = Window.GetWindow(t); if(w == null) return default; //if Popup or in Popup, gets owner WIndow
-		//		return (AWnd)new WindowInteropHelper(w).Handle;
+		//		return (wnd)new WindowInteropHelper(w).Handle;
 		//	}
-		//	if(PresentationSource.FromDependencyObject(t) is HwndSource hs) return (AWnd)hs.Handle;
+		//	if(PresentationSource.FromDependencyObject(t) is HwndSource hs) return (wnd)hs.Handle;
 		//	return default;
 		//}
 
@@ -184,7 +185,7 @@ namespace Au.Types
 				t.WindowStartupLocation = WindowStartupLocation.Manual;
 				if (wstate == WindowState.Minimized) t.ShowActivated = false;
 
-				AHookWin.ThreadCbt(k => {
+				WindowsHook.ThreadCbt(k => {
 					if (k.code == HookData.CbtEvent.CREATEWND) {
 						var c = k.CreationInfo->lpcs;
 						if (!c->style.Has(WS.CHILD)) {
@@ -200,7 +201,7 @@ namespace Au.Types
 							}
 						}
 					} else {
-						ADebug_.Print(k.code); //didn't detect the window? Because unhooks when detects.
+						Debug_.Print(k.code); //didn't detect the window? Because unhooks when detects.
 					}
 					return false;
 				});
@@ -242,15 +243,15 @@ namespace Au.Types
 				if(w.Is0) throw new ObjectDisposedException("Window");
 				if(andSize) w.MoveL(r); else w.MoveL(x, y);
 			} else {
-				var screen=AScreen.Of(new POINT(x, y));
-				var si=screen.GetInfo();
+				var scrn=screen.of(new POINT(x, y));
+				var si=scrn.GetInfo();
 				var rs=si.workArea;
 			
 				if(andSize) {
 					x=r.left; y=r.top;
 					var stc=t.SizeToContent;
 					if(stc!=SizeToContent.WidthAndHeight) {
-						double f=96d/screen.Dpi;
+						double f=96d/scrn.Dpi;
 						if(!stc.Has(SizeToContent.Width)) t.Width=r.Width*f;
 						if(!stc.Has(SizeToContent.Height)) t.Height=r.Height*f;
 					}
@@ -274,11 +275,11 @@ namespace Au.Types
 				};
 			
 				if(!si.isPrimary) {
-					using var h=AHookWin.ThreadCbt(d=> {
+					using var h=WindowsHook.ThreadCbt(d=> {
 						if(d.code== HookData.CbtEvent.CREATEWND) unsafe {
 							var w=d.CreationInfo(out var c, out _);
 							if(c->style!=0 && !c->style.Has(WS.CHILD)) { //note: this does not work if ShowInTaskbar = false. Then WPF creates a "Hidden Window" before, even if owner specified.
-								AOutput.Write(c->x, c->y, c->cx, c->cy, c->hwndParent, c->style, c->lpszClass, c->lpszName);
+								print.it(c->x, c->y, c->cx, c->cy, c->hwndParent, c->style, c->lpszClass, c->lpszName);
 				//				d.hook.Unhook();
 								c->x=rs.left; c->y=rs.top;
 								//the hook receives 2 windows. At first the true window and then some other HwndWrapper* with 0 x y cx cy style parent. The second is never visibe.
@@ -308,7 +309,7 @@ namespace Au.Types
 					x = r.left; y = r.top;
 					var stc = t.SizeToContent;
 					if (stc != SizeToContent.WidthAndHeight) {
-						double f = 96d / AScreen.Of(x, y).Dpi;
+						double f = 96d / screen.of(x, y).Dpi;
 						if (!stc.Has(SizeToContent.Width)) t.Width = r.Width * f;
 						if (!stc.Has(SizeToContent.Height)) t.Height = r.Height * f;
 					}
@@ -320,10 +321,10 @@ namespace Au.Types
 
 				t.SourceInitialized += (_, _) => {
 					var w = t.Hwnd();
-					var v = AScreen.Of(x, y).Info;
+					var v = screen.of(x, y).Info;
 					var rs = v.workArea;
 					if (!v.isPrimary) {
-						using var h = AHookWin.ThreadCbt(k => k.code == HookData.CbtEvent.ACTIVATE); //workaround for WPF bug: activates window when DPI changes
+						using var h = WindowsHook.ThreadCbt(k => k.code == HookData.CbtEvent.ACTIVATE); //workaround for WPF bug: activates window when DPI changes
 						w.MoveL(rs.left, rs.top); //let DPI-scale
 					}
 					var rw = w.Rect;
@@ -352,7 +353,7 @@ namespace Au.Types
 		/// <remarks>
 		/// The unit is physical pixels. WPF provides <b>Left</b> and <b>Top</b> properties, but the unit is logical pixels, therefore cannot set exact location on high DPI screens, especially if there are mutiple screens with different DPI.
 		/// 
-		/// If the window is already loaded, just ensures it is not maximized/minimized and calls <see cref="AWnd.MoveL"/>.
+		/// If the window is already loaded, just ensures it is not maximized/minimized and calls <see cref="wnd.MoveL"/>.
 		/// 
 		/// Else sets window location for normal state (not minimized/maximized). Temporarily changes <b>Title</b>. Clears <b>WindowStartupLocation</b>, <b>Left</b>, <b>Top</b>. Clears <b>ShowActivated</b> if minimized. Does not change <b>SizeToContent</b>.
 		/// </remarks>
@@ -366,7 +367,7 @@ namespace Au.Types
 		/// <remarks>
 		/// The unit is physical pixels. WPF provides <b>Left</b>, <b>Top</b>, <b>Width</b> and <b>Height</b> properties, but the unit is logical pixels, therefore cannot set exact rectangle on high DPI screens, especially if there are mutiple screens with different DPI.
 		/// 
-		/// If the window is already loaded, just ensures it is not maximized/minimized and calls <see cref="AWnd.MoveL"/>.
+		/// If the window is already loaded, just ensures it is not maximized/minimized and calls <see cref="wnd.MoveL"/>.
 		/// 
 		/// Else sets window rectangle for normal state (not minimized/maximized). Temporarily changes <b>Title</b>. Clears <b>WindowStartupLocation</b>, <b>Left</b>, <b>Top</b>, <b>Width</b>, <b>Height</b>. Clears <b>ShowActivated</b> if minimized. Does not change <b>SizeToContent</b>.
 		/// </remarks>
@@ -480,12 +481,12 @@ namespace Au.Types
 		/// Workaround for WPF bug: on DPI change tries to activate window.
 		/// Call on WM_DPICHANED message or in OnDpiChanged override. Only if top-level window.
 		/// </summary>
-		public static void DpiChangedWorkaround(this HwndSource t) => _DCW(t.Dispatcher, (AWnd)t.Handle);
+		public static void DpiChangedWorkaround(this HwndSource t) => _DCW(t.Dispatcher, (wnd)t.Handle);
 
-		static void _DCW(Dispatcher d, AWnd w) {
-			if (AWnd.Active != w) {
+		static void _DCW(Dispatcher d, wnd w) {
+			if (wnd.active != w) {
 				bool wasVisible = w.IsVisible; //allow to activate when opening window in non-primary screen
-				var h = AHookWin.ThreadCbt(k => k.code == HookData.CbtEvent.ACTIVATE && (AWnd)k.wParam == w && (wasVisible || !w.IsVisible));
+				var h = WindowsHook.ThreadCbt(k => k.code == HookData.CbtEvent.ACTIVATE && (wnd)k.wParam == w && (wasVisible || !w.IsVisible));
 				d.InvokeAsync(() => h.Dispose());
 			}
 		}

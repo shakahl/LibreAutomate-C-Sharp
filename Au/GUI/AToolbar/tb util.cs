@@ -1,15 +1,15 @@
 using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 //using System.Linq;
 
 namespace Au
 {
-	public partial class AToolbar
+	public partial class toolbar
 	{
 		bool _SetDpi() {
-			int dpi = _os != null ? _os.Screen.Dpi : ADpi.OfWindow(OwnerWindow, true);
+			int dpi = _os != null ? _os.Screen.Dpi : Dpi.OfWindow(OwnerWindow, true);
 			if (dpi == _dpi) return false;
 			_dpi = dpi;
 			_dpiF = _dpi / 96d;
@@ -29,9 +29,9 @@ namespace Au
 
 		double _Unscale(int i, bool offsets) => _NeedScaling(offsets) ? i / _dpiF : i;
 
-		SIZE _Scale(System.Windows.Size z) => _NeedScaling(false) ? ADpi.Scale(z, _dpi) : SIZE.From(z, true);
+		SIZE _Scale(System.Windows.Size z) => _NeedScaling(false) ? Dpi.Scale(z, _dpi) : SIZE.From(z, true);
 
-		System.Windows.Size _Unscale(SIZE z) => _NeedScaling(false) ? ADpi.Unscale(z, _dpi) : z;
+		System.Windows.Size _Unscale(SIZE z) => _NeedScaling(false) ? Dpi.Unscale(z, _dpi) : z;
 
 		//	System.Windows.Size _Unscale(int width, int height) => _Unscale(new SIZE(width, height));
 
@@ -51,7 +51,7 @@ namespace Au
 		}
 
 		void _Resize(SIZE clientSize/*, bool ignoreAnchor=false*/) {
-			//		AOutput.Write(_dpi);
+			//		print.it(_dpi);
 			_w.GetWindowAndClientRectInScreen(out var rw, out var rc);
 			int cx = clientSize.width + (rw.Width - rc.Width), cy = clientSize.height + (rw.Height - rc.Height);
 			var a = Anchor.WithoutFlags();
@@ -62,7 +62,7 @@ namespace Au
 				int dx = cx - rw.Width, dy = cy - rw.Height;
 				if (!a.HasLeft()) rw.left -= dx; else if (!a.HasRight()) rw.right += dx;
 				if (!a.HasTop()) rw.top -= dy; else if (!a.HasBottom()) rw.bottom += dy;
-				//			AOutput.Write(dx, dy, old, rw);
+				//			print.it(dx, dy, old, rw);
 				_w.MoveL(rw);
 			}
 		}
@@ -87,7 +87,7 @@ namespace Au
 		/// <summary>
 		/// Returns DPI-scaled border thickness in client area. Returns 0 if b is not TBBorder.Width1 ... TBBorder.Width4.
 		/// </summary>
-		static int _BorderPadding(TBBorder b, int dpi) => b >= TBBorder.Width1 && b <= TBBorder.Width4 ? ADpi.Scale((int)b, dpi) : 0;
+		static int _BorderPadding(TBBorder b, int dpi) => b >= TBBorder.Width1 && b <= TBBorder.Width4 ? Dpi.Scale((int)b, dpi) : 0;
 
 		/// <summary>
 		/// Returns DPI-scaled border thickness in client area. Returns 0 if b is not TBBorder.Width1 ... TBBorder.Width4.

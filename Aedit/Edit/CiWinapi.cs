@@ -13,7 +13,7 @@ using System.Linq;
 
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -70,8 +70,8 @@ class CiWinapi
 	public void OnCommitInsertDeclaration(CiComplItem item) {
 		if (!_GetText(item, out string text)) return;
 		if (_InsertDeclaration(item, text)) return;
-		AClipboard.Text = text;
-		AOutput.Write("<>Clipboard:\r\n<code>" + text + "</code>");
+		clipboard.text = text;
+		print.it("<>Clipboard:\r\n<code>" + text + "</code>");
 	}
 
 	bool _InsertDeclaration(CiComplItem item, string text) {
@@ -123,7 +123,7 @@ class CiWinapi
 
 			if (level == 0) { //insert missing usings first
 				int len = doc.zLen16;
-				InsertCode.UsingDirective("Au;Au.Types;System;System.Runtime.InteropServices"); //Au: AWnd; Au.Types: RECT etc; System: IntPtr, Guid etc
+				InsertCode.UsingDirective("Au;Au.Types;System;System.Runtime.InteropServices"); //Au: wnd; Au.Types: RECT etc; System: IntPtr, Guid etc
 				int add = doc.zLen16 - len;
 				posInsert += add; posClass += add;
 			}
@@ -133,7 +133,7 @@ class CiWinapi
 
 			//recursively add declarations for unknown names found in now added declaration
 			if (kind is CiItemKind.Constant or CiItemKind.Field or CiItemKind.Enum or CiItemKind.Class) return;
-			//AOutput.Write(level, name);
+			//print.it(level, name);
 			if (level > 30) return; //max seen 10. Tested: at level 10 uses ~40 KB of stack.
 			if (!CodeInfo.GetDocumentAndFindNode(out var cd, out node, posClass)) return;
 			if (node is not ClassDeclarationSyntax) return;
@@ -149,34 +149,34 @@ class CiWinapi
 					) {
 					var loc = d.Location;
 					if (!loc.IsInSource) {
-						ADebug_.Print("!insource");
+						Debug_.Print("!insource");
 						continue;
 					}
 					var span = loc.SourceSpan;
 					if (!newSpan.Contains(span)) {
-						ADebug_.Print("!contains");
+						Debug_.Print("!contains");
 						continue;
 					}
 					name = cd.code[span.Start..span.End];
-					//AOutput.Write(name);
+					//print.it(name);
 					if (!hs.Add(name)) { //same name again
-										 //AOutput.Write("same", name);
+										 //print.it("same", name);
 						continue;
 					}
 					using (var db = EdDatabases.OpenWinapi()) //fast, if compared with GetDiagnostics
 					using (var stat = db.Statement("SELECT code, kind FROM api WHERE name=?", name)) {
 						if (!stat.Step()) {
-							ADebug_.Print("not in DB: " + name);
+							Debug_.Print("not in DB: " + name);
 							continue;
 						}
 						text = stat.GetText(0);
 						kind = (CiItemKind)stat.GetInt(1);
 					}
-					//AOutput.Write(kind, text);
+					//print.it(kind, text);
 					_Insert(level + 1, node, text, name, kind);
 				} else {
 					if (ec == ErrorCode.ERR_ManagedAddr) continue; //possibly same name is an internal managed type in some assembly, but in our DB it may be unmanaged. This error is for for field; we'll catch its type later.
-					else ADebug_.Print(d);
+					else Debug_.Print(d);
 				}
 			}
 		}

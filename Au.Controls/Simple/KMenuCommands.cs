@@ -1,5 +1,5 @@
 ﻿using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -130,14 +130,14 @@ namespace Au.Controls
 					string text = ca.text, dots = null; //menu item text, possibly with _ for Alt-underline
 					if (text == "...") { dots = text; text = null; }
 					if (text != null) {
-						c.ButtonText = AStringUtil.RemoveUnderlineChar(text, '_');
+						c.ButtonText = StringUtil.RemoveUnderlineChar(text, '_');
 					} else {
 						text = mi.Name.Replace('_', ' ') + dots;
 						c.ButtonText = text;
 						char u = ca.underlined;
 						if (u != default) {
 							int i = text.IndexOf(u);
-							if (i >= 0) text = text.Insert(i, "_"); else AOutput.Write($"Alt-underline character '{u}' not found in \"{text}\"");
+							if (i >= 0) text = text.Insert(i, "_"); else print.it($"Alt-underline character '{u}' not found in \"{text}\"");
 						}
 					}
 					c.ButtonTooltip = ca.tooltip;
@@ -208,21 +208,21 @@ namespace Au.Controls
 		/// <param name="target"></param>
 		/// <param name="name"></param>
 		public void BindKeysTarget(UIElement target, string name) {
-			//AOutput.Write($"---- {name} = {target}");
+			//print.it($"---- {name} = {target}");
 			foreach (var c in _d.Values) {
 				var ca = c.Attribute;
 				var keys = ca.keys;
 				if (keys != null && ca.target == name) {
-					//AOutput.Write(c, keys);
+					//print.it(c, keys);
 					int i = keys.IndexOf(", ");
 					if (i < 0) _Add(keys); else foreach (var v in keys.Split(", ")) _Add(v);
 					void _Add(string s) {
-						if (!AKeys.More.ParseHotkeyString(s, out var mod, out var key, out var mouse)) {
-							AOutput.Warning("Invalid key or mouse shortcut: " + s);
+						if (!Au.keys.more.parseHotkeyString(s, out var mod, out var key, out var mouse)) {
+							print.warning("Invalid key or mouse shortcut: " + s);
 							return;
 						}
 						if (key != default) target.InputBindings.Add(new KeyBinding(c, key, mod));
-						else if (target is System.Windows.Interop.HwndHost) AOutput.Warning(s + ": mouse shortcuts don't work with HwndHost controls");
+						else if (target is System.Windows.Interop.HwndHost) print.warning(s + ": mouse shortcuts don't work with HwndHost controls");
 						else target.InputBindings.Add(new MouseBinding(c, new MouseGesture(mouse, mod)));
 
 						//FUTURE: support mouse shortcuts in HwndHost
@@ -249,14 +249,14 @@ namespace Au.Controls
 
 					void _KeyDown(object source, KeyEventArgs e) {
 						if (Environment.CurrentManagedThreadId != 1) return;
-						//APerf.First();
+						//perf.first();
 						if (e.Handled) return;
 						var k = e.Key; if (k == Key.System) k = e.SystemKey;
 						if (k is Key.LeftCtrl or Key.LeftShift or Key.LeftAlt or Key.RightCtrl or Key.RightShift or Key.RightAlt or Key.LWin or Key.RWin or Key.DeadCharProcessed or Key.ImeProcessed) return;
-						//AOutput.Write(k);
+						//print.it(k);
 						ModifierKeys mod = 0; bool haveMod = false;
 						foreach (var kb in a) {
-							//AOutput.Write(kb.Command);
+							//print.it(kb.Command);
 							if (kb.Key != k) continue;
 							if (!haveMod) { haveMod = true; mod = Keyboard.Modifiers; }
 							if (kb.Modifiers != mod) continue;
@@ -266,7 +266,7 @@ namespace Au.Controls
 							break;
 							//note: execute even if main window disabled. Maybe the command works in current window. Or maybe user wants to save (Ctrl+S).
 						}
-						//APerf.NW(); //fast
+						//perf.nw(); //fast
 					}
 
 					//void _PreProcessInput(object sender, PreProcessInputEventArgs e) {
@@ -275,9 +275,9 @@ namespace Au.Controls
 					//	if (re == Keyboard.KeyDownEvent && e.StagingItem.Input is KeyEventArgs ke) {
 					//		var k = ke.Key; if (k == Key.System) k = ke.SystemKey;
 					//		if (k is Key.LeftCtrl or Key.LeftShift or Key.LeftAlt or Key.RightCtrl or Key.RightShift or Key.RightAlt or Key.LWin or Key.RWin or Key.DeadCharProcessed or Key.ImeProcessed) return;
-					//		AOutput.Write(k);
+					//		print.it(k);
 					//	//} else { //no mouse events in hwndhosted control. It's ok, don't need global mouse shortcuts. Normal WPF bindings don't work too.
-					//	//	AOutput.Write(re);
+					//	//	print.it(re);
 					//	}
 					//}
 				}
@@ -415,7 +415,7 @@ namespace Au.Controls
 
 				if (_mi.IsCheckable) {
 					if (b is ToggleButton tb) tb.SetBinding(ToggleButton.IsCheckedProperty, new Binding("IsChecked") { Source = _mi });
-					else AOutput.Warning($"Menu item {Name} is checkable, but button isn't a ToggleButton (CheckBox or RadioButton).");
+					else print.warning($"Menu item {Name} is checkable, but button isn't a ToggleButton (CheckBox or RadioButton).");
 				}
 			}
 
@@ -509,8 +509,8 @@ namespace Au.Controls
 				switch (from.Icon) {
 				case Image im: return new Image { Source = im.Source };
 				case UIElement e when e.Uid is string res: //see _SetImage
-					if (AResources.HasResourcePrefix(res)) return AResources.GetXamlObject(res) as UIElement;
-					if (res.Starts("source:")) return AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(res[7..]);
+					if (ResourceUtil.HasResourcePrefix(res)) return ResourceUtil.GetXamlObject(res) as UIElement;
+					if (res.Starts("source:")) return ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(res[7..]);
 					break;
 				}
 				return null;
@@ -520,15 +520,15 @@ namespace Au.Controls
 				bool custom = customizing != null;
 				try {
 					var ie = custom
-						? AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(image)
-						: AResources.GetWpfImageElement(image);
+						? ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(image)
+						: ResourceUtil.GetWpfImageElement(image);
 					if (ie is not Image) ie.Uid = (custom ? "source:" : "resource:") + image; //xaml source for _CopyImage
 					_mi.Icon = ie;
 					return true;
 				}
 				catch (Exception ex) {
 					if (custom) customizing.Error("failed to load image", ex);
-					else AOutput.Write($"Failed to load image resource {image}. {ex.ToStringWithoutStack()}");
+					else print.it($"Failed to load image resource {image}. {ex.ToStringWithoutStack()}");
 				}
 				return false;
 			}
@@ -579,7 +579,7 @@ namespace Au.Controls
 
 			//public void Test() {
 			//	foreach (var v in CanExecuteChanged.GetInvocationList()) {
-			//		AOutput.Write(v.Target);
+			//		print.it(v.Target);
 			//	}
 			//}
 
@@ -626,7 +626,7 @@ namespace Au.Controls
 					}
 					catch (Exception ex) { context.Error($"invalid '{an}' value", ex); }
 				}
-				if ((btext ?? text) != null) ButtonText = btext ?? AStringUtil.RemoveUnderlineChar(text, '_');
+				if ((btext ?? text) != null) ButtonText = btext ?? StringUtil.RemoveUnderlineChar(text, '_');
 
 				if (toolbar != null) {
 					try {
@@ -669,10 +669,10 @@ namespace Au.Controls
 			string xmlFile = _defaultFile = xmlFileDefault;
 			_customizedFile = xmlFileCustomized;
 			try {
-				var a = AXml.LoadElem(xmlFileDefault).Elements().ToArray(); //menu and toolbars
-				if (xmlFileCustomized != null && AFile.Exists(xmlFileCustomized, true).isFile) {
+				var a = XmlUtil.LoadElem(xmlFileDefault).Elements().ToArray(); //menu and toolbars
+				if (xmlFileCustomized != null && filesystem.exists(xmlFileCustomized, true).isFile) {
 					try { //replace a elements with elements that exist in xmlFileCustomized. If some toolbar does not exist there, use default.
-						var ac = AXml.LoadElem(xmlFileCustomized).Elements().ToArray();
+						var ac = XmlUtil.LoadElem(xmlFileCustomized).Elements().ToArray();
 						for (int i = 0; i < a.Length; i++) {
 							var name = a[i].Name.LocalName;
 							foreach (var y in ac) if (y.Name.LocalName == name && y.HasElements) { a[i] = y; break; }
@@ -680,7 +680,7 @@ namespace Au.Controls
 						xmlFile = _customizedFile = xmlFileCustomized;
 						//FUTURE: auto-update documentation comments in xmlFileCustomized
 					}
-					catch (Exception ex) { AOutput.Write($"Failed to load file '{xmlFileCustomized}'. {ex.ToStringWithoutStack()}"); }
+					catch (Exception ex) { print.it($"Failed to load file '{xmlFileCustomized}'. {ex.ToStringWithoutStack()}"); }
 				}
 
 				var context = new _CustomizeContext { xmlFile = xmlFile };
@@ -689,18 +689,18 @@ namespace Au.Controls
 					var tbname = xtb.Name.LocalName;
 					if (tbname != "menu") {
 						foreach (var v in toolbars) if (v.Name == tbname) { tb = v; goto g1; }
-						AOutput.Write($"{xmlFile}: unknown toolbar '{tbname}'. Toolbars: {string.Join(", ", toolbars.Select(o => o.Name))}.");
+						print.it($"{xmlFile}: unknown toolbar '{tbname}'. Toolbars: {string.Join(", ", toolbars.Select(o => o.Name))}.");
 						continue;
 						g1:;
 					}
 					foreach (var v in xtb.Elements()) {
 						var name = v.Name.LocalName;
 						if (_d.TryGetValue(name, out var c)) c.Customize_(v, tb, context);
-						else AOutput.Write($"{xmlFile}: unknown command '{name}'. Commands: {string.Join(", ", _d.Keys)}.");
+						else print.it($"{xmlFile}: unknown command '{name}'. Commands: {string.Join(", ", _d.Keys)}.");
 					}
 				}
 			}
-			catch (Exception ex) { AOutput.Write($"Failed to load file '{xmlFile}'. {ex.ToStringWithoutStack()}"); }
+			catch (Exception ex) { print.it($"Failed to load file '{xmlFile}'. {ex.ToStringWithoutStack()}"); }
 
 			foreach (var tb in toolbars) {
 				tb.ContextMenuOpening += _ContextMenu;
@@ -715,13 +715,13 @@ namespace Au.Controls
 			public Command command;
 
 			public void Error(string s, Exception ex = null) {
-				AOutput.Write($"{xmlFile}, command {command.Name}: {s}. {ex?.ToStringWithoutStack()}");
+				print.it($"{xmlFile}, command {command.Name}: {s}. {ex?.ToStringWithoutStack()}");
 			}
 		}
 
 		void _Customize() {
-			if (!AFile.Exists(_customizedFile, true).isFile) AFile.Copy(_defaultFile, _customizedFile);
-			ARun.SelectInExplorer(_customizedFile);
+			if (!filesystem.exists(_customizedFile, true).isFile) filesystem.copy(_defaultFile, _customizedFile);
+			run.selectInExplorer(_customizedFile);
 		}
 
 		private void AProcess_Exit(object sender, EventArgs e) {
@@ -733,9 +733,9 @@ namespace Au.Controls
 			if (_GetCommandFromMouseEventArgs(sender, e, out _, out _)) {
 				e.Handled = true;
 				if (sender is ToolBar tb) tb.IsOverflowOpen = false; //this was some workaround when using WPF menu, now don't know
-				switch (AMenu.ShowSimple("Edit commands file|Find default commands file")) {
+				switch (popupMenu.showSimple("Edit commands file|Find default commands file")) {
 				case 1: _Customize(); break;
-				case 2: ARun.SelectInExplorer(_defaultFile); break;
+				case 2: run.selectInExplorer(_defaultFile); break;
 				}
 			}
 		}
@@ -845,7 +845,7 @@ namespace Au.Controls
 		/// <summary>
 		/// Image string.
 		/// The factory action receives this string in parameters. It can load image and set menu item's <b>Icon</b> property.
-		/// If factory action not used or does not set <b>Image</b> property and does not set image=null, this class loads image from exe or script resources and sets <b>Icon</b> property. The resource file can be xaml (for example converted from svg) or png etc. If using Visual Studio, to add an image to resources set its build action = Resource. More info: <see cref="Au.Util.AResources"/>.
+		/// If factory action not used or does not set <b>Image</b> property and does not set image=null, this class loads image from exe or script resources and sets <b>Icon</b> property. The resource file can be xaml (for example converted from svg) or png etc. If using Visual Studio, to add an image to resources set its build action = Resource. More info: <see cref="Au.More.ResourceUtil"/>.
 		/// </summary>
 		public string image;
 

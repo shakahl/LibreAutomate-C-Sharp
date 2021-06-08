@@ -3,7 +3,7 @@ using System.IO;
 
 using Au.Types;
 using Au.Controls;
-using Au.Util;
+using Au.More;
 
 namespace Au.Tools
 {
@@ -34,7 +34,7 @@ namespace Au.Tools
 		}
 
 		string _GetContentText() {
-			var s = ContentText ?? AResources.GetString("tools/regex.txt");
+			var s = ContentText ?? ResourceUtil.GetString("tools/regex.txt");
 			if (!s.Contains('\n')) s = File.ReadAllText(s);
 			return s;
 		}

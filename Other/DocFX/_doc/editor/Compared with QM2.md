@@ -34,14 +34,14 @@ for i 0 5
 
 The same script in QM3 (C#):
 ```csharp
-var w = AWnd.Find("*- Mozilla Firefox", "MozillaWindowClass");
+var w = wnd.find("*- Mozilla Firefox", "MozillaWindowClass");
 w.Activate();
-AMouse.Click(w, 331, 115);
+mouse.click(w, 331, 115);
 2.s();
-AKeys.Key("Left", "text", "Enter");
+keys.send("Left", "text", "Enter");
 for(int i=0; i<5; i++) {
-	AOutput.Write(i);
-	AOutput.Write(i*i);
+	print.it(i);
+	print.it(i*i);
 }
 ```
 
@@ -49,7 +49,7 @@ As you see, C# code is longer, but usually it is easier to understand. The [code
 
 QM3 has triggers to execute parts of a running script. Trigger types: hotkey, autotext, mouse, window; more in the future. Triggers also can be used to launch scripts, but differently than in QM.
 
-QM3 does not have item types like "menu", "toolbar" and "autotext". Instead use classes AMenu, AToolbar and AutotextTriggers.
+QM3 does not have item types like "menu", "toolbar" and "autotext". Instead use classes popupMenu, toolbar and AutotextTriggers.
 
 Instead of dialogs now use Windows Forms or WPF. Editor in the future.
 

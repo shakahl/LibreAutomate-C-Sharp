@@ -4,7 +4,7 @@
 
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -31,12 +31,12 @@ static unsafe class RunAssembly
 	/// <param name="handleExceptions">Handle/print exceptions.</param>
 	public static void Run(string asmFile, string[] args, bool handleExceptions) {
 		try {
-			//using var p1 = APerf.Create();
+			//using var p1 = perf.local();
 
 			_LoadedScriptAssembly lsa = default;
 			Assembly asm = lsa.Find(asmFile, out bool loaded);
 			if (asm == null) {
-				//AOutput.Write(loaded);
+				//print.it(loaded);
 				var alc = new AssemblyLoadContext(null, isCollectible: true);
 				//p1.Next();
 
@@ -58,7 +58,7 @@ static unsafe class RunAssembly
 				//tested: .NET unloads dlls, but later than Assembly objects, maybe after 1-2 minutes, randomly.
 
 				if (loaded) {
-					var s = asmFile.Insert(asmFile.Length - 4, "'" + ATime.PerfMicroseconds.ToString()); //info: compiler will delete all files with "'" on first run after editor restart
+					var s = asmFile.Insert(asmFile.Length - 4, "'" + perf.mcs.ToString()); //info: compiler will delete all files with "'" on first run after editor restart
 #if true //copy file
 					if (!Api.CopyFileEx(asmFile, s, null, default, null, 0)) throw new AuException(0, "failed to copy assembly file");
 					//p1.Next('C');
@@ -97,7 +97,7 @@ static unsafe class RunAssembly
 			}
 		}
 		catch (Exception e1) when (handleExceptions) {
-			AOutput.Write(e1 is TargetInvocationException te ? te.InnerException : e1);
+			print.it(e1 is TargetInvocationException te ? te.InnerException : e1);
 		}
 	}
 
@@ -119,7 +119,7 @@ static unsafe class RunAssembly
 		public Assembly Find(string asmFile, out bool loaded) {
 			loaded = false;
 			_d ??= new Dictionary<string, _Asm>(StringComparer.OrdinalIgnoreCase);
-			if (!AFile.GetProperties(asmFile, out var p, FAFlags.UseRawPath)) return null;
+			if (!filesystem.getProperties(asmFile, out var p, FAFlags.UseRawPath)) return null;
 			_fileTime = p.LastWriteTimeUtc;
 			if (loaded = _d.TryGetValue(asmFile, out var x)) {
 				if (x.time == _fileTime) return x.asm;
@@ -130,11 +130,11 @@ static unsafe class RunAssembly
 
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		public void Add(string asmFile, Assembly asm) {
-			if (_fileTime == default) return; //AFile.GetProperties failed
+			if (_fileTime == default) return; //filesystem.getProperties failed
 			_d.Add(asmFile, new _Asm { time = _fileTime, asm = asm });
 
-			//foreach(var v in _d.Values) AOutput.Write(v.asm.FullName);
-			//foreach(var v in AppDomain.CurrentDomain.GetAssemblies()) AOutput.Write(v.FullName);
+			//foreach(var v in _d.Values) print.it(v.asm.FullName);
+			//foreach(var v in AppDomain.CurrentDomain.GetAssemblies()) print.it(v.FullName);
 		}
 	}
 
@@ -144,10 +144,10 @@ static unsafe class RunAssembly
 	{
 		public _AssemblyLoadContext(string name, bool isCollectible) : base(name, isCollectible) { }
 
-		~_AssemblyLoadContext() { AOutput.Write("AssemblyLoadContext unloaded", Name); }
+		~_AssemblyLoadContext() { print.it("AssemblyLoadContext unloaded", Name); }
 
 		protected override Assembly Load(AssemblyName assemblyName) {
-			//AOutput.Write("Load", assemblyName);
+			//print.it("Load", assemblyName);
 			return null;
 		}
 	}
@@ -166,8 +166,8 @@ static unsafe class RunAssembly
 		}
 
 		~_AssemblyDtor() {
-			AOutput.Write("Assembly unloaded", _file);
-			Task.Delay(120_000).ContinueWith(_ => { AOutput.Write(Api.DeleteFile(_file)); });
+			print.it("Assembly unloaded", _file);
+			Task.Delay(120_000).ContinueWith(_ => { print.it(Api.DeleteFile(_file)); });
 		}
 	}
 #endif

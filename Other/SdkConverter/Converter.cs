@@ -3,8 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -12,7 +10,7 @@ using System.Runtime.CompilerServices;
 
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 
 namespace SdkConverter
 {
@@ -20,12 +18,12 @@ namespace SdkConverter
 	{
 		[STAThread]
 		static void Main(string[] args) {
-			AThisProcess.CultureIsInvariant = true;
+			process.thisProcessCultureIsInvariant = true;
 			//#endif
-			ADefaultTraceListener.Setup(useAOutput: true);
+			DebugTraceListener.Setup(usePrint: true);
 
-			AOutput.QM2.UseQM2 = true;
-			AOutput.Clear();
+			print.qm2.use = true;
+			print.clear();
 			var x = new Converter();
 
 #if TEST_SMALL
@@ -117,11 +115,11 @@ namespace SdkConverter
 
 					//_ConvertTypedefAndTag();
 
-					//AOutput.Write("#define CONST:");
-					//AOutput.Write(_defineConst);
-					//AOutput.Write("#define other:");
-					//AOutput.Write(_defineOther);
-					//AOutput.Write(_defineConst.Count, _defineOther.Count);
+					//print.it("#define CONST:");
+					//print.it(_defineConst);
+					//print.it("#define other:");
+					//print.it(_defineOther);
+					//print.it(_defineConst.Count, _defineOther.Count);
 					//27890, 1061
 					//27659, 998
 					//27605, 983
@@ -129,7 +127,7 @@ namespace SdkConverter
 					_FunctionsFinally();
 
 					stf = _PostProcessTypesFunctionsInterfaces();
-					//AOutput.Write(stf);
+					//print.it(stf);
 				}
 
 				string sh = @"// Windows API declarations for C#.
@@ -151,7 +149,7 @@ using System.Runtime.InteropServices;
 using Au;
 using Au.Types;
 #else
-using AWnd = System.IntPtr; //HWND (window handle)
+using wnd = System.IntPtr; //HWND (window handle)
 #endif
 
 //add this to projects that will use these API
@@ -180,13 +178,13 @@ static unsafe class API
 			}
 			//#if !TEST_SMALL
 			catch (ConverterException e) {
-				AOutput.Write(e);
-				AWnd.FindFast(null, "QM_Editor").Send(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{_cppFile}||{e.Offset}");
+				print.it(e);
+				wnd.findFast(null, "QM_Editor").Send(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{_cppFile}||{e.Offset}");
 				throw;
 			}
 			catch (Exception e) {
-				AOutput.Write(e);
-				AWnd.FindFast(null, "QM_Editor").Send(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {" "}||{_cppFile}||{_Pos(_i)}");
+				print.it(e);
+				wnd.findFast(null, "QM_Editor").Send(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {" "}||{_cppFile}||{_Pos(_i)}");
 				throw;
 			}
 			//#endif
@@ -194,7 +192,7 @@ static unsafe class API
 				Marshal.FreeHGlobal((IntPtr)_keywordMemory);
 			}
 
-			AOutput.Write($"DONE {(is32bit ? 32 : 64)}-bit");
+			print.it($"DONE {(is32bit ? 32 : 64)}-bit");
 		}
 
 		char* _keywordMemory;
@@ -288,14 +286,14 @@ static unsafe class API
 			_AddKeyword("IntPtr", new _CppType("IntPtr", _is32bit ? 4 : 8, false));
 
 			_AddSymbol("LPARAM", _sym_LPARAM = new _Struct("LPARAM", false), 0);
-			_AddSymbol("HWND", _sym_AWnd = new _Struct("AWnd", false), 0);
+			_AddSymbol("HWND", _sym_wnd = new _Struct("wnd", false), 0);
 		}
 
-		_Struct _sym_LPARAM, _sym_AWnd;
+		_Struct _sym_LPARAM, _sym_wnd;
 
 		void _ConvertAll(int nestLevel) {
 			for (; _i < _nTokUntilDefUndef; _i++) {
-				//AOutput.Write(_TokToString(_i));
+				//print.it(_TokToString(_i));
 				char* s = T(_i); char c = *s;
 				if (_IsCharIdentStart(c)) {
 					_Statement();
@@ -305,7 +303,7 @@ static unsafe class API
 #if TEST_SMALL
 					if(c == '/' && s[1] == '/') return;
 #endif
-					//AOutput.Write(_i);
+					//print.it(_i);
 					_Err(_i, $"unexpected: {_TokToString(_i)}");
 				}
 			}
@@ -320,7 +318,7 @@ static unsafe class API
 #if TEST_SMALL
 					if(*s == '/' && s[1] == '/') return;
 #endif
-					//AOutput.Write(_i);
+					//print.it(_i);
 					_Err(_i, $"unexpected: {_TokToString(_i)}");
 				}
 			}
@@ -371,9 +369,9 @@ static unsafe class API
 			}
 			//}
 			//catch(ConverterException e) {
-			//	//AOutput.Write(e);
-			//	AWnd.FindFast(null, "QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{_cppFile}||{e.Offset}");
-			//	if(ADialog.Show("Error. Skip statement and continue?", e.Message, "Yes|No").ButtonName != "Yes") throw e as Exception;
+			//	//print.it(e);
+			//	wnd.findFast(null, "QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{_cppFile}||{e.Offset}");
+			//	if(dialog.show("Error. Skip statement and continue?", e.Message, "Yes|No").ButtonName != "Yes") throw e as Exception;
 			//	_SkipStatement();
 			//         }
 		}
@@ -398,7 +396,7 @@ static unsafe class API
 #if DEBUG
 			if (debugShow) {
 				string s = new(T(i0), 0, (int)(T(_i + 1) - T(i0)));
-				AOutput.Write($"<><c 0xff>skipped:</c>\r\n{s}");
+				print.it($"<><c 0xff>skipped:</c>\r\n{s}");
 			}
 #endif
 		}
@@ -436,7 +434,7 @@ static unsafe class API
 
 			if (pushPop > 0) _packStack.Push(_pack); else if (pushPop < 0 && _packStack.Count > 0) _pack = _packStack.Pop();
 			if (pack != 0) _pack = pack;
-			//AOutput.Write($"pushPop={pushPop}, pack={pack},    _pack={_pack}, _packStack.Count={_packStack.Count}");
+			//print.it($"pushPop={pushPop}, pack={pack},    _pack={_pack}, _packStack.Count={_packStack.Count}");
 		}
 
 		bool _ExternConst(bool isJustConst = false) {
@@ -458,15 +456,15 @@ static unsafe class API
 
 				string name = _TokToString(_i), data;
 				if (!_guids.TryGetValue(name, out data)) {
-					//AOutput.Write(name);
+					//print.it(name);
 					return false;
 				}
 
 				if (name.Ends("A") && char.IsLower(name[name.Length - 2])) {
-					//AOutput.Write(name);
+					//print.it(name);
 					return false;
 				} else if (name.Ends("W") && char.IsLower(name[name.Length - 2])) {
-					//AOutput.Write(name);
+					//print.it(name);
 					name = name.Remove(name.Length - 1);
 				}
 
@@ -487,14 +485,14 @@ static unsafe class API
 				string name = _TokToString(iName);
 
 				_ExpressionResult r = _Expression(iValue, _i, name);
-				//AOutput.Write(ct.csTypename, r.typeS, r.valueS);
+				//print.it(ct.csTypename, r.typeS, r.valueS);
 				if (r.typeS == null) return false;
 
 				_enumValues[_tok[iName]] = r.valueI;
 
 				__sbDef.Clear();
 				__sbDef.AppendFormat("internal const {0} {1} = {2};", ct.csTypename, name, r.valueS);
-				//AOutput.Write(__sbDef);
+				//print.it(__sbDef);
 				_cppConst.Add(__sbDef.ToString());
 			}
 			return true;
@@ -515,12 +513,12 @@ static unsafe class API
 			//get GUIDs extracted from SDK lib files
 			_guids = new Dictionary<string, string>();
 			foreach (var s in File.ReadAllLines(@"Q:\app\Au\Other\Api\GuidMap.txt")) {
-				//AOutput.Write(s);
+				//print.it(s);
 				int i = s.IndexOf(' ');
 				string sn = s.Substring(0, i), sd = s.Substring(i + 1), sOld;
 				if (_guids.TryGetValue(sn, out sOld)) {
 					if (sd == sOld) continue;
-					//AOutput.Write(name, sOld, sd);
+					//print.it(name, sOld, sd);
 					//continue;
 					//several in SDK, the second ones are correct
 					_guids.Remove(sn);
@@ -546,7 +544,7 @@ static unsafe class API
 					if (!_TokIsChar(i + 5, ':')) continue; //class or IUnknown
 					if (!_TokIs(i - 1, "struct") && !_TokIs(i - 1, "__interface")) continue; //unexpected
 					i += 4;
-					//AOutput.Write(_tok[i]);
+					//print.it(_tok[i]);
 					_interfaces.Add(_TokToString(i));
 				}
 			}

@@ -14,7 +14,7 @@ using System.Reflection;
 //using System.Linq;
 
 using Au.Types;
-using Au.Util;
+using Au.More;
 
 namespace Au.Controls
 {
@@ -106,7 +106,7 @@ namespace Au.Controls
 		[SkipLocalsInit]
 		string _GetString(int sciMessage, nint wParam, int len, bool findLength) {
 			if (len == 0) return "";
-			using ABuffer<byte> b = new(len + 1);
+			using FastBuffer<byte> b = new(len + 1);
 			b[len] = 0;
 			Call(sciMessage, wParam, b.p);
 			Debug.Assert(b[len] == 0);
@@ -114,12 +114,12 @@ namespace Au.Controls
 			return _FromUtf8(b, len);
 		}
 
-		static string _FromUtf8(byte* b, int n = -1) => AConvert.FromUtf8(b, n);
+		static string _FromUtf8(byte* b, int n = -1) => Convert2.FromUtf8(b, n);
 
-		static byte[] _ToUtf8(string s) => AConvert.ToUtf8(s);
+		static byte[] _ToUtf8(string s) => Convert2.ToUtf8(s);
 
 		static byte[] _ToUtf8(string s, out int utf8Length) {
-			var r = AConvert.ToUtf8(s);
+			var r = Convert2.ToUtf8(s);
 			utf8Length = r.Length - 1;
 			return r;
 		}
@@ -143,7 +143,7 @@ namespace Au.Controls
 				int len1 = Encoding.UTF8.GetCharCount(p1, n1);
 				int len2 = Encoding.UTF8.GetCharCount(p2, n2);
 				nint k1 = (nint)p1, k2 = (nint)p2;
-				return string.Create(len1 + len2, (k1, k2, n1, n2), (span, a) => {
+				return string.Create(len1 + len2, (k1, k2, n1, n2), static (span, a) => {
 					int len1 = Encoding.UTF8.GetChars(new ReadOnlySpan<byte>((byte*)a.k1, a.n1), span);
 					Encoding.UTF8.GetChars(new ReadOnlySpan<byte>((byte*)a.k2, a.n2), span.Slice(len1));
 				});
@@ -151,7 +151,7 @@ namespace Au.Controls
 				int n1 = end8 - start8;
 				int len1 = Encoding.UTF8.GetCharCount(p1, n1);
 				nint k1 = (nint)p1;
-				return string.Create(len1, (k1, n1), (span, a) => {
+				return string.Create(len1, (k1, n1), static (span, a) => {
 					Encoding.UTF8.GetChars(new ReadOnlySpan<byte>((byte*)a.k1, a.n1), span);
 				});
 			}
@@ -198,9 +198,9 @@ namespace Au.Controls
 		/// <exception cref="ArgumentOutOfRangeException">Invalid argument, eg greater than text length.</exception>
 		public bool zNormalizeRangeCanBeReverse(bool utf16, ref int from, ref int to, bool swapFromTo) {
 			bool reverse = to >= 0 && to < from;
-			if (reverse) AMath.Swap(ref from, ref to);
+			if (reverse) Math2.Swap(ref from, ref to);
 			zNormalizeRange(utf16, ref from, ref to);
-			if (reverse && !swapFromTo) AMath.Swap(ref from, ref to);
+			if (reverse && !swapFromTo) Math2.Swap(ref from, ref to);
 			return reverse;
 		}
 
@@ -303,7 +303,7 @@ namespace Au.Controls
 		bool _CanParseTags(string s) {
 			if (s.NE()) return false;
 			return ZInitTagsStyle switch {
-				ZTagsStyle.AutoAlways => s.IndexOf('<') >= 0,
+				ZTagsStyle.AutoAlways => s.Contains('<'),
 				ZTagsStyle.AutoWithPrefix => s.Starts("<>"),
 				_ => false,
 			};
@@ -360,7 +360,7 @@ namespace Au.Controls
 				return;
 			}
 
-			var a = AConvert.ToUtf8(s, andRN ? "\r\n" : "");
+			var a = Convert2.ToUtf8(s, andRN ? "\r\n" : "");
 			using (new _NoReadonly(this))
 				fixed (byte* b = a) Call(SCI_APPENDTEXT, a.Length, b);
 
@@ -414,7 +414,7 @@ namespace Au.Controls
 		/// </remarks>
 		public string zText {
 			get {
-				//AOutput.QM2.Write($"Text: cached={_text != null}");
+				//print.qm2.write($"Text: cached={_text != null}");
 				if (_text == null && !_w.Is0) _text = zGetText_(); //_NotifyModified sets _text=null
 				return _text;
 			}
@@ -505,14 +505,14 @@ namespace Au.Controls
 		//public void TestCreatePosMap()
 		//{
 		//	_CreatePosMap();
-		//	//foreach(var v in _aPos) AOutput.Write(v.i8, v.i16);
+		//	//foreach(var v in _aPos) print.it(v.i8, v.i16);
 		//}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		unsafe void _CreatePosMap() {
 			//This func is fast and garbageless. For code edit controls don't need to optimize to avoid calling it frequently, eg for each added character.
 			//Should not be used for output/log controls if called on each "append text". Or then need to optimize.
-			//AOutput.QM2.Write(this.Name);
+			//print.qm2.write(this.Name);
 
 			_aPos.Clear();
 
@@ -556,7 +556,7 @@ namespace Au.Controls
 			ge:
 			_posState = _PosState.Error;
 			_aPos.Clear();
-			ADebug_.Print("Invalid UTF-8 text");
+			Debug_.Print("Invalid UTF-8 text");
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -629,7 +629,7 @@ namespace Au.Controls
 		public void TestCreatePosMap()//_TODO
 		{
 			_CreatePosMap();
-			//foreach(var v in _aPos) AOutput.Write(v.i8, v.i16);
+			//foreach(var v in _aPos) print.it(v.i8, v.i16);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -639,7 +639,7 @@ namespace Au.Controls
 
 			int textLen;
 			int gap = Sci_Range(_sciPtr, 0, -1, out var p, out var p2, &textLen);
-			//AOutput.Write(textLen);
+			//print.it(textLen);
 			int to8 = p2 == null ? textLen : gap;
 			int i8 = 0, i16 = 0;
 			g1:
@@ -675,7 +675,7 @@ namespace Au.Controls
 			ge:
 			_posState = _PosState.Error;
 			_aPos.Clear();
-			ADebug_.Print("Invalid UTF-8 text");
+			Debug_.Print("Invalid UTF-8 text");
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -968,7 +968,7 @@ namespace Au.Controls
 				//If at the modified line index was a nested folding point, Scintilla will expand again, very async.
 				//	Could restore again with the following code, but it can be dangerous, eg document closed. Never mind.
 				//var sci = _sci; var i = _foldLine;
-				//ATimer.After(300, _ => sci.Call(SCI_FOLDLINE, i));
+				//timerm.after(300, _ => sci.Call(SCI_FOLDLINE, i));
 			}
 		}
 
@@ -1164,11 +1164,11 @@ namespace Au.Controls
 			public byte[] Load(string file) {
 				_enc = _Encoding.Binary;
 				if (0 != file.Ends(true, ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani")) {
-					if (!AFile.Exists(file).isFile) throw new FileNotFoundException($"Could not find file '{file}'.");
+					if (!filesystem.exists(file).isFile) throw new FileNotFoundException($"Could not find file '{file}'.");
 					return Encoding.UTF8.GetBytes($"//Image file @\"{file}\"\0");
 				}
 
-				using var fr = AFile.LoadStream(file);
+				using var fr = filesystem.loadStream(file);
 				var fileSize = fr.Length;
 				if (fileSize > 100_000_000) return Encoding.UTF8.GetBytes("//Cannot edit. The file is too big, more than 100_000_000 bytes.\0");
 				int trySize = (int)Math.Min(fileSize, 65_000);
@@ -1177,7 +1177,7 @@ namespace Au.Controls
 				fixed (byte* p = b) _enc = _DetectEncoding(p, trySize);
 				if (_enc == _Encoding.Binary) return Encoding.UTF8.GetBytes("//Cannot edit. The file is binary, not text.\0");
 				int bomLength = (int)_enc >> 4;
-				//AOutput.Write(_enc, bomLength, fileSize);
+				//print.it(_enc, bomLength, fileSize);
 
 				if (fileSize > trySize) {
 					var old = b; b = new byte[fileSize + 4]; Array.Copy(old, b, trySize);
@@ -1275,12 +1275,12 @@ namespace Au.Controls
 			}
 
 			/// <summary>
-			/// Saves control text with the same encoding/BOM as loaded. Uses <see cref="AFile.Save"/>.
+			/// Saves control text with the same encoding/BOM as loaded. Uses <see cref="filesystem.save"/>.
 			/// </summary>
 			/// <param name="z"></param>
-			/// <param name="file">To pass to AFile.Save.</param>
-			/// <param name="tempDirectory">To pass to AFile.Save.</param>
-			/// <exception cref="Exception">Exceptions of AFile.Save.</exception>
+			/// <param name="file">To pass to filesystem.save.</param>
+			/// <param name="tempDirectory">To pass to filesystem.save.</param>
+			/// <exception cref="Exception">Exceptions of filesystem.save.</exception>
 			/// <exception cref="InvalidOperationException">The file is binary (then <b>SetText</b> made the control read-only), or <b>Load</b> not called.</exception>
 			public unsafe void Save(KScintilla z, string file, string tempDirectory = null) {
 				if (_enc == _Encoding.Binary) throw new InvalidOperationException();
@@ -1299,9 +1299,9 @@ namespace Au.Controls
 				};
 				else if (bom == 3) bomm = 0xBFBBEF; //UTF8; else bom 0
 
-				//AOutput.Write(_enc, bom, bomm, e);
+				//print.it(_enc, bom, bomm, e);
 
-				AFile.Save(file, temp => {
+				filesystem.save(file, temp => {
 					using var fs = File.OpenWrite(temp);
 					if (bomm != 0) { uint u = bomm; fs.Write(new ReadOnlySpan<byte>((byte*)&u, bom)); } //rare
 					if (e != null) { //rare
@@ -1314,7 +1314,7 @@ namespace Au.Controls
 					}
 				}, tempDirectory: tempDirectory);
 
-				//AOutput.Write("file", File.ReadAllBytes(file));
+				//print.it("file", File.ReadAllBytes(file));
 			}
 		}
 

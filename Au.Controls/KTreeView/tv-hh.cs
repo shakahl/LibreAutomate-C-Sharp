@@ -1,5 +1,5 @@
 using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -12,21 +12,21 @@ namespace Au.Controls
 	public unsafe partial class KTreeView : HwndHost
 	{
 		const string c_winClassName = "KTreeView";
-		AWnd _w;
+		wnd _w;
 		bool _hasHwnd;
 
-		public AWnd Hwnd => _w;
+		public wnd Hwnd => _w;
 
 		static KTreeView() {
-			AWnd.More.RegisterWindowClass(c_winClassName);
+			wnd.more.registerWindowClass(c_winClassName);
 		}
 
 		protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
-			var wParent = (AWnd)hwndParent.Handle;
+			var wParent = (wnd)hwndParent.Handle;
 #if true
-			AWnd.More.CreateWindow(_wndProc = _WndProc, false, c_winClassName, Name, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
+			wnd.more.createWindow(_wndProc = _WndProc, false, c_winClassName, Name, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
 #else //the below code works, but not on Win7. The above code works if WS.DISABLED or WM_NCHITTEST returns HTTRANSPARENT. WPF can remove WS.DISABLED.
-			_w=AWnd.More.CreateWindow(_wndProc = _WndProc, false, c_winClassName, null, WS.CHILD|WS.CLIPCHILDREN, WSE.TRANSPARENT|WSE.LAYERED, 0, 0, 10, 10, wParent);
+			_w=wnd.more.createWindow(_wndProc = _WndProc, false, c_winClassName, null, WS.CHILD|WS.CLIPCHILDREN, WSE.TRANSPARENT|WSE.LAYERED, 0, 0, 10, 10, wParent);
 	//		_w.SetTransparency(true, 255);
 			Api.SetLayeredWindowAttributes(_w, 0, 0, 0);
 #endif
@@ -39,9 +39,9 @@ namespace Au.Controls
 		}
 
 		WNDPROC _wndProc;
-		nint _WndProc(AWnd w, int msg, nint wParam, nint lParam) {
+		nint _WndProc(wnd w, int msg, nint wParam, nint lParam) {
 			//var pmo = new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
-			//if (AWnd.More.PrintMsg(out string s, _w, msg, wParam, lParam, pmo)) AOutput.Write("<><c green>" + s + "<>");
+			//if (wnd.more.printMsg(out string s, _w, msg, wParam, lParam, pmo)) print.it("<><c green>" + s + "<>");
 
 			if (_vscroll.WndProc(w, msg, wParam, lParam) || _hscroll.WndProc(w, msg, wParam, lParam)) return default;
 
@@ -49,24 +49,24 @@ namespace Au.Controls
 			case Api.WM_NCCREATE:
 				_w = w;
 				_hasHwnd = true;
-				_SetDpiAndItemSize(ADpi.OfWindow(_w));
-				ABufferedPaint.Init();
+				_SetDpiAndItemSize(More.Dpi.OfWindow(_w));
+				BufferedPaint.Init();
 				break;
 			case Api.WM_NCDESTROY:
 				_w = default;
 				_hasHwnd = false;
 				_acc?.Dispose(); _acc = null;
-				ABufferedPaint.Uninit();
+				BufferedPaint.Uninit();
 				break;
 			case Api.WM_PAINT:
-				using (var bp = new ABufferedPaint(w, true)) _Render(bp.DC, bp.UpdateRect);
+				using (var bp = new BufferedPaint(w, true)) _Render(bp.DC, bp.UpdateRect);
 				return default;
 			case Api.WM_SHOWWINDOW when wParam == 1:
 				if (_ensureVisibleIndex > 0) EnsureVisible(_ensureVisibleIndex);
 				break;
 			case Api.WM_SIZE:
-				_width = AMath.LoWord(lParam);
-				_height = AMath.HiWord(lParam);
+				_width = Math2.LoWord(lParam);
+				_height = Math2.HiWord(lParam);
 				_Measure();
 				break;
 			case Api.WM_SYSCOMMAND when ((int)wParam & 0xfff0) is Api.SC_VSCROLL or Api.SC_HSCROLL: //note: Windows bug: swapped SC_VSCROLL and SC_HSCROLL
@@ -103,7 +103,7 @@ namespace Au.Controls
 		_Accessible _acc;
 
 		protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
-			//AOutput.Write(e.Property);
+			//print.it(e.Property);
 			if (_lePopup != null && e.Property.Name == "IsVisible" && e.NewValue is bool y && !y) EndEditLabel(true);
 			base.OnPropertyChanged(e);
 		}

@@ -372,7 +372,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 	if(0 == wcsncmp(pCmdLine, LR"(\\.\pipe\Au.Task-)", 17)) { //preloaded task process for a script with role miniProgram
 		auto coreclr_create_delegate = (coreclr_create_delegate_ptr)GetProcAddress(hm, "coreclr_create_delegate");
 		void (STDMETHODCALLTYPE * Init)(LPWSTR, _TaskInit&) = nullptr;
-		coreclr_create_delegate(hostHandle, domainId, "Au", "Au.Util.MiniProgram_", "Init", (void**)&Init); //waits until editor asks to execute a task; it sends task info through pipe
+		coreclr_create_delegate(hostHandle, domainId, "Au", "Au.More.MiniProgram_", "Init", (void**)&Init); //waits until editor asks to execute a task; it sends task info through pipe
 		//QueryPerformanceCounter(&t4); //1 ms
 		_TaskInit t = { };
 		Init(pCmdLine, t);

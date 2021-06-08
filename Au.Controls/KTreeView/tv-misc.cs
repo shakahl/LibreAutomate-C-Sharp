@@ -1,7 +1,7 @@
 using Au.Types;
 using System;
 using System.Collections.Generic;
-using Au.Util;
+using Au.More;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -55,7 +55,7 @@ namespace Au.Controls
 		//	return i >= 0 && _IsInside(i, iChild);
 		//}
 
-		int _DpiScale(int value) => ADpi.Scale(value, _dpi);
+		int _DpiScale(int value) => More.Dpi.Scale(value, _dpi);
 
 		int _ItemTop(int index) => (index - _vscroll.Pos) * _itemHeight;
 
@@ -82,7 +82,7 @@ namespace Au.Controls
 			p.text = p.image + _imageSize + _imageMarginX * 2;
 			p.marginRight = p.text + _avi[i].measured;
 			p.right = p.marginRight + _marginRight;
-			//AOutput.Write(p.checkbox, p.marginLeft, p.image, p.text, p.marginRight, p.right);
+			//print.it(p.checkbox, p.marginLeft, p.image, p.text, p.marginRight, p.right);
 		}
 
 		/// <summary>
@@ -179,7 +179,7 @@ namespace Au.Controls
 		{
 			readonly KTreeView _tv;
 			ToolTip _tt;
-			ATimer _timer;
+			timerm _timer;
 			int _i;
 			_VisibleItem[] _avi;
 
@@ -189,7 +189,7 @@ namespace Au.Controls
 				if (i >= 0) {
 					var r = _tv.GetRectPhysical(i, TVParts.Text, clampX: true);
 					if (_tv._avi[i].measured > r.Width) {
-						_timer ??= new ATimer(_Show);
+						_timer ??= new timerm(_Show);
 						_avi = _tv._avi; _i = i;
 						_timer.After(300);
 						return;
@@ -198,7 +198,7 @@ namespace Au.Controls
 				Hide();
 			}
 
-			void _Show(ATimer t) {
+			void _Show(timerm t) {
 				if (_avi != _tv._avi || _i != _tv._hotIndex) return;
 				if (_tt == null) {
 					_tt = new ToolTip() {
@@ -207,7 +207,7 @@ namespace Au.Controls
 						HorizontalOffset = 4,
 						HasDropShadow = false //why no shadow on Win10?
 					};
-					if (AVersion.MinWin8) _tt.Padding = new Thickness(2, -1, 2, 1); //on Win7 makes too small
+					if (osVersion.minWin8) _tt.Padding = new Thickness(2, -1, 2, 1); //on Win7 makes too small
 				}
 				var r = _tv.GetRectLogical(_i, clampX: true);
 				r.X -= 4; r.Width += 4;

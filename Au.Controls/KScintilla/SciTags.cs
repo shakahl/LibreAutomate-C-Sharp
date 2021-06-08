@@ -1,5 +1,5 @@
 using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -49,7 +49,7 @@ OTHER CHANGES:
 	Supports user-defined link tags. Need to provide delegates of functions that implement them. Use SciTags2.AddCommonLinkTag or SciTags2.AddLinkTag.
 	These link tags are not implemented by this class, but you can provide delegates of functions that implement them:
 		<open>, <script>.
-	<help> by default calls Au.Util.AHelp.AuHelp, which opens a topic in web browser. You can override it with SciTags2.AddCommonLinkTag or SciTags2.AddLinkTag.
+	<help> by default calls Au.More.HelpUtil.AuHelp, which opens a topic in web browser. You can override it with SciTags2.AddCommonLinkTag or SciTags2.AddLinkTag.
 	<code> attributes are not used. Currently supports only C# code; for it uses the C++ lexer.
 
 CHANGES IN <image>:
@@ -69,18 +69,18 @@ namespace Au.Controls
 	/// <remarks>
 	/// Links and formatting is specified in text, using tags like in HTML. Depending on control style, may need prefix <c><![CDATA[<>]]></c>.
 	/// Reference: [](xref:output_tags).
-	/// Tags are supported by <see cref="AOutput.Write"/> when it writes to the Au script editor.
+	/// Tags are supported by <see cref="print.it"/> when it writes to the Au script editor.
 	/// 
 	/// This control does not implement some predefined tags: open, script.
 	/// If used, must be implemented by the program.
 	/// Also you can register custom link tags that call your callback functions.
 	/// See <see cref="AddLinkTag"/>, <see cref="AddCommonLinkTag"/>.
 	/// 
-	/// Tags are supported by some existing controls based on <see cref="KScintilla"/>. In the Au editor it is the output (use <see cref="AOutput.Write"/>, like in the example below). In this library - the <see cref="KSciInfoBox"/> control. To enable tags in other <see cref="KScintilla"/> controls, use <see cref="KScintilla.ZInitTagsStyle"/> and optionally <see cref="KScintilla.ZInitImagesStyle"/>.
+	/// Tags are supported by some existing controls based on <see cref="KScintilla"/>. In the Au editor it is the output (use <see cref="print.it"/>, like in the example below). In this library - the <see cref="KSciInfoBox"/> control. To enable tags in other <see cref="KScintilla"/> controls, use <see cref="KScintilla.ZInitTagsStyle"/> and optionally <see cref="KScintilla.ZInitImagesStyle"/>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
-	/// AOutput.Write("<>Text with <i>tags<>.");
+	/// print.it("<>Text with <i>tags<>.");
 	/// ]]></code>
 	/// </example>
 	public unsafe class SciTags
@@ -195,11 +195,11 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Displays <see cref="AOutput.Server"/> messages that are currently in its queue.
+		/// Displays <see cref="print.Server"/> messages that are currently in its queue.
 		/// </summary>
-		/// <param name="os">The AOutput.Server instance.</param>
+		/// <param name="ps">The print.Server instance.</param>
 		/// <param name="onMessage">
-		/// A callback function that can be called when this function gets/removes a message from os.
+		/// A callback function that can be called when this function gets/removes a message from ps.
 		/// When message type is Write, it can change message text; if null, this function ignores the message.
 		/// It also processes messages of type TaskEvent; this function ignores them.
 		/// </param>
@@ -209,8 +209,8 @@ namespace Au.Controls
 		/// Messages with tags must have prefix "&lt;&gt;".
 		/// Limits text length to about 4 MB (removes oldest text when exceeded).
 		/// </remarks>
-		/// <seealso cref="AOutput.Server.SetNotifications"/>
-		public void OutputServerProcessMessages(AOutput.Server os, Action<OutputServerMessage> onMessage = null) {
+		/// <seealso cref="print.Server.SetNotifications"/>
+		public void PrintServerProcessMessages(print.Server ps, Action<PrintServerMessage> onMessage = null) {
 			//info: Cannot call _c.Write for each message, it's too slow. Need to join all messages.
 			//	If multiple messages, use StringBuilder.
 			//	If some messages have tags, use string "<\x15\x0\x4" to separate messages. Never mind: don't escape etc.
@@ -218,15 +218,15 @@ namespace Au.Controls
 			string s = null;
 			StringBuilder b = null;
 			bool hasTags = false, hasTagsPrev = false;
-			while (os.GetMessage(out var m)) {
+			while (ps.GetMessage(out var m)) {
 				onMessage?.Invoke(m);
 				switch (m.Type) {
-				case OutputServerMessageType.Clear:
+				case PrintServerMessageType.Clear:
 					_c.zClearText();
 					s = null;
 					b?.Clear();
 					break;
-				case OutputServerMessageType.Write when m.Text != null:
+				case PrintServerMessageType.Write when m.Text != null:
 					if (s == null) {
 						s = m.Text;
 						hasTags = hasTagsPrev = s.Starts("<>");
@@ -272,7 +272,7 @@ namespace Au.Controls
 
 			//test slow client
 			//Thread.Sleep(500);
-			//AOutput.QM2.Write(s.Length / 1048576d);
+			//print.qm2.write(s.Length / 1048576d);
 		}
 
 		/// <summary>
@@ -282,27 +282,27 @@ namespace Au.Controls
 		/// <param name="appendLine">Append. Also appends "\r\n". Sets caret and scrolls to the end. If false, replaces control text.</param>
 		/// <param name="skipLTGT">If text starts with "&lt;&gt;", skip it.</param>
 		public void AddText(string text, bool appendLine, bool skipLTGT) {
-			//APerf.First();
+			//perf.first();
 			if (text.NE() || (skipLTGT && text == "<>")) {
 				if (appendLine) _c.zAppendText("", true, true, true); else _c.zClearText();
 				return;
 			}
 
-			//int len = AConvert.Utf8LengthFromString(text);
-			//byte* buffer = (byte*)AMemory.Alloc(len * 2 + 4), s = buffer;
+			//int len = Convert2.Utf8LengthFromString(text);
+			//byte* buffer = (byte*)MemoryUtil.Alloc(len * 2 + 4), s = buffer;
 			//try {
-			//	AConvert.Utf8FromString(text, s, len + 1);
+			//	Convert2.Utf8FromString(text, s, len + 1);
 			//	if(appendLine) { s[len++] = (byte)'\r'; s[len++] = (byte)'\n'; }
 			//	if(skipLTGT && s[0] == '<' && s[1] == '>') { s += 2; len -= 2; }
 			//	s[len] = s[len + 1] = 0;
 			//	_AddText(s, len, appendLine);
 			//}
 			//finally {
-			//	AMemory.Free(buffer);
+			//	MemoryUtil.Free(buffer);
 			//}
 
 			int len = Encoding.UTF8.GetByteCount(text);
-			byte* buffer = AMemory.Alloc(len * 2 + 4), s = buffer;
+			byte* buffer = MemoryUtil.Alloc(len * 2 + 4), s = buffer;
 			try {
 				Encoding.UTF8.GetBytes(text, new Span<byte>(buffer, len));
 				if (appendLine) { s[len++] = (byte)'\r'; s[len++] = (byte)'\n'; }
@@ -311,12 +311,12 @@ namespace Au.Controls
 				_AddText(s, len, appendLine);
 			}
 			finally {
-				AMemory.Free(buffer);
+				MemoryUtil.Free(buffer);
 			}
 		}
 
 		void _AddText(byte* s, int len, bool append) {
-			//APerf.Next();
+			//perf.next();
 			byte* s0 = s, sEnd = s + len; //source text
 			byte* t = s0; //destination text, ie without some tags
 			byte* r0 = s0 + (len + 2), r = r0; //destination style bytes
@@ -560,7 +560,7 @@ namespace Au.Controls
 
 			if (_styles.Count > prevStylesCount) _SetUserStyles(prevStylesCount);
 
-			//APerf.Next();
+			//perf.next();
 			_c.zAddText_(append, s0, len);
 			if (!hasTags) return;
 
@@ -588,9 +588,9 @@ namespace Au.Controls
 				//	Scrolling is very slow. //CONSIDER: try to scroll async (SCI_GOTOPOS); but no, will not need it when output will be buffered.
 				//	//FUTURE: see maybe it's possible to get styling from lexers without attaching them to Scintilla control. Creating a hidden control for it is not good, eg because setting text is much slower.
 
-				//APerf.Next();
+				//perf.next();
 				_SetLexer(LexLanguage.SCLEX_CPP);
-				//APerf.Next();
+				//perf.next();
 
 				//Problem: SCI_COLOURISE does not work when appending if previous text contains styles.
 				//See code in:
@@ -604,9 +604,9 @@ namespace Au.Controls
 				for (int i = 0; i < codes.Count; i++) {
 					_c.Call(SCI_COLOURISE, codes[i].x + prevLen, codes[i].y + prevLen);
 				}
-				//APerf.Next();
+				//perf.next();
 				_SetLexer(LexLanguage.SCLEX_NULL);
-				//APerf.Next();
+				//perf.next();
 
 				if (prevStyle != 0) _StyleChar(prevLen - 1, prevStyle); //part 2 of the workaround
 
@@ -616,9 +616,9 @@ namespace Au.Controls
 				}
 			}
 			_StyleRange(len);
-			//APerf.Next();
-			////APerf.Write();
-			//AOutput.QM2.Write(APerf.ToString());
+			//perf.next();
+			////perf.write();
+			//print.qm2.write(perf.ToString());
 
 
 			void _StyleRange(int to) {
@@ -634,7 +634,7 @@ namespace Au.Controls
 			}
 
 			void _Write(byte ch, byte style) {
-				//AOutput.QM2.Write($"{ch} {style}");
+				//print.qm2.write($"{ch} {style}");
 				*t++ = ch; *r++ = style;
 			}
 
@@ -690,7 +690,7 @@ namespace Au.Controls
 		/// Called on SCN_HOTSPOTRELEASECLICK.
 		/// </summary>
 		internal void OnLinkClick_(int pos, bool ctrl) {
-			if (AKeys.UI.IsAlt) return;
+			if (keys.gui.isAlt) return;
 
 			int iTag, iText, k;
 			//to find beginning of link text (after <tag>), search for STYLE_HIDDEN before
@@ -705,7 +705,7 @@ namespace Au.Controls
 			}
 			//get text <tag>LinkText
 			var s = _c.zRangeText(false, iTag, pos);
-			//AOutput.Write(iTag, iText, pos, s);
+			//print.it(iTag, iText, pos, s);
 
 			//is it <fold>?
 			if (s == " >>") {
@@ -716,7 +716,7 @@ namespace Au.Controls
 			//get tag, attribute and text
 			if (!s.RegexMatch(@"(?s)^<(\+?\w+)(?: ""([^""]*)""| ([^>]*))?>(.+)", out var m)) return;
 			string tag = m[1].Value, attr = m[2].Value ?? m[3].Value ?? m[4].Value;
-			//AOutput.Write($"'{tag}'  '{attr}'  '{m[4].Value}'");
+			//print.it($"'{tag}'  '{attr}'  '{m[4].Value}'");
 
 			//process it async, because bad things happen if now we remove focus or change control text etc
 			_c.Dispatcher.InvokeAsync(() => _OnLinkClick(tag, attr));
@@ -724,7 +724,7 @@ namespace Au.Controls
 
 		//note: attr can be ""
 		void _OnLinkClick(string tag, string attr) {
-			//AOutput.Write($"'{tag}'  '{attr}'");
+			//print.it($"'{tag}'  '{attr}'");
 
 			if (_userLinkTags.TryGetValue(tag, out var d) || s_userLinkTags.TryGetValue(tag, out d)) {
 				d.Invoke(attr);
@@ -737,21 +737,21 @@ namespace Au.Controls
 
 			switch (tag) {
 			case "link":
-				ARun.RunSafe(s1, s2);
+				run.itSafe(s1, s2);
 				break;
 			case "google":
-				ARun.RunSafe("https://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);
+				run.itSafe("https://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);
 				break;
 			case "help":
-				AHelp.AuHelp(attr);
+				HelpUtil.AuHelp(attr);
 				break;
 			case "explore":
-				ARun.SelectInExplorer(attr);
+				run.selectInExplorer(attr);
 				break;
 			default:
 				//case "open": case "script": //the control recognizes but cannot implement these. The lib user can implement.
 				//others are unregistered tags. Only if start with '+' (others are displayed as text).
-				if (AOpt.Warnings.Verbose) ADialog.ShowWarning("Debug", "Tag '" + tag + "' is not implemented.\nUse SciTags2.AddCommonLinkTag or SciTags2.AddLinkTag.");
+				if (opt.warnings.Verbose) dialog.showWarning("Debug", "Tag '" + tag + "' is not implemented.\nUse SciTags2.AddCommonLinkTag or SciTags2.AddLinkTag.");
 				break;
 			}
 		}
@@ -832,9 +832,9 @@ namespace Au.Controls
 		Dictionary<string, _TagStyle> _userStyles;
 
 		internal void OnLButtonDownWhenNotFocused_(nint wParam, nint lParam, ref bool setFocus) {
-			if (setFocus && _c.ZInitReadOnlyAlways && !AKeys.UI.IsAlt) {
-				int pos = _c.Call(SCI_CHARPOSITIONFROMPOINTCLOSE, AMath.LoShort(lParam), AMath.HiShort(lParam));
-				//AOutput.Write(pos);
+			if (setFocus && _c.ZInitReadOnlyAlways && !keys.gui.isAlt) {
+				int pos = _c.Call(SCI_CHARPOSITIONFROMPOINTCLOSE, Math2.LoShort(lParam), Math2.HiShort(lParam));
+				//print.it(pos);
 				if (pos >= 0 && _c.zStyleHotspot(_c.zGetStyleAt(pos))) setFocus = false;
 			}
 		}

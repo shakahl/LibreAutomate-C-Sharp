@@ -13,7 +13,7 @@ using System.Linq;
 
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 using Au.Controls;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
@@ -42,7 +42,7 @@ static class CiUtil
 
 	public static (ISymbol symbol, string keyword, HelpKind helpKind, SyntaxToken token)
 		GetSymbolOrKeywordFromPos(Document document, int position, string code) {
-		//using var p1 = APerf.Create();
+		//using var p1 = perf.local();
 
 		if (position > 0 && SyntaxFacts.IsIdentifierPartCharacter(code[position - 1])) position--;
 
@@ -65,7 +65,7 @@ static class CiUtil
 			var k = token.Kind();
 
 			//PrintNode(token.GetPreviousToken());
-			//AOutput.Write(
+			//print.it(
 			//	//token.IsKeyword(), //IsReservedKeyword||IsContextualKeyword, but not IsPreprocessorKeyword
 			//	SyntaxFacts.IsReservedKeyword(k), //also true for eg #if
 			//	SyntaxFacts.IsContextualKeyword(k)
@@ -113,7 +113,7 @@ static class CiUtil
 				gen = true;
 				break;
 			}
-			//AOutput.Write(v, gen, v.Kind);
+			//print.it(v, gen, v.Kind);
 			if (gen == preferGeneric) { symbol = v; break; }
 			symbol ??= v;
 		}
@@ -138,27 +138,27 @@ static class CiUtil
 				_ => "keyword"
 			};
 			s = $"C# {s} \"{keyword}\"";
-			//AOutput.Write(s); return;
+			//print.it(s); return;
 			url = _GoogleURL(s);
 		} else if (helpKind == HelpKind.String) {
-			int i = AMenu.ShowSimple("1 C# strings|2 String formatting|3 Wildcard expression|11 Regex tool (Ctrl+Space)|12 Keys tool (Ctrl+Space)", MSFlags.ByCaret);
+			int i = popupMenu.showSimple("1 C# strings|2 String formatting|3 Wildcard expression|11 Regex tool (Ctrl+Space)|12 Keys tool (Ctrl+Space)", MSFlags.ByCaret);
 			switch (i) {
 			case 1: url = "C# strings"; break;
 			case 2: url = "C# string formatting"; break;
-			case 3: AHelp.AuHelp("articles/Wildcard expression"); break;
+			case 3: HelpUtil.AuHelp("articles/Wildcard expression"); break;
 			case 11: CiTools.CmdShowRegexWindow(); break;
 			case 12: CiTools.CmdShowKeysWindow(); break;
 			}
 			if (url != null) url = _GoogleURL(url);
 		}
-		if (url != null) ARun.RunSafe(url);
+		if (url != null) run.itSafe(url);
 	}
 
 	static string _GoogleURL(string query) => "https://www.google.com/search?q=" + Uri.EscapeDataString(query);
 
 	public static string GetSymbolHelpUrl(ISymbol sym) {
-		//AOutput.Write(sym);
-		//AOutput.Write(sym.IsInSource(), sym.IsFromSource());
+		//print.it(sym);
+		//print.it(sym.IsInSource(), sym.IsFromSource());
 		string query;
 		IModuleSymbol metadata = null;
 		foreach (var loc in sym.Locations) {
@@ -169,13 +169,13 @@ static class CiUtil
 			if (au && sym.IsEnumMember()) sym = sym.ContainingType;
 			query = sym.QualifiedName();
 			query = query.Replace("..ctor", au ? ".-ctor" : null);
-			if (au) return AHelp.AuHelpUrl(query);
+			if (au) return HelpUtil.AuHelpUrl(query);
 			if (metadata.Name.Starts("Au.")) return null;
 			string kind = (sym is INamedTypeSymbol ints) ? ints.TypeKind.ToString() : sym.Kind.ToString();
 			query = query + " " + kind.Lower();
 		} else if (!sym.IsInSource()) { //eg an operator of string etc
 			if (!(sym is IMethodSymbol me && me.MethodKind == MethodKind.BuiltinOperator)) return null;
-			//AOutput.Write(sym, sym.Kind, sym.QualifiedName());
+			//print.it(sym, sym.Kind, sym.QualifiedName());
 			//query = "C# " + sym.ToString(); //eg "string.operator +(string, string)", and Google finds just Equality
 			//query = "C# " + sym.QualifiedName(); //eg "System.String.op_Addition", and Google finds nothing
 			query = "C# " + sym.ToString().RegexReplace(@"\(.+\)$", "", 1).Replace('.', ' '); //eg C# string operator +, not bad
@@ -204,7 +204,7 @@ static class CiUtil
 
 	public static PSFormat GetParameterStringFormat(SyntaxNode node, SemanticModel semo, bool isString) {
 		var kind = node.Kind();
-		//AOutput.Write(kind);
+		//print.it(kind);
 		SyntaxNode parent;
 		if (isString || kind == SyntaxKind.StringLiteralExpression) parent = node.Parent;
 		else if (kind == SyntaxKind.InterpolatedStringText) parent = node.Parent.Parent;
@@ -221,7 +221,7 @@ static class CiUtil
 					case "System.Text.RegularExpressions.Regex":
 					case "RegexCompilationInfo":
 					case "System.Text.RegularExpressions.RegexCompilationInfo":
-						if ((object)asy == alis.Arguments[0]) format = PSFormat.Regex;
+						if ((object)asy == alis.Arguments[0]) format = PSFormat.NetRegex;
 						break;
 					}
 				}
@@ -236,7 +236,7 @@ static class CiUtil
 					case "Regex.Replace":
 					case "Regex.Split":
 						var aa = alis.Arguments;
-						if (aa.Count >= 2 && (object)asy == aa[1]) format = PSFormat.Regex;
+						if (aa.Count >= 2 && (object)asy == aa[1]) format = PSFormat.NetRegex;
 						break;
 					}
 				}
@@ -279,7 +279,7 @@ static class CiUtil
 	public static bool IsInString(ref SyntaxNode node, int position) {
 		if (node == null) return false;
 		var nk = node.Kind();
-		//AOutput.Write(nk, position, node.Span, node.GetType(), node);
+		//print.it(nk, position, node.Span, node.GetType(), node);
 		switch (nk) {
 		case SyntaxKind.StringLiteralExpression:
 			//return true only if position is in the string value.
@@ -361,19 +361,19 @@ static class CiUtil
 
 #if DEBUG
 	public static void PrintNode(SyntaxNode x, int pos = 0, bool printNode = true, bool printErrors = false) {
-		if (x == null) { AOutput.Write("null"); return; }
-		if (printNode) AOutput.Write($"<><c blue>{pos}, {x.Span}, k={x.Kind()}, t={x.GetType().Name},<> '<c green>{x}<>'");
-		if (printErrors) foreach (var d in x.GetDiagnostics()) AOutput.Write(d.Code, d.Location.SourceSpan, d);
+		if (x == null) { print.it("null"); return; }
+		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, k={x.Kind()}, t={x.GetType().Name},<> '<c green>{x}<>'");
+		if (printErrors) foreach (var d in x.GetDiagnostics()) print.it(d.Code, d.Location.SourceSpan, d);
 	}
 
 	public static void PrintNode(SyntaxToken x, int pos = 0, bool printNode = true, bool printErrors = false) {
-		if (printNode) AOutput.Write($"<><c blue>{pos}, {x.Span}, {x.Kind()},<> '<c green>{x}<>'");
-		if (printErrors) foreach (var d in x.GetDiagnostics()) AOutput.Write(d.Code, d.Location.SourceSpan, d);
+		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, {x.Kind()},<> '<c green>{x}<>'");
+		if (printErrors) foreach (var d in x.GetDiagnostics()) print.it(d.Code, d.Location.SourceSpan, d);
 	}
 
 	public static void PrintNode(SyntaxTrivia x, int pos = 0, bool printNode = true, bool printErrors = false) {
-		if (printNode) AOutput.Write($"<><c blue>{pos}, {x.Span}, {x.Kind()},<> '<c green>{x}<>'");
-		if (printErrors) foreach (var d in x.GetDiagnostics()) AOutput.Write(d.Code, d.Location.SourceSpan, d);
+		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, {x.Kind()},<> '<c green>{x}<>'");
+		if (printErrors) foreach (var d in x.GetDiagnostics()) print.it(d.Code, d.Location.SourceSpan, d);
 	}
 
 	public static void HiliteRange(int start, int end) {
@@ -427,9 +427,9 @@ static class CiUtil
 #if DEBUG
 	//unfinished. Just prints what we can get from CSharpSyntaxContext.
 	public static /*CiContextType*/void GetContextType(/*in CodeInfo.Context cd,*/ CSharpSyntaxContext c) {
-		//AOutput.Write("--------");
-		AOutput.Clear();
-		//AOutput.Write(cd.pos16);
+		//print.it("--------");
+		print.clear();
+		//print.it(cd.pos16);
 		_Print("IsInNonUserCode", c.IsInNonUserCode);
 		_Print("IsGlobalStatementContext", c.IsGlobalStatementContext);
 		_Print("IsAnyExpressionContext", c.IsAnyExpressionContext);
@@ -484,8 +484,8 @@ static class CiUtil
 		//_Print("", c.);
 
 		static void _Print(string s, bool value) {
-			if (value) AOutput.Write($"<><c red>{s}<>");
-			else AOutput.Write(s);
+			if (value) print.it($"<><c red>{s}<>");
+			else print.it(s);
 		}
 
 		//return CiContextType.Namespace;
@@ -496,8 +496,8 @@ static class CiUtil
 	//public static CiContextType GetContextType(CompilationUnitSyntax t, int pos) {
 	//	var members = t.Members;
 	//	var ms = members.FullSpan;
-	//	//foreach(var v in members) AOutput.Write(v.GetType().Name, v); return 0;
-	//	//AOutput.Write(pos, ms);
+	//	//foreach(var v in members) print.it(v.GetType().Name, v); return 0;
+	//	//print.it(pos, ms);
 	//	//CiUtil.HiliteRange(ms);
 	//	if (ms == default) { //assume empty top-level statements
 	//		var v = t.AttributeLists.FullSpan;
@@ -515,7 +515,7 @@ static class CiUtil
 
 	//		//now the difficult part
 	//		ms = members[i].Span;
-	//		AOutput.Write(pos, ms);
+	//		print.it(pos, ms);
 	//		CiUtil.HiliteRange(ms);
 	//		//unfinished. Here should use CSharpSyntaxContext.
 	//	}
@@ -548,8 +548,8 @@ static class CiExt
 {
 	[Conditional("DEBUG")]
 	public static void DebugPrint(this CompletionItem t, string color = "blue") {
-		AOutput.Write($"<><c {color}>{t.DisplayText},    {string.Join("|", t.Tags)},    prefix={t.DisplayTextPrefix},    suffix={t.DisplayTextSuffix},    filter={t.FilterText},    sort={t.SortText},    inline={t.InlineDescription},    automation={t.AutomationText},    provider={t.ProviderName}<>");
-		AOutput.Write(string.Join("\n", t.Properties));
+		print.it($"<><c {color}>{t.DisplayText},    {string.Join("|", t.Tags)},    prefix={t.DisplayTextPrefix},    suffix={t.DisplayTextSuffix},    filter={t.FilterText},    sort={t.SortText},    inline={t.InlineDescription},    automation={t.AutomationText},    provider={t.ProviderName}<>");
+		print.it(string.Join("\n", t.Properties));
 	}
 
 	[Conditional("DEBUG")]

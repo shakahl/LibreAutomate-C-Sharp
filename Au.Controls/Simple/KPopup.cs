@@ -1,5 +1,5 @@
 ﻿using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -33,7 +33,7 @@ namespace Au.Controls
 		SizeToContent _sizeToContent;
 		bool _shadow;
 		HwndSource _hs;
-		AWnd _w;
+		wnd _w;
 		bool _inSizeMove;
 
 		///
@@ -57,7 +57,7 @@ namespace Au.Controls
 					HwndSourceHook = _Hook
 				};
 				_hs = new _HwndSource(p) { kpopup = this, RootVisual = Border, SizeToContent = default };
-				//AOutput.Write(_hs.AcquireHwndFocusInMenuMode, _hs.RestoreFocusMode, p.TreatAsInputRoot); //True, Auto, True
+				//print.it(_hs.AcquireHwndFocusInMenuMode, _hs.RestoreFocusMode, p.TreatAsInputRoot); //True, Auto, True
 
 				OnHandleCreated();
 			}
@@ -73,15 +73,15 @@ namespace Au.Controls
 		protected virtual void OnHandleCreated() { HandleCreated?.Invoke(); }
 		public event Action HandleCreated;
 
-		public static KPopup FromHwnd(AWnd w) {
+		public static KPopup FromHwnd(wnd w) {
 			if (w.IsAlive && HwndSource.FromHwnd(w.Handle) is _HwndSource hs) return hs.kpopup;
 			return null;
 		}
 
 		/// <summary>
-		/// Gets popup window handle. Returns default(AWnd) if not created (also after destroying).
+		/// Gets popup window handle. Returns default(wnd) if not created (also after destroying).
 		/// </summary>
-		public AWnd Hwnd => _w;
+		public wnd Hwnd => _w;
 
 		//public HwndSource HwndSource => _hs ?? _Create();
 
@@ -130,7 +130,7 @@ namespace Au.Controls
 			get => _size;
 			set {
 				_size = value;
-				if (IsVisible) _w.ResizeL_(ADpi.Scale(_size, _w));
+				if (IsVisible) _w.ResizeL_(Dpi.Scale(_size, _w));
 			}
 		}
 		SIZE _size;
@@ -144,7 +144,7 @@ namespace Au.Controls
 		/// <summary>
 		/// Shows the popup window by a window, WPF element or rectangle.
 		/// </summary>
-		/// <param name="owner">Provides owner window and optionally rectangle. Can be <b>FrameworkElement</b>, <b>KPopup</b>, <b>AWnd</b> or null.</param>
+		/// <param name="owner">Provides owner window and optionally rectangle. Can be <b>FrameworkElement</b>, <b>KPopup</b>, <b>wnd</b> or null.</param>
 		/// <param name="side">Show at this side of rectangle, or opposite side if does not fit in screen. If null, shows in rectangle.</param>
 		/// <param name="rScreen">Rectangle in screen (physical pixels). If null, uses owner's rectangle. Cannot be both null.</param>
 		/// <param name="exactSize">If does not fit in screen, cover part of rectangle but don't make smaller.</param>
@@ -155,10 +155,10 @@ namespace Au.Controls
 		/// If <see cref="Size"/> not set, uses <see cref="SizeToContent.WidthAndHeight"/>.
 		/// </remarks>
 		public void ShowByRect(object owner, Dock? side, RECT? rScreen = null, bool exactSize = false, bool exactSide = false) {
-			//CloseHides = true; //AOutput.Write(_w); //18 -> 5 ms
-			//APerf.First(); if(owner is FrameworkElement test) test.Dispatcher.InvokeAsync(() => APerf.NW());
+			//CloseHides = true; //print.it(_w); //18 -> 5 ms
+			//perf.first(); if(owner is FrameworkElement test) test.Dispatcher.InvokeAsync(() => perf.nw());
 
-			AWnd ow = default;
+			wnd ow = default;
 			switch (owner) {
 			case null:
 				if (rScreen == null) throw new ArgumentException("owner and rScreen are null");
@@ -171,7 +171,7 @@ namespace Au.Controls
 				ow = p._w;
 				rScreen ??= ow.Rect;
 				break;
-			case AWnd w:
+			case wnd w:
 				ow = w;
 				rScreen ??= ow.Rect;
 				break;
@@ -184,26 +184,26 @@ namespace Au.Controls
 
 			//could use API CalculatePopupWindowPosition instead of this code, but it is not exactly what need here.
 			RECT r = rScreen.Value;
-			var screen = AScreen.Of(r);
-			var rs = screen.WorkArea;
-			int dpi = screen.Dpi;
-			SIZE size = ADpi.Scale(Size, dpi);
+			var scrn = screen.of(r);
+			var rs = scrn.WorkArea;
+			int dpi = scrn.Dpi;
+			SIZE size = Dpi.Scale(Size, dpi);
 
 			if (_sizeToContent != default) {
 				RECT nc = default;
-				ADpi.AdjustWindowRectEx(dpi, ref nc, _style, _exStyle);
+				Dpi.AdjustWindowRectEx(dpi, ref nc, _style, _exStyle);
 				rs.left -= nc.left; rs.right -= nc.right; rs.top -= nc.top; rs.bottom -= nc.bottom;
 
 				if (_sizeToContent.Has(SizeToContent.Width)) size.width = rs.Width; else size.width = Math.Min(size.width, rs.Width);
 				if (_sizeToContent.Has(SizeToContent.Height)) size.height = rs.Height; else size.height = Math.Min(size.height, rs.Height);
-				_border.Measure(ADpi.Unscale(size, dpi));
+				_border.Measure(Dpi.Unscale(size, dpi));
 				//never mind: it seems FlowDocument measures only height.
 				//	If need width, could instead use TextBlock. It does not support paragraph etc, but we can use multiple TextBlock etc in StackPanel.
 				//	But then no select/copy, not so easy scrolling, etc.
 				_border.UpdateLayout();
 				var ds = _border.DesiredSize;
 				ds.Width = Math.Ceiling(ds.Width); ds.Height = Math.Ceiling(ds.Height); //avoid scrollbars
-				size = ADpi.Scale(ds, dpi);
+				size = Dpi.Scale(ds, dpi);
 				size.width += nc.Width; size.height += nc.Height;
 			}
 			size.width = Math.Min(size.width, rs.Width);
@@ -309,7 +309,7 @@ namespace Au.Controls
 				if (state == _ccState) return;
 				_ccState = state;
 				if (ClickClose != CC.Anywhere) {
-					var wm = AWnd.FromMouse(WXYFlags.NeedWindow);
+					var wm = wnd.fromMouse(WXYFlags.NeedWindow);
 					if (ClickClose == CC.Inside) {
 						if (wm != _w) return;
 					} else {
@@ -328,9 +328,9 @@ namespace Au.Controls
 			}
 
 			static int _MouseState() =>
-				(AKeys.UI.GetKeyState(KKey.MouseLeft) & 1)
-				| (AKeys.UI.GetKeyState(KKey.MouseRight) & 1) << 1
-				| (AKeys.UI.GetKeyState(KKey.MouseMiddle) & 1) << 2;
+				(keys.gui.getKeyState(KKey.MouseLeft) & 1)
+				| (keys.gui.getKeyState(KKey.MouseRight) & 1) << 1
+				| (keys.gui.getKeyState(KKey.MouseMiddle) & 1) << 2;
 		}
 		const int c_ccTimer = 10;
 		bool _ccTimer;
@@ -340,14 +340,14 @@ namespace Au.Controls
 		public enum CC { Inside = 1, Outside = 2, Anywhere = 3 };
 
 		unsafe nint _Hook(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled) {
-			var r = _Hook((AWnd)hwnd, msg, wParam, lParam);
+			var r = _Hook((wnd)hwnd, msg, wParam, lParam);
 			handled = r != null;
 			return r ?? 0;
 		}
 
-		unsafe nint? _Hook(AWnd w, int msg, nint wParam, nint lParam) {
-			//AWnd.More.PrintMsg((AWnd)hwnd, msg, wParam, lParam);
-			//if (msg == Api.WM_ACTIVATE && wParam != 0) AOutput.Write("ACTIVATE");
+		unsafe nint? _Hook(wnd w, int msg, nint wParam, nint lParam) {
+			//wnd.more.printMsg((wnd)hwnd, msg, wParam, lParam);
+			//if (msg == Api.WM_ACTIVATE && wParam != 0) print.it("ACTIVATE");
 
 			switch (msg) {
 			case Api.WM_NCCREATE:
@@ -361,8 +361,8 @@ namespace Au.Controls
 				break;
 			case Api.WM_WINDOWPOSCHANGED:
 				var wp = (Api.WINDOWPOS*)lParam;
-				//AOutput.Write(wp->flags & SWPFlags._KNOWNFLAGS, IsVisible);
-				if (!wp->flags.Has(SWPFlags.NOSIZE) && _inSizeMove) _size = SIZE.From(ADpi.Unscale((wp->cx, wp->cy), w), true);
+				//print.it(wp->flags & SWPFlags._KNOWNFLAGS, IsVisible);
+				if (!wp->flags.Has(SWPFlags.NOSIZE) && _inSizeMove) _size = SIZE.From(Dpi.Unscale((wp->cx, wp->cy), w), true);
 				if (wp->flags.Has(SWPFlags.SHOWWINDOW)) {
 					UserClosed = false;
 					_ClickCloseTimer(true);
@@ -381,7 +381,7 @@ namespace Au.Controls
 				break;
 			case Api.WM_MOUSEACTIVATE:
 				//OS ignores WS_EX_NOACTIVATE if the active window is of this thread. Workaround: on WM_MOUSEACTIVATE return MA_NOACTIVATE.
-				switch (AMath.HiShort(lParam)) {
+				switch (Math2.HiShort(lParam)) {
 				case Api.WM_MBUTTONDOWN:
 					Close(); //never mind: we probably don't receive this message if our thread is inactive
 					return Api.MA_NOACTIVATEANDEAT;
@@ -394,9 +394,9 @@ namespace Au.Controls
 				if (_exStyle.Has(WSE.NOACTIVATE)) {
 					//OS activates when clicked in non-client area, eg when moving or resizing. Workaround: on WM_NCLBUTTONDOWN suppress activation with a CBT hook.
 					//When moving or resizing, WM_NCLBUTTONDOWN returns when moving/resizing ends. On resizing would activate on mouse button up.
-					var wa = AWnd.ThisThread.Active;
+					var wa = wnd.thisThread.active;
 					if (wa != default && wa != w) {
-						using (AHookWin.ThreadCbt(d => d.code == HookData.CbtEvent.ACTIVATE && d.Hwnd == w))
+						using (WindowsHook.ThreadCbt(d => d.code == HookData.CbtEvent.ACTIVATE && d.Hwnd == w))
 							Api.DefWindowProc(w, msg, wParam, lParam);
 						return 0;
 					}

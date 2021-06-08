@@ -1,4 +1,4 @@
-﻿/*/ role exeProgram; outputPath %AFolders.Workspace%\bin\RenameMe; /*/ //.
+﻿/*/ role exeProgram; outputPath %folders.Workspace%\bin\RenameMe; /*/ //.
 using Au;
 using System.Reflection;
 
@@ -15,7 +15,7 @@ using System.Reflection;
 //[assembly: AssemblyTrademark("Legal trademarks")]
 
 class Script { static void Main(string[] a) => new Script(a); Script(string[] args) { //;;
-;ATask.Setup(trayIcon: true); //;
+;scriptt.setup(trayIcon: true); //;
 
 /*
 To create .exe program from a script: in Properties select role exeProgram. This script is an example.

@@ -14,7 +14,7 @@ using System.Xml.Linq;
 
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -64,13 +64,13 @@ static class CiSnippets
 		if (syncon.IsObjectCreationTypeContext || syncon.IsAttributeNameContext) return;
 		//CiUtil.GetContextType(syncon);
 
-		//AOutput.Clear(); AOutput.Write(++s_test);
+		//print.clear(); print.it(++s_test);
 
-		//AOutput.Clear();
+		//print.clear();
 		//foreach (var v in root.ChildNodes()) {
 		//	CiUtil.PrintNode(v);
 		//}
-		//AOutput.Write("---");
+		//print.it("---");
 
 		_Context context = _Context.Unknown;
 		int pos = span.Start;
@@ -78,16 +78,16 @@ static class CiSnippets
 		//get node from start
 		var token = root.FindToken(pos);
 		var node = token.Parent;
-		//CiUtil.PrintNode(node); //AOutput.Write("--");
+		//CiUtil.PrintNode(node); //print.it("--");
 		//return;
 
 		//find ancestor/self that contains pos inside
 		while (node != null && !node.Span.ContainsInside(pos)) node = node.Parent;
 		//CiUtil.PrintNode(node);
-		//for(var v = node; v != null; v = v.Parent) AOutput.Write(v.GetType().Name, v is ExpressionSyntax, v is ExpressionStatementSyntax);
+		//for(var v = node; v != null; v = v.Parent) print.it(v.GetType().Name, v is ExpressionSyntax, v is ExpressionStatementSyntax);
 
-		//AOutput.Write(SyntaxFacts.IsTopLevelStatement);
-		//AOutput.Write(SyntaxFacts.IsInNamespaceOrTypeContext); //not tested
+		//print.it(SyntaxFacts.IsTopLevelStatement);
+		//print.it(SyntaxFacts.IsInNamespaceOrTypeContext); //not tested
 
 		switch (node) {
 		case BlockSyntax:
@@ -126,13 +126,13 @@ static class CiSnippets
 			}
 			break;
 		}
-		//AOutput.Write(context);
+		//print.it(context);
 		s_context = context;
 
 		if (s_items == null) {
 			var a = new List<_CiComplItemSnippet>();
-			if (!AFile.Exists(CustomFile).isFile) {
-				try { AFile.Copy(AFolders.ThisAppBS + @"Default\Snippets2.xml", CustomFile); }
+			if (!filesystem.exists(CustomFile).isFile) {
+				try { filesystem.copy(folders.ThisAppBS + @"Default\Snippets2.xml", CustomFile); }
 				catch { goto g1; }
 			}
 			_LoadFile(CustomFile, true);
@@ -142,7 +142,7 @@ static class CiSnippets
 
 			void _LoadFile(string file, bool custom) {
 				try {
-					var xroot = AXml.LoadElem(file);
+					var xroot = XmlUtil.LoadElem(file);
 					foreach (var xg in xroot.Elements("group")) {
 						if (!xg.Attr(out string sc, "context")) continue;
 						_Context con = default;
@@ -166,7 +166,7 @@ static class CiSnippets
 						}
 					}
 				}
-				catch (Exception ex) { AOutput.Write("Failed to load snippets from " + file + "\r\n\t" + ex.ToStringWithoutStack()); }
+				catch (Exception ex) { print.it("Failed to load snippets from " + file + "\r\n\t" + ex.ToStringWithoutStack()); }
 			}
 			//FUTURE: support $selection$. Add menu Edit -> Surround -> Snippet1|Snippet2|....
 			//FUTURE: snippet editor, maybe like in Eclipse.
@@ -201,7 +201,7 @@ static class CiSnippets
 			foreach (var v in snippet.x.Elements("list")) {
 				m.Separator();
 				m.StartParagraph();
-				m.Append(AStringUtil.RemoveUnderlineChar(v.Attr("item")));
+				m.Append(StringUtil.RemoveUnderlineChar(v.Attr("item")));
 				_AppendInfo(v);
 				_AppendCode(v);
 			}
@@ -235,7 +235,7 @@ static class CiSnippets
 		if (x.HasElements) {
 			x = null;
 			var a = snippet.x.Elements("list").ToArray();
-			var m = new AMenu();
+			var m = new popupMenu();
 			foreach (var v in a) m.Add(v.Attr("item"));
 			m.FocusedItem = m.Items.First();
 			int g = m.Show(MSFlags.ByCaret | MSFlags.Underline);
@@ -306,6 +306,6 @@ static class CiSnippets
 		}
 	}
 
-	public static readonly string DefaultFile = AFolders.ThisApp + @"Default\Snippets.xml";
+	public static readonly string DefaultFile = folders.ThisApp + @"Default\Snippets.xml";
 	public static readonly string CustomFile = AppSettings.DirBS + "Snippets.xml";
 }

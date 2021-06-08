@@ -4,14 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel; //Win32Exception
 
 //using System.Reflection;
 //using System.Linq;
@@ -152,118 +147,6 @@ namespace SdkConverter
 
 		void Test()
 		{
-			//TestSimple();
-
-			//var x = CreateTestInterface();
-			//x.Test1(3);
-			//int[] a = { 1, 2 };
-			////fixed(int* p = a)
-			////{
-			////	x.Test2(p);
-			////}
-			//x.Test2(a);
-
-			//string[] a = { "one", "two" };
-			//TestArrayStr(a);
-			//AOutput.Write(a[0]);
-			//int[] a = { 1, 2 };
-			//TestArray(a);
-			//AOutput.Write(a[0]);
-
-			//string s = "instr";
-			//var p = new STSTR();
-			////var p = new STSTR2();
-			//p.k = 1;
-			//p.s = s;
-			//TestStructString(ref p);
-			////TestStructString2(p);
-			//AOutput.Write("returned");
-			//AOutput.Write(p.k, p.s);
-			//AOutput.Write(p.s == s);
-
-			//var p = new POINT();
-			//p.x = 2;
-			//TestStructBlit(ref p);
-			//AOutput.Write(p.y);
-
-
-			//var v = new SRKH();
-			//var g = new Guid();
-
-			//var a1 = new Action(() => { TestUnmanaged1(ref v, ref g); });
-			//         var a2 = new Action(() => { TestUnmanaged2(ref v, ref g); });
-			//var a3 = new Action(() => { TestUnmanaged3(out v, out g); });
-			//var a4 = new Action(() => { TestUnmanaged4(ref v, ref g); });
-
-			//APerf.ExecuteMulti(5, 10000, a1, a2, a3, a4);
-
-			//var sb = new StringBuilder("test");
-			//CharUpper(sb);
-			//AOutput.Write(sb);
-
-			//int k = 1;
-			//int R=TestUnmanaged(ref k);
-			//AOutput.Write(R, k);
-
-			//bool k = false;
-			//bool R=TestUnmanaged(ref k);
-			//AOutput.Write(R, k);
-
-
-			//AOutput.Write(1);
-			//string s;
-			//s = new string(GetCommandLine());
-			//AOutput.Write(s);
-			//s = new string(GetCommandLine());
-			//AOutput.Write(s);
-			//s = new string(GetCommandLine());
-			//AOutput.Write(s);
-			//AOutput.Write(2);
-
-
-			//var v = new ARRHOLDER();
-			//v.c[0].i = 5;
-
-			//return;
-
-
-			////var x = new ARR();
-			////for(int i=0; i<4; i++) {
-			////	x[i] = i + 100;
-			////	AOutput.Write(x[i]);
-			////}
-
-			//int n1 = 0, n2 = 0;
-
-			//var x = new ARRHOLDER();
-
-			////x.b = new int[100];
-			////for(int i = 0; i < 100; i++) {
-			////	x.a[i] = i + 100;
-			////	AOutput.Write(x.a[i]);
-			////}
-			////AOutput.Write("DONE");
-
-			//var a1 = new Action(() =>
-			//{
-			//	for(int i = 0; i < 100; i++) {
-			//		x.a[i] = i + 100;
-			//		n1 += x.a[i];
-			//	}
-			//});
-
-			//var a2 = new Action(() =>
-			//{
-			//x.b = new int[100];
-			//	for(int i = 0; i < 100; i++) {
-			//		x.b[i] = i + 100;
-			//		n2 += x.b[i];
-			//	}
-			//});
-
-			//APerf.ExecuteMulti(5, 50, a1, a2);
-
-			//AOutput.Write(n1, n2);
 		}
 	}
 }

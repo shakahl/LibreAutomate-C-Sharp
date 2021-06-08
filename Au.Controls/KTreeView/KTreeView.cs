@@ -2,7 +2,7 @@ using Au.Types;
 using System;
 using System.Collections.Generic;
 //using System.Linq;
-using Au.Util;
+using Au.More;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -54,7 +54,7 @@ namespace Au.Controls
 		///
 		protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {
 			if (_hasHwnd) {
-				_SetDpiAndItemSize(newDpi.PixelsPerInchY.ToInt()); //don't use ADpi.OfWindow(this), it's invalid when reparenting
+				_SetDpiAndItemSize(newDpi.PixelsPerInchY.ToInt()); //don't use Dpi.OfWindow(this), it's invalid when reparenting
 				_MeasureClear(false);
 			}
 			base.OnDpiChanged(oldDpi, newDpi);
@@ -176,7 +176,7 @@ namespace Au.Controls
 		///
 		protected override void OnMouseWheel(MouseWheelEventArgs e) {
 			e.Handled = true;
-			if (!_avi.NE_() && _vscroll.Visible) _vscroll.WndProc(_w, Api.WM_MOUSEWHEEL, AMath.MakeLparam(0, e.Delta), 0);
+			if (!_avi.NE_() && _vscroll.Visible) _vscroll.WndProc(_w, Api.WM_MOUSEWHEEL, Math2.MakeLparam(0, e.Delta), 0);
 			base.OnMouseWheel(e);
 		}
 
@@ -272,7 +272,7 @@ namespace Au.Controls
 		///
 		protected override void OnMouseDown(MouseButtonEventArgs e) {
 
-			//AOutput.Write("down", e.ClickCount, Keyboard.Modifiers, e.Timestamp);
+			//print.it("down", e.ClickCount, Keyboard.Modifiers, e.Timestamp);
 			var b = e.ChangedButton;
 			if (b == MouseButton.Left || b == MouseButton.Right || b == MouseButton.Middle) {
 				if (b != MouseButton.Middle && Focusable) Focus();
@@ -294,9 +294,9 @@ namespace Au.Controls
 							clickEvent = true;
 						} else if (e.ClickCount == 1) {
 							if (CaptureMouse()) _mouse = (e, h, xy, mk, multiSelect, unselectOnUp);
-							//cannot detect click/drag here with ADragDrop etc because it captures mouse which closes parent Popup. Also then mouse events are not good.
+							//cannot detect click/drag here with DragDropUtil etc because it captures mouse which closes parent Popup. Also then mouse events are not good.
 						} else {
-							//AOutput.Write("double", h.item);
+							//print.it("double", h.item);
 							if (b == MouseButton.Left && h.part == TVParts.Text && h.item.IsFolder) Expand(h.index, null);
 							clickEvent = true;
 							activateEvent = !SingleClickActivate;
@@ -339,7 +339,7 @@ namespace Au.Controls
 						if (_mouse.mk == ModifierKeys.Shift) _ShiftSelect(i); else Select(i, !IsSelected(i), unselectOther: false);
 						_focusedIndex = i;
 					} else {
-						//AOutput.Write("click", eDown.ChangedButton);
+						//print.it("click", eDown.ChangedButton);
 						if (_mouse.unselect) Select(_mouse.h.index, true, unselectOther: true);
 						bool activateEvent = SingleClickActivate && eDown.ChangedButton == MouseButton.Left;
 						_MouseEvents(true, activateEvent, false, eDown, _mouse.h, _mouse.xy, _mouse.mk);
@@ -353,9 +353,9 @@ namespace Au.Controls
 		protected override void OnMouseMove(MouseEventArgs e) {
 			if (_mouse.e != null) {
 				if (_Pressed(_mouse.e.ChangedButton)) {
-					//AOutput.Write("move");
-					if (AMath.Distance(_w.MouseClientXY, _mouse.xy) > _itemHeight / 4) {
-						//AOutput.Write("drag");
+					//print.it("move");
+					if (Math2.Distance(_w.MouseClientXY, _mouse.xy) > _itemHeight / 4) {
+						//print.it("drag");
 						int i = _mouse.h.index;
 						if (!IsSelected(i)) SelectSingle(i, andFocus: true);
 						var eDown = _MouseEnd();
@@ -363,7 +363,7 @@ namespace Au.Controls
 					}
 				} else {
 					_MouseEnd();
-					ADebug_.Print("_mouse.e!=null");
+					Debug_.Print("_mouse.e!=null");
 				}
 			}
 			_OnMouseMoveOrWheel(false);
@@ -415,7 +415,7 @@ namespace Au.Controls
 
 		///
 		protected override void OnKeyDown(KeyEventArgs e) {
-			//AOutput.Write(e.Key, _focusedIndex);
+			//print.it(e.Key, _focusedIndex);
 			e.Handled = ProcessKey(e.Key);
 			base.OnKeyDown(e);
 		}
@@ -424,7 +424,7 @@ namespace Au.Controls
 		/// Processes keys such as arrow, page, Enter, Ctrl+A.
 		/// Returns true if handled.
 		/// </summary>
-		/// <seealso cref="AKeys.More.KKeyToWpf"/>
+		/// <seealso cref="keys.more.KKeyToWpf"/>
 		public bool ProcessKey(Key k) {
 			bool handled = false;
 			if (!_avi.NE_()) {
@@ -437,7 +437,7 @@ namespace Au.Controls
 					if (isFocus) ItemActivated?.Invoke(this, new TVItemEventArgs(_IndexToItem(_focusedIndex), _focusedIndex, mk: mod));
 					break;
 				case Key.Home or Key.End or Key.Down or Key.Up or Key.PageDown or Key.PageUp:
-					selIndex = _vscroll.KeyNavigate(_focusedIndex, AKeys.More.KKeyFromWpf(k));
+					selIndex = _vscroll.KeyNavigate(_focusedIndex, keys.more.KKeyFromWpf(k));
 					break;
 				case Key.Left:
 				case Key.Right:
@@ -790,7 +790,7 @@ namespace Au.Controls
 			r.left -= _imageMarginX;
 			double f = 96d / _dpi;
 			_leTB = new TextBox { Height = r.Height * f, MinWidth = r.Width * f, Text = item.DisplayText };
-			_leTB.Padding = AVersion.MinWin8 ? new Thickness(0, -1, 0, 0) : new Thickness(-1, -2, 0, 0);
+			_leTB.Padding = osVersion.minWin8 ? new Thickness(0, -1, 0, 0) : new Thickness(-1, -2, 0, 0);
 			_leTB.SelectAll();
 			_leTB.KeyDown += (_, e) => {
 				switch (e.Key) {
@@ -803,12 +803,12 @@ namespace Au.Controls
 			_lePopup.ShowByRect(this, null, r);
 			_leTB.Focus();
 
-			//		ATimer.After(1000,_=>Visibility=Visibility.Collapsed);
-			//		ATimer.After(1000,_=>Window.GetWindow(this).Hide());
-			//		ATimer.After(2000,_=>Window.GetWindow(this).Show());
-			//		ATimer.After(1000,_=>Window.GetWindow(this).Width=500);
-			//		ATimer.After(1000,_=>Expand(0, false));
-			//		ATimer.After(1000,_=>ItemsRoot=null);
+			//		timerm.after(1000,_=>Visibility=Visibility.Collapsed);
+			//		timerm.after(1000,_=>Window.GetWindow(this).Hide());
+			//		timerm.after(2000,_=>Window.GetWindow(this).Show());
+			//		timerm.after(1000,_=>Window.GetWindow(this).Width=500);
+			//		timerm.after(1000,_=>Expand(0, false));
+			//		timerm.after(1000,_=>ItemsRoot=null);
 		}
 
 		KPopup _lePopup;
@@ -823,7 +823,7 @@ namespace Au.Controls
 			if (_lePopup == null) return;
 			int index = cancel ? -1 : IndexOf(_leItem);
 			if (!cancel) cancel = index < 0 || !IsVisible;
-			//AOutput.Write("EndEditLabel, cancel=", cancel);
+			//print.it("EndEditLabel, cancel=", cancel);
 			bool focus = Keyboard.FocusedElement == _leTB;
 			var text = cancel ? null : _leTB.Text; _leTB = null;
 			var item = _leItem; _leItem = null;
@@ -899,15 +899,15 @@ namespace Au.Controls
 					_dd.scrollDelayTime = 0;
 					_dd.scrollTime = 0;
 				} else if (_dd.scrolling || key != 0) {
-					long time = ATime.WinMilliseconds;
+					long time = Environment.TickCount64;
 					if (time - _dd.scrollTime > 110) {
 						_dd.scrollTime = time;
 						noMark = _Scroll(scroll, false);
 					} else noMark = true;
 				} else if (_dd.scrollDelayTime == 0 || p != _dd.scrollDelayPoint) {
-					_dd.scrollDelayTime = ATime.WinMilliseconds;
+					_dd.scrollDelayTime = Environment.TickCount64;
 					_dd.scrollDelayPoint = p;
-				} else if (ATime.WinMilliseconds - _dd.scrollDelayTime > 400) {
+				} else if (Environment.TickCount64 - _dd.scrollDelayTime > 400) {
 					_dd.scrolling = true;
 				}
 			}
@@ -953,7 +953,7 @@ namespace Au.Controls
 
 		/// <summary>
 		/// Can be called from "drag over" and "drop" overrides or event handlers to get drop info.
-		/// This overload uses mouse position (<see cref="AWnd.MouseClientXY"/>).
+		/// This overload uses mouse position (<see cref="wnd.MouseClientXY"/>).
 		/// </summary>
 		/// <param name="d"></param>
 		/// <seealso cref="OnDragOver2"/>

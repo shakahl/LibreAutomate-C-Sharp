@@ -1,14 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel; //Win32Exception
 
 //using System.Reflection;
 //using System.Linq;
@@ -146,7 +141,7 @@ namespace SdkConverter
 
 			//ANSI string constant?
 			if(!isPrefix && _nTokUntilDefUndef != 0 && _TokIsChar(iPrevTok - 1, '`')) {
-				//AOutput.Write(new string(s0, 0, (int)(d - s0)));
+				//print.it(new string(s0, 0, (int)(d - s0)));
 				//_Err(iPrevTok, "ANSI string");
 				*s0 = '\x2'; //later will restore '\"' and add to "FAILED TO CONVERT"
 			}

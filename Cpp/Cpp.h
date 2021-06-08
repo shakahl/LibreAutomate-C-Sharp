@@ -69,7 +69,7 @@ struct Cpp_Acc_Agent : Cpp_Acc {
 #endif
 
 //Flags for Cpp_AccFind.
-//The same as C# AFFlags. Documented there.
+//The same as C# EFFlags. Documented there.
 //[Flags]
 enum class eAF
 {

@@ -13,7 +13,7 @@ using System.Linq;
 
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -53,7 +53,7 @@ class CiFavorite
 
 			var d = semo.GetDeclarationDiagnostics();
 			if (!d.IsDefaultOrEmpty) {
-				foreach (var v in d) if (v.Severity == DiagnosticSeverity.Error) AOutput.Write("Error in Options -> Code -> namespaces: " + v.GetMessage());
+				foreach (var v in d) if (v.Severity == DiagnosticSeverity.Error) print.it("Error in Options -> Code -> namespaces: " + v.GetMessage());
 			}
 
 			//get types and group by namespace
@@ -88,7 +88,7 @@ class CiFavorite
 	public void AddCompletions(List<CiComplItem> items, Dictionary<INamespaceOrTypeSymbol, List<int>> groups, TextSpan span, CSharpSyntaxContext syncon, ITypeSymbol typeForExtensionMethods = null) {
 		if (!_Init()) return;
 
-		//APerf.First();
+		//perf.first();
 		CiComplItem prevci = null; string prevname = null; //to join overloads
 		if (typeForExtensionMethods != null) { //add extension methods
 
@@ -100,13 +100,13 @@ class CiFavorite
 					//don't add from namespaces specified in code (using directives)
 					//if (hs.Contains(a[0].ContainingNamespace)) continue; //usually does not make much faster. Also need to test more, maybe in some cases prevents adding our methods.
 					if (groups.ContainsKey(a[0].ContainingType)) continue;
-					//AOutput.Write(nt.ns, a[0].ContainingType, a);
+					//print.it(nt.ns, a[0].ContainingType, a);
 
 					prevname = null;
 					foreach (var m in a) {
 						var rm = m.ReduceExtensionMethod(typeForExtensionMethods);
 						if (rm == null) continue;
-						//AOutput.Write(m);
+						//print.it(m);
 						var name = rm.Name;
 						if (name != prevname) {
 							prevname = name;
@@ -129,7 +129,7 @@ class CiFavorite
 				var ns = nt.ns;
 				bool skip = groups.TryGetValue(ns, out var ati);
 				if (skip) {
-					//don't skip if the group contains single item "Unimported.Namespace.Type" for parameter enum or new, like in this code: ARun.Run("", "", RFlags, new ROptions);
+					//don't skip if the group contains single item "Unimported.Namespace.Type" for parameter enum or new, like in this code: run.it("", "", RFlags, new ROptions);
 					if (ati.Count == 1 && items[ati[0]].Text.Contains('.')) skip = false;
 				}
 				int nExist = ati.Lenn_();
@@ -141,7 +141,7 @@ class CiFavorite
 
 					var name = t.Name;
 					if (onlyAttributes && name.Ends("Attribute") && name.Length > 9) name = name[..^9];
-					//AOutput.Write(name);
+					//print.it(name);
 					//note: in some cases Roslyn may not remove suffix "Attribute" from its completion items. Rare, never mind.
 
 					if (skip) {
@@ -154,7 +154,7 @@ class CiFavorite
 									break;
 								}
 						if (found) continue;
-						//AOutput.Write(name, items.Take(nExist).Select(o => o.Text));
+						//print.it(name, items.Take(nExist).Select(o => o.Text));
 					}
 
 					if (name != prevname) {
@@ -178,7 +178,7 @@ class CiFavorite
 			//rejected: optimize to avoid calling this code each time. Fast, although creates garbage.
 			//rejected: support 'using static Namespace.Type'. Rare. Initially implemented, but not fully; also would need to: 1. use context. 2. join overloads.
 		}
-		//APerf.NW();
+		//perf.nw();
 
 		//code scraps for 'using static'
 		//} else if (sym is IFieldSymbol f) {

@@ -531,10 +531,10 @@ HRESULT InjectDllAndGetAgent(HWND w, out IAccessible*& iaccAgent, out HWND* wAge
 	//		see also: https://superuser.com/questions/496104/windows-8-developer-license
 	//	note: the child Windows.UI.Core.CoreWindow runs in other process than its host ApplicationFrameWindow. We need to inject into the control's process. Injection into the host's process succeeds but is useless.
 #if true
-	if(wnd::ClassNameIs(GetAncestor(w, GA_ROOT), { L"ApplicationFrameWindow", L"Windows.UI.Core.CoreWindow", L"ConsoleWindowClass", L"SunAwt*" }))
+	if(wn::ClassNameIs(GetAncestor(w, GA_ROOT), { L"ApplicationFrameWindow", L"Windows.UI.Core.CoreWindow", L"ConsoleWindowClass", L"SunAwt*" }))
 		return (HRESULT)eError::UseNotInProc;
 #else
-	int icn = wnd::ClassNameIs(w, { L"ApplicationFrameWindow", L"Windows.UI.Core.CoreWindow", L"ConsoleWindowClass", L"SunAwt*" });
+	int icn = wn::ClassNameIs(w, { L"ApplicationFrameWindow", L"Windows.UI.Core.CoreWindow", L"ConsoleWindowClass", L"SunAwt*" });
 	if(icn) {
 		if(icn == 2 && SetProcessRestrictionExemption(true)) {
 			Print("SetProcessRestrictionExemption OK");

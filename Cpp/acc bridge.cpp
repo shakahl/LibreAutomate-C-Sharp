@@ -655,7 +655,7 @@ EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, const Cpp_AccParams& ap, Cp
 		//To detect it, we look for an "Internet Explorer_Server" control.
 		//If it is Firefox or Chrome, this makes slightly slower.
 		if(ap.roleLength >= 4 && CMP4(ap.role, L"web:")) {
-			HWND wIES = wnd::FindChildByClassName(w, c_IES, true);
+			HWND wIES = wn::FindChildByClassName(w, c_IES, true);
 			if(wIES) { w = wIES; flags2 |= eAF2::InIES; }
 		}
 	}

@@ -13,7 +13,7 @@ using System.Linq;
 
 using Au;
 using Au.Types;
-using Au.Util;
+using Au.More;
 using Au.Controls;
 using System.Windows.Controls;
 using System.Windows;
@@ -36,7 +36,7 @@ class CiPopupList
 	bool _groupsEnabled;
 	List<string> _groups;
 	CiPopupText _textPopup;
-	ATimer _tpTimer;
+	timerm _tpTimer;
 
 	public KPopup PopupWindow => _popup;
 
@@ -81,7 +81,7 @@ class CiPopupList
 
 		void _AddButton(ButtonBase b, string text, string image) {
 			b.Style = (b is CheckBox) ? cstyle : bstyle;
-			b.Content = AResources.GetWpfImageElement(image);
+			b.Content = ResourceUtil.GetWpfImageElement(image);
 			b.ToolTip = text;
 			AutomationProperties.SetName(b, text);
 			b.Focusable = false; //would close popup
@@ -101,7 +101,7 @@ class CiPopupList
 		};
 
 		_textPopup = new CiPopupText(CiPopupText.UsedBy.PopupList);
-		_tpTimer = new ATimer(_ShowTextPopup);
+		_tpTimer = new timerm(_ShowTextPopup);
 	}
 
 	private void _KindButton_Click(object sender, RoutedEventArgs e) {
@@ -129,7 +129,7 @@ class CiPopupList
 	}
 
 	//private void _Options_Click(object sender, RoutedEventArgs e) {
-	//	var m = new AMenu();
+	//	var m = new popupMenu();
 	//	//m[""] = o => ;
 	//}
 
@@ -141,9 +141,10 @@ class CiPopupList
 	private void _tv_SelectedSingle(object sender, int index) {
 		if ((uint)index < _av.Count) {
 			var ci = _av[index];
-			//AOutput.Write(ci.ci.ProviderName, ci.Provider);
+			//print.it(ci.ci.ProviderName, ci.Provider);
 			if (ci.Provider == CiComplProvider.XmlDoc) return;
-			_tpTimer.After(300, ci);
+			_tpTimer.Tag = ci;
+			_tpTimer.After(300);
 			_textPopup.Text = null;
 		} else {
 			_textPopup.Hide();
@@ -151,7 +152,7 @@ class CiPopupList
 		}
 	}
 
-	void _ShowTextPopup(ATimer t) {
+	void _ShowTextPopup(timerm t) {
 		var ci = t.Tag as CiComplItem;
 		var text = _compl.GetDescriptionDoc(ci, 0);
 		if (text == null) return;
@@ -229,13 +230,13 @@ class CiPopupList
 		UpdateVisibleItems();
 
 		var r = CiUtil.GetCaretRectFromPos(_doc, position, inScreen: true);
-		r.left -= ADpi.Scale(50, _doc);
+		r.left -= Dpi.Scale(50, _doc);
 
 		_popup.ShowByRect(_doc, Dock.Bottom, r);
 	}
 
 	public void Hide() {
-		//ADebug_.PrintIf(_debug, "reenter, " + new StackTrace());
+		//Debug_.PrintIf(_debug, "reenter, " + new StackTrace());
 		if (_a == null) return;
 		_tv.SetItems(null, false);
 		_popup.Close();
@@ -271,7 +272,7 @@ class CiPopupList
 			case KKey.PageUp:
 			case KKey.Home:
 			case KKey.End:
-				_tv.ProcessKey(AKeys.More.KKeyToWpf(key));
+				_tv.ProcessKey(keys.more.KKeyToWpf(key));
 				return true;
 			}
 		}
@@ -311,7 +312,7 @@ class CiPopupList
 			Range black, green;
 			if (ci.commentOffset == 0) { black = ..s.Length; green = default; } else { black = ..ci.commentOffset; green = ci.commentOffset..; }
 
-			ADebug_.PrintIf(!ci.ci.DisplayTextPrefix.NE(), s); //we don't support prefix; never seen.
+			Debug_.PrintIf(!ci.ci.DisplayTextPrefix.NE(), s); //we don't support prefix; never seen.
 			int xEndOfText = 0;
 			int color = ci.moveDown.HasAny(CiComplItemMoveDownBy.Name | CiComplItemMoveDownBy.FilterText) ? 0x808080 : _textColor;
 			_tr.MoveTo(_cd.xText, _cd.yText);

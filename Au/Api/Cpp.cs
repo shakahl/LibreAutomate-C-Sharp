@@ -15,9 +15,8 @@ namespace Au.Types
 	[DebuggerStepThrough]
 	internal static unsafe partial class Cpp
 	{
-		static Cpp()
-		{
-			AFile.More.LoadDll64or32Bit("AuCpp.dll");
+		static Cpp() {
+			filesystem.more.loadDll64or32Bit("AuCpp.dll");
 		}
 
 		//speed:
@@ -31,11 +30,11 @@ namespace Au.Types
 		{
 			public IntPtr acc;
 			public int elem;
-			public AAcc.Misc_ misc;
+			public elm.Misc_ misc;
 
 			public Cpp_Acc(IntPtr iacc, int elem_) { acc = iacc; elem = elem_; misc = default; }
-			public Cpp_Acc(AAcc a) { acc = a._iacc; elem = a._elem; misc = a._misc; }
-			public static implicit operator Cpp_Acc(AAcc a) => new Cpp_Acc(a);
+			public Cpp_Acc(elm e) { acc = e._iacc; elem = e._elem; misc = e._misc; }
+			public static implicit operator Cpp_Acc(elm e) => new(e);
 		}
 
 		internal delegate int AccCallbackT(Cpp_Acc a);
@@ -44,15 +43,14 @@ namespace Au.Types
 		{
 			string _role, _name, _prop;
 			int _roleLength, _nameLength, _propLength;
-			public AFFlags flags;
+			public EFFlags flags;
 			public int skip;
-			char resultProp; //AAcc.Finder.RProp
+			char resultProp; //elmFinder.RProp
 
-			public Cpp_AccParams(string role, string name, string prop, AFFlags flags, int skip, char resultProp) : this()
-			{
-				if(role != null) { _role = role; _roleLength = role.Length; }
-				if(name != null) { _name = name; _nameLength = name.Length; }
-				if(prop != null) { _prop = prop; _propLength = prop.Length; }
+			public Cpp_AccParams(string role, string name, string prop, EFFlags flags, int skip, char resultProp) : this() {
+				if (role != null) { _role = role; _roleLength = role.Length; }
+				if (name != null) { _name = name; _nameLength = name.Length; }
+				if (prop != null) { _prop = prop; _propLength = prop.Length; }
 				this.flags = flags;
 				this.skip = skip;
 				this.resultProp = resultProp;
@@ -60,18 +58,17 @@ namespace Au.Types
 		}
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern EError Cpp_AccFind(AWnd w, Cpp_Acc* aParent, in Cpp_AccParams ap, AccCallbackT also, out Cpp_Acc aResult, [MarshalAs(UnmanagedType.BStr)] out string sResult);
+		internal static extern EError Cpp_AccFind(wnd w, Cpp_Acc* aParent, in Cpp_AccParams ap, AccCallbackT also, out Cpp_Acc aResult, [MarshalAs(UnmanagedType.BStr)] out string sResult);
 
 		internal enum EError
 		{
-			NotFound = 0x1001, //AO not found. With FindAll - no errors. This is actually not an error.
+			NotFound = 0x1001, //UI element not found. With FindAll - no errors. This is actually not an error.
 			InvalidParameter = 0x1002, //invalid parameter, for example wildcard expression (or regular expression in it)
 			WindowClosed = 0x1003, //the specified window handle is invalid or the window was destroyed while injecting
-			WaitChromeDisabled = 0x1004, //need to wait while enabling Chrome AOs finished
+			WaitChromeDisabled = 0x1004, //need to wait while enabling Chrome UI elements finished
 		}
 
-		internal static bool IsCppError(int hr)
-		{
+		internal static bool IsCppError(int hr) {
 			return hr >= (int)EError.NotFound && hr <= (int)EError.WaitChromeDisabled;
 		}
 
@@ -79,20 +76,20 @@ namespace Au.Types
 		/// flags: 1 not inproc, 2 get only name.
 		/// </summary>
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int Cpp_AccFromWindow(int flags, AWnd w, AccOBJID objId, out Cpp_Acc aResult, out BSTR sResult);
+		internal static extern int Cpp_AccFromWindow(int flags, wnd w, EObjid objId, out Cpp_Acc aResult, out BSTR sResult);
 
 		//flags: 1 get UIA, 2 prefer LINK.
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int Cpp_AccFromPoint(POINT p, AXYFlags flags, out Cpp_Acc aResult);
+		internal static extern int Cpp_AccFromPoint(POINT p, EXYFlags flags, out Cpp_Acc aResult);
 
 		//flags: 1 get UIA.
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int Cpp_AccGetFocused(AWnd w, int flags, out Cpp_Acc aResult);
+		internal static extern int Cpp_AccGetFocused(wnd w, int flags, out Cpp_Acc aResult);
 
-		//These are called from AAcc class functions like Cpp.Cpp_Func(this, ...); GC.KeepAlive(this);.
-		//We can use 'this' because Cpp_Acc has an implicit conversion from AAcc operator.
-		//Need GC.KeepAlive(this) everywhere. Else GC can collect the AAcc (and release _iacc) while in the Cpp func.
-		//Alternatively could make the Cpp parameter 'const Cpp_Acc&', and pass AAcc directly. But I don't like it.
+		//These are called from elm class functions like Cpp.Cpp_Func(this, ...); GC.KeepAlive(this);.
+		//We can use 'this' because Cpp_Acc has an implicit conversion from elm operator.
+		//Need GC.KeepAlive(this) everywhere. Else GC can collect the elm (and release _iacc) while in the Cpp func.
+		//Alternatively could make the Cpp parameter 'const Cpp_Acc&', and pass elm directly. But I don't like it.
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int Cpp_AccNavigate(Cpp_Acc aFrom, string navig, out Cpp_Acc aResult);
@@ -107,7 +104,7 @@ namespace Au.Types
 		internal static extern int Cpp_AccGetRect(Cpp_Acc a, out RECT r);
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int Cpp_AccGetRole(Cpp_Acc a, out AccROLE roleInt, out BSTR roleStr);
+		internal static extern int Cpp_AccGetRole(Cpp_Acc a, out ERole roleInt, out BSTR roleStr);
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int Cpp_AccGetInt(Cpp_Acc a, char what, out int R);
@@ -116,7 +113,7 @@ namespace Au.Types
 		internal static extern int Cpp_AccAction(Cpp_Acc a, char action, [MarshalAs(UnmanagedType.BStr)] string param = null);
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int Cpp_AccSelect(Cpp_Acc a, AccSELFLAG flagsSelect);
+		internal static extern int Cpp_AccSelect(Cpp_Acc a, ESelect flagsSelect);
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int Cpp_AccGetSelection(Cpp_Acc a, out BSTR sResult);
@@ -125,13 +122,12 @@ namespace Au.Types
 		internal static extern int Cpp_AccGetProps(Cpp_Acc a, string props, out BSTR sResult);
 
 #if DEBUG
-		internal static void DebugUnload()
-		{
-			//run GC to release Firefox acc wrappers. Else may not unload from Firefox.
+		internal static void DebugUnload() {
+			//run GC to release Firefox object wrappers. Else may not unload from Firefox.
 			GC.Collect();
 			GC.WaitForPendingFinalizers();
 			//Cpp_Unload(0); //in Setup32.dll, it's 32-bit
-			ARun.Run(@"Q:\app\Au\Other\Programs\unload AuCpp dll.exe", null, RFlags.WaitForExit); //loads Setup32.dll and calls Cpp_Unload
+			run.it(@"Q:\app\Au\Other\Programs\unload AuCpp dll.exe", null, RFlags.WaitForExit); //loads Setup32.dll and calls Cpp_Unload
 		}
 #endif
 

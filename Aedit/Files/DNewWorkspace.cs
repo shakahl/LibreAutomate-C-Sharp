@@ -32,7 +32,7 @@ partial class FilesModel
 
 			Title = "New Workspace";
 
-			var b = new AWpfBuilder(this).WinSize(600).Columns(-3, 0, -1);
+			var b = new wpfBuilder(this).WinSize(600).Columns(-3, 0, -1);
 			b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
 			b.R.Add<Label>("Parent folder").Skip().Add<Label>("Name");
 			b.R.Add(out TextBox tLocation, _location).Validation(_Validate)
@@ -44,7 +44,7 @@ partial class FilesModel
 
 			void _Browse(WBButtonClickArgs e) {
 				using var d = new System.Windows.Forms.FolderBrowserDialog {
-					SelectedPath = AFile.Exists(tLocation.Text).isDir ? tLocation.Text : AFolders.ThisAppDocuments,
+					SelectedPath = filesystem.exists(tLocation.Text).isDir ? tLocation.Text : folders.ThisAppDocuments,
 					ShowNewFolderButton = true
 				};
 				if (d.ShowDialog() == System.Windows.Forms.DialogResult.OK) tLocation.Text = d.SelectedPath;
@@ -53,17 +53,17 @@ partial class FilesModel
 			string _Validate(FrameworkElement e) {
 				var s = (e as TextBox).Text;
 				if (e == tLocation) {
-					if (!AFile.Exists(s).isDir) return "Folder does not exist";
+					if (!filesystem.exists(s).isDir) return "Folder does not exist";
 				} else {
-					if (APath.IsInvalidName(s)) return "Invalid filename";
-					ResultPath = APath.Combine(tLocation.Text, s); //validation is when OK clicked
-					if (AFile.Exists(ResultPath)) return s + " already exists";
+					if (pathname.isInvalidName(s)) return "Invalid filename";
+					ResultPath = pathname.combine(tLocation.Text, s); //validation is when OK clicked
+					if (filesystem.exists(ResultPath)) return s + " already exists";
 				}
 				return null;
 			}
 
 			//b.OkApply += e => {
-			//	AOutput.Write(ResultPath); e.Cancel = true;
+			//	print.it(ResultPath); e.Cancel = true;
 			//};
 		}
 	}

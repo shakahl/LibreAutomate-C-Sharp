@@ -259,43 +259,43 @@ namespace Au.Types
 
 		/// <summary>
 		/// Saves XML to a file in a safer way.
-		/// Uses <see cref="XElement.Save(string, SaveOptions)"/> and <see cref="AFile.Save"/>.
+		/// Uses <see cref="XElement.Save(string, SaveOptions)"/> and <see cref="filesystem.save"/>.
 		/// </summary>
-		/// <exception cref="Exception">Exceptions of <see cref="XElement.Save"/> and <see cref="AFile.Save"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="XElement.Save"/> and <see cref="filesystem.save"/>.</exception>
 		public static void SaveElem(this XElement t, string file, bool backup = false, SaveOptions? options = default)
 		{
-			AFile.Save(file, temp => {
+			filesystem.save(file, temp => {
 				if(options.HasValue) t.Save(temp, options.GetValueOrDefault()); else t.Save(temp);
 			}, backup);
 		}
 
 		/// <summary>
 		/// Saves XML to a file in a safer way.
-		/// Uses <see cref="XDocument.Save(string)"/> and <see cref="AFile.Save"/>
+		/// Uses <see cref="XDocument.Save(string)"/> and <see cref="filesystem.save"/>
 		/// </summary>
-		/// <exception cref="Exception">Exceptions of <see cref="XDocument.Save"/> and <see cref="AFile.Save"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="XDocument.Save"/> and <see cref="filesystem.save"/>.</exception>
 		public static void SaveDoc(this XDocument t, string file, bool backup = false, SaveOptions? options = default)
 		{
-			AFile.Save(file, temp => {
+			filesystem.save(file, temp => {
 				if(options.HasValue) t.Save(temp, options.GetValueOrDefault()); else t.Save(temp);
 			}, backup);
 		}
 	}
 }
 
-namespace Au.Util
+namespace Au.More
 {
 	/// <summary>
 	/// Contains static functions to load <b>XElement</b> and <b>XDocument</b> in a safer way.
 	/// </summary>
-	public static class AXml
+	public static class XmlUtil
 	{
 		/// <summary>
 		/// Loads XML file in a safer way.
-		/// Uses <see cref="XElement.Load(XmlReader, LoadOptions)"/> and <see cref="AFile.WaitIfLocked"/>.
+		/// Uses <see cref="XElement.Load(XmlReader, LoadOptions)"/> and <see cref="filesystem.waitIfLocked"/>.
 		/// </summary>
 		/// <param name="file">
-		/// File. Must be full path. Can contain environment variables etc, see <see cref="APath.Expand"/>.
+		/// File. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.
 		/// If starts with '&lt;', loads from XML string instead.
 		/// </param>
 		/// <param name="options"></param>
@@ -309,10 +309,10 @@ namespace Au.Util
 
 		/// <summary>
 		/// Loads XML file in a safer way.
-		/// Uses <see cref="XDocument.Load(XmlReader, LoadOptions)"/> and <see cref="AFile.WaitIfLocked"/>.
+		/// Uses <see cref="XDocument.Load(XmlReader, LoadOptions)"/> and <see cref="filesystem.waitIfLocked"/>.
 		/// </summary>
 		/// <param name="file">
-		/// File. Must be full path. Can contain environment variables etc, see <see cref="APath.Expand"/>.
+		/// File. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.
 		/// If starts with '&lt;', loads from XML string instead.
 		/// </param>
 		/// <param name="options"></param>
@@ -326,8 +326,8 @@ namespace Au.Util
 
 		static XContainer _Load(string file, LoadOptions options, bool doc) {
 			if (file.Starts('<')) return _Load2(file, options, doc, true);
-			file = APath.NormalizeForNET_(file);
-			return AFile.WaitIfLocked(() => _Load2(file, options, doc, false));
+			file = pathname.NormalizeForNET_(file);
+			return filesystem.waitIfLocked(() => _Load2(file, options, doc, false));
 
 			static XContainer _Load2(string file, LoadOptions options, bool doc, bool isString) {
 				using var r = isString ? new XmlTextReader(new StringReader(file)) : new XmlTextReader(file); //to preserve \r\n

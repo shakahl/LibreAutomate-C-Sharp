@@ -12,7 +12,7 @@ using System.Reflection;
 using System.Linq;
 
 using Au.Types;
-using Au.Util;
+using Au.More;
 
 using Microsoft.CodeAnalysis;
 using System.Collections.Immutable;
@@ -48,7 +48,7 @@ namespace Au.Compiler
 
 			public _MR(string name, string path)
 			{
-				//AOutput.Write(name);
+				//print.it(name);
 				this.name = name;
 				this.path = path;
 				_wr = new WeakReference<PortableExecutableReference>(null);
@@ -58,35 +58,35 @@ namespace Au.Compiler
 				get {
 					if(!_wr.TryGetTarget(out var r)) {
 						//for(int i=0;i<10;i++) //tested: process memory does not grow when loading same file several times
-						//APerf.First();
+						//perf.first();
 						r = MetadataReference.CreateFromFile(path, (this as _MR2)?.Prop ?? default, _DocumentationProvider.Create(path));
-						//APerf.NW();
+						//perf.nw();
 
 						_wr.SetTarget(r);
-						//AOutput.Write("LOADED", name, this is _MR2);
+						//print.it("LOADED", name, this is _MR2);
 
 						//prevent GC too early, eg in the middle of compiling many files
 						if(s_timer == null) {
 							s_timer = new Timer(_ => {
 								int nKeep = 0;
 								lock(s_cache) {
-									long timeNow = ATime.WinMilliseconds;
+									long timeNow = Environment.TickCount64;
 									foreach(var v in s_cache) {
 										if(v._refKeeper == null) continue;
 										long t = v._timeout;
 										if(timeNow >= t) v._refKeeper = null;
 										else nKeep++;
 									}
-									//AOutput.Write("timer", nRemoved);
+									//print.it("timer", nRemoved);
 									s_isTimer = nKeep > 0 ? s_timer.Change(c_timerPeriod, -1) : false;
 								}
 								if(nKeep == 0) GC.Collect();
 							});
 						}
-					} //else AOutput.Write("cached", name, this is _MR2);
+					} //else print.it("cached", name, this is _MR2);
 
 					if(!s_isTimer) s_isTimer = s_timer.Change(c_timerPeriod, -1);
-					_timeout = ATime.WinMilliseconds + c_timerPeriod - 1000;
+					_timeout = Environment.TickCount64 + c_timerPeriod - 1000;
 					_refKeeper = r;
 					return r;
 				}
@@ -123,8 +123,8 @@ namespace Au.Compiler
 		}
 
 		static List<_MR> s_cache = new List<_MR>();
-		static Timer s_timer; //SHOULDDO: ATimer. Previously Timer used less CPU, but now several times more. Maybe in Core.
-		static bool s_isTimer;
+		static Timer s_timer; //TODO: timerm. Previously Timer used less CPU, but now several times more. Maybe in Core.
+		static bool s_isTimer; //TODO: remove (timerm has a property)
 
 		/// <summary>
 		/// List containing <see cref="DefaultReferences"/> + references for which was called <see cref="Resolve"/> of this MetaReferences variable.
@@ -139,7 +139,7 @@ namespace Au.Compiler
 
 		static MetaReferences()
 		{
-			//var p1 = APerf.Create();
+			//var p1 = perf.local();
 			s_netDocProvider = new _NetDocumentationProvider();
 			//p1.Next('d');
 
@@ -155,7 +155,7 @@ namespace Au.Compiler
 			}
 			//p1.Next('c');
 
-			var auPath = AFolders.ThisAppBS + "Au.dll";
+			var auPath = folders.ThisAppBS + "Au.dll";
 			DefaultReferences.Add("Au", MetadataReference.CreateFromFile(auPath, documentation: _DocumentationProvider.Create(auPath)));
 			//p1.NW('a');
 		}
@@ -171,7 +171,7 @@ namespace Au.Compiler
 		/// Finds reference assembly file, creates PortableExecutableReference and adds to the cache.
 		/// Returns false if file not found.
 		/// </summary>
-		/// <param name="reference">Assembly filename (like "My.dll" or "My"), relative path or full path. If not full path, must be in AFolders.ThisApp.</param>
+		/// <param name="reference">Assembly filename (like "My.dll" or "My"), relative path or full path. If not full path, must be in folders.ThisApp.</param>
 		/// <exception cref="Exception">Some unexpected exception, eg failed to load the found file.</exception>
 		/// <remarks>
 		/// Can be "Alias=X.dll" - assembly reference that can be used with C# keyword 'extern alias'.
@@ -197,7 +197,7 @@ namespace Au.Compiler
 
 				var path = _ResolvePath(reference, isCOM);
 				if(path == null) return false;
-				path = APath.Normalize_(path);
+				path = pathname.Normalize_(path);
 
 				for(i = 0; i < a.Count; i++) {
 					if(a[i].path.Eqi(path) && _PropEq(a[i], alias, isCOM)) goto g1;
@@ -228,13 +228,13 @@ namespace Au.Compiler
 		static string _ResolvePath(string re, bool isCOM)
 		{
 			if(re.NE()) return null;
-			bool isFull = APath.IsFullPathExpand(ref re);
-			if(!isFull && isCOM) { isFull = true; re = AFolders.Workspace + @".interop\" + re; }
-			if(isFull) return AFile.Exists(re).isFile ? re : null;
+			bool isFull = pathname.isFullPathExpand(ref re);
+			if(!isFull && isCOM) { isFull = true; re = folders.Workspace + @".interop\" + re; }
+			if(isFull) return filesystem.exists(re).isFile ? re : null;
 
 			if(!re.Ends(".dll", true)) re += ".dll";
-			re = AFolders.ThisAppBS + re;
-			return AFile.Exists(re).isFile ? re : null;
+			re = folders.ThisAppBS + re;
+			return filesystem.exists(re).isFile ? re : null;
 
 			//note: we don't use Microsoft.CodeAnalysis.Scripting.ScriptMetadataResolver. It is very slow, makes compiling many times slower.
 		}
@@ -253,7 +253,7 @@ namespace Au.Compiler
 
 		public static bool IsDotnetAssembly(string path)
 		{
-			using var stream = AFile.LoadStream(path);
+			using var stream = filesystem.loadStream(path);
 			using var pr = new System.Reflection.PortableExecutable.PEReader(stream);
 			return pr.HasMetadata;
 		}
@@ -261,7 +261,7 @@ namespace Au.Compiler
 #if DEBUG
 		internal static void DebugPrintCachedRefs()
 		{
-			foreach(var v in s_cache) if(v.IsCached) AOutput.Write(v.name);
+			foreach(var v in s_cache) if(v.IsCached) print.it(v.name);
 		}
 #endif
 
@@ -272,8 +272,8 @@ namespace Au.Compiler
 		/// </summary>
 		class _DocumentationProvider : DocumentationProvider
 		{
-			protected ASqlite _db;
-			ASqliteStatement _stat;
+			protected sqlite _db;
+			sqliteStatement _stat;
 
 			/// <summary>
 			/// Creates documentation provider for assembly <i>asmPath</i>.
@@ -286,21 +286,21 @@ namespace Au.Compiler
 				if(s_d.TryGetValue(asmPath, out var dp)) return dp;
 
 				var xmlPath = Path.ChangeExtension(asmPath, "xml");
-				if(!AFile.GetProperties(xmlPath, out var px)) return null;
+				if(!filesystem.getProperties(xmlPath, out var px)) return null;
 
 				if(px.Size >= 10_000) {
-					var md5 = new AHash.MD5(); md5.Add(xmlPath.Lower());
-					var dbPath = AFolders.ThisAppTemp + md5.Hash.ToString() + ".db";
+					var md5 = new Hash.MD5(); md5.Add(xmlPath.Lower());
+					var dbPath = folders.ThisAppTemp + md5.Hash.ToString() + ".db";
 					try {
-						if(!AFile.GetProperties(dbPath, out var pd) || pd.LastWriteTimeUtc != px.LastWriteTimeUtc) {
-							//ADebug_.Print($"creating db: {asmPath}  ->  {dbPath}");
-							AFile.Delete(dbPath);
-							using(var d = new ASqlite(dbPath)) {
+						if(!filesystem.getProperties(dbPath, out var pd) || pd.LastWriteTimeUtc != px.LastWriteTimeUtc) {
+							//Debug_.Print($"creating db: {asmPath}  ->  {dbPath}");
+							filesystem.delete(dbPath);
+							using(var d = new sqlite(dbPath)) {
 								using var trans = d.Transaction();
 								d.Execute("CREATE TABLE doc (name TEXT PRIMARY KEY, xml TEXT)");
 								using var statInsert = d.Statement("INSERT INTO doc VALUES (?, ?)");
 
-								var xr = AXml.LoadElem(xmlPath);
+								var xr = XmlUtil.LoadElem(xmlPath);
 								foreach(var e in xr.Descendants("member")) {
 									var name = e.Attr("name");
 
@@ -311,7 +311,7 @@ namespace Au.Compiler
 									using var reader = e.CreateReader();
 									reader.MoveToContent();
 									var xml = reader.ReadInnerXml();
-									//AOutput.Write(name, xml);
+									//print.it(name, xml);
 
 									statInsert.BindAll(name, xml).Step();
 									statInsert.Reset();
@@ -321,11 +321,11 @@ namespace Au.Compiler
 							}
 							File.SetLastWriteTimeUtc(dbPath, px.LastWriteTimeUtc);
 						}
-						var db = new ASqlite(dbPath, SLFlags.SQLITE_OPEN_READONLY); //never mind: we don't dispose it on process exit
+						var db = new sqlite(dbPath, SLFlags.SQLITE_OPEN_READONLY); //never mind: we don't dispose it on process exit
 						s_d[asmPath] = dp = new _DocumentationProvider { _db = db };
 						return dp;
 					}
-					catch(Exception ex) { ADebug_.Print(ex.ToStringWithoutStack()); }
+					catch(Exception ex) { Debug_.Print(ex.ToStringWithoutStack()); }
 				}
 				return XmlDocumentationProvider.CreateFromFile(xmlPath);
 			}
@@ -338,9 +338,9 @@ namespace Au.Compiler
 						try {
 							_stat ??= _db.Statement("SELECT xml FROM doc WHERE name=?");
 							if(_stat.Bind(1, documentationMemberID).Step()) return _stat.GetText(0);
-							//ADebug_.Print(documentationMemberID);
+							//Debug_.Print(documentationMemberID);
 						}
-						catch(SLException ex) { ADebug_.Print(ex.Message); }
+						catch(SLException ex) { Debug_.Print(ex.Message); }
 						finally { _stat?.Reset(); }
 					}
 				}
@@ -349,13 +349,13 @@ namespace Au.Compiler
 
 			public override bool Equals(object obj)
 			{
-				ADebug_.PrintIf(obj != this, "Equals");
+				Debug_.PrintIf(obj != this, "Equals");
 				return obj == this;
 			}
 
 			public override int GetHashCode()
 			{
-				ADebug_.Print("GetHashCode");
+				Debug_.Print("GetHashCode");
 				return 1;
 			}
 		}
@@ -375,7 +375,7 @@ namespace Au.Compiler
 					_db = EdDatabases.OpenDoc(); //never mind: we don't dispose it on process exit
 					if(_db.Get(out string s, "SELECT xml FROM doc WHERE name='.'")) _refs = new HashSet<string>(s.Split('\n'));
 				}
-				catch(SLException ex) { ADebug_.Print(ex.Message); }
+				catch(SLException ex) { Debug_.Print(ex.Message); }
 			}
 
 			/// <summary>

@@ -23,7 +23,7 @@ This small and fast program is used to execute scripts like command line program
 
 The command line is the script name and optionally command line arguments, separated by space and optionally enclosed in "". Arguments will be in the *args* variable of the script's main function. The script must exist in current workspace.
 
-Use prefix * to wait until the script ends. Use prefix ** to wait until the script ends and capture its [ATask.WriteResult]() text. To capture **Console.Write** text, instead compile the script to .exe and run the .exe file.
+Use prefix * to wait until the script ends. Use prefix ** to wait until the script ends and capture its [scriptt.writeResult]() text. To capture **Console.Write** text, instead compile the script to .exe and run the .exe file.
 
 The exit code of this program when it waits is the script's exit code. To set it the script can use **Environment.ExitCode**. When does not wait, the exit code is the process id of the script. When fails to run (script not found, contains errors, etc), the exit code is < 0.
 

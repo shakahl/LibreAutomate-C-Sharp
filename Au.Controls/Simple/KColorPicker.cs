@@ -1,7 +1,7 @@
 ﻿using Au.Types;
 using System;
 using System.Collections.Generic;
-using Au.Util;
+using Au.More;
 using System.Windows.Interop;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -103,16 +103,16 @@ namespace Au.Controls
 		{
 			const string c_winClassName = "KColorPicker";
 			KColorPicker _cp;
-			AWnd _w;
+			wnd _w;
 			int _dpi;
 			int _cellSize;
 			const int c_nHue = 30; //number of hue columns. Must be 240-divisible.
 			const int c_nLum = 7; //number of luminance rows. Must be 240-divisible minus 1.
 
-			public AWnd Hwnd => _w;
+			public wnd Hwnd => _w;
 
 			static _Palette() {
-				AWnd.More.RegisterWindowClass(c_winClassName);
+				wnd.more.registerWindowClass(c_winClassName);
 			}
 
 			public _Palette(KColorPicker cp) {
@@ -120,8 +120,8 @@ namespace Au.Controls
 			}
 
 			protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
-				var wParent = (AWnd)hwndParent.Handle;
-				AWnd.More.CreateWindow(_wndProc = _WndProc, false, c_winClassName, null, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
+				var wParent = (wnd)hwndParent.Handle;
+				wnd.more.createWindow(_wndProc = _WndProc, false, c_winClassName, null, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
 
 				return new HandleRef(this, _w.Handle);
 			}
@@ -133,18 +133,18 @@ namespace Au.Controls
 			protected override Size MeasureOverride(Size constraint) => _Measure();
 
 			WNDPROC _wndProc;
-			nint _WndProc(AWnd w, int msg, nint wParam, nint lParam) {
+			nint _WndProc(wnd w, int msg, nint wParam, nint lParam) {
 				//var pmo = new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
-				//if (AWnd.More.PrintMsg(out string s, _w, msg, wParam, lParam, pmo)) AOutput.Write("<><c green>" + s + "<>");
+				//if (wnd.more.printMsg(out string s, _w, msg, wParam, lParam, pmo)) print.it("<><c green>" + s + "<>");
 
 				switch (msg) {
 				case Api.WM_NCCREATE:
 					_w = w;
-					ABufferedPaint.Init();
+					BufferedPaint.Init();
 					break;
 				case Api.WM_NCDESTROY:
 					_w = default;
-					ABufferedPaint.Uninit();
+					BufferedPaint.Uninit();
 					break;
 				//case Api.WM_NCHITTEST: //never mind: if in Popup, probably click closes. Currently not using in popups.
 				//	return Api.HTTRANSPARENT;
@@ -152,7 +152,7 @@ namespace Au.Controls
 					_WmLbuttondown(lParam);
 					break;
 				case Api.WM_PAINT:
-					using (var bp = new ABufferedPaint(w, true)) _Paint(bp.DC);
+					using (var bp = new BufferedPaint(w, true)) _Paint(bp.DC);
 					return default;
 				}
 
@@ -160,12 +160,12 @@ namespace Au.Controls
 			}
 
 			Size _Measure() {
-				_dpi = ADpi.OfWindow(_w);
-				int i = _cellSize = ADpi.Scale(10, _dpi);
+				_dpi = Dpi.OfWindow(_w);
+				int i = _cellSize = Dpi.Scale(10, _dpi);
 				var z = new SIZE(i, i);
 				z.width *= c_nHue; z.width++;
 				z.height *= c_nLum + 1; z.height++; z.height += _cellSize / 4;
-				return ADpi.Unscale(z, _dpi);
+				return Dpi.Unscale(z, _dpi);
 			}
 
 			void _Paint(nint dc) {
@@ -186,7 +186,7 @@ namespace Au.Controls
 							int d = Math.Abs(80 - hue); //diff from green
 							if (d <= 64) {
 								d /= 4;
-								//							if(lum==120) AOutput.Write(Math.Max(d, 10), (240-lum)/Math.Max(d, 10));
+								//							if(lum==120) print.it(Math.Max(d, 10), (240-lum)/Math.Max(d, 10));
 								lum2 -= (240 - lum) / Math.Max(d, 8);
 							}
 						}
@@ -197,7 +197,7 @@ namespace Au.Controls
 						//					if(lum==120 /*&& hue<=180*/) {
 						//						ColorInt k=ColorInt.FromBGR(col, true);
 						//						var b=k.GetPerceivedBrightness();
-						//						AOutput.Write(col.ToString("X6"), hue, lum, b);
+						//						print.it(col.ToString("X6"), hue, lum, b);
 						//					}
 
 						_Draw(col, j * z);
@@ -208,7 +208,7 @@ namespace Au.Controls
 				//black...white
 				y += _cellSize / 4;
 				for (int j = 0, gray = 0; j < c_nHue; j++, gray += gray < 120 ? 10 : 8) {
-					//				AOutput.Write(gray);
+					//				print.it(gray);
 					if (gray > 255) gray = 255;
 					var col = (gray << 16) | (gray << 8) | gray;
 					_ac[j, c_nLum] = col;
@@ -236,7 +236,7 @@ namespace Au.Controls
 			//		public bool SelectedGray => _select.lum==c_nLum;
 
 			public void SelectColor(int col) {
-				//			AOutput.Write((uint)col);
+				//			print.it((uint)col);
 				var (H, L, S) = _ColorRGBToHLS(col);
 				if (S == 0) { //gray
 					int lum = L * 255 / 240;
@@ -259,7 +259,7 @@ namespace Au.Controls
 			}
 
 			void _WmLbuttondown(nint xy) {
-				var (x, y) = AMath.NintToPOINT(xy);
+				var (x, y) = Math2.NintToPOINT(xy);
 				x--; x /= _cellSize;
 				y--; y /= _cellSize;
 				x = Math.Clamp(x, 0, c_nHue - 1);

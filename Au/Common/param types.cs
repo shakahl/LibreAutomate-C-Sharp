@@ -1,4 +1,4 @@
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -110,7 +110,7 @@ namespace Au.Types
 
 	/// <summary>
 	/// Contains x or y coordinate in screen or some other rectangle that can be specified in various ways: normal, reverse, fraction, center, max.
-	/// Used for parameters of functions like <see cref="AMouse.Move"/>, <see cref="AWnd.Move"/>.
+	/// Used for parameters of functions like <see cref="mouse.move"/>, <see cref="wnd.Move"/>.
 	/// </summary>
 	/// <remarks>
 	/// To specify a normal coordinate, assign an <b>int</b> value (implicit conversion from <b>int</b> to <b>Coord</b>). Else use static functions such as <b>Reverse</b>, <b>Fraction</b> (or assign float), <b>Center</b>, <b>Max</b>, <b>MaxInside</b>.
@@ -253,7 +253,7 @@ namespace Au.Types
 		/// <param name="w">The window.</param>
 		/// <param name="nonClient">x y are relative to the entire w rectangle, not to its client area.</param>
 		/// <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center.</param>
-		public static POINT NormalizeInWindow(Coord x, Coord y, AWnd w, bool nonClient = false, bool centerIfEmpty = false) {
+		public static POINT NormalizeInWindow(Coord x, Coord y, wnd w, bool nonClient = false, bool centerIfEmpty = false) {
 			//info: don't need widthHeight parameter because client area left/top are 0. With non-client don't need in this library and probably not useful. But if need, caller can explicitly offset the rect before calling this func.
 
 			if (centerIfEmpty) {
@@ -280,10 +280,10 @@ namespace Au.Types
 		/// <param name="x">X coordinate relative to the specified screen (default - primary).</param>
 		/// <param name="y">Y coordinate relative to the specified screen (default - primary).</param>
 		/// <param name="workArea">x y are relative to the work area.</param>
-		/// <param name="screen">If used, x y are relative to this screen. Default - primary screen. Example: <c>AScreen.Index(1)</c>.</param>
+		/// <param name="screen">If used, x y are relative to this screen. Default - primary screen. Example: <c>screen.index(1)</c>.</param>
 		/// <param name="widthHeight">Use only width and height of the screen rectangle. If false, the function adds its offset (left and top, which can be nonzero if using the work area or a non-primary screen).</param>
 		/// <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center.</param>
-		public static POINT Normalize(Coord x, Coord y, bool workArea = false, AScreen screen = default, bool widthHeight = false, bool centerIfEmpty = false) {
+		public static POINT Normalize(Coord x, Coord y, bool workArea = false, screen screen = default, bool widthHeight = false, bool centerIfEmpty = false) {
 			if (centerIfEmpty) {
 				if (x.IsEmpty) x = Center;
 				if (y.IsEmpty) y = Center;
@@ -354,7 +354,7 @@ namespace Au.Types
 	{
 #pragma warning disable 1591 //XML doc
 		public Coord x, y;
-		public AScreen screen;
+		public screen screen;
 		public bool workArea;
 		public bool inRect;
 		public RECT rect;
@@ -366,11 +366,11 @@ namespace Au.Types
 		/// <param name="x">X relative to the screen or work area. Default - center.</param>
 		/// <param name="y">X relative to the screen or work area. Default - center.</param>
 		/// <param name="workArea">x y are relative to the work area of the screen.</param>
-		/// <param name="screen">Can be used to specify a screen. Default - primary. Example: <c>AScreen.Index(1)</c>.</param>
+		/// <param name="screen">Can be used to specify a screen. Default - primary. Example: <c>screen.index(1)</c>.</param>
 		/// <remarks>
 		/// Also there is are implicit conversions from tuple (x, y) and POINT. Instead of <c>new PopupXY(x, y)</c> you can use <c>(x, y)</c>. Instead of <c>new PopupXY(p.x, p.y, false)</c> you can use <c>p</c> or <c>(POINT)p</c> .
 		/// </remarks>
-		public PopupXY(Coord x = default, Coord y = default, bool workArea = true, AScreen screen = default) {
+		public PopupXY(Coord x = default, Coord y = default, bool workArea = true, screen screen = default) {
 			this.x = x; this.y = y; this.workArea = workArea; this.screen = screen;
 		}
 
@@ -398,13 +398,13 @@ namespace Au.Types
 		/// </summary>
 		public static POINT Mouse {
 			get {
-				var p = AMouse.XY;
-				int cy = ADpi.GetSystemMetrics(Api.SM_CYCURSOR, p);
-				if (ACursor.GetCurrentVisibleCursor(out var c) && Api.GetIconInfo(c, out var u)) {
+				var p = mouse.xy;
+				int cy = Dpi.GetSystemMetrics(Api.SM_CYCURSOR, p);
+				if (MouseCursor.GetCurrentVisibleCursor(out var c) && Api.GetIconInfo(c, out var u)) {
 					if (u.hbmColor != default) Api.DeleteObject(u.hbmColor);
 					Api.DeleteObject(u.hbmMask);
 
-					//AOutput.Write(u.xHotspot, u.yHotspot);
+					//print.it(u.xHotspot, u.yHotspot);
 					p.y += cy - u.yHotspot - 1; //not perfect, but better than just to add SM_CYCURSOR or some constant value.
 					return p;
 				}
@@ -415,10 +415,10 @@ namespace Au.Types
 		/// <summary>
 		/// Gets <see cref="screen"/>.Now if not empty, else screen that contains the specified point.
 		/// </summary>
-		public AScreen GetScreen() {
+		public screen GetScreen() {
 			if (!screen.IsEmpty) return screen.Now;
 			POINT p = inRect ? Coord.NormalizeInRect(x, y, rect, centerIfEmpty: true) : Coord.Normalize(x, y, workArea);
-			return AScreen.Of(p);
+			return screen.of(p);
 		}
 	}
 
@@ -427,10 +427,8 @@ namespace Au.Types
 	/// If <b>Name</b> not set, will be used standard GUI font; then <b>Size</b> can be 0 to use size of standard GUI font.
 	/// On high-DPI screen the font size will be scaled.
 	/// </summary>
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-	public record FontSizeEtc(int Size = 0, string Name = null, bool Bold = false, bool Italic = false)
+	public record FontNSS(int Size = 0, string Name = null, bool Bold = false, bool Italic = false)
 	{
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 		/// <summary>
 		/// Creates font.
 		/// </summary>
@@ -443,27 +441,27 @@ namespace Au.Types
 
 	/// <summary>
 	/// Window handle.
-	/// Used for function parameters where the function needs a window handle as <see cref="AWnd"/> but also allows to pass a variable of any of these types: System.Windows.Forms.Control (Form or control), System.Windows.DependencyObject (WPF window or control), IntPtr (window handle).
+	/// Used for function parameters where the function needs a window handle as <see cref="wnd"/> but also allows to pass a variable of any of these types: System.Windows.Forms.Control (Form or control), System.Windows.DependencyObject (WPF window or control), IntPtr (window handle).
 	/// </summary>
 	public struct AnyWnd
 	{
 		readonly object _o;
 		AnyWnd(object o) { _o = o; }
 
-		/// <summary> Assignment of a value of type AWnd. </summary>
-		public static implicit operator AnyWnd(AWnd w) => new AnyWnd(w);
+		/// <summary> Assignment of a value of type wnd. </summary>
+		public static implicit operator AnyWnd(wnd w) => new AnyWnd(w);
 		/// <summary> Assignment of a window handle as IntPtr. </summary>
-		public static implicit operator AnyWnd(IntPtr hwnd) => new AnyWnd((AWnd)hwnd);
+		public static implicit operator AnyWnd(IntPtr hwnd) => new AnyWnd((wnd)hwnd);
 		/// <summary> Assignment of a value of type System.Windows.Forms.Control (Form or any control class). </summary>
 		public static implicit operator AnyWnd(System.Windows.Forms.Control c) => new AnyWnd(c);
 		/// <summary> Assignment of a value of type System.Windows.DependencyObject (WPF window or control). </summary>
 		public static implicit operator AnyWnd(System.Windows.DependencyObject c) => c != null ? new AnyWnd(new object[] { c }) : default;
 
 		/// <summary>
-		/// Gets the window or control handle as AWnd.
-		/// Returns default(AWnd) if not assigned.
+		/// Gets the window or control handle as wnd.
+		/// Returns default(wnd) if not assigned.
 		/// </summary>
-		public AWnd Hwnd => AWnd.Internal_.FromObject(_o);
+		public wnd Hwnd => wnd.Internal_.FromObject(_o);
 
 		/// <summary>
 		/// true if this is default(AnyWnd).
@@ -475,7 +473,7 @@ namespace Au.Types
 	/// Used for function parameters to specify multiple strings.
 	/// Contains a string like "One|Two|Three" or string[] or List&lt;string&gt;. Has implicit conversions from these types.
 	/// </summary>
-	public struct DStringList //with prefix D because this was created for ADialog
+	public struct DStringList //with prefix D because this was created for dialog
 	{
 		readonly object _o;
 		DStringList(object o) { _o = o; }

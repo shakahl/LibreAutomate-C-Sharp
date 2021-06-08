@@ -117,7 +117,7 @@ namespace Au.Triggers
 				}
 			}
 			catch(Exception ex) {
-				AOutput.Write(ex);
+				print.it(ex);
 				return false;
 			}
 			return true;
@@ -132,15 +132,15 @@ namespace Au.Triggers
 			if(_funcAfter != null) {
 				try {
 					foreach(var v in _funcAfter) {
-						var t1 = ATime.PerfMilliseconds;
+						var t1 = perf.ms;
 						bool ok = v.f(args);
-						var td = ATime.PerfMilliseconds - t1;
-						if(td > 200) AOutput.Warning($"Too slow Triggers.FuncOf function of a window trigger. Should be < 10 ms, now {td} ms. Task name: {ATask.Name}.", -1);
+						var td = perf.ms - t1;
+						if(td > 200) print.warning($"Too slow Triggers.FuncOf function of a window trigger. Should be < 10 ms, now {td} ms. Task name: {scriptt.name}.", -1);
 						if(!ok) return false;
 					}
 				}
 				catch(Exception ex) {
-					AOutput.Write(ex);
+					print.it(ex);
 					return false;
 				}
 			}
@@ -216,7 +216,7 @@ namespace Au.Triggers
 		/// Disables the trigger. Enables later when the toolbar is closed.
 		/// Use to implement single-instance toolbars.
 		/// </summary>
-		public void DisableTriggerUntilClosed(AToolbar t)
+		public void DisableTriggerUntilClosed(toolbar t)
 		{
 			TriggerBase.Disabled = true;
 			t.Closed += () => TriggerBase.Disabled = false;
@@ -229,20 +229,20 @@ namespace Au.Triggers
 	/// <example>
 	/// Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
 	/// <code><![CDATA[
-	/// Triggers.Hotkey["Ctrl+K"] = o => AOutput.Write("this trigger works with all windows");
+	/// Triggers.Hotkey["Ctrl+K"] = o => print.it("this trigger works with all windows");
 	/// Triggers.Of.Window("* Notepad"); //specifies a working window for triggers added afterwards
-	/// Triggers.Hotkey["Ctrl+F11"] = o => AOutput.Write("this trigger works only when a Notepad window is active");
-	/// Triggers.Hotkey["Ctrl+F12"] = o => AOutput.Write("this trigger works only when a Notepad window is active");
+	/// Triggers.Hotkey["Ctrl+F11"] = o => print.it("this trigger works only when a Notepad window is active");
+	/// Triggers.Hotkey["Ctrl+F12"] = o => print.it("this trigger works only when a Notepad window is active");
 	/// var wordpad = Triggers.Of.Window("* WordPad"); //specifies another working window for triggers added afterwards
-	/// Triggers.Hotkey["Ctrl+F11"] = o => AOutput.Write("this trigger works only when a WordPad window is active");
-	/// Triggers.Hotkey["Ctrl+F12"] = o => AOutput.Write("this trigger works only when a WordPad window is active");
+	/// Triggers.Hotkey["Ctrl+F11"] = o => print.it("this trigger works only when a WordPad window is active");
+	/// Triggers.Hotkey["Ctrl+F12"] = o => print.it("this trigger works only when a WordPad window is active");
 	/// Triggers.Of.AllWindows(); //let triggers added afterwards work with all windows
-	/// Triggers.Mouse[TMEdge.RightInTop25] = o => AOutput.Write("this trigger works with all windows");
+	/// Triggers.Mouse[TMEdge.RightInTop25] = o => print.it("this trigger works with all windows");
 	/// Triggers.Of.Again(wordpad); //sets a previously specified working window for triggers added afterwards
-	/// Triggers.Mouse[TMEdge.RightInBottom25] = o => AOutput.Write("this trigger works only when a WordPad window is active");
-	/// Triggers.Mouse[TMMove.DownUp] = o => AOutput.Write("this trigger works only when a WordPad window is active");
-	/// Triggers.Mouse[TMClick.Middle] = o => AOutput.Write("this trigger works only when the mouse is in a WordPad window");
-	/// Triggers.Mouse[TMWheel.Forward] = o => AOutput.Write("this trigger works only when the mouse is in a WordPad window");
+	/// Triggers.Mouse[TMEdge.RightInBottom25] = o => print.it("this trigger works only when a WordPad window is active");
+	/// Triggers.Mouse[TMMove.DownUp] = o => print.it("this trigger works only when a WordPad window is active");
+	/// Triggers.Mouse[TMClick.Middle] = o => print.it("this trigger works only when the mouse is in a WordPad window");
+	/// Triggers.Mouse[TMWheel.Forward] = o => print.it("this trigger works only when the mouse is in a WordPad window");
 	/// Triggers.Run();
 	/// ]]></code>
 	/// </example>
@@ -274,15 +274,15 @@ namespace Au.Triggers
 		/// </summary>
 		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
 		/// <remarks>
-		/// Parameters are like with <see cref="AWnd.Find"/>.
+		/// Parameters are like with <see cref="wnd.find"/>.
 		/// Example in class help.
 		/// </remarks>
-		/// <exception cref="ArgumentException">Exceptions of <see cref="AWnd.Finder"/> constructor.</exception>
+		/// <exception cref="ArgumentException">Exceptions of <see cref="wndFinder"/> constructor.</exception>
 		public TriggerScope Window(
-			[ParamString(PSFormat.AWildex)] string name = null,
-			[ParamString(PSFormat.AWildex)] string cn = null,
-			[ParamString(PSFormat.AWildex)] WOwner of = default,
-			Func<AWnd, bool> also = null, WContains contains = default)
+			[ParamString(PSFormat.wildex)] string name = null,
+			[ParamString(PSFormat.wildex)] string cn = null,
+			[ParamString(PSFormat.wildex)] WOwner of = default,
+			Func<wnd, bool> also = null, WContains contains = default)
 			=> _Window(false, name, cn, of, also, contains);
 
 		/// <summary>
@@ -290,32 +290,32 @@ namespace Au.Triggers
 		/// </summary>
 		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
 		/// <remarks>
-		/// Parameters are like with <see cref="AWnd.Find"/>.
+		/// Parameters are like with <see cref="wnd.find"/>.
 		/// Example in class help.
 		/// </remarks>
-		/// <exception cref="ArgumentException">Exceptions of <see cref="AWnd.Finder"/> constructor.</exception>
+		/// <exception cref="ArgumentException">Exceptions of <see cref="wndFinder"/> constructor.</exception>
 		public TriggerScope NotWindow(
-			[ParamString(PSFormat.AWildex)] string name = null,
-			[ParamString(PSFormat.AWildex)] string cn = null,
-			[ParamString(PSFormat.AWildex)] WOwner of = default,
-			Func<AWnd, bool> also = null, WContains contains = default)
+			[ParamString(PSFormat.wildex)] string name = null,
+			[ParamString(PSFormat.wildex)] string cn = null,
+			[ParamString(PSFormat.wildex)] WOwner of = default,
+			Func<wnd, bool> also = null, WContains contains = default)
 			=> _Window(true, name, cn, of, also, contains);
 
-		TriggerScope _Window(bool not, string name, string cn, WOwner of, Func<AWnd, bool> also, WContains contains)
-			=> _Add(not, new AWnd.Finder(name, cn, of, 0, also, contains));
+		TriggerScope _Window(bool not, string name, string cn, WOwner of, Func<wnd, bool> also, WContains contains)
+			=> _Add(not, new wndFinder(name, cn, of, 0, also, contains));
 
 		/// <summary>
 		/// Sets scope "only this window". Hotkey, autotext and mouse triggers added afterwards will work only when the specified window is active.
 		/// </summary>
 		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
-		public TriggerScope Window(AWnd.Finder f)
+		public TriggerScope Window(wndFinder f)
 			=> _Add(false, f);
 
 		/// <summary>
 		/// Sets scope "not this window". Hotkey, autotext and mouse triggers added afterwards will not work when the specified window is active.
 		/// </summary>
 		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
-		public TriggerScope NotWindow(AWnd.Finder f)
+		public TriggerScope NotWindow(wndFinder f)
 			=> _Add(true, f);
 
 		//rejected. May be used incorrectly. Rare. When really need, can use the 'also' parameter.
@@ -324,7 +324,7 @@ namespace Au.Triggers
 		///// </summary>
 		///// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
 		///// <exception cref="AuWndException">Invalid window handle.</exception>
-		//public TriggerScope Window(AWnd w)
+		//public TriggerScope Window(wnd w)
 		//	=> _Add(false, w);
 
 		///// <summary>
@@ -332,7 +332,7 @@ namespace Au.Triggers
 		///// </summary>
 		///// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
 		///// <exception cref="AuWndException">Invalid window handle.</exception>
-		//public TriggerScope NotWindow(AWnd w)
+		//public TriggerScope NotWindow(wnd w)
 		//	=> _Add(true, w);
 
 		/// <summary>
@@ -341,12 +341,12 @@ namespace Au.Triggers
 		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
 		/// <param name="any">
 		/// Specifies one or more windows.
-		/// Tip: <b>AWnd.Finder</b> has implicit conversion from string. See <see cref="AWnd.Finder.op_Implicit(string)"/>.
+		/// Tip: <b>wndFinder</b> has implicit conversion from string. See <see cref="wndFinder.op_Implicit(string)"/>.
 		/// Examples: <c>"Name"</c>, <c>"Name,Class"</c>, <c>",,Program.exe"</c>.
 		/// The easiest way to specify "all windows of program X.exe": <c>Triggers.Of.Windows(",,X.exe")</c>.
 		/// </param>
-		/// <exception cref="Exception">Exceptions of <see cref="AWnd.Finder.op_Implicit(string)"/>. This function itself does not throw exceptions.</exception>
-		public TriggerScope Windows(params AWnd.Finder[] any)
+		/// <exception cref="Exception">Exceptions of <see cref="wndFinder.op_Implicit(string)"/>. This function itself does not throw exceptions.</exception>
+		public TriggerScope Windows(params wndFinder[] any)
 			=> _Add(false, any);
 
 		/// <summary>
@@ -355,17 +355,17 @@ namespace Au.Triggers
 		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
 		/// <param name="any">See <see cref="Windows"/>.</param>
 		/// <exception cref="Exception">See <see cref="Windows"/>.</exception>
-		public TriggerScope NotWindows(params AWnd.Finder[] any)
+		public TriggerScope NotWindows(params wndFinder[] any)
 			=> _Add(true, any);
 
-		TriggerScope _Add(bool not, AWnd.Finder f)
+		TriggerScope _Add(bool not, wndFinder f)
 		{
 			if(f == null) throw new ArgumentNullException();
 			Used = true;
 			return Current = new TriggerScope(f, not);
 		}
 
-		TriggerScope _Add(bool not, AWnd.Finder[] a)
+		TriggerScope _Add(bool not, wndFinder[] a)
 		{
 			if(a.Length == 0) return _Add(not, a[0]);
 			foreach(var v in a) if(v == null) throw new ArgumentNullException();
@@ -382,7 +382,7 @@ namespace Au.Triggers
 	/// <example>See <see cref="TriggerScopes"/>.</example>
 	public class TriggerScope
 	{
-		internal readonly object o; //AWnd.Finder, AWnd.Finder[]
+		internal readonly object o; //wndFinder, wndFinder[]
 		internal readonly bool not;
 		internal int perfTime;
 
@@ -402,10 +402,10 @@ namespace Au.Triggers
 			var w = thc.Window;
 			if(!w.Is0) {
 				switch(o) {
-				case AWnd.Finder f:
+				case wndFinder f:
 					yes = f.IsMatch(w, thc);
 					break;
-				case AWnd.Finder[] a:
+				case wndFinder[] a:
 					foreach(var v in a) {
 						if(yes = v.IsMatch(w, thc)) break;
 					}
@@ -431,7 +431,7 @@ namespace Au.Triggers
 	/// 
 	/// A trigger can have up to 4 CF delegates and a window scope (<c>Triggers.Of...</c>). They are called in this order: CF assigned through <see cref="FollowingTriggersBeforeWindow"/>, <see cref="NextTriggerBeforeWindow"/>, window scope, <see cref="NextTrigger"/>, <see cref="FollowingTriggers"/>. The <b>NextX</b> properties assign the CF to the next single trigger. The <b>FollowingX</b> properties assign the CF to all following triggers until you assign another CF or null. If several are assigned, the trigger action runs only if all CF return true and the window scope matches. The <b>XBeforeWindow</b> properties are used only with hotkey, autotext and mouse triggers.
 	/// 
-	/// All CF must be as fast as possible. Slow CF can make triggers slower (or even all keyboard/mouse input); also may cause warnings and trigger failures. A big problem is the low-level hooks timeout that Windows applies to trigger hooks; see <see cref="AHookWin.LowLevelHooksTimeout"/>. A related problem - slow JIT and loading of assemblies, which can make the CF too slow the first time; in some rare cases may even need to preload assemblies or pre-JIT functions to avoid the timeout warning.
+	/// All CF must be as fast as possible. Slow CF can make triggers slower (or even all keyboard/mouse input); also may cause warnings and trigger failures. A big problem is the low-level hooks timeout that Windows applies to trigger hooks; see <see cref="More.WindowsHook.LowLevelHooksTimeout"/>. A related problem - slow JIT and loading of assemblies, which can make the CF too slow the first time; in some rare cases may even need to preload assemblies or pre-JIT functions to avoid the timeout warning.
 	///
 	/// In CF never use functions that generate keyboard or mouse events or activate windows.
 	/// </remarks>
@@ -439,19 +439,19 @@ namespace Au.Triggers
 	/// Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
 	/// <code><![CDATA[
 	/// //examples of assigning a callback function (CF) to a single trigger
-	/// Triggers.FuncOf.NextTrigger = o => AKeys.IsCapsLock; //o => AKeys.IsCapsLock is the callback function (lambda)
-	/// Triggers.Hotkey["Ctrl+K"] = o => AOutput.Write("action: Ctrl+K while CapsLock is on");
-	/// Triggers.FuncOf.NextTrigger = o => { var v = o as HotkeyTriggerArgs; AOutput.Write($"func: mod={v.Mod}"); return AMouse.IsPressed(MButtons.Left); };
-	/// Triggers.Hotkey["Ctrl+Shift?+B"] = o => AOutput.Write("action: mouse left button + Ctrl+B or Ctrl+Shift+B");
+	/// Triggers.FuncOf.NextTrigger = o => keys.isCapsLock; //o => keys.isCapsLock is the callback function (lambda)
+	/// Triggers.Hotkey["Ctrl+K"] = o => print.it("action: Ctrl+K while CapsLock is on");
+	/// Triggers.FuncOf.NextTrigger = o => { var v = o as HotkeyTriggerArgs; print.it($"func: mod={v.Mod}"); return mouse.isPressed(MButtons.Left); };
+	/// Triggers.Hotkey["Ctrl+Shift?+B"] = o => print.it("action: mouse left button + Ctrl+B or Ctrl+Shift+B");
 	/// 
 	/// //examples of assigning a CF to multiple triggers
-	/// Triggers.FuncOf.FollowingTriggers = o => { var v = o as HotkeyTriggerArgs; AOutput.Write("func", v.Trigger); return true; };
-	/// Triggers.Hotkey["Ctrl+F8"] = o => AOutput.Write("action: " + o.Trigger);
-	/// Triggers.Hotkey["Ctrl+F9"] = o => AOutput.Write("action: " + o.Trigger);
+	/// Triggers.FuncOf.FollowingTriggers = o => { var v = o as HotkeyTriggerArgs; print.it("func", v.Trigger); return true; };
+	/// Triggers.Hotkey["Ctrl+F8"] = o => print.it("action: " + o.Trigger);
+	/// Triggers.Hotkey["Ctrl+F9"] = o => print.it("action: " + o.Trigger);
 	/// Triggers.FuncOf.FollowingTriggers = null; //stop assigning the CF to triggers added afterwards
 	/// 
 	/// //sometimes all work can be done in CF and you don't need the trigger action
-	/// Triggers.FuncOf.NextTrigger = o => { var v = o as HotkeyTriggerArgs; AOutput.Write("func: " + v.Trigger); return true; };
+	/// Triggers.FuncOf.NextTrigger = o => { var v = o as HotkeyTriggerArgs; print.it("func: " + v.Trigger); return true; };
 	/// Triggers.Hotkey["Ctrl+F12"] = null;
 	/// 
 	/// Triggers.Run();

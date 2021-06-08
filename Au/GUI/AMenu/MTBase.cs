@@ -1,5 +1,5 @@
 using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -12,25 +12,25 @@ using System.Runtime.InteropServices;
 namespace Au
 {
 	/// <summary>
-	/// Base class of <see cref="AMenu"/> and <see cref="AToolbar"/>.
+	/// Base class of <see cref="popupMenu"/> and <see cref="toolbar"/>.
 	/// </summary>
 	/// <remarks>
 	/// <i>image</i> argument of "add item" functions can be:
-	/// - file/folder path (string) - the "show" function calls <see cref="AIcon.Of"/> to get its icon. It also supports file type icons like ".txt", etc.
+	/// - file/folder path (string) - the "show" function calls <see cref="icon.of"/> to get its icon. It also supports file type icons like ".txt", etc.
 	/// - file path with prefix "imagefile:" or resource path that starts with "resources/" or has prefix "resource:" - the "show" function loads .png or .xaml image file or resource.
 	/// - string with prefix "image:" - Base-64 encoded png file. Can be created with the "Find image..." dialog.
 	/// - <see cref="FolderPath"/> - same as folder path string.
 	/// - <see cref="Image"/> - image.
-	/// - <see cref="AIcon"/> - icon. The "add item" function disposes it.
-	/// - <see cref="StockIcon"/> - the "show" function calls <see cref="AIcon.Stock"/>.
-	/// - null - if <see cref="ExtractIconPathFromCode"/> true, the "show" function tries to extract a file path from action code; then calls <see cref="AIcon.Of"/>. Else no image.
+	/// - <see cref="icon"/> - icon. The "add item" function disposes it.
+	/// - <see cref="StockIcon"/> - the "show" function calls <see cref="icon.stock"/>.
+	/// - null - if <see cref="ExtractIconPathFromCode"/> true, the "show" function tries to extract a file path from action code; then calls <see cref="icon.of"/>. Else no image.
 	/// - string "" - no image, even if <b>ExtractIconPathFromCode</b> true.
 	/// 
 	/// Item images should be of size 16x16 (small icon size). If high DPI, will scale images automatically, which makes them slightly blurred. To avoid scaling, can be used XAML images, but then slower.
 	///
-	/// Images are loaded on demand, when showing the menu or submenu etc. If fails to load, prints warning (<see cref="AOutput.Warning"/>).
+	/// Images are loaded on demand, when showing the menu or submenu etc. If fails to load, prints warning (<see cref="print.warning"/>).
 	/// 
-	/// For icon/image files use full path, unless they are in <see cref="AFolders.ThisAppImages"/>
+	/// For icon/image files use full path, unless they are in <see cref="folders.ThisAppImages"/>
 	/// 
 	/// To add an image resource in Visual Studio, use build action "Resource" for the image file.
 	/// </remarks>
@@ -41,12 +41,12 @@ namespace Au
 		private protected readonly string _sourceFile;
 		private protected readonly int _sourceLine;
 		private protected readonly int _threadId;
-		private protected AWnd _w;
+		private protected wnd _w;
 		private protected int _dpi;
-		(AWnd tt, MTItem item, RECT rect) _tt;
+		(wnd tt, MTItem item, RECT rect) _tt;
 
 		private protected MTBase() {
-			_threadId = AThread.Id;
+			_threadId = Api.GetCurrentThreadId();
 		}
 
 		private protected MTBase(string name, string f_, int l_) : this() {
@@ -55,10 +55,10 @@ namespace Au
 			_sourceLine = l_;
 		}
 
-		private protected virtual void _WmNccreate(AWnd w) {
+		private protected virtual void _WmNccreate(wnd w) {
 			_w = w;
-			ABufferedPaint.Init();
-			ACursor.SetArrowCursor_(); //workaround for: briefly shows "wait" cursor when entering mouse first time in process
+			BufferedPaint.Init();
+			MouseCursor.SetArrowCursor_(); //workaround for: briefly shows "wait" cursor when entering mouse first time in process
 		}
 
 		private protected virtual void _WmNcdestroy() {
@@ -68,16 +68,16 @@ namespace Au
 				Marshal.ReleaseComObject(_stdAO);
 				_stdAO = null;
 			}
-			ABufferedPaint.Uninit();
+			BufferedPaint.Uninit();
 		}
 
 		/// <summary>
-		/// When adding items without explicitly specified image, extract file path from item action code (for example <see cref="ARun.Run"/> argument) and use icon of that file.
+		/// When adding items without explicitly specified image, extract file path from item action code (for example <see cref="run.it"/> argument) and use icon of that file.
 		/// This property is applied to items added afterwards; submenus inherit it.
 		/// </summary>
 		/// <remarks>
-		/// Gets file path from code that contains a string like <c>@"c:\windows\system32\notepad.exe"</c> or <c>@"%AFolders.System%\notepad.exe"</c> or URL/shell.
-		/// Also supports code patterns like <c>AFolders.System + "notepad.exe"</c>, <c>AFolders.Virtual.RecycleBin</c>.
+		/// Gets file path from code that contains a string like <c>@"c:\windows\system32\notepad.exe"</c> or <c>@"%folders.System%\notepad.exe"</c> or URL/shell.
+		/// Also supports code patterns like <c>folders.System + "notepad.exe"</c>, <c>folders.shell.RecycleBin</c>.
 		/// 
 		/// If extracts file path, also in the context menu adds item "Find file" which selects the file in Explorer.
 		/// 
@@ -86,12 +86,12 @@ namespace Au
 		public bool ExtractIconPathFromCode { get; set; }
 
 		/// <summary>
-		/// Gets image cache used by all menus and toolbars (<b>AMenu</b>, <b>AToolbar</b>) of this process.
+		/// Gets image cache used by all menus and toolbars (<b>popupMenu</b>, <b>toolbar</b>) of this process.
 		/// </summary>
 		/// <remarks>
-		/// The <b>AIconImageCache</b> object can be shared with other code.
+		/// The <b>IconImageCache</b> object can be shared with other code.
 		/// </remarks>
-		public static AIconImageCache CommonImageCache { get; } = new();
+		public static IconImageCache commonImageCache { get; } = new();
 
 		/// <summary>
 		/// Execute item actions asynchronously in new threads.
@@ -103,7 +103,7 @@ namespace Au
 		public bool ActionThread { get; set; }
 
 		/// <summary>
-		/// Whether to handle exceptions in item action code. If false (default), handles exceptions and on exception calls <see cref="AOutput.Warning"/>.
+		/// Whether to handle exceptions in item action code. If false (default), handles exceptions and on exception calls <see cref="print.warning"/>.
 		/// This property is applied to items added afterwards; submenus inherit it.
 		/// </summary>
 		public bool ActionException { get; set; }
@@ -125,10 +125,10 @@ namespace Au
 		//private protected int _SourceLine(MTItem x) => x?.sourceLine ?? _sourceLine;
 		private protected string _SourceLink(MTItem x, string text) => _sourceFile == null ? null : $"<open {_sourceFile}|{x.sourceLine}>{text}<>";
 
-		private protected bool _IsOtherThread => _threadId != AThread.Id;
+		private protected bool _IsOtherThread => _threadId != Api.GetCurrentThreadId();
 
 		private protected void _ThreadTrap() {
-			if (_threadId != AThread.Id) throw new InvalidOperationException("Wrong thread.");
+			if (_threadId != Api.GetCurrentThreadId()) throw new InvalidOperationException("Wrong thread.");
 		}
 
 		/// <summary>
@@ -141,32 +141,32 @@ namespace Au
 			case Image g: im = g; dontDispose = true; break;
 			case string s when s.Length > 0:
 				try {
-					bool isImage = AImageUtil.HasImageOrResourcePrefix(s);
+					bool isImage = ImageUtil.HasImageOrResourcePrefix(s);
 					//if (ImageCache != null) {
 					dontDispose = true;
-					im = CommonImageCache.Get(s, _dpi, isImage, isImage ? null : _imageAsyncCompletion ??= _ImageAsyncCompletion, x, _OnException);
+					im = commonImageCache.Get(s, _dpi, isImage, isImage ? null : _imageAsyncCompletion ??= _ImageAsyncCompletion, x, _OnException);
 					if (x.imageAsync = im == null && !isImage) return default;
 					//} else if (isImage)
-					//	im = AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(s, (new(16, 16), _dpi));
+					//	im = ImageUtil.LoadGdipBitmapFromFileOrResourceOrString(s, (new(16, 16), _dpi));
 					//else
-					//	im = AIcon.Of(s)?.ToGdipBitmap();
+					//	im = icon.of(s)?.ToGdipBitmap();
 
 					if (im == null) _OnException(s, null);
 				}
 				catch (Exception e1) { _OnException(null, e1); }
 
 				void _OnException(string s, Exception e) {
-					AOutput.Write($"<>Failed to load image. {e?.ToStringWithoutStack() ?? s}. {_SourceLink(x, "Edit")}");
+					print.it($"<>Failed to load image. {e?.ToStringWithoutStack() ?? s}. {_SourceLink(x, "Edit")}");
 				}
 				break;
 			case StockIcon si:
-				im = AIcon.Stock(si)?.ToGdipBitmap();
+				im = icon.stock(si)?.ToGdipBitmap();
 				break;
 			case null:
 				if (x.extractIconPath == 1 && x.clicked != null) {
-					x.file = AIcon.IconPathFromCode_(x.clicked.Method, out bool cs);
+					x.file = icon.IconPathFromCode_(x.clicked.Method, out bool cs);
 					if (x.file != null && !cs) { x.image = x.file; x.extractIconPath = 2; } else x.extractIconPath = (byte)(cs ? 4 : 3);
-					//APerf.Next('c');
+					//perf.next('c');
 				}
 				//if(x.image==null && x.checkType==0) x.image = (x.submenu ? DefaultSubmenuImage : DefaultImage).Value;
 				if (x.image != null) goto g1;
@@ -180,8 +180,8 @@ namespace Au
 
 		private protected string _GetFullTooltip(MTItem b) {
 			var s = b.Tooltip;
-			if (this is AToolbar tb && !tb.DisplayText) {
-				var v = b as AToolbar.ToolbarItem;
+			if (this is toolbar tb && !tb.DisplayText) {
+				var v = b as toolbar.ToolbarItem;
 				if (s.NE()) s = v.Text;
 				else if (!v.Text.NE() && !v.IsGroup_) s = b.Text + "\n" + s;
 			}
@@ -202,10 +202,10 @@ namespace Au
 				if (!_tt.tt.IsAlive) {
 					_tt.tt = Api.CreateWindowEx(WSE.TOPMOST | WSE.TRANSPARENT, "tooltips_class32", null, Api.TTS_ALWAYSTIP | Api.TTS_NOPREFIX, 0, 0, 0, 0, _w);
 					_tt.tt.Send(Api.TTM_ACTIVATE, 1);
-					_tt.tt.Send(Api.TTM_SETMAXTIPWIDTH, 0, AScreen.Of(_w).WorkArea.Width / 3);
+					_tt.tt.Send(Api.TTM_SETMAXTIPWIDTH, 0, screen.of(_w).WorkArea.Width / 3);
 				}
 
-				if (b is AMenu.MenuItem) { //ensure the tooltip is above submenu in Z order
+				if (b is popupMenu.MenuItem) { //ensure the tooltip is above submenu in Z order
 					_tt.tt.ZorderTop();
 					if (submenuDelay > 0) submenuDelay += 100;
 					_tt.tt.Send(0x403, 3, submenuDelay > (int)_tt.tt.Send(0x415, 3) ? submenuDelay : -1); //TTM_SETDELAYTIME,TTM_GETDELAYTIME,TTDT_INITIAL
@@ -235,7 +235,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Base of <see cref="AMenu.MenuItem"/> etc.
+		/// Base of <see cref="popupMenu.MenuItem"/> etc.
 		/// </summary>
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		public abstract class MTItem
@@ -286,7 +286,7 @@ namespace Au
 					file = value;
 					if (file == null) {
 						image = null; extractIconPath = 3;
-					} else if (file.Ends(".cs") && !APath.IsFullPath(file)) {
+					} else if (file.Ends(".cs") && !pathname.isFullPath(file)) {
 						image = null; extractIconPath = 4;
 					} else {
 						image = file; extractIconPath = 2;
@@ -296,13 +296,13 @@ namespace Au
 
 			internal void GoToFile_() {
 				if (file.NE()) return;
-				if (extractIconPath == 2) ARun.SelectInExplorer(file);
-				else AScriptEditor.GoToEdit(file, 0);
+				if (extractIconPath == 2) run.selectInExplorer(file);
+				else ScriptEditor.GoToEdit(file, 0);
 			}
 
 			internal static (bool edit, bool go, string goText) CanEditOrGoToFile_(string _sourceFile, MTItem item) {
 				if (_sourceFile != null) {
-					if (AScriptEditor.Available) {
+					if (ScriptEditor.Available) {
 						if (item?.file == null) return (true, false, null);
 						return (true, true, item.extractIconPath == 2 ? "Find file" : "Open script");
 					} else if (item != null && item.extractIconPath == 2) {
@@ -329,12 +329,12 @@ namespace Au
 				}
 
 				image = im.Value;
-				if (image is AIcon ic) { image = ic.ToGdipBitmap(); image ??= ""; } //DestroyIcon now; don't extract from code.
+				if (image is icon ic) { image = ic.ToGdipBitmap(); image ??= ""; } //DestroyIcon now; don't extract from code.
 
 				clicked = click;
 				sourceLine = l_;
 
-				extractIconPath = (byte)((mt.ExtractIconPathFromCode && click is not (null or Action<AMenu> or Func<AMenu>)) ? 1 : 0);
+				extractIconPath = (byte)((mt.ExtractIconPathFromCode && click is not (null or Action<popupMenu> or Func<popupMenu>)) ? 1 : 0);
 				actionThread = mt.ActionThread;
 				actionException = mt.ActionException;
 				pathInTooltip = mt.PathInTooltip;
@@ -354,7 +354,7 @@ namespace Au.Types
 	/// Used for menu/toolbar function parameters to specify an image in different ways (file path, Image object, etc).
 	/// </summary>
 	/// <remarks>
-	/// Has implicit conversions from string, <see cref="Image"/>, <see cref="AIcon"/>, <see cref="StockIcon"/>, <see cref="FolderPath"/>.
+	/// Has implicit conversions from string, <see cref="Image"/>, <see cref="icon"/>, <see cref="StockIcon"/>, <see cref="FolderPath"/>.
 	/// More info: <see cref="MTBase"/>.
 	/// </remarks>
 	public struct MTImage
@@ -367,14 +367,14 @@ namespace Au.Types
 		///
 		public static implicit operator MTImage(Image image) => new(image);
 		///
-		public static implicit operator MTImage(AIcon icon) => new(icon);
+		public static implicit operator MTImage(icon icon) => new(icon);
 		///
 		public static implicit operator MTImage(StockIcon icon) => new(icon);
 		///
 		public static implicit operator MTImage(FolderPath path) => new((string)path);
 
 		/// <summary>
-		/// Gets the raw value stored in this variable. Can be string, Image, AIcon, StockIcon or null.
+		/// Gets the raw value stored in this variable. Can be <b>string</b>, <b>Image</b>, <b>icon</b>, <b>StockIcon</b> or null.
 		/// </summary>
 		public object Value => _o;
 	}

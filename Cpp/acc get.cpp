@@ -12,8 +12,8 @@ namespace {
 //Returns: 1 Chrome, 2 Java, 3 OpenOffice, 0 none.
 int _IsSpecWnd(HWND w, bool onlyChrome)
 {
-	if(onlyChrome) return wnd::ClassNameIs(w, L"Chrome*");
-	return wnd::ClassNameIs(w, { L"Chrome*", L"SunAwt*", L"SALFRAME" });
+	if(onlyChrome) return wn::ClassNameIs(w, L"Chrome*");
+	return wn::ClassNameIs(w, { L"Chrome*", L"SunAwt*", L"SALFRAME" });
 }
 
 void _FromPoint_GetLink(ref IAccessible*& a, ref long& elem, ref int& role)

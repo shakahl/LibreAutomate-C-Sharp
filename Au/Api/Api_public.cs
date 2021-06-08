@@ -2,91 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-using Au.Types;
-
 #pragma warning disable 649, 169 //field never assigned/used
-
-namespace Au
-{
-	/// <summary>
-	/// Gets, sets or clears the last error code of Windows API. Gets error text.
-	/// </summary>
-	/// <remarks>
-	/// Many Windows API functions, when failed, set an error code. Code 0 means no error. It is stored in an internal thread-specific int variable. But only if the API declaration's DllImport attribute has SetLastError = true.
-	/// 
-	/// Some functions of this library simply call these API functions and don't throw exception when API fail. For example, most <see cref="AWnd"/> propery-get functions.
-	/// When failed, they return false/0/null/empty. Then you can use <see cref="Code"/> to get the error code or <see cref="Message"/> to get error text.
-	/// 
-	/// Most of functions set error code only when failed, and don't clear the old error code when succeeded. Therefore may need to call <see cref="Clear"/> before.
-	///
-	/// Windows API error code definitions and documentation are not included in this library. You can look for them in API function documentation on the internet.
-	/// </remarks>
-	/// <example>
-	/// <code><![CDATA[
-	/// AWnd w = AWnd.Find("Notepag");
-	/// ALastError.Clear();
-	/// bool enabled = w.IsEnabled; //returns true if enabled, false if disabled or failed
-	/// if(!enabled && ALastError.Code != 0) { AOutput.Write(ALastError.Message); return; } //1400, Invalid window handle
-	/// AOutput.Write(enabled);
-	/// ]]></code>
-	/// </example>
-	[DebuggerStepThrough]
-	public static class ALastError
-	{
-		/// <summary>
-		/// Calls API <msdn>SetLastError</msdn>(0), which clears the Windows API last error code of this thread.
-		/// </summary>
-		/// <remarks>
-		/// Need it before calling some functions if you want to use <see cref="Code"/> or <see cref="Message"/>.
-		/// The same as <c>ALastError.Code = 0;</c>.
-		/// </remarks>
-		public static void Clear() => Api.SetLastError(0);
-
-		/// <summary>
-		/// Gets (<see cref="Marshal.GetLastWin32Error"/>) or sets (API <msdn>SetLastError</msdn>) the Windows API last error code of this thread.
-		/// </summary>
-		public static int Code {
-			get => Marshal.GetLastWin32Error();
-			set => Api.SetLastError(value);
-		}
-
-		/// <summary>
-		/// Gets the text message of the Windows API last error code of this thread.
-		/// Returns null if the code is 0.
-		/// </summary>
-		/// <remarks>
-		/// The string always ends with ".".
-		/// </remarks>
-		public static string Message => MessageFor(Code);
-
-		/// <summary>
-		/// Gets the text message of a Windows API error code.
-		/// Returns null if errorCode is 0.
-		/// </summary>
-		/// <remarks>
-		/// The string always ends with ".".
-		/// </remarks>
-		public static unsafe string MessageFor(int errorCode) {
-			if (errorCode == 0) return null;
-			if (errorCode == 1) return "The requested data or action is unavailable. (0x1)."; //or ERROR_INVALID_FUNCTION, but it's rare
-			string s = "Unknown exception";
-			char* p = null;
-			const uint fl = Api.FORMAT_MESSAGE_FROM_SYSTEM | Api.FORMAT_MESSAGE_ALLOCATE_BUFFER | Api.FORMAT_MESSAGE_IGNORE_INSERTS;
-			int r = Api.FormatMessage(fl, default, errorCode, 0, &p, 0, default);
-			if (p != null) {
-				while (r > 0 && p[r - 1] <= ' ') r--;
-				if (r > 0) {
-					if (p[r - 1] == '.') r--;
-					s = new string(p, 0, r);
-				}
-				Api.LocalFree(p);
-			}
-			s = $"{s} (0x{errorCode:X}).";
-			return s;
-		}
-	}
-}
-
 #pragma warning disable 1591 //missing XML documentation
 
 namespace Au.Types
@@ -165,7 +81,7 @@ namespace Au.Types
 	/// <summary>API <msdn>MSG</msdn></summary>
 	public struct MSG //WinMSG
 	{
-		public AWnd hwnd;
+		public wnd hwnd;
 		public int message;
 		public nint wParam;
 		public nint lParam;
@@ -173,15 +89,15 @@ namespace Au.Types
 		public POINT pt;
 
 		public override string ToString() {
-			AWnd.More.PrintMsg(out string s, this, new() { Indent = false, Number = false });
+			wnd.more.printMsg(out string s, this, new() { Indent = false, Number = false });
 			return s;
 		}
 
 		public static implicit operator MSG(in System.Windows.Forms.Message m)
-			=> new MSG { hwnd = (AWnd)m.HWnd, message = m.Msg, wParam = m.WParam, lParam = m.LParam };
+			=> new MSG { hwnd = (wnd)m.HWnd, message = m.Msg, wParam = m.WParam, lParam = m.LParam };
 
 		public static implicit operator MSG(in System.Windows.Interop.MSG m)
-			=> new MSG { hwnd = (AWnd)m.hwnd, message = m.message, wParam = m.wParam, lParam = m.lParam, time = m.time, pt = (m.pt_x, m.pt_y) };
+			=> new MSG { hwnd = (wnd)m.hwnd, message = m.message, wParam = m.wParam, lParam = m.lParam, time = m.time, pt = (m.pt_x, m.pt_y) };
 	}
 
 	/// <summary><see cref="GUITHREADINFO"/> flags.</summary>
@@ -200,12 +116,12 @@ namespace Au.Types
 	{
 		public int cbSize;
 		public GTIFlags flags;
-		public AWnd hwndActive;
-		public AWnd hwndFocus;
-		public AWnd hwndCapture;
-		public AWnd hwndMenuOwner;
-		public AWnd hwndMoveSize;
-		public AWnd hwndCaret;
+		public wnd hwndActive;
+		public wnd hwndFocus;
+		public wnd hwndCapture;
+		public wnd hwndMenuOwner;
+		public wnd hwndMoveSize;
+		public wnd hwndCaret;
 		public RECT rcCaret;
 	}
 
@@ -215,7 +131,7 @@ namespace Au.Types
 		public nint lpCreateParams;
 		public IntPtr hInstance;
 		public nint hMenu;
-		public AWnd hwndParent;
+		public wnd hwndParent;
 		public int cy;
 		public int cx;
 		public int y;
@@ -226,14 +142,14 @@ namespace Au.Types
 		public WSE dwExStyle;
 
 		public ReadOnlySpan<char> Name => lpszName == default ? default
-			: new ReadOnlySpan<char>(lpszName, Util.CharPtr_.Length(lpszName));
+			: new ReadOnlySpan<char>(lpszName, More.CharPtr_.Length(lpszName));
 		//public string Name => lpszName == default ? null : new string(lpszName);
 
 		/// <summary>
 		/// If lpszClass is atom, returns string with # prefix and atom value, like "#32770".
 		/// </summary>
 		public ReadOnlySpan<char> ClassName => (nuint)lpszClass < 0x10000 ? "#" + ((int)lpszClass).ToStringInvariant()
-			: new ReadOnlySpan<char>(lpszClass, Util.CharPtr_.Length(lpszClass));
+			: new ReadOnlySpan<char>(lpszClass, More.CharPtr_.Length(lpszClass));
 		//public string ClassName => (nuint)lpszClass < 0x10000 ? "#" + ((int)lpszClass).ToStringInvariant() : new string(lpszClass);
 
 		//tested and documented: CBT hook can change only x y cx cy.
@@ -254,10 +170,9 @@ namespace Au.Types
 		PARENTRELATIVEFORUI = 0x80094001
 	}
 
-	/// <summary>API <msdn>SetWindowPos</msdn> flags. Can be used with <see cref="AWnd.SetWindowPos"/>.</summary>
+	/// <summary>API <msdn>SetWindowPos</msdn> flags. Can be used with <see cref="wnd.SetWindowPos"/>.</summary>
 	/// <remarks>The _X flags are undocumented.</remarks>
 	[Flags]
-	[CLSCompliant(false)]
 	public enum SWPFlags : uint
 	{
 		NOSIZE = 0x1,
@@ -283,7 +198,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Special window handle values. Can be used with <see cref="AWnd.SetWindowPos"/>.
+	/// Special window handle values. Can be used with <see cref="wnd.SetWindowPos"/>.
 	/// See API <msdn>SetWindowPos</msdn>.
 	/// </summary>
 	public enum SpecHWND
@@ -297,7 +212,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Window long constants. Used with <see cref="AWnd.GetWindowLong"/> and <see cref="AWnd.SetWindowLong"/>.
+	/// Window long constants. Used with <see cref="wnd.GetWindowLong"/> and <see cref="wnd.SetWindowLong"/>.
 	/// See API <msdn>GetWindowLong</msdn>. See also API <msdn>SetWindowSubclass</msdn>.
 	/// </summary>
 	public static class GWL
@@ -320,7 +235,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Window class long constants. Used with <see cref="AWnd.More.GetClassLong"/>.
+	/// Window class long constants. Used with <see cref="wnd.more.getClassLong"/>.
 	/// See API <msdn>WNDCLASSEX</msdn>, <msdn>GetClassLong</msdn>.
 	/// </summary>
 	public static class GCL
@@ -340,9 +255,9 @@ namespace Au.Types
 	}
 
 	/// <summary>API <msdn>WNDPROC</msdn></summary>
-	public delegate nint WNDPROC(AWnd w, int msg, nint wParam, nint lParam);
+	public delegate nint WNDPROC(wnd w, int msg, nint wParam, nint lParam);
 
-	/// <summary>API <msdn>SendMessageTimeout</msdn> flags. Used with <see cref="AWnd.SendTimeout"/>.</summary>
+	/// <summary>API <msdn>SendMessageTimeout</msdn> flags. Used with <see cref="wnd.SendTimeout"/>.</summary>
 	[Flags]
 	public enum SMTFlags : uint
 	{

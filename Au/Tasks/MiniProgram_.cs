@@ -15,7 +15,7 @@ using Au.Types;
 //A minimal script starts in 70-100 ms cold, 40 hot.
 //Workaround for role miniProgram:
 //	Preload task process. Let it wait for next task. While waiting, it also can JIT etc.
-//	Then starts in 12/4 ms (cold/hot). With ATask.Setup 15/5.
+//	Then starts in 12/4 ms (cold/hot). With scriptt.setup 15/5.
 //	Except first time. Also not faster if several scripts are started without a delay. Never mind.
 //	This is implemented in this class and in Au.AppHost (just ~10 code lines added in 1 place).
 
@@ -24,22 +24,22 @@ using Au.Types;
 
 300.ms(); //give time to preload new task process
 for (int i = 0; i < 5; i++) {
-//	APerf.Cpu();
-//	APerf.Shared.First(); //slower
-	var t=ATime.PerfMilliseconds.ToStringInvariant(); t=ATime.PerfMilliseconds.ToStringInvariant();
-	ATask.Run(@"miniProgram.cs", t); //cold 10, hot 3. Without Setup: 6/2. Slower on vmware Win7+Avast.
-//	ATask.Run(@"exeProgram.cs", t); //cold 80, hot 43. Slightly slower on vmware Win7+Avast.
+//	perf.cpu();
+//	perf.shared.First(); //slower
+	var t=perf.ms.ToStringInvariant(); t=perf.ms.ToStringInvariant();
+	scriptt.run(@"miniProgram.cs", t); //cold 10, hot 3. Without Setup: 6/2. Slower on vmware Win7+Avast.
+//	scriptt.run(@"exeProgram.cs", t); //cold 80, hot 43. Slightly slower on vmware Win7+Avast.
 	600.ms(); //give time for the process to exit
 }
 
 //miniProgram.cs and exeProgram.cs:
 
-AOutput.Write(ATime.PerfMilliseconds-Int64.Parse(args[0]));
+print.it(perf.ms-Int64.Parse(args[0]));
 */
 
 //Smaller problem: .NET creates many threads. No workaround.
 
-//PROBLEM: preloaded task's windows start inactive, behind one or more windows. Unless they activate self, like ADialog.
+//PROBLEM: preloaded task's windows start inactive, behind one or more windows. Unless they activate self, like dialog.
 //	It does not depend on the foreground lock setting/API. The setting/API just enable SetForegroundWindow, but most windows don't call it.
 //	Workaround: use CBT hook. It receives HCBT_ACTIVATE even when the window does not become the foreground window.
 //		On HCBT_ACTIVATE, async-call SetForegroundWindow. Also, editor calls AllowSetForegroundWindow before starting task.
@@ -49,7 +49,7 @@ AOutput.Write(ATime.PerfMilliseconds-Int64.Parse(args[0]));
 
 //FUTURE: option to start without preloading.
 
-namespace Au.Util
+namespace Au.More
 {
 	/// <summary>
 	/// Prepares to quickly start and execute a script with role miniProgram in this preloaded task process.
@@ -73,15 +73,15 @@ namespace Au.Util
 			r = default;
 			string pipeName = new((char*)pn);
 
-			ATask.s_role = ATRole.MiniProgram;
+			scriptt.s_role = ATRole.MiniProgram;
 
-			AThread.SetComApartment_(ApartmentState.STA); //1.7 ms
+			process.ThisThreadSetComApartment_(ApartmentState.STA); //1.7 ms
 
-			ATask.AppModuleInit_(); //2.7 ms (1.8 if with AProcess.Exit below)
+			scriptt.AppModuleInit_(); //2.7 ms (1.8 if with process.thisProcessExit below)
 
 			//rejected. Now this is implemented in editor. To detect when failed uses process exit code. Never mind exception text, it is not very useful.
-			//AProcess.Exit += e => { //0.9 ms
-			//	if (s_started != 0) AOutput.TaskEvent_(e == null ? "TE" : "TF " + e.ToStringWithoutStack(), s_started);
+			//process.thisProcessExit += e => { //0.9 ms
+			//	if (s_started != 0) print.TaskEvent_(e == null ? "TE" : "TF " + e.ToStringWithoutStack(), s_started);
 			//};
 
 			for (int i = 0; ; i++) {
@@ -91,21 +91,21 @@ namespace Au.Util
 
 				//rejected: ProfileOptimization. Now everything is JIT-ed and is as fast as can be.
 
-				AThread.Start(() => {
-					//using var p2 = APerf.Create();
+				run.thread(() => {
+					//using var p2 = perf.local();
 
 					//JIT
-					AJit.Compile(typeof(Serializer_), "Deserialize");
-					AJit.Compile(typeof(Api), nameof(Api.ReadFile), nameof(Api.CloseHandle), nameof(Api.SetEnvironmentVariable));
+					Jit_.Compile(typeof(Serializer_), "Deserialize");
+					Jit_.Compile(typeof(Api), nameof(Api.ReadFile), nameof(Api.CloseHandle), nameof(Api.SetEnvironmentVariable));
 					//p2.Next();
 					var h1 = Api.CreateFile(null, Api.GENERIC_READ, 0, default, Api.OPEN_EXISTING, 0);
 					//p2.Next();
 					Marshal.StringToCoTaskMemUTF8("-");
-					AFolders.Workspace = new FolderPath("");
-					AJit.Compile(typeof(ATask), nameof(ATask.Setup), nameof(ATask.TrayIcon_));
+					folders.Workspace = new FolderPath("");
+					Jit_.Compile(typeof(scriptt), nameof(scriptt.setup), nameof(scriptt.TrayIcon_));
 					//p2.Next();
 
-					//AOutput.TaskEvent_(null, 0); //8-20 ms
+					//print.TaskEvent_(null, 0); //8-20 ms
 					Thread.Sleep(20);
 					"Au".ToLowerInvariant(); //15-40 ms
 
@@ -116,13 +116,13 @@ namespace Au.Util
 				_Hook();
 			}
 
-			//ADebug_.PrintLoadedAssemblies(true, true);
+			//Debug_.PrintLoadedAssemblies(true, true);
 
 			EFlags flags;
 
-			//using var p1 = APerf.Create();
+			//using var p1 = perf.local();
 			using (var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ, 0, default, Api.OPEN_EXISTING, 0)) {
-				if (pipe.Is0) { ADebug_.PrintNativeError_(); return; }
+				if (pipe.Is0) { Debug_.PrintNativeError_(); return; }
 				//p1.Next();
 				int size; if (!Api.ReadFile(pipe, &size, 4, out int nr, default) || nr != 4) return;
 				//p1.Next();
@@ -130,7 +130,7 @@ namespace Au.Util
 				//p1.Next();
 				var a = Serializer_.Deserialize(b);
 				//p1.Next('d');
-				ATask.s_name = a[0]; //would not need, because AppDomain.CurrentDomain.FriendlyName returns the same, but I don't trust it, it used to return a different string in the past
+				scriptt.s_name = a[0]; //would not need, because AppDomain.CurrentDomain.FriendlyName returns the same, but I don't trust it, it used to return a different string in the past
 				flags = (EFlags)(int)a[2];
 
 				r.asmFile = Marshal.StringToCoTaskMemUTF8(a[1]);
@@ -143,8 +143,8 @@ namespace Au.Util
 				}
 				//p1.Next();
 
-				string wrp = a[4]; if (wrp != null) Api.SetEnvironmentVariable("ATask.WriteResult.pipe", wrp);
-				AFolders.Workspace = new FolderPath(a[5]);
+				string wrp = a[4]; if (wrp != null) Api.SetEnvironmentVariable("scriptt.writeResult.pipe", wrp);
+				folders.Workspace = new FolderPath(a[5]);
 				s_scriptId = a[6];
 				//p1.Next();
 			}
@@ -152,19 +152,19 @@ namespace Au.Util
 
 			if (0 != (flags & EFlags.RefPaths)) AssemblyLoadContext.Default.Resolving += _ResolvingAssembly;
 
-			if (0 != (flags & EFlags.MTA)) AThread.SetComApartment_(ApartmentState.MTA);
+			if (0 != (flags & EFlags.MTA)) process.ThisThreadSetComApartment_(ApartmentState.MTA);
 
 			if (0 != (flags & EFlags.Console)) Api.AllocConsole();
 
 			//if(0 != (flags & EFlags.Config)) { //this was with .NET 4
 			//	var config = asmFile + ".config";
-			//	if(AFile.Exists(config, true).isFile) AppDomain.CurrentDomain.SetData("APP_CONFIG_FILE", config);
+			//	if(filesystem.exists(config, true).isFile) AppDomain.CurrentDomain.SetData("APP_CONFIG_FILE", config);
 			//}
 
 			if (s_hook == null) _Hook();
 
 			//Api.QueryPerformanceCounter(out s_started);
-			//AOutput.TaskEvent_("TS", s_started);
+			//print.TaskEvent_("TS", s_started);
 		}
 
 		static Assembly _ResolvingAssembly(AssemblyLoadContext alc, AssemblyName an) {
@@ -172,10 +172,10 @@ namespace Au.Util
 			foreach (var v in s_refPaths ??= Assembly.GetEntryAssembly().GetCustomAttribute<RefPathsAttribute>().Paths.Split('|')) {
 				int iName = v.Length - name.Length - 4;
 				if (iName <= 0 || v[iName - 1] != '\\' || !v.Eq(iName, name, true)) continue;
-				if (!AFile.Exists(v).isFile) continue;
+				if (!filesystem.exists(v).isFile) continue;
 				//try {
 				return alc.LoadFromAssemblyPath(v);
-				//} catch(Exception ex) { ADebug_.Print(ex.ToStringWithoutStack()); break; }
+				//} catch(Exception ex) { Debug_.Print(ex.ToStringWithoutStack()); break; }
 			}
 			return null;
 		}
@@ -197,29 +197,29 @@ namespace Au.Util
 		}
 
 		static void _Hook() {
-			s_hook = AHookWin.ThreadCbt(m => {
-				//AOutput.Write(m.code, m.wParam, m.lParam);
+			s_hook = WindowsHook.ThreadCbt(m => {
+				//print.it(m.code, m.wParam, m.lParam);
 				//switch(m.code) {
 				//case HookData.CbtEvent.ACTIVATE:
 				//case HookData.CbtEvent.SETFOCUS:
-				//	AOutput.Write((AWnd)m.wParam);
-				//	AOutput.Write(AWnd.Active);
-				//	AOutput.Write(AWnd.ThisThread.Active);
-				//	AOutput.Write(AWnd.Focused);
-				//	AOutput.Write(AWnd.ThisThread.Focused);
+				//	print.it((wnd)m.wParam);
+				//	print.it(wnd.active);
+				//	print.it(wnd.thisThread.active);
+				//	print.it(wnd.focused);
+				//	print.it(wnd.thisThread.focused);
 				//	break;
 				//}
 				if (m.code == HookData.CbtEvent.ACTIVATE) {
-					var w = (AWnd)m.wParam;
+					var w = (wnd)m.wParam;
 					if (!w.HasExStyle(WSE.NOACTIVATE)) {
-						//AOutput.Write(w);
-						//AOutput.Write(w.ExStyle);
+						//print.it(w);
+						//print.it(w.ExStyle);
 						//Api.SetForegroundWindow(w); //does not work
-						ATimer.After(1, _ => {
+						timerm.after(1, _ => {
 							if (s_hook == null) return;
-							//AOutput.Write(AWnd.Active);
-							//AOutput.Write(AWnd.ThisThread.Active);
-							bool isActive = w == AWnd.Active, activate = !isActive && w == AWnd.ThisThread.Active;
+							//print.it(wnd.active);
+							//print.it(wnd.thisThread.active);
+							bool isActive = w == wnd.active, activate = !isActive && w == wnd.thisThread.active;
 							if (isActive || activate) { s_hook.Dispose(); s_hook = null; }
 							if (activate) {
 								Api.SetForegroundWindow(w);
@@ -234,7 +234,7 @@ namespace Au.Util
 				return false;
 			});
 		}
-		static AHookWin s_hook;
+		static WindowsHook s_hook;
 
 	}
 }

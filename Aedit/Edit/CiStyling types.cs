@@ -63,8 +63,7 @@ partial class CiStyling
 		public int color;
 		public bool bold;
 
-		public TStyle(int color, bool bold)
-		{
+		public TStyle(int color, bool bold) {
 			this.color = color;
 			this.bold = bold;
 		}
@@ -76,92 +75,61 @@ partial class CiStyling
 		public static bool operator !=(TStyle a, TStyle b) => !(a == b);
 	}
 
-	public class TStyles
+	public record TStyles //note: must be record, because uses synthesized ==
 	{
-		public string FontName;
-		public int FontSize;
-		public int BackgroundColor;
+		public string FontName = "Consolas";
+		public int FontSize = 10;
+		public int BackgroundColor = 0xffffff;
 
-		public TStyle None;
-		public TStyle Comment;
-		public TStyle String;
-		public TStyle StringEscape;
-		public TStyle Number;
-		public TStyle Punctuation;
-		public TStyle Operator;
-		public TStyle Keyword;
-		public TStyle Namespace;
-		public TStyle Type;
-		public TStyle Function;
-		public TStyle Variable;
-		public TStyle Constant;
-		public TStyle Label;
-		public TStyle Preprocessor;
-		public TStyle Excluded;
-		public TStyle XmlDocText;
-		public TStyle XmlDocTag;
+		public TStyle None; //black
+		public TStyle Comment = 0x408000; //green like in VS but towards yellow
+		public TStyle String = 0xA07040; //brown, more green
+										 //0xc0c0c0; //good contrast with 0xA07040, but maybe not with white background
+										 //0xc0e000; //light yellow-green. Too vivid.
+		public TStyle StringEscape = 0xB776FB; //pink-purple like in VS
+		public TStyle Number = 0x804000; //brown, more red
+		public TStyle Punctuation; //black
+		public TStyle Operator = 0x0000ff; //blue like keyword
+		public TStyle Keyword = 0x0000ff; //blue like in VS
+		public TStyle Namespace = 0x808000; //dark yellow
+		public TStyle Type = 0x0080c0; //like in VS but more blue
+		public TStyle Function = (0, true);
+		public TStyle Variable = 0x204020; //dark green gray
+		public TStyle Constant = 0x204020; //like variable
+		public TStyle Label = 0xff00ff; //magenta
+		public TStyle Preprocessor = 0xff8000; //orange
+		public TStyle Excluded = 0x808080; //gray
+		public TStyle XmlDocText = 0x408000; //green like comment
+		public TStyle XmlDocTag = 0x808080; //gray
 
-		public TStyle LineNumber;
+		public TStyle LineNumber = 0x808080;
 
 		public static TStyles Settings {
 			get => s_styles ??= new TStyles();
 			set {
 				s_styles = value;
-				if(value != null) value._Save();
-				else AFile.Delete(s_settingsFile);
+				if (value != null) value._Save();
+				else filesystem.delete(s_settingsFile);
 			}
 		}
 		static TStyles s_styles;
 		internal static readonly string s_settingsFile = AppSettings.DirBS + "Font.csv";
 
-		public TStyles()
-		{
-			FontName = "Consolas";
-			FontSize = 10;
-			BackgroundColor = 0xffffff;
+		public TStyles() {
+			csvTable csv;
+			if (!filesystem.exists(s_settingsFile).isFile) return;
+			try { csv = csvTable.load(s_settingsFile); }
+			catch (Exception e1) { print.it(e1.ToStringWithoutStack()); return; }
+			if (csv.ColumnCount < 2) return;
 
-			//None = 0;
-			Comment = 0x408000; //green like in VS but towards yellow
-			String = 0xA07040; //brown, more green
-							   //0xc0c0c0; //good contrast with 0xA07040, but maybe not with white background
-							   //0xc0e000; //light yellow-green. Too vivid.
-			StringEscape = 0xB776FB; //pink-purple like in VS
-			Number = 0x804000; //brown, more red
-							   //Punctuation = 0; //black
-			Operator = 0x0000ff; //blue like keyword
-			Keyword = 0x0000ff; //blue like in VS
-			Namespace = 0x808000; //dark yellow
-			Type = 0x0080c0; //like in VS but more blue
-			Function = (0, true);
-			Variable = 0x204020; //dark green gray
-			Constant = 0x204020; //like variable
-			Label = 0xff00ff; //magenta
-			Preprocessor = 0xff8000; //orange
-			Excluded = 0x808080; //gray
-			XmlDocText = 0x408000; //green like comment
-			XmlDocTag = 0x808080; //gray
-
-			LineNumber = 0x808080;
-
-			_Load();
-		}
-
-		void _Load()
-		{
-			ACsv csv;
-			if(!AFile.Exists(s_settingsFile).isFile) return;
-			try { csv = ACsv.Load(s_settingsFile); }
-			catch(Exception e1) { AOutput.Write(e1.ToStringWithoutStack()); return; }
-			if(csv.ColumnCount < 2) return;
-
-			foreach(var a in csv.Data) {
-				switch(a[0]) {
+			foreach (var a in csv.Rows) {
+				switch (a[0]) {
 				case "Font":
-					if(!a[1].NE()) FontName = a[1];
-					if(a.Length > 2) { int fs = a[2].ToInt(); if(fs >= 5 && fs <= 100) FontSize = fs; }
+					if (!a[1].NE()) FontName = a[1];
+					if (a.Length > 2) { int fs = a[2].ToInt(); if (fs >= 5 && fs <= 100) FontSize = fs; }
 					break;
 				case "Background":
-					if(!a[1].NE()) BackgroundColor = a[1].ToInt();
+					if (!a[1].NE()) BackgroundColor = a[1].ToInt();
 					break;
 				case nameof(None): _Style(ref None, a); break;
 				case nameof(Comment): _Style(ref Comment, a); break;
@@ -185,16 +153,14 @@ partial class CiStyling
 				}
 			}
 
-			static void _Style(ref TStyle r, string[] a)
-			{
-				if(!a[1].NE()) r.color = a[1].ToInt();
-				if(a.Length > 2 && !a[2].NE()) r.bold = 0 != (1 & a[2].ToInt());
+			static void _Style(ref TStyle r, string[] a) {
+				if (!a[1].NE()) r.color = a[1].ToInt();
+				if (a.Length > 2 && !a[2].NE()) r.bold = 0 != (1 & a[2].ToInt());
 			}
 		}
 
-		void _Save()
-		{
-			var b = new StringBuilder(); //don't need ACsv for such simple values
+		void _Save() {
+			var b = new StringBuilder(); //don't need csvTable for such simple values
 			b.AppendFormat("Font, {0}, {1}\r\n", FontName, FontSize);
 			b.Append("Background, 0x").AppendLine(BackgroundColor.ToString("X6"));
 			_Style(nameof(None), None);
@@ -217,25 +183,22 @@ partial class CiStyling
 			_Style(nameof(XmlDocTag), XmlDocTag);
 			_Style(nameof(LineNumber), LineNumber);
 
-			void _Style(string name, TStyle r)
-			{
+			void _Style(string name, TStyle r) {
 				b.Append(name).Append(", 0x").Append(r.color.ToString("X6"));
-				if(r.bold) b.Append(", 1");
+				if (r.bold) b.Append(", 1");
 				b.AppendLine();
 			}
 
-			AFile.SaveText(s_settingsFile, b.ToString());
+			filesystem.saveText(s_settingsFile, b.ToString());
 		}
 
 		/// <summary>
 		/// Gets colors, bold, but not font properties.
 		/// </summary>
-		public TStyles(KScintilla sci)
-		{
+		public TStyles(KScintilla sci) {
 			BackgroundColor = ColorInt.SwapRB(sci.Call(SCI_STYLEGETBACK));
 
-			TStyle _Get(EToken tok)
-			{
+			TStyle _Get(EToken tok) {
 				int color = ColorInt.SwapRB(sci.Call(SCI_STYLEGETFORE, (int)tok));
 				bool bold = 0 != sci.Call(SCI_STYLEGETBOLD, (int)tok);
 				return new TStyle(color, bold);
@@ -263,17 +226,15 @@ partial class CiStyling
 			LineNumber = _Get(EToken.LineNumber);
 		}
 
-		public void ToScintilla(KScintilla sci)
-		{
+		public void ToScintilla(KScintilla sci) {
 			sci.zStyleFont(STYLE_DEFAULT, FontName, FontSize);
 			sci.zStyleBackColor(STYLE_DEFAULT, BackgroundColor);
 			//if(None.color != 0) sci.zStyleForeColor(STYLE_DEFAULT, None.color); //also would need bold and in ctor above
 			sci.zStyleClearAll();
 
-			void _Set(EToken tok, TStyle sty)
-			{
+			void _Set(EToken tok, TStyle sty) {
 				sci.zStyleForeColor((int)tok, sty.color);
-				if(sty.bold) sci.zStyleBold((int)tok, true);
+				if (sty.bold) sci.zStyleBold((int)tok, true);
 			}
 
 			_Set(EToken.None, None);
@@ -298,34 +259,33 @@ partial class CiStyling
 			_Set((EToken)STYLE_LINENUMBER, LineNumber);
 		}
 
-		public TStyle GetStyle(EToken token)
-		{
-			switch(token) {
-			case EToken.None: return None;
-			case EToken.Comment: return Comment;
-			case EToken.String: return String;
-			case EToken.StringEscape: return StringEscape;
-			case EToken.Number: return Number;
-			case EToken.Punctuation: return Punctuation;
-			case EToken.Operator: return Operator;
-			case EToken.Keyword: return Keyword;
-			case EToken.Namespace: return Namespace;
-			case EToken.Type: return Type;
-			case EToken.Function: return Function;
-			case EToken.Variable: return Variable;
-			case EToken.Constant: return Constant;
-			case EToken.Label: return Label;
-			case EToken.Preprocessor: return Preprocessor;
-			case EToken.Excluded: return Excluded;
-			case EToken.XmlDocText: return XmlDocText;
-			case EToken.XmlDocTag: return XmlDocTag;
-			case EToken.LineNumber: return LineNumber;
-			}
-			return default;
-		}
+		//not used
+		//public TStyle GetStyle(EToken token) {
+		//	return token switch {
+		//		EToken.None => None,
+		//		EToken.Comment => Comment,
+		//		EToken.String => String,
+		//		EToken.StringEscape => StringEscape,
+		//		EToken.Number => Number,
+		//		EToken.Punctuation => Punctuation,
+		//		EToken.Operator => Operator,
+		//		EToken.Keyword => Keyword,
+		//		EToken.Namespace => Namespace,
+		//		EToken.Type => Type,
+		//		EToken.Function => Function,
+		//		EToken.Variable => Variable,
+		//		EToken.Constant => Constant,
+		//		EToken.Label => Label,
+		//		EToken.Preprocessor => Preprocessor,
+		//		EToken.Excluded => Excluded,
+		//		EToken.XmlDocText => XmlDocText,
+		//		EToken.XmlDocTag => XmlDocTag,
+		//		EToken.LineNumber => LineNumber,
+		//		_ => default,
+		//	};
+		//}
 
-		//public void SetStyle(EToken token, TStyle style)
-		//{
+		//public void SetStyle(EToken token, TStyle style) {
 		//	switch(token) {
 		//	case EToken.None: None = style; break;
 		//	case EToken.Comment: Comment = style; break;
@@ -348,31 +308,5 @@ partial class CiStyling
 		//	case EToken.LineNumber: LineNumber = style; break;
 		//	}
 		//}
-
-		public unsafe bool Equals(TStyles s)
-		{
-			return FontName == s.FontName
-				&& FontSize == s.FontSize
-				&& BackgroundColor == s.BackgroundColor
-				&& None == s.None
-				&& Comment == s.Comment
-				&& String == s.String
-				&& StringEscape == s.StringEscape
-				&& Number == s.Number
-				&& Punctuation == s.Punctuation
-				&& Operator == s.Operator
-				&& Keyword == s.Keyword
-				&& Namespace == s.Namespace
-				&& Type == s.Type
-				&& Function == s.Function
-				&& Variable == s.Variable
-				&& Constant == s.Constant
-				&& Label == s.Label
-				&& Preprocessor == s.Preprocessor
-				&& Excluded == s.Excluded
-				&& XmlDocText == s.XmlDocText
-				&& XmlDocTag == s.XmlDocTag
-				&& LineNumber == s.LineNumber;
-		}
 	}
 }

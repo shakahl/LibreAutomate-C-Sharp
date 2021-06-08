@@ -14,7 +14,7 @@ using System.Reflection;
 using Au.Types;
 
 using Microsoft.CodeAnalysis;
-using Au.Util;
+using Au.More;
 
 namespace Au.Compiler
 {
@@ -39,7 +39,7 @@ namespace Au.Compiler
 		/// <param name="fMain">Main file of the compilation. Used only for failures that are not C# errors, eg when fails to open a metadata reference file.</param>
 		/// <remarks>
 		/// This and other AddX functions add line like "[C:\path\file.cs(line,column)]: message" or "[C:\path\file.cs]: message".
-		/// Then our AOutput.Server.SetNotifications callback will convert the "[...]" part to a link.
+		/// Then our print.Server.SetNotifications callback will convert the "[...]" part to a link.
 		/// </remarks>
 		public void AddErrorOrWarning(Diagnostic d, FileNode fMain)
 		{
@@ -74,7 +74,7 @@ namespace Au.Compiler
 		public void AddError(FileNode f, string code, int pos, string message, params object[] formatArgs)
 		{
 			_StartAdd();
-			AStringUtil.LineAndColumn(code, pos, out int line, out int col);
+			StringUtil.LineAndColumn(code, pos, out int line, out int col);
 			_Append(f, line, col, message, formatArgs);
 		}
 
@@ -134,7 +134,7 @@ namespace Au.Compiler
 			//errors and warnings
 			_b.Append(s);
 
-			AOutput.Write(_b.ToString());
+			print.it(_b.ToString());
 			Clear();
 		}
 

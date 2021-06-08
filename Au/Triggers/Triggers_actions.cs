@@ -1,5 +1,5 @@
 using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -47,12 +47,12 @@ namespace Au.Triggers
 	/// <example>
 	/// <code><![CDATA[
 	/// Triggers.Options.ThreadNew();
-	/// Triggers.Options.BeforeAction = o => { AOpt.Key.KeySpeed = 10; };
-	/// Triggers.Hotkey["Ctrl+K"] = o => AOutput.Write(AOpt.Key.KeySpeed); //10
-	/// Triggers.Hotkey["Ctrl+Shift+K"] = o => AOutput.Write(AOpt.Key.KeySpeed); //10
-	/// Triggers.Options.BeforeAction = o => { AOpt.Key.KeySpeed = 20; };
-	/// Triggers.Hotkey["Ctrl+L"] = o => AOutput.Write(AOpt.Key.KeySpeed); //20
-	/// Triggers.Hotkey["Ctrl+Shift+L"] = o => AOutput.Write(AOpt.Key.KeySpeed); //20
+	/// Triggers.Options.BeforeAction = o => { opt.key.KeySpeed = 10; };
+	/// Triggers.Hotkey["Ctrl+K"] = o => print.it(opt.key.KeySpeed); //10
+	/// Triggers.Hotkey["Ctrl+Shift+K"] = o => print.it(opt.key.KeySpeed); //10
+	/// Triggers.Options.BeforeAction = o => { opt.key.KeySpeed = 20; };
+	/// Triggers.Hotkey["Ctrl+L"] = o => print.it(opt.key.KeySpeed); //20
+	/// Triggers.Hotkey["Ctrl+Shift+L"] = o => print.it(opt.key.KeySpeed); //20
 	/// ]]></code>
 	/// </example>
 	public class TriggerOptions
@@ -70,7 +70,7 @@ namespace Au.Triggers
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
 		/// Multiple actions in same thread cannot run simultaneously. Actions in different threads can run simultaneously.
-		/// There is no "end old running action" feature. If need it, use other script. Example: <c>Triggers.Hotkey["Ctrl+M"] = o => ATask.RunWait("Other Script");</c>.
+		/// There is no "end old running action" feature. If need it, use other script. Example: <c>Triggers.Hotkey["Ctrl+M"] = o => scriptt.runWait("Other Script");</c>.
 		/// There is no "temporarily pause old running action to run new action" feature. As well as for scripts.
 		/// The thread has <see cref="ApartmentState.STA"/>.
 		/// There are several <b>ThreadX</b> functions. Only the last called function is active. If none called, it is the same as called this function without arguments.
@@ -88,7 +88,7 @@ namespace Au.Triggers
 		/// Run trigger actions in same thread as <see cref="ActionTriggers.Run"/>.
 		/// </summary>
 		/// <remarks>
-		/// The action must be as fast as possible, else it will block triggers etc. Use to create and show toolbars (<see cref="AToolbar"/>). Rarely used for other purposes.
+		/// The action must be as fast as possible, else it will block triggers etc. Use to create and show toolbars (<see cref="toolbar"/>). Rarely used for other purposes.
 		/// </remarks>
 		public void ThreadMain() {
 			_New();
@@ -137,11 +137,11 @@ namespace Au.Triggers
 
 		/// <summary>
 		/// A function to run before the trigger action.
-		/// For example, it can set <see cref="AOpt"/> options.
+		/// For example, it can set <see cref="opt"/> options.
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
-		/// Triggers.Options.BeforeAction = o => { AOpt.Key.KeySpeed = 20; AOpt.Key.TextSpeed = 5; };
+		/// Triggers.Options.BeforeAction = o => { opt.key.KeySpeed = 20; opt.key.TextSpeed = 5; };
 		/// ]]></code>
 		/// </example>
 		public Action<TOBAArgs> BeforeAction { set => _New().before = value; }
@@ -152,7 +152,7 @@ namespace Au.Triggers
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
-		/// Triggers.Options.AfterAction = o => { if(o.Exception!=null) AOutput.Write(o.Exception.Message); else AOutput.Write("completed successfully"); };
+		/// Triggers.Options.AfterAction = o => { if(o.Exception!=null) print.it(o.Exception.Message); else print.it("completed successfully"); };
 		/// ]]></code>
 		/// </example>
 		public Action<TOBAArgs> AfterAction { set => _New().after = value; }
@@ -205,54 +205,54 @@ namespace Au.Triggers
 	class TriggerActionThreads
 	{
 		public void Run(ActionTrigger trigger, TriggerArgs args, int muteMod) {
-			//APerf.First();
+			//perf.first();
 			Action actionWrapper = () => {
-				var opt = trigger.options;
-				var oldAOpt = opt.thread == TOThread.New ? default : AOpt.Scope.All(inherit: false);
+				var o = trigger.options;
+				var oldOpt = o.thread == TOThread.New ? default : opt.scope.all(inherit: false);
 				try {
 					_MuteMod(ref muteMod);
 
 					string sTrigger = null; long startTime = 0;
-					//APerf.Next();
-					if (ATask.Role == ATRole.MiniProgram) {
+					//perf.next();
+					if (scriptt.role == ATRole.MiniProgram) {
 						sTrigger = trigger.ToString();
 						Api.QueryPerformanceCounter(out startTime);
-						AOutput.TaskEvent_("AS " + sTrigger, startTime, trigger.sourceFile, trigger.sourceLine);
-						//APerf.Next();
+						print.TaskEvent_("AS " + sTrigger, startTime, trigger.sourceFile, trigger.sourceLine);
+						//perf.next();
 					}
 
 					var baArgs = new TOBAArgs(args); //struct
 #if true
-					opt.before?.Invoke(baArgs);
+					o.before?.Invoke(baArgs);
 #else
-					if(opt.before != null) {
+					if(o.before != null) {
 						bool called = false;
-						if(t_beforeCalled == null) t_beforeCalled = new List<Action<bool>> { opt.before };
-						else if(!t_beforeCalled.Contains(opt.before)) t_beforeCalled.Add(opt.before);
+						if(t_beforeCalled == null) t_beforeCalled = new List<Action<bool>> { o.before };
+						else if(!t_beforeCalled.Contains(o.before)) t_beforeCalled.Add(o.before);
 						else called = true;
-						opt.before(!called);
+						o.before(!called);
 					}
 #endif
 					try {
-						//APerf.NW();
+						//perf.nw();
 						trigger.Run(args);
 
-						if (sTrigger != null) AOutput.TaskEvent_("AE", startTime, trigger.sourceFile, trigger.sourceLine);
+						if (sTrigger != null) print.TaskEvent_("AE", startTime, trigger.sourceFile, trigger.sourceLine);
 					}
 					catch (Exception e1) {
-						if (sTrigger != null) AOutput.TaskEvent_("AF", startTime, trigger.sourceFile, trigger.sourceLine);
+						if (sTrigger != null) print.TaskEvent_("AF", startTime, trigger.sourceFile, trigger.sourceLine);
 
 						baArgs.Exception = e1;
-						AOutput.Write(e1);
+						print.it(e1);
 					}
-					opt.after?.Invoke(baArgs);
+					o.after?.Invoke(baArgs);
 				}
 				catch (Exception e2) {
-					AOutput.Write(e2);
+					print.it(e2);
 				}
 				finally {
-					oldAOpt.Dispose();
-					if (opt.flags.Has(TOFlags.Single)) _d.TryRemove(trigger, out _);
+					oldOpt.Dispose();
+					if (o.flags.Has(TOFlags.Single)) _d.TryRemove(trigger, out _);
 				}
 			};
 			//never mind: we should not create actionWrapper if cannot run. But such cases are rare. Fast and small, about 64 bytes.
@@ -278,7 +278,7 @@ namespace Au.Triggers
 							if (thread.IsAlive) canRun = false;
 							break;
 						case Task task:
-							//AOutput.Write(task.Status);
+							//print.it(task.Status);
 							switch (task.Status) {
 							case TaskStatus.RanToCompletion: case TaskStatus.Faulted: case TaskStatus.Canceled: break;
 							default: canRun = false; break;
@@ -320,7 +320,7 @@ namespace Au.Triggers
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static void _OutOfMemory() {
-			AOutput.Warning("There is not enough memory available to start the trigger action thread.", -1); //info: -1 because would need much memory for stack trace
+			print.warning("There is not enough memory available to start the trigger action thread.", -1); //info: -1 because would need much memory for stack trace
 		}
 
 		List<_Thread> _a = new List<_Thread>();
@@ -348,7 +348,7 @@ namespace Au.Triggers
 					_q = new Queue<_Action>();
 					_event = new(false);
 					try {
-						AThread.Start(() => {
+						run.thread(() => {
 							try {
 								while (!_disposed && _event.WaitOne()) {
 									while (!_disposed) {
@@ -357,7 +357,7 @@ namespace Au.Triggers
 											g1:
 											if (_q.Count == 0) { _running = false; break; }
 											x = _q.Dequeue();
-											if (x.time != 0 && ATime.PerfMilliseconds > x.time) goto g1;
+											if (x.time != 0 && perf.ms > x.time) goto g1;
 											_running = true;
 										}
 										x.actionWrapper();
@@ -367,7 +367,7 @@ namespace Au.Triggers
 							finally {
 								_event.Dispose(); _event = null;
 								_q = null; _running = false; //restart if aborted
-															 //AOutput.Write("thread ended");
+															 //print.it("thread ended");
 							}
 						});
 					}
@@ -383,7 +383,7 @@ namespace Au.Triggers
 					if (_running) {
 						if (ifRunningWaitMS == 0) {
 							if (!trigger.options.flags.Has(TOFlags.NoWarning))
-								AOutput.Write("Warning: can't run the trigger action because an action is running in this thread." +
+								print.it("Warning: can't run the trigger action because an action is running in this thread." +
 									" To run simultaneously or wait, use one of Triggers.Options.ThreadX functions." +
 									" To disable this warning: Triggers.Options.Thread(noWarning: true);." +
 									" Trigger: " + trigger);
@@ -394,7 +394,7 @@ namespace Au.Triggers
 						_running = true;
 						//if(ifRunningWaitMS > 0 && ifRunningWaitMS < 1000000000) ifRunningWaitMS += 1000;
 					}
-					_q.Enqueue(new _Action { actionWrapper = actionWrapper, time = ifRunningWaitMS <= 0 ? 0 : ATime.PerfMilliseconds + ifRunningWaitMS });
+					_q.Enqueue(new _Action { actionWrapper = actionWrapper, time = ifRunningWaitMS <= 0 ? 0 : perf.ms + ifRunningWaitMS });
 				}
 				_event.Set();
 				return R;
@@ -430,7 +430,7 @@ namespace Au.Triggers
 		//			_q = new Queue<_Action>();
 		//			_event = Api.CreateEvent(false);
 		//			try {
-		//				AThread.Start(() => {
+		//				run.thread(() => {
 		//					try {
 		//						while(!_disposed && 0 == Api.WaitForSingleObject(_event, -1)) {
 		//							while(!_disposed) {
@@ -439,7 +439,7 @@ namespace Au.Triggers
 		//									g1:
 		//									if(_q.Count == 0) { _running = false; break; }
 		//									x = _q.Dequeue();
-		//									if(x.time != 0 && ATime.PerfMilliseconds > x.time) goto g1;
+		//									if(x.time != 0 && perf.ms > x.time) goto g1;
 		//									_running = true;
 		//								}
 		//								x.actionWrapper();
@@ -449,7 +449,7 @@ namespace Au.Triggers
 		//					finally {
 		//						_event.Dispose();
 		//						_q = null; _running = false; //restart if aborted
-		//													 //AOutput.Write("thread ended");
+		//													 //print.it("thread ended");
 		//					}
 		//				});
 		//			}
@@ -465,7 +465,7 @@ namespace Au.Triggers
 		//			if(_running) {
 		//				if(ifRunningWaitMS == 0) {
 		//					if(!trigger.options.flags.Has(TOFlags.NoWarning))
-		//						AOutput.Write("Warning: can't run the trigger action because an action is running in this thread." +
+		//						print.it("Warning: can't run the trigger action because an action is running in this thread." +
 		//							" To run simultaneously or wait, use one of Triggers.Options.ThreadX functions." +
 		//							" To disable this warning: Triggers.Options.Thread(noWarning: true);." +
 		//							" Trigger: " + trigger);
@@ -476,7 +476,7 @@ namespace Au.Triggers
 		//				_running = true;
 		//				//if(ifRunningWaitMS > 0 && ifRunningWaitMS < 1000000000) ifRunningWaitMS += 1000;
 		//			}
-		//			_q.Enqueue(new _Action { actionWrapper = actionWrapper, time = ifRunningWaitMS <= 0 ? 0 : ATime.PerfMilliseconds + ifRunningWaitMS });
+		//			_q.Enqueue(new _Action { actionWrapper = actionWrapper, time = ifRunningWaitMS <= 0 ? 0 : perf.ms + ifRunningWaitMS });
 		//		}
 		//		Api.SetEvent(_event);
 		//		return R;
@@ -492,10 +492,10 @@ namespace Au.Triggers
 		void _MuteMod(ref int muteMod) {
 			switch (Interlocked.Exchange(ref muteMod, 0)) {
 			case c_modRelease:
-				AKeys.Internal_.ReleaseModAndDisableModMenu();
+				keys.Internal_.ReleaseModAndDisableModMenu();
 				break;
 			case c_modCtrl:
-				AKeys.Internal_.SendKey(KKey.Ctrl); //disable Alt/Win menu
+				keys.Internal_.SendKey(KKey.Ctrl); //disable Alt/Win menu
 				break;
 			}
 		}

@@ -1,5 +1,5 @@
 using Au.Types;
-using Au.Util;
+using Au.More;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -168,10 +168,10 @@ namespace Au.Controls
 				var a = _marginDpi ??= new int[Call(SCI_GETMARGINS)];
 				if (chars) {
 					value *= zStyleMeasureStringWidth(STYLE_LINENUMBER, "8");
-					a[margin] = ADpi.Unscale(value, _dpi).ToInt();
+					a[margin] = Dpi.Unscale(value, _dpi).ToInt();
 				} else {
 					a[margin] = value;
-					value = ADpi.Scale(value, _dpi);
+					value = Dpi.Scale(value, _dpi);
 				}
 			} else {
 				var a = _marginDpi;
@@ -199,7 +199,7 @@ namespace Au.Controls
 		internal void zMarginWidthsDpiChanged_() {
 			var a = _marginDpi; if (a == null) return;
 			for (int i = a.Length; --i >= 0;) {
-				if (a[i] > 0) Call(SCI_SETMARGINWIDTHN, i, ADpi.Scale(a[i], _dpi));
+				if (a[i] > 0) Call(SCI_SETMARGINWIDTHN, i, Dpi.Scale(a[i], _dpi));
 			}
 		}
 
@@ -253,7 +253,7 @@ namespace Au.Controls
 			//zSetStringString(SCI_SETPROPERTY, "lexer.cpp.verbatim.strings.allow.escapes\0" + "1"); //expected to style "", but it does nothing
 
 
-			//AOutput.Write(zGetString(SCI_DESCRIBEKEYWORDSETS, 0, -1));
+			//print.it(zGetString(SCI_DESCRIBEKEYWORDSETS, 0, -1));
 			//Primary keywords and identifiers
 			//Secondary keywords and identifiers
 			//Documentation comment keywords
