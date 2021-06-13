@@ -350,6 +350,9 @@ static class Menus
 		[Command(image = "resources/images/settingsgroup_16x.xaml")]
 		public static void Options() { DOptions.ZShow(); }
 
+		[Command]
+		public static void Icons() { DIcons.ZShow(); }
+
 		[Command(separator = true, target = "Output")]
 		public static class Output
 		{

@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-//using System.Linq;
+using System.Linq;
 //using System.Xml.Linq;
 //using System.Runtime;
 
@@ -42,6 +42,8 @@ using System.Windows.Forms;
 //using System.Windows.Media.Imaging;
 //using System.Resources;
 
+using static Au.Controls.Sci;
+
 #if TRACE
 
 #pragma warning disable 169
@@ -58,8 +60,10 @@ static unsafe class Test
 {
 
 	public static void FromMenubar() {
-		//Au.Types.
-		//Au.
+		//var doc = Panels.Editor.ZActiveDoc;
+
+		//Sci_GetStylingInfo(doc.ZSciPtr, 15, out var si); //fast
+		//print.it($"pos={doc.zCurrentPos8}, endStyled={si.endStyled}, endStyledLineStart={si.endStyledLineStart}, endStyledLine={si.endStyledLine+1}, visibleFrom={si.visibleFrom}, visibleFromLine={si.visibleFromLine+1}, visibleTo={si.visibleTo}, visibleToLine={si.visibleToLine+1}");
 
 		//Cpp.Cpp_Test();
 

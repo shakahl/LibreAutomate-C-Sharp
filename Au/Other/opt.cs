@@ -178,14 +178,12 @@ namespace Au
 			/// print.it(opt.mouse.ClickSpeed);
 			/// ]]></code>
 			/// </example>
-			public static UsingEndAction mouse(bool inherit = true)
-			{
+			public static UsingEndAction mouse(bool inherit = true) {
 				var old = _Mouse(inherit);
 				return new UsingEndAction(() => t_mouse = old);
 			}
 
-			static OMouse _Mouse(bool inherit)
-			{
+			static OMouse _Mouse(bool inherit) {
 				var old = t_mouse;
 				//t_mouse = new OMouse((old != null && inherit) ? old : Static.Mouse);
 				t_mouse = (old != null && inherit) ? new OMouse(old) : null; //lazy
@@ -206,14 +204,12 @@ namespace Au
 			/// print.it(opt.key.KeySpeed);
 			/// ]]></code>
 			/// </example>
-			public static UsingEndAction key(bool inherit = true)
-			{
+			public static UsingEndAction key(bool inherit = true) {
 				var old = _Key(inherit);
 				return new UsingEndAction(() => t_key = old);
 			}
 
-			static OKey _Key(bool inherit)
-			{
+			static OKey _Key(bool inherit) {
 				var old = t_key;
 				//t_key = new OKey((old != null && inherit) ? old : Static.Key);
 				t_key = (old != null && inherit) ? new OKey(old) : null; //lazy
@@ -234,14 +230,12 @@ namespace Au
 			/// print.it(opt.wait.Period);
 			/// ]]></code>
 			/// </example>
-			public static UsingEndAction wait(bool inherit = true)
-			{
+			public static UsingEndAction wait(bool inherit = true) {
 				var old = _WaitFor(inherit);
 				return new UsingEndAction(() => t_wait = old);
 			}
 
-			static OWait _WaitFor(bool inherit)
-			{
+			static OWait _WaitFor(bool inherit) {
 				var old = t_wait;
 				//t_waitFor = (old != null && inherit) ? new OWait(old.Period, old.DoEvents) : new OptWaitFor();
 				t_wait = (old != null && inherit) ? new OWait(old.Period, old.DoEvents) : null; //lazy
@@ -264,14 +258,12 @@ namespace Au
 			/// print.it(opt.warnings.Verbose, opt.warnings.IsDisabled("Test*"));
 			/// ]]></code>
 			/// </example>
-			public static UsingEndAction warnings(bool inherit = true)
-			{
+			public static UsingEndAction warnings(bool inherit = true) {
 				var old = _Warnings(inherit);
 				return new UsingEndAction(() => t_warnings = old);
 			}
 
-			static OWarnings _Warnings(bool inherit)
-			{
+			static OWarnings _Warnings(bool inherit) {
 				var old = t_warnings;
 				//t_warnings = new OWarnings((old != null && inherit) ? old : Static.Warnings);
 				t_warnings = (old != null && inherit) ? new OWarnings(old) : null; //lazy
@@ -293,8 +285,7 @@ namespace Au
 			/// print.it(opt.key.KeySpeed, opt.mouse.ClickSpeed);
 			/// ]]></code>
 			/// </example>
-			public static UsingEndAction all(bool inherit = true)
-			{
+			public static UsingEndAction all(bool inherit = true) {
 				var o1 = _Mouse(inherit);
 				var o2 = _Key(inherit);
 				var o3 = _WaitFor(inherit);
@@ -324,15 +315,13 @@ namespace Au.Types
 		/// Initializes this instance with default values or values copied from another instance.
 		/// </summary>
 		/// <param name="cloneOptions">If not null, copies its options into this variable.</param>
-		internal OWarnings(OWarnings cloneOptions = null)
-		{
-			if(cloneOptions != null) {
+		internal OWarnings(OWarnings cloneOptions = null) {
+			if (cloneOptions != null) {
 				_Copy(cloneOptions);
 			}
 		}
 
-		void _Copy(OWarnings o)
-		{
+		void _Copy(OWarnings o) {
 			_verbose = o._verbose;
 			_disabledWarnings = o._disabledWarnings == null ? null : new List<string>(o._disabledWarnings);
 		}
@@ -345,10 +334,10 @@ namespace Au.Types
 
 		/// <summary>
 		/// If true, some library functions may display more warnings and other info.
-		/// If not explicitly set, the default value depends on the build configuration of the main assembly: true if Debug, false if Release (optimize true). See <see cref="AssemblyUtil.IsDebug"/>.
+		/// If not explicitly set, the default value depends on the build configuration of the main assembly: true if Debug, false if Release (optimize true). See <see cref="AssemblyUtil_.IsDebug"/>.
 		/// </summary>
 		public bool Verbose {
-			get => (_verbose ??= AssemblyUtil.IsDebug) == true;
+			get => (_verbose ??= scriptt.isDebug) == true;
 			set => _verbose = value;
 		}
 
@@ -376,8 +365,7 @@ namespace Au.Types
 		/// ]]></code>
 		/// Don't use code <c>using(opt.init.warnings.Disable...</c>, it's not thread-safe.
 		/// </example>
-		public UsingEndAction Disable(params string[] warningsWild)
-		{
+		public UsingEndAction Disable(params string[] warningsWild) {
 			_disabledWarnings ??= new List<string>();
 			int restoreCount = _disabledWarnings.Count;
 			_disabledWarnings.AddRange(warningsWild);
@@ -388,11 +376,10 @@ namespace Au.Types
 		/// Returns true if the specified warning text matches a wildcard string added with <see cref="Disable"/>.
 		/// </summary>
 		/// <param name="text">Warning text. Case-insensitive.</param>
-		public bool IsDisabled(string text)
-		{
+		public bool IsDisabled(string text) {
 			string s = text ?? "";
 			var a = _disabledWarnings;
-			if(a != null) foreach(var k in a) if(s.Like(k, true)) return true;
+			if (a != null) foreach (var k in a) if (s.Like(k, true)) return true;
 			return false;
 		}
 	}
@@ -420,7 +407,7 @@ namespace Au.Types
 		/// <param name="cloneOptions">If not null, copies its options into this variable.</param>
 		internal OMouse(OMouse cloneOptions = null) //don't need public like OKey
 		{
-			if(cloneOptions != null) {
+			if (cloneOptions != null) {
 				_o = cloneOptions._o;
 			} else {
 				_o.ClickSpeed = 20;
@@ -439,10 +426,9 @@ namespace Au.Types
 
 		bool _IsStatic => this == opt.init.mouse;
 
-		int _SetValue(int value, int max, int maxStatic)
-		{
+		int _SetValue(int value, int max, int maxStatic) {
 			var m = _IsStatic ? maxStatic : max;
-			if((uint)value > m) throw new ArgumentOutOfRangeException(null, "Max " + m.ToString());
+			if ((uint)value > m) throw new ArgumentOutOfRangeException(null, "Max " + m.ToString());
 			return value;
 		}
 
@@ -532,17 +518,15 @@ namespace Au.Types
 		/// Initializes this instance with default values or values copied from another instance.
 		/// </summary>
 		/// <param name="cloneOptions">If not null, copies its options into this variable.</param>
-		public OKey(OKey cloneOptions = null)
-		{
+		public OKey(OKey cloneOptions = null) {
 			CopyOrDefault_(cloneOptions);
 		}
 
 		/// <summary>
 		/// Copies options from o, or sets default if o==null. Like ctor does.
 		/// </summary>
-		internal void CopyOrDefault_(OKey o)
-		{
-			if(o != null) {
+		internal void CopyOrDefault_(OKey o) {
+			if (o != null) {
 				_textSpeed = o._textSpeed;
 				_keySpeed = o._keySpeed;
 				_clipboardKeySpeed = o._clipboardKeySpeed;
@@ -569,15 +553,15 @@ namespace Au.Types
 				NoBlockInput = default;
 				Hook = default;
 			}
-//#if DEBUG
-//			if(o != null) {
-//				Debug1 = o.Debug1;
-//				Debug2 = o.Debug2;
-//			} else {
-//				Debug1 = default;
-//				Debug2 = default;
-//			}
-//#endif
+			//#if DEBUG
+			//			if(o != null) {
+			//				Debug1 = o.Debug1;
+			//				Debug2 = o.Debug2;
+			//			} else {
+			//				Debug1 = default;
+			//				Debug2 = default;
+			//			}
+			//#endif
 		}
 
 		//rejected. Use opt.scope.
@@ -590,10 +574,9 @@ namespace Au.Types
 		/// Returns this variable, or <b>OKey</b> cloned from this variable and possibly modified by <b>Hook</b>.
 		/// </summary>
 		/// <param name="wFocus">The focused or active window. Use Lib.GetWndFocusedOrActive().</param>
-		internal OKey GetHookOptionsOrThis_(wnd wFocus)
-		{
+		internal OKey GetHookOptionsOrThis_(wnd wFocus) {
 			var call = this.Hook;
-			if(call == null || wFocus.Is0) return this;
+			if (call == null || wFocus.Is0) return this;
 			var R = new OKey(this);
 			call(new OKeyHookData(R, wFocus));
 			return R;
@@ -661,10 +644,9 @@ namespace Au.Types
 
 		bool _IsStatic => this == opt.init.key;
 
-		int _SetValue(int value, int max, int maxStatic)
-		{
+		int _SetValue(int value, int max, int maxStatic) {
 			var m = _IsStatic ? maxStatic : max;
-			if((uint)value > m) throw new ArgumentOutOfRangeException(null, "Max " + m.ToString());
+			if ((uint)value > m) throw new ArgumentOutOfRangeException(null, "Max " + m.ToString());
 			return value;
 		}
 		//T _SetValue<T>(T value, T max, T maxStatic) where T : IComparable<T>
@@ -793,10 +775,10 @@ namespace Au.Types
 		/// <seealso cref="OKeyHookData"/>
 		public Action<OKeyHookData> Hook { get; set; }
 
-//#if DEBUG
-//		public int Debug1 { get; set; }
-//		public int Debug2 { get; set; }
-//#endif
+		//#if DEBUG
+		//		public int Debug1 { get; set; }
+		//		public int Debug2 { get; set; }
+		//#endif
 	}
 
 	/// <summary>
@@ -913,8 +895,7 @@ namespace Au.Types
 		public bool DoEvents { get; set; }
 
 		///
-		public OWait(int period = 10, bool doEvents = false)
-		{
+		public OWait(int period = 10, bool doEvents = false) {
 			Period = period; DoEvents = doEvents;
 		}
 

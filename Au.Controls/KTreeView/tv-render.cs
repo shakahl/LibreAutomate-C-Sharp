@@ -157,6 +157,9 @@ namespace Au.Controls
 		//		_Invalidate();
 		//	}
 
+		//shoulddo: support custom background color
+		//public ColorInt? BackgroundColor { get; set; }
+
 		void _Render(IntPtr dc, RECT rUpdate) {
 			//if (BackgroundColor != null) {
 

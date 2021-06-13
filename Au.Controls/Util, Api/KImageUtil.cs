@@ -137,6 +137,9 @@ namespace Au.Controls
 			/// <summary>The string isn't image.</summary>
 			None,
 
+			/// <summary>XAML image.</summary>
+			Xaml,
+
 			/// <summary>Compressed and Base64-encoded .bmp file data with "~:" prefix. See <see cref="ImageToString(string)"/>.</summary>
 			Base64CompressedBmp,
 
@@ -198,7 +201,13 @@ namespace Au.Controls
 					c1 = (char)s[0]; c2 = (char)s[1];
 				}
 				break;
-				//case 'r': if(BytePtr_.AsciiStarts(s, "resource:")) return ImageType.Resource; break;
+			//case 'r': if(BytePtr_.AsciiStarts(s, "resource:")) return ImageType.Resource; break;
+			case '<':
+				if (BytePtr_.AsciiFindString(s, length, "xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'") > 0) {
+					if (BytePtr_.AsciiFindString(s, length, "<Path ") >= 0) return ImageType.Xaml;
+					if (BytePtr_.AsciiFindString(s, length, "<GeometryDrawing ") >= 0) return ImageType.Xaml;
+				}
+				return default;
 			}
 
 			//file path
@@ -242,8 +251,9 @@ namespace Au.Controls
 		/// <param name="s">Depends on t. File path or resource name without prefix or Base64 image data without prefix.</param>
 		/// <param name="t">Image type and string format.</param>
 		/// <param name="searchPath">Use <see cref="filesystem.searchPath"/></param>
+		/// <param name="xaml">If not null, supports XAML images. See <see cref="ImageUtil.LoadGdipBitmapFromXaml"/>.</param>
 		/// <remarks>Supports environment variables etc. If not full path, searches in <see cref="folders.ThisAppImages"/>.</remarks>
-		public static byte[] BmpFileDataFromString(string s, ImageType t, bool searchPath = false) {
+		public static byte[] BmpFileDataFromString(string s, ImageType t, bool searchPath = false, (int dpi, SIZE? size)? xaml = null) {
 			//print.it(t, s);
 			try {
 				switch (t) {
@@ -279,6 +289,9 @@ namespace Au.Controls
 				case ImageType.ShellIcon:
 				case ImageType.Cur:
 					return _IconToBytes(s, t == ImageType.Cur, searchPath);
+				case ImageType.Xaml when xaml != null:
+					var xv = xaml.Value;
+					return _ImageToBytes(ImageUtil.LoadGdipBitmapFromXaml(s, xv.dpi, xv.size));
 				}
 			}
 			catch (Exception ex) { Debug_.Print(ex.Message + "    " + s); }

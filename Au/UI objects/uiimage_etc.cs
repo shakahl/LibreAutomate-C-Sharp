@@ -196,10 +196,10 @@ namespace Au
 			if (n == 1) return _Capture(new RECT(outline[0].x, outline[0].y, 1, 1));
 
 			using var path = _CreatePath(outline);
-			RECT r = RECT.From(path.GetBounds());
+			RECT r = RECT.From(path.GetBounds(), false);
 			if (r.NoArea) {
 				path.Widen(Pens.Black); //will be transparent, but no exception. Difficult to make non-transparent line.
-				r = RECT.From(path.GetBounds());
+				r = RECT.From(path.GetBounds(), false);
 			}
 			return _Capture(r, w, usePrintWindow, path);
 		}
@@ -543,7 +543,7 @@ namespace Au
 					GraphicsPath path = null;
 					if (isAnyShape && a.Count > 1) {
 						path = _CreatePath(a);
-						r = RECT.From(path.GetBounds());
+						r = RECT.From(path.GetBounds(), false);
 					} else {
 						r.right++; r.bottom++;
 					}

@@ -45,7 +45,7 @@ namespace Au.More
 		public Bitmap Get(string imageSource, int dpi, bool? isImage = null, Action<Bitmap, object> asyncCompletion = null, object acData = null, Action<string, Exception> onException = null) {
 			lock (this) {
 				bool isIm = isImage ?? ImageUtil.HasImageOrResourcePrefix(imageSource);
-				bool isXaml = isIm && imageSource.Ends(".xaml", true);
+				bool isXaml = isIm && (imageSource.Starts('<') || imageSource.Ends(".xaml", true));
 				if (!isXaml) dpi = 96;
 				if (isIm) asyncCompletion = null;
 
@@ -103,7 +103,7 @@ namespace Au.More
 									//print.it(_images[0].images.Count, _dmb.Count, imageSource);
 								}
 							}
-						} else if (isXaml) b = ImageUtil.LoadGdipBitmapFromXaml(imageSource, (c_imageSize, c_imageSize), dpi);
+						} else if (isXaml) b = ImageUtil.LoadGdipBitmapFromXaml(imageSource, dpi, (c_imageSize, c_imageSize));
 						else b = ImageUtil.LoadGdipBitmapFromFileOrResourceOrString(imageSource);
 					}
 					catch (Exception ex) { if (onException != null) onException(imageSource, ex); else print.warning(ex.ToStringWithoutStack()); }

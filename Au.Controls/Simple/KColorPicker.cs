@@ -37,7 +37,7 @@ namespace Au.Controls
 			_tColor.TextChanged += (o, e) => {
 				int col = _GetColor(bgr: true);
 				if (!_hlsChanging) {
-					var (H, L, S) = _ColorRGBToHLS(col);
+					var (H, L, S) = ColorInt.ToHLS(col, bgr: true);
 					_hlsChanging = true;
 					if (S != 0) tH.Text = H.ToString();
 					tL.Text = L.ToString();
@@ -73,7 +73,7 @@ namespace Au.Controls
 					}
 
 					int H = tH.Text.ToInt(), L = tL.Text.ToInt(), S = tS.Text.ToInt();
-					int col = _ColorHLSToRGB(H, L, S);
+					int col = ColorInt.FromHLS(H, L, S, bgr: true);
 					_hlsChanging = true;
 					_SetColor(col, bgr: true);
 					_hlsChanging = false;
@@ -190,7 +190,7 @@ namespace Au.Controls
 								lum2 -= (240 - lum) / Math.Max(d, 8);
 							}
 						}
-						var col = _ColorHLSToRGB(hue, lum2, 240);
+						var col = ColorInt.FromHLS(hue, lum2, 240, bgr: true);
 
 						_ac[j, i] = col;
 
@@ -236,8 +236,8 @@ namespace Au.Controls
 			//		public bool SelectedGray => _select.lum==c_nLum;
 
 			public void SelectColor(int col) {
-				//			print.it((uint)col);
-				var (H, L, S) = _ColorRGBToHLS(col);
+				//print.it((uint)col);
+				var (H, L, S) = ColorInt.ToHLS(col, bgr: true);
 				if (S == 0) { //gray
 					int lum = L * 255 / 240;
 					for (int j = 0; j < c_nHue; j++) {
@@ -276,19 +276,6 @@ namespace Au.Controls
 				var w = Hwnd;
 				if (w.IsVisible) Api.InvalidateRect(w, null, false);
 			}
-		}
-
-		static int _ColorHLSToRGB(int H, int L, int S) {
-			if (S == 0) { //ColorHLSToRGB bug: returns 0 if S 0
-				int i = L * 255 / 240;
-				return i | (i << 8) | (i << 16);
-			}
-			return KApi.ColorHLSToRGB((ushort)H, (ushort)L, (ushort)S);
-		}
-
-		static (int H, int L, int S) _ColorRGBToHLS(int col) {
-			KApi.ColorRGBToHLS(col, out var H, out var L, out var S);
-			return (H, L, S);
 		}
 
 		void _SetColor(int color, bool bgr) {

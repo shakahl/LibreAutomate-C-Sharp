@@ -202,7 +202,7 @@ namespace Au
 		/// Finds editor's message-only window used with WM_COPYDATA etc.
 		/// </summary>
 		internal static wnd WndMsg_ => s_wndMsg.FindFastCached_(ref s_wmTime, null, "Aedit.m3gVxcTJN02pDrHiQ00aSQ", true);
-		static wnd s_wndMsg;
+		static readonly wnd s_wndMsg;
 		static long s_wmTime;
 
 		/// <summary>
@@ -348,6 +348,12 @@ namespace Au
 		public static bool isRunSingle => s_runSingle ??= null != Assembly.GetEntryAssembly()?.GetCustomAttribute<RunSingleAttribute>();
 		static bool? s_runSingle;
 		//note: GetEntryAssembly returns null in func called by host through coreclr_create_delegate.
+
+		/// <summary>
+		/// Returns true if the build configuration of the main assembly is Debug. Returns false if Release (optimize true).
+		/// </summary>
+		public static bool isDebug => s_debug ??= AssemblyUtil_.IsDebug(Assembly.GetEntryAssembly());
+		static bool? s_debug;
 
 		/// <summary>
 		/// Adds standard tray icon.

@@ -1,6 +1,4 @@
-﻿//#define DESIGNER //makes the form class not nested, which allows to edit the form in the designer
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;

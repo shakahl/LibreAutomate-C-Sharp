@@ -64,7 +64,7 @@ partial class CiStyling
 
 	SciCode _doc; //to detect when the active document changed
 	bool _update;
-	Range _visibleLines;
+	StartEnd _visibleLines;
 	timerm _modTimer;
 	int _modFromEnd; //like _endStyling (SCI_GETENDSTYLED), but from end
 	int _diagCounter;
@@ -99,7 +99,7 @@ partial class CiStyling
 			_StylingAndFoldingVisibleFrom0(doc);
 		} else {
 			Sci_GetStylingInfo(doc.ZSciPtr, 8 | 4, out var si); //fast
-			if (si.visibleFromLine < _visibleLines.Start.Value || si.visibleToLine > _visibleLines.End.Value) {
+			if (si.visibleFromLine < _visibleLines.start || si.visibleToLine > _visibleLines.end) {
 				_StylingAndFolding(doc); //all visible
 			} else if (_diagCounter > 0 && --_diagCounter == 0) {
 				CodeInfo._diag.Indicators(doc.zPos16(si.visibleFrom), doc.zPos16(si.visibleTo));
@@ -304,7 +304,7 @@ partial class CiStyling
 		doc.Call(SCI_STARTSTYLING, start8);
 		unsafe { fixed (byte* bp = b) doc.Call(SCI_SETSTYLINGEX, b.Length, bp); }
 		_modFromEnd = int.MaxValue;
-		_visibleLines = minimal ? default : si.visibleFromLine..si.visibleToLine;
+		_visibleLines = minimal ? default : new(si.visibleFromLine, si.visibleToLine);
 #if PRINT
 		p1.Next('S');
 #endif

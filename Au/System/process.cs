@@ -634,7 +634,7 @@ namespace Au
 			//info: we don't call .NET functions directly to avoid loading assemblies.
 
 			isWPF = false;
-			int f = AssemblyUtil.IsLoadedWinformsWpf();
+			int f = AssemblyUtil_.IsLoadedWinformsWpf();
 			if (0 != (f & 1) && _HML_Forms()) return true;
 			if (0 != (f & 2) && _HML_Wpf()) return isWPF = true;
 			return false;

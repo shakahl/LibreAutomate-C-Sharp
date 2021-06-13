@@ -15,6 +15,7 @@ using System.Windows;
 using System.Windows.Media.Imaging;
 using System.Windows.Markup;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace Au.More
 {
@@ -30,9 +31,9 @@ namespace Au.More
 		public static bool HasImageStringPrefix(string s) => s.Starts("image:") || s.Starts("~:");
 
 		/// <summary>
-		/// Returns true if string starts with "resource:" or "resources/" or "imagefile:" or "image:" or "~:".
+		/// Returns true if string starts with "resource:" or "resources/" or "&lt;" or "imagefile:" or "image:" or "~:".
 		/// </summary>
-		public static bool HasImageOrResourcePrefix(string s) => ResourceUtil.HasResourcePrefix(s) || 0 != s.Starts(false, "imagefile:", "image:", "~:");
+		public static bool HasImageOrResourcePrefix(string s) => ResourceUtil.HasResourcePrefix(s) || s.Starts('<') || 0 != s.Starts(false, "imagefile:", "image:", "~:");
 
 		/// <summary>
 		/// Loads image as stream from Base-64 string that starts with "image:" (png) or "~:" (zipped bmp).
@@ -40,15 +41,14 @@ namespace Au.More
 		/// <param name="s">Base-64 string with prefix "image:" or "~:".</param>
 		/// <exception cref="ArgumentException">String does not start with "image:"/"~:" or is invalid Base-64.</exception>
 		/// <exception cref="Exception"><see cref="Convert2.Decompress"/> exceptions (when prefix "~:").</exception>
-		public static MemoryStream LoadImageStreamFromString(string s)
-		{
-			if(!HasImageStringPrefix(s)) throw new ArgumentException("String must start with \"image:\" or \"~:\".");
+		public static MemoryStream LoadImageStreamFromString(string s) {
+			if (!HasImageStringPrefix(s)) throw new ArgumentException("String must start with \"image:\" or \"~:\".");
 			bool compressed = s[0] == '~';
 			int start = compressed ? 2 : 6, n = (int)((s.Length - start) * 3L / 4);
 			var b = new byte[n];
-			if(!Convert.TryFromBase64Chars(s.AsSpan(start), b, out n)) throw new ArgumentException("Invalid Base64 string");
+			if (!Convert.TryFromBase64Chars(s.AsSpan(start), b, out n)) throw new ArgumentException("Invalid Base64 string");
 			var stream = compressed ? new MemoryStream() : new MemoryStream(b, 0, n, false);
-			if(compressed) Convert2.Decompress(stream, b, 0, n);
+			if (compressed) Convert2.Decompress(stream, b, 0, n);
 			return stream;
 			//size and speed of "image:" and "~:": "image:" usually is bigger by 10-20% and faster by ~25%
 		}
@@ -60,7 +60,7 @@ namespace Au.More
 		/// <exception cref="ArgumentException">String does not start with "image:"/"~:" or is invalid Base-64.</exception>
 		/// <exception cref="Exception"></exception>
 		public static System.Drawing.Bitmap LoadGdipBitmapFromString(string s)
-			=> new (LoadImageStreamFromString(s));
+			=> new(LoadImageStreamFromString(s));
 
 		/// <summary>
 		/// Loads WPF image from Base-64 string that starts with "image:" (png) or "~:" (zipped bmp).
@@ -74,20 +74,18 @@ namespace Au.More
 		/// <summary>
 		/// Calls <see cref="LoadGdipBitmapFromString"/> and handles exceptions. On exception returns null and optionally writes warning to the output.
 		/// </summary>
-		public static System.Drawing.Bitmap TryLoadGdipBitmapFromString(string s, bool warning)
-		{
+		public static System.Drawing.Bitmap TryLoadGdipBitmapFromString(string s, bool warning) {
 			try { return LoadGdipBitmapFromString(s); }
-			catch(Exception ex) { if(warning) print.warning(ex.ToStringWithoutStack()); }
+			catch (Exception ex) { if (warning) print.warning(ex.ToStringWithoutStack()); }
 			return null;
 		}
 
 		/// <summary>
 		/// Calls <see cref="LoadWpfImageFromString"/> and handles exceptions. On exception returns null and optionally writes warning to the output.
 		/// </summary>
-		public static BitmapFrame TryLoadWpfImageFromString(string s, bool warning)
-		{
+		public static BitmapFrame TryLoadWpfImageFromString(string s, bool warning) {
 			try { return LoadWpfImageFromString(s); }
-			catch(Exception ex) { if(warning) print.warning(ex.ToStringWithoutStack()); }
+			catch (Exception ex) { if (warning) print.warning(ex.ToStringWithoutStack()); }
 			return null;
 		}
 
@@ -102,11 +100,11 @@ namespace Au.More
 		/// </param>
 		/// <param name="xaml">If not null, supports XAML images. See <see cref="LoadGdipBitmapFromXaml"/>.</param>
 		/// <exception cref="Exception"></exception>
-		public static System.Drawing.Bitmap LoadGdipBitmapFromFileOrResourceOrString(string image, (SIZE size, int dpi)? xaml = null) {
+		public static System.Drawing.Bitmap LoadGdipBitmapFromFileOrResourceOrString(string image, (int dpi, SIZE? size)? xaml = null) {
 			if (HasImageStringPrefix(image))
 				return LoadGdipBitmapFromString(image);
-			if (xaml != null && (image.Ends(".xaml", true) || image.Starts('<')))
-				return LoadGdipBitmapFromXaml(image, xaml.Value.size, xaml.Value.dpi);
+			if (xaml != null && (image.Starts('<') || image.Ends(".xaml", true)))
+				return LoadGdipBitmapFromXaml(image, xaml.Value.dpi, xaml.Value.size);
 			if (ResourceUtil.HasResourcePrefix(image))
 				return ResourceUtil.GetGdipBitmap(image);
 			if (image.Starts("imagefile:")) image = image[10..];
@@ -142,13 +140,13 @@ namespace Au.More
 		/// - Base-64 image with prefix "image:"; uses<see cref="LoadWpfImageFromString"/>.
 		/// - XAML string that starts with "&lt;".
 		/// </param>
-		/// <exception cref="Exception">Failed.</exception>
+		/// <exception cref="Exception"></exception>
 		/// <remarks>
 		/// If <i>image</i> starts with "&lt;" or ends with ".xaml" (case-insensitive), returns object created from XAML root element. Else returns <see cref="Image"/> with <b>Source</b> = <b>BitmapFrame</b>.
 		/// </remarks>
 		public static UIElement LoadWpfImageElementFromFileOrResourceOrString(string image) {
 			if (image.Starts('<')) return (UIElement)XamlReader.Parse(image);
-			if(image.Ends(".xaml", true)) {
+			if (image.Ends(".xaml", true)) {
 				if (ResourceUtil.HasResourcePrefix(image)) return (UIElement)ResourceUtil.GetXamlObject(image);
 				if (image.Starts("imagefile:")) image = image[10..];
 				using var stream = filesystem.loadStream(image);
@@ -165,34 +163,102 @@ namespace Au.More
 		/// Loads GDI+ image from WPF XAML file or string.
 		/// </summary>
 		/// <param name="image">XAML file, resource or string. See <see cref="LoadWpfImageElementFromFileOrResourceOrString"/>.</param>
-		/// <param name="size">Final image size. Use logical pixels, ie not DPI-scaled.</param>
 		/// <param name="dpi">DPI of window that will display the image.</param>
+		/// <param name="size">Final image size in logical pixels (not DPI-scaled). If null, uses element's <b>DesiredSize</b> property, max 1024x1024.</param>
+		/// <exception cref="Exception"></exception>
 		/// <remarks>
-		/// Calls <see cref="LoadWpfImageElementFromFileOrResourceOrString"/> and converts to GDI+ image.
+		/// Calls <see cref="LoadWpfImageElementFromFileOrResourceOrString"/> and <see cref="ConvertWpfImageElementToGdipBitmap"/>.
 		/// </remarks>
 		[MethodImpl(MethodImplOptions.NoInlining)]
-		public static System.Drawing.Bitmap LoadGdipBitmapFromXaml(string image, SIZE size, int dpi) {
+		public static System.Drawing.Bitmap LoadGdipBitmapFromXaml(string image, int dpi, SIZE? size = null) {
 			var e = LoadWpfImageElementFromFileOrResourceOrString(image);
-			e.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-			e.Arrange(new Rect(e.DesiredSize));
-			var (wid, hei) = Dpi.Scale(size, dpi);
-			var rtb = new RenderTargetBitmap(wid, hei, dpi, dpi, System.Windows.Media.PixelFormats.Pbgra32);
+			//s_cwt.Add(e, new());
+			return ConvertWpfImageElementToGdipBitmap(e, dpi, size);
+		}
+
+		//static ConditionalWeakTable<UIElement, _DebugGC> s_cwt = new();
+		//class _DebugGC { ~_DebugGC() { print.it("~"); } }
+
+		/// <summary>
+		/// Converts WPF image element to GDI+ image.
+		/// </summary>
+		/// <param name="e">For example <b>Viewbox</b>.</param>
+		/// <param name="dpi">DPI of window that will display the image.</param>
+		/// <param name="size">Final image size in logical pixels (not DPI-scaled). If null, uses element's <b>DesiredSize</b> property, max 1024x1024.</param>
+		public static System.Drawing.Bitmap ConvertWpfImageElementToGdipBitmap(UIElement e, int dpi, SIZE? size = null) {
+			if (!e.IsMeasureValid) e.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+			bool arranged = e.IsArrangeValid; if (!arranged) e.Arrange(new Rect(e.DesiredSize));
+			if (size == null) {
+				var z = e.DesiredSize; //if using RenderSize or ActualX, if element height!=width, draws in wrong place, clipped
+				size = new(Math.Min(1024d, z.Width).ToInt(), Math.Min(1024d, z.Height).ToInt());
+			}
+			var (wid, hei) = Dpi.Scale(size.Value, dpi);
+			var rtb = new RenderTargetBitmap(wid, hei, dpi, dpi, PixelFormats.Pbgra32);
+			//var rtb = t_rtb ??= new RenderTargetBitmap(wid, hei, dpi, dpi, PixelFormats.Pbgra32); rtb.Clear(); //not better
 			rtb.Render(e);
-			int stride = wid * 4;
-			int msize = hei * stride;
+			if (!arranged) e.InvalidateArrange(); //prevent huge memory leak
+			int stride = wid * 4, msize = hei * stride;
 			var m = new _BitmapMemory(msize);
 			rtb.CopyPixels(new Int32Rect(0, 0, wid, hei), m.pixels, msize, stride);
 			var b = new System.Drawing.Bitmap(wid, hei, stride, System.Drawing.Imaging.PixelFormat.Format32bppPArgb, m.pixels) { Tag = m }; //only this Bitmap creation method preserves alpha
 			b.SetResolution(dpi, dpi);
 			return b;
 		}
+		//[ThreadStatic] static RenderTargetBitmap t_rtb;
 
 		//Holds memory of System.Drawing.Bitmap created with the scan ctor. Such Bitmap does not own/free the memory. We attach _BitmapMemory to Bitmap.Tag, let GC dispose it.
 		unsafe class _BitmapMemory
 		{
 			public readonly IntPtr pixels;
-			public _BitmapMemory(int size) { pixels = (IntPtr)MemoryUtil.Alloc(size); }
-			~_BitmapMemory() { MemoryUtil.Free((void*)pixels); }
+			int _size;
+
+			public _BitmapMemory(int size) {
+				pixels = (IntPtr)MemoryUtil.Alloc(size);
+				GC.AddMemoryPressure(_size = size);
+			}
+
+			//static int _debug;
+			~_BitmapMemory() {
+				//print.it(_debug++, _size);
+				MemoryUtil.Free((void*)pixels);
+				GC.RemoveMemoryPressure(_size);
+			}
 		}
+
+		/// <summary>
+		/// Converts XAML image to native icon file data.
+		/// </summary>
+		/// <param name="stream">Stream to write icon file data. Writes from start.</param>
+		/// <param name="image">Image XAML. See <see cref="LoadWpfImageElementFromFileOrResourceOrString"/>.</param>
+		/// <param name="sizes">Sizes of icon images to add to the ico file. For example 16, 24, 32, 48, 64. Sizes can be 1 to 256 inclusive.</param>
+		/// <exception cref="ArgumentOutOfRangeException">An invalid size.</exception>
+		/// <exception cref="Exception"></exception>
+		public static unsafe void XamlImageToIconFile(Stream stream, string image, params int[] sizes) {
+			var e = LoadWpfImageElementFromFileOrResourceOrString(image) as FrameworkElement;
+			stream.Position = Math2.AlignUp(sizeof(Api.NEWHEADER) + sizeof(Api.ICONDIRENTRY) * sizes.Length, 4);
+			var a = stackalloc Api.ICONDIRENTRY[sizes.Length];
+			for (int i = 0; i < sizes.Length; i++) {
+				int size = sizes[i];
+				if (size < 1 || size > 256) throw new ArgumentOutOfRangeException();
+				e.Width = size; e.Height = size;
+				var b = ConvertWpfImageElementToGdipBitmap(e, 96, (size, size));
+				int pos = (int)stream.Position;
+				b.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+				byte bsize = (byte)(size == 256 ? 0 : checked((byte)size));
+				a[i] = new Api.ICONDIRENTRY { bWidth = bsize, bHeight = bsize, wBitCount = 32, dwBytesInRes = (int)stream.Position - pos, dwImageOffset = pos };
+			}
+			var posEnd = stream.Position;
+			stream.Position = 0;
+			var h = new Api.NEWHEADER { wResType = 1, wResCount = (ushort)sizes.Length };
+			stream.Write(new(&h, sizeof(Api.NEWHEADER)));
+			stream.Write(new(a, sizeof(Api.ICONDIRENTRY) * sizes.Length));
+			stream.Position = posEnd;
+		}
+
+		//public static void XamlImageToIconFile(string file, string image, params int[] sizes) {
+		//	file = pathname.NormalizeForNET_(file);
+		//	using var stream = File.OpenWrite(file);
+		//	XamlImageToIconFile(stream, image, sizes);
+		//}
 	}
 }

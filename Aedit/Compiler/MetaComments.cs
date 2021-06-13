@@ -246,6 +246,11 @@ namespace Au.Compiler
 		/// </summary>
 		public List<MetaCodeFile> CodeFiles { get; private set; }
 
+		/// <summary>
+		/// CodeFiles[0].
+		/// </summary>
+		public MetaCodeFile MainFile => CodeFiles[0];
+
 		List<FileNode> _filesC; //files added through meta option 'c'. Finally parsed and added to Files.
 
 		/// <summary>
@@ -513,7 +518,7 @@ namespace Au.Compiler
 				return;
 			}
 			if (!_isMain) {
-				_ErrorN($"in this file only these options can be used: 'r', 'c', 'resource', 'com'. Others only in the main file of the compilation - {CodeFiles[0].f.Name}.");
+				_ErrorN($"in this file only these options can be used: 'r', 'c', 'resource', 'com'. Others only in the main file of the compilation - {MainFile.f.Name}.");
 				return;
 			}
 

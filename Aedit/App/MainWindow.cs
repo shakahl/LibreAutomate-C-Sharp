@@ -19,6 +19,9 @@ using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Input;
 
+//TODO: when starting, if wmware player window active, does not activete our window, and also it is hung until manually activated.
+//	When manually activated, output shows many unsuccessful attempts to activate window.
+
 partial class MainWindow : Window
 {
 	public MainWindow() {
@@ -50,6 +53,7 @@ partial class MainWindow : Window
 		//timerm.after(100, _ => DOptions.ZShow());
 		//timerm.after(100, _ => App.Model.Properties());
 		//timerm.after(100, _ => Menus.File.Workspace.New_workspace());
+		//timerm.after(100, _ => DIcons.ZShow());
 
 //		timerm.after(100, _ => {
 //#if !true

@@ -329,7 +329,7 @@ namespace Au.Compiler
 				}
 				return XmlDocumentationProvider.CreateFromFile(xmlPath);
 			}
-			static System.Collections.Concurrent.ConcurrentDictionary<string, _DocumentationProvider> s_d = new System.Collections.Concurrent.ConcurrentDictionary<string, _DocumentationProvider>(StringComparer.OrdinalIgnoreCase);
+			static System.Collections.Concurrent.ConcurrentDictionary<string, _DocumentationProvider> s_d = new(StringComparer.OrdinalIgnoreCase);
 
 			protected internal override string GetDocumentationForSymbol(string documentationMemberID, System.Globalization.CultureInfo preferredCulture, CancellationToken cancellationToken = default)
 			{

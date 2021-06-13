@@ -170,8 +170,8 @@ namespace Au.Compiler
 				//if empty script, error "no Main". Users would not understand why. Append semicolon to make compiler detect top-level statements.
 				if (m.Role != ERole.classLibrary) {
 					var diag1 = compilation.GetDiagnostics();
-					if(diag1.Any(o => o.Id == "CS5001")) //no Main
-						compilation = compilation.ReplaceSyntaxTree(trees[0], trees[0].WithChangedText(SourceText.From(m.CodeFiles[0].code + "\r\n;", Encoding.UTF8)) as CSharpSyntaxTree);
+					if (diag1.Any(o => o.Id == "CS5001")) //no Main
+						compilation = compilation.ReplaceSyntaxTree(trees[0], trees[0].WithChangedText(SourceText.From(m.MainFile.code + "\r\n;", Encoding.UTF8)) as CSharpSyntaxTree);
 				}
 
 				//Create debug info always. It is used for run-time error links.
@@ -465,7 +465,7 @@ namespace Au.Compiler
 		static void _ResourceException(Exception e, MetaComments m, FileNode curFile) {
 			var em = e.ToStringWithoutStack();
 			var err = m.Errors;
-			var f = m.CodeFiles[0].f;
+			var f = m.MainFile.f;
 			if (curFile == null) err.AddError(f, "Failed to add resources. " + em);
 			else err.AddError(f, $"Failed to add resource '{curFile.Name}'. " + em);
 		}
@@ -488,7 +488,10 @@ namespace Au.Compiler
 					icoStream?.Dispose();
 					_ResourceException(e, m, curFile);
 				}
+			} else if (_GetMainFileIcon(m, out var stream)) {
+				return compilation.CreateDefaultWin32Resources(versionResource: false, noManifest: true, null, stream);
 			}
+
 			return null;
 #else
 			var manifest = m.ManifestFile;
@@ -549,6 +552,9 @@ namespace Au.Compiler
 					} else {
 						res.AddIcon(m.IconFile.FilePath, ref ic);
 					}
+				} else if (_GetMainFileIcon(m, out var stream)) {
+					_Resources.ICONCONTEXT ic = default;
+					res.AddIcon(stream.ToArray(), ref ic);
 				}
 				res.AddVersion(outFile);
 
@@ -595,6 +601,20 @@ namespace Au.Compiler
 			finally { if (!done) Api.DeleteFile(exeFile); }
 
 			return exeFile;
+		}
+
+		static bool _GetMainFileIcon(MetaComments m, out MemoryStream ms) {
+			try {
+				if (m.MainFile.f.CustomIcon is string ci && DIcons.TryGetIconFromBigDB(ci, out string xaml)) {
+					ms = new MemoryStream();
+					ImageUtil.XamlImageToIconFile(ms, xaml, 16, 24, 32, 48, 64);
+					ms.Position = 0;
+					return true;
+				}
+			}
+			catch(Exception e1) { _ResourceException(e1, m, null); }
+			ms = null;
+			return false;
 		}
 
 		static void _CopyDlls(MetaComments m, Stream asmStream, bool need64, bool need32) {
@@ -659,7 +679,7 @@ namespace Au.Compiler
 				args = StringUtil.CommandLineToArray(x.s);
 
 				//replace variables like $(variable)
-				var f = m.CodeFiles[0].f;
+				var f = m.MainFile.f;
 				if (s_rx1 == null) s_rx1 = new regexp(@"\$\((\w+)\)");
 				string _ReplFunc(RXMatch k) {
 					switch (k[1].Value) {

@@ -18,7 +18,7 @@ class DOptions : KDialogWindow
 {
 	public static void ZShow() {
 		if (s_dialog == null) {
-			s_dialog = new DOptions();
+			s_dialog = new();
 			s_dialog.Show();
 		} else {
 			s_dialog.Activate();
@@ -34,7 +34,7 @@ class DOptions : KDialogWindow
 	wpfBuilder _b;
 	TabControl _tc;
 
-	public DOptions() {
+	DOptions() {
 		Title = "Options";
 		Owner = App.Wmain;
 		WindowStartupLocation = WindowStartupLocation.CenterOwner;

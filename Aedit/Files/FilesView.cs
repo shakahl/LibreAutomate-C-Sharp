@@ -1,4 +1,5 @@
 using Au;
+using Au.More;
 using Au.Types;
 using Au.Controls;
 using System;
@@ -16,6 +17,9 @@ using System.Linq;
 using System.Windows.Input;
 using System.Windows;
 using System.Windows.Controls;
+
+//using Jdenticon;
+//using System.Drawing;
 
 partial class FilesModel
 {
@@ -168,3 +172,20 @@ partial class FilesModel
 		#endregion
 	}
 }
+
+//Tested Jdenticon library that generates random icons. Works well, but the icons are too abstract and monotonic.
+//partial class FileNode
+//{
+//	System.Drawing.Bitmap ITreeViewItem.Image {
+//		get {
+//			if (_bmp == null && 0 != Name.Like(true, "Script14?.cs", "Script13?.cs")) {
+//				var v = Identicon.FromValue(Name, size: 16);
+//				v.Style = new IdenticonStyle { BackColor = Jdenticon.Rendering.Color.Transparent/*, ColorSaturation=0.7f, ColorLightness = new(0.1f, 0.5f)*/ };
+//				using var stream = v.SaveAsPng();
+//				_bmp = System.Drawing.Bitmap.FromStream(stream) as System.Drawing.Bitmap;
+//			}
+//			return _bmp;
+//		}
+//	}
+//	System.Drawing.Bitmap _bmp;
+//}

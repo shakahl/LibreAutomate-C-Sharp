@@ -295,187 +295,9 @@
         <member name="M:Au.Types.Cpp.Cpp_RegexMatch(System.Runtime.InteropServices.HandleRef,System.String,System.IntPtr,System.IntPtr,Au.Types.RXMatchFlags,Au.Types.Cpp.PcreCalloutT,Au.Types.Cpp.RegexMatch@,Au.Types.BSTR@)">
             <summary>This and related API are documented in the C++ dll project.</summary>
         </member>
-        <member name="T:Au.Types.NoDoc">
-            <summary>
-            In DocFX-generated help files removes documentation and auto-generated links in TOC and class pages.
-            </summary>
-        </member>
-        <member name="T:Au.Types.NativeApi">
-            <summary>
-            If a class is derived from this class, editor adds undeclared Windows API to its completion list.
-            </summary>
-        </member>
-        <member name="T:Au.Types.NativeApi.l">
-            
-        </member>
-        <member name="T:Au.Types.UsingEndAction">
-            <summary>
-            Invokes specified action (calls callback function) at the end of <c>using(...) { ... }</c>.
-            Usually returned by functions. Example: <see cref="M:Au.opt.scope.mouse(System.Boolean)"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.UsingEndAction.#ctor(System.Action)">
-            <summary>Sets action to be invoked when disposing this variable.</summary>
-        </member>
-        <member name="M:Au.Types.UsingEndAction.Dispose">
-            <summary>Invokes the action if not null.</summary>
-        </member>
-        <member name="T:Au.Types.PSFormat">
-            <summary>
-            Used with <see cref="T:Au.Types.ParamStringAttribute"/> to specify string parameter format.
-            </summary>
-        </member>
-        <member name="F:Au.Types.PSFormat.None">
-            
-        </member>
-        <member name="F:Au.Types.PSFormat.keys">
-            <summary>
-            Keys. See <see cref="M:Au.keys.send(Au.Types.KKeysEtc[])"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Types.PSFormat.wildex">
-            <summary>
-            [Wildcard expression](xref:wildcard_expression).
-            </summary>
-        </member>
-        <member name="F:Au.Types.PSFormat.regexp">
-            <summary>
-            PCRE regular expression.
-            </summary>
-        </member>
-        <member name="F:Au.Types.PSFormat.regexpReplacement">
-            <summary>
-            PCRE regular expression replacement string.
-            </summary>
-        </member>
-        <member name="F:Au.Types.PSFormat.NetRegex">
-            <summary>
-            .NET regular expression.
-            </summary>
-        </member>
-        <member name="T:Au.Types.ParamStringAttribute">
-            <summary>
-            A function parameter with this attribute is a string of the specified format, for example regular expression.
-            Code editors should help to create correct string arguments: provide tools or reference, show errors.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ParamStringAttribute.#ctor(Au.Types.PSFormat)">
-            
-        </member>
-        <member name="P:Au.Types.ParamStringAttribute.Format">
-            
-        </member>
-        <member name="T:Au.Types.AuException">
-            <summary>
-            The base exception class used in this library.
-            Thrown when something fails and there is no better exception type for that failure.
-            </summary>
-            <remarks>
-            Some constructors support Windows API error code. Then <see cref="P:Au.Types.AuException.Message"/> will contain its error description.
-            If the string passed to the constructor starts with "*", replaces the "*" with "Failed to ". If does not end with ".", appends ".".
-            </remarks>
-        </member>
-        <member name="M:Au.Types.AuException.#ctor(System.String,System.Exception)">
-            <summary>
-            Sets <b>Message</b> = <i>message</i> (default "Failed.").
-            Sets <b>NativeErrorCode</b> = 0.
-            </summary>
-        </member>
-        <member name="M:Au.Types.AuException.#ctor(System.Int32,System.String,System.Exception)">
-            <summary>
-            Sets <b>NativeErrorCode</b> = <c>(errorCode != 0) ? errorCode : lastError.code</c>.
-            Sets <b>Message</b> = <c>message + " " + lastError.messageFor(NativeErrorCode)</c>.
-            </summary>
-        </member>
-        <member name="P:Au.Types.AuException.NativeErrorCode">
-            <summary> Gets the Windows API error code. </summary>
-        </member>
-        <member name="P:Au.Types.AuException.Message">
-            <summary> Gets error message. </summary>
-        </member>
-        <member name="F:Au.Types.AuException.FormattedMessage">
-            <summary> String created by FormatMessage(), which should be called by the Message override if null. Initially null. </summary>
-        </member>
-        <member name="M:Au.Types.AuException.FormatMessage(System.String,System.String)">
-            <summary>
-            Formats error message. Sets and returns FormattedMessage.
-            As base text, uses the text passed to the constructor (default "Failed.").
-            If it starts with "*", replaces the "*" with "Failed to ".
-            If it ends with "*", replaces the "*" with commonPostfix if it is not empty.
-            If then the message does not end with ".", appends ".".
-            If appendMessage is null, uses lastError.messageFor(NativeErrorCode) if NativeErrorCode not 0.
-            If then appendMessage is not empty, appends " " and appendMessage.
-            Also appends InnerException.Message in new tab-indented line if InnerException is not null.
-            </summary>
-        </member>
-        <member name="M:Au.Types.AuException.ThrowIfHresultNot0(System.Int32,System.String)">
-            <summary>
-            If errorCode is not 0, throws AuException that includes the code and its message.
-            More info: <see cref="M:Au.Types.AuException.FormatMessage(System.String,System.String)"/>.
-            </summary>
-            <param name="errorCode">Windows API error code or HRESULT.</param>
-            <param name="message">Main message. The message of the error code will be appended to it.</param>
-        </member>
-        <member name="M:Au.Types.AuException.ThrowIfHresultNegative(System.Int32,System.String)">
-            <summary>
-            If errorCode is less than 0, throws AuException that includes the code and its message.
-            More info: <see cref="M:Au.Types.AuException.FormatMessage(System.String,System.String)"/>.
-            </summary>
-            <param name="errorCode">Windows API error code or HRESULT.</param>
-            <param name="message">Main message. The message of the error code will be appended to it.</param>
-        </member>
-        <member name="T:Au.Types.AuWndException">
-            <summary>
-            Exception thrown mostly by <see cref="T:Au.wnd"/> functions.
-            </summary>
-            <remarks>
-            Some constructors support Windows API error code. Then Message also will contain its error description.
-            If error code ERROR_INVALID_WINDOW_HANDLE, Message also depends on whether the window handle is 0.
-            If parameter <i>errorCode</i> is 0 or not used: if the window handle is invalid, uses ERROR_INVALID_WINDOW_HANDLE.
-            If the string passed to the constructor starts with "*", replaces the "*" with "Failed to ". If ends with "*", replaces the "*" with " window.". If does not end with ".", appends ".".
-            </remarks>
-        </member>
-        <member name="M:Au.Types.AuWndException.#ctor(Au.wnd,System.String,System.Exception)">
-            <summary>
-            Sets <b>Message</b> = <i>message</i> (default "Failed.").
-            Sets <b>NativeErrorCode</b> = <c>w.IsAlive ? 0 : ERROR_INVALID_WINDOW_HANDLE</c>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.AuWndException.#ctor(Au.wnd,System.Int32,System.String,System.Exception)">
-            <summary>
-            Sets <b>NativeErrorCode</b> = <c>(errorCode != 0) ? errorCode : (w.IsAlive ? lastError.code : ERROR_INVALID_WINDOW_HANDLE)</c>.
-            Sets <b>Message</b> = <c>message + " " + lastError.messageFor(NativeErrorCode)</c>.
-            </summary>
-        </member>
-        <member name="P:Au.Types.AuWndException.Window">
-            <summary> Gets the window passed to the constructor. </summary>
-        </member>
-        <member name="P:Au.Types.AuWndException.Message">
-            <summary> Gets error message. </summary>
-        </member>
-        <member name="T:Au.Types.NotFoundException">
-            <summary>
-            Functions that search for an object can throw this exception when not found.
-            </summary>
-        </member>
-        <member name="M:Au.Types.NotFoundException.#ctor">
-            <summary>
-            Sets Message = "Not found.".
-            </summary>
-        </member>
-        <member name="M:Au.Types.NotFoundException.#ctor(System.String)">
-            <summary>
-            Sets Message = message.
-            </summary>
-        </member>
         <member name="T:Au.Types.ExtMisc">
             <summary>
             Adds extension methods for some .NET types.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtMisc.ToStringWithoutStack(System.Exception)">
-            <summary>
-            Returns string containing exception type name and message.
             </summary>
         </member>
         <member name="M:Au.Types.ExtMisc.ToInt(System.Double)">
@@ -739,1079 +561,9 @@
             Creates solid brush and calls <see cref="M:System.Drawing.Graphics.FillRectangle(System.Drawing.Brush,System.Drawing.Rectangle)"/>.
             </summary>
         </member>
-        <member name="T:Au.Types.OWarnings">
+        <member name="M:Au.Types.ExtMisc.ToStringWithoutStack(System.Exception)">
             <summary>
-            Options for run-time warnings (<see cref="M:Au.print.warning(System.String,System.Int32,System.String)"/>).
-            </summary>
-        </member>
-        <member name="M:Au.Types.OWarnings.#ctor(Au.Types.OWarnings)">
-            <summary>
-            Initializes this instance with default values or values copied from another instance.
-            </summary>
-            <param name="cloneOptions">If not null, copies its options into this variable.</param>
-        </member>
-        <member name="P:Au.Types.OWarnings.Verbose">
-            <summary>
-            If true, some library functions may display more warnings and other info.
-            If not explicitly set, the default value depends on the build configuration of the main assembly: true if Debug, false if Release (optimize true). See <see cref="P:Au.More.AssemblyUtil.IsDebug"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.OWarnings.Disable(System.String[])">
-            <summary>
-            Disables one or more run-time warnings.
-            </summary>
-            <param name="warningsWild">One or more warnings as case-insensitive wildcard strings. See <see cref="M:Au.ExtString.Like(System.String,System.String,System.Boolean)"/>.</param>
-            <remarks>
-            Adds the strings to an internal list. When <see cref="M:Au.print.warning(System.String,System.Int32,System.String)"/> is called, it looks in the list. If finds the warning in the list, does not show the warning.
-            It's easy to auto-restore warnings with 'using', like in the second example. Restoring is optional.
-            </remarks>
-            <example>
-            This code at the start of script disables two warnings in all threads.
-            <code><![CDATA[
-            opt.init.warnings.Disable("*part of warning 1 text*", "*part of warning 2 text*");
-            ]]></code>
-            Temporarily disable all warnings in this thread.
-            <code><![CDATA[
-            opt.warnings.Verbose = true;
-            print.warning("one");
-            using(opt.warnings.Disable("*")) {
-            	print.warning("two");
-            }
-            print.warning("three");
-            ]]></code>
-            Don't use code <c>using(opt.init.warnings.Disable...</c>, it's not thread-safe.
-            </example>
-        </member>
-        <member name="M:Au.Types.OWarnings.IsDisabled(System.String)">
-            <summary>
-            Returns true if the specified warning text matches a wildcard string added with <see cref="M:Au.Types.OWarnings.Disable(System.String[])"/>.
-            </summary>
-            <param name="text">Warning text. Case-insensitive.</param>
-        </member>
-        <member name="T:Au.Types.OMouse">
-            <summary>
-            Options for functions of class <see cref="T:Au.mouse"/>.
-            </summary>
-            <remarks>
-            Total <c>Click(x, y)</c> time is: mouse move + <see cref="P:Au.Types.OMouse.MoveSleepFinally"/> + button down + <see cref="P:Au.Types.OMouse.ClickSpeed"/> + button down + <see cref="P:Au.Types.OMouse.ClickSpeed"/> + <see cref="P:Au.Types.OMouse.ClickSleepFinally"/>.
-            </remarks>
-            <seealso cref="P:Au.opt.mouse"/>
-            <seealso cref="P:Au.opt.init.mouse"/>
-        </member>
-        <member name="M:Au.Types.OMouse.#ctor(Au.Types.OMouse)">
-            <summary>
-            Initializes this instance with default values or values copied from another instance.
-            </summary>
-            <param name="cloneOptions">If not null, copies its options into this variable.</param>
-        </member>
-        <member name="P:Au.Types.OMouse.ClickSpeed">
-            <summary>
-            How long to wait (milliseconds) after sending each mouse button down or up event (2 events for click, 4 for double-click).
-            Default: 20.
-            </summary>
-            <value>Valid values: 0 - 1000 (1 s). Valid values for <see cref="P:Au.opt.init.mouse"/>: 0 - 100 (1 s).</value>
-            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
-        </member>
-        <member name="P:Au.Types.OMouse.MoveSpeed">
-            <summary>
-            If not 0, makes mouse movements slower, not instant.
-            Default: 0.
-            </summary>
-            <value>Valid values: 0 (instant) - 10000 (slowest). Valid values for <see cref="P:Au.opt.init.mouse"/>: 0 - 100.</value>
-            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
-            <remarks>
-            Used by <see cref="M:Au.mouse.move(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>, <see cref="M:Au.mouse.click(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> and other functions that generate mouse movement events, except <see cref="M:Au.mouse.moveRecorded(System.String,System.Double)"/>.
-            It is not milliseconds or some other unit. It adds intermediate mouse movements and small delays when moving the mouse cursor to the specified point. The speed also depends on the distance.
-            Value 0 (default) does not add intermediate mouse movements. Adds at least 1 if some mouse buttons are pressed. Value 1 adds at least 1 intermediate mouse movement. Values 10-50 are good for visually slow movements.
-            </remarks>
-        </member>
-        <member name="P:Au.Types.OMouse.ClickSleepFinally">
-            <summary>
-            How long to wait (milliseconds) before a 'mouse click' or 'mouse wheel' function returns.
-            Default: 10.
-            </summary>
-            <value>Valid values: 0 - 10000 (10 s). Valid values for <see cref="P:Au.opt.init.mouse"/>: 0 - 100.</value>
-            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
-            <remarks>
-            The 'click' functions also sleep <see cref="P:Au.Types.OMouse.ClickSpeed"/> ms after button down and up. Default <b>ClickSpeed</b> is 20, default <b>ClickSleepFinally</b> is 10, therefore default click time without mouse-move is 20+20+10=50.
-            </remarks>
-        </member>
-        <member name="P:Au.Types.OMouse.MoveSleepFinally">
-            <summary>
-            How long to wait (milliseconds) after moving the mouse cursor. Used in 'move+click' functions too.
-            Default: 10.
-            </summary>
-            <value>Valid values: 0 - 1000 (1 s). Valid values for <see cref="P:Au.opt.init.mouse"/>: 0 - 100.</value>
-            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
-            <remarks>
-            Used by <see cref="M:Au.mouse.move(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> (finally), <see cref="M:Au.mouse.click(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> (between moving and clicking) and other functions that generate mouse movement events.
-            </remarks>
-        </member>
-        <member name="P:Au.Types.OMouse.Relaxed">
-            <summary>
-            Make some functions less strict (throw less exceptions etc).
-            Default: false.
-            </summary>
-            <remarks>
-            This option is used by these functions:
-            - <see cref="M:Au.mouse.move(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>, <see cref="M:Au.mouse.click(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> and other functions that move the cursor (mouse pointer):
-            <br/>false - throw exception if cannot move the cursor to the specified x y. For example it the x y is not in screen.
-            <br/>true - try to move anyway. Don't throw exception, regardless of the final cursor position (which probably will be at a screen edge).
-            - <see cref="M:Au.mouse.move(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>, <see cref="M:Au.mouse.click(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> and other functions that move the cursor (mouse pointer):
-            <br/>false - before moving the cursor, wait while a mouse button is pressed by the user or another thread. It prevents an unintended drag-drop.
-            <br/>true - do not wait.
-            - <see cref="M:Au.mouse.click(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> and other functions that click or press a mouse button using window coordinates:
-            <br/>false - don't allow to click in another window. If need, activate the specified window (or its top-level parent). If that does not help, throw exception. However if the window is a control, allow x y anywhere in its top-level parent window.
-            <br/>true - allow to click in another window. Don't activate the window and don't throw exception.
-            </remarks>
-        </member>
-        <member name="T:Au.Types.OKey">
-            <summary>
-            Options for functions of class <see cref="T:Au.keys"/>.
-            Some options also are used with <see cref="T:Au.clipboard"/> functions that send keys (Ctrl+V etc).
-            </summary>
-            <seealso cref="P:Au.opt.key"/>
-            <seealso cref="P:Au.opt.init.key"/>
-        </member>
-        <member name="M:Au.Types.OKey.#ctor(Au.Types.OKey)">
-            <summary>
-            Initializes this instance with default values or values copied from another instance.
-            </summary>
-            <param name="cloneOptions">If not null, copies its options into this variable.</param>
-        </member>
-        <member name="M:Au.Types.OKey.CopyOrDefault_(Au.Types.OKey)">
-            <summary>
-            Copies options from o, or sets default if o==null. Like ctor does.
-            </summary>
-        </member>
-        <member name="M:Au.Types.OKey.GetHookOptionsOrThis_(Au.wnd)">
-            <summary>
-            Returns this variable, or <b>OKey</b> cloned from this variable and possibly modified by <b>Hook</b>.
-            </summary>
-            <param name="wFocus">The focused or active window. Use Lib.GetWndFocusedOrActive().</param>
-        </member>
-        <member name="P:Au.Types.OKey.TextSpeed">
-            <summary>
-            How long to wait (milliseconds) between pressing and releasing each character key. Used by <see cref="M:Au.keys.sendt(System.String,System.String)"/>. Also by <see cref="M:Au.keys.send(Au.Types.KKeysEtc[])"/> and similar functions for <c>"!text"</c> arguments.
-            Default: 0.
-            </summary>
-            <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="P:Au.opt.init.key"/>: 0 - 10.</value>
-            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
-            <remarks>
-            Used only for 'text' arguments, not for 'keys' arguments. See <see cref="P:Au.Types.OKey.KeySpeed"/>.
-            </remarks>
-        </member>
-        <member name="P:Au.Types.OKey.KeySpeed">
-            <summary>
-            How long to wait (milliseconds) between pressing and releasing each key. Used by <see cref="M:Au.keys.send(Au.Types.KKeysEtc[])"/> and similar functions, except for <c>"!text"</c> arguments.
-            Default: 1.
-            </summary>
-            <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="P:Au.opt.init.key"/>: 0 - 10.</value>
-            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
-            <remarks>
-            Used only for 'keys' arguments, not for 'text' arguments. See <see cref="P:Au.Types.OKey.TextSpeed"/>.
-            </remarks>
-        </member>
-        <member name="P:Au.Types.OKey.KeySpeedClipboard">
-            <summary>
-            How long to wait (milliseconds) between sending Ctrl+V and Ctrl+C keys of clipboard functions (paste, copy).
-            Default: 5.
-            </summary>
-            <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="P:Au.opt.init.key"/>: 0 - 50.</value>
-            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
-            <remarks>
-            In most apps copy/paste works without this delay. Known apps that need it: Internet Explorer's address bar, BlueStacks.
-            </remarks>
-        </member>
-        <member name="P:Au.Types.OKey.SleepFinally">
-            <summary>
-            How long to wait (milliseconds) before a 'send keys or text' function returns.
-            Default: 10.
-            </summary>
-            <value>Valid values: 0 - 10000 (10 seconds). Valid values for <see cref="P:Au.opt.init.key"/>: 0 - 100.</value>
-            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
-            <remarks>
-            Not used by <see cref="M:Au.clipboard.copy(System.Boolean,Au.Types.OKey)"/>.
-            </remarks>
-        </member>
-        <member name="P:Au.Types.OKey.TextHow">
-            <summary>
-            How to send text to the active window (keys, characters or clipboard).
-            Default: <see cref="F:Au.Types.OKeyText.Characters"/>.
-            </summary>
-        </member>
-        <member name="P:Au.Types.OKey.PasteLength">
-            <summary>
-            To send text use clipboard (like with <see cref="F:Au.Types.OKeyText.Paste"/>) if text length is &gt;= this value.
-            Default: 200.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
-        </member>
-        <member name="P:Au.Types.OKey.PasteWorkaround">
-            <summary>
-            When pasting text that ends with space, tab or/and newline characters, remove them and after pasting send them as keys.
-            Default: false.
-            </summary>
-            <remarks>
-            Some apps trim these characters when pasting.
-            </remarks>
-        </member>
-        <member name="P:Au.Types.OKey.RestoreClipboard">
-            <summary>
-            Whether to restore clipboard data when copying or pasting text.
-            Default: true.
-            By default restores only text. See also <see cref="P:Au.Types.OKey.RestoreClipboardAllFormats"/>, <see cref="P:Au.Types.OKey.RestoreClipboardExceptFormats"/>.
-            </summary>
-        </member>
-        <member name="P:Au.Types.OKey.RestoreClipboardAllFormats">
-            <summary>
-            When copying or pasting text, restore clipboard data of all formats that are possible to restore.
-            Default: false - restore only text.
-            </summary>
-            <remarks>
-            Restoring data of all formats set by some apps can be slow or cause problems. More info: <see cref="P:Au.Types.OKey.RestoreClipboardExceptFormats"/>.
-            
-            This property is static, not thread-static. It should be set (if need) at the start of script and not changed later.
-            </remarks>
-            <seealso cref="P:Au.Types.OKey.RestoreClipboard"/>
-            <seealso cref="P:Au.Types.OKey.RestoreClipboardExceptFormats"/>
-        </member>
-        <member name="P:Au.Types.OKey.RestoreClipboardExceptFormats">
-            <summary>
-            When copying or pasting text, and <see cref="P:Au.Types.OKey.RestoreClipboardAllFormats"/> is true, do not restore clipboard data of these formats.
-            Default: null.
-            </summary>
-            <remarks>
-            To restore clipboard data, the copy/paste functions at first get clipboard data. Getting data of some formats set by some apps can be slow (100 ms or more) or cause problems (the app can change something in its window or even show a dialog).
-            It also depends on whether this is the first time the data is being retrieved. The app can render data on demand, when some app is retrieving it from the clipboard first time; then can be slow etc.
-            
-            You can use function <see cref="M:Au.Types.OKey.PrintClipboard"/> to see format names and get-data times.
-            
-            There are several kinds of clipboard formats - registered, standard, private and display. Only registered formats have string names. For standard formats use API contant names, like "CF_WAVE". Private, display and metafile formats are never restored.
-            These formats are never restored: CF_METAFILEPICT, CF_ENHMETAFILE, CF_PALETTE, CF_OWNERDISPLAY, CF_DSPx formats, CF_GDIOBJx formats, CF_PRIVATEx formats. Some other formats too, but they are automatically synthesized from other formats if need. Also does not restore if data size is 0 or &gt; 10 MB.
-            
-            This property is static, not thread-static. It should be set (if need) at the start of script and not changed later.
-            </remarks>
-            <seealso cref="P:Au.Types.OKey.RestoreClipboard"/>
-            <seealso cref="M:Au.Types.OKey.PrintClipboard"/>
-        </member>
-        <member name="M:Au.Types.OKey.PrintClipboard">
-            <summary>
-            Writes to the output some info about current clipboard data.
-            </summary>
-            <remarks>
-            Shows this info for each clipboard format: format name, time spent to get data (microseconds), data size (bytes), and whether this format would be restored (depends on <see cref="P:Au.Types.OKey.RestoreClipboardExceptFormats"/>).
-            <note>Copy something to the clipboard each time before calling this function. Don't use <see cref="M:Au.clipboard.copy(System.Boolean,Au.Types.OKey)"/> and don't call this function in loop. Else it shows small times.</note>
-            The time depends on app, etc. More info: <see cref="P:Au.Types.OKey.RestoreClipboardExceptFormats"/>.
-            </remarks>
-        </member>
-        <member name="P:Au.Types.OKey.NoModOff">
-            <summary>
-            When starting to send keys or text, don't release modifier keys.
-            Default: false.
-            </summary>
-        </member>
-        <member name="P:Au.Types.OKey.NoCapsOff">
-            <summary>
-            When starting to send keys or text, don't turn off CapsLock.
-            Default: false.
-            </summary>
-        </member>
-        <member name="P:Au.Types.OKey.NoBlockInput">
-            <summary>
-            While sending or pasting keys or text, don't block user-pressed keys.
-            Default: false.
-            </summary>
-            <remarks>
-            If false (default), user-pressed keys are sent afterwards. If true, user-pressed keys can be mixed with script-pressed keys, which is particularly dangerous when modifier keys are mixed (and combined) with non-modifier keys.
-            </remarks>
-        </member>
-        <member name="P:Au.Types.OKey.Hook">
-            <summary>
-            Callback function that can modify options of 'send keys or text' functions depending on active window etc.
-            Default: null.
-            </summary>
-            <remarks>
-            The callback function is called by <see cref="M:Au.keys.send(Au.Types.KKeysEtc[])"/>, <see cref="M:Au.keys.sendt(System.String,System.String)"/>, <see cref="M:Au.keys.SendIt(System.Boolean)"/>, <see cref="M:Au.clipboard.paste(System.String,System.String,Au.Types.OKey)"/> and similar functions. Not called by <see cref="M:Au.clipboard.copy(System.Boolean,Au.Types.OKey)"/>.
-            </remarks>
-            <seealso cref="T:Au.Types.OKeyHookData"/>
-        </member>
-        <member name="T:Au.Types.OKeyHookData">
-            <summary>
-            Parameter type of the <see cref="P:Au.Types.OKey.Hook"/> callback function.
-            </summary>
-        </member>
-        <member name="F:Au.Types.OKeyHookData.optk">
-            <summary>
-            Options used by the 'send keys or text' function. The callback function can modify them, except Hook, NoModOff, NoCapsOff, NoBlockInput.
-            </summary>
-        </member>
-        <member name="F:Au.Types.OKeyHookData.w">
-            <summary>
-            The focused control. If there is no focused control - the active window. Use <c>w.Window</c> to get top-level window; if <c>w.Window == w</c>, <b>w</b> is the active window, else the focused control. The callback function is not called if there is no active window.
-            </summary>
-        </member>
-        <member name="T:Au.Types.OKeyText">
-            <summary>
-            How functions send text.
-            See <see cref="P:Au.Types.OKey.TextHow"/>.
-            </summary>
-            <remarks>
-            There are three ways to send text to the active app using keys:
-            - Characters (default) - use special key code VK_PACKET. Can send most characters.
-            - Keys - use virtual-key codes, with Shift etc where need. Can send only characters that can be simply entered with the keyboard using current keyboard layout.
-            - Paste - use the clipboard and Ctrl+V. Can send any text.
-            
-            Most but not all apps support all three ways.
-            </remarks>
-        </member>
-        <member name="F:Au.Types.OKeyText.Characters">
-            <summary>
-            Send text characters using special key code VK_PACKET.
-            This option is default. Few apps don't support it.
-            For newlines sends key Enter, because VK_PACKET often does not work well.
-            If text contains Unicode characters with Unicode code above 0xffff, clipboard-pastes whole text, because many apps don't support Unicode surrogates sent as WM_PACKET pairs.
-            </summary>
-        </member>
-        <member name="F:Au.Types.OKeyText.KeysOrChar">
-            <summary>
-            Send virtual-key codes, with Shift etc where need.
-            All apps support it.
-            If a character cannot be simply typed with the keyboard using current keyboard layout, sends it like with the <b>Characters</b> option.
-            </summary>
-        </member>
-        <member name="F:Au.Types.OKeyText.KeysOrPaste">
-            <summary>
-            Send virtual-key codes, with Shift etc where need.
-            All apps support it.
-            If text contains characters that cannot be simply typed with the keyboard using current keyboard layout, clipboard-pastes whole text.
-            </summary>
-        </member>
-        <member name="F:Au.Types.OKeyText.Paste">
-            <summary>
-            Paste text using the clipboard and Ctrl+V.
-            Few apps don't support it.
-            This option is recommended for long text, because other ways then are too slow.
-            Other options are unreliable when text length is more than 4000 and the target app is too slow to process sent characters. Then <see cref="P:Au.Types.OKey.TextSpeed"/> can help.
-            Also, other options are unreliable when the target app modifies typed text, for example has such features as auto-complete, auto-indent or auto-correct. However some apps modify even pasted text, for example trim the last newline or space.
-            When pasting text, previous clipboard data of some formats is lost. Text is restored by default.
-            </summary>
-        </member>
-        <member name="T:Au.Types.OWait">
-            <summary>
-            Options for 'wait for' functions.
-            </summary>
-            <seealso cref="P:Au.opt.wait"/>
-            <seealso cref="M:Au.wait.forCondition(System.Double,System.Func{System.Boolean},Au.Types.OWait)"/>
-            <seealso cref="T:Au.wait.Loop"/>
-        </member>
-        <member name="P:Au.Types.OWait.Period">
-            <summary>
-            The sleep time between checking the wait condition. Milliseconds.
-            Default: 10.
-            </summary>
-            <value>Valid values: 1-1000.</value>
-            <remarks>
-            Most 'wait for' functions of this library use <see cref="T:Au.wait.Loop"/>, which repeatedly checks the wait condition and sleeps (waits) several ms. This property sets the initial sleep time, which then is incremented by <b>Period</b>/10 ms (default 1 ms) in each loop until reaches <b>Period</b>*50 (default 500 ms).
-            This property makes the response time shorter or longer. If &lt;10, makes it shorter (faster response), but increases CPU usage; if &gt;10, makes it longer (slower response).
-            </remarks>
-            <seealso cref="P:Au.wait.Loop.Period"/>
-            <example>
-            <code><![CDATA[
-            opt.wait.Period = 100;
-            ]]></code>
-            </example>
-        </member>
-        <member name="P:Au.Types.OWait.DoEvents">
-            <summary>
-            Use <see cref="M:Au.wait.doEvents(System.Int32)"/> instead of <see cref="M:Au.wait.ms(System.Int32)"/>.
-            Default: false.
-            </summary>
-            <remarks>
-            Use this property when need to process Windows messages, events, hooks, timers, etc while waiting. More info: <see cref="M:Au.wait.doEvents(System.Int32)"/>.
-            </remarks>
-            <seealso cref="M:Au.wait.forMessagesAndCondition(System.Double,System.Func{System.Boolean})"/>
-            <example>
-            <code><![CDATA[
-            opt.wait.DoEvents = true;
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.Types.OWait.#ctor(System.Int32,System.Boolean)">
-            
-        </member>
-        <member name="T:Au.Types.Coord">
-            <summary>
-            Contains x or y coordinate in screen or some other rectangle that can be specified in various ways: normal, reverse, fraction, center, max.
-            Used for parameters of functions like <see cref="M:Au.mouse.move(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>, <see cref="M:Au.wnd.Move(Au.Types.Coord,Au.Types.Coord,Au.Types.Coord,Au.Types.Coord,System.Boolean,Au.screen)"/>.
-            </summary>
-            <remarks>
-            To specify a normal coordinate, assign an <b>int</b> value (implicit conversion from <b>int</b> to <b>Coord</b>). Else use static functions such as <b>Reverse</b>, <b>Fraction</b> (or assign float), <b>Center</b>, <b>Max</b>, <b>MaxInside</b>.
-            Also there are functions to convert <b>Coord</b> to normal coodinates.
-            </remarks>
-        </member>
-        <member name="P:Au.Types.Coord.Type">
-            <summary>
-            Value type.
-            </summary>
-        </member>
-        <member name="P:Au.Types.Coord.Value">
-            <summary>
-            Non-fraction value.
-            </summary>
-        </member>
-        <member name="P:Au.Types.Coord.FractionValue">
-            <summary>
-            Fraction value.
-            </summary>
-        </member>
-        <member name="P:Au.Types.Coord.IsEmpty">
-            <summary>
-            Returns true if Type == None (when assigned default(Coord)).
-            </summary>
-        </member>
-        <member name="M:Au.Types.Coord.op_Implicit(System.Int32)~Au.Types.Coord">
-            <summary>
-            Creates Coord of Normal type.
-            </summary>
-        </member>
-        <member name="M:Au.Types.Coord.op_Implicit(System.Single)~Au.Types.Coord">
-            <summary>
-            Creates Coord of Fraction type.
-            </summary>
-        </member>
-        <member name="M:Au.Types.Coord.op_Implicit(System.UInt32)~Au.Types.Coord">
-            
-        </member>
-        <member name="M:Au.Types.Coord.op_Implicit(System.Int64)~Au.Types.Coord">
-            
-        </member>
-        <member name="M:Au.Types.Coord.op_Implicit(System.UInt64)~Au.Types.Coord">
-            
-        </member>
-        <member name="M:Au.Types.Coord.Reverse(System.Int32)">
-            <summary>
-            Creates Coord of Reverse type.
-            Value 0 is at the right or bottom, and does not belong to the rectangle. Positive values are towards left or top.
-            </summary>
-        </member>
-        <member name="M:Au.Types.Coord.Fraction(System.Double)">
-            <summary>
-            Creates Coord of Fraction type.
-            Value 0.0 is the left or top of the rectangle. Value 1.0 is the right or bottom of the rectangle. Values &lt;0.0 and &gt;=1.0 are outside of the rectangle.
-            Instead can be used implicit conversion from float, for example argument <c>Coord.Fraction(0.5)</c> can be replaced with <c>0.5f</c>.
-            </summary>
-        </member>
-        <member name="P:Au.Types.Coord.Center">
-            <summary>
-            Returns <c>Fraction(0.5)</c>.
-            </summary>
-            <seealso cref="M:Au.Types.Coord.Fraction(System.Double)"/>
-        </member>
-        <member name="P:Au.Types.Coord.Max">
-            <summary>
-            Returns <c>Reverse(0)</c>.
-            This point will be outside of the rectangle. See also <see cref="P:Au.Types.Coord.MaxInside"/>.
-            </summary>
-            <seealso cref="M:Au.Types.Coord.Reverse(System.Int32)"/>
-        </member>
-        <member name="P:Au.Types.Coord.MaxInside">
-            <summary>
-            Returns <c>Reverse(1)</c>.
-            This point will be inside of the rectangle, at the very right or bottom, assuming the rectangle is not empty.
-            </summary>
-            <seealso cref="M:Au.Types.Coord.Reverse(System.Int32)"/>
-        </member>
-        <member name="M:Au.Types.Coord.NormalizeInRange(System.Int32,System.Int32)">
-            <summary>
-            Converts fractional/reverse coordinate to normal coordinate in a range.
-            </summary>
-            <param name="start">Start of range.</param>
-            <param name="end">End of range.</param>
-        </member>
-        <member name="M:Au.Types.Coord.NormalizeInRect(Au.Types.Coord,Au.Types.Coord,Au.Types.RECT,System.Boolean,System.Boolean)">
-            <summary>
-            Converts fractional/reverse coordinates to normal coordinates in a rectangle.
-            </summary>
-            <param name="x">X coordinate relative to r.</param>
-            <param name="y">Y coordinate relative to r.</param>
-            <param name="r">The rectangle.</param>
-            <param name="widthHeight">Use only width and height of r. If false (default), the function adds r offset (left and top).</param>
-            <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center. Not used with widthHeight.</param>
-        </member>
-        <member name="M:Au.Types.Coord.NormalizeInWindow(Au.Types.Coord,Au.Types.Coord,Au.wnd,System.Boolean,System.Boolean)">
-            <summary>
-            Returns normal coordinates relative to the client area of a window. Converts fractional/reverse coordinates etc.
-            </summary>
-            <param name="x">X coordinate relative to the client area of w.</param>
-            <param name="y">Y coordinate relative to the client area of w.</param>
-            <param name="w">The window.</param>
-            <param name="nonClient">x y are relative to the entire w rectangle, not to its client area.</param>
-            <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center.</param>
-        </member>
-        <member name="M:Au.Types.Coord.Normalize(Au.Types.Coord,Au.Types.Coord,System.Boolean,Au.screen,System.Boolean,System.Boolean)">
-            <summary>
-            Returns normal coordinates relative to the primary screen. Converts fractional/reverse coordinates etc.
-            </summary>
-            <param name="x">X coordinate relative to the specified screen (default - primary).</param>
-            <param name="y">Y coordinate relative to the specified screen (default - primary).</param>
-            <param name="workArea">x y are relative to the work area.</param>
-            <param name="screen">If used, x y are relative to this screen. Default - primary screen. Example: <c>screen.index(1)</c>.</param>
-            <param name="widthHeight">Use only width and height of the screen rectangle. If false, the function adds its offset (left and top, which can be nonzero if using the work area or a non-primary screen).</param>
-            <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center.</param>
-        </member>
-        <member name="M:Au.Types.Coord.ToString">
-            
-        </member>
-        <member name="M:Au.Types.Coord.Equals(Au.Types.Coord)">
-            
-        </member>
-        <member name="M:Au.Types.Coord.op_Equality(Au.Types.Coord,Au.Types.Coord)">
-            
-        </member>
-        <member name="M:Au.Types.Coord.op_Inequality(Au.Types.Coord,Au.Types.Coord)">
-            
-        </member>
-        <member name="M:Au.Types.Coord.GetHashCode">
-            
-        </member>
-        <member name="T:Au.Types.CoordType">
-            <summary>
-            <see cref="T:Au.Types.Coord"/> variable value type.
-            </summary>
-        </member>
-        <member name="F:Au.Types.CoordType.None">
-            <summary>
-            No value. The variable is default(Coord).
-            </summary>
-        </member>
-        <member name="F:Au.Types.CoordType.Normal">
-            <summary>
-            <see cref="P:Au.Types.Coord.Value"/> is pixel offset from left or top of a rectangle.
-            </summary>
-        </member>
-        <member name="F:Au.Types.CoordType.Reverse">
-            <summary>
-            <see cref="P:Au.Types.Coord.Value"/> is pixel offset from right or bottom of a rectangle, towards left or top.
-            </summary>
-        </member>
-        <member name="F:Au.Types.CoordType.Fraction">
-            <summary>
-            <see cref="P:Au.Types.Coord.FractionValue"/> is fraction of a rectangle, where 0.0 is left or top, and 1.0 is right or bottom (outside of the rectangle).
-            </summary>
-        </member>
-        <member name="T:Au.Types.PopupXY">
-            <summary>
-            Can be used to specify coordinates for various popup windows, like <c>new PopupXY(x, y)</c>, <c>(x, y)</c>, <c>PopupXY.In(rectangle)</c>, <c>PopupXY.Mouse</c>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.PopupXY.#ctor(Au.Types.Coord,Au.Types.Coord,System.Boolean,Au.screen)">
-            <summary>
-            Sets position and/or screen.
-            </summary>
-            <param name="x">X relative to the screen or work area. Default - center.</param>
-            <param name="y">X relative to the screen or work area. Default - center.</param>
-            <param name="workArea">x y are relative to the work area of the screen.</param>
-            <param name="screen">Can be used to specify a screen. Default - primary. Example: <c>screen.index(1)</c>.</param>
-            <remarks>
-            Also there is are implicit conversions from tuple (x, y) and POINT. Instead of <c>new PopupXY(x, y)</c> you can use <c>(x, y)</c>. Instead of <c>new PopupXY(p.x, p.y, false)</c> you can use <c>p</c> or <c>(POINT)p</c> .
-            </remarks>
-        </member>
-        <member name="M:Au.Types.PopupXY.In(Au.Types.RECT,Au.Types.Coord,Au.Types.Coord)">
-            <summary>
-            Creates new <b>PopupXY</b> that specifies position in a rectangle. For example of the owner window, like <c>PopupXY.In(myForm.Bounds)</c>.
-            </summary>
-            <param name="r">Rectangle relative to the primary screen.</param>
-            <param name="x">X relative to the rectangle. Default - center.</param>
-            <param name="y">Y relative to the rectangle. Default - center.</param>
-        </member>
-        <member name="M:Au.Types.PopupXY.op_Implicit(System.ValueTuple{Au.Types.Coord,Au.Types.Coord})~Au.Types.PopupXY">
-            <summary>
-            Creates new <b>PopupXY</b> that specifies position relative to the work area of the primary screen.
-            </summary>
-        </member>
-        <member name="M:Au.Types.PopupXY.op_Implicit(Au.Types.POINT)~Au.Types.PopupXY">
-            <summary>Creates new <b>PopupXY</b> that specifies position relative to the primary screen (not to the work area).</summary>
-        </member>
-        <member name="P:Au.Types.PopupXY.Mouse">
-            <summary>
-            Gets point coordinates below mouse cursor, for showing a tooltip-like popup.
-            </summary>
-        </member>
-        <member name="M:Au.Types.PopupXY.GetScreen">
-            <summary>
-            Gets <see cref="F:Au.Types.PopupXY.screen"/>.Now if not empty, else screen that contains the specified point.
-            </summary>
-        </member>
-        <member name="T:Au.Types.FontNSS">
-            <summary>
-            Font name, size and style.
-            If <b>Name</b> not set, will be used standard GUI font; then <b>Size</b> can be 0 to use size of standard GUI font.
-            On high-DPI screen the font size will be scaled.
-            </summary>
-        </member>
-        <member name="M:Au.Types.FontNSS.#ctor(System.Int32,System.String,System.Boolean,System.Boolean)">
-            <summary>
-            Font name, size and style.
-            If <b>Name</b> not set, will be used standard GUI font; then <b>Size</b> can be 0 to use size of standard GUI font.
-            On high-DPI screen the font size will be scaled.
-            </summary>
-        </member>
-        <member name="M:Au.Types.FontNSS.CreateFont(Au.Types.DpiOf)">
-            <summary>
-            Creates font.
-            </summary>
-            <param name="dpi">DPI for scaling.</param>
-        </member>
-        <member name="T:Au.Types.AnyWnd">
-            <summary>
-            Window handle.
-            Used for function parameters where the function needs a window handle as <see cref="T:Au.wnd"/> but also allows to pass a variable of any of these types: System.Windows.Forms.Control (Form or control), System.Windows.DependencyObject (WPF window or control), IntPtr (window handle).
-            </summary>
-        </member>
-        <member name="M:Au.Types.AnyWnd.op_Implicit(Au.wnd)~Au.Types.AnyWnd">
-            <summary> Assignment of a value of type wnd. </summary>
-        </member>
-        <member name="M:Au.Types.AnyWnd.op_Implicit(System.IntPtr)~Au.Types.AnyWnd">
-            <summary> Assignment of a window handle as IntPtr. </summary>
-        </member>
-        <member name="M:Au.Types.AnyWnd.op_Implicit(System.Windows.Forms.Control)~Au.Types.AnyWnd">
-            <summary> Assignment of a value of type System.Windows.Forms.Control (Form or any control class). </summary>
-        </member>
-        <member name="M:Au.Types.AnyWnd.op_Implicit(System.Windows.DependencyObject)~Au.Types.AnyWnd">
-            <summary> Assignment of a value of type System.Windows.DependencyObject (WPF window or control). </summary>
-        </member>
-        <member name="P:Au.Types.AnyWnd.Hwnd">
-            <summary>
-            Gets the window or control handle as wnd.
-            Returns default(wnd) if not assigned.
-            </summary>
-        </member>
-        <member name="P:Au.Types.AnyWnd.IsEmpty">
-            <summary>
-            true if this is default(AnyWnd).
-            </summary>
-        </member>
-        <member name="T:Au.Types.DStringList">
-            <summary>
-            Used for function parameters to specify multiple strings.
-            Contains a string like "One|Two|Three" or string[] or List&lt;string&gt;. Has implicit conversions from these types.
-            </summary>
-        </member>
-        <member name="M:Au.Types.DStringList.op_Implicit(System.String)~Au.Types.DStringList">
-            <summary> Assignment of a value of type string. </summary>
-        </member>
-        <member name="M:Au.Types.DStringList.op_Implicit(System.String[])~Au.Types.DStringList">
-            <summary> Assignment of a value of type string[]. </summary>
-        </member>
-        <member name="M:Au.Types.DStringList.op_Implicit(System.Collections.Generic.List{System.String})~Au.Types.DStringList">
-            <summary> Assignment of a value of type List&lt;string&gt;. </summary>
-        </member>
-        <member name="P:Au.Types.DStringList.Value">
-            <summary>
-            The raw value.
-            </summary>
-        </member>
-        <member name="M:Au.Types.DStringList.ToArray">
-            <summary>
-            Converts the value to string[].
-            </summary>
-        </member>
-        <member name="T:Au.Types.POINT">
-            <summary>
-            Point coordinates x y.
-            </summary>
-        </member>
-        <member name="M:Au.Types.POINT.From(System.Drawing.PointF,System.Boolean)">
-            <param name="p"></param>
-            <param name="round">Can round up, for example 1.7 to 2.</param>
-            <exception cref="T:System.OverflowException"></exception>
-        </member>
-        <member name="M:Au.Types.POINT.From(System.Windows.Point,System.Boolean)">
-            <param name="p"></param>
-            <param name="round">Can round up, for example 1.7 to 2.</param>
-            <exception cref="T:System.OverflowException"></exception>
-        </member>
-        <member name="M:Au.Types.POINT.Offset(System.Int32,System.Int32)">
-            <summary>Adds x and y to this.x and this.y.</summary>
-        </member>
-        <member name="M:Au.Types.POINT.op_Addition(Au.Types.POINT,System.ValueTuple{System.Int32,System.Int32})">
-            <summary>Returns <c>new POINT(p.x + d.x, p.y + d.y)</c>.</summary>
-        </member>
-        <member name="T:Au.Types.SIZE">
-            <summary>
-            Width and height.
-            </summary>
-        </member>
-        <member name="M:Au.Types.SIZE.From(System.Drawing.SizeF,System.Boolean)">
-            <param name="z"></param>
-            <param name="round">Can round up, for example 1.7 to 2.</param>
-            <exception cref="T:System.OverflowException"></exception>
-        </member>
-        <member name="M:Au.Types.SIZE.From(System.Windows.Size,System.Boolean)">
-            <param name="z"></param>
-            <param name="round">Can round up, for example 1.7 to 2.</param>
-            <exception cref="T:System.OverflowException"></exception>
-        </member>
-        <member name="M:Au.Types.SIZE.op_Addition(Au.Types.SIZE,System.ValueTuple{System.Int32,System.Int32})">
-            <summary>Returns <c>new SIZE(z.width + d.x, z.height + d.y)</c>.</summary>
-        </member>
-        <member name="T:Au.Types.RECT">
-            <summary>
-            Rectangle coordinates left top right bottom.
-            </summary>
-            <remarks>
-            This type can be used with Windows API functions. The .NET <b>Rectangle</b> etc can't, because their fields are different.
-            Has conversions from/to <b>Rectangle</b>.
-            </remarks>
-        </member>
-        <member name="M:Au.Types.RECT.#ctor(System.Int32,System.Int32,System.Int32,System.Int32)">
-            <summary>
-            Sets all fields.
-            </summary>
-            <param name="left"></param>
-            <param name="top"></param>
-            <param name="width">Width (not <i>right</i>).</param>
-            <param name="height">Height (not <i>bottom</i>).</param>
-            <remarks>
-            Sets <c>right = left + width; bottom = top + height;</c>. To specify right/bottom instead of width/height, use <see cref="M:Au.Types.RECT.FromLTRB(System.Int32,System.Int32,System.Int32,System.Int32)"/> instead.
-            </remarks>
-        </member>
-        <member name="M:Au.Types.RECT.FromLTRB(System.Int32,System.Int32,System.Int32,System.Int32)">
-            <summary>
-            Creates <b>RECT</b> with specified <b>left</b>, <b>top</b>, <b>right</b> and <b>bottom</b>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.RECT.op_Implicit(System.ValueTuple{System.Int32,System.Int32,System.Int32,System.Int32})~Au.Types.RECT">
-            <summary>
-            Converts from tuple (left, top, width, height).
-            </summary>
-        </member>
-        <member name="M:Au.Types.RECT.From(System.Drawing.RectangleF,System.Boolean)">
-            <param name="r"></param>
-            <param name="round">Can round up, for example 1.7 to 2.</param>
-            <exception cref="T:System.OverflowException"></exception>
-        </member>
-        <member name="M:Au.Types.RECT.From(System.Windows.Rect,System.Boolean)">
-            <param name="r"></param>
-            <param name="round">Can round up, for example 1.7 to 2.</param>
-            <exception cref="T:System.OverflowException"></exception>
-        </member>
-        <member name="P:Au.Types.RECT.Is0">
-            <summary>
-            Returns true if all fields == 0.
-            </summary>
-        </member>
-        <member name="P:Au.Types.RECT.NoArea">
-            <summary>
-            Returns true if the rectangle area is empty or invalid: <c>right&lt;=left || bottom&lt;=top;</c>
-            </summary>
-        </member>
-        <member name="P:Au.Types.RECT.Width">
-            <summary>
-            Gets or sets width.
-            </summary>
-        </member>
-        <member name="P:Au.Types.RECT.Height">
-            <summary>
-            Gets or sets height.
-            </summary>
-        </member>
-        <member name="P:Au.Types.RECT.XY">
-            <summary>
-            Returns <c>new POINT(left, top)</c>.
-            </summary>
-        </member>
-        <member name="P:Au.Types.RECT.Size">
-            <summary>
-            Returns <c>new SIZE(Width, Height)</c>.
-            </summary>
-        </member>
-        <member name="P:Au.Types.RECT.CenterX">
-            <summary>
-            Gets horizontal center.
-            </summary>
-        </member>
-        <member name="P:Au.Types.RECT.CenterY">
-            <summary>
-            Gets vertical center.
-            </summary>
-        </member>
-        <member name="M:Au.Types.RECT.Contains(System.Int32,System.Int32)">
-            <summary>
-            Returns true if this rectangle contains the specified point.
-            </summary>
-        </member>
-        <member name="M:Au.Types.RECT.Contains(Au.Types.POINT)">
-            <summary>
-            Returns true if this rectangle contains the specified point.
-            </summary>
-        </member>
-        <member name="M:Au.Types.RECT.Contains(Au.Types.RECT)">
-            <summary>
-            Returns true if this rectangle contains entire specified rectangle.
-            </summary>
-        </member>
-        <member name="M:Au.Types.RECT.Inflate(System.Int32,System.Int32)">
-            <summary>
-            Makes this rectangle bigger or smaller: <c>left-=dx; right+=dx; top-=dy; bottom+=dy;</c>
-            Use negative dx/dy to make the rectangle smaller. Note: too big negative dx/dy can make it invalid (right&lt;left or bottom&lt;top).
-            </summary>
-        </member>
-        <member name="M:Au.Types.RECT.Intersect(Au.Types.RECT)">
-            <summary>
-            Replaces this rectangle with the intersection of itself and the specified rectangle.
-            Returns true if the rectangles intersect.
-            If they don't intersect, makes this RECT empty.
-            </summary>
-        </member>
-        <member name="M:Au.Types.RECT.Intersect(Au.Types.RECT,Au.Types.RECT)">
-            <summary>
-            Returns the intersection rectangle of two rectangles.
-            If they don't intersect, returns empty rectangle.
-            </summary>
-        </member>
-        <member name="M:Au.Types.RECT.IntersectsWith(Au.Types.RECT)">
-            <summary>
-            Returns true if this rectangle and another rectangle intersect.
-            </summary>
-        </member>
-        <member name="M:Au.Types.RECT.Offset(System.Int32,System.Int32)">
-            <summary>
-            Moves this rectangle by the specified offsets: <c>left+=dx; right+=dx; top+=dy; bottom+=dy;</c>
-            Negative dx moves to the left. Negative dy moves up.
-            </summary>
-        </member>
-        <member name="M:Au.Types.RECT.Move(System.Int32,System.Int32)">
-            <summary>
-            Moves this rectangle so that <b>left</b>=<i>x</i> and <b>right</b>=<i>y</i>. Does not change <b>Width</b> and <b>Height</b>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.RECT.Union(Au.Types.RECT)">
-            <summary>
-            Replaces this rectangle with the union of itself and the specified rectangle.
-            Union is the smallest rectangle that contains two full rectangles.
-            Returns true if finally this rectangle is not empty.
-            If either rectangle is empty (Width or Height is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
-            </summary>
-        </member>
-        <member name="M:Au.Types.RECT.Union(Au.Types.RECT,Au.Types.RECT)">
-            <summary>
-            Returns the union of two rectangles.
-            Union is the smallest rectangle that contains two full rectangles.
-            If either rectangle is empty (Width or Height is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
-            </summary>
-        </member>
-        <member name="M:Au.Types.RECT.Normalize(System.Boolean)">
-            <summary>
-            If width or height are negative, modifies this rectangle so that they would not be negative.
-            </summary>
-            <param name="swap">true - swap right/left, bottom/top; false - set right = left, bottom = top.</param>
-        </member>
-        <member name="M:Au.Types.RECT.MoveInScreen(Au.Types.Coord,Au.Types.Coord,Au.screen,System.Boolean,System.Boolean)">
-            <summary>
-            Moves this rectangle to the specified coordinates in the specified screen, and ensures that whole rectangle is in screen.
-            Final rectangle coordinates are relative to the primary screen.
-            </summary>
-            <param name="x">X coordinate in the specified screen. If default(Coord) - center. Can be <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
-            <param name="y">Y coordinate in the specified screen. If default(Coord) - center. Can be <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
-            <param name="screen">Use this screen. If default, uses the primary screen. Example: <c>screen.index(1)</c>.</param>
-            <param name="workArea">Use the work area, not whole screen. Default true.</param>
-            <param name="ensureInScreen">If part of rectangle is not in screen, move and/or resize it so that entire rectangle would be in screen. Default true.</param>
-            <remarks>
-            This function can be used to calculate new window location before creating it. If window already exists, use <see cref="M:Au.wnd.MoveInScreen(Au.Types.Coord,Au.Types.Coord,Au.screen,System.Boolean,System.Boolean)"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.Types.RECT.MoveInRect(Au.Types.RECT,Au.Types.Coord,Au.Types.Coord,System.Boolean)">
-            <summary>
-            Moves this rectangle to the specified coordinates in another rectangle <i>r</i>.
-            </summary>
-            <param name="r">Another rectangle.</param>
-            <param name="x">X coordinate relative to <i>r</i>. Default - center. Can be <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
-            <param name="y">Y coordinate relative to <i>r</i>. Default - center. Can be <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
-            <param name="ensureInRect">If part of rectangle is not in <i>r</i>, move and/or resize it so that entire rectangle would be in <i>r</i>.</param>
-        </member>
-        <member name="M:Au.Types.RECT.EnsureInScreen(Au.screen,System.Boolean)">
-            <summary>
-            Adjusts this rectangle to ensure that whole rectangle is in screen.
-            Initial and final rectangle coordinates are relative to the primary screen.
-            </summary>
-            <param name="screen">Use this screen (see <see cref="T:Au.screen"/>). If default, uses screen of the rectangle (or nearest).</param>
-            <param name="workArea">Use the work area, not whole screen. Default true.</param>
-            <remarks>
-            This function can be used to calculate new window location before creating it. If window already exists, use <see cref="M:Au.wnd.EnsureInScreen(Au.screen,System.Boolean)"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.Types.RECT.ToString">
-            <summary>
-            Converts to string "{L=left T=top W=width H=height}".
-            </summary>
-            <seealso cref="M:Au.Types.RECT.TryParse(System.String,Au.Types.RECT@)"/>
-        </member>
-        <member name="M:Au.Types.RECT.ToStringSimple">
-            <summary>
-            Converts to string "left top width height".
-            </summary>
-            <seealso cref="M:Au.Types.RECT.TryParse(System.String,Au.Types.RECT@)"/>
-        </member>
-        <member name="M:Au.Types.RECT.ToStringFormat(System.String)">
-            <summary>
-            Formats string from RECT main fields and properties.
-            </summary>
-            <param name="format">
-            <see cref="M:System.Text.StringBuilder.AppendFormat(System.IFormatProvider,System.String,System.Object)"/> format string. Example: <c>"({0}, {1}, {4}, {5})"</c>.
-            This function passes to AppendFormat 6 values in this order: <b>left</b>, <b>top</b>, <b>right</b>, <b>bottom</b>, <b>Width</b>, <b>Height</b>.
-            </param>
-        </member>
-        <member name="M:Au.Types.RECT.TryParse(System.String,Au.Types.RECT@)">
-            <summary>
-            Converts string to RECT.
-            Returns false if invalid string format.
-            </summary>
-            <param name="s">String in format "{L=left T=top W=width H=height}" (<see cref="M:Au.Types.RECT.ToString"/>) or "left top width height" (<see cref="M:Au.Types.RECT.ToStringSimple"/>).</param>
-            <param name="r"></param>
-        </member>
-        <member name="T:Au.Types.ColorInt">
-            <summary>
-            Color, as int in 0xAARRGGBB format.
-            Can convert from/to <see cref="T:System.Drawing.Color"/>, <see cref="T:System.Windows.Media.Color"/>, int (0xAARRGGBB), Windows COLORREF (0xBBGGRR), string.
-            </summary>
-        </member>
-        <member name="F:Au.Types.ColorInt.argb">
-            <summary>
-            Color value in 0xAARRGGBB format.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ColorInt.#ctor(System.Int32,System.Boolean)">
-            <param name="colorARGB">Color value in 0xAARRGGBB or 0xRRGGBB format.</param>
-            <param name="makeOpaque">Set alpha = 0xFF.</param>
-        </member>
-        <member name="M:Au.Types.ColorInt.#ctor(System.UInt32,System.Boolean)">
-            <param name="colorARGB">Color value in 0xAARRGGBB or 0xRRGGBB format.</param>
-            <param name="makeOpaque">Set alpha = 0xFF.</param>
-        </member>
-        <member name="M:Au.Types.ColorInt.op_Implicit(System.Int32)~Au.Types.ColorInt">
-            <summary>
-            Converts from int color value in 0xRRGGBB or 0xAARRGGBB format.
-            Sets alpha 0xFF.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ColorInt.op_Implicit(System.UInt32)~Au.Types.ColorInt">
-            <summary>
-            Converts from int color value in 0xRRGGBB or 0xAARRGGBB format.
-            Sets alpha 0xFF.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ColorInt.op_Implicit(System.Drawing.Color)~Au.Types.ColorInt">
-            <summary>
-            Converts from <see cref="T:System.Drawing.Color"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ColorInt.op_Implicit(System.Windows.Media.Color)~Au.Types.ColorInt">
-            <summary>
-            Converts from <see cref="T:System.Windows.Media.Color"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ColorInt.FromString(System.String,Au.Types.ColorInt@)">
-            <summary>
-            Converts from color name (<see cref="M:System.Drawing.Color.FromName(System.String)"/>) or string "0xRRGGBB" or "#RRGGBB".
-            </summary>
-            <remarks>
-            If s is a hex number that contains 6 or less hex digits, makes opaque (alpha 0xFF).
-            If s is null or invalid, sets c.argb = 0 and returns false.
-            </remarks>
-        </member>
-        <member name="M:Au.Types.ColorInt.FromBGR(System.Int32,System.Boolean)">
-            <summary>
-            Converts from Windows native COLORREF (0xBBGGRR to 0xAARRGGBB).
-            </summary>
-            <param name="colorBGR">Color in 0xBBGGRR format.</param>
-            <param name="makeOpaque">If true, sets alpha = 0xFF. If null, sets alpha = 0xFF if it is 0 in <i>colorBGR</i>.</param>
-        </member>
-        <member name="M:Au.Types.ColorInt.ToBGR(System.Boolean)">
-            <summary>
-            Converts to Windows native COLORREF (0xBBGGRR from 0xAARRGGBB).
-            Returns color in COLORREF format. Does not modify this variable.
-            </summary>
-            <param name="zeroAlpha">Set the alpha byte = 0.</param>
-        </member>
-        <member name="M:Au.Types.ColorInt.op_Explicit(Au.Types.ColorInt)~System.Drawing.Color">
-            <summary>Converts to <see cref="T:System.Drawing.Color"/>.</summary>
-        </member>
-        <member name="M:Au.Types.ColorInt.op_Explicit(Au.Types.ColorInt)~System.Windows.Media.Color">
-            <summary>Converts to <see cref="T:System.Windows.Media.Color"/>.</summary>
-        </member>
-        <member name="M:Au.Types.ColorInt.SwapRB(System.Int32)">
-            <summary>
-            Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).
-            ARGB is used in .NET, GDI+ and HTML/CSS.
-            ABGR is used by most Windows API; aka COLORREF.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ColorInt.SwapRB(System.UInt32)">
-            <summary>
-            Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).
-            ARGB is used in .NET, GDI+ and HTML/CSS.
-            ABGR is used by most Windows API; aka COLORREF.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ColorInt.GetPerceivedBrightness">
-            <summary>
-            Calculates color's perceived brightness.
-            Returns a value in range 0 (brightness of black color) to 1 (brightness of white color).
-            </summary>
-            <remarks>
-            Unlike Color.GetBrightness, this function gives different weights for red, green and blue components.
-            Does not use alpha.
-            </remarks>
-        </member>
-        <member name="M:Au.Types.ColorInt.AdjustLuminance(System.Int32,System.Boolean)">
-            <summary>
-            Changes color's luminance (makes darker or brighter).
-            Returns new color. Does not modify this variable.
-            </summary>
-            <param name="n">The luminance in units of 0.1 percent of the range (which depends on totalRange). Can be from -1000 to 1000.</param>
-            <param name="totalRange">If true, n is in the whole luminance range (from minimal to maximal possible). If false, n is in the range from current luminance of the color to the maximal (if n positive) or minimal (if n negative) luminance.</param>
-            <remarks>
-            Calls API <msdn>ColorAdjustLuma</msdn>.
-            Does not change hue and saturation. Does not use alpha.
-            </remarks>
-        </member>
-        <member name="M:Au.Types.VARIANT.Dispose">
-            <summary>
-            Calls VariantClear.
-            </summary>
-        </member>
-        <member name="M:Au.Types.VARIANT.ToString">
-            <summary>
-            Converts to string.
-            </summary>
-        </member>
-        <member name="M:Au.Types.VARIANT.ToStringAndDispose">
-            <summary>
-            Converts to string.
-            Disposes this VARIANT.
-            </summary>
-        </member>
-        <member name="P:Au.Types.BSTR.Is0">
-            <summary>
-            Returns true if the string is null.
-            </summary>
-        </member>
-        <member name="P:Au.Types.BSTR.Item(System.Int32)">
-            <summary>
-            Unsafe.
-            </summary>
-        </member>
-        <member name="M:Au.Types.BSTR.ToString">
-            <summary>
-            Converts to string.
-            Does not dispose.
-            </summary>
-        </member>
-        <member name="M:Au.Types.BSTR.ToStringAndDispose">
-            <summary>
-            Converts to string and disposes.
+            Returns string containing exception type name and message.
             </summary>
         </member>
         <member name="T:Au.Types.ExtWpf">
@@ -4675,6 +3427,293 @@
             Calls <see cref="M:Au.elm.fromEvent(Au.wnd,Au.Types.EObjid,System.Int32)"/>.
             </summary>
         </member>
+        <member name="T:Au.Types.ColorInt">
+            <summary>
+            Color, as int in 0xAARRGGBB format.
+            Can convert from/to <see cref="T:System.Drawing.Color"/>, <see cref="T:System.Windows.Media.Color"/>, int (0xAARRGGBB), Windows COLORREF (0xBBGGRR), string.
+            </summary>
+        </member>
+        <member name="F:Au.Types.ColorInt.argb">
+            <summary>
+            Color value in 0xAARRGGBB format.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ColorInt.#ctor(System.Int32,System.Boolean)">
+            <param name="colorARGB">Color value in 0xAARRGGBB or 0xRRGGBB format.</param>
+            <param name="makeOpaque">Set alpha = 0xFF.</param>
+        </member>
+        <member name="M:Au.Types.ColorInt.#ctor(System.UInt32,System.Boolean)">
+            <param name="colorARGB">Color value in 0xAARRGGBB or 0xRRGGBB format.</param>
+            <param name="makeOpaque">Set alpha = 0xFF.</param>
+        </member>
+        <member name="M:Au.Types.ColorInt.op_Implicit(System.Int32)~Au.Types.ColorInt">
+            <summary>
+            Converts from int color value in 0xRRGGBB or 0xAARRGGBB format.
+            Sets alpha 0xFF.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ColorInt.op_Implicit(System.UInt32)~Au.Types.ColorInt">
+            <summary>
+            Converts from int color value in 0xRRGGBB or 0xAARRGGBB format.
+            Sets alpha 0xFF.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ColorInt.op_Implicit(System.Drawing.Color)~Au.Types.ColorInt">
+            <summary>
+            Converts from <see cref="T:System.Drawing.Color"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ColorInt.op_Implicit(System.Windows.Media.Color)~Au.Types.ColorInt">
+            <summary>
+            Converts from <see cref="T:System.Windows.Media.Color"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ColorInt.FromString(System.String,Au.Types.ColorInt@)">
+            <summary>
+            Converts from color name (<see cref="M:System.Drawing.Color.FromName(System.String)"/>) or string "0xRRGGBB" or "#RRGGBB".
+            </summary>
+            <remarks>
+            If s is a hex number that contains 6 or less hex digits, makes opaque (alpha 0xFF).
+            If s is null or invalid, sets c.argb = 0 and returns false.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ColorInt.FromBGR(System.Int32,System.Boolean)">
+            <summary>
+            Converts from Windows native COLORREF (0xBBGGRR to 0xAARRGGBB).
+            </summary>
+            <param name="colorBGR">Color in 0xBBGGRR format.</param>
+            <param name="makeOpaque">If true, sets alpha = 0xFF. If null, sets alpha = 0xFF if it is 0 in <i>colorBGR</i>.</param>
+        </member>
+        <member name="M:Au.Types.ColorInt.ToBGR(System.Boolean)">
+            <summary>
+            Converts to Windows native COLORREF (0xBBGGRR from 0xAARRGGBB).
+            Returns color in COLORREF format. Does not modify this variable.
+            </summary>
+            <param name="zeroAlpha">Set the alpha byte = 0.</param>
+        </member>
+        <member name="M:Au.Types.ColorInt.op_Explicit(Au.Types.ColorInt)~System.Drawing.Color">
+            <summary>Converts to <see cref="T:System.Drawing.Color"/>.</summary>
+        </member>
+        <member name="M:Au.Types.ColorInt.op_Explicit(Au.Types.ColorInt)~System.Windows.Media.Color">
+            <summary>Converts to <see cref="T:System.Windows.Media.Color"/>.</summary>
+        </member>
+        <member name="M:Au.Types.ColorInt.SwapRB(System.Int32)">
+            <summary>
+            Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).
+            ARGB is used in .NET, GDI+ and HTML/CSS.
+            ABGR is used by most Windows API; aka COLORREF.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ColorInt.SwapRB(System.UInt32)">
+            <summary>
+            Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).
+            ARGB is used in .NET, GDI+ and HTML/CSS.
+            ABGR is used by most Windows API; aka COLORREF.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ColorInt.FromHLS(System.Int32,System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Converts from hue-luminance-saturation (HLS).
+            </summary>
+            <param name="H">Hue, 0 to 240.</param>
+            <param name="L">Luminance, 0 to 240.</param>
+            <param name="S">Saturation, 0 to 240.</param>
+            <param name="bgr">Return color in 0xBBGGRR format. If false, 0xRRGGBB.</param>
+            <returns>Color in 0xRRGGBB or 0xBBGGRR format, depending on <b>bgr</b>. Alpha 0.</returns>
+        </member>
+        <member name="M:Au.Types.ColorInt.ToHLS(System.Int32,System.Boolean)">
+            <summary>
+            Converts to hue-luminance-saturation (HLS).
+            </summary>
+            <param name="color">Color in 0xRRGGBB or 0xBBGGRR format, depending on <b>bgr</b>. Ignores alpha.</param>
+            <param name="bgr"><i>color</i> is in 0xBBGGRR format. If false, 0xRRGGBB.</param>
+            <returns>Hue, luminance and saturation. All 0 to 240.</returns>
+        </member>
+        <member name="M:Au.Types.ColorInt.GetPerceivedBrightness(System.Int32,System.Boolean)">
+            <summary>
+            Calculates color's perceived brightness.
+            Returns 0 to 1.
+            </summary>
+            <param name="color">Color in 0xRRGGBB or 0xBBGGRR format, depending on <b>bgr</b>. Ignores alpha.</param>
+            <param name="bgr"><i>color</i> is in 0xBBGGRR format. If false, 0xRRGGBB.</param>
+            <remarks>
+            Unlike <see cref="M:Au.Types.ColorInt.ToHLS(System.Int32,System.Boolean)"/> and <see cref="M:System.Drawing.Color.GetBrightness"/>, this function uses different weights for red, green and blue components.
+            Ignores alpha.
+            </remarks>
+        </member>
+        <member name="T:Au.Types.NoDoc">
+            <summary>
+            In DocFX-generated help files removes documentation and auto-generated links in TOC and class pages.
+            </summary>
+        </member>
+        <member name="T:Au.Types.NativeApi">
+            <summary>
+            If a class is derived from this class, editor adds undeclared Windows API to its completion list.
+            </summary>
+        </member>
+        <member name="T:Au.Types.NativeApi.l">
+            
+        </member>
+        <member name="T:Au.Types.UsingEndAction">
+            <summary>
+            Invokes specified action (calls callback function) at the end of <c>using(...) { ... }</c>.
+            Usually returned by functions. Example: <see cref="M:Au.opt.scope.mouse(System.Boolean)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.UsingEndAction.#ctor(System.Action)">
+            <summary>Sets action to be invoked when disposing this variable.</summary>
+        </member>
+        <member name="M:Au.Types.UsingEndAction.Dispose">
+            <summary>Invokes the action if not null.</summary>
+        </member>
+        <member name="T:Au.Types.PSFormat">
+            <summary>
+            Used with <see cref="T:Au.Types.ParamStringAttribute"/> to specify string parameter format.
+            </summary>
+        </member>
+        <member name="F:Au.Types.PSFormat.None">
+            
+        </member>
+        <member name="F:Au.Types.PSFormat.keys">
+            <summary>
+            Keys. See <see cref="M:Au.keys.send(Au.Types.KKeysEtc[])"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.PSFormat.wildex">
+            <summary>
+            [Wildcard expression](xref:wildcard_expression).
+            </summary>
+        </member>
+        <member name="F:Au.Types.PSFormat.regexp">
+            <summary>
+            PCRE regular expression.
+            </summary>
+        </member>
+        <member name="F:Au.Types.PSFormat.regexpReplacement">
+            <summary>
+            PCRE regular expression replacement string.
+            </summary>
+        </member>
+        <member name="F:Au.Types.PSFormat.NetRegex">
+            <summary>
+            .NET regular expression.
+            </summary>
+        </member>
+        <member name="T:Au.Types.ParamStringAttribute">
+            <summary>
+            A function parameter with this attribute is a string of the specified format, for example regular expression.
+            Code editors should help to create correct string arguments: provide tools or reference, show errors.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ParamStringAttribute.#ctor(Au.Types.PSFormat)">
+            
+        </member>
+        <member name="P:Au.Types.ParamStringAttribute.Format">
+            
+        </member>
+        <member name="T:Au.Types.AuException">
+            <summary>
+            The base exception class used in this library.
+            Thrown when something fails and there is no better exception type for that failure.
+            </summary>
+            <remarks>
+            Some constructors support Windows API error code. Then <see cref="P:Au.Types.AuException.Message"/> will contain its error description.
+            If the string passed to the constructor starts with "*", replaces the "*" with "Failed to ". If does not end with ".", appends ".".
+            </remarks>
+        </member>
+        <member name="M:Au.Types.AuException.#ctor(System.String,System.Exception)">
+            <summary>
+            Sets <b>Message</b> = <i>message</i> (default "Failed.").
+            Sets <b>NativeErrorCode</b> = 0.
+            </summary>
+        </member>
+        <member name="M:Au.Types.AuException.#ctor(System.Int32,System.String,System.Exception)">
+            <summary>
+            Sets <b>NativeErrorCode</b> = <c>(errorCode != 0) ? errorCode : lastError.code</c>.
+            Sets <b>Message</b> = <c>message + " " + lastError.messageFor(NativeErrorCode)</c>.
+            </summary>
+        </member>
+        <member name="P:Au.Types.AuException.NativeErrorCode">
+            <summary> Gets the Windows API error code. </summary>
+        </member>
+        <member name="P:Au.Types.AuException.Message">
+            <summary> Gets error message. </summary>
+        </member>
+        <member name="F:Au.Types.AuException.FormattedMessage">
+            <summary> String created by FormatMessage(), which should be called by the Message override if null. Initially null. </summary>
+        </member>
+        <member name="M:Au.Types.AuException.FormatMessage(System.String,System.String)">
+            <summary>
+            Formats error message. Sets and returns FormattedMessage.
+            As base text, uses the text passed to the constructor (default "Failed.").
+            If it starts with "*", replaces the "*" with "Failed to ".
+            If it ends with "*", replaces the "*" with commonPostfix if it is not empty.
+            If then the message does not end with ".", appends ".".
+            If appendMessage is null, uses lastError.messageFor(NativeErrorCode) if NativeErrorCode not 0.
+            If then appendMessage is not empty, appends " " and appendMessage.
+            Also appends InnerException.Message in new tab-indented line if InnerException is not null.
+            </summary>
+        </member>
+        <member name="M:Au.Types.AuException.ThrowIfHresultNot0(System.Int32,System.String)">
+            <summary>
+            If errorCode is not 0, throws AuException that includes the code and its message.
+            More info: <see cref="M:Au.Types.AuException.FormatMessage(System.String,System.String)"/>.
+            </summary>
+            <param name="errorCode">Windows API error code or HRESULT.</param>
+            <param name="message">Main message. The message of the error code will be appended to it.</param>
+        </member>
+        <member name="M:Au.Types.AuException.ThrowIfHresultNegative(System.Int32,System.String)">
+            <summary>
+            If errorCode is less than 0, throws AuException that includes the code and its message.
+            More info: <see cref="M:Au.Types.AuException.FormatMessage(System.String,System.String)"/>.
+            </summary>
+            <param name="errorCode">Windows API error code or HRESULT.</param>
+            <param name="message">Main message. The message of the error code will be appended to it.</param>
+        </member>
+        <member name="T:Au.Types.AuWndException">
+            <summary>
+            Exception thrown mostly by <see cref="T:Au.wnd"/> functions.
+            </summary>
+            <remarks>
+            Some constructors support Windows API error code. Then Message also will contain its error description.
+            If error code ERROR_INVALID_WINDOW_HANDLE, Message also depends on whether the window handle is 0.
+            If parameter <i>errorCode</i> is 0 or not used: if the window handle is invalid, uses ERROR_INVALID_WINDOW_HANDLE.
+            If the string passed to the constructor starts with "*", replaces the "*" with "Failed to ". If ends with "*", replaces the "*" with " window.". If does not end with ".", appends ".".
+            </remarks>
+        </member>
+        <member name="M:Au.Types.AuWndException.#ctor(Au.wnd,System.String,System.Exception)">
+            <summary>
+            Sets <b>Message</b> = <i>message</i> (default "Failed.").
+            Sets <b>NativeErrorCode</b> = <c>w.IsAlive ? 0 : ERROR_INVALID_WINDOW_HANDLE</c>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.AuWndException.#ctor(Au.wnd,System.Int32,System.String,System.Exception)">
+            <summary>
+            Sets <b>NativeErrorCode</b> = <c>(errorCode != 0) ? errorCode : (w.IsAlive ? lastError.code : ERROR_INVALID_WINDOW_HANDLE)</c>.
+            Sets <b>Message</b> = <c>message + " " + lastError.messageFor(NativeErrorCode)</c>.
+            </summary>
+        </member>
+        <member name="P:Au.Types.AuWndException.Window">
+            <summary> Gets the window passed to the constructor. </summary>
+        </member>
+        <member name="P:Au.Types.AuWndException.Message">
+            <summary> Gets error message. </summary>
+        </member>
+        <member name="T:Au.Types.NotFoundException">
+            <summary>
+            Functions that search for an object can throw this exception when not found.
+            </summary>
+        </member>
+        <member name="M:Au.Types.NotFoundException.#ctor">
+            <summary>
+            Sets Message = "Not found.".
+            </summary>
+        </member>
+        <member name="M:Au.Types.NotFoundException.#ctor(System.String)">
+            <summary>
+            Sets Message = message.
+            </summary>
+        </member>
         <member name="T:Au.Types.JSettings">
             <summary>
             Base of records that contain various settings as public fields. Loads and lazily auto-saves from/to a JSON file.
@@ -4742,6 +3781,684 @@
             <remarks>
             Returns false if <b>Load</b> did not find the file (the settings were not saved) or failed to load/parse or parameter <i>useDefault</i> = true or parameter <i>file</i> = null.
             </remarks>
+        </member>
+        <member name="T:Au.Types.OWarnings">
+            <summary>
+            Options for run-time warnings (<see cref="M:Au.print.warning(System.String,System.Int32,System.String)"/>).
+            </summary>
+        </member>
+        <member name="M:Au.Types.OWarnings.#ctor(Au.Types.OWarnings)">
+            <summary>
+            Initializes this instance with default values or values copied from another instance.
+            </summary>
+            <param name="cloneOptions">If not null, copies its options into this variable.</param>
+        </member>
+        <member name="P:Au.Types.OWarnings.Verbose">
+            <summary>
+            If true, some library functions may display more warnings and other info.
+            If not explicitly set, the default value depends on the build configuration of the main assembly: true if Debug, false if Release (optimize true). See <see cref="M:Au.More.AssemblyUtil_.IsDebug(System.Reflection.Assembly)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.OWarnings.Disable(System.String[])">
+            <summary>
+            Disables one or more run-time warnings.
+            </summary>
+            <param name="warningsWild">One or more warnings as case-insensitive wildcard strings. See <see cref="M:Au.ExtString.Like(System.String,System.String,System.Boolean)"/>.</param>
+            <remarks>
+            Adds the strings to an internal list. When <see cref="M:Au.print.warning(System.String,System.Int32,System.String)"/> is called, it looks in the list. If finds the warning in the list, does not show the warning.
+            It's easy to auto-restore warnings with 'using', like in the second example. Restoring is optional.
+            </remarks>
+            <example>
+            This code at the start of script disables two warnings in all threads.
+            <code><![CDATA[
+            opt.init.warnings.Disable("*part of warning 1 text*", "*part of warning 2 text*");
+            ]]></code>
+            Temporarily disable all warnings in this thread.
+            <code><![CDATA[
+            opt.warnings.Verbose = true;
+            print.warning("one");
+            using(opt.warnings.Disable("*")) {
+            	print.warning("two");
+            }
+            print.warning("three");
+            ]]></code>
+            Don't use code <c>using(opt.init.warnings.Disable...</c>, it's not thread-safe.
+            </example>
+        </member>
+        <member name="M:Au.Types.OWarnings.IsDisabled(System.String)">
+            <summary>
+            Returns true if the specified warning text matches a wildcard string added with <see cref="M:Au.Types.OWarnings.Disable(System.String[])"/>.
+            </summary>
+            <param name="text">Warning text. Case-insensitive.</param>
+        </member>
+        <member name="T:Au.Types.OMouse">
+            <summary>
+            Options for functions of class <see cref="T:Au.mouse"/>.
+            </summary>
+            <remarks>
+            Total <c>Click(x, y)</c> time is: mouse move + <see cref="P:Au.Types.OMouse.MoveSleepFinally"/> + button down + <see cref="P:Au.Types.OMouse.ClickSpeed"/> + button down + <see cref="P:Au.Types.OMouse.ClickSpeed"/> + <see cref="P:Au.Types.OMouse.ClickSleepFinally"/>.
+            </remarks>
+            <seealso cref="P:Au.opt.mouse"/>
+            <seealso cref="P:Au.opt.init.mouse"/>
+        </member>
+        <member name="M:Au.Types.OMouse.#ctor(Au.Types.OMouse)">
+            <summary>
+            Initializes this instance with default values or values copied from another instance.
+            </summary>
+            <param name="cloneOptions">If not null, copies its options into this variable.</param>
+        </member>
+        <member name="P:Au.Types.OMouse.ClickSpeed">
+            <summary>
+            How long to wait (milliseconds) after sending each mouse button down or up event (2 events for click, 4 for double-click).
+            Default: 20.
+            </summary>
+            <value>Valid values: 0 - 1000 (1 s). Valid values for <see cref="P:Au.opt.init.mouse"/>: 0 - 100 (1 s).</value>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+        </member>
+        <member name="P:Au.Types.OMouse.MoveSpeed">
+            <summary>
+            If not 0, makes mouse movements slower, not instant.
+            Default: 0.
+            </summary>
+            <value>Valid values: 0 (instant) - 10000 (slowest). Valid values for <see cref="P:Au.opt.init.mouse"/>: 0 - 100.</value>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+            <remarks>
+            Used by <see cref="M:Au.mouse.move(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>, <see cref="M:Au.mouse.click(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> and other functions that generate mouse movement events, except <see cref="M:Au.mouse.moveRecorded(System.String,System.Double)"/>.
+            It is not milliseconds or some other unit. It adds intermediate mouse movements and small delays when moving the mouse cursor to the specified point. The speed also depends on the distance.
+            Value 0 (default) does not add intermediate mouse movements. Adds at least 1 if some mouse buttons are pressed. Value 1 adds at least 1 intermediate mouse movement. Values 10-50 are good for visually slow movements.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.OMouse.ClickSleepFinally">
+            <summary>
+            How long to wait (milliseconds) before a 'mouse click' or 'mouse wheel' function returns.
+            Default: 10.
+            </summary>
+            <value>Valid values: 0 - 10000 (10 s). Valid values for <see cref="P:Au.opt.init.mouse"/>: 0 - 100.</value>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+            <remarks>
+            The 'click' functions also sleep <see cref="P:Au.Types.OMouse.ClickSpeed"/> ms after button down and up. Default <b>ClickSpeed</b> is 20, default <b>ClickSleepFinally</b> is 10, therefore default click time without mouse-move is 20+20+10=50.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.OMouse.MoveSleepFinally">
+            <summary>
+            How long to wait (milliseconds) after moving the mouse cursor. Used in 'move+click' functions too.
+            Default: 10.
+            </summary>
+            <value>Valid values: 0 - 1000 (1 s). Valid values for <see cref="P:Au.opt.init.mouse"/>: 0 - 100.</value>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+            <remarks>
+            Used by <see cref="M:Au.mouse.move(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> (finally), <see cref="M:Au.mouse.click(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> (between moving and clicking) and other functions that generate mouse movement events.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.OMouse.Relaxed">
+            <summary>
+            Make some functions less strict (throw less exceptions etc).
+            Default: false.
+            </summary>
+            <remarks>
+            This option is used by these functions:
+            - <see cref="M:Au.mouse.move(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>, <see cref="M:Au.mouse.click(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> and other functions that move the cursor (mouse pointer):
+            <br/>false - throw exception if cannot move the cursor to the specified x y. For example it the x y is not in screen.
+            <br/>true - try to move anyway. Don't throw exception, regardless of the final cursor position (which probably will be at a screen edge).
+            - <see cref="M:Au.mouse.move(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>, <see cref="M:Au.mouse.click(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> and other functions that move the cursor (mouse pointer):
+            <br/>false - before moving the cursor, wait while a mouse button is pressed by the user or another thread. It prevents an unintended drag-drop.
+            <br/>true - do not wait.
+            - <see cref="M:Au.mouse.click(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> and other functions that click or press a mouse button using window coordinates:
+            <br/>false - don't allow to click in another window. If need, activate the specified window (or its top-level parent). If that does not help, throw exception. However if the window is a control, allow x y anywhere in its top-level parent window.
+            <br/>true - allow to click in another window. Don't activate the window and don't throw exception.
+            </remarks>
+        </member>
+        <member name="T:Au.Types.OKey">
+            <summary>
+            Options for functions of class <see cref="T:Au.keys"/>.
+            Some options also are used with <see cref="T:Au.clipboard"/> functions that send keys (Ctrl+V etc).
+            </summary>
+            <seealso cref="P:Au.opt.key"/>
+            <seealso cref="P:Au.opt.init.key"/>
+        </member>
+        <member name="M:Au.Types.OKey.#ctor(Au.Types.OKey)">
+            <summary>
+            Initializes this instance with default values or values copied from another instance.
+            </summary>
+            <param name="cloneOptions">If not null, copies its options into this variable.</param>
+        </member>
+        <member name="M:Au.Types.OKey.CopyOrDefault_(Au.Types.OKey)">
+            <summary>
+            Copies options from o, or sets default if o==null. Like ctor does.
+            </summary>
+        </member>
+        <member name="M:Au.Types.OKey.GetHookOptionsOrThis_(Au.wnd)">
+            <summary>
+            Returns this variable, or <b>OKey</b> cloned from this variable and possibly modified by <b>Hook</b>.
+            </summary>
+            <param name="wFocus">The focused or active window. Use Lib.GetWndFocusedOrActive().</param>
+        </member>
+        <member name="P:Au.Types.OKey.TextSpeed">
+            <summary>
+            How long to wait (milliseconds) between pressing and releasing each character key. Used by <see cref="M:Au.keys.sendt(System.String,System.String)"/>. Also by <see cref="M:Au.keys.send(Au.Types.KKeysEtc[])"/> and similar functions for <c>"!text"</c> arguments.
+            Default: 0.
+            </summary>
+            <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="P:Au.opt.init.key"/>: 0 - 10.</value>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+            <remarks>
+            Used only for 'text' arguments, not for 'keys' arguments. See <see cref="P:Au.Types.OKey.KeySpeed"/>.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.OKey.KeySpeed">
+            <summary>
+            How long to wait (milliseconds) between pressing and releasing each key. Used by <see cref="M:Au.keys.send(Au.Types.KKeysEtc[])"/> and similar functions, except for <c>"!text"</c> arguments.
+            Default: 1.
+            </summary>
+            <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="P:Au.opt.init.key"/>: 0 - 10.</value>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+            <remarks>
+            Used only for 'keys' arguments, not for 'text' arguments. See <see cref="P:Au.Types.OKey.TextSpeed"/>.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.OKey.KeySpeedClipboard">
+            <summary>
+            How long to wait (milliseconds) between sending Ctrl+V and Ctrl+C keys of clipboard functions (paste, copy).
+            Default: 5.
+            </summary>
+            <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="P:Au.opt.init.key"/>: 0 - 50.</value>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+            <remarks>
+            In most apps copy/paste works without this delay. Known apps that need it: Internet Explorer's address bar, BlueStacks.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.OKey.SleepFinally">
+            <summary>
+            How long to wait (milliseconds) before a 'send keys or text' function returns.
+            Default: 10.
+            </summary>
+            <value>Valid values: 0 - 10000 (10 seconds). Valid values for <see cref="P:Au.opt.init.key"/>: 0 - 100.</value>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+            <remarks>
+            Not used by <see cref="M:Au.clipboard.copy(System.Boolean,Au.Types.OKey)"/>.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.OKey.TextHow">
+            <summary>
+            How to send text to the active window (keys, characters or clipboard).
+            Default: <see cref="F:Au.Types.OKeyText.Characters"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Types.OKey.PasteLength">
+            <summary>
+            To send text use clipboard (like with <see cref="F:Au.Types.OKeyText.Paste"/>) if text length is &gt;= this value.
+            Default: 200.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+        </member>
+        <member name="P:Au.Types.OKey.PasteWorkaround">
+            <summary>
+            When pasting text that ends with space, tab or/and newline characters, remove them and after pasting send them as keys.
+            Default: false.
+            </summary>
+            <remarks>
+            Some apps trim these characters when pasting.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.OKey.RestoreClipboard">
+            <summary>
+            Whether to restore clipboard data when copying or pasting text.
+            Default: true.
+            By default restores only text. See also <see cref="P:Au.Types.OKey.RestoreClipboardAllFormats"/>, <see cref="P:Au.Types.OKey.RestoreClipboardExceptFormats"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Types.OKey.RestoreClipboardAllFormats">
+            <summary>
+            When copying or pasting text, restore clipboard data of all formats that are possible to restore.
+            Default: false - restore only text.
+            </summary>
+            <remarks>
+            Restoring data of all formats set by some apps can be slow or cause problems. More info: <see cref="P:Au.Types.OKey.RestoreClipboardExceptFormats"/>.
+            
+            This property is static, not thread-static. It should be set (if need) at the start of script and not changed later.
+            </remarks>
+            <seealso cref="P:Au.Types.OKey.RestoreClipboard"/>
+            <seealso cref="P:Au.Types.OKey.RestoreClipboardExceptFormats"/>
+        </member>
+        <member name="P:Au.Types.OKey.RestoreClipboardExceptFormats">
+            <summary>
+            When copying or pasting text, and <see cref="P:Au.Types.OKey.RestoreClipboardAllFormats"/> is true, do not restore clipboard data of these formats.
+            Default: null.
+            </summary>
+            <remarks>
+            To restore clipboard data, the copy/paste functions at first get clipboard data. Getting data of some formats set by some apps can be slow (100 ms or more) or cause problems (the app can change something in its window or even show a dialog).
+            It also depends on whether this is the first time the data is being retrieved. The app can render data on demand, when some app is retrieving it from the clipboard first time; then can be slow etc.
+            
+            You can use function <see cref="M:Au.Types.OKey.PrintClipboard"/> to see format names and get-data times.
+            
+            There are several kinds of clipboard formats - registered, standard, private and display. Only registered formats have string names. For standard formats use API contant names, like "CF_WAVE". Private, display and metafile formats are never restored.
+            These formats are never restored: CF_METAFILEPICT, CF_ENHMETAFILE, CF_PALETTE, CF_OWNERDISPLAY, CF_DSPx formats, CF_GDIOBJx formats, CF_PRIVATEx formats. Some other formats too, but they are automatically synthesized from other formats if need. Also does not restore if data size is 0 or &gt; 10 MB.
+            
+            This property is static, not thread-static. It should be set (if need) at the start of script and not changed later.
+            </remarks>
+            <seealso cref="P:Au.Types.OKey.RestoreClipboard"/>
+            <seealso cref="M:Au.Types.OKey.PrintClipboard"/>
+        </member>
+        <member name="M:Au.Types.OKey.PrintClipboard">
+            <summary>
+            Writes to the output some info about current clipboard data.
+            </summary>
+            <remarks>
+            Shows this info for each clipboard format: format name, time spent to get data (microseconds), data size (bytes), and whether this format would be restored (depends on <see cref="P:Au.Types.OKey.RestoreClipboardExceptFormats"/>).
+            <note>Copy something to the clipboard each time before calling this function. Don't use <see cref="M:Au.clipboard.copy(System.Boolean,Au.Types.OKey)"/> and don't call this function in loop. Else it shows small times.</note>
+            The time depends on app, etc. More info: <see cref="P:Au.Types.OKey.RestoreClipboardExceptFormats"/>.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.OKey.NoModOff">
+            <summary>
+            When starting to send keys or text, don't release modifier keys.
+            Default: false.
+            </summary>
+        </member>
+        <member name="P:Au.Types.OKey.NoCapsOff">
+            <summary>
+            When starting to send keys or text, don't turn off CapsLock.
+            Default: false.
+            </summary>
+        </member>
+        <member name="P:Au.Types.OKey.NoBlockInput">
+            <summary>
+            While sending or pasting keys or text, don't block user-pressed keys.
+            Default: false.
+            </summary>
+            <remarks>
+            If false (default), user-pressed keys are sent afterwards. If true, user-pressed keys can be mixed with script-pressed keys, which is particularly dangerous when modifier keys are mixed (and combined) with non-modifier keys.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.OKey.Hook">
+            <summary>
+            Callback function that can modify options of 'send keys or text' functions depending on active window etc.
+            Default: null.
+            </summary>
+            <remarks>
+            The callback function is called by <see cref="M:Au.keys.send(Au.Types.KKeysEtc[])"/>, <see cref="M:Au.keys.sendt(System.String,System.String)"/>, <see cref="M:Au.keys.SendIt(System.Boolean)"/>, <see cref="M:Au.clipboard.paste(System.String,System.String,Au.Types.OKey)"/> and similar functions. Not called by <see cref="M:Au.clipboard.copy(System.Boolean,Au.Types.OKey)"/>.
+            </remarks>
+            <seealso cref="T:Au.Types.OKeyHookData"/>
+        </member>
+        <member name="T:Au.Types.OKeyHookData">
+            <summary>
+            Parameter type of the <see cref="P:Au.Types.OKey.Hook"/> callback function.
+            </summary>
+        </member>
+        <member name="F:Au.Types.OKeyHookData.optk">
+            <summary>
+            Options used by the 'send keys or text' function. The callback function can modify them, except Hook, NoModOff, NoCapsOff, NoBlockInput.
+            </summary>
+        </member>
+        <member name="F:Au.Types.OKeyHookData.w">
+            <summary>
+            The focused control. If there is no focused control - the active window. Use <c>w.Window</c> to get top-level window; if <c>w.Window == w</c>, <b>w</b> is the active window, else the focused control. The callback function is not called if there is no active window.
+            </summary>
+        </member>
+        <member name="T:Au.Types.OKeyText">
+            <summary>
+            How functions send text.
+            See <see cref="P:Au.Types.OKey.TextHow"/>.
+            </summary>
+            <remarks>
+            There are three ways to send text to the active app using keys:
+            - Characters (default) - use special key code VK_PACKET. Can send most characters.
+            - Keys - use virtual-key codes, with Shift etc where need. Can send only characters that can be simply entered with the keyboard using current keyboard layout.
+            - Paste - use the clipboard and Ctrl+V. Can send any text.
+            
+            Most but not all apps support all three ways.
+            </remarks>
+        </member>
+        <member name="F:Au.Types.OKeyText.Characters">
+            <summary>
+            Send text characters using special key code VK_PACKET.
+            This option is default. Few apps don't support it.
+            For newlines sends key Enter, because VK_PACKET often does not work well.
+            If text contains Unicode characters with Unicode code above 0xffff, clipboard-pastes whole text, because many apps don't support Unicode surrogates sent as WM_PACKET pairs.
+            </summary>
+        </member>
+        <member name="F:Au.Types.OKeyText.KeysOrChar">
+            <summary>
+            Send virtual-key codes, with Shift etc where need.
+            All apps support it.
+            If a character cannot be simply typed with the keyboard using current keyboard layout, sends it like with the <b>Characters</b> option.
+            </summary>
+        </member>
+        <member name="F:Au.Types.OKeyText.KeysOrPaste">
+            <summary>
+            Send virtual-key codes, with Shift etc where need.
+            All apps support it.
+            If text contains characters that cannot be simply typed with the keyboard using current keyboard layout, clipboard-pastes whole text.
+            </summary>
+        </member>
+        <member name="F:Au.Types.OKeyText.Paste">
+            <summary>
+            Paste text using the clipboard and Ctrl+V.
+            Few apps don't support it.
+            This option is recommended for long text, because other ways then are too slow.
+            Other options are unreliable when text length is more than 4000 and the target app is too slow to process sent characters. Then <see cref="P:Au.Types.OKey.TextSpeed"/> can help.
+            Also, other options are unreliable when the target app modifies typed text, for example has such features as auto-complete, auto-indent or auto-correct. However some apps modify even pasted text, for example trim the last newline or space.
+            When pasting text, previous clipboard data of some formats is lost. Text is restored by default.
+            </summary>
+        </member>
+        <member name="T:Au.Types.OWait">
+            <summary>
+            Options for 'wait for' functions.
+            </summary>
+            <seealso cref="P:Au.opt.wait"/>
+            <seealso cref="M:Au.wait.forCondition(System.Double,System.Func{System.Boolean},Au.Types.OWait)"/>
+            <seealso cref="T:Au.wait.Loop"/>
+        </member>
+        <member name="P:Au.Types.OWait.Period">
+            <summary>
+            The sleep time between checking the wait condition. Milliseconds.
+            Default: 10.
+            </summary>
+            <value>Valid values: 1-1000.</value>
+            <remarks>
+            Most 'wait for' functions of this library use <see cref="T:Au.wait.Loop"/>, which repeatedly checks the wait condition and sleeps (waits) several ms. This property sets the initial sleep time, which then is incremented by <b>Period</b>/10 ms (default 1 ms) in each loop until reaches <b>Period</b>*50 (default 500 ms).
+            This property makes the response time shorter or longer. If &lt;10, makes it shorter (faster response), but increases CPU usage; if &gt;10, makes it longer (slower response).
+            </remarks>
+            <seealso cref="P:Au.wait.Loop.Period"/>
+            <example>
+            <code><![CDATA[
+            opt.wait.Period = 100;
+            ]]></code>
+            </example>
+        </member>
+        <member name="P:Au.Types.OWait.DoEvents">
+            <summary>
+            Use <see cref="M:Au.wait.doEvents(System.Int32)"/> instead of <see cref="M:Au.wait.ms(System.Int32)"/>.
+            Default: false.
+            </summary>
+            <remarks>
+            Use this property when need to process Windows messages, events, hooks, timers, etc while waiting. More info: <see cref="M:Au.wait.doEvents(System.Int32)"/>.
+            </remarks>
+            <seealso cref="M:Au.wait.forMessagesAndCondition(System.Double,System.Func{System.Boolean})"/>
+            <example>
+            <code><![CDATA[
+            opt.wait.DoEvents = true;
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Types.OWait.#ctor(System.Int32,System.Boolean)">
+            
+        </member>
+        <member name="T:Au.Types.Coord">
+            <summary>
+            Contains x or y coordinate in screen or some other rectangle that can be specified in various ways: normal, reverse, fraction, center, max.
+            Used for parameters of functions like <see cref="M:Au.mouse.move(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>, <see cref="M:Au.wnd.Move(Au.Types.Coord,Au.Types.Coord,Au.Types.Coord,Au.Types.Coord,System.Boolean,Au.screen)"/>.
+            </summary>
+            <remarks>
+            To specify a normal coordinate, assign an <b>int</b> value (implicit conversion from <b>int</b> to <b>Coord</b>). Else use static functions such as <b>Reverse</b>, <b>Fraction</b> (or assign float), <b>Center</b>, <b>Max</b>, <b>MaxInside</b>.
+            Also there are functions to convert <b>Coord</b> to normal coodinates.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.Coord.Type">
+            <summary>
+            Value type.
+            </summary>
+        </member>
+        <member name="P:Au.Types.Coord.Value">
+            <summary>
+            Non-fraction value.
+            </summary>
+        </member>
+        <member name="P:Au.Types.Coord.FractionValue">
+            <summary>
+            Fraction value.
+            </summary>
+        </member>
+        <member name="P:Au.Types.Coord.IsEmpty">
+            <summary>
+            Returns true if Type == None (when assigned default(Coord)).
+            </summary>
+        </member>
+        <member name="M:Au.Types.Coord.op_Implicit(System.Int32)~Au.Types.Coord">
+            <summary>
+            Creates Coord of Normal type.
+            </summary>
+        </member>
+        <member name="M:Au.Types.Coord.op_Implicit(System.Single)~Au.Types.Coord">
+            <summary>
+            Creates Coord of Fraction type.
+            </summary>
+        </member>
+        <member name="M:Au.Types.Coord.op_Implicit(System.UInt32)~Au.Types.Coord">
+            
+        </member>
+        <member name="M:Au.Types.Coord.op_Implicit(System.Int64)~Au.Types.Coord">
+            
+        </member>
+        <member name="M:Au.Types.Coord.op_Implicit(System.UInt64)~Au.Types.Coord">
+            
+        </member>
+        <member name="M:Au.Types.Coord.Reverse(System.Int32)">
+            <summary>
+            Creates Coord of Reverse type.
+            Value 0 is at the right or bottom, and does not belong to the rectangle. Positive values are towards left or top.
+            </summary>
+        </member>
+        <member name="M:Au.Types.Coord.Fraction(System.Double)">
+            <summary>
+            Creates Coord of Fraction type.
+            Value 0.0 is the left or top of the rectangle. Value 1.0 is the right or bottom of the rectangle. Values &lt;0.0 and &gt;=1.0 are outside of the rectangle.
+            Instead can be used implicit conversion from float, for example argument <c>Coord.Fraction(0.5)</c> can be replaced with <c>0.5f</c>.
+            </summary>
+        </member>
+        <member name="P:Au.Types.Coord.Center">
+            <summary>
+            Returns <c>Fraction(0.5)</c>.
+            </summary>
+            <seealso cref="M:Au.Types.Coord.Fraction(System.Double)"/>
+        </member>
+        <member name="P:Au.Types.Coord.Max">
+            <summary>
+            Returns <c>Reverse(0)</c>.
+            This point will be outside of the rectangle. See also <see cref="P:Au.Types.Coord.MaxInside"/>.
+            </summary>
+            <seealso cref="M:Au.Types.Coord.Reverse(System.Int32)"/>
+        </member>
+        <member name="P:Au.Types.Coord.MaxInside">
+            <summary>
+            Returns <c>Reverse(1)</c>.
+            This point will be inside of the rectangle, at the very right or bottom, assuming the rectangle is not empty.
+            </summary>
+            <seealso cref="M:Au.Types.Coord.Reverse(System.Int32)"/>
+        </member>
+        <member name="M:Au.Types.Coord.NormalizeInRange(System.Int32,System.Int32)">
+            <summary>
+            Converts fractional/reverse coordinate to normal coordinate in a range.
+            </summary>
+            <param name="start">Start of range.</param>
+            <param name="end">End of range.</param>
+        </member>
+        <member name="M:Au.Types.Coord.NormalizeInRect(Au.Types.Coord,Au.Types.Coord,Au.Types.RECT,System.Boolean,System.Boolean)">
+            <summary>
+            Converts fractional/reverse coordinates to normal coordinates in a rectangle.
+            </summary>
+            <param name="x">X coordinate relative to r.</param>
+            <param name="y">Y coordinate relative to r.</param>
+            <param name="r">The rectangle.</param>
+            <param name="widthHeight">Use only width and height of r. If false (default), the function adds r offset (left and top).</param>
+            <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center. Not used with widthHeight.</param>
+        </member>
+        <member name="M:Au.Types.Coord.NormalizeInWindow(Au.Types.Coord,Au.Types.Coord,Au.wnd,System.Boolean,System.Boolean)">
+            <summary>
+            Returns normal coordinates relative to the client area of a window. Converts fractional/reverse coordinates etc.
+            </summary>
+            <param name="x">X coordinate relative to the client area of w.</param>
+            <param name="y">Y coordinate relative to the client area of w.</param>
+            <param name="w">The window.</param>
+            <param name="nonClient">x y are relative to the entire w rectangle, not to its client area.</param>
+            <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center.</param>
+        </member>
+        <member name="M:Au.Types.Coord.Normalize(Au.Types.Coord,Au.Types.Coord,System.Boolean,Au.screen,System.Boolean,System.Boolean)">
+            <summary>
+            Returns normal coordinates relative to the primary screen. Converts fractional/reverse coordinates etc.
+            </summary>
+            <param name="x">X coordinate relative to the specified screen (default - primary).</param>
+            <param name="y">Y coordinate relative to the specified screen (default - primary).</param>
+            <param name="workArea">x y are relative to the work area.</param>
+            <param name="screen">If used, x y are relative to this screen. Default - primary screen. Example: <c>screen.index(1)</c>.</param>
+            <param name="widthHeight">Use only width and height of the screen rectangle. If false, the function adds its offset (left and top, which can be nonzero if using the work area or a non-primary screen).</param>
+            <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center.</param>
+        </member>
+        <member name="M:Au.Types.Coord.ToString">
+            
+        </member>
+        <member name="M:Au.Types.Coord.Equals(Au.Types.Coord)">
+            
+        </member>
+        <member name="M:Au.Types.Coord.op_Equality(Au.Types.Coord,Au.Types.Coord)">
+            
+        </member>
+        <member name="M:Au.Types.Coord.op_Inequality(Au.Types.Coord,Au.Types.Coord)">
+            
+        </member>
+        <member name="M:Au.Types.Coord.GetHashCode">
+            
+        </member>
+        <member name="T:Au.Types.CoordType">
+            <summary>
+            <see cref="T:Au.Types.Coord"/> variable value type.
+            </summary>
+        </member>
+        <member name="F:Au.Types.CoordType.None">
+            <summary>
+            No value. The variable is default(Coord).
+            </summary>
+        </member>
+        <member name="F:Au.Types.CoordType.Normal">
+            <summary>
+            <see cref="P:Au.Types.Coord.Value"/> is pixel offset from left or top of a rectangle.
+            </summary>
+        </member>
+        <member name="F:Au.Types.CoordType.Reverse">
+            <summary>
+            <see cref="P:Au.Types.Coord.Value"/> is pixel offset from right or bottom of a rectangle, towards left or top.
+            </summary>
+        </member>
+        <member name="F:Au.Types.CoordType.Fraction">
+            <summary>
+            <see cref="P:Au.Types.Coord.FractionValue"/> is fraction of a rectangle, where 0.0 is left or top, and 1.0 is right or bottom (outside of the rectangle).
+            </summary>
+        </member>
+        <member name="T:Au.Types.PopupXY">
+            <summary>
+            Can be used to specify coordinates for various popup windows, like <c>new PopupXY(x, y)</c>, <c>(x, y)</c>, <c>PopupXY.In(rectangle)</c>, <c>PopupXY.Mouse</c>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.PopupXY.#ctor(Au.Types.Coord,Au.Types.Coord,System.Boolean,Au.screen)">
+            <summary>
+            Sets position and/or screen.
+            </summary>
+            <param name="x">X relative to the screen or work area. Default - center.</param>
+            <param name="y">X relative to the screen or work area. Default - center.</param>
+            <param name="workArea">x y are relative to the work area of the screen.</param>
+            <param name="screen">Can be used to specify a screen. Default - primary. Example: <c>screen.index(1)</c>.</param>
+            <remarks>
+            Also there is are implicit conversions from tuple (x, y) and POINT. Instead of <c>new PopupXY(x, y)</c> you can use <c>(x, y)</c>. Instead of <c>new PopupXY(p.x, p.y, false)</c> you can use <c>p</c> or <c>(POINT)p</c> .
+            </remarks>
+        </member>
+        <member name="M:Au.Types.PopupXY.In(Au.Types.RECT,Au.Types.Coord,Au.Types.Coord)">
+            <summary>
+            Creates new <b>PopupXY</b> that specifies position in a rectangle. For example of the owner window, like <c>PopupXY.In(myForm.Bounds)</c>.
+            </summary>
+            <param name="r">Rectangle relative to the primary screen.</param>
+            <param name="x">X relative to the rectangle. Default - center.</param>
+            <param name="y">Y relative to the rectangle. Default - center.</param>
+        </member>
+        <member name="M:Au.Types.PopupXY.op_Implicit(System.ValueTuple{Au.Types.Coord,Au.Types.Coord})~Au.Types.PopupXY">
+            <summary>
+            Creates new <b>PopupXY</b> that specifies position relative to the work area of the primary screen.
+            </summary>
+        </member>
+        <member name="M:Au.Types.PopupXY.op_Implicit(Au.Types.POINT)~Au.Types.PopupXY">
+            <summary>Creates new <b>PopupXY</b> that specifies position relative to the primary screen (not to the work area).</summary>
+        </member>
+        <member name="P:Au.Types.PopupXY.Mouse">
+            <summary>
+            Gets point coordinates below mouse cursor, for showing a tooltip-like popup.
+            </summary>
+        </member>
+        <member name="M:Au.Types.PopupXY.GetScreen">
+            <summary>
+            Gets <see cref="F:Au.Types.PopupXY.screen"/>.Now if not empty, else screen that contains the specified point.
+            </summary>
+        </member>
+        <member name="T:Au.Types.FontNSS">
+            <summary>
+            Font name, size and style.
+            If <b>Name</b> not set, will be used standard GUI font; then <b>Size</b> can be 0 to use size of standard GUI font.
+            On high-DPI screen the font size will be scaled.
+            </summary>
+        </member>
+        <member name="M:Au.Types.FontNSS.#ctor(System.Int32,System.String,System.Boolean,System.Boolean)">
+            <summary>
+            Font name, size and style.
+            If <b>Name</b> not set, will be used standard GUI font; then <b>Size</b> can be 0 to use size of standard GUI font.
+            On high-DPI screen the font size will be scaled.
+            </summary>
+        </member>
+        <member name="M:Au.Types.FontNSS.CreateFont(Au.Types.DpiOf)">
+            <summary>
+            Creates font.
+            </summary>
+            <param name="dpi">DPI for scaling.</param>
+        </member>
+        <member name="T:Au.Types.AnyWnd">
+            <summary>
+            Window handle.
+            Used for function parameters where the function needs a window handle as <see cref="T:Au.wnd"/> but also allows to pass a variable of any of these types: System.Windows.Forms.Control (Form or control), System.Windows.DependencyObject (WPF window or control), IntPtr (window handle).
+            </summary>
+        </member>
+        <member name="M:Au.Types.AnyWnd.op_Implicit(Au.wnd)~Au.Types.AnyWnd">
+            <summary> Assignment of a value of type wnd. </summary>
+        </member>
+        <member name="M:Au.Types.AnyWnd.op_Implicit(System.IntPtr)~Au.Types.AnyWnd">
+            <summary> Assignment of a window handle as IntPtr. </summary>
+        </member>
+        <member name="M:Au.Types.AnyWnd.op_Implicit(System.Windows.Forms.Control)~Au.Types.AnyWnd">
+            <summary> Assignment of a value of type System.Windows.Forms.Control (Form or any control class). </summary>
+        </member>
+        <member name="M:Au.Types.AnyWnd.op_Implicit(System.Windows.DependencyObject)~Au.Types.AnyWnd">
+            <summary> Assignment of a value of type System.Windows.DependencyObject (WPF window or control). </summary>
+        </member>
+        <member name="P:Au.Types.AnyWnd.Hwnd">
+            <summary>
+            Gets the window or control handle as wnd.
+            Returns default(wnd) if not assigned.
+            </summary>
+        </member>
+        <member name="P:Au.Types.AnyWnd.IsEmpty">
+            <summary>
+            true if this is default(AnyWnd).
+            </summary>
+        </member>
+        <member name="T:Au.Types.DStringList">
+            <summary>
+            Used for function parameters to specify multiple strings.
+            Contains a string like "One|Two|Three" or string[] or List&lt;string&gt;. Has implicit conversions from these types.
+            </summary>
+        </member>
+        <member name="M:Au.Types.DStringList.op_Implicit(System.String)~Au.Types.DStringList">
+            <summary> Assignment of a value of type string. </summary>
+        </member>
+        <member name="M:Au.Types.DStringList.op_Implicit(System.String[])~Au.Types.DStringList">
+            <summary> Assignment of a value of type string[]. </summary>
+        </member>
+        <member name="M:Au.Types.DStringList.op_Implicit(System.Collections.Generic.List{System.String})~Au.Types.DStringList">
+            <summary> Assignment of a value of type List&lt;string&gt;. </summary>
+        </member>
+        <member name="P:Au.Types.DStringList.Value">
+            <summary>
+            The raw value.
+            </summary>
+        </member>
+        <member name="M:Au.Types.DStringList.ToArray">
+            <summary>
+            Converts the value to string[].
+            </summary>
         </member>
         <member name="T:Au.Types.PrintServerMessageType">
             <summary>
@@ -4812,6 +4529,297 @@
         </member>
         <member name="F:Au.Types.SODefault.Nearest">
             <summary>The nearest screen. If window handle is invalid - the primary screen.</summary>
+        </member>
+        <member name="T:Au.Types.POINT">
+            <summary>
+            Point coordinates x y.
+            </summary>
+        </member>
+        <member name="M:Au.Types.POINT.From(System.Drawing.PointF,System.Boolean)">
+            <param name="p"></param>
+            <param name="round">Can round up, for example 1.7 to 2.</param>
+            <exception cref="T:System.OverflowException"></exception>
+        </member>
+        <member name="M:Au.Types.POINT.From(System.Windows.Point,System.Boolean)">
+            <param name="p"></param>
+            <param name="round">Can round up, for example 1.7 to 2.</param>
+            <exception cref="T:System.OverflowException"></exception>
+        </member>
+        <member name="M:Au.Types.POINT.Offset(System.Int32,System.Int32)">
+            <summary>Adds x and y to this.x and this.y.</summary>
+        </member>
+        <member name="M:Au.Types.POINT.op_Addition(Au.Types.POINT,System.ValueTuple{System.Int32,System.Int32})">
+            <summary>Returns <c>new POINT(p.x + d.x, p.y + d.y)</c>.</summary>
+        </member>
+        <member name="T:Au.Types.SIZE">
+            <summary>
+            Width and height.
+            </summary>
+        </member>
+        <member name="M:Au.Types.SIZE.From(System.Drawing.SizeF,System.Boolean)">
+            <param name="z"></param>
+            <param name="round">Can round up, for example 1.7 to 2.</param>
+            <exception cref="T:System.OverflowException"></exception>
+        </member>
+        <member name="M:Au.Types.SIZE.From(System.Windows.Size,System.Boolean)">
+            <param name="z"></param>
+            <param name="round">Can round up, for example 1.7 to 2.</param>
+            <exception cref="T:System.OverflowException"></exception>
+        </member>
+        <member name="M:Au.Types.SIZE.op_Addition(Au.Types.SIZE,System.ValueTuple{System.Int32,System.Int32})">
+            <summary>Returns <c>new SIZE(z.width + d.x, z.height + d.y)</c>.</summary>
+        </member>
+        <member name="T:Au.Types.RECT">
+            <summary>
+            Rectangle coordinates left top right bottom.
+            </summary>
+            <remarks>
+            This type can be used with Windows API functions. The .NET <b>Rectangle</b> etc can't, because their fields are different.
+            Has conversions from/to <b>Rectangle</b>.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.RECT.#ctor(System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Sets all fields.
+            </summary>
+            <param name="left"></param>
+            <param name="top"></param>
+            <param name="width">Width (not <i>right</i>).</param>
+            <param name="height">Height (not <i>bottom</i>).</param>
+            <remarks>
+            Sets <c>right = left + width; bottom = top + height;</c>. To specify right/bottom instead of width/height, use <see cref="M:Au.Types.RECT.FromLTRB(System.Int32,System.Int32,System.Int32,System.Int32)"/> instead.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.RECT.FromLTRB(System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Creates <b>RECT</b> with specified <b>left</b>, <b>top</b>, <b>right</b> and <b>bottom</b>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.RECT.op_Implicit(System.ValueTuple{System.Int32,System.Int32,System.Int32,System.Int32})~Au.Types.RECT">
+            <summary>
+            Converts from tuple (left, top, width, height).
+            </summary>
+        </member>
+        <member name="M:Au.Types.RECT.From(System.Drawing.RectangleF,System.Boolean)">
+            <param name="r"></param>
+            <param name="round">Can round up, for example 1.7 to 2.</param>
+            <exception cref="T:System.OverflowException"></exception>
+        </member>
+        <member name="M:Au.Types.RECT.From(System.Windows.Rect,System.Boolean)">
+            <param name="r"></param>
+            <param name="round">Can round up, for example 1.7 to 2.</param>
+            <exception cref="T:System.OverflowException"></exception>
+        </member>
+        <member name="P:Au.Types.RECT.Is0">
+            <summary>
+            Returns true if all fields == 0.
+            </summary>
+        </member>
+        <member name="P:Au.Types.RECT.NoArea">
+            <summary>
+            Returns true if the rectangle area is empty or invalid: <c>right&lt;=left || bottom&lt;=top;</c>
+            </summary>
+        </member>
+        <member name="P:Au.Types.RECT.Width">
+            <summary>
+            Gets or sets width.
+            </summary>
+        </member>
+        <member name="P:Au.Types.RECT.Height">
+            <summary>
+            Gets or sets height.
+            </summary>
+        </member>
+        <member name="P:Au.Types.RECT.XY">
+            <summary>
+            Returns <c>new POINT(left, top)</c>.
+            </summary>
+        </member>
+        <member name="P:Au.Types.RECT.Size">
+            <summary>
+            Returns <c>new SIZE(Width, Height)</c>.
+            </summary>
+        </member>
+        <member name="P:Au.Types.RECT.CenterX">
+            <summary>
+            Gets horizontal center.
+            </summary>
+        </member>
+        <member name="P:Au.Types.RECT.CenterY">
+            <summary>
+            Gets vertical center.
+            </summary>
+        </member>
+        <member name="M:Au.Types.RECT.Contains(System.Int32,System.Int32)">
+            <summary>
+            Returns true if this rectangle contains the specified point.
+            </summary>
+        </member>
+        <member name="M:Au.Types.RECT.Contains(Au.Types.POINT)">
+            <summary>
+            Returns true if this rectangle contains the specified point.
+            </summary>
+        </member>
+        <member name="M:Au.Types.RECT.Contains(Au.Types.RECT)">
+            <summary>
+            Returns true if this rectangle contains entire specified rectangle.
+            </summary>
+        </member>
+        <member name="M:Au.Types.RECT.Inflate(System.Int32,System.Int32)">
+            <summary>
+            Makes this rectangle bigger or smaller: <c>left-=dx; right+=dx; top-=dy; bottom+=dy;</c>
+            Use negative dx/dy to make the rectangle smaller. Note: too big negative dx/dy can make it invalid (right&lt;left or bottom&lt;top).
+            </summary>
+        </member>
+        <member name="M:Au.Types.RECT.Intersect(Au.Types.RECT)">
+            <summary>
+            Replaces this rectangle with the intersection of itself and the specified rectangle.
+            Returns true if the rectangles intersect.
+            If they don't intersect, makes this RECT empty.
+            </summary>
+        </member>
+        <member name="M:Au.Types.RECT.Intersect(Au.Types.RECT,Au.Types.RECT)">
+            <summary>
+            Returns the intersection rectangle of two rectangles.
+            If they don't intersect, returns empty rectangle.
+            </summary>
+        </member>
+        <member name="M:Au.Types.RECT.IntersectsWith(Au.Types.RECT)">
+            <summary>
+            Returns true if this rectangle and another rectangle intersect.
+            </summary>
+        </member>
+        <member name="M:Au.Types.RECT.Offset(System.Int32,System.Int32)">
+            <summary>
+            Moves this rectangle by the specified offsets: <c>left+=dx; right+=dx; top+=dy; bottom+=dy;</c>
+            Negative dx moves to the left. Negative dy moves up.
+            </summary>
+        </member>
+        <member name="M:Au.Types.RECT.Move(System.Int32,System.Int32)">
+            <summary>
+            Moves this rectangle so that <b>left</b>=<i>x</i> and <b>right</b>=<i>y</i>. Does not change <b>Width</b> and <b>Height</b>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.RECT.Union(Au.Types.RECT)">
+            <summary>
+            Replaces this rectangle with the union of itself and the specified rectangle.
+            Union is the smallest rectangle that contains two full rectangles.
+            Returns true if finally this rectangle is not empty.
+            If either rectangle is empty (Width or Height is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
+            </summary>
+        </member>
+        <member name="M:Au.Types.RECT.Union(Au.Types.RECT,Au.Types.RECT)">
+            <summary>
+            Returns the union of two rectangles.
+            Union is the smallest rectangle that contains two full rectangles.
+            If either rectangle is empty (Width or Height is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
+            </summary>
+        </member>
+        <member name="M:Au.Types.RECT.Normalize(System.Boolean)">
+            <summary>
+            If width or height are negative, modifies this rectangle so that they would not be negative.
+            </summary>
+            <param name="swap">true - swap right/left, bottom/top; false - set right = left, bottom = top.</param>
+        </member>
+        <member name="M:Au.Types.RECT.MoveInScreen(Au.Types.Coord,Au.Types.Coord,Au.screen,System.Boolean,System.Boolean)">
+            <summary>
+            Moves this rectangle to the specified coordinates in the specified screen, and ensures that whole rectangle is in screen.
+            Final rectangle coordinates are relative to the primary screen.
+            </summary>
+            <param name="x">X coordinate in the specified screen. If default(Coord) - center. Can be <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
+            <param name="y">Y coordinate in the specified screen. If default(Coord) - center. Can be <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
+            <param name="screen">Use this screen. If default, uses the primary screen. Example: <c>screen.index(1)</c>.</param>
+            <param name="workArea">Use the work area, not whole screen. Default true.</param>
+            <param name="ensureInScreen">If part of rectangle is not in screen, move and/or resize it so that entire rectangle would be in screen. Default true.</param>
+            <remarks>
+            This function can be used to calculate new window location before creating it. If window already exists, use <see cref="M:Au.wnd.MoveInScreen(Au.Types.Coord,Au.Types.Coord,Au.screen,System.Boolean,System.Boolean)"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.RECT.MoveInRect(Au.Types.RECT,Au.Types.Coord,Au.Types.Coord,System.Boolean)">
+            <summary>
+            Moves this rectangle to the specified coordinates in another rectangle <i>r</i>.
+            </summary>
+            <param name="r">Another rectangle.</param>
+            <param name="x">X coordinate relative to <i>r</i>. Default - center. Can be <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
+            <param name="y">Y coordinate relative to <i>r</i>. Default - center. Can be <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
+            <param name="ensureInRect">If part of rectangle is not in <i>r</i>, move and/or resize it so that entire rectangle would be in <i>r</i>.</param>
+        </member>
+        <member name="M:Au.Types.RECT.EnsureInScreen(Au.screen,System.Boolean)">
+            <summary>
+            Adjusts this rectangle to ensure that whole rectangle is in screen.
+            Initial and final rectangle coordinates are relative to the primary screen.
+            </summary>
+            <param name="screen">Use this screen (see <see cref="T:Au.screen"/>). If default, uses screen of the rectangle (or nearest).</param>
+            <param name="workArea">Use the work area, not whole screen. Default true.</param>
+            <remarks>
+            This function can be used to calculate new window location before creating it. If window already exists, use <see cref="M:Au.wnd.EnsureInScreen(Au.screen,System.Boolean)"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.RECT.ToString">
+            <summary>
+            Converts to string "{L=left T=top W=width H=height}".
+            </summary>
+            <seealso cref="M:Au.Types.RECT.TryParse(System.String,Au.Types.RECT@)"/>
+        </member>
+        <member name="M:Au.Types.RECT.ToStringSimple">
+            <summary>
+            Converts to string "left top width height".
+            </summary>
+            <seealso cref="M:Au.Types.RECT.TryParse(System.String,Au.Types.RECT@)"/>
+        </member>
+        <member name="M:Au.Types.RECT.ToStringFormat(System.String)">
+            <summary>
+            Formats string from RECT main fields and properties.
+            </summary>
+            <param name="format">
+            <see cref="M:System.Text.StringBuilder.AppendFormat(System.IFormatProvider,System.String,System.Object)"/> format string. Example: <c>"({0}, {1}, {4}, {5})"</c>.
+            This function passes to AppendFormat 6 values in this order: <b>left</b>, <b>top</b>, <b>right</b>, <b>bottom</b>, <b>Width</b>, <b>Height</b>.
+            </param>
+        </member>
+        <member name="M:Au.Types.RECT.TryParse(System.String,Au.Types.RECT@)">
+            <summary>
+            Converts string to RECT.
+            Returns false if invalid string format.
+            </summary>
+            <param name="s">String in format "{L=left T=top W=width H=height}" (<see cref="M:Au.Types.RECT.ToString"/>) or "left top width height" (<see cref="M:Au.Types.RECT.ToStringSimple"/>).</param>
+            <param name="r"></param>
+        </member>
+        <member name="M:Au.Types.VARIANT.Dispose">
+            <summary>
+            Calls VariantClear.
+            </summary>
+        </member>
+        <member name="M:Au.Types.VARIANT.ToString">
+            <summary>
+            Converts to string.
+            </summary>
+        </member>
+        <member name="M:Au.Types.VARIANT.ToStringAndDispose">
+            <summary>
+            Converts to string.
+            Disposes this VARIANT.
+            </summary>
+        </member>
+        <member name="P:Au.Types.BSTR.Is0">
+            <summary>
+            Returns true if the string is null.
+            </summary>
+        </member>
+        <member name="P:Au.Types.BSTR.Item(System.Int32)">
+            <summary>
+            Unsafe.
+            </summary>
+        </member>
+        <member name="M:Au.Types.BSTR.ToString">
+            <summary>
+            Converts to string.
+            Does not dispose.
+            </summary>
+        </member>
+        <member name="M:Au.Types.BSTR.ToStringAndDispose">
+            <summary>
+            Converts to string and disposes.
+            </summary>
         </member>
         <member name="T:Au.Types.STIFlags">
             <summary>
@@ -6394,273 +6402,6 @@
             Used by <see cref="M:Au.wnd.more.taskbarButton.setProgressState(Au.wnd,Au.Types.WTBProgressState)"/>.
             </summary>
         </member>
-        <member name="T:Au.lastError">
-             <summary>
-             Gets, sets or clears the last error code of Windows API. Gets error text.
-             </summary>
-             <remarks>
-             Many Windows API functions, when failed, set an error code. Code 0 means no error. It is stored in an internal thread-specific int variable. But only if the API declaration's DllImport attribute has SetLastError = true.
-             
-             Some functions of this library simply call these API functions and don't throw exception when API fail. For example, most <see cref="T:Au.wnd"/> propery-get functions.
-             When failed, they return false/0/null/empty. Then you can use <see cref="P:Au.lastError.code"/> to get the error code or <see cref="P:Au.lastError.message"/> to get error text.
-             
-             Most of functions set error code only when failed, and don't clear the old error code when succeeded. Therefore may need to call <see cref="M:Au.lastError.clear"/> before.
-            
-             Windows API error code definitions and documentation are not included in this library. You can look for them in API function documentation on the internet.
-             </remarks>
-             <example>
-             <code><![CDATA[
-             wnd w = wnd.find("Notepag");
-             lastError.clear();
-             bool enabled = w.IsEnabled; //returns true if enabled, false if disabled or failed
-             if(!enabled && lastError.code != 0) { print.it(lastError.message); return; } //1400, Invalid window handle
-             print.it(enabled);
-             ]]></code>
-             </example>
-        </member>
-        <member name="M:Au.lastError.clear">
-            <summary>
-            Calls API <msdn>SetLastError</msdn>(0), which clears the Windows API last error code of this thread.
-            </summary>
-            <remarks>
-            Need it before calling some functions if you want to use <see cref="P:Au.lastError.code"/> or <see cref="P:Au.lastError.message"/>.
-            The same as <c>lastError.code = 0;</c>.
-            </remarks>
-        </member>
-        <member name="P:Au.lastError.code">
-            <summary>
-            Gets (<see cref="M:System.Runtime.InteropServices.Marshal.GetLastWin32Error"/>) or sets (API <msdn>SetLastError</msdn>) the Windows API last error code of this thread.
-            </summary>
-        </member>
-        <member name="P:Au.lastError.message">
-            <summary>
-            Gets the text message of the Windows API last error code of this thread.
-            Returns null if the code is 0.
-            </summary>
-            <remarks>
-            The string always ends with ".".
-            </remarks>
-        </member>
-        <member name="M:Au.lastError.messageFor(System.Int32)">
-            <summary>
-            Gets the text message of a Windows API error code.
-            Returns null if errorCode is 0.
-            </summary>
-            <remarks>
-            The string always ends with ".".
-            </remarks>
-        </member>
-        <member name="T:Au.opt">
-            <summary>
-            Options for some functions of this library.
-            </summary>
-            <remarks>
-            Some frequently used static functions of this library have some options (settings). For example <see cref="M:Au.keys.send(Au.Types.KKeysEtc[])"/> allows to change speed, text sending method, etc. Passing options as parameters in each call usually isn't what you want to do in automation scripts. Instead you can set options using static properties. This class contains several groups of options for functions of various classes. See examples.
-            
-            There are two sets of identical or similar options - in class <b>opt</b> and in class <see cref="T:Au.opt.init"/>:
-            - <b>opt</b> - thread-static options (each thread has its own instance). Functions of this library use them. You can change or change-restore them anywhere in script. Initial options are automatically copied from <b>opt.init</b> when that group of options (<b>Key</b>, <b>Mouse</b>, etc) is used first time in that thread (explicitly or by library functions).
-            - <b>opt.init</b> - static options. Contains initial property values for <b>opt</b>. Normally you change them when script starts. Don't change later, it's not thread-safe.
-            </remarks>
-        </member>
-        <member name="P:Au.opt.key">
-            <summary>
-            Options for keyboard and clipboard functions (classes <see cref="T:Au.keys"/>, <see cref="T:Au.clipboard"/> and functions that use them).
-            </summary>
-            <remarks>
-            Each thread has its own <b>opt.key</b> instance. It inherits options from <see cref="P:Au.opt.init.key"/>.
-            Also can be used when creating <see cref="T:Au.keys"/> instances. See the second example.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            opt.key.KeySpeed = 100;
-            keys.send("Right*10 Ctrl+A");
-            ]]></code>
-            Use a <b>keys</b> instance.
-            <code><![CDATA[
-            var k = new keys(opt.key); //create new keys instance and copy options from opt.key to it
-            k.Options.KeySpeed = 100; //changes option of k but not of opt.key
-            k.Add("Right*10 Ctrl+A").Send(); //uses options of k
-            ]]></code>
-            </example>
-        </member>
-        <member name="P:Au.opt.mouse">
-            <summary>
-            Options for mouse functions (class <see cref="T:Au.mouse"/> and functions that use it).
-            </summary>
-            <remarks>
-            Each thread has its own <b>opt.mouse</b> instance. It inherits options from <see cref="P:Au.opt.init.mouse"/>.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            opt.mouse.ClickSpeed = 100;
-            mouse.click();
-            ]]></code>
-            </example>
-        </member>
-        <member name="P:Au.opt.wait">
-            <summary>
-            Options for 'wait for' functions.
-            </summary>
-            <remarks>
-            Each thread has its own <b>opt.wait</b> instance. There is no <b>opt.init.wait</b>.
-            Most 'wait for' functions of this library use these options. Functions of .NET classes don't.
-            </remarks>
-        </member>
-        <member name="P:Au.opt.warnings">
-            <summary>
-            Options for showing run-time warnings and other info that can be useful to find problems in code at run time.
-            </summary>
-            <remarks>
-            Each thread has its own <b>opt.warnings</b> instance. It inherits options from <see cref="P:Au.opt.init.warnings"/>.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            opt.warnings.Verbose = false;
-            print.warning("Example");
-            print.warning("Example");
-            ]]></code>
-            </example>
-        </member>
-        <member name="T:Au.opt.init">
-            <summary>
-            Default <see cref="T:Au.opt"/> properties of a thread.
-            </summary>
-            <remarks>
-            You can change these options at the start of your script/program. Don't change later.
-            </remarks>
-        </member>
-        <member name="P:Au.opt.init.key">
-            <summary>
-            Default option values for <see cref="P:Au.opt.key"/> of a thread.
-            </summary>
-            <remarks>
-            Also can be used when creating <see cref="T:Au.keys"/> instances. See the second example.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            opt.init.key.KeySpeed = 10;
-            ...
-            keys.send("Tab Ctrl+V"); //uses opt.key, which is implicitly copied from opt.init.key
-            ]]></code>
-            Use a <b>keys</b> instance.
-            <code><![CDATA[
-            var k = new keys(opt.init.key); //create new keys instance and copy options from opt.init.key to it
-            k.Options.KeySpeed = 100; //changes option of k
-            k.Add("Tab Ctrl+V").Send(); //uses options of k
-            ]]></code>
-            </example>
-        </member>
-        <member name="P:Au.opt.init.mouse">
-            <summary>
-            Default option values for <see cref="P:Au.opt.mouse"/> of a thread.
-            </summary>
-            <example>
-            <code><![CDATA[
-            opt.init.mouse.ClickSpeed = 10;
-            ...
-            mouse.click(); //uses opt.mouse, which is implicitly copied from opt.init.mouse
-            ]]></code>
-            </example>
-        </member>
-        <member name="P:Au.opt.init.warnings">
-            <summary>
-            Default option values for <see cref="P:Au.opt.warnings"/> of a thread.
-            </summary>
-            <example>
-            <code><![CDATA[
-            opt.init.warnings.Verbose = false;
-            ]]></code>
-            </example>
-        </member>
-        <member name="T:Au.opt.scope">
-            <summary>
-            Creates temporary scopes for options.
-            Example: <c>using(opt.scope.Key()) { opt.key.KeySpeed=5; ... }</c>.
-            </summary>
-        </member>
-        <member name="M:Au.opt.scope.mouse(System.Boolean)">
-            <summary>
-            Creates temporary scope for <see cref="P:Au.opt.mouse"/> options. See example.
-            </summary>
-            <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="T:Au.opt.init"/>).</param>
-            <example>
-            <code><![CDATA[
-            print.it(opt.mouse.ClickSpeed);
-            using(opt.scope.Mouse()) {
-            	opt.mouse.ClickSpeed = 100;
-            	print.it(opt.mouse.ClickSpeed);
-            } //here restored automatically
-            print.it(opt.mouse.ClickSpeed);
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.opt.scope.key(System.Boolean)">
-            <summary>
-            Creates temporary scope for <see cref="P:Au.opt.key"/> options. See example.
-            </summary>
-            <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="T:Au.opt.init"/>).</param>
-            <example>
-            <code><![CDATA[
-            print.it(opt.key.KeySpeed);
-            using(opt.scope.Key()) {
-            	opt.key.KeySpeed = 5;
-            	print.it(opt.key.KeySpeed);
-            } //here restored automatically
-            print.it(opt.key.KeySpeed);
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.opt.scope.wait(System.Boolean)">
-            <summary>
-            Creates temporary scope for <see cref="P:Au.opt.wait"/> options. See example.
-            </summary>
-            <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="T:Au.opt.init"/>).</param>
-            <example>
-            <code><![CDATA[
-            print.it(opt.wait.Period);
-            using(opt.scope.wait()) {
-            	opt.wait.Period = 5;
-            	print.it(opt.wait.Period);
-            } //here restored automatically
-            print.it(opt.wait.Period);
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.opt.scope.warnings(System.Boolean)">
-            <summary>
-            Creates temporary scope for <see cref="P:Au.opt.warnings"/> options. See example.
-            </summary>
-            <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="T:Au.opt.init"/>).</param>
-            <example>
-            <code><![CDATA[
-            opt.warnings.Verbose = false;
-            print.it(opt.warnings.Verbose, opt.warnings.IsDisabled("Test*"));
-            using(opt.scope.Warnings()) {
-            	opt.warnings.Verbose = true;
-            	opt.warnings.Disable("Test*");
-            	print.it(opt.warnings.Verbose, opt.warnings.IsDisabled("Test*"));
-            } //here restored automatically
-            print.it(opt.warnings.Verbose, opt.warnings.IsDisabled("Test*"));
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.opt.scope.all(System.Boolean)">
-            <summary>
-            Creates temporary scope for all options. See example.
-            </summary>
-            <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="T:Au.opt.init"/>).</param>
-            <example>
-            <code><![CDATA[
-            print.it(opt.key.KeySpeed, opt.mouse.ClickSpeed);
-            using(opt.scope.All()) {
-            	opt.key.KeySpeed = 5;
-            	opt.mouse.ClickSpeed = 50;
-            	print.it(opt.key.KeySpeed, opt.mouse.ClickSpeed);
-            } //here restored automatically
-            print.it(opt.key.KeySpeed, opt.mouse.ClickSpeed);
-            ]]></code>
-            </example>
-        </member>
         <member name="T:Au.More.XmlUtil">
             <summary>
             Contains static functions to load <b>XElement</b> and <b>XDocument</b> in a safer way.
@@ -6819,6 +6560,24 @@
         <member name="M:Au.More.ArrayBuilder_`1.ToArray">
             <summary>
             Copies elements to a new managed array.
+            </summary>
+        </member>
+        <member name="T:Au.More.AssemblyUtil_">
+            <summary>
+            Assembly functions.
+            </summary>
+        </member>
+        <member name="M:Au.More.AssemblyUtil_.IsDebug(System.Reflection.Assembly)">
+            <summary>
+            Returns true if the build configuration of the assembly is Debug. Returns false if Release (optimized).
+            </summary>
+            <remarks>
+            Returns true if the assembly has <see cref="T:System.Diagnostics.DebuggableAttribute"/> and its <b>IsJITTrackingEnabled</b> is true.
+            </remarks>
+        </member>
+        <member name="M:Au.More.AssemblyUtil_.IsLoadedWinformsWpf">
+            <summary>
+            Returns flags for loaded assemblies: 1 System.Windows.Forms, 2 WindowsBase (WPF).
             </summary>
         </member>
         <member name="T:Au.More.AttachThreadInput_">
@@ -7208,6 +6967,14 @@
             </summary>
             <value>The length.</value>
         </member>
+        <member name="M:Au.More.ILInstruction.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents this instance.
+            </summary>
+            <returns>
+            A <see cref="T:System.String"/> that represents this instance.
+            </returns>
+        </member>
         <member name="T:Au.More.ILReader">
             <summary>
             Reads IL instructions from a byte stream.
@@ -7580,24 +7347,6 @@
         <member name="P:Au.More.Tables_.LowerCase">
             <summary>
             Native-memory char[0x10000] containing lower-case versions of the first 0x10000 characters.
-            </summary>
-        </member>
-        <member name="T:Au.More.AssemblyUtil">
-            <summary>
-            Assembly functions.
-            </summary>
-        </member>
-        <member name="P:Au.More.AssemblyUtil.IsDebug">
-            <summary>
-            Returns true if the build configuration of the main assembly is Debug. Returns false if Release (optimize true).
-            </summary>
-            <remarks>
-            Returns true if the assembly has <see cref="T:System.Diagnostics.DebuggableAttribute"/> and its <b>IsJITTrackingEnabled</b> is true.
-            </remarks>
-        </member>
-        <member name="M:Au.More.AssemblyUtil.IsLoadedWinformsWpf">
-            <summary>
-            Returns flags for loaded assemblies: 1 System.Windows.Forms, 2 WindowsBase (WPF).
             </summary>
         </member>
         <member name="T:Au.More.BufferedPaint">
@@ -8359,7 +8108,7 @@
             <param name="imageSource">File path, or resource path that starts with "resources/" or has prefix "resource:", etc. See <i>isImage</i> parameter.</param>
             <param name="dpi">DPI of window that will display the image.</param>
             <param name="isImage">
-            true - load image from xaml/png/etc file, resource or string with <see cref="M:Au.More.ImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String,System.Nullable{System.ValueTuple{Au.Types.SIZE,System.Int32}})"/> or <see cref="M:Au.More.ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.
+            true - load image from xaml/png/etc file, resource or string with <see cref="M:Au.More.ImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String,System.Nullable{System.ValueTuple{System.Int32,System.Nullable{Au.Types.SIZE}}})"/> or <see cref="M:Au.More.ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.
             false - get file icon with <see cref="M:Au.icon.of(System.String,System.Int32,Au.Types.IconGetFlags)"/>.
             null (default) - call <see cref="M:Au.More.ImageUtil.HasImageOrResourcePrefix(System.String)"/> to determine whether it is image.
             </param>
@@ -8390,7 +8139,7 @@
         </member>
         <member name="M:Au.More.ImageUtil.HasImageOrResourcePrefix(System.String)">
             <summary>
-            Returns true if string starts with "resource:" or "resources/" or "imagefile:" or "image:" or "~:".
+            Returns true if string starts with "resource:" or "resources/" or "&lt;" or "imagefile:" or "image:" or "~:".
             </summary>
         </member>
         <member name="M:Au.More.ImageUtil.LoadImageStreamFromString(System.String)">
@@ -8427,7 +8176,7 @@
             Calls <see cref="M:Au.More.ImageUtil.LoadWpfImageFromString(System.String)"/> and handles exceptions. On exception returns null and optionally writes warning to the output.
             </summary>
         </member>
-        <member name="M:Au.More.ImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String,System.Nullable{System.ValueTuple{Au.Types.SIZE,System.Int32}})">
+        <member name="M:Au.More.ImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String,System.Nullable{System.ValueTuple{System.Int32,System.Nullable{Au.Types.SIZE}}})">
             <summary>
             Loads GDI+ image from file, resource or string.
             </summary>
@@ -8437,7 +8186,7 @@
             - resource path that starts with "resources/" or has prefix "resource:" (<see cref="M:Au.More.ResourceUtil.GetGdipBitmap(System.String)"/>)
             - Base-64 image with prefix "image:" (<see cref="M:Au.More.ImageUtil.LoadGdipBitmapFromString(System.String)"/>).
             </param>
-            <param name="xaml">If not null, supports XAML images. See <see cref="M:Au.More.ImageUtil.LoadGdipBitmapFromXaml(System.String,Au.Types.SIZE,System.Int32)"/>.</param>
+            <param name="xaml">If not null, supports XAML images. See <see cref="M:Au.More.ImageUtil.LoadGdipBitmapFromXaml(System.String,System.Int32,System.Nullable{Au.Types.SIZE})"/>.</param>
             <exception cref="T:System.Exception"></exception>
         </member>
         <member name="M:Au.More.ImageUtil.LoadWpfImageFromFileOrResourceOrString(System.String)">
@@ -8463,21 +8212,40 @@
             - Base-64 image with prefix "image:"; uses<see cref="M:Au.More.ImageUtil.LoadWpfImageFromString(System.String)"/>.
             - XAML string that starts with "&lt;".
             </param>
-            <exception cref="T:System.Exception">Failed.</exception>
+            <exception cref="T:System.Exception"></exception>
             <remarks>
             If <i>image</i> starts with "&lt;" or ends with ".xaml" (case-insensitive), returns object created from XAML root element. Else returns <see cref="T:System.Windows.Controls.Image"/> with <b>Source</b> = <b>BitmapFrame</b>.
             </remarks>
         </member>
-        <member name="M:Au.More.ImageUtil.LoadGdipBitmapFromXaml(System.String,Au.Types.SIZE,System.Int32)">
+        <member name="M:Au.More.ImageUtil.LoadGdipBitmapFromXaml(System.String,System.Int32,System.Nullable{Au.Types.SIZE})">
             <summary>
             Loads GDI+ image from WPF XAML file or string.
             </summary>
             <param name="image">XAML file, resource or string. See <see cref="M:Au.More.ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.</param>
-            <param name="size">Final image size. Use logical pixels, ie not DPI-scaled.</param>
             <param name="dpi">DPI of window that will display the image.</param>
+            <param name="size">Final image size in logical pixels (not DPI-scaled). If null, uses element's <b>DesiredSize</b> property, max 1024x1024.</param>
+            <exception cref="T:System.Exception"></exception>
             <remarks>
-            Calls <see cref="M:Au.More.ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/> and converts to GDI+ image.
+            Calls <see cref="M:Au.More.ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/> and <see cref="M:Au.More.ImageUtil.ConvertWpfImageElementToGdipBitmap(System.Windows.UIElement,System.Int32,System.Nullable{Au.Types.SIZE})"/>.
             </remarks>
+        </member>
+        <member name="M:Au.More.ImageUtil.ConvertWpfImageElementToGdipBitmap(System.Windows.UIElement,System.Int32,System.Nullable{Au.Types.SIZE})">
+            <summary>
+            Converts WPF image element to GDI+ image.
+            </summary>
+            <param name="e">For example <b>Viewbox</b>.</param>
+            <param name="dpi">DPI of window that will display the image.</param>
+            <param name="size">Final image size in logical pixels (not DPI-scaled). If null, uses element's <b>DesiredSize</b> property, max 1024x1024.</param>
+        </member>
+        <member name="M:Au.More.ImageUtil.XamlImageToIconFile(System.IO.Stream,System.String,System.Int32[])">
+            <summary>
+            Converts XAML image to native icon file data.
+            </summary>
+            <param name="stream">Stream to write icon file data. Writes from start.</param>
+            <param name="image">Image XAML. See <see cref="M:Au.More.ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.</param>
+            <param name="sizes">Sizes of icon images to add to the ico file. For example 16, 24, 32, 48, 64. Sizes can be 1 to 256 inclusive.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">An invalid size.</exception>
+            <exception cref="T:System.Exception"></exception>
         </member>
         <member name="T:Au.More.Math2">
             <summary>
@@ -17803,6 +17571,273 @@
             <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
             <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
         </member>
+        <member name="T:Au.lastError">
+             <summary>
+             Gets, sets or clears the last error code of Windows API. Gets error text.
+             </summary>
+             <remarks>
+             Many Windows API functions, when failed, set an error code. Code 0 means no error. It is stored in an internal thread-specific int variable. But only if the API declaration's DllImport attribute has SetLastError = true.
+             
+             Some functions of this library simply call these API functions and don't throw exception when API fail. For example, most <see cref="T:Au.wnd"/> propery-get functions.
+             When failed, they return false/0/null/empty. Then you can use <see cref="P:Au.lastError.code"/> to get the error code or <see cref="P:Au.lastError.message"/> to get error text.
+             
+             Most of functions set error code only when failed, and don't clear the old error code when succeeded. Therefore may need to call <see cref="M:Au.lastError.clear"/> before.
+            
+             Windows API error code definitions and documentation are not included in this library. You can look for them in API function documentation on the internet.
+             </remarks>
+             <example>
+             <code><![CDATA[
+             wnd w = wnd.find("Notepag");
+             lastError.clear();
+             bool enabled = w.IsEnabled; //returns true if enabled, false if disabled or failed
+             if(!enabled && lastError.code != 0) { print.it(lastError.message); return; } //1400, Invalid window handle
+             print.it(enabled);
+             ]]></code>
+             </example>
+        </member>
+        <member name="M:Au.lastError.clear">
+            <summary>
+            Calls API <msdn>SetLastError</msdn>(0), which clears the Windows API last error code of this thread.
+            </summary>
+            <remarks>
+            Need it before calling some functions if you want to use <see cref="P:Au.lastError.code"/> or <see cref="P:Au.lastError.message"/>.
+            The same as <c>lastError.code = 0;</c>.
+            </remarks>
+        </member>
+        <member name="P:Au.lastError.code">
+            <summary>
+            Gets (<see cref="M:System.Runtime.InteropServices.Marshal.GetLastWin32Error"/>) or sets (API <msdn>SetLastError</msdn>) the Windows API last error code of this thread.
+            </summary>
+        </member>
+        <member name="P:Au.lastError.message">
+            <summary>
+            Gets the text message of the Windows API last error code of this thread.
+            Returns null if the code is 0.
+            </summary>
+            <remarks>
+            The string always ends with ".".
+            </remarks>
+        </member>
+        <member name="M:Au.lastError.messageFor(System.Int32)">
+            <summary>
+            Gets the text message of a Windows API error code.
+            Returns null if errorCode is 0.
+            </summary>
+            <remarks>
+            The string always ends with ".".
+            </remarks>
+        </member>
+        <member name="T:Au.opt">
+            <summary>
+            Options for some functions of this library.
+            </summary>
+            <remarks>
+            Some frequently used static functions of this library have some options (settings). For example <see cref="M:Au.keys.send(Au.Types.KKeysEtc[])"/> allows to change speed, text sending method, etc. Passing options as parameters in each call usually isn't what you want to do in automation scripts. Instead you can set options using static properties. This class contains several groups of options for functions of various classes. See examples.
+            
+            There are two sets of identical or similar options - in class <b>opt</b> and in class <see cref="T:Au.opt.init"/>:
+            - <b>opt</b> - thread-static options (each thread has its own instance). Functions of this library use them. You can change or change-restore them anywhere in script. Initial options are automatically copied from <b>opt.init</b> when that group of options (<b>Key</b>, <b>Mouse</b>, etc) is used first time in that thread (explicitly or by library functions).
+            - <b>opt.init</b> - static options. Contains initial property values for <b>opt</b>. Normally you change them when script starts. Don't change later, it's not thread-safe.
+            </remarks>
+        </member>
+        <member name="P:Au.opt.key">
+            <summary>
+            Options for keyboard and clipboard functions (classes <see cref="T:Au.keys"/>, <see cref="T:Au.clipboard"/> and functions that use them).
+            </summary>
+            <remarks>
+            Each thread has its own <b>opt.key</b> instance. It inherits options from <see cref="P:Au.opt.init.key"/>.
+            Also can be used when creating <see cref="T:Au.keys"/> instances. See the second example.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            opt.key.KeySpeed = 100;
+            keys.send("Right*10 Ctrl+A");
+            ]]></code>
+            Use a <b>keys</b> instance.
+            <code><![CDATA[
+            var k = new keys(opt.key); //create new keys instance and copy options from opt.key to it
+            k.Options.KeySpeed = 100; //changes option of k but not of opt.key
+            k.Add("Right*10 Ctrl+A").Send(); //uses options of k
+            ]]></code>
+            </example>
+        </member>
+        <member name="P:Au.opt.mouse">
+            <summary>
+            Options for mouse functions (class <see cref="T:Au.mouse"/> and functions that use it).
+            </summary>
+            <remarks>
+            Each thread has its own <b>opt.mouse</b> instance. It inherits options from <see cref="P:Au.opt.init.mouse"/>.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            opt.mouse.ClickSpeed = 100;
+            mouse.click();
+            ]]></code>
+            </example>
+        </member>
+        <member name="P:Au.opt.wait">
+            <summary>
+            Options for 'wait for' functions.
+            </summary>
+            <remarks>
+            Each thread has its own <b>opt.wait</b> instance. There is no <b>opt.init.wait</b>.
+            Most 'wait for' functions of this library use these options. Functions of .NET classes don't.
+            </remarks>
+        </member>
+        <member name="P:Au.opt.warnings">
+            <summary>
+            Options for showing run-time warnings and other info that can be useful to find problems in code at run time.
+            </summary>
+            <remarks>
+            Each thread has its own <b>opt.warnings</b> instance. It inherits options from <see cref="P:Au.opt.init.warnings"/>.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            opt.warnings.Verbose = false;
+            print.warning("Example");
+            print.warning("Example");
+            ]]></code>
+            </example>
+        </member>
+        <member name="T:Au.opt.init">
+            <summary>
+            Default <see cref="T:Au.opt"/> properties of a thread.
+            </summary>
+            <remarks>
+            You can change these options at the start of your script/program. Don't change later.
+            </remarks>
+        </member>
+        <member name="P:Au.opt.init.key">
+            <summary>
+            Default option values for <see cref="P:Au.opt.key"/> of a thread.
+            </summary>
+            <remarks>
+            Also can be used when creating <see cref="T:Au.keys"/> instances. See the second example.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            opt.init.key.KeySpeed = 10;
+            ...
+            keys.send("Tab Ctrl+V"); //uses opt.key, which is implicitly copied from opt.init.key
+            ]]></code>
+            Use a <b>keys</b> instance.
+            <code><![CDATA[
+            var k = new keys(opt.init.key); //create new keys instance and copy options from opt.init.key to it
+            k.Options.KeySpeed = 100; //changes option of k
+            k.Add("Tab Ctrl+V").Send(); //uses options of k
+            ]]></code>
+            </example>
+        </member>
+        <member name="P:Au.opt.init.mouse">
+            <summary>
+            Default option values for <see cref="P:Au.opt.mouse"/> of a thread.
+            </summary>
+            <example>
+            <code><![CDATA[
+            opt.init.mouse.ClickSpeed = 10;
+            ...
+            mouse.click(); //uses opt.mouse, which is implicitly copied from opt.init.mouse
+            ]]></code>
+            </example>
+        </member>
+        <member name="P:Au.opt.init.warnings">
+            <summary>
+            Default option values for <see cref="P:Au.opt.warnings"/> of a thread.
+            </summary>
+            <example>
+            <code><![CDATA[
+            opt.init.warnings.Verbose = false;
+            ]]></code>
+            </example>
+        </member>
+        <member name="T:Au.opt.scope">
+            <summary>
+            Creates temporary scopes for options.
+            Example: <c>using(opt.scope.Key()) { opt.key.KeySpeed=5; ... }</c>.
+            </summary>
+        </member>
+        <member name="M:Au.opt.scope.mouse(System.Boolean)">
+            <summary>
+            Creates temporary scope for <see cref="P:Au.opt.mouse"/> options. See example.
+            </summary>
+            <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="T:Au.opt.init"/>).</param>
+            <example>
+            <code><![CDATA[
+            print.it(opt.mouse.ClickSpeed);
+            using(opt.scope.Mouse()) {
+            	opt.mouse.ClickSpeed = 100;
+            	print.it(opt.mouse.ClickSpeed);
+            } //here restored automatically
+            print.it(opt.mouse.ClickSpeed);
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.opt.scope.key(System.Boolean)">
+            <summary>
+            Creates temporary scope for <see cref="P:Au.opt.key"/> options. See example.
+            </summary>
+            <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="T:Au.opt.init"/>).</param>
+            <example>
+            <code><![CDATA[
+            print.it(opt.key.KeySpeed);
+            using(opt.scope.Key()) {
+            	opt.key.KeySpeed = 5;
+            	print.it(opt.key.KeySpeed);
+            } //here restored automatically
+            print.it(opt.key.KeySpeed);
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.opt.scope.wait(System.Boolean)">
+            <summary>
+            Creates temporary scope for <see cref="P:Au.opt.wait"/> options. See example.
+            </summary>
+            <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="T:Au.opt.init"/>).</param>
+            <example>
+            <code><![CDATA[
+            print.it(opt.wait.Period);
+            using(opt.scope.wait()) {
+            	opt.wait.Period = 5;
+            	print.it(opt.wait.Period);
+            } //here restored automatically
+            print.it(opt.wait.Period);
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.opt.scope.warnings(System.Boolean)">
+            <summary>
+            Creates temporary scope for <see cref="P:Au.opt.warnings"/> options. See example.
+            </summary>
+            <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="T:Au.opt.init"/>).</param>
+            <example>
+            <code><![CDATA[
+            opt.warnings.Verbose = false;
+            print.it(opt.warnings.Verbose, opt.warnings.IsDisabled("Test*"));
+            using(opt.scope.Warnings()) {
+            	opt.warnings.Verbose = true;
+            	opt.warnings.Disable("Test*");
+            	print.it(opt.warnings.Verbose, opt.warnings.IsDisabled("Test*"));
+            } //here restored automatically
+            print.it(opt.warnings.Verbose, opt.warnings.IsDisabled("Test*"));
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.opt.scope.all(System.Boolean)">
+            <summary>
+            Creates temporary scope for all options. See example.
+            </summary>
+            <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="T:Au.opt.init"/>).</param>
+            <example>
+            <code><![CDATA[
+            print.it(opt.key.KeySpeed, opt.mouse.ClickSpeed);
+            using(opt.scope.All()) {
+            	opt.key.KeySpeed = 5;
+            	opt.mouse.ClickSpeed = 50;
+            	print.it(opt.key.KeySpeed, opt.mouse.ClickSpeed);
+            } //here restored automatically
+            print.it(opt.key.KeySpeed, opt.mouse.ClickSpeed);
+            ]]></code>
+            </example>
+        </member>
         <member name="T:Au.print">
             <summary>
             Writes text to the output window, console, log file or custom writer.
@@ -21209,6 +21244,11 @@
             <remarks>
             If script properties contain runSingle true, the default compiler adds <see cref="T:Au.Types.RunSingleAttribute"/> to the main assembly. Then at run time this property returns true.
             </remarks>
+        </member>
+        <member name="P:Au.scriptt.isDebug">
+            <summary>
+            Returns true if the build configuration of the main assembly is Debug. Returns false if Release (optimize true).
+            </summary>
         </member>
         <member name="M:Au.scriptt.trayIcon(System.Int32,System.Action{Au.trayIcon},System.Action{Au.trayIcon,Au.popupMenu},System.String)">
             <summary>
@@ -25024,7 +25064,7 @@
             <exception cref="T:System.ArgumentException">Bad image or string format.</exception>
             <exception cref="T:System.Exception">Depending on <i>image</i> string format, exceptions of <see cref="M:System.Drawing.Image.FromFile(System.String)"/>, <see cref="M:System.Drawing.Bitmap.#ctor(System.IO.Stream)"/>, etc.</exception>
             <remarks>
-            Calls <see cref="M:Au.More.ImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String,System.Nullable{System.ValueTuple{Au.Types.SIZE,System.Int32}})"/>.
+            Calls <see cref="M:Au.More.ImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String,System.Nullable{System.ValueTuple{System.Int32,System.Nullable{Au.Types.SIZE}}})"/>.
             </remarks>
         </member>
         <member name="M:Au.uiimage.more.bitmapFromHbitmap(System.IntPtr)">

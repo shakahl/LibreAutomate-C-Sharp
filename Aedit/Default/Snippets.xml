@@ -442,7 +442,7 @@ if (!b.ShowDialog()) return;
 		</snippet>
 
 		<snippet name="riRunItSnippet" info="Run a program or open a document, folder, web page." more="Tip: drag and drop.">
-			<![CDATA[run.it($end$AFolders.System + @"Notepad.exe"$end$);]]>
+			<![CDATA[run.it($end$folders.System + @"notepad.exe"$end$);]]>
 		</snippet>
 
 		<snippet name="srScripttRunSnippet" info="Start to execute a script." more="Tip: drag and drop. See also: RunWait.">

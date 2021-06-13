@@ -72,12 +72,10 @@ partial class CiCompletion
 		if (!popupListHidden) _popupList.Hide();
 	}
 
-	public void SciUpdateUI(SciCode doc) //modified, position changed, clicked
-	{
-		//int pos = doc.CurrentPosChars;
-		//var node = CiTools.NodeAt(pos);
-		//print.it(CiTools.IsInString(ref node, pos));
-
+	public void SciUpdateUI(SciCode doc) { //modified, position changed, clicked
+										   //int pos = doc.CurrentPosChars;
+										   //var node = CiTools.NodeAt(pos);
+										   //print.it(CiTools.IsInString(ref node, pos));
 	}
 
 	/// <summary>
@@ -767,6 +765,23 @@ partial class CiCompletion
 		}
 		_popupList.SelectedItem = ci;
 	}
+	//FUTURE: when typed 1-2 lowercase chars, select keyword instead of type.
+	//	Now these types are selected first (but none when typed 3 chars):
+	/*
+	elm else
+	folders for
+	inputBlocker int
+	regexp return/ref/readonly/record    //ref/record are rare and before return, but readonly...
+	trayIcon true/try
+	uiimage uint
+
+	RARE
+	clipboard class
+	filesystem finally/fixed
+	pathname params
+	print/process private/protected
+
+	*/
 
 	public System.Windows.Documents.Section GetDescriptionDoc(CiComplItem ci, int iSelect) {
 		if (_data == null) return null;
@@ -1026,7 +1041,7 @@ partial class CiCompletion
 			var ci = _popupList.SelectedItem;
 			if (ci != null) {
 				R = _Commit(doc, ci, default, key);
-				if (R == CiComplResult.None && key == KKey.Tab) R = CiComplResult.Simple; //always suppress Tab
+				if (R == CiComplResult.None && key is KKey.Tab or KKey.Enter) R = CiComplResult.Simple; //always suppress Tab and Enter
 			}
 			_CancelUI();
 		}

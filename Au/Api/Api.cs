@@ -795,8 +795,14 @@ namespace Au.Types
 		//internal static extern bool PathIsDirectoryEmpty(string pszPath);
 		//speed: slightly faster than with filesystem.enumerate.
 
+		//[DllImport("shlwapi.dll")]
+		//internal static extern uint ColorAdjustLuma(uint clrRGB, int n, bool fScale);
+
 		[DllImport("shlwapi.dll")]
-		internal static extern uint ColorAdjustLuma(uint clrRGB, int n, bool fScale);
+		internal static extern void ColorRGBToHLS(int clrRGB, out ushort pwHue, out ushort pwLuminance, out ushort pwSaturation);
+
+		[DllImport("shlwapi.dll")]
+		internal static extern int ColorHLSToRGB(ushort wHue, ushort wLuminance, ushort wSaturation);
 
 		//internal enum ASSOCSTR
 		//{
@@ -1345,5 +1351,28 @@ namespace Au.Types
 
 		#endregion
 
+		#region struct
+
+		internal struct NEWHEADER
+		{
+			public ushort wReserved;
+			public ushort wResType;
+			public ushort wResCount;
+		};
+
+		[StructLayout(LayoutKind.Sequential, Pack = 2)]
+		internal struct ICONDIRENTRY
+		{
+			public byte bWidth;
+			public byte bHeight;
+			public byte bColorCount;
+			public byte bReserved;
+			public ushort wPlanes;
+			public ushort wBitCount;
+			public int dwBytesInRes;
+			public int dwImageOffset;
+		};
+
+		#endregion
 	}
 }

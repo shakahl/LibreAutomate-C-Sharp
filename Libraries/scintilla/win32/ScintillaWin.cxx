@@ -519,7 +519,7 @@ public:
 			r.endStyled = (int)pdoc->GetEndStyled();
 			if(0 != (flags & 2)) r.endStyledLineStart = (int)pdoc->LineStart(r.endStyledLine = (int)pdoc->LineFromPosition(r.endStyled));
 		}
-		if(0 != (flags & 4)) r.visibleFrom = (int)pdoc->LineStart(r.visibleFromLine = (int)topLine);
+		if(0 != (flags & 4)) r.visibleFrom = (int)pdoc->LineStart(r.visibleFromLine = (int)pcs->DocFromDisplay(topLine));
 		if(0 != (flags & 8)) {
 			auto lineTo = pcs->DocFromDisplay(topLine + LinesOnScreen()) + 1;
 			auto n = pdoc->LinesTotal();

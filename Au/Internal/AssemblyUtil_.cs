@@ -18,16 +18,15 @@ namespace Au.More
 	/// <summary>
 	/// Assembly functions.
 	/// </summary>
-	public static class AssemblyUtil
+	internal static class AssemblyUtil_
 	{
 		/// <summary>
-		/// Returns true if the build configuration of the main assembly is Debug. Returns false if Release (optimize true).
+		/// Returns true if the build configuration of the assembly is Debug. Returns false if Release (optimized).
 		/// </summary>
 		/// <remarks>
 		/// Returns true if the assembly has <see cref="DebuggableAttribute"/> and its <b>IsJITTrackingEnabled</b> is true.
 		/// </remarks>
-		public static bool IsDebug => s_debug ??= (Assembly.GetEntryAssembly()?.GetCustomAttribute<DebuggableAttribute>()?.IsJITTrackingEnabled ?? false);
-		static bool? s_debug;
+		public static bool IsDebug(Assembly a) => a?.GetCustomAttribute<DebuggableAttribute>()?.IsJITTrackingEnabled ?? false;
 		//IsJITTrackingEnabled depends on config, but not 100% reliable, eg may be changed explicitly in source code (maybe IsJITOptimizerDisabled too).
 		//IsJITOptimizerDisabled depends on 'Optimize code' checkbox in project Properties, regardless of config.
 		//note: GetEntryAssembly returns null in func called by host through coreclr_create_delegate.
@@ -36,14 +35,14 @@ namespace Au.More
 		///// <summary>
 		///// Returns true if Au.dll is installed in the global assembly cache.
 		///// </summary>
-		//internal static bool IsAuInGAC => typeof(AssemblyUtil).Assembly.GlobalAssemblyCache;
+		//internal static bool IsAuInGAC => typeof(AssemblyUtil_).Assembly.GlobalAssemblyCache;
 
 		//no ngen in Core.
 		///// <summary>
 		///// Returns true if Au.dll is compiled to native code using ngen.exe.
 		///// It means - no JIT-compiling delay when its functions are called first time in process.
 		///// </summary>
-		//internal static bool IsAuNgened => s_auNgened ??= IsNgened(typeof(AssemblyUtil).Assembly);
+		//internal static bool IsAuNgened => s_auNgened ??= IsNgened(typeof(AssemblyUtil_).Assembly);
 		//static bool? s_auNgened;
 		////tested: Module.GetPEKind always gets ILOnly.
 		////test: new StackFrame().HasNativeImage()

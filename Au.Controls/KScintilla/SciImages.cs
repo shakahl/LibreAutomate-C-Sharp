@@ -47,17 +47,24 @@ namespace Au.Controls
 		class _ThreadSharedData
 		{
 			List<_Image> _a;
+			int _dpi;
+
 			public int CacheSize { get; private set; }
 
 			public void AddImage(_Image im) {
-				if (_a == null) _a = new List<_Image>();
+				_a ??= new List<_Image>();
 				_a.Add(im);
 				CacheSize += im.data.Length;
 			}
 
-			public _Image FindImage(long nameHash) {
-				if (_a != null)
+			public _Image FindImage(long nameHash, int dpi) {
+				if (dpi != _dpi) {
+					ClearCache();
+					_dpi = dpi;
+				}
+				if (_a != null) {
 					for (int j = 0; j < _a.Count; j++) if (_a[j].nameHash == nameHash) return _a[j];
+				}
 				return null;
 			}
 
@@ -333,7 +340,6 @@ namespace Au.Controls
 			if (imType == KImageUtil.ImageType.None) goto g1;
 			if (prefixLength == 10) { i += prefixLength; prefixLength = 0; } //"imagefile:"
 
-			//SHOULDDO: support XAML. But most XAML are not images.
 			//FUTURE: support SVG. Tested several best SVG libraries.
 			//	None of C# libs support >50% tested .svg files.
 			//	Librsvg (C) supports all. Too big for Au; would be useful for toolbar/menu images. Not too big for editor, if very need.
@@ -342,7 +348,7 @@ namespace Au.Controls
 
 			//is already loaded?
 			long hash = Hash.Fnv1Long(s + i, i2 - i);
-			var im = d.FindImage(hash);
+			var im = d.FindImage(hash, _c._dpi);
 			//print.it(im != null, new string((sbyte*)s, i, i2 - i));
 			if (im != null) return im;
 
@@ -354,7 +360,7 @@ namespace Au.Controls
 
 			//load
 			long t1 = computer.tickCountWithoutSleep;
-			byte[] b = KImageUtil.BmpFileDataFromString(path, imType, !_isEditor);
+			byte[] b = KImageUtil.BmpFileDataFromString(path, imType, !_isEditor, (_c._dpi, null));
 			t1 = computer.tickCountWithoutSleep - t1; if (t1 > 1000) print.warning($"Time to load image '{path}' is {t1} ms.", -1, prefix: "<>Note: "); //eg if network path unavailable, may wait ~7 s
 			if (b == null) goto g1;
 			if (!KImageUtil.GetBitmapFileInfo_(b, out var q)) goto g1;

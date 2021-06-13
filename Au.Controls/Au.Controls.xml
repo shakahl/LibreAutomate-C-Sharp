@@ -1826,7 +1826,7 @@
             If without prefix, gets file icon; see <see cref="M:Au.icon.of(System.String,System.Int32,Au.Types.IconGetFlags)"/>.
             </summary>
             <remarks>
-            To load image the control calls <see cref="M:Au.More.ImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String,System.Nullable{System.ValueTuple{Au.Types.SIZE,System.Int32}})"/> or <see cref="M:Au.More.ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.
+            To load image the control calls <see cref="M:Au.More.ImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String,System.Nullable{System.ValueTuple{System.Int32,System.Nullable{Au.Types.SIZE}}})"/> or <see cref="M:Au.More.ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.
             The control uses <see cref="T:Au.More.IconImageCache"/>; see <see cref="P:Au.Controls.KTreeView.ImageCache"/>.
             </remarks>
         </member>
@@ -2824,6 +2824,9 @@
         <member name="F:Au.Controls.KImageUtil.ImageType.None">
             <summary>The string isn't image.</summary>
         </member>
+        <member name="F:Au.Controls.KImageUtil.ImageType.Xaml">
+            <summary>XAML image.</summary>
+        </member>
         <member name="F:Au.Controls.KImageUtil.ImageType.Base64CompressedBmp">
             <summary>Compressed and Base64-encoded .bmp file data with "~:" prefix. See <see cref="M:Au.Controls.KImageUtil.ImageToString(System.String)"/>.</summary>
         </member>
@@ -2865,7 +2868,7 @@
             <param name="prefixLength">Length of prefix "imagefile:" or "image:" or "~:".</param>
             <param name="s">File path etc. See <see cref="T:Au.Controls.KImageUtil.ImageType"/>.</param>
         </member>
-        <member name="M:Au.Controls.KImageUtil.BmpFileDataFromString(System.String,Au.Controls.KImageUtil.ImageType,System.Boolean)">
+        <member name="M:Au.Controls.KImageUtil.BmpFileDataFromString(System.String,Au.Controls.KImageUtil.ImageType,System.Boolean,System.Nullable{System.ValueTuple{System.Int32,System.Nullable{Au.Types.SIZE}}})">
             <summary>
             Loads image and returns its data in .bmp file format.
             Returns null if fails, for example file not found or invalid Base64 string.
@@ -2873,6 +2876,7 @@
             <param name="s">Depends on t. File path or resource name without prefix or Base64 image data without prefix.</param>
             <param name="t">Image type and string format.</param>
             <param name="searchPath">Use <see cref="M:Au.filesystem.searchPath(System.String,System.String[])"/></param>
+            <param name="xaml">If not null, supports XAML images. See <see cref="M:Au.More.ImageUtil.LoadGdipBitmapFromXaml(System.String,System.Int32,System.Nullable{Au.Types.SIZE})"/>.</param>
             <remarks>Supports environment variables etc. If not full path, searches in <see cref="P:Au.folders.ThisAppImages"/>.</remarks>
         </member>
         <member name="M:Au.Controls.KImageUtil.BmpFileDataToString(System.Byte[])">

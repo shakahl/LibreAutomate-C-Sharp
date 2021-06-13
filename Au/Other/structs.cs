@@ -41,13 +41,13 @@ namespace Au.Types
 		/// <param name="p"></param>
 		/// <param name="round">Can round up, for example 1.7 to 2.</param>
 		/// <exception cref="OverflowException"></exception>
-		public static POINT From(PointF p, bool round = false)
+		public static POINT From(PointF p, bool round)
 			=> new(round ? p.X.ToInt() : checked((int)p.X), round ? p.Y.ToInt() : checked((int)p.Y));
 
 		/// <param name="p"></param>
 		/// <param name="round">Can round up, for example 1.7 to 2.</param>
 		/// <exception cref="OverflowException"></exception>
-		public static POINT From(System.Windows.Point p, bool round = false)
+		public static POINT From(System.Windows.Point p, bool round)
 			=> new(round ? p.X.ToInt() : checked((int)p.X), round ? p.Y.ToInt() : checked((int)p.Y));
 
 		//rejected
@@ -113,13 +113,13 @@ namespace Au.Types
 		/// <param name="z"></param>
 		/// <param name="round">Can round up, for example 1.7 to 2.</param>
 		/// <exception cref="OverflowException"></exception>
-		public static SIZE From(SizeF z, bool round = false)
+		public static SIZE From(SizeF z, bool round)
 			=> new(round ? z.Width.ToInt() : checked((int)z.Width), round ? z.Height.ToInt() : checked((int)z.Height));
 
 		/// <param name="z"></param>
 		/// <param name="round">Can round up, for example 1.7 to 2.</param>
 		/// <exception cref="OverflowException"></exception>
-		public static SIZE From(System.Windows.Size z, bool round = false)
+		public static SIZE From(System.Windows.Size z, bool round)
 			=> new(round ? z.Width.ToInt() : checked((int)z.Width), round ? z.Height.ToInt() : checked((int)z.Height));
 
 		public static bool operator ==(SIZE s1, SIZE s2) => s1.width == s2.width && s1.height == s2.height;
@@ -192,7 +192,7 @@ namespace Au.Types
 		/// <param name="r"></param>
 		/// <param name="round">Can round up, for example 1.7 to 2.</param>
 		/// <exception cref="OverflowException"></exception>
-		public static RECT From(RectangleF r, bool round = false) {
+		public static RECT From(RectangleF r, bool round) {
 			if (round) return new(r.Left.ToInt(), r.Top.ToInt(), r.Width.ToInt(), r.Height.ToInt());
 			checked { return new((int)r.Left, (int)r.Top, (int)r.Width, (int)r.Height); }
 		}
@@ -200,7 +200,7 @@ namespace Au.Types
 		/// <param name="r"></param>
 		/// <param name="round">Can round up, for example 1.7 to 2.</param>
 		/// <exception cref="OverflowException"></exception>
-		public static RECT From(System.Windows.Rect r, bool round = false) {
+		public static RECT From(System.Windows.Rect r, bool round) {
 			if (round) return new(r.Left.ToInt(), r.Top.ToInt(), r.Width.ToInt(), r.Height.ToInt());
 			checked { return new((int)r.Left, (int)r.Top, (int)r.Width, (int)r.Height); }
 		}
@@ -438,186 +438,6 @@ namespace Au.Types
 			return ok;
 		}
 #pragma warning restore 1591 //XML doc
-	}
-
-	/// <summary>
-	/// Color, as int in 0xAARRGGBB format.
-	/// Can convert from/to <see cref="Color"/>, <see cref="System.Windows.Media.Color"/>, int (0xAARRGGBB), Windows COLORREF (0xBBGGRR), string.
-	/// </summary>
-	public struct ColorInt : IEquatable<ColorInt>
-	{
-		/// <summary>
-		/// Color value in 0xAARRGGBB format.
-		/// </summary>
-		[JsonInclude]
-		public int argb;
-
-		/// <param name="colorARGB">Color value in 0xAARRGGBB or 0xRRGGBB format.</param>
-		/// <param name="makeOpaque">Set alpha = 0xFF.</param>
-		public ColorInt(int colorARGB, bool makeOpaque) {
-			if (makeOpaque) colorARGB |= 0xFF << 24;
-			argb = colorARGB;
-		}
-
-		/// <param name="colorARGB">Color value in 0xAARRGGBB or 0xRRGGBB format.</param>
-		/// <param name="makeOpaque">Set alpha = 0xFF.</param>
-		public ColorInt(uint colorARGB, bool makeOpaque) : this((int)colorARGB, makeOpaque) { }
-
-		/// <summary>
-		/// Converts from int color value in 0xRRGGBB or 0xAARRGGBB format.
-		/// Sets alpha 0xFF.
-		/// </summary>
-		//[Obsolete] //to find all references
-		public static implicit operator ColorInt(int color) => new(color, true);
-
-		/// <summary>
-		/// Converts from int color value in 0xRRGGBB or 0xAARRGGBB format.
-		/// Sets alpha 0xFF.
-		/// </summary>
-		//[Obsolete] //to find all references
-		public static implicit operator ColorInt(uint color) => new((int)color, true);
-
-		/// <summary>
-		/// Converts from <see cref="Color"/>.
-		/// </summary>
-		public static implicit operator ColorInt(Color color) => new(color.ToArgb(), false);
-
-		/// <summary>
-		/// Converts from <see cref="System.Windows.Media.Color"/>.
-		/// </summary>
-		public static implicit operator ColorInt(System.Windows.Media.Color color)
-			=> new((color.A << 24) | (color.R << 16) | (color.G << 8) | color.B, false);
-
-		/// <summary>
-		/// Converts from color name (<see cref="Color.FromName(string)"/>) or string "0xRRGGBB" or "#RRGGBB".
-		/// </summary>
-		/// <remarks>
-		/// If s is a hex number that contains 6 or less hex digits, makes opaque (alpha 0xFF).
-		/// If s is null or invalid, sets c.argb = 0 and returns false.
-		/// </remarks>
-		public static bool FromString(string s, out ColorInt c) {
-			c.argb = 0;
-			if (s == null || s.Length < 2) return false;
-			if (s[0] == '0' && s[1] == 'x') {
-				c.argb = s.ToInt(0, out int end);
-				if (end < 3) return false;
-				if (end <= 8) c.argb |= unchecked((int)0xFF000000);
-			} else if (s[0] == '#') {
-				c.argb = s.ToInt(1, out int end, STIFlags.IsHexWithout0x);
-				if (end < 2) return false;
-				if (end <= 7) c.argb |= unchecked((int)0xFF000000);
-			} else {
-				c.argb = Color.FromName(s).ToArgb();
-				if (c.argb == 0) return false; //invalid is 0, black is 0xFF000000
-			}
-			return true;
-		}
-
-		/// <summary>
-		/// Converts from Windows native COLORREF (0xBBGGRR to 0xAARRGGBB).
-		/// </summary>
-		/// <param name="colorBGR">Color in 0xBBGGRR format.</param>
-		/// <param name="makeOpaque">If true, sets alpha = 0xFF. If null, sets alpha = 0xFF if it is 0 in <i>colorBGR</i>.</param>
-		public static ColorInt FromBGR(int colorBGR, bool makeOpaque = true) => new(SwapRB(colorBGR), makeOpaque);
-
-		/// <summary>
-		/// Converts to Windows native COLORREF (0xBBGGRR from 0xAARRGGBB).
-		/// Returns color in COLORREF format. Does not modify this variable.
-		/// </summary>
-		/// <param name="zeroAlpha">Set the alpha byte = 0.</param>
-		public int ToBGR(bool zeroAlpha = true) {
-			var r = SwapRB(argb);
-			if (zeroAlpha) r &= 0xFFFFFF;
-			return r;
-		}
-
-		//rejected. Easy to create bugs when actually need BGR. Let use ToBGR() when need BGR, or argb field when need ARGB.
-		///// <summary>Returns <c>c.argb</c>.</summary>
-		//public static explicit operator int(ColorInt c) => c.argb;
-
-		///// <summary>Returns <c>(uint)c.argb</c>.</summary>
-		//public static explicit operator uint(ColorInt c) => (uint)c.argb;
-
-		/// <summary>Converts to <see cref="Color"/>.</summary>
-		public static explicit operator Color(ColorInt c) => Color.FromArgb(c.argb);
-
-		/// <summary>Converts to <see cref="System.Windows.Media.Color"/>.</summary>
-		public static explicit operator System.Windows.Media.Color(ColorInt c) {
-			uint k = (uint)c.argb;
-			return System.Windows.Media.Color.FromArgb((byte)(k >> 24), (byte)(k >> 16), (byte)(k >> 8), (byte)k);
-		}
-
-		internal static System.Windows.Media.Color WpfColor_(int rgb)
-			=> System.Windows.Media.Color.FromRgb((byte)(rgb >> 16), (byte)(rgb >> 8), (byte)rgb);
-
-		internal static System.Windows.Media.SolidColorBrush WpfBrush_(int rgb)
-			=> new(WpfColor_(rgb));
-
-		///// <summary>
-		///// <c>FromBGR(GetSysColor)</c>.
-		///// </summary>
-		//internal static ColorInt FromSysColor_(int colorIndex) => FromBGR(Api.GetSysColor(colorIndex), true);
-
-#pragma warning disable 1591 //XML doc
-		public static bool operator ==(ColorInt a, ColorInt b) => a.argb == b.argb;
-		public static bool operator !=(ColorInt a, ColorInt b) => a.argb != b.argb;
-
-		public bool Equals(ColorInt other) => other.argb == argb;
-
-		public override bool Equals(object obj) => obj is ColorInt && this == (ColorInt)obj;
-		public override int GetHashCode() => argb;
-		public override string ToString() => "#" + argb.ToString("X8");
-#pragma warning restore 1591 //XML doc
-
-		/// <summary>
-		/// Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).
-		/// ARGB is used in .NET, GDI+ and HTML/CSS.
-		/// ABGR is used by most Windows API; aka COLORREF.
-		/// </summary>
-		public static int SwapRB(int color) => (color & unchecked((int)0xff00ff00)) | (color << 16 & 0xff0000) | (color >> 16 & 0xff);
-
-		/// <summary>
-		/// Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).
-		/// ARGB is used in .NET, GDI+ and HTML/CSS.
-		/// ABGR is used by most Windows API; aka COLORREF.
-		/// </summary>
-		public static uint SwapRB(uint color) => (color & 0xff00ff00) | (color << 16 & 0xff0000) | (color >> 16 & 0xff);
-
-		/// <summary>
-		/// Calculates color's perceived brightness.
-		/// Returns a value in range 0 (brightness of black color) to 1 (brightness of white color).
-		/// </summary>
-		/// <remarks>
-		/// Unlike Color.GetBrightness, this function gives different weights for red, green and blue components.
-		/// Does not use alpha.
-		/// </remarks>
-		internal float GetPerceivedBrightness() //FUTURE: make public if really useful
-		{
-			uint u = (uint)argb;
-			uint R = u >> 16 & 0xff, G = u >> 8 & 0xff, B = u & 0xff;
-			return (float)(Math.Sqrt(R * R * .299 + G * G * .587 + B * B * .114) / 255);
-		}
-
-		/// <summary>
-		/// Changes color's luminance (makes darker or brighter).
-		/// Returns new color. Does not modify this variable.
-		/// </summary>
-		/// <param name="n">The luminance in units of 0.1 percent of the range (which depends on totalRange). Can be from -1000 to 1000.</param>
-		/// <param name="totalRange">If true, n is in the whole luminance range (from minimal to maximal possible). If false, n is in the range from current luminance of the color to the maximal (if n positive) or minimal (if n negative) luminance.</param>
-		/// <remarks>
-		/// Calls API <msdn>ColorAdjustLuma</msdn>.
-		/// Does not change hue and saturation. Does not use alpha.
-		/// </remarks>
-		internal ColorInt AdjustLuminance(int n, bool totalRange = false) {
-			uint u = (uint)argb;
-			u = Api.ColorAdjustLuma(u & 0xffffff, n, !totalRange) | (u & 0xFF000000);
-			return new((int)u, false);
-			//tested: with SwapRB the same.
-		}
-		//FUTURE: make public if really useful.
-		//	Or remove.
-		//	Or also add ColorRGBToHLS and ColorHLSToRGB.
-		//	It seems incompatible with Color.GetBrightness etc.
 	}
 
 	internal unsafe struct VARIANT : IDisposable
