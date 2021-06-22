@@ -137,8 +137,11 @@ namespace Au.Controls
 			/// <summary>The string isn't image.</summary>
 			None,
 
-			/// <summary>XAML image.</summary>
+			/// <summary>XAML image data.</summary>
 			Xaml,
+
+			/// <summary>XAML icon name "*Pack.Icon color".</summary>
+			XamlIconName,
 
 			/// <summary>Compressed and Base64-encoded .bmp file data with "~:" prefix. See <see cref="ImageToString(string)"/>.</summary>
 			Base64CompressedBmp,
@@ -208,6 +211,15 @@ namespace Au.Controls
 					if (BytePtr_.AsciiFindString(s, length, "<GeometryDrawing ") >= 0) return ImageType.Xaml;
 				}
 				return default;
+			case '*':
+				if (length > 10 && length < 80) {
+					int i = BytePtr_.AsciiFindChar(s, length, (byte)'.') + 1;
+					if (i > 3) {
+						int j = BytePtr_.AsciiFindChar(s + i, length - i, (byte)' ');
+						if (j > 0) return ImageType.XamlIconName;
+					}
+				}
+				return default;
 			}
 
 			//file path
@@ -270,7 +282,7 @@ namespace Au.Controls
 					}
 					break;
 				}
-
+				g1:
 				switch (t) {
 				case ImageType.Base64CompressedBmp:
 					return Convert2.Decompress(Convert.FromBase64String(s));
@@ -289,12 +301,17 @@ namespace Au.Controls
 				case ImageType.ShellIcon:
 				case ImageType.Cur:
 					return _IconToBytes(s, t == ImageType.Cur, searchPath);
+				case ImageType.XamlIconName when xaml != null:
+					s = script.editor.GetCustomIcon(s, EGetIcon.IconNameToXaml);
+					if (s == null) break;
+					t = ImageType.Xaml;
+					goto g1;
 				case ImageType.Xaml when xaml != null:
 					var xv = xaml.Value;
 					return _ImageToBytes(ImageUtil.LoadGdipBitmapFromXaml(s, xv.dpi, xv.size));
 				}
 			}
-			catch (Exception ex) { Debug_.Print(ex.Message + "    " + s); }
+			catch (Exception ex) { Debug_.PrintIf(t != ImageType.Xaml, ex.Message + "    " + s); }
 			return null;
 		}
 

@@ -691,8 +691,8 @@ namespace Au.Compiler
 			string s2 = null;
 			int i = s.Find(" /");
 			if (i > 0) {
-				s2 = s.Substring(i + 2);
-				s = s.Remove(i);
+				s2 = s[(i + 2)..];
+				s = s[..i];
 			}
 			return new(_GetFile(s, folder), s2);
 		}
@@ -700,6 +700,7 @@ namespace Au.Compiler
 		string _GetOutPath(string s) {
 			s = s.TrimEnd('\\');
 			if (!pathname.isFullPathExpand(ref s)) {
+				if (s.Starts('%')) _ErrorV("relative path starts with %");
 				if (s.Starts('\\')) s = _fn.Model.FilesDirectory + s;
 				else s = pathname.getDirectory(_fn.FilePath, true) + s;
 			}

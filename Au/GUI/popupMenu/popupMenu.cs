@@ -911,7 +911,7 @@ namespace Au
 			var (canEdit, canGo, goText) = MTItem.CanEditOrGoToFile_(_sourceFile, b);
 			if (canEdit || canGo) {
 				var m = new popupMenu();
-				if (canEdit) m["Edit menu item"] = _ => ScriptEditor.GoToEdit(_sourceFile, b.sourceLine);
+				if (canEdit) m["Edit menu item"] = _ => script.editor.OpenAndGoToLine(_sourceFile, b.sourceLine);
 				if (canGo) m[goText] = _ => b.GoToFile_();
 				_ShowSubmenu(b, m: m);
 			}

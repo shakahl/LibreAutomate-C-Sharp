@@ -24,7 +24,7 @@ class PanelOpen : DockPanel
 	bool _updatedOnce;
 
 	public PanelOpen() {
-		_tv = new KTreeView { Name = "Open_list", ImageCache = App.ImageCache };
+		_tv = new KTreeView { Name = "Open_list" };
 		this.Children.Add(_tv);
 	}
 

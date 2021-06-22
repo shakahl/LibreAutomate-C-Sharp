@@ -15,7 +15,7 @@ using Au.Types;
 //A minimal script starts in 70-100 ms cold, 40 hot.
 //Workaround for role miniProgram:
 //	Preload task process. Let it wait for next task. While waiting, it also can JIT etc.
-//	Then starts in 12/4 ms (cold/hot). With scriptt.setup 15/5.
+//	Then starts in 12/4 ms (cold/hot). With script.setup 15/5.
 //	Except first time. Also not faster if several scripts are started without a delay. Never mind.
 //	This is implemented in this class and in Au.AppHost (just ~10 code lines added in 1 place).
 
@@ -26,9 +26,9 @@ using Au.Types;
 for (int i = 0; i < 5; i++) {
 //	perf.cpu();
 //	perf.shared.First(); //slower
-	var t=perf.ms.ToStringInvariant(); t=perf.ms.ToStringInvariant();
-	scriptt.run(@"miniProgram.cs", t); //cold 10, hot 3. Without Setup: 6/2. Slower on vmware Win7+Avast.
-//	scriptt.run(@"exeProgram.cs", t); //cold 80, hot 43. Slightly slower on vmware Win7+Avast.
+	var t=perf.ms.ToS(); t=perf.ms.ToS();
+	script.run(@"miniProgram.cs", t); //cold 10, hot 3. Without Setup: 6/2. Slower on vmware Win7+Avast.
+//	script.run(@"exeProgram.cs", t); //cold 80, hot 43. Slightly slower on vmware Win7+Avast.
 	600.ms(); //give time for the process to exit
 }
 
@@ -73,11 +73,11 @@ namespace Au.More
 			r = default;
 			string pipeName = new((char*)pn);
 
-			scriptt.s_role = ATRole.MiniProgram;
+			script.s_role = SRole.MiniProgram;
 
 			process.ThisThreadSetComApartment_(ApartmentState.STA); //1.7 ms
 
-			scriptt.AppModuleInit_(); //2.7 ms (1.8 if with process.thisProcessExit below)
+			script.AppModuleInit_(); //2.7 ms (1.8 if with process.thisProcessExit below)
 
 			//rejected. Now this is implemented in editor. To detect when failed uses process exit code. Never mind exception text, it is not very useful.
 			//process.thisProcessExit += e => { //0.9 ms
@@ -102,7 +102,7 @@ namespace Au.More
 					//p2.Next();
 					Marshal.StringToCoTaskMemUTF8("-");
 					folders.Workspace = new FolderPath("");
-					Jit_.Compile(typeof(scriptt), nameof(scriptt.setup), nameof(scriptt.TrayIcon_));
+					Jit_.Compile(typeof(script), nameof(script.setup), nameof(script.TrayIcon_));
 					//p2.Next();
 
 					//print.TaskEvent_(null, 0); //8-20 ms
@@ -130,7 +130,7 @@ namespace Au.More
 				//p1.Next();
 				var a = Serializer_.Deserialize(b);
 				//p1.Next('d');
-				scriptt.s_name = a[0]; //would not need, because AppDomain.CurrentDomain.FriendlyName returns the same, but I don't trust it, it used to return a different string in the past
+				script.s_name = a[0]; //would not need, because AppDomain.CurrentDomain.FriendlyName returns the same, but I don't trust it, it used to return a different string in the past
 				flags = (EFlags)(int)a[2];
 
 				r.asmFile = Marshal.StringToCoTaskMemUTF8(a[1]);
@@ -143,7 +143,7 @@ namespace Au.More
 				}
 				//p1.Next();
 
-				string wrp = a[4]; if (wrp != null) Api.SetEnvironmentVariable("scriptt.writeResult.pipe", wrp);
+				string wrp = a[4]; if (wrp != null) Api.SetEnvironmentVariable("script.writeResult.pipe", wrp);
 				folders.Workspace = new FolderPath(a[5]);
 				s_scriptId = a[6];
 				//p1.Next();

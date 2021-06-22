@@ -320,8 +320,11 @@ namespace Au
 		/// Returns true if the table exists.
 		/// </summary>
 		/// <param name="table">Table name.</param>
+		/// <remarks>
+		/// This function is slower than "CREATE TABLE IF NOT EXISTS...".
+		/// </remarks>
 		public bool TableExists(string table) {
-			return Any($"SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", table);
+			return Any("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", table);
 		}
 
 		#region util
@@ -499,6 +502,12 @@ namespace Au
 
 		/// <summary>Calls sqlite3_bind_blob64. Returns this.</summary>
 		/// <exception cref="SLException">Failed.</exception>
+		public sqliteStatement Bind(SLIndexOrName sqlParam, ReadOnlySpan<byte> blob) {
+			fixed (byte* p = blob) return Bind(sqlParam, p, blob.Length);
+		}
+
+		/// <summary>Calls sqlite3_bind_blob64. Returns this.</summary>
+		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind<T>(SLIndexOrName sqlParam, T[] array) where T : unmanaged {
 			fixed (T* p = array) return Bind(sqlParam, p, (array?.LongLength ?? 0) * sizeof(T));
 		}
@@ -516,7 +525,7 @@ namespace Au
 
 		/// <summary>Calls sqlite3_bind_null. Returns this.</summary>
 		/// <exception cref="SLException">Failed.</exception>
-		/// <remarks>Usually don't need to call this function. Unset parameter values are null. The Bind(string/void*/Array/List) functions set null too if the value is null.</remarks>
+		/// <remarks>Usually don't need to call this function. Unset parameter values are null. The Bind(string/void*/ReadOnlySpan/Array/List) functions set null too if the value is null.</remarks>
 		public sqliteStatement BindNull(SLIndexOrName sqlParam)
 			=> _Err(SLApi.sqlite3_bind_null(_st, _B(sqlParam)), "sqlite3_bind_null");
 

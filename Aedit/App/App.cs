@@ -29,7 +29,6 @@ static class App
 	public static KMenuCommands Commands;
 	public static FilesModel Model;
 	public static RunningTasks Tasks;
-	public static IconImageCache ImageCache;
 
 #if TRACE
 	static App() {
@@ -101,6 +100,7 @@ static class App
 		Tasks = new RunningTasks();
 		perf.next('t');
 
+		script.editor.IconNameToXaml_ = (s, what) => DIcons.GetIconString(s, what);
 		FilesModel.LoadWorkspace(CommandLine.WorkspaceDirectory);
 		perf.next('W');
 		CommandLine.OnProgramLoaded();
@@ -148,7 +148,6 @@ static class App
 	static void _LoadUI() {
 		var app = new Aedit.WpfApp { ShutdownMode = ShutdownMode.OnMainWindowClose };
 		app.InitializeComponent(); //FUTURE: remove if not used. Adds 2 MB (10->12) when running hidden at startup.
-		ImageCache = new IconImageCache();
 		new MainWindow();
 		app.DispatcherUnhandledException += (_, e) => {
 			e.Handled = 1 == dialog.showError("Exception", e.Exception.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, Wmain, e.Exception.ToString());
@@ -345,7 +344,7 @@ static class App
 			var w = Wmain;
 			if (w != null) {
 				w.Show();
-				w.Activate();
+				Hwnd.ActivateL();
 			} else {
 				Api.PostMessage(default, c_msgBreakMessageLoop, 1, 0);
 			}

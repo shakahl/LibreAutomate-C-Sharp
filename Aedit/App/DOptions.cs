@@ -112,7 +112,7 @@ class DOptions : KDialogWindow
 				foreach (var v in t.Rows) {
 					var s0 = v[0];
 					if (s0.Starts("//")) continue;
-					if (App.Model.FindFile(s0) == null) return "Script not found: " + s0;
+					if (App.Model.FindCodeFile(s0) == null) return "Script not found: " + s0;
 					var delay = v.Length == 1 ? null : v[1];
 					if (!delay.NE()) {
 						rxDelay ??= new regexp(@"(?i)^\d+ *m?s$");
@@ -237,7 +237,7 @@ class DOptions : KDialogWindow
 			fontName.ItemsSource = fonts;
 			var selFont = styles.FontName;
 			fontName.SelectedItem = selFont; if (fontName.SelectedItem == null) fontName.Text = selFont;
-			fontSize.Text = styles.FontSize.ToStringInvariant();
+			fontSize.Text = styles.FontSize.ToS();
 
 			//styles
 

@@ -215,10 +215,10 @@ namespace Au
 				if (_timerPeriod != 250) _SetTimer(250);
 
 				//remove closed toolbars and their owners if need. Now don't need because toolbars call Remove when closing.
-				//			for(int i = _atb.Count - 1; i >= 0; i--) {
-				//				var tb = _atb[i];
-				//				if(tb._closed) Remove(tb);
-				//			}
+				//for(int i = _atb.Count - 1; i >= 0; i--) {
+				//	var tb = _atb[i];
+				//	if(tb._closed) Remove(tb);
+				//}
 
 				//move/close/hide/show owned toolbars together with their owners
 				for (int i = _aow.Count - 1; i >= 0; i--) {
@@ -395,7 +395,7 @@ namespace Au
 			if (!onFollowOwner && _hide.Has(TBHide.Owner) && IsOwned && OwnerWindow.IsMinimized) return;
 
 			bool dpiChanged = _os == null && _SetDpi();
-			//		print.it(dpiChanged, OwnerWindow);
+			//print.it(dpiChanged, OwnerWindow);
 
 			var (r, prevSize) = _GetCachedOwnerRect();
 			//print.it(r, Anchor, _xy, Size);
@@ -452,24 +452,24 @@ namespace Au
 			//uncomment if using properties MinimumSize and MaximumSize.
 
 			if (!_created) return;
-			//		//print.it(this, wp.flags);
+			////print.it(this, wp.flags);
 
-			//		if(!wp.flags.Has(SWPFlags.NOSIZE)) {
-			//			SIZE min = _GetMinSize();
-			//			if(wp.cx < min.width) wp.cx = min.width;
-			//			if(wp.cy < min.height) wp.cy = min.height;
-			//			SIZE max = _Scale(MaximumSize);
-			//			if(max.width > 0) wp.cx = Math.Min(wp.cx, Math.Max(max.width, min.width));
-			//			if(max.height > 0) wp.cy = Math.Min(wp.cy, Math.Max(max.height, min.height));
-			//		}
+			//if(!wp.flags.Has(SWPFlags.NOSIZE)) {
+			//	SIZE min = _GetMinSize();
+			//	if(wp.cx < min.width) wp.cx = min.width;
+			//	if(wp.cy < min.height) wp.cy = min.height;
+			//	SIZE max = _Scale(MaximumSize);
+			//	if(max.width > 0) wp.cx = Math.Min(wp.cx, Math.Max(max.width, min.width));
+			//	if(max.height > 0) wp.cy = Math.Min(wp.cy, Math.Max(max.height, min.height));
+			//}
 			//
-			//		SIZE _GetMinSize()
-			//		{
-			//			int k = Border < TBBorder.ThreeD ? 1 : wnd.more.borderWidth(_w);//?
-			//			k *= 2;
-			//			var ms = _Scale(MinimumSize);
-			//			return (Math.Max(k, ms.Width), Math.Max(k, ms.Height));
-			//		}
+			//SIZE _GetMinSize()
+			//{
+			//	int k = Border < TBBorder.ThreeD ? 1 : wnd.more.borderWidth(_w);//?
+			//	k *= 2;
+			//	var ms = _Scale(MinimumSize);
+			//	return (Math.Max(k, ms.Width), Math.Max(k, ms.Height));
+			//}
 
 			if (!wp.flags.Has(SWPFlags.NOMOVE) && _IsSatellite) {
 				RECT r = _satPlanet._w.Rect;
@@ -492,7 +492,7 @@ namespace Au
 					/*SIZE z=*/
 					_Measure(_w.ClientRect.Width); //rewrap buttons etc
 
-					//				if(AutoSize && _ignorePosChanged && z.height!=wp.cy && Anchor is TBAnchor.TopLR or TBAnchor.BottomLR && Layout==TBLayout.HorizontalWrap) _Resize(z);//rejected
+					//if(AutoSize && _ignorePosChanged && z.height!=wp.cy && Anchor is TBAnchor.TopLR or TBAnchor.BottomLR && Layout==TBLayout.HorizontalWrap) _Resize(z);//rejected
 				}
 				_SatFollow();
 			}
@@ -503,7 +503,7 @@ namespace Au
 
 		void _UpdateOffsets(int x, int y, int cx, int cy) {
 			var (r, _) = _GetCachedOwnerRect();
-			//		print.it(x, y, cx, cy, r);
+			//print.it(x, y, cx, cy, r);
 			if (Anchor.HasLeft()) _offsets.Left = _Unscale(x - (Anchor.OppositeX() ? r.right : r.left), true);
 			if (Anchor.HasRight()) _offsets.Right = _Unscale((Anchor.OppositeX() ? r.left : r.right) - x - cx, true);
 			if (Anchor.HasTop()) _offsets.Top = _Unscale(y - (Anchor.OppositeY() ? r.bottom : r.top), true);
@@ -543,7 +543,8 @@ namespace Au
 		unsafe void _WmDpiChanged(nint wParam, nint lParam) {
 			if (_os != null) {
 				if (!_SetDpi()) return;
-				//			print.it("WM_DPICHANGED", _w.Rect);
+				_Images(true);
+				//print.it("WM_DPICHANGED", _w.Rect);
 				_MeasureText();
 				if (_inMoveSize) { //cannot autosize now, or something bad may happen, eg nested wm_dpichanged until stack overflow
 					_w.MoveL(*(RECT*)lParam);
@@ -573,10 +574,10 @@ namespace Au
 				timerm.every(1000, t => {
 					if (--i > 0 && _dpi == oldDpi && !_closed && !_hide.Has(TBHide.Owner)) {
 						if (Dpi.OfWindow(OwnerWindow, true) == oldDpi) return;
-						//					print.it("DPI changed", _dpi, Dpi.OfWindow(OwnerWindow, true));
+						//print.it("DPI changed", _dpi, Dpi.OfWindow(OwnerWindow, true));
 						_FollowRect();
 					}
-					//				print.it("stop");
+					//print.it("stop");
 					t.Stop();
 					//tested: if pm-dpi-aware window is minimized, its dpi changes when restored. Not if hidden.
 				});

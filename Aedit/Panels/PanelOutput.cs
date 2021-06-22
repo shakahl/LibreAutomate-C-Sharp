@@ -127,7 +127,7 @@ class PanelOutput : DockPanel
 			SciTags.AddCommonLinkTag("open", s => _OpenLink(s));
 			SciTags.AddCommonLinkTag("script", s => _RunScript(s));
 			ZTags.AddLinkTag("+properties", fid => {
-				var f = App.Model.FindFile(fid);
+				var f = App.Model.FindCodeFile(fid);
 				if (f == null || !App.Model.SetCurrentFile(f)) return;
 				Menus.File.Properties();
 			});
@@ -250,7 +250,7 @@ class PanelOutput : DockPanel
 
 		static void _RunScript(string s) {
 			var a = s.Split('|');
-			var f = App.Model.FindFile(a[0]); if (f == null) return;
+			var f = App.Model.FindCodeFile(a[0]); if (f == null) return;
 			CompileRun.CompileAndRun(true, f, a.Length == 1 ? null : a.RemoveAt(0));
 		}
 	}

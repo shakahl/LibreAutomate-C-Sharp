@@ -132,10 +132,10 @@ namespace Au.Types
 		//internal static extern Handle_ OpenFileMapping(uint dwDesiredAccess, bool bInheritHandle, string lpName);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern IntPtr MapViewOfFile(IntPtr hFileMappingObject, uint dwDesiredAccess, uint dwFileOffsetHigh, uint dwFileOffsetLow, nint dwNumberOfBytesToMap);
+		internal static extern void* MapViewOfFile(IntPtr hFileMappingObject, uint dwDesiredAccess, uint dwFileOffsetHigh, uint dwFileOffsetLow, nint dwNumberOfBytesToMap);
 
-		//[DllImport("kernel32.dll", SetLastError = true)]
-		//internal static extern bool UnmapViewOfFile(IntPtr lpBaseAddress);
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool UnmapViewOfFile(void* lpBaseAddress);
 
 		[DllImport("kernel32.dll", EntryPoint = "GetModuleHandleW", SetLastError = true)]
 		internal static extern IntPtr GetModuleHandle(string name);

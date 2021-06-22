@@ -72,26 +72,16 @@ namespace Au
 		}
 
 		/// <summary>
-		/// When adding items without explicitly specified image, extract file path from item action code (for example <see cref="run.it"/> argument) and use icon of that file.
+		/// Extract file path or script path from item action code (for example <see cref="run.it"/> or <see cref="script.run"/> argument) and use icon of that file or script.
 		/// This property is applied to items added afterwards; submenus inherit it.
 		/// </summary>
 		/// <remarks>
-		/// Gets file path from code that contains a string like <c>@"c:\windows\system32\notepad.exe"</c> or <c>@"%folders.System%\notepad.exe"</c> or URL/shell.
+		/// Gets path from code that contains a string like <c>@"c:\windows\system32\notepad.exe"</c> or <c>@"%folders.System%\notepad.exe"</c> or URL/shell or <c>@"\folder\script.cs"</c>.
 		/// Also supports code patterns like <c>folders.System + "notepad.exe"</c>, <c>folders.shell.RecycleBin</c>.
 		/// 
-		/// If extracts file path, also in the context menu adds item "Find file" which selects the file in Explorer.
-		/// 
-		/// Also can extract script file name or path in workspace, like @"\Folder\Script20.cs". It is used to open the script from the context menu.
+		/// If extracts path, also in the context menu adds item "Find file" which selects the file in Explorer or "Open script" which opens the script in editor.
 		/// </remarks>
 		public bool ExtractIconPathFromCode { get; set; }
-
-		/// <summary>
-		/// Gets image cache used by all menus and toolbars (<b>popupMenu</b>, <b>toolbar</b>) of this process.
-		/// </summary>
-		/// <remarks>
-		/// The <b>IconImageCache</b> object can be shared with other code.
-		/// </remarks>
-		public static IconImageCache commonImageCache { get; } = new();
 
 		/// <summary>
 		/// Execute item actions asynchronously in new threads.
@@ -132,26 +122,30 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Converts x.image (object containing string, Image, etc or null) to Image. Extracts icon path from code if need.
+		/// Converts x.image (object containing string, Image, etc or null) to Image. Extracts icon path from code if need. Returns default if will extract async.
 		/// </summary>
 		private protected (Image image, bool dispose) _GetImage(MTItem x) {
 			Image im = null; bool dontDispose = false;
-			g1:
+
+			if (x.extractIconPath == 1) { //extract path always, not only when x.image==null, or we would not have path for other purposes
+				x.file = icon.ExtractIconPathFromCode_(x.clicked.Method, out bool cs);
+				if (x.file != null) {
+					x.image ??= x.file;
+					x.extractIconPath = (byte)(cs ? 4 : 2);
+				} else x.extractIconPath = 3;
+			}
+
 			switch (x.image) {
-			case Image g: im = g; dontDispose = true; break;
+			case Image g:
+				im = g;
+				dontDispose = true;
+				break;
 			case string s when s.Length > 0:
 				try {
-					bool isImage = ImageUtil.HasImageOrResourcePrefix(s);
-					//if (ImageCache != null) {
 					dontDispose = true;
-					im = commonImageCache.Get(s, _dpi, isImage, isImage ? null : _imageAsyncCompletion ??= _ImageAsyncCompletion, x, _OnException);
-					if (x.imageAsync = im == null && !isImage) return default;
-					//} else if (isImage)
-					//	im = ImageUtil.LoadGdipBitmapFromFileOrResourceOrString(s, (new(16, 16), _dpi));
-					//else
-					//	im = icon.of(s)?.ToGdipBitmap();
-
-					if (im == null) _OnException(s, null);
+					bool isImage = ImageUtil.HasImageOrResourcePrefix(s);
+					im = IconImageCache.Common.Get(s, _dpi, isImage, _OnException);
+					if (im == null && isImage) _OnException(s, null);
 				}
 				catch (Exception e1) { _OnException(null, e1); }
 
@@ -162,21 +156,9 @@ namespace Au
 			case StockIcon si:
 				im = icon.stock(si)?.ToGdipBitmap();
 				break;
-			case null:
-				if (x.extractIconPath == 1 && x.clicked != null) {
-					x.file = icon.IconPathFromCode_(x.clicked.Method, out bool cs);
-					if (x.file != null && !cs) { x.image = x.file; x.extractIconPath = 2; } else x.extractIconPath = (byte)(cs ? 4 : 3);
-					//perf.next('c');
-				}
-				//if(x.image==null && x.checkType==0) x.image = (x.submenu ? DefaultSubmenuImage : DefaultImage).Value;
-				if (x.image != null) goto g1;
-				break;
 			}
 			return (im, im != null && !dontDispose);
 		}
-
-		Action<Bitmap, object> _imageAsyncCompletion;
-		private protected abstract void _ImageAsyncCompletion(Bitmap b, object o);
 
 		private protected string _GetFullTooltip(MTItem b) {
 			var s = b.Tooltip;
@@ -242,7 +224,6 @@ namespace Au
 		{
 			internal Delegate clicked;
 			internal object image;
-			internal bool imageAsync;
 			/// <summary>1 if need to extract, 2 if already extracted (the image field is the path), 3 if failed to extract, 4 if extracted "script.cs"</summary>
 			internal byte extractIconPath; //from MTBase.ExtractIconPathFromCode
 			internal bool actionThread; //from MTBase.ActionThread
@@ -253,7 +234,7 @@ namespace Au
 			internal RECT rect;
 			internal Image image2;
 
-			internal bool HasImage_ => image2 != null || imageAsync;
+			internal bool HasImage_ => image2 != null;
 
 			/// <summary>
 			/// Item text.
@@ -274,22 +255,22 @@ namespace Au
 			public ColorInt TextColor { get; set; }
 
 			/// <summary>
-			/// Gets file path extracted from item action code or sets file path as it would be extracted from action code.
+			/// Gets file or script path extracted from item action code (see <see cref="ExtractIconPathFromCode"/>) or sets path as it would be extracted.
 			/// </summary>
 			/// <remarks>
-			/// Can be used to set file path when it cannot be extracted from action code (the item does not have an action or action code does not contain the path string). See <see cref="MTBase.ExtractIconPathFromCode"/>.
-			/// When you set this property, the menu/toolbar item uses icon of the specified file, and its context menu contains "Find file".
+			/// Can be used to set file or script path when it cannot be extracted from action code.
+			/// When you set this property, the menu/toolbar item uses icon of the specified file, and its context menu contains "Find file" or "Open script".
 			/// </remarks>
 			public string File {
 				get => file;
 				set {
 					file = value;
 					if (file == null) {
-						image = null; extractIconPath = 3;
-					} else if (file.Ends(".cs") && !pathname.isFullPath(file)) {
-						image = null; extractIconPath = 4;
+						extractIconPath = 3;
 					} else {
-						image = file; extractIconPath = 2;
+						image ??= file;
+						bool cs = file.Ends(".cs", true) && !pathname.isFullPath(file, orEnvVar: true);
+						extractIconPath = (byte)(cs ? 4 : 2);
 					}
 				}
 			}
@@ -297,12 +278,12 @@ namespace Au
 			internal void GoToFile_() {
 				if (file.NE()) return;
 				if (extractIconPath == 2) run.selectInExplorer(file);
-				else ScriptEditor.GoToEdit(file, 0);
+				else script.editor.OpenAndGoToLine(file, 0);
 			}
 
 			internal static (bool edit, bool go, string goText) CanEditOrGoToFile_(string _sourceFile, MTItem item) {
 				if (_sourceFile != null) {
-					if (ScriptEditor.Available) {
+					if (script.editor.Available) {
 						if (item?.file == null) return (true, false, null);
 						return (true, true, item.extractIconPath == 2 ? "Find file" : "Open script");
 					} else if (item != null && item.extractIconPath == 2) {
@@ -334,7 +315,7 @@ namespace Au
 				clicked = click;
 				sourceLine = l_;
 
-				extractIconPath = (byte)((mt.ExtractIconPathFromCode && click is not (null or Action<popupMenu> or Func<popupMenu>)) ? 1 : 0);
+				extractIconPath = (byte)((mt.ExtractIconPathFromCode && clicked is not (null or Action<popupMenu> or Func<popupMenu>)) ? 1 : 0);
 				actionThread = mt.ActionThread;
 				actionException = mt.ActionException;
 				pathInTooltip = mt.PathInTooltip;

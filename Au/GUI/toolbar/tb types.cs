@@ -225,7 +225,7 @@ namespace Au.Types
 	//
 	//	public void Deconstruct(out double width, out double height) { width = this.width; height = this.height; }
 	//
-	//	public override string ToString() => $"{{cx={width.ToStringInvariant()} cy={height.ToStringInvariant()}}}";
+	//	public override string ToString() => $"{{cx={width.ToS()} cy={height.ToS()}}}";
 	//}
 
 	/// <summary>

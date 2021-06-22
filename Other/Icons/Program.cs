@@ -60,7 +60,7 @@ class Program
 
 		//var dupl = new Dictionary<string, string>(); int nDupl = 0;
 
-		int nTables = 0, nIcons = 0;
+		int nTables = 0, nIcons = 0, nSkipped = 0;
 		foreach (var dll in Directory.EnumerateFiles(folders.ThisApp, "MahApps.Metro.IconPacks.?*.dll")) {
 			//print.it(dll);
 			var asm = alc.LoadFromAssemblyPath(dll);
@@ -78,6 +78,11 @@ class Program
 				foreach (DictionaryEntry k in ty.GetMethod("Create").Invoke(null, null) as IDictionary) {
 					string name = k.Key.ToString(), data = k.Value.ToString();
 					if (data.NE()) continue; //icon "None"
+					if (data.Length > 10000) {
+						//print.it(name, data.Length);
+						nSkipped++;
+						continue; //nothing very useful
+					}
 					//if (!dupl.TryAdd(data, table + "." + name)) { nDupl++; print.it("DUPL", dupl[data], table + "." + name); /*continue;*/ } //1.2%. All from same assemblies. Often similar name, but often different. Makes DB smaller by 100 KB (from 18 MB).
 					nIcons++;
 					//print.it(name, data);
@@ -91,6 +96,6 @@ class Program
 		trans.Commit();
 		d.Execute("VACUUM");
 
-		print.it($"Done. {nTables} tables, {nIcons} icons"/*, $"{nDupl} duplicate"*/); //29 tables, 25914 icons
+		print.it($"Done. {nTables} tables, {nIcons} icons, skipped {nSkipped}"/*, $"{nDupl} duplicate"*/); //29 tables, 25877 icons, skipped 37
 	}
 }

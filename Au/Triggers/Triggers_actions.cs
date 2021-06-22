@@ -70,7 +70,7 @@ namespace Au.Triggers
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
 		/// Multiple actions in same thread cannot run simultaneously. Actions in different threads can run simultaneously.
-		/// There is no "end old running action" feature. If need it, use other script. Example: <c>Triggers.Hotkey["Ctrl+M"] = o => scriptt.runWait("Other Script");</c>.
+		/// There is no "end old running action" feature. If need it, use other script. Example: <c>Triggers.Hotkey["Ctrl+M"] = o => script.runWait("Other Script");</c>.
 		/// There is no "temporarily pause old running action to run new action" feature. As well as for scripts.
 		/// The thread has <see cref="ApartmentState.STA"/>.
 		/// There are several <b>ThreadX</b> functions. Only the last called function is active. If none called, it is the same as called this function without arguments.
@@ -214,7 +214,7 @@ namespace Au.Triggers
 
 					string sTrigger = null; long startTime = 0;
 					//perf.next();
-					if (scriptt.role == ATRole.MiniProgram) {
+					if (script.role == SRole.MiniProgram) {
 						sTrigger = trigger.ToString();
 						Api.QueryPerformanceCounter(out startTime);
 						print.TaskEvent_("AS " + sTrigger, startTime, trigger.sourceFile, trigger.sourceLine);

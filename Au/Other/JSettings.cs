@@ -167,7 +167,7 @@ $@"Failed to load settings from {file}. Will use default settings.
 				//p1.Next();
 				bool same = b.AsSpan().SequenceEqual(_old);
 				//p1.Next();
-				//if (scriptt.role == ATRole.MiniProgram) print.it(same);
+				//if (script.role == SRole.MiniProgram) print.it(same);
 				if (same) return;
 				filesystem.saveBytes(_file, b);
 				//print.qm2.write(GetType().Name + " saved");

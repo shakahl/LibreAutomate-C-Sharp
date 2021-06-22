@@ -176,10 +176,10 @@ namespace Au
 		{
 			/// <summary>
 			/// Default title bar text.
-			/// Default value - <see cref="scriptt.name"/>. In exe it is exe file name like "Example.exe".
+			/// Default value - <see cref="script.name"/>. In exe it is exe file name like "Example.exe".
 			/// </summary>
 			public static string defaultTitle {
-				get => _defaultTitle ?? scriptt.name;
+				get => _defaultTitle ?? script.name;
 				set { _defaultTitle = value; }
 			}
 			static string _defaultTitle;

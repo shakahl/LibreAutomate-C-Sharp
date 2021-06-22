@@ -315,7 +315,7 @@ namespace Au
 				}
 			}
 
-			//static string _ToMB(long n) => Math.Round(n / 1048576d, 3).ToStringInvariant();
+			//static string _ToMB(long n) => Math.Round(n / 1048576d, 3).ToS();
 
 			/// <summary>
 			/// Adds s directly to _messages and sets timer.
@@ -422,7 +422,7 @@ namespace Au
 
 			Api.GetSystemTimeAsFileTime(out var time);
 
-			string caller = scriptt.name;
+			string caller = script.name;
 #if NEED_CALLER
 			if(Server.NeedCallerMethod_) {
 				//info: this func always called from directly, which is usually called through Writer, Write. But it is public and can be called directly.
@@ -461,12 +461,12 @@ namespace Au
 		/// Could also log other events. For example at first used for task start/end/fail events, but now it is implemented in editor.
 		/// </summary>
 		internal static void TaskEvent_(string s, long id, string sourceFile = null, int sourceLine = 0) {
-			Debug.Assert(scriptt.role == ATRole.MiniProgram);
+			Debug.Assert(script.role == SRole.MiniProgram);
 			//if (s == null) s = "\0DNl08ISh30Kbt6ekJV3VvA"; //JIT //now not used
 			//else {
 			if (sourceFile == null) sourceFile = MiniProgram_.s_scriptId; //task started/ended/failed
-			else sourceFile = sourceFile + "\0" + sourceLine.ToStringInvariant(); //trigger action started/ended/failed
-			sourceFile = id.ToStringInvariant() + "\0" + sourceFile;
+			else sourceFile = sourceFile + "\0" + sourceLine.ToS(); //trigger action started/ended/failed
+			sourceFile = id.ToS() + "\0" + sourceFile;
 			//}
 			s_client.WriteLine(s, PrintServerMessageType.TaskEvent, sourceFile);
 		}
@@ -659,7 +659,7 @@ namespace Au.Types
 
 #if NEED_CALLER
 			/// <summary>
-			/// The <see cref="scriptt.name"/> property value of the process that called <see cref="print.it"/>.
+			/// The <see cref="script.name"/> property value of the process that called <see cref="print.it"/>.
 			/// Used with <see cref="PrintServerMessageType.Write"/>.
 			/// If <see cref="NeedCallerMethod"/> is true, also includes the caller method. Format: "scriptname:type.method".
 			/// </summary>
@@ -674,7 +674,7 @@ namespace Au.Types
 			}
 #else
 		/// <summary>
-		/// The <see cref="scriptt.name"/> property value of the process that called <see cref="print.it"/>.
+		/// The <see cref="script.name"/> property value of the process that called <see cref="print.it"/>.
 		/// Used with <see cref="PrintServerMessageType.Write"/>.
 		/// </summary>
 		public string Caller { get; }

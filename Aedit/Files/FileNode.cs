@@ -48,7 +48,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 	_State _state;
 	_Flags _flags;
 	string _linkTarget;
-	object _icon; //icon name or string[] { name, xaml }
+	string _icon;
 	uint _testScriptId;
 
 	//this ctor is used when creating new item of known type
@@ -79,7 +79,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 		_state = f._state;
 		_flags = f._flags;
 		_linkTarget = f._linkTarget;
-		_icon = f.CustomIcon;
+		_icon = f.CustomIconName;
 		_id = _model.AddGetId(this);
 	}
 
@@ -129,7 +129,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 			if (!exporting) x.WriteAttributeString("i", _id.ToString());
 			if (_flags != 0) x.WriteAttributeString("f", ((int)_flags).ToString());
 			if (IsLink) x.WriteAttributeString("path", LinkTarget);
-			var ico = CustomIcon; if (ico != null) x.WriteAttributeString("icon", ico);
+			var ico = CustomIconName; if (ico != null) x.WriteAttributeString("icon", ico);
 			if (!exporting && _testScriptId != 0) x.WriteAttributeString("run", _testScriptId.ToString());
 		}
 	}
@@ -232,11 +232,15 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 	public string LinkTarget => _linkTarget;
 
 	/// <summary>
-	/// Gets or sets custom icon path or null. For links always returns null; use LinkTarget.
-	/// The setter will save workspace.
+	/// Gets or sets custom icon name (like "*Pack.Icon color") or null.
 	/// </summary>
-	public string CustomIcon {
-		get => _icon switch { string s => s, string[] a => a[0], _ => null };
+	/// <remarks>
+	/// The setter will save workspace.
+	/// User can set custom icon: menu -> Tools -> Icons.
+	/// Currently editor does not support item icons as .ico files etc. Not difficult to add, but probably don't need when we have 25000 XAML icons. For .exe files can use any icons.
+	/// </remarks>
+	public string CustomIconName {
+		get => _icon;
 		set {
 			_icon = value;
 			_model.Save.WorkspaceLater();
@@ -399,16 +403,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 			_ => null
 		};
 
-	string ITreeViewItem.ImageSource {
-		get {
-			if (_icon is string icon) {
-				if (DIcons.TryGetIconFromBigDB(icon, out string xaml)) _icon = new string[] { icon, xaml };
-				else _icon = new string[] { icon };
-			}
-			if (_icon is string[] a && a.Length > 1) return a[1]; //XAML
-			return IsNotCodeFile ? FilePath : GetFileTypeImageSource(FileType, _isExpanded);
-		}
-	}
+	string ITreeViewItem.ImageSource => CustomIconName ?? (IsNotCodeFile ? FilePath : GetFileTypeImageSource(FileType, _isExpanded));
 
 	//has default implementation
 	//TVCheck ITreeViewItem.CheckState { get; }

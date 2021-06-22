@@ -379,7 +379,7 @@ namespace Au.Compiler
 				if (m.Role is ERole.miniProgram or ERole.exeProgram) {
 					if (m.RunSingle) sb.AppendLine($"[assembly: Au.Types.RunSingle]");
 					if (m.Role == ERole.exeProgram) {
-						sb.AppendLine(@"class ModuleInit__ { [System.Runtime.CompilerServices.ModuleInitializer] internal static void Init() { Au.scriptt.AppModuleInit_(); }}");
+						sb.AppendLine(@"class ModuleInit__ { [System.Runtime.CompilerServices.ModuleInitializer] internal static void Init() { Au.script.AppModuleInit_(); }}");
 					}
 				}
 
@@ -548,7 +548,15 @@ namespace Au.Compiler
 				if (m.IconFile != null) {
 					_Resources.ICONCONTEXT ic = default;
 					if (m.IconFile.IsFolder) {
-						foreach (var des in m.IconFile.Descendants()) if (!des.IsFolder) res.AddIcon(des.FilePath, ref ic);
+						foreach (var des in m.IconFile.Descendants()) {
+							if (des.IsFolder) continue;
+							if (des.Name.Ends(".ico", true)) {
+								res.AddIcon(des.FilePath, ref ic);
+							} else if (des.Name.Ends(".xaml", true)) {
+								_GetIconFromXaml(filesystem.loadText(des.FilePath), out var stream);
+								res.AddIcon(stream.ToArray(), ref ic);
+							}
+						}
 					} else {
 						res.AddIcon(m.IconFile.FilePath, ref ic);
 					}
@@ -605,16 +613,20 @@ namespace Au.Compiler
 
 		static bool _GetMainFileIcon(MetaComments m, out MemoryStream ms) {
 			try {
-				if (m.MainFile.f.CustomIcon is string ci && DIcons.TryGetIconFromBigDB(ci, out string xaml)) {
-					ms = new MemoryStream();
-					ImageUtil.XamlImageToIconFile(ms, xaml, 16, 24, 32, 48, 64);
-					ms.Position = 0;
+				if (DIcons.TryGetIconFromBigDB(m.MainFile.f.CustomIconName, out string xaml)) {
+					_GetIconFromXaml(xaml, out ms);
 					return true;
 				}
 			}
-			catch(Exception e1) { _ResourceException(e1, m, null); }
+			catch (Exception e1) { _ResourceException(e1, m, null); }
 			ms = null;
 			return false;
+		}
+
+		static void _GetIconFromXaml(string xaml, out MemoryStream ms) {
+			ms = new MemoryStream();
+			ImageUtil.XamlImageToIconFile(ms, xaml, 16, 24, 32, 48, 64);
+			ms.Position = 0;
 		}
 
 		static void _CopyDlls(MetaComments m, Stream asmStream, bool need64, bool need32) {

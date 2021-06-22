@@ -1314,6 +1314,7 @@ namespace Au.Types
 
 		internal const uint RDW_FRAME = 0x400;
 		internal const uint RDW_INVALIDATE = 0x1;
+		internal const uint RDW_ALLCHILDREN = 0x80;
 
 		[DllImport("user32.dll")]
 		internal static extern bool RedrawWindow(wnd hWnd, RECT* lprcUpdate = null, IntPtr hrgnUpdate = default, uint flags = 0);

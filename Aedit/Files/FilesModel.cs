@@ -243,22 +243,43 @@ partial class FilesModel
 			name.ToInt(out long id, 1);
 			return FindById(id);
 		}
-		var d = FilesDirectory; if (name.Starts(d, true) && name.Eq(d.Length, '\\')) name = name[d.Length..];
-		var f = Root.FindDescendant(name, folder);
-		if (f == null && pathname.isFullPath(name)) f = FindByFilePath(name, folder);
-		return f;
-		//rejected: support name without extension.
+		if(pathname.isFullPath(name)) return FindByFilePath(name, folder);
+		return Root.FindDescendant(name, folder);
+		//rejected: support name without extension, like now FindCodeFile.
 	}
 
 	/// <summary>
 	/// Calls <see cref="Find(string, bool?)"/>(name, false).
 	/// If not found and name does not end with ".cs", tries to find name + ".cs".
 	/// </summary>
-	public FileNode FindFile(string name) {
+	public FileNode FindCodeFile(string name) {
 		var f = Find(name, false);
 		if (f == null && !name.Ends(".cs", true)) f = Find(name + ".cs", false);
 		return f;
 	}
+
+	/// <summary>
+	/// Finds file or folder by its file path (<see cref="FileNode.FilePath"/>).
+	/// </summary>
+	/// <param name="path">Full path of a file in this workspace or of a linked external file.</param>
+	/// <param name="folder">true - folder, false - file, null - any.</param>
+	public FileNode FindByFilePath(string path, bool? folder = null) {
+		var d = FilesDirectory;
+		if (path.Starts(d, true) && path.Eq(d.Length, '\\')) return Root.FindDescendant(path[d.Length..], folder); //is in workspace folder
+		if (folder != true) foreach (var f in Root.Descendants()) if (f.IsLink && path.Eqi(f.LinkTarget)) return f; //find link
+		return null;
+	}
+
+	///// <summary>
+	///// If path starts with <see cref="FilesDirectory"/> and '\\', removes the FilesDirectory part and returns true.
+	///// </summary>
+	///// <param name="path">Full or relative path or name.</param>
+	//bool _FullPathToRelative(ref string path) {
+	//	var d = FilesDirectory;
+	//	bool full = path.Starts(d, true) && path.Eq(d.Length, '\\');
+	//	if (full) path = path[d.Length..];
+	//	return full;
+	//}
 
 	/// <summary>
 	/// Adds id/f to the dictionary that is used by <see cref="FindById"/> etc.
@@ -325,20 +346,7 @@ partial class FilesModel
 	}
 
 	/// <summary>
-	/// Finds file or folder by its file path (<see cref="FileNode.FilePath"/>).
-	/// </summary>
-	/// <param name="path">Full path of a file in this workspace or of a linked external file.</param>
-	/// <param name="folder">true - folder, false - file, null - any.</param>
-	public FileNode FindByFilePath(string path, bool? folder = null) {
-		var d = FilesDirectory;
-		if (path.Length > d.Length && path.Starts(d, true) && path[d.Length] == '\\') //is in workspace folder
-			return Root.FindDescendant(path[d.Length..], folder);
-		if (folder != true) foreach (var f in Root.Descendants()) if (f.IsLink && path.Eqi(f.LinkTarget)) return f;
-		return null;
-	}
-
-	/// <summary>
-	/// Finds all files (and not folders) that have the specified name.
+	/// Finds all files (and not folders) with the specified name.
 	/// Returns empty array if not found.
 	/// </summary>
 	/// <param name="name">File name, like "name.cs". If starts with backslash, works like <see cref="Find"/>. Does not support <see cref="FileNode.IdStringWithWorkspace"/> string and filename without extension.</param>
@@ -390,12 +398,16 @@ partial class FilesModel
 	/// <summary>
 	/// Closes specified files that are open.
 	/// </summary>
-	/// <param name="files">Any IEnumerable except OpenFiles.</param>
-	public void CloseFiles(IEnumerable<FileNode> files, FileNode dontClose = null) {
+	/// <param name="files">Any <b>IEnumerable</b> except <b>OpenFiles</b>.</param>
+	/// <param name="dontClose">null or <b>FileNode</b> or <b>BitArray</b> to not close.</param>
+	public void CloseFiles(IEnumerable<FileNode> files, object dontClose = null) {
 		if (files == OpenFiles) files = OpenFiles.ToArray();
 		bool closeCurrent = false;
+		int i = 0;
 		foreach (var f in files) {
-			if (f == dontClose) continue;
+			if (dontClose is System.Collections.BitArray ba) {
+				if (i < ba.Length && ba[i++]) continue;
+			} else if (f == dontClose) continue;
 			if (f == _currentFile) closeCurrent = true; else CloseFile(f, activateOther: false);
 		}
 		if (closeCurrent) CloseFile(_currentFile);
@@ -531,7 +543,7 @@ partial class FilesModel
 	/// Finds file and calls <see cref="OpenAndGoTo(FileNode, int, int)"/>. Does nothing if not found.
 	/// </summary>
 	public bool OpenAndGoTo(string file, int line = -1, int columnOrPos = -1) {
-		var f = FindFile(file); if (f == null) return false;
+		var f = FindCodeFile(file); if (f == null) return false;
 		return OpenAndGoTo(f, line, columnOrPos);
 	}
 
@@ -546,7 +558,7 @@ partial class FilesModel
 	/// If column1BasedOrPos or line1Based not empty, searches only files, not folders.
 	/// </remarks>
 	public bool OpenAndGoTo2(string fileOrFolder, string line1Based = null, string column1BasedOrPos = null) {
-		var f = line1Based.NE() && column1BasedOrPos.NE() ? Find(fileOrFolder, null) : FindFile(fileOrFolder);
+		var f = line1Based.NE() && column1BasedOrPos.NE() ? Find(fileOrFolder, null) : FindCodeFile(fileOrFolder);
 		if (f == null) return false;
 		if (f.IsFolder) {
 			f.SelectSingle();
@@ -959,7 +971,7 @@ partial class FilesModel
 				}
 				return;
 			}
-			_ImportFiles(files, target, pos, copySilently: copy);
+			ImportFiles(files, target, pos, copySilently: copy);
 		}
 	}
 
@@ -975,7 +987,7 @@ partial class FilesModel
 		}
 
 		var (target, pos) = _GetInsertPos();
-		_ImportFiles(a, target, pos);
+		ImportFiles(a, target, pos);
 	}
 
 	/// <summary>
@@ -1004,7 +1016,7 @@ partial class FilesModel
 			if (folder == null) return;
 
 			if (notWorkspace) {
-				_ImportFiles(Directory.GetFileSystemEntries(wsDir), folder, FNPosition.Inside, copySilently: true);
+				ImportFiles(Directory.GetFileSystemEntries(wsDir), folder, FNPosition.Inside, copySilently: true);
 			} else {
 				var m = new FilesModel(wsDir + @"\files.xml", importing: true);
 				var a = m.Root.Children().ToArray();
@@ -1050,7 +1062,7 @@ partial class FilesModel
 		//info: don't need to schedule saving here. FileCopy and FileMove did it.
 	}
 
-	void _ImportFiles(string[] a, FileNode target, FNPosition pos, bool copySilently = false) {
+	public void ImportFiles(string[] a, FileNode target, FNPosition pos, bool copySilently = false, bool dontSelect = false, bool dontPrint = false) {
 		bool fromWorkspaceDir = false, dirsDropped = false;
 		for (int i = 0; i < a.Length; i++) {
 			var s = a[i] = pathname.normalize(a[i]);
@@ -1081,11 +1093,11 @@ partial class FilesModel
 		}
 
 		var newParent = (pos == FNPosition.Inside) ? target : target.Parent;
-		bool select = pos != FNPosition.Inside || target.IsExpanded, focus = select;
+		bool select = !dontSelect && (pos != FNPosition.Inside || target.IsExpanded), focus = select;
 		if (select) TreeControl.UnselectAll();
 		try {
 			var newParentPath = newParent.FilePath + "\\";
-			var (nf1, nd1, nc1) = _CountFilesFolders();
+			var (nf1, nd1, nc1) = dontPrint ? default : _CountFilesFolders();
 
 			foreach (var path in a) {
 				var g = filesystem.exists(path, true);
@@ -1103,7 +1115,7 @@ partial class FilesModel
 
 				FileNode k;
 				var name = pathname.getName(path);
-				name = FileNode.CreateNameUniqueInFolder(newParent, name, isDir);
+				if (!fromWorkspaceDir) name = FileNode.CreateNameUniqueInFolder(newParent, name, isDir);
 
 				if (r == 1) { //add as link
 					k = new FileNode(this, name, path, false, path); //CONSIDER: unexpand
@@ -1123,9 +1135,11 @@ partial class FilesModel
 				}
 			}
 
-			var (nf2, nd2, nc2) = _CountFilesFolders();
-			int nf = nf2 - nf1, nd = nd2 - nd1, nc = nc2 - nc1;
-			if (nf + nd > 0) print.it($"Info: Imported {nf} files and {nd} folders.{(nc > 0 ? GetSecurityInfo("\r\n\t") : null)}");
+			if (!dontPrint) {
+				var (nf2, nd2, nc2) = _CountFilesFolders();
+				int nf = nf2 - nf1, nd = nd2 - nd1, nc = nc2 - nc1;
+				if (nf + nd > 0) print.it($"Info: Imported {nf} files and {nd} folders.{(nc > 0 ? GetSecurityInfo("\r\n\t") : null)}");
+			}
 		}
 		catch (Exception ex) { print.it(ex.Message); }
 		Save.WorkspaceLater();
@@ -1145,6 +1159,31 @@ partial class FilesModel
 			foreach (var v in Root.Descendants()) if (v.IsFolder) nd++; else { nf++; if (v.IsCodeFile) nc++; }
 			return (nf, nd, nc);
 		}
+	}
+
+	/// <summary>
+	/// Adds to workspace 1 file (not folder) that exists in workspace folder in filesystem.
+	/// </summary>
+	public FileNode ImportFromWorkspaceFolder(string path, FileNode target, FNPosition pos) {
+		FileNode R = null;
+		try {
+			if (!filesystem.exists(path, true).isFile) return null;
+
+			var relPath = path[FilesDirectory.Length..];
+			var fExists = this.Find(relPath, null);
+			if (fExists != null) {
+				if (fExists.IsFolder) return null;
+				R = fExists;
+			} else {
+				var name = pathname.getName(path);
+				R = new FileNode(this, name, path, false);
+				target.AddChildOrSibling(R, pos, false);
+			}
+		}
+		catch (Exception ex) { print.it(ex.Message); }
+		Save.WorkspaceLater();
+		CodeInfo.FilesChanged();
+		return R;
 	}
 
 	#endregion
@@ -1389,7 +1428,7 @@ partial class FilesModel
 			foreach (var row in x.Rows) {
 				string file = row[0];
 				if (file.Starts("//")) continue;
-				var f = FindFile(file);
+				var f = FindCodeFile(file);
 				if (f == null) { print.it("Startup script not found: " + file + ". Please edit Options -> Run scripts..."); continue; }
 				int delay = 10;
 				if (x.ColumnCount > 1) {

@@ -306,7 +306,7 @@ namespace Au.Types
 			switch (Type) {
 			case CoordType.Normal: return Value.ToString() + ", Normal";
 			case CoordType.Reverse: return Value.ToString() + ", Reverse";
-			case CoordType.Fraction: return FractionValue.ToStringInvariant() + ", Fraction";
+			case CoordType.Fraction: return FractionValue.ToS() + ", Fraction";
 			default: return "default";
 			}
 		}

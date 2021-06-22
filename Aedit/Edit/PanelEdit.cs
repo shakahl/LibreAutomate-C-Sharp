@@ -24,7 +24,7 @@ using System.Windows.Input;
 
 class PanelEdit : Grid
 {
-	readonly List<SciCode> _docs = new(); //documents that are actually open currently. Note: FilesModel.OpenFiles contains not only these.
+	readonly List<SciCode> _docs = new();
 	SciCode _activeDoc;
 
 	public PanelEdit() {
@@ -40,10 +40,15 @@ class PanelEdit : Grid
 
 	public bool ZIsOpen => _activeDoc != null;
 
+	/// <summary>
+	/// Documents that are actually open currently.
+	/// Note: <see cref="FilesModel.OpenFiles"/> contains not only these.
+	/// </summary>
 	public IReadOnlyList<SciCode> ZOpenDocs => _docs;
 
 	/// <summary>
 	/// If f is open (active or not), returns its SciCode, else null.
+	/// See <see cref="ZOpenDocs"/>.
 	/// </summary>
 	public SciCode ZGetOpenDocOf(FileNode f) {
 		foreach (var v in _docs) if (v.ZFile == f) return v;

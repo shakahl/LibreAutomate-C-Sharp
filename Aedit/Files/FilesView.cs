@@ -28,7 +28,6 @@ partial class FilesModel
 		public FilesView() {
 			SetMultiSelect(toggle: false);
 			AllowDrop = true;
-			ImageCache = App.ImageCache;
 
 			ItemActivated += _ItemActivated;
 			ItemClick += _ItemClick;

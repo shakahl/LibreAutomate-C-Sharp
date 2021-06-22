@@ -16,7 +16,7 @@ public partial class toolbar
 	/// ]]></code>
 	/// </example>
 	public static Window toolbarsDialog() {
-//		var s = scriptt.name;
+//		var s = script.name;
 //		s = s == "Triggers and toolbars" ? "Toolbars" : "Toolbars of " + s;
 
 		var b = new wpfBuilder("Toolbars").WinSize(400, 250).Columns(-1, 0);

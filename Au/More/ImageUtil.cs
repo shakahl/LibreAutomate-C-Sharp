@@ -31,9 +31,9 @@ namespace Au.More
 		public static bool HasImageStringPrefix(string s) => s.Starts("image:") || s.Starts("~:");
 
 		/// <summary>
-		/// Returns true if string starts with "resource:" or "resources/" or "&lt;" or "imagefile:" or "image:" or "~:".
+		/// Returns true if string starts with "resource:" or "resources/" or "*" or "&lt;" or "imagefile:" or "image:" or "~:".
 		/// </summary>
-		public static bool HasImageOrResourcePrefix(string s) => ResourceUtil.HasResourcePrefix(s) || s.Starts('<') || 0 != s.Starts(false, "imagefile:", "image:", "~:");
+		public static bool HasImageOrResourcePrefix(string s) => s.Starts('*') || s.Starts('<') || ResourceUtil.HasResourcePrefix(s) || 0 != s.Starts(false, "imagefile:", "image:", "~:");
 
 		/// <summary>
 		/// Loads image as stream from Base-64 string that starts with "image:" (png) or "~:" (zipped bmp).
@@ -144,13 +144,13 @@ namespace Au.More
 		/// <remarks>
 		/// If <i>image</i> starts with "&lt;" or ends with ".xaml" (case-insensitive), returns object created from XAML root element. Else returns <see cref="Image"/> with <b>Source</b> = <b>BitmapFrame</b>.
 		/// </remarks>
-		public static UIElement LoadWpfImageElementFromFileOrResourceOrString(string image) {
-			if (image.Starts('<')) return (UIElement)XamlReader.Parse(image);
+		public static FrameworkElement LoadWpfImageElementFromFileOrResourceOrString(string image) {
+			if (image.Starts('<')) return (FrameworkElement)XamlReader.Parse(image);
 			if (image.Ends(".xaml", true)) {
-				if (ResourceUtil.HasResourcePrefix(image)) return (UIElement)ResourceUtil.GetXamlObject(image);
+				if (ResourceUtil.HasResourcePrefix(image)) return (FrameworkElement)ResourceUtil.GetXamlObject(image);
 				if (image.Starts("imagefile:")) image = image[10..];
 				using var stream = filesystem.loadStream(image);
-				return (UIElement)XamlReader.Load(stream);
+				return (FrameworkElement)XamlReader.Load(stream);
 			} else {
 				var bf = LoadWpfImageFromFileOrResourceOrString(image);
 				return new Image { Source = bf };
@@ -168,6 +168,7 @@ namespace Au.More
 		/// <exception cref="Exception"></exception>
 		/// <remarks>
 		/// Calls <see cref="LoadWpfImageElementFromFileOrResourceOrString"/> and <see cref="ConvertWpfImageElementToGdipBitmap"/>.
+		/// Don't use the <b>Tag</b> property of the bitmap. It keeps bitmap data.
 		/// </remarks>
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		public static System.Drawing.Bitmap LoadGdipBitmapFromXaml(string image, int dpi, SIZE? size = null) {
@@ -176,7 +177,73 @@ namespace Au.More
 			return ConvertWpfImageElementToGdipBitmap(e, dpi, size);
 		}
 
-		//static ConditionalWeakTable<UIElement, _DebugGC> s_cwt = new();
+		//This unfinished version creates icon element without XAML parser, if possible.
+		//	That part then 5 times faster, and whole function 2 times faster (1500 -> 750 mcs).
+		//	But in reality this speed improvement isnt' very useful. Eg loading WPF is much slower than loading icons, although slightly faster without XAML reader. Better use a good cache.
+		//public static System.Drawing.Bitmap LoadGdipBitmapFromXaml(string image, int dpi, SIZE? size = null) {
+		//	using var p1 = perf.local();
+		//	if (keys.isScrollLock) {
+		//		var e = LoadWpfImageElementFromFileOrResourceOrString(image);
+		//		p1.Next('X');
+		//		return ConvertWpfImageElementToGdipBitmap(e, dpi, size);
+		//	} else {
+		//		FrameworkElement e = _GetPathFaster(image, size ?? new(16, 16));
+		//		p1.Next();
+		//		e ??= LoadWpfImageElementFromFileOrResourceOrString(image);
+		//		p1.Next('x');
+		//		//s_cwt.Add(e, new());
+		//		return ConvertWpfImageElementToGdipBitmap(e, dpi, size);
+		//	}
+
+		//	static FrameworkElement _GetPathFaster(string image, SIZE size) {
+		//		//if (!image.Starts('<')) return null;
+		//		//int i = image.Find("<Path "); if (i < 0) return null;
+		//		//if (i > 0) {
+		//		//	int j = image.LastIndexOf("></") + 1;
+		//		//	if (j <= i) return null;
+		//		//	image = image[i..j];
+		//		//}
+		//		if (!image.Starts("<Path ")) return null;
+		//		try {
+		//			var x = XElement.Parse(image);
+		//			bool flip = false;
+		//			if (x.HasElements) {
+		//				flip = true;//todo
+		//			}
+		//			var g = Geometry.Parse(x.Attr("Data"));
+		//			var e = new System.Windows.Shapes.Path {
+		//				Data = g,
+		//				Stretch = Stretch.Uniform,
+		//			};
+		//			if (x.Attr(out string fill, "Fill")) {
+		//				e.Fill = s_brushConverter.ConvertFromInvariantString(fill) as Brush;
+		//				e.SnapsToDevicePixels = true;
+		//				e.UseLayoutRounding = true;
+		//			} else if (x.Attr(out string stroke, "Stroke")) {
+		//				e.Stroke = s_brushConverter.ConvertFromInvariantString(stroke) as Brush;
+		//				if (x.Attr(out double sThick, "StrokeThickness")) e.StrokeThickness = sThick;
+		//				if (x.Attr(out string sStartCap, "StrokeStartLineCap")) e.StrokeStartLineCap = Enum.Parse<PenLineCap>(sStartCap);
+		//				if (x.Attr(out string sEndCap, "StrokeEndLineCap")) e.StrokeEndLineCap = Enum.Parse<PenLineCap>(sEndCap);
+		//				if (x.Attr(out string sJoin, "StrokeLineJoin")) e.StrokeLineJoin = Enum.Parse<PenLineJoin>(sJoin);
+		//			}
+		//			if (flip) e.LayoutTransform = new ScaleTransform(1, -1, 0.5, 0.5);
+		//			if (x.HasAttr("Width") || x.HasAttr("Height")) {
+		//				if (x.Attr(out double wid, "Width")) e.Width = wid;
+		//				if (x.Attr(out double hei, "Height")) e.Height = hei;
+		//				return new Viewbox { Width = size.width, Height = size.height, Child = e };
+		//			}
+		//			e.Width = size.width;
+		//			e.Height = size.height;
+		//			return e;
+		//		}
+		//		catch (Exception e1) { Debug_.Print(e1.ToStringWithoutStack()); }
+		//		return null;
+		//	}
+		//}
+
+		//static readonly BrushConverter s_brushConverter = new();
+
+		//static ConditionalWeakTable<FrameworkElement, _DebugGC> s_cwt = new();
 		//class _DebugGC { ~_DebugGC() { print.it("~"); } }
 
 		/// <summary>
@@ -184,10 +251,24 @@ namespace Au.More
 		/// </summary>
 		/// <param name="e">For example <b>Viewbox</b>.</param>
 		/// <param name="dpi">DPI of window that will display the image.</param>
-		/// <param name="size">Final image size in logical pixels (not DPI-scaled). If null, uses element's <b>DesiredSize</b> property, max 1024x1024.</param>
-		public static System.Drawing.Bitmap ConvertWpfImageElementToGdipBitmap(UIElement e, int dpi, SIZE? size = null) {
-			if (!e.IsMeasureValid) e.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-			bool arranged = e.IsArrangeValid; if (!arranged) e.Arrange(new Rect(e.DesiredSize));
+		/// <param name="size">
+		/// Final image size in logical pixels (not DPI-scaled).
+		/// If null, uses element's <b>DesiredSize</b> property, max 1024x1024.
+		/// If not null, sets element's <b>Width</b> and <b>Height</b>; the element should not be used in UI.
+		/// </param>
+		/// <remarks>
+		/// The <b>Tag</b> property of the bitmap is array of bitmap pixels; don't replace.
+		/// </remarks>
+		public static unsafe System.Drawing.Bitmap ConvertWpfImageElementToGdipBitmap(FrameworkElement e, int dpi, SIZE? size = null) {
+			bool measured = e.IsMeasureValid;
+			if (size != null) {
+				measured = false;
+				e.Width = size.Value.width;
+				e.Height = size.Value.height;
+			}
+			if (!measured) e.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+			bool arranged = measured && e.IsArrangeValid; //initially !measured but arranged; after measuring measured and !arranged
+			if (!arranged) e.Arrange(new Rect(e.DesiredSize));
 			if (size == null) {
 				var z = e.DesiredSize; //if using RenderSize or ActualX, if element height!=width, draws in wrong place, clipped
 				size = new(Math.Min(1024d, z.Width).ToInt(), Math.Min(1024d, z.Height).ToInt());
@@ -197,33 +278,17 @@ namespace Au.More
 			//var rtb = t_rtb ??= new RenderTargetBitmap(wid, hei, dpi, dpi, PixelFormats.Pbgra32); rtb.Clear(); //not better
 			rtb.Render(e);
 			if (!arranged) e.InvalidateArrange(); //prevent huge memory leak
+			if (!measured) e.InvalidateMeasure();
 			int stride = wid * 4, msize = hei * stride;
-			var m = new _BitmapMemory(msize);
-			rtb.CopyPixels(new Int32Rect(0, 0, wid, hei), m.pixels, msize, stride);
-			var b = new System.Drawing.Bitmap(wid, hei, stride, System.Drawing.Imaging.PixelFormat.Format32bppPArgb, m.pixels) { Tag = m }; //only this Bitmap creation method preserves alpha
-			b.SetResolution(dpi, dpi);
-			return b;
+			var m = GC.AllocateUninitializedArray<byte>(msize, pinned: true);
+			fixed (byte* pixels = m) {
+				rtb.CopyPixels(new Int32Rect(0, 0, wid, hei), (IntPtr)pixels, msize, stride);
+				var b = new System.Drawing.Bitmap(wid, hei, stride, System.Drawing.Imaging.PixelFormat.Format32bppPArgb, (IntPtr)pixels) { Tag = m }; //only this Bitmap creation method preserves alpha
+				b.SetResolution(dpi, dpi);
+				return b;
+			}
 		}
 		//[ThreadStatic] static RenderTargetBitmap t_rtb;
-
-		//Holds memory of System.Drawing.Bitmap created with the scan ctor. Such Bitmap does not own/free the memory. We attach _BitmapMemory to Bitmap.Tag, let GC dispose it.
-		unsafe class _BitmapMemory
-		{
-			public readonly IntPtr pixels;
-			int _size;
-
-			public _BitmapMemory(int size) {
-				pixels = (IntPtr)MemoryUtil.Alloc(size);
-				GC.AddMemoryPressure(_size = size);
-			}
-
-			//static int _debug;
-			~_BitmapMemory() {
-				//print.it(_debug++, _size);
-				MemoryUtil.Free((void*)pixels);
-				GC.RemoveMemoryPressure(_size);
-			}
-		}
 
 		/// <summary>
 		/// Converts XAML image to native icon file data.
@@ -234,14 +299,13 @@ namespace Au.More
 		/// <exception cref="ArgumentOutOfRangeException">An invalid size.</exception>
 		/// <exception cref="Exception"></exception>
 		public static unsafe void XamlImageToIconFile(Stream stream, string image, params int[] sizes) {
-			var e = LoadWpfImageElementFromFileOrResourceOrString(image) as FrameworkElement;
+			var e = LoadWpfImageElementFromFileOrResourceOrString(image);
 			stream.Position = Math2.AlignUp(sizeof(Api.NEWHEADER) + sizeof(Api.ICONDIRENTRY) * sizes.Length, 4);
 			var a = stackalloc Api.ICONDIRENTRY[sizes.Length];
 			for (int i = 0; i < sizes.Length; i++) {
 				int size = sizes[i];
 				if (size < 1 || size > 256) throw new ArgumentOutOfRangeException();
-				e.Width = size; e.Height = size;
-				var b = ConvertWpfImageElementToGdipBitmap(e, 96, (size, size));
+				using var b = ConvertWpfImageElementToGdipBitmap(e, 96, (size, size));
 				int pos = (int)stream.Position;
 				b.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
 				byte bsize = (byte)(size == 256 ? 0 : checked((byte)size));
@@ -255,10 +319,11 @@ namespace Au.More
 			stream.Position = posEnd;
 		}
 
-		//public static void XamlImageToIconFile(string file, string image, params int[] sizes) {
-		//	file = pathname.NormalizeForNET_(file);
-		//	using var stream = File.OpenWrite(file);
-		//	XamlImageToIconFile(stream, image, sizes);
-		//}
+		///
+		public static void XamlImageToIconFile(string file, string image, params int[] sizes) {
+			file = pathname.NormalizeForNET_(file);
+			using var stream = File.OpenWrite(file);
+			XamlImageToIconFile(stream, image, sizes);
+		}
 	}
 }

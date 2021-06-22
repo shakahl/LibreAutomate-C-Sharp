@@ -212,7 +212,7 @@ class PanelFind : UserControl
 		b.R.StartGrid<GroupBox>("Find in files");
 		b.R.Add("Search in", out ComboBox cbFileType, true).Items("All files|C# files (*.cs)|C# script files|C# class files|Other files").Select(_SearchIn);
 		b.R.Add("Skip files where path matches wildcard", out TextBox tSkip, string.Join("\r\n", _SkipWildcards), row2: 0).Multiline(100, TextWrapping.NoWrap);
-		int iSlow = App.Settings.find_printSlow; string sSlow = iSlow > 0 ? iSlow.ToStringInvariant() : null;
+		int iSlow = App.Settings.find_printSlow; string sSlow = iSlow > 0 ? iSlow.ToS() : null;
 		b.R.StartStack().Add("Print file open+search times >=", out TextBox tSlow, sSlow).Width(50).Add<Label>("ms").End();
 		b.End();
 		b.R.AddOkCancel();
@@ -539,7 +539,7 @@ class PanelFind : UserControl
 			cFound.ZTags.AddLinkTag("+raif", s => _ReplaceAllInFiles(s));
 
 			cFound.ZTags.AddLinkTag("+caf", s => {
-				App.Model.CloseFiles(_lastFindAll.files);
+				App.Model.CloseFiles(_lastFindAll.files, _lastFindAll.wasOpen);
 				App.Model.CollapseAll(exceptWithOpenFiles: true);
 			});
 
@@ -659,7 +659,7 @@ class PanelFind : UserControl
 		if (nFound > 1) {
 			var guid = Guid.NewGuid().ToString(); ; //probably don't need, but safer
 			b.AppendFormat("<z orange>Found {0} in {1} files.    <+raif \"{2}\"><c 0x80ff>Replace all...<><>    <+caf><c 0x80ff>Close all<><>", nFound, aFiles.Count, guid).AppendLine("<>");
-			_lastFindAll = (f, aFiles, guid);
+			_lastFindAll = (f, aFiles, guid, null);
 		}
 
 		if (folder != App.Model.Root)
@@ -673,12 +673,12 @@ class PanelFind : UserControl
 		cFound.zSetText(b.ToString());
 	}
 
-	(_TextToFind f, List<FileNode> files, string guid) _lastFindAll;
+	(_TextToFind f, List<FileNode> files, string guid, System.Collections.BitArray wasOpen) _lastFindAll;
 
 	void _ReplaceAllInFiles(string sGuid) {
-		var (f, files, guid) = _lastFindAll;
+		var (f, files, guid, _) = _lastFindAll;
 		if (guid != sGuid) return;
-		if(!_ValidateReplacement(f, files[0])) return; //avoid opening files when invalid regex replacement
+		if (!_ValidateReplacement(f, files[0])) return; //avoid opening files when invalid regex replacement
 		f.replaceText = _tReplace.Text;
 		_AddToRecent(f, false, onlyRepl: true);
 
@@ -694,8 +694,10 @@ Opens files to enable Undo.",
 		var d = dialog.showProgress(marquee: false, "Replacing", owner: App.Hwnd);
 		try {
 			App.Wmain.IsEnabled = false;
+			bool needWasOpen = _lastFindAll.wasOpen == null;
 			for (int i = 0; i < files.Count; i++) {
 				var v = files[i];
+				if (needWasOpen && App.Model.OpenFiles.Contains(v)) (_lastFindAll.wasOpen ??= new(files.Count))[i] = true;
 				if (!App.Model.SetCurrentFile(v)) { print.it("Failed to open " + v.Name); continue; }
 				if ((i & 15) == 15) wait.doEvents(); //makes slower, but visually better. Without it the progress dialog almost does not respond, although other thread; maybe clicking it tries to change wmain Z order etc.
 				_ReplaceAllInEditor(f);

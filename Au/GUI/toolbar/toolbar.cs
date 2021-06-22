@@ -346,7 +346,7 @@ namespace Au
 
 			_RegisterWinclass();
 			_SetDpi();
-			_Images();
+			_Images(false);
 			_MeasureText();
 			var size = _Measure();
 			var style = WS.POPUP | WS.CLIPCHILDREN | _BorderStyle(_sett.border);
@@ -704,7 +704,7 @@ namespace Au
 
 			if (!no.Has(TBNoMenu.Edit | TBNoMenu.File)) {
 				var (canEdit, canGo, goText) = MTItem.CanEditOrGoToFile_(_sourceFile, item);
-				if (!no.Has(TBNoMenu.Edit) && canEdit) m["Edit toolbar"] = o => ScriptEditor.GoToEdit(_sourceFile, item?.sourceLine ?? _sourceLine);
+				if (!no.Has(TBNoMenu.Edit) && canEdit) m["Edit toolbar"] = o => script.editor.OpenAndGoToLine(_sourceFile, item?.sourceLine ?? _sourceLine);
 				if (!no.Has(TBNoMenu.File) && canGo) m[goText] = o => item.GoToFile_();
 			}
 			if (!no.Has(TBNoMenu.Close)) m.Add("Close", o => _SatPlanetOrThis.Close());

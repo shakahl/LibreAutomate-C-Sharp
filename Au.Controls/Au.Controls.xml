@@ -1751,8 +1751,7 @@
         <member name="P:Au.Controls.KTreeView.ImageCache">
             <summary>
             Gets or sets image cache.
-            For example you can use single cache for all controls.
-            If not set, the 'get' function auto-creates new instance when called first time.
+            If not set, uses <see cref="P:Au.More.IconImageCache.Common"/>.
             </summary>
         </member>
         <member name="P:Au.Controls.KTreeView.ItemMarginLeft">
@@ -2825,7 +2824,10 @@
             <summary>The string isn't image.</summary>
         </member>
         <member name="F:Au.Controls.KImageUtil.ImageType.Xaml">
-            <summary>XAML image.</summary>
+            <summary>XAML image data.</summary>
+        </member>
+        <member name="F:Au.Controls.KImageUtil.ImageType.XamlIconName">
+            <summary>XAML icon name "*Pack.Icon color".</summary>
         </member>
         <member name="F:Au.Controls.KImageUtil.ImageType.Base64CompressedBmp">
             <summary>Compressed and Base64-encoded .bmp file data with "~:" prefix. See <see cref="M:Au.Controls.KImageUtil.ImageToString(System.String)"/>.</summary>

@@ -784,6 +784,8 @@ namespace Au
 		/// </summary>
 		/// <param name="paths">string array, List or other collection. Full paths.</param>
 		/// <param name="tryRecycleBin"></param>
+		/// <exception cref="ArgumentException">path is not full path (see <see cref="pathname.isFullPath"/>).</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		public static void delete(IEnumerable<string> paths, bool tryRecycleBin = false) {
 			if (tryRecycleBin) {
 				var a = new List<string>();

@@ -23,6 +23,9 @@ using Microsoft.CodeAnalysis.Text;
 
 //FUTURE: favorite meta r and c. Then can add favorite namespaces from these too.
 
+//TODO: duplicates if using meta testInternal.
+//TODO: if in completion list selected like Favorite.Namespace.Enum, remove Favorite.Namespace and insert using Favorite.Namespace.
+
 //TODO: support using static.
 //	Then users could create their common "functions.cs" files used with meta c and 'using static'.
 //	When sharing in forums, recommend to put their functions.cs in patebin and in forum signature add link to it.

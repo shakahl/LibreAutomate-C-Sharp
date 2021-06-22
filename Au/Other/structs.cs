@@ -85,7 +85,7 @@ namespace Au.Types
 
 		public void Deconstruct(out int x, out int y) { x = this.x; y = this.y; }
 
-		public override string ToString() => $"{{{x.ToStringInvariant()}, {y.ToStringInvariant()}}}";
+		public override string ToString() => $"{{{x.ToS()}, {y.ToS()}}}";
 #pragma warning restore 1591 //XML doc
 	}
 
@@ -134,7 +134,7 @@ namespace Au.Types
 
 		public void Deconstruct(out int width, out int height) { width = this.width; height = this.height; }
 
-		public override string ToString() => $"{{{width.ToStringInvariant()}, {height.ToStringInvariant()}}}";
+		public override string ToString() => $"{{{width.ToS()}, {height.ToS()}}}";
 #pragma warning restore 1591 //XML doc
 	}
 
@@ -383,7 +383,7 @@ namespace Au.Types
 		/// </summary>
 		/// <seealso cref="TryParse"/>
 		public override string ToString() {
-			return $"{{L={left.ToStringInvariant()} T={top.ToStringInvariant()} W={Width.ToStringInvariant()} H={Height.ToStringInvariant()}}}";
+			return $"{{L={left.ToS()} T={top.ToS()} W={Width.ToS()} H={Height.ToS()}}}";
 			//note: don't change the format. Some functions parse it, eg TryParse and acc in C++.
 
 			//don't need R B. Rarely useful, just makes more difficult to read W H.
@@ -395,7 +395,7 @@ namespace Au.Types
 		/// </summary>
 		/// <seealso cref="TryParse"/>
 		public string ToStringSimple() {
-			return $"{left.ToStringInvariant()} {top.ToStringInvariant()} {Width.ToStringInvariant()} {Height.ToStringInvariant()}";
+			return $"{left.ToS()} {top.ToS()} {Width.ToS()} {Height.ToS()}";
 		}
 
 		/// <summary>
@@ -407,7 +407,7 @@ namespace Au.Types
 		/// </param>
 		public string ToStringFormat(string format) {
 			using (new StringBuilder_(out var b)) {
-				b.AppendFormat(format, left.ToStringInvariant(), top.ToStringInvariant(), right.ToStringInvariant(), bottom.ToStringInvariant(), Width.ToStringInvariant(), Height.ToStringInvariant());
+				b.AppendFormat(format, left.ToS(), top.ToS(), right.ToS(), bottom.ToS(), Width.ToS(), Height.ToS());
 				return b.ToString();
 			}
 		}

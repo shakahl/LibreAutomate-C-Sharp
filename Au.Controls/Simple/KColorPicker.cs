@@ -68,7 +68,7 @@ namespace Au.Controls
 					int i = tb.Text.ToInt();
 					if (i < 0 || i > 240) {
 						_hlsChanging = true;
-						tb.Text = Math.Clamp(i, 0, 240).ToStringInvariant();
+						tb.Text = Math.Clamp(i, 0, 240).ToS();
 						_hlsChanging = false;
 					}
 
@@ -83,7 +83,7 @@ namespace Au.Controls
 					int i = t.Text.ToInt() + d;
 					if (hls == 0) { if (i < 0) i += 240; else if (i > 240) i -= 240; }
 					int v = Math.Clamp(i, 0, 240);
-					t.Text = v.ToStringInvariant();
+					t.Text = v.ToS();
 				};
 				p2.Children.Add(t);
 				return t;
@@ -280,7 +280,7 @@ namespace Au.Controls
 
 		void _SetColor(int color, bool bgr) {
 			if (bgr) color = ColorInt.SwapRB(color);
-			var s = "0x" + color.ToStringInvariant("X6");
+			var s = "0x" + color.ToS("X6");
 			_tColor.Text = s;
 		}
 

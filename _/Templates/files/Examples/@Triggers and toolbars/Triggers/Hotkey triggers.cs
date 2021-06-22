@@ -24,7 +24,7 @@ void HotkeyTriggers() {
 		};
 		hk["Ctrl+Shift+1"] = o => TriggerActionExample(); //call other function. To find it quickly, Ctrl+click the function name here.
 		hk["Ctrl+Shift+2"] = o => TriggerActionExample2(o.Window); //the function can be in any class or partial file of this project
-		hk["Ctrl+Shift+3"] = o => scriptt.run("Script example1.cs"); //run script in separate process
+		hk["Ctrl+Shift+3"] = o => script.run("Script example1.cs"); //run script in separate process
 		
 		//triggers that work only with some windows (when the window is active)
 		

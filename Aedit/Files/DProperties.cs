@@ -585,7 +585,7 @@ This option is ignored when the task runs as .exe program started not from edito
 		info.AddElem(runSingle,
 @"<b>runSingle</b> - whether tasks can run simultaneously, etc.
  • <i>false</i> (default) - multiple tasks can run simultaneously (see ifRunning).
- • <i>true</i> (checked in Properties) - multiple such tasks cannot run simultaneously. The editor's tray icon is green when running; also green text in the ""Tasks"" panel. By default scriptt.setup ends the task on PC sleep and desktop switch (Ctrl+Alt+Delete, Win+L, etc).
+ • <i>true</i> (checked in Properties) - multiple such tasks cannot run simultaneously. The editor's tray icon is green when running; also green text in the ""Tasks"" panel. By default script.setup ends the task on PC sleep and desktop switch (Ctrl+Alt+Delete, Win+L, etc).
 
 This option is ignored when the task runs as .exe program started not from editor.
 ");
@@ -622,7 +622,9 @@ If role classLibrary, the dll file is named like the class file. It can be used 
 @"<b>icon</b> - icon of the output exe file.
 The .ico file must be in this workspace. Can be path relative to this file (examples: App.ico, Folder\App.ico, ..\Folder\App.ico) or path in the workspace (examples: \App.ico, \Folder\App.ico).
 
-The icon will be added as a native resource and displayed in File Explorer etc. If role exeProgram, can add multiple icons from folder. Resource ids start from IDI_APPLICATION (32512). Native resources can be used with icon.ofThisApp etc and dialog functions.
+The icon will be added as a native resource and displayed in File Explorer etc. If role exeProgram, can add all .ico and .xaml icons from folder. Resource ids start from IDI_APPLICATION (32512). Native resources can be used with icon.ofThisApp etc and dialog functions.
+
+If not specified, uses custom icon of the main C# file. See menu Tools -> Icons.
 ");
 		info.AddElem(manifest,
 @"<b>manifest</b> - <google manifest file site:microsoft.com>manifest<> of the output exe or dll file.

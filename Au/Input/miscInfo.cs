@@ -22,7 +22,7 @@ namespace Au
 	/// <seealso cref="folders"/>
 	/// <seealso cref="process"/>
 	/// <seealso cref="screen"/>
-	/// <seealso cref="scriptt"/>
+	/// <seealso cref="script"/>
 	/// <seealso cref="perf"/>
 	/// <seealso cref="uacInfo"/>
 	/// <seealso cref="Dpi"/>

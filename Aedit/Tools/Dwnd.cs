@@ -205,7 +205,7 @@ namespace Au.Tools
 
 				bool idUseful = TUtil.GetUsefulControlId(_con, _wnd, out f.cId);
 				idC.Visible = idUseful;
-				if (idUseful) idC.Set(true, f.cId.ToStringInvariant()); else an.Add("***id " + f.cId + " (probably not useful)");
+				if (idUseful) idC.Set(true, f.cId.ToS()); else an.Add("***id " + f.cId + " (probably not useful)");
 				nameC.Set(!idUseful, an[iSel], an);
 				classC.Set(!idUseful, TUtil.StripWndClassName(f.cClass, true));
 			}
@@ -503,7 +503,6 @@ namespace Au.Tools
 #region tree
 
 		void _InitTree() {
-			_tree.ImageCache = App.ImageCache;
 			_tree.SingleClickActivate = true;
 			_tree.ItemActivated += (_, e) => {
 				var x = e.Item as _TreeItem;

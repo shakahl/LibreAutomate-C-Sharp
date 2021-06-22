@@ -44,7 +44,7 @@ void Toolbar_Startup1() {
 	t.Group("Examples"); //horizontal separator, optionally with text
 	t.DisplayText = false;
 	t["Run program"] = o => run.it(folders.System + @"notepad.exe");
-	t["Script\0 Run script"] = o => scriptt.run("Script example1.cs");
+	t["Script\0 Run script"] = o => script.run("Script example1.cs");
 	t["Copy-paste"] = o => {
 		string s = clipboard.copy(); //note: to test it, at first select some text somewhere, else it will fail
 		s = s.Upper();

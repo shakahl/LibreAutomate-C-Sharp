@@ -462,7 +462,7 @@ namespace Au
 		public static icon trayIcon(int resourceId = Api.IDI_APPLICATION/*, bool large = false*/) {
 #if true
 			IntPtr hi = default; int hr = 1;
-			if (scriptt.role == ATRole.MiniProgram) hr = Api.LoadIconMetric(Api.GetModuleHandle(Assembly.GetEntryAssembly().Location), resourceId, 0, out hi);
+			if (script.role == SRole.MiniProgram) hr = Api.LoadIconMetric(Api.GetModuleHandle(Assembly.GetEntryAssembly().Location), resourceId, 0, out hi);
 			if (hr != 0) hr = Api.LoadIconMetric(Api.GetModuleHandle(null), resourceId, 0, out hi);
 			if (hr != 0) hr = Api.LoadIconMetric(default, resourceId, 0, out hi);
 			return hr == 0 ? _New(hi) : null;
@@ -490,7 +490,7 @@ namespace Au
 		/// If role miniProgram, at first looks in main assembly (.dll).
 		/// </summary>
 		internal static IntPtr GetAppIconModuleHandle_(int resourceId) { //used by dialog
-			if (scriptt.role == ATRole.MiniProgram) {
+			if (script.role == SRole.MiniProgram) {
 				var h1 = Api.GetModuleHandle(Assembly.GetEntryAssembly().Location);
 				if (default != Api.FindResource(h1, resourceId, Api.RT_GROUP_ICON)) return h1;
 			}
@@ -705,17 +705,23 @@ namespace Au
 		/// Also supports code patterns like <c>folders.System + "notepad.exe"</c> or <c>folders.shell.RecycleBin</c>.
 		/// Returns null if no such string/pattern.
 		/// </summary>
-		internal static string IconPathFromCode_(MethodInfo mi, out bool cs) {
+		/// <param name="mi"></param>
+		/// <param name="cs">The string is .cs filename or relative path, but not full path.</param>
+		internal static string ExtractIconPathFromCode_(MethodInfo mi, out bool cs) {
 			//support code pattern like 'folders.System + "notepad.exe"'.
 			//	Opcodes: call(folders.System), ldstr("notepad.exe"), FolderPath.op_Addition.
 			//also code pattern like 'folders.System' or 'folders.shell.RecycleBin'.
 			//	Opcodes: call(folders.System), FolderPath.op_Implicit(FolderPath to string).
 			//also code pattern like 'run.itSafe("notepad.exe")'.
 			//print.it(mi.Name);
+
 			cs = false;
+			var il = mi.GetMethodBody().GetILAsByteArray();
+			if (il.Length > 100) return null;
+
 			int i = 0, patternStart = -1; MethodInfo f1 = null; string filename = null, filename2 = null;
 			try {
-				var reader = new ILReader(mi);
+				var reader = new ILReader(mi, il);
 				foreach (var instruction in reader.Instructions) {
 					if (++i > 100) break;
 					var op = instruction.Op;
@@ -725,9 +731,10 @@ namespace Au
 					} else if (op == OpCodes.Ldstr) {
 						var s = instruction.Data as string;
 						//print.it(s);
+						//print.it(i, patternStart);
 						if (i == patternStart + 1) filename = s;
 						else {
-							if (pathname.isFullPathExpand(ref s)) return s; //eg run.itSafe(@"%folders.System%\notepad.exe");
+							if (pathname.isFullPathExpand(ref s)) return s; //eg run.it(@"%folders.System%\notepad.exe");
 							if (pathname.IsShellPathOrUrl_(s)) return s;
 							filename = null; patternStart = -1;
 							if (i == 1) filename2 = s;
@@ -745,18 +752,20 @@ namespace Au
 							if (i == patternStart + 2 && f.Name == "op_Addition") {
 								//print.it(2);
 								var fp = (FolderPath)f1.Invoke(null, null);
-								if ((string)fp == null) return null;
+								if (fp.ToString() == null) return null;
 								return fp + filename;
 							} else if (i == patternStart + 1 && f.Name == "op_Implicit" && f.ReturnType == typeof(string)) {
 								//print.it(3);
 								return (FolderPath)f1.Invoke(null, null);
 							}
+							//} else if (dt == typeof(script)) {
+							//	print.it(filename);
 						}
 					}
 				}
 				if (filename2 != null) {
 					if (filename2.Ends(".exe", true)) return filesystem.searchPath(filename2);
-					if (cs = filename2.Ends(".cs", true)) return filename2;
+					if (cs = filename2.Ends(".cs", true) && !pathname.isFullPath(filename2, orEnvVar: true)) return filename2;
 				}
 			}
 			catch (Exception ex) { Debug_.Print(ex); }

@@ -13,11 +13,11 @@ using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
 
-//CONSIDER: scriptt.canPause. Let user explicitly insert this at all points where the script can be safely paused. Also option to allow to pause at every key/mouse/etc function.
+//CONSIDER: script.canPause. Let user explicitly insert this at all points where the script can be safely paused. Also option to allow to pause at every key/mouse/etc function.
 
-//TODO: remove runSingle. Maybe need something similar, but not to limit to single running task. As an alternative could use scriptt.setup(runSingle: true) or scriptt.mutex().
-//	Then maybe let scriptt.setup sleepExit default true, and on first run print info about it.
-//	IDEA: scriptt.setup(bool? trayIcon=null). If null, changes editor's icon; maybe only if role miniProgram.
+//TODO: remove runSingle. Maybe need something similar, but not to limit to single running task. As an alternative could use script.setup(runSingle: true) or script.mutex().
+//	Then maybe let script.setup sleepExit default true, and on first run print info about it.
+//	IDEA: script.setup(bool? trayIcon=null). If null, changes editor's icon; maybe only if role miniProgram.
 
 namespace Au
 {
@@ -26,7 +26,7 @@ namespace Au
 	/// A script task is a running script, except if role editorExtension. Each script task is a separate process.
 	/// </summary>
 	/// <seealso cref="process"/>
-	public static class scriptt
+	public static class script
 	{
 		/// <summary>
 		/// In a process of a script with role miniProgram (defaut) returns script file name without extension.
@@ -38,8 +38,8 @@ namespace Au
 		/// <summary>
 		/// If this script task has been started from editor, returns script's role property. Else returns <b>ExeProgram</b>.
 		/// </summary>
-		public static ATRole role => s_role;
-		internal static ATRole s_role;
+		public static SRole role => s_role;
+		internal static SRole s_role;
 
 		/// <summary>
 		/// Starts executing a script. Does not wait.
@@ -97,7 +97,7 @@ namespace Au
 			if (needResult && !tr.Init()) throw new AuException("*get task results");
 
 			var data = Serializer_.Serialize(script, args, tr.pipeName);
-			int pid = (int)wnd.more.CopyData.SendBytes(w, 100, data, mode);
+			int pid = (int)wnd.more.CopyData.Send<byte>(w, 100, data, mode);
 			switch ((RunResult_)pid) {
 			case RunResult_.failed: return !waitMode ? -1 : throw new AuException("*start task"); //don't throw, eg maybe cannot run because other "runSingle" script is running
 			case RunResult_.notFound: throw new FileNotFoundException($"Script '{script}' not found.");
@@ -201,9 +201,8 @@ namespace Au
 		/// <summary>
 		/// Finds editor's message-only window used with WM_COPYDATA etc.
 		/// </summary>
-		internal static wnd WndMsg_ => s_wndMsg.FindFastCached_(ref s_wmTime, null, "Aedit.m3gVxcTJN02pDrHiQ00aSQ", true);
-		static readonly wnd s_wndMsg;
-		static long s_wmTime;
+		internal static wnd WndMsg_ => s_wndMsg.FindFast(null, "Aedit.m3gVxcTJN02pDrHiQ00aSQ", true);
+		static wnd.Cached_ s_wndMsg;
 
 		/// <summary>
 		/// Writes a string result for the task that called <see cref="runWait(out string, string, string[])"/> or <see cref="runWait(Action{string}, string, string[])"/> to run this task, or for the program that executed "Au.CL.exe" to run this task with command line like "Au.CL.exe **Script5.cs".
@@ -216,7 +215,7 @@ namespace Au
 		/// The program that executed "Au.CL.exe" to run this task with command line like "Au.CL.exe **Script5.cs" can read the string from the redirected standard output in real time, or the string is written to its console in real time. The string encoding is UTF8; if you use a bat file or cmd.exe and want to get correct Unicode text, execute this before, to change console code page to UTF-8: <c>chcp 65001</c>.
 		/// </remarks>
 		public static unsafe bool writeResult(string s) {
-			var pipeName = Environment.GetEnvironmentVariable("scriptt.writeResult.pipe");
+			var pipeName = Environment.GetEnvironmentVariable("script.writeResult.pipe");
 			if (pipeName == null) return false;
 			if (!s.NE()) {
 				if (!Api.WaitNamedPipe(pipeName, 3000)) goto ge;
@@ -255,8 +254,8 @@ namespace Au
 		/// Does nothing if role editorExtension.
 		/// </remarks>
 		public static void setup(bool trayIcon = false, bool? sleepExit = null, bool? lockExit = null, bool debug = false, UExcept exception = UExcept.Print | UExcept.Exit, [CallerFilePath] string f_ = null) {
-			if (role == ATRole.EditorExtension) return;
-			if (s_setup) throw new InvalidOperationException("scriptt.setup already called");
+			if (role == SRole.EditorExtension) return;
+			if (s_setup) throw new InvalidOperationException("script.setup already called");
 			s_setup = true;
 
 			s_setupException = exception;
@@ -310,7 +309,7 @@ namespace Au
 				//info: setup32.dll disables WER for Au.Task.exe and Au.Task32.exe.
 			};
 
-			if (role == ATRole.ExeProgram) {
+			if (role == SRole.ExeProgram) {
 				//set STA thread if Main without [MTAThread]
 				if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA) { //speed: 150 mcs
 					if (null == Assembly.GetEntryAssembly().EntryPoint.GetCustomAttribute<MTAThreadAttribute>()) { //1.5 ms
@@ -325,7 +324,7 @@ namespace Au
 
 		internal static void ExitOnSleepOrDesktopSwitch_(bool sleep) {
 			string runSingle = isRunSingle ? " (depends on runSingle)" : null;
-			print.it($"Info: task '{name}' ended because of {(sleep ? "PC sleep" : "switched desktop")} at {DateTime.Now.ToShortTimeString()}. See scriptt.setup in script{runSingle}. See also Options -> Templates.");
+			print.it($"Info: task '{name}' ended because of {(sleep ? "PC sleep" : "switched desktop")} at {DateTime.Now.ToShortTimeString()}. See script.setup in script{runSingle}. See also Options -> Templates.");
 			Environment.Exit(2);
 		}
 
@@ -360,7 +359,7 @@ namespace Au
 		/// </summary>
 		/// <param name="delay">Delay, milliseconds.</param>
 		/// <param name="init">Called before showing the tray icon. Can set its properties and event handlers.</param>
-		/// <param name="menu">Called before showing context menu. Can add menu items. Menu item actions must not block messages etc for long time; if need, run in other thread or process (<see cref="scriptt.run"/>).</param>
+		/// <param name="menu">Called before showing context menu. Can add menu items. Menu item actions must not block messages etc for long time; if need, run in other thread or process (<see cref="script.run"/>).</param>
 		/// <param name="f_">[](xref:caller_info). Don't use. Or set = null to disable script editing via the tray icon.</param>
 		/// <remarks>
 		/// Uses other thread. The <i>init</i> and <i>menu</i> actions run in that thread too. It dispatches messages, therefore they also can set timers (<see cref="timerm"/>), create hidden windows, etc. Current thread does not have to dispatch messages.
@@ -370,30 +369,30 @@ namespace Au
 		/// <example>
 		/// Shows how to change icon and tooltip.
 		/// <code><![CDATA[
-		/// scriptt.trayIcon(init: t => { t.Icon = icon.stock(StockIcon.HELP); t.Tooltip = "Example"; });
+		/// script.trayIcon(init: t => { t.Icon = icon.stock(StockIcon.HELP); t.Tooltip = "Example"; });
 		/// ]]></code>
 		/// Shows how to add menu items.
 		/// <code><![CDATA[
-		/// scriptt.trayIcon(menu: (t, m) => {
+		/// script.trayIcon(menu: (t, m) => {
 		/// 	m["Example"] = o => { dialog.show("Example"); };
-		/// 	m["Run other script"] = o => { scriptt.run("Example"); };
+		/// 	m["Run other script"] = o => { script.run("Example"); };
 		/// });
 		/// ]]></code>
 		/// </example>
 		/// <seealso cref="Au.trayIcon"/>
 		public static void trayIcon(int delay = 500, Action<trayIcon> init = null, Action<trayIcon, popupMenu> menu = null, [CallerFilePath] string f_ = null) {
-			if (role == ATRole.EditorExtension) return;
+			if (role == SRole.EditorExtension) return;
 			TrayIcon_(false, false, delay, init, menu, f_);
 		}
 
 		internal static void TrayIcon_(bool sleepExit, bool lockExit, int delay = 500, Action<trayIcon> init = null, Action<trayIcon, popupMenu> menu = null, [CallerFilePath] string f_ = null) {
 			Au.run.thread(() => {
 				Thread.Sleep(delay);
-				var ti = new trayIcon { Tooltip = scriptt.name, sleepExit_ = sleepExit, lockExit_ = lockExit };
+				var ti = new trayIcon { Tooltip = script.name, sleepExit_ = sleepExit, lockExit_ = lockExit };
 				init?.Invoke(ti);
 				ti.Icon ??= icon.trayIcon();
-				bool canEdit = f_ != null && ScriptEditor.Available;
-				if (canEdit) ti.Click += _ => ScriptEditor.GoToEdit(f_, 0);
+				bool canEdit = f_ != null && editor.Available;
+				if (canEdit) ti.Click += _ => editor.OpenAndGoToLine(f_, 0);
 				ti.MiddleClick += _ => Environment.Exit(2);
 				ti.RightClick += e => {
 					var m = new popupMenu();
@@ -401,9 +400,9 @@ namespace Au
 						menu(ti, m);
 						if (m.Last != null && !m.Last.IsSeparator) m.Separator();
 					}
-					if (canEdit) m["Edit script\tClick"] = _ => ScriptEditor.GoToEdit(f_, 0);
+					if (canEdit) m["Edit script\tClick"] = _ => editor.OpenAndGoToLine(f_, 0);
 					m["End task\tM-click" + (sleepExit ? ", Sleep" : null) + (lockExit ? ", Win+L, Ctrl+Alt+Delete" : null)] = _ => Environment.Exit(2);
-					if (canEdit) m["End and edit"] = _ => { ScriptEditor.GoToEdit(f_, 0); Environment.Exit(2); };
+					if (canEdit) m["End and edit"] = _ => { editor.OpenAndGoToLine(f_, 0); Environment.Exit(2); };
 					m.Show(MSFlags.AlignCenterH | MSFlags.AlignRectBottomTop, /*excludeRect: ti.GetRect(out var r1) ? r1 : null,*/ owner: ti.Hwnd);
 				};
 				ti.Visible = true;
@@ -418,7 +417,7 @@ namespace Au
 		//	Maybe also use different tray icon for runSingle. Maybe then don't change editor's tray icon when runSingle running.
 		//	Maybe also add default icon to exeProgram.
 
-#if false //not sure is it useful. Unreliable. Should use hook to detect user-pressed, but then UAC makes less reliable. Can instead use scriptt.setup (Win+L, Ctrl+Alt+Delete and sleep-exit are reliable). If useful, can instead add scriptt.setup parameter keyExit.
+#if false //not sure is it useful. Unreliable. Should use hook to detect user-pressed, but then UAC makes less reliable. Can instead use script.setup (Win+L, Ctrl+Alt+Delete and sleep-exit are reliable). If useful, can instead add script.setup parameter keyExit.
 		/// <summary>
 		/// Sets a hotkey that ends this process.
 		/// </summary>
@@ -436,7 +435,7 @@ namespace Au
 		/// - If several processes call this function with same hotkey, the hotkey ends one process at a time.
 		/// </remarks>
 		public static void exitHotkey(KHotkey hotkey, int exitCode = 0) {
-			if (Role == ATRole.EditorExtension) return;
+			if (Role == SRole.EditorExtension) return;
 			run.thread(() => {
 				var (mod, key) = keys.more.Hotkey.Normalize_(hotkey);
 				var atom = Api.GlobalAddAtom("Au.EndHotkey");
@@ -486,15 +485,61 @@ namespace Au
 			}, background: true, sta: false);
 		}
 #endif
+
+		/// <summary>
+		/// Contains static functions to interact with the script editor, if available.
+		/// </summary>
+		public static class editor
+		{
+			/// <summary>
+			/// Returns true if editor is running.
+			/// </summary>
+			public static bool Available => !WndMsg_.Is0;
+
+			/// <summary>
+			/// Opens the specified source file (script etc) and sets code editor's current position at the start of the specified line.
+			/// Does nothing if editor isn't running.
+			/// </summary>
+			/// <param name="file">Source file. Can be full path, or relative path in workspace, or file name with ".cs".</param>
+			/// <param name="line">1-based line index. If 0, just opens file.</param>
+			public static void OpenAndGoToLine(string file, int line) {
+				var w = WndMsg_; if (w.Is0) return;
+				Api.AllowSetForegroundWindow(w.ProcessId);
+				wnd.more.CopyData.Send<char>(w, 4, file, line);
+			}
+
+			/// <summary>
+			/// Gets custom icon string in specified format.
+			/// Returns null if no custom icon or if editor isn't running.
+			/// </summary>
+			/// <param name="file">File/folder path etc, or icon name. See <see cref="EGetIcon"/>.</param>
+			/// <param name="what">The format of input and output strings.</param>
+			public static string GetCustomIcon(string file, EGetIcon what) {
+				var del = IconNameToXaml_;
+				if (del != null) return del(file, what);
+
+				var w = WndMsg_; if (w.Is0) return null;
+				wnd.more.CopyData.SendReceive<char>(w, (int)Math2.MakeLparam(10, (int)what), file, out string r);
+				return r;
+				//rejected: add option to get serialized Bitmap instead. Now loads XAML in this process. It is 230 ms and +27 MB.
+				//	Nothing good if the toolbar etc also uses XAML icons directly, eg for non-script items. And serializing is slow.
+				//	Now not actual because of cache.
+			}
+
+			/// <summary>
+			/// Editor sets this. Library uses it to avoid sendmessage.
+			/// </summary>
+			internal static Func<string, EGetIcon, string> IconNameToXaml_;
+		}
 	}
 }
 
 namespace Au.Types
 {
 	/// <summary>
-	/// <see cref="scriptt.role"/>.
+	/// <see cref="script.role"/>.
 	/// </summary>
-	public enum ATRole
+	public enum SRole
 	{
 		/// <summary>
 		/// The task runs as normal .exe program.
@@ -514,7 +559,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Flags for <see cref="scriptt.setup"/> parameter <i>exception</i>. Defines what to do on unhandled exception.
+	/// Flags for <see cref="script.setup"/> parameter <i>exception</i>. Defines what to do on unhandled exception.
 	/// Default flags is <b>Print</b> and <b>Exit</b>, even if <b>Setup</b> not called (with default compiler only).
 	/// </summary>
 	[Flags]
@@ -550,6 +595,33 @@ namespace Au.Types
 		///// Not used with flag <b>Exit</b>.
 		///// </summary>
 		//DisableWER = 8,
+	}
+
+	/// <summary>
+	/// For <see cref="script.editor.GetCustomIcon"/>.
+	/// </summary>
+	public enum EGetIcon
+	{
+		/// <summary>
+		/// Input is a file or folder in current workspace. Can be relative path in workspace (like @"\Folder\File.cs") or full path or filename.
+		/// Output must be icon name, like "*Pack.Icon color", where color is like #RRGGBB or color name. See menu -> Tools -> Icons.
+		/// </summary>
+		PathToIconName,
+
+		/// <summary>
+		/// Input is a file or folder in current workspace (see <b>PathToIconName</b>).
+		/// Output must be icon XAML.
+		/// </summary>
+		PathToIconXaml,
+
+		/// <summary>
+		/// Input is icon name (see <b>PathToIconName</b>).
+		/// Output must be icon XAML.
+		/// </summary>
+		IconNameToXaml,
+
+		//PathToGdipBitmap,
+		//IconNameToGdipBitmap,
 	}
 
 	/// <summary>

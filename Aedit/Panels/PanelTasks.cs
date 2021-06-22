@@ -24,7 +24,7 @@ class PanelTasks : DockPanel
 	bool _updatedOnce;
 
 	public PanelTasks() {
-		_tv = new KTreeView { Name = "Tasks_list", ImageCache = App.ImageCache };
+		_tv = new KTreeView { Name = "Tasks_list" };
 		this.Children.Add(_tv);
 	}
 

@@ -19,7 +19,7 @@ namespace Au.Triggers
 	/// The main class of action triggers.
 	/// </summary>
 	/// <remarks>
-	/// This class manages action triggers. Action triggers are used to call functions (aka <i>trigger actions</i>) in a running script in response to events such as hotkey, typed text, mouse action, activated window. To launch scripts are used other ways: manually, at startup, command line, <see cref="scriptt.run"/>, output link.
+	/// This class manages action triggers. Action triggers are used to call functions (aka <i>trigger actions</i>) in a running script in response to events such as hotkey, typed text, mouse action, activated window. To launch scripts are used other ways: manually, at startup, command line, <see cref="script.run"/>, output link.
 	/// 
 	/// If your script class has a field or property like <c>readonly ActionTriggers Triggers = new();</c>, through it you can access all trigger types (hotkey, window, etc) and add triggers to them.
 	/// 
@@ -42,7 +42,7 @@ namespace Au.Triggers
 	/// Recommended properties for scripts containing triggers:
 	/// - <c>ifRunning warn_restart</c> - to quickly restart the script when editing. Just click the Run button.
 	/// 
-	/// Avoid multiple scripts with triggers. Each running instance uses some CPU. All triggers should be in single script, if possible. It's OK to run additional scripts temporarily, for example to test new triggers without restarting the main script. From trigger actions you can call <see cref="scriptt.run"/> to run other scripts in new process; see example.
+	/// Avoid multiple scripts with triggers. Each running instance uses some CPU. All triggers should be in single script, if possible. It's OK to run additional scripts temporarily, for example to test new triggers without restarting the main script. From trigger actions you can call <see cref="script.run"/> to run other scripts in new process; see example.
 	/// 
 	/// Trigger actions don't inherit <b>opt</b> options that are set before adding triggers. The example shows two ways how to set <b>opt</b> options for multiple actions. Also you can set them in action code. Next action running in the same thread will not inherit <b>opt</b> options set by previous action.
 	/// </remarks>
@@ -71,7 +71,7 @@ namespace Au.Triggers
 	/// 	keys.sendt("text");
 	/// 	w1.Close();
 	/// };
-	/// hk["Win+Alt+K"] = o => scriptt.run("other script.cs"); //run other script in new process
+	/// hk["Win+Alt+K"] = o => script.run("other script.cs"); //run other script in new process
 	/// 
 	/// //triggers that work only with some windows
 	/// 
@@ -527,7 +527,7 @@ namespace Au.Triggers
 			set {
 				if (value == DisabledEverywhere) return;
 				SharedMemory_.Ptr->triggers.disabled = value;
-				var w = scriptt.WndMsg_; if (!w.Is0) w.SendNotify(Api.WM_USER, 20); //update tray icon etc
+				var w = script.WndMsg_; if (!w.Is0) w.SendNotify(Api.WM_USER, 20); //update tray icon etc
 			}
 		}
 
@@ -716,7 +716,7 @@ namespace Au.Triggers
 			//print.it(ttTrue, ttCompare);
 			if (ttCompare <= 25 && (ttTrue < 200 || ttTrue < WindowsHook.LowLevelHooksTimeout - 100)) return;
 			var b = new StringBuilder();
-			b.AppendFormat("<>Warning: Too slow trigger scope detection (Triggers.Of or Triggers.FuncOf). Time: {0} ms. Task name: {1}. <fold>", ttTrue, scriptt.name);
+			b.AppendFormat("<>Warning: Too slow trigger scope detection (Triggers.Of or Triggers.FuncOf). Time: {0} ms. Task name: {1}. <fold>", ttTrue, script.name);
 			for (int i = 0; i < _perfLen; i++) {
 				var v = _perfList[i];
 				int t = v.time_ & 0x7fffffff;

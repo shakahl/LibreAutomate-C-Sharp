@@ -267,8 +267,7 @@ namespace Au.Controls
 						if (b == null) {
 							var imageSource = item.ImageSource;
 							if (!imageSource.NE()) {
-								bool isImage = ImageUtil.HasImageOrResourcePrefix(imageSource);
-								b = ImageCache.Get(imageSource, _dpi, isImage, isImage ? null : _imageAsyncCompletion ??= _ImageAsyncCompletion, item);
+								b = ImageCache.Get(imageSource, _dpi, ImageUtil.HasImageOrResourcePrefix(imageSource));
 							}
 						}
 						if (b != null) {
@@ -314,16 +313,12 @@ namespace Au.Controls
 			}
 		}
 
-		Action<System.Drawing.Bitmap, object> _imageAsyncCompletion;
-		void _ImageAsyncCompletion(System.Drawing.Bitmap b, object o) => Redraw(o as ITreeViewItem);
-
 		/// <summary>
 		/// Gets or sets image cache.
-		/// For example you can use single cache for all controls.
-		/// If not set, the 'get' function auto-creates new instance when called first time.
+		/// If not set, uses <see cref="IconImageCache.Common"/>.
 		/// </summary>
 		public IconImageCache ImageCache {
-			get => _imageCache ??= new IconImageCache();
+			get => _imageCache ??= IconImageCache.Common;
 			set { _imageCache = value; }
 		}
 		IconImageCache _imageCache;

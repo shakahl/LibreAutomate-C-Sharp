@@ -37,23 +37,29 @@ namespace Au
 		/// Also supports known folder names, like <c>"%folders.Documents%"</c>. More info in Remarks.
 		/// </summary>
 		/// <param name="path">Any string. Can be null.</param>
+		/// <param name="strict">
+		/// What to do if path looks like starts with and environment variable or known folder but the variable/folder does not exist:
+		/// - true - throw <b>ArgumentException</b>;
+		/// - false - return unexpanded path;
+		/// - null (default) - call <see cref="print.warning"/> and return unexpanded path.
+		/// </param>
 		/// <remarks>
 		/// Supports known folder names. See <see cref="folders"/>.
 		/// Example: <c>@"%folders.Documents%\file.txt"</c>.
 		/// Example: <c>@"%folders.shell.ControlPanel%" //gets ":: ITEMIDLIST"</c>.
 		/// Usually known folders are used like <c>string path = folders.Documents + "file.txt"</c>. However it cannot be used when you want to store paths in text files, registry, etc. Then this feature is useful.
 		/// To get known folder path, this function calls <see cref="folders.getFolder"/>.
-		///
+		/// 
 		/// This function is called by many functions of classes <b>pathname</b>, <b>filesystem</b>, <b>icon</b>, some others, therefore all they support environment variables and known folders in path string.
 		/// </remarks>
 		/// <seealso cref="Environment.ExpandEnvironmentVariables"/>
 		/// <seealso cref="Environment.GetEnvironmentVariable"/>
 		/// <seealso cref="Environment.SetEnvironmentVariable"/>
-		public static string expand(string path) {
+		public static string expand(string path, bool? strict = null) {
 			var s = path;
 			if (s.Lenn() < 3) return s;
 			if (s[0] != '%') {
-				if (s[0] == '\"' && s[1] == '%') return "\"" + expand(s[1..]);
+				if (s[0] == '\"' && s[1] == '%') return "\"" + expand(s[1..], strict);
 				return s;
 			}
 			int i = s.IndexOf('%', 2); if (i < 0) return s;
@@ -61,10 +67,10 @@ namespace Au
 
 			//support known folders, like @"%folders.Documents%\...".
 			//	rejected: without "folders", like @"%%.Documents%\...". If need really short, can set and use environment variables.
-			//if ((i > 12 && s.Starts("%folders.")) || (i > 4 && s.Starts("%%"))) {
+			//if ((i > 10 && s.Starts("%folders.")) || (i > 4 && s.Starts("%%"))) {
 			//	var prop = s[(s[1] == '%' ? 2 : 10)..i];
-			if (i > 12 && s.Starts("%folders.")) {
-				var prop = s[10..i];
+			if (i > 10 && s.Starts("%folders.")) {
+				var prop = s[9..i];
 				var k = folders.getFolder(prop);
 				if (k != null) {
 					s = s[++i..];
@@ -72,17 +78,22 @@ namespace Au
 					return k + s; //add \ if need
 				}
 				//throw new AuException("folders does not have property " + prop);
-				return s;
 			}
 
-			if (!Api.ExpandEnvironmentStrings(s, out s)) return s;
-			return expand(s); //can be %envVar2% in envVar1 value
+			if (!Api.ExpandEnvironmentStrings(s, out s)) {
+				var err = "Failed to expand path: " + s;
+				if (strict == true) throw new ArgumentException(err);
+				if (strict != false) print.warning(err);
+				return s;
+			}
+			return expand(s, strict); //can be %envVar2% in envVar1 value
 		}
 
 		/// <summary>
 		/// Returns true if the string is full path, like <c>@"C:\a\b.txt"</c> or <c>@"C:"</c> or <c>@"\\server\share\..."</c>:
 		/// </summary>
 		/// <param name="path">Any string. Can be null.</param>
+		/// <param name="orEnvVar">Also return true if starts with <c>"%environmentVariable%"</c> or <c>"%folders.Folder%"</c>. Note: this function does not check whether the variable/folder exists; for it use <see cref="isFullPathExpand"/> instead.</param>
 		/// <remarks>
 		/// Returns true if <i>path</i> matches one of these wildcard patterns:
 		/// - <c>@"?:\*"</c> - local path, like <c>@"C:\a\b.txt"</c>. Here ? is A-Z, a-z.
@@ -92,10 +103,8 @@ namespace Au
 		/// Supports <c>'/'</c> characters too.
 		/// 
 		/// Supports only file-system paths. Returns false if path is URL (<see cref="isUrl"/>) or starts with <c>"::"</c>.
-		/// 
-		/// If path starts with <c>"%environmentVariable%"</c>, shows warning and returns false. You should at first expand environment variables with <see cref="expand"/> or instead use <see cref="isFullPathExpand"/>.
 		/// </remarks>
-		public static bool isFullPath(string path) {
+		public static bool isFullPath(string path, bool orEnvVar = false) {
 			var s = path;
 			int len = s.Lenn();
 
@@ -108,15 +117,8 @@ namespace Au
 				case '\\':
 				case '/':
 					return IsSepChar_(s[1]);
-				case '%':
-#if true
-					if (!expand(s).Starts('%'))
-						print.warning("Path starts with %environmentVariable%. Use pathname.isFullPathExpand instead.");
-#else
-					s = Expand(s); //quite fast. 70% slower than just EnvVarExists_, but reliable.
-					return !s.Starts('%') && IsFullPath(s);
-#endif
-					break;
+				case '%' when orEnvVar:
+					return len > 2 && s.IndexOf('%', 2) > 0;
 				}
 			}
 
@@ -131,6 +133,7 @@ namespace Au
 		/// Any string. Can be null.
 		/// If starts with '%' character, calls <see cref="isFullPath"/> with expanded environment variables (<see cref="expand"/>). If it returns true, replaces the passed variable with the expanded path string.
 		/// </param>
+		/// <param name="strict">See <see cref="expand"/>. Shortly: null (default) - warning; true - exception; false - ignore.</param>
 		/// <remarks>
 		/// Returns true if <i>path</i> matches one of these wildcard patterns:
 		/// - <c>@"?:\*"</c> - local path, like <c>@"C:\a\b.txt"</c>. Here ? is A-Z, a-z.
@@ -139,11 +142,11 @@ namespace Au
 		/// Supports '/' characters too.
 		/// Supports only file-system paths. Returns false if path is URL (<see cref="isUrl"/>) or starts with <c>"::"</c>.
 		/// </remarks>
-		public static bool isFullPathExpand(ref string path) {
+		public static bool isFullPathExpand(ref string path, bool? strict = null) {
 			var s = path;
 			if (s == null || s.Length < 2) return false;
 			if (s[0] != '%') return isFullPath(s);
-			s = expand(s);
+			s = expand(s, strict);
 			if (s[0] == '%') return false;
 			if (!isFullPath(s)) return false;
 			path = s;

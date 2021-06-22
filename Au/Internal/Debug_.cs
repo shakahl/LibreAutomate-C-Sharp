@@ -193,7 +193,7 @@ namespace Au.More
 			var mem = GC.GetTotalMemory(false);
 			//if(s_mem0 == 0) s_mem0 = mem;
 			if (fromAnchor) mem -= s_mem0;
-			return (mem / 1024d / 1024d).ToStringInvariant("F3");
+			return (mem / 1024d / 1024d).ToS("F3");
 		}
 		static long s_mem0;
 

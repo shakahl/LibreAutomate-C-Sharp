@@ -1,6 +1,6 @@
 /*/ runSingle true; /*/ //.
 using Au;
-;scriptt.setup(trayIcon: true); //;
+;script.setup(trayIcon: true); //;
 
 //Click the ► button on the toolbar to run the script.
 

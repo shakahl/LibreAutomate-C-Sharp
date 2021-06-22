@@ -395,7 +395,7 @@ namespace Au.Controls
 
 			static string _GridLengthToString(GridLength k) {
 				if (k.IsAuto) return null;
-				var s = Math.Round(k.Value, 10).ToStringInvariant();
+				var s = Math.Round(k.Value, 10).ToS();
 				return k.IsStar ? s + "*" : s;
 				//GridLength.ToString is almost same, but: for Auto returns "Auto"; can return long string like "425.79999999999995" instead of "425.8".
 			}

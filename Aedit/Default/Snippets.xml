@@ -273,15 +273,14 @@ opt.mouse.MoveSleepFinally = 10;]]>
 			<list item ="Static">
 				<![CDATA[perf.first();$end$
 perf.next();
+perf.next();
+perf.next();
 perf.nw();]]>
-			</list>
-			<list item ="Local">
-				<![CDATA[var p1 = perf.local();$end$
-p1.Next();
-p1.Write();]]>
 			</list>
 			<list item ="Local, auto-NW">
 				<![CDATA[using var p1 = perf.local();$end$
+p1.Next();
+p1.Next();
 p1.Next();]]>
 			</list>
 		</snippet>
@@ -298,7 +297,7 @@ m.Submenu("", m => {
 });
 m.Separator();
 m["Run program example"] = o => run.it(folders.System + @"notepad.exe");
-m["Run script example"] = o => scriptt.run("Script123456789.cs");
+m["Run script example"] = o => script.run("Script123456789.cs");
 m["Copy-paste example"] = o => {
 	string s = clipboard.copy();
 	s = s.Upper();
@@ -446,7 +445,7 @@ if (!b.ShowDialog()) return;
 		</snippet>
 
 		<snippet name="srScripttRunSnippet" info="Start to execute a script." more="Tip: drag and drop. See also: RunWait.">
-			<![CDATA[scriptt.run(@"$end$\Folder\Script$end$.cs");]]>
+			<![CDATA[script.run(@"$end$\Folder\Script$end$.cs");]]>
 		</snippet>
 
 		<snippet name="failedSnippet" info="Throw 'failed' exception." more="Exception text is optional." using="Au.Types">

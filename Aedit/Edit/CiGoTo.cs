@@ -178,7 +178,7 @@ class CiGoTo
 				int i = _FindSourceSite(download: true);
 				if (i < 0) return;
 
-				Hash.MD5 md5 = default;
+				Hash.MD5Context md5 = default;
 				md5.Add(_docId);
 				var hash = md5.Hash.ToString().Remove(16);
 

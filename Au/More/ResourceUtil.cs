@@ -138,7 +138,7 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Gets WPF object from XAML resource, for example image converted from SVG format.
+		/// Gets WPF object from XAML resource, for example image.
 		/// Returns object of type of the XAML root object, for example Viewbox if image.
 		/// </summary>
 		/// <param name="name">Can be resource name like "file.xaml" or "sub/file.xaml" or "&lt;LoadedAssemblyName&gt;file.xaml". Can have prefix "resource:".</param>
@@ -159,8 +159,8 @@ namespace Au.More
 		/// <remarks>
 		/// If <i>name</i> ends with ".xaml" (case-insensitive), calls <see cref="GetXamlObject"/>. Else returns <see cref="Image"/> with <b>Source</b> = <see cref="GetWpfImage"/>.
 		/// </remarks>
-		public static UIElement GetWpfImageElement(string name) {
-			if (name.Ends(".xaml", true)) return (UIElement)GetXamlObject(name);
+		public static FrameworkElement GetWpfImageElement(string name) {
+			if (name.Ends(".xaml", true)) return (FrameworkElement)GetXamlObject(name);
 			return new Image { Source = GetWpfImage(name) };
 		}
 
@@ -191,7 +191,7 @@ namespace Au.More
 
 		//[MethodImpl(MethodImplOptions.NoInlining)] //avoid loading WPF dlls if no "pack:"
 		//static UnmanagedMemoryStream _Pack(string name) {
-		//	if (scriptt.role == ATRole.MiniProgram && !name.Contains(";component/") && name.Starts("pack://application:,,,/")) name = name.Insert(23, scriptt.name + ";component/");
+		//	if (script.role == SRole.MiniProgram && !name.Contains(";component/") && name.Starts("pack://application:,,,/")) name = name.Insert(23, script.name + ";component/");
 		//	if (Application.Current == null) new Application();
 		//	return Application.GetResourceStream(new Uri(name)).Stream as UnmanagedMemoryStream;
 		//}

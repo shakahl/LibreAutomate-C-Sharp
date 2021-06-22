@@ -547,7 +547,7 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public void SetDouble(int row, int column, double value)
 		{
-			this[row, column] = value.ToStringInvariant();
+			this[row, column] = value.ToS();
 		}
 
 		/// <summary>

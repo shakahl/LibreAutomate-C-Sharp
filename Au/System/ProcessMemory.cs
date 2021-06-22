@@ -62,13 +62,13 @@ namespace Au.More
 		public IntPtr Mem { get; private set; }
 
 		/// <summary>
-		/// Sets an address of memory in that process that is to be used by the read and write functions.
+		/// Sets an address of memory in that process to be used by the read and write functions.
 		/// </summary>
 		/// <param name="mem">A memory address in that process.</param>
 		/// <param name="freeWhenDisposing">
 		/// Let the Dispose method (or finalizer) call API <msdn>VirtualFreeEx</msdn> to free mem. The memory must be allocated with API <msdn>VirtualAllocEx</msdn> (by any process) or <msdn>VirtualAlloc</msdn> (by that process).
 		/// If false, mem can be any memory in that process, and this variable will not free it. Alternatively you can use <see cref="ReadOther"/> and <see cref="WriteOther"/>.</param>
-		/// <exception cref="InvalidOperationException">This variable already has Mem, unless it was set by this function with <i>freeWhenDisposing</i> = false.</exception>
+		/// <exception cref="InvalidOperationException">This variable already has <see cref="Mem"/> != default, unless it was set by this function with <i>freeWhenDisposing</i> = false.</exception>
 		/// <remarks>
 		/// This function can be used if this variable was created with <i>nBytes</i> = 0. Else exception. Also exception if this function previously called with <i>freeWhenDisposing</i> = true.
 		/// </remarks>
@@ -78,6 +78,14 @@ namespace Au.More
 			Mem = mem;
 		}
 		bool _dontFree;
+
+		/// <summary>
+		/// Clears <see cref="Mem"/> but does not free the memory (and will not free later).
+		/// The memory must be freed with API <msdn>VirtualFreeEx</msdn> by this or target process, or with API <msdn>VirtualFree</msdn> by target process.
+		/// </summary>
+		public void ForgetMem() {
+			Mem = default;
+		}
 
 		void _Alloc(int pid, wnd w, int nBytes) {
 			string err;

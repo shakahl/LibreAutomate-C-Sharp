@@ -690,7 +690,7 @@ partial class SciCode
 
 	static Hash.MD5Result _Hash(List<int> a) {
 		if (a.Count == 0) return default;
-		Hash.MD5 md5 = default;
+		Hash.MD5Context md5 = default;
 		foreach (var v in a) md5.Add(v);
 		return md5.Hash;
 	}

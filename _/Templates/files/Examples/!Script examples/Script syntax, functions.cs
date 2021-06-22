@@ -4,7 +4,7 @@
 /*/ runSingle true; /*/ //.
 using Au;
 using System.Text;
-;scriptt.setup(trayIcon: true); //;
+;script.setup(trayIcon: true); //;
 
 /*
 The programming language is C#.
@@ -16,7 +16,7 @@ Also you can create and use new functions, classes, libraries and .exe programs.
 A script can optionally start with a description as /// comments.
 Then can be /*/ /*/ comments with script properties used by the editor program.
 Then 'using' directives.
-Then scriptt.setup or/and other code that sets run time properties. Optional.
+Then script.setup or/and other code that sets run time properties. Optional.
 Then your script. It can contain local functions anywhere.
 Then optionally you can define classes and other types.
 
@@ -31,13 +31,13 @@ Script properties are saved in /*/ /*/ comments at the start of script.
 You can change them in the Properties dialog or edit directly in script.
 Before /*/ /*/ comments can be only other comments, empty lines and spaces.
 
-More properties can be set in code with scriptt.setup and other functions.
+More properties can be set in code with script.setup and other functions.
 For example, if don't need tray icon, remove 'trayIcon: true'.
 
 To change default properties and code for new scripts: Options -> Templates.
 
 To run a script, you can click the ► Run button on the toolbar, or use command line,
-or call scriptt.run from another script, or in Options set to run at startup.
+or call script.run from another script, or in Options set to run at startup.
 
 Triggers such as hotkeys, autotext, mouse and window are used to execute code
 in a running script. That code also can launch other scripts.

@@ -23,7 +23,7 @@ namespace Au
 	/// Contains static functions to work with processes (find, enumerate, get basic info, etc), current process (get info), current thread (get info).
 	/// </summary>
 	/// <seealso cref="run"/>
-	/// <seealso cref="scriptt"/>
+	/// <seealso cref="script"/>
 	/// <seealso cref="Process"/>
 	public static unsafe class process
 	{
@@ -511,13 +511,6 @@ namespace Au
 		public static string thisExeName => s_exeName ??= pathname.getName(thisExePath);
 
 		/// <summary>
-		/// Gets drive type (fixed, removable, network, etc) of the program file of this process.
-		/// </summary>
-		/// <seealso cref="folders.ThisAppDriveBS"/>
-		public static DriveType thisExeDriveType => s_driveType ??= new DriveInfo(folders.ThisAppDriveBS).DriveType;
-		static DriveType? s_driveType;
-
-		/// <summary>
 		/// Gets user session id of this process.
 		/// </summary>
 		public static int thisProcessSessionId => getSessionId(Api.GetCurrentProcessId());
@@ -529,7 +522,7 @@ namespace Au
 		/// If your app doesn't want to use current culture (default in .NET apps), it can set these properties = <see cref="CultureInfo.InvariantCulture"/> or set this property = true.
 		/// It prevents potential bugs when app/script/components don't specify invariant culture in string functions and 'number to/from string' functions.
 		/// Also, there is a bug in 'number to/from string' functions in some .NET versions with some cultures: they use wrong minus sign, not ASII '-' which is specified in Control Panel.
-		/// The default compiler sets this property = true; as well as <see cref="scriptt.setup"/>.
+		/// The default compiler sets this property = true; as well as <see cref="script.setup"/>.
 		/// </remarks>
 		public static bool thisProcessCultureIsInvariant {
 			get {
@@ -600,7 +593,7 @@ namespace Au
 				if (!u.IsTerminating) return; //never seen, but anyway
 				e = (Exception)u.ExceptionObject; //probably non-Exception object is impossible in C#
 			} else {
-				e = scriptt.s_unhandledException;
+				e = script.s_unhandledException;
 			}
 			var k = _eventExit;
 			if (k != null) try { k(e); } catch { }

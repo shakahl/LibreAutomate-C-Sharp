@@ -111,7 +111,7 @@ partial class SciCode
 					//}
 
 					string mi = _data.scripts
-						? "1 var s = name;|2 var s = path;|3 scriptt.run(path);|4 t[name] = o => scriptt.run(path);"
+						? "1 var s = name;|2 var s = path;|3 script.run(path);|4 t[name] = o => script.run(path);"
 						: "11 var s = path;|12 run.it(path);|13 t[name] = o => run.it(path);";
 					what = popupMenu.showSimple(mi);
 					if (what == 0) return;
@@ -195,7 +195,7 @@ partial class SciCode
 					switch (what) {
 					case 1: b.AppendFormat("\"{0}\"", name); break;
 					case 2 or 11: b.Append(path); break;
-					case 3 or 4: b.AppendFormat("scriptt.run({0})", path); break;
+					case 3 or 4: b.AppendFormat("script.run({0})", path); break;
 					case 12 or 13:
 						b.Append(path);
 						if (!args.NE()) b.AppendFormat(", \"{0}\"", args.Escape());

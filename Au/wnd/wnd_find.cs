@@ -156,17 +156,26 @@ namespace Au
 			return Api.FindWindowEx(messageOnly ? SpecHWND.MESSAGE : default, wAfter, cn, name);
 		}
 
-		/// <summary>
-		/// Calls <see cref="findFast"/>, sets this and time, but only if !IsAlive or more than 1 s elapsed since that.
-		/// Returns this.
-		/// </summary>
-		internal wnd FindFastCached_(ref long time, string name, string cn, bool messageOnly) {
-			long t = Environment.TickCount64;
-			if (t - time > 1000 || !IsAlive) {
-				time = t;
-				this = findFast(name, cn, messageOnly);
+		internal struct Cached_
+		{
+			wnd _w;
+			long _time;
+
+			/// <summary>
+			/// Calls/returns <see cref="findFast"/> and stores found hwnd and time. Returns the cached hwnd if called frequently and it's still valid.
+			/// </summary>
+			public wnd FindFast(string name, string cn, bool messageOnly) {
+				long t = Environment.TickCount64;
+				if (t - _time > 1000 || !_w.IsAlive) {
+					lock ("x5rX3BZJrE+pOTqszh4ttQ") {
+						if (t - _time > 1000 || !_w.IsAlive) {
+							_w = findFast(name, cn, messageOnly);
+						}
+					}
+				}
+				_time = t;
+				return _w;
 			}
-			return this;
 		}
 
 		/// <summary>

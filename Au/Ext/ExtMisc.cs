@@ -74,7 +74,7 @@ namespace Au.Types
 		/// Uses invariant culture, therefore decimal point is always '.', not ',' etc.
 		/// Calls <see cref="double.ToString(string, IFormatProvider)"/>.
 		/// </summary>
-		public static string ToStringInvariant(this double t, string format = null) {
+		public static string ToS(this double t, string format = null) {
 			return t.ToString(format, NumberFormatInfo.InvariantInfo);
 		}
 
@@ -83,7 +83,7 @@ namespace Au.Types
 		/// Uses invariant culture, therefore decimal point is always '.', not ',' etc.
 		/// Calls <see cref="float.ToString(string, IFormatProvider)"/>.
 		/// </summary>
-		public static string ToStringInvariant(this float t, string format = null) {
+		public static string ToS(this float t, string format = null) {
 			return t.ToString(format, NumberFormatInfo.InvariantInfo);
 		}
 
@@ -92,7 +92,7 @@ namespace Au.Types
 		/// Uses invariant culture, therefore decimal point is always '.', not ',' etc.
 		/// Calls <see cref="decimal.ToString(string, IFormatProvider)"/>.
 		/// </summary>
-		public static string ToStringInvariant(this decimal t, string format = null) {
+		public static string ToS(this decimal t, string format = null) {
 			return t.ToString(format, NumberFormatInfo.InvariantInfo);
 		}
 
@@ -101,7 +101,7 @@ namespace Au.Types
 		/// Uses invariant culture, therefore minus sign is always ASCII '-', not '−' etc.
 		/// Calls <see cref="int.ToString(string, IFormatProvider)"/>.
 		/// </summary>
-		public static string ToStringInvariant(this int t, string format = null) {
+		public static string ToS(this int t, string format = null) {
 			return t.ToString(format, NumberFormatInfo.InvariantInfo);
 		}
 
@@ -110,7 +110,7 @@ namespace Au.Types
 		/// Uses invariant culture, therefore minus sign is always ASCII '-', not '−' etc.
 		/// Calls <see cref="double.ToString(string, IFormatProvider)"/>.
 		/// </summary>
-		public static string ToStringInvariant(this long t, string format = null) {
+		public static string ToS(this long t, string format = null) {
 			return t.ToString(format, NumberFormatInfo.InvariantInfo);
 		}
 
@@ -119,7 +119,7 @@ namespace Au.Types
 		/// Uses invariant culture, therefore minus sign is always ASCII '-', not '−' etc.
 		/// Calls <see cref="IntPtr.ToString(string, IFormatProvider)"/>.
 		/// </summary>
-		public static string ToStringInvariant(this nint t, string format = null) {
+		public static string ToS(this nint t, string format = null) {
 			return t.ToString(format, NumberFormatInfo.InvariantInfo);
 		}
 		//cref not nint.ToString because DocFX does not support it.

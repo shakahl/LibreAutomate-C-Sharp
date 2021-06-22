@@ -26,13 +26,13 @@ static class CompileRun
 	/// <summary>
 	/// Compiles and/or executes C# file or its project.
 	/// If <paramref name="run"/> is false, returns 1 if compiled, 0 if failed to compile.
-	/// Else returns: process id if started now, 0 if failed, (int)scriptt.ERunResult.deferred if scheduled to run later, (int)scriptt.ERunResult.editorThread if runs in editor thread.
+	/// Else returns: process id if started now, 0 if failed, (int)script.ERunResult.deferred if scheduled to run later, (int)script.ERunResult.editorThread if runs in editor thread.
 	/// </summary>
 	/// <param name="run">If true, compiles if need and executes. If false, always compiles and does not execute.</param>
 	/// <param name="f">C# file. Does nothing if null or not C# file.</param>
 	/// <param name="args">To pass to Main.</param>
 	/// <param name="noDefer">Don't schedule to run later.</param>
-	/// <param name="wrPipeName">Pipe name for scriptt.writeResult.</param>
+	/// <param name="wrPipeName">Pipe name for script.writeResult.</param>
 	/// <param name="runFromEditor">Starting from the Run button or menu Run command. Can restart etc.</param>
 	/// <remarks>
 	/// Saves editor text if need.
@@ -75,7 +75,7 @@ static class CompileRun
 
 		if (r.role == Au.Compiler.ERole.editorExtension) {
 			RunAssembly.Run(r.file, args, handleExceptions: true);
-			return (int)scriptt.RunResult_.editorThread;
+			return (int)script.RunResult_.editorThread;
 		}
 
 		return App.Tasks.RunCompiled(f, r, args, noDefer, wrPipeName, runFromEditor: runFromEditor);
@@ -252,7 +252,7 @@ class RunningTasks
 		_a = new List<RunningTask>();
 		_q = new List<_WaitingTask>();
 		App.Timer1sOr025s += _TimerUpdateUI;
-		scriptt.s_role = ATRole.EditorExtension;
+		script.s_role = SRole.EditorExtension;
 	}
 
 	public void OnWorkspaceClosed() {
@@ -424,13 +424,13 @@ class RunningTasks
 #if false //use shared memory instead of pipe. Works, but unfinished, used only to compare speed. Same speed.
 	/// <summary>
 	/// Executes the compiled assembly in new process.
-	/// Returns: process id if started now, 0 if failed, (int)scriptt.ERunResult.deferred if scheduled to run later.
+	/// Returns: process id if started now, 0 if failed, (int)script.ERunResult.deferred if scheduled to run later.
 	/// </summary>
 	/// <param name="f"></param>
 	/// <param name="r"></param>
 	/// <param name="args"></param>
 	/// <param name="noDefer">Don't schedule to run later. If cannot run now, just return 0.</param>
-	/// <param name="wrPipeName">Pipe name for scriptt.writeResult.</param>
+	/// <param name="wrPipeName">Pipe name for script.writeResult.</param>
 	/// <param name="ignoreLimits">Don't check whether the task can run now.</param>
 	/// <param name="runFromEditor">Starting from the Run button or menu Run command. Can restart etc.</param>
 	public unsafe int RunCompiled(FileNode f, Compiler.CompResults r, string[] args,
@@ -457,7 +457,7 @@ class RunningTasks
 				break;
 			case EIfRunning.wait when !noDefer:
 				_q.Insert(0, new _WaitingTask(f, r, args));
-				return (int)scriptt.ERunResult.deferred; //-1
+				return (int)script.ERunResult.deferred; //-1
 			case EIfRunning.restart when _EndTask(running):
 				goto g1;
 			default: //warn
@@ -580,13 +580,13 @@ class RunningTasks
 #else
 	/// <summary>
 	/// Executes the compiled assembly in new process.
-	/// Returns: process id if started now, 0 if failed, (int)scriptt.ERunResult.deferred if scheduled to run later.
+	/// Returns: process id if started now, 0 if failed, (int)script.ERunResult.deferred if scheduled to run later.
 	/// </summary>
 	/// <param name="f"></param>
 	/// <param name="r"></param>
 	/// <param name="args"></param>
 	/// <param name="noDefer">Don't schedule to run later. If cannot run now, just return 0.</param>
-	/// <param name="wrPipeName">Pipe name for scriptt.writeResult.</param>
+	/// <param name="wrPipeName">Pipe name for script.writeResult.</param>
 	/// <param name="ignoreLimits">Don't check whether the task can run now.</param>
 	/// <param name="runFromEditor">Starting from the Run button or menu Run command. Can restart etc.</param>
 	public unsafe int RunCompiled(FileNode f, Compiler.CompResults r, string[] args,
@@ -612,7 +612,7 @@ class RunningTasks
 				break;
 			case EIfRunning.wait when !noDefer:
 				_q.Insert(0, new _WaitingTask(f, r, args));
-				return (int)scriptt.RunResult_.deferred; //-1
+				return (int)script.RunResult_.deferred; //-1
 			case EIfRunning.restart when _EndTask(running):
 				goto g1;
 			default: //warn
@@ -763,9 +763,9 @@ class RunningTasks
 	/// Returns (processId, processHandle). Throws if failed.
 	/// </summary>
 	static (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string args, string wrPipeName) {
-		if (wrPipeName != null) wrPipeName = "scriptt.writeResult.pipe=" + wrPipeName;
+		if (wrPipeName != null) wrPipeName = "script.writeResult.pipe=" + wrPipeName;
 		if (uac == _SpUac.admin) {
-			if (wrPipeName != null) throw new AuException($"*start process '{exeFile}' as admin and enable scriptt.writeResult"); //cannot pass environment variables. //rare //FUTURE
+			if (wrPipeName != null) throw new AuException($"*start process '{exeFile}' as admin and enable script.writeResult"); //cannot pass environment variables. //rare //FUTURE
 			var k = run.it(exeFile, args, RFlags.Admin | RFlags.NeedProcessHandle, "");
 			return (k.ProcessId, k.ProcessHandle);
 			//note: don't try to start task without UAC consent. It is not secure.

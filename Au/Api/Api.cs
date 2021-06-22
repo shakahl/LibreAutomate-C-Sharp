@@ -1154,8 +1154,8 @@ namespace Au.Types
 		//[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
 		//internal static extern void* memset(void* ptr, int ch, nint n);
 
-		//[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
-		//internal static extern int memcmp(void* p1, void* p2, nint count);
+		[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int memcmp(void* p1, void* p2, nint count);
 
 
 
@@ -1279,13 +1279,13 @@ namespace Au.Types
 		//info: NtSetTimerResolution can set min 0.5 ms resolution. timeBeginPeriod min 1.
 
 		[DllImport("ntdll.dll")]
-		internal static extern void MD5Init(out Hash.MD5 context);
+		internal static extern void MD5Init(out Hash.MD5Context context);
 
 		[DllImport("ntdll.dll")]
-		internal static extern void MD5Update(ref Hash.MD5 context, void* data, int dataLen);
+		internal static extern void MD5Update(ref Hash.MD5Context context, void* data, int dataLen);
 
 		[DllImport("ntdll.dll")]
-		internal static extern void MD5Final(ref Hash.MD5 context);
+		internal static extern void MD5Final(ref Hash.MD5Context context);
 
 #pragma warning disable 169
 		internal struct SYSTEM_PROCESS_INFORMATION

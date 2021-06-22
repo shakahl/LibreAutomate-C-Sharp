@@ -65,21 +65,37 @@ class DIcons : KDialogWindow
 			tv.Redraw();
 		};
 		b.StartStack();
-		TextBox randFromTo = null;
+		TextBox randFromTo = null, iconSizes = null;
 		b.AddButton("Randomize colors", _ => _RandomizeColors());
 		b.Add("L %", out randFromTo, "30-70").Width(50);
 		b.End();
-		b.StartStack<GroupBox>("Set icon of selected files");
+		b.AddSeparator().Margin("B20");
+		b.StartStack<Expander>("Set icon of selected files");
 		b.AddButton(out var bThis, "This", _ => _SetIcon(tv)).Width(70).Disabled();
 		b.AddButton("Default", _ => _SetIcon(null)).Width(70);
 		//b.AddButton("Random", null).Width(70); //idea: set random icons for multiple selected files. Probably too crazy.
 		b.End();
-		b.StartStack<GroupBox>("Insert code for menu/toolbar/etc icon");
-		b.AddButton(out var bCodeVar, "Variable", _ => _InsertCode(tv, 0)).Width(70).Disabled();
-		b.AddButton(out var bCodeField, "Field", _ => _InsertCode(tv, 1)).Width(70).Disabled();
-		b.AddButton(out var bCodeXaml, "XAML", _ => _InsertCode(tv, 2)).Width(70).Disabled();
+		b.StartStack<Expander>("Insert code for menu/toolbar/etc icon", vertical: true);
+		b.StartStack();
+		b.Add<Label>("Add new line: ");
+		b.AddButton(out var bCodeVar, "Variable = XAML", _ => _InsertCodeOrExport(tv, 0)).Disabled();
+		b.AddButton(out var bCodeField, "Field = XAML", _ => _InsertCodeOrExport(tv, 1)).Disabled();
 		b.End();
-		b.StartGrid<GroupBox>("List display options");
+		b.StartStack();
+		b.Add<Label>("Simply insert: ");
+		b.AddButton(out var bCodeXaml, "XAML", _ => _InsertCodeOrExport(tv, 2)).Width(70).Disabled();
+		b.AddButton(out var bCodeName, "Name", _ => _InsertCodeOrExport(tv, 3)).Width(70).Disabled().Tooltip("Shorter, but works only when editor is running.\nCan be used with menus, toolbars and script.editor.GetCustomIcon.");
+		b.End();
+		b.End();
+		b.StartStack<Expander>("Export to current workspace folder");
+		b.AddButton(out var bExportXaml, ".xaml", _ => _InsertCodeOrExport(tv, 10)).Width(70).Disabled();
+		b.AddButton(out var bExportIco, ".ico", _ => _InsertCodeOrExport(tv, 11)).Width(70).Disabled();
+		b.Add("sizes", out iconSizes, "16,24,32,48,64").Width(100);
+		b.End();
+		b.StartStack<Expander>("Other actions");
+		b.AddButton("Clear program's icon cache", _ => IconImageCache.Common.Clear(redrawWindows: true));
+		b.End();
+		b.StartGrid<Expander>("List display options");
 		//b.Add("Background", out ComboBox cBackground).Items("Default|Control|White|Black)");
 		//cBackground.SelectionChanged += (o, e) => _ChangeBackground();
 		b.Add(out KCheckBox cCollection, "Collection");
@@ -102,7 +118,9 @@ class DIcons : KDialogWindow
 			foreach (var (table, _) in s_tables) {
 				using var stat = s_db.Statement("SELECT name FROM " + table);
 				while (stat.Step()) {
-					_a.Add(new(table, stat.GetText(0)));
+					var k = new _Item(table, stat.GetText(0));
+					//var s = _ColorName(k); if (s.Length < 20 || s.Length > 60) print.it(s.Length, s);
+					_a.Add(k);
 				}
 			}
 			_a.Sort((a, b) => string.Compare(a._name, b._name, StringComparison.OrdinalIgnoreCase));
@@ -131,24 +149,46 @@ class DIcons : KDialogWindow
 			bCodeVar.IsEnabled = enable;
 			bCodeField.IsEnabled = enable;
 			bCodeXaml.IsEnabled = enable;
+			bCodeName.IsEnabled = enable;
+			bExportXaml.IsEnabled = enable;
+			bExportIco.IsEnabled = enable;
 		}
 
 		void _SetIcon(KTreeView tv) {
-			var k = tv?.SelectedItem as _Item;
-			string icon = k == null ? null : (k._table + "." + k._name + " " + _ItemColor(k));
+			string icon = tv?.SelectedItem is _Item k ? _ColorName(k) : null;
 			foreach (var v in FilesModel.TreeControl.SelectedItems) {
-				v.CustomIcon = icon;
+				v.CustomIconName = icon;
 			}
 		}
 
-		void _InsertCode(KTreeView tv, int what) {
-			var k = tv.SelectedItem as _Item;
-			if (GetIconFromBigDB(k._table, k._name, _ItemColor(k), out var s)) {
-				s = s.Replace('\"', '\'').RegexReplace(@"\R\s*", "");
+		void _InsertCodeOrExport(KTreeView tv, int what) {
+			if (tv.SelectedItem is not _Item k) return;
+			if (what == 3) {
+				InsertCode.TextSimply(_ColorName(k));
+			} else if (GetIconFromBigDB(k._table, k._name, _ItemColor(k), out var xaml)) {
+				xaml = xaml.Replace('\"', '\'').RegexReplace(@"\R\s*", "");
 				switch (what) {
-				case 0: InsertCode.Statements($"string icon{k._name} = \"{s}\";"); break;
-				case 1: InsertCode.Statements($"public const string {k._name} = \"{s}\";"); break;
-				case 2: InsertCode.TextSimply(s); break;
+				case 0: InsertCode.Statements($"string icon{k._name} = \"{xaml}\";"); break;
+				case 1: InsertCode.Statements($"public const string {k._name} = \"{xaml}\";"); break;
+				case 2: InsertCode.TextSimply(xaml); break;
+				case 10: _Export(false); break;
+				case 11: _Export(true); break;
+				}
+
+				void _Export(bool ico) {
+					//App.Model.New
+					var cf = App.Model.CurrentFile.Parent; if (cf == null) return;
+					var path = $"{cf.FilePath}\\{k._name}{(ico ? ".ico" : ".xaml")}";
+					//CONSIDER: if path exists, show dialog
+					if (ico) {
+						var sizes = iconSizes.Text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(o => o.ToInt()).ToArray();
+						ImageUtil.XamlImageToIconFile(path, xaml, sizes);
+					} else {
+						filesystem.saveText(path, xaml);
+					}
+					var fn = App.Model.ImportFromWorkspaceFolder(path, cf, FNPosition.Inside);
+					if (fn == null) print.it("failed");
+					else print.it($"<>Icon exported to <open>{fn.ItemPath}<>");
 				}
 			}
 		}
@@ -186,9 +226,11 @@ class DIcons : KDialogWindow
 		//}
 	}
 
-	static string _ColorToString(int c) => "#" + c.ToStringInvariant("X6");
+	static string _ColorToString(int c) => "#" + c.ToS("X6");
 
 	string _ItemColor(_Item k) => _random == null ? _color : _ColorToString(k._color);
+
+	string _ColorName(_Item k) => "*" + k._table + "." + k._name + " " + _ItemColor(k);
 
 	protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {
 		_dpi = newDpi.PixelsPerInchX.ToInt();
@@ -237,6 +279,7 @@ class DIcons : KDialogWindow
 		}
 	}
 
+	/// <exception cref="Exception"></exception>
 	public static bool GetIconFromBigDB(string table, string name, string color, out string xaml) {
 		xaml = null;
 		string templ = null; foreach (var v in s_tables) if (v.table == table) { templ = v.templ; break; }
@@ -250,19 +293,24 @@ class DIcons : KDialogWindow
 
 		if (templ.Contains("\"{")) return false;
 		//print.it(templ);
+		//xaml = templ;
 		xaml = $@"<Viewbox Width='16' Height='16' xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'>{templ}</Viewbox>";
 		return true;
 	}
 
+	/// <param name="icon">Icon name, like "*Pack.Icon color", where color is like #RRGGBB or color name. Can be null.</param>
+	/// <exception cref="Exception"></exception>
 	public static bool GetIconFromBigDB(string icon, out string xaml) {
 		xaml = null;
+		if (icon == null || !icon.Starts('*')) return false;
 		int i = icon.IndexOf('.'); if (i < 0) return false;
 		int j = icon.IndexOf(' ', i + 1); if (j < 0) return false;
 		_OpenDB();
-		return GetIconFromBigDB(icon[..i], icon[++i..j], icon[++j..], out xaml);
+		return GetIconFromBigDB(icon[1..i], icon[++i..j], icon[++j..], out xaml);
 	}
 
 #if true
+	/// <param name="icon">Icon name, like "*Pack.Icon color", where color is like #RRGGBB or color name. Can be null.</param>
 	public static bool TryGetIconFromBigDB(string icon, out string xaml) {
 		//using var p1 = perf.local();
 		try { return GetIconFromBigDB(icon, out xaml); }
@@ -274,7 +322,7 @@ class DIcons : KDialogWindow
 	//Maybe not good to use an 18 MB DB directly, but I didn't notice something bad.
 	//note: the big DB must have PRIMARY KEY. Don't need it with other version.
 #else
-	//This version stores XAML of used icons in a small DB file. When missing, gets from the big DB and copies to the small.
+	//This (outdated) version stores XAML of used icons in a small DB file. When missing, gets from the big DB and copies to the small.
 	//Has advantages and disadvantages.
 	//Faster 2 times (when the small DB is WAL). But both versions much faster than converting XAML to GDI+ bitmap. Same memory usage.
 	//shoulddo: when deleting a file, delete its icon from the small DB if not used by other files.
@@ -300,4 +348,10 @@ class DIcons : KDialogWindow
 	}
 	static sqlite s_iconsDB;
 #endif
+
+	public static string GetIconString(string s, EGetIcon what) {
+		if (what != EGetIcon.IconNameToXaml) s = App.Model.Find(s, null)?.CustomIconName;
+		if (what != EGetIcon.PathToIconName && s != null) TryGetIconFromBigDB(s, out s);
+		return s;
+	}
 }

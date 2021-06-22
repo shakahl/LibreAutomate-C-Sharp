@@ -12,7 +12,7 @@ A script is a small C# program. Examples: menu New -> Examples.
 
 In the [code editor](xref:code_editor) you can press Ctrl+Space to show a list of available functions, classes etc.
 
-To run a script, click the Run button on the toolbar. Also there are other ways: at startup (set it in Options), [command line](xref:command_line), [scriptt.run](). See also [action triggers](xref:Au.Triggers.ActionTriggers).
+To run a script, click the Run button on the toolbar. Also there are other ways: at startup (set it in Options), [command line](xref:command_line), [script.run](). See also [action triggers](xref:Au.Triggers.ActionTriggers).
 
 When you click the Run button, the program at first compiles the script if not already compiled. Cannot run if the C# code contains errors.
 

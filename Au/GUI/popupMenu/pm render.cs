@@ -245,14 +245,10 @@ namespace Au
 			}
 		}
 
-		private protected override void _ImageAsyncCompletion(Bitmap b, object o) {
-			ChangeImage_(o as MenuItem, b);
-		}
-
-		internal void ChangeImage_(MenuItem ti, Bitmap b) {
-			ti.image2 = b;
-			ti.imageAsync = false;
-			_Invalidate(ti);
-		}
+		//not used
+		//internal void ChangeImage_(MenuItem ti, Bitmap b) {
+		//	ti.image2 = b;
+		//	_Invalidate(ti);
+		//}
 	}
 }

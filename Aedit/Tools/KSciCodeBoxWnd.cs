@@ -81,7 +81,7 @@ namespace Au.Controls
 						f.NeedControl = true;
 						wndVar = conVar;
 						if (isId) {
-							f.idC = id.ToStringInvariant();
+							f.idC = id.ToS();
 							f.classC_comments = cls;
 							f.nameC_comments = con.Name;
 						} else {

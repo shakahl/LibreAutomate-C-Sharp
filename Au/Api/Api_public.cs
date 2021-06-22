@@ -148,9 +148,9 @@ namespace Au.Types
 		/// <summary>
 		/// If lpszClass is atom, returns string with # prefix and atom value, like "#32770".
 		/// </summary>
-		public ReadOnlySpan<char> ClassName => (nuint)lpszClass < 0x10000 ? "#" + ((int)lpszClass).ToStringInvariant()
+		public ReadOnlySpan<char> ClassName => (nuint)lpszClass < 0x10000 ? "#" + ((int)lpszClass).ToS()
 			: new ReadOnlySpan<char>(lpszClass, More.CharPtr_.Length(lpszClass));
-		//public string ClassName => (nuint)lpszClass < 0x10000 ? "#" + ((int)lpszClass).ToStringInvariant() : new string(lpszClass);
+		//public string ClassName => (nuint)lpszClass < 0x10000 ? "#" + ((int)lpszClass).ToS() : new string(lpszClass);
 
 		//tested and documented: CBT hook can change only x y cx cy.
 	}

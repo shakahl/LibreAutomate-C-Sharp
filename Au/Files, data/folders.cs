@@ -276,7 +276,7 @@ namespace Au
 		//	Or could install dotnet in the removable drive to be shared by portable .NET apps. And let our AppHost support it. Maybe it already supports the environment variable, don't remember.
 
 		const string c_defaultAppSubDir = "Au";
-		//static string c_defaultAppSubDir = @"Au\" + scriptt.name; //no. In a script app could create many folders. All these properties can be set.
+		//static string c_defaultAppSubDir = @"Au\" + script.name; //no. In a script app could create many folders. All these properties can be set.
 		//note: don't use Application.ProductName etc. It loads Forms, throws if dynamic assembly, etc.
 
 		#region set auto/once
@@ -403,7 +403,6 @@ namespace Au
 		/// <summary>
 		/// Gets the root directory of this application, like @"C:\" or @"\\network\folder\".
 		/// </summary>
-		/// <seealso cref="process.thisExeDriveType"/>
 		public static string ThisAppDriveBS => __thisAppDrive ??= Path.GetPathRoot(ThisAppBS);
 		static string __thisAppDrive;
 		//public static FolderPath ThisAppDrive => new(__thisAppDrive ??= Path.GetPathRoot(ThisAppBS));
@@ -414,9 +413,26 @@ namespace Au
 		/// </summary>
 		public static FolderPath Workspace {
 			get => __workspace;
-			internal set => __workspace = value;
+			internal set { __workspace = value; WorkspaceDriveBS = Path.GetPathRoot(value); }
 		}
 		static FolderPath __workspace;
+
+		/// <summary>
+		/// Gets the root directory of <see cref="Workspace"/>, like @"C:\" or @"\\network\folder\".
+		/// </summary>
+		public static string WorkspaceDriveBS { get; private set; }
+
+		/// <summary>
+		/// Gets drive type (fixed, removable, network, etc) of <see cref="WorkspaceDriveBS"/>.
+		/// </summary>
+		public static DriveType workspaceDriveType => s_driveTypeWS ??= new DriveInfo(WorkspaceDriveBS).DriveType;
+		static DriveType? s_driveTypeWS;
+
+		/// <summary>
+		/// Gets drive type (fixed, removable, network, etc) of <see cref="ThisAppDriveBS"/>.
+		/// </summary>
+		public static DriveType thisAppDriveType => s_driveTypeApp ??= new DriveInfo(ThisAppDriveBS).DriveType;
+		static DriveType? s_driveTypeApp;
 
 		/// <summary>
 		/// Gets folder path of caller's source code file.

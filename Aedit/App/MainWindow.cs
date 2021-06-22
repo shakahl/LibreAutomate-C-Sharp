@@ -19,9 +19,6 @@ using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Input;
 
-//TODO: when starting, if wmware player window active, does not activete our window, and also it is hung until manually activated.
-//	When manually activated, output shows many unsuccessful attempts to activate window.
-
 partial class MainWindow : Window
 {
 	public MainWindow() {
@@ -111,6 +108,12 @@ partial class MainWindow : Window
 		var hs = PresentationSource.FromVisual(this) as HwndSource;
 		App.Hwnd = (wnd)hs.Handle;
 
+		//workaround for: sometimes OS does not set foreground window. Then we have a fake active/focused state (blinking caret, called OnActivated, etc).
+		//	1. When started hidden, and now clicked tray icon first time. Is it because of the "lock foreground window"? Or WPF shows window somehow incorrectly, as usual?
+		//	2. When starting visible, if VMWare Player is active. Same with some other programs too (WPF, appstore, some other).
+		//this.Activate(); //does not work with VMWare, also if user clicks a window after starting this process
+		App.Hwnd.ActivateL(); //works always, possibly with workarounds
+
 		Panels.PanelManager["Output"].Visible = true;
 
 		App.Model.WorkspaceLoadedWithUI(onUiLoaded: true);
@@ -151,11 +154,25 @@ partial class MainWindow : Window
 		return default;
 	}
 
-	protected override void OnActivated(EventArgs e) {
-		//var w = this.Hwnd(); if (wnd.active != w) w.ActivateL(); //activates window, but this is a bad place for it, eg does not set focus correctly
-		var w = this.Hwnd(); if (wnd.active != w) Dispatcher.InvokeAsync(() => w.ActivateL());
-		base.OnActivated(e);
-	}
+	//this could be a workaround for the inactive window at startup, but probably don't need when we call Activete() in OnSourceInitialized
+	//protected override void OnActivated(EventArgs e) {
+	//	var w = this.Hwnd();
+	//	if (wnd.active != w && _activationWorkaroundTime < Environment.TickCount64 - 5000) {
+	//		//print.it(new StackTrace());
+	//		_activationWorkaroundTime = Environment.TickCount64;
+	//		timerm.after(10, _ => {
+	//			Debug_.Print("OnActivated workaround, " + wnd.active);
+	//			//w.ActivateL(); //in some cases does not work, or need key etc
+	//			if (!w.IsMinimized) {
+	//				w.ShowMinimized(noAnimation: true);
+	//				w.ShowNotMinimized(noAnimation: true);
+	//			}
+	//		});
+	//	}
+
+	//	base.OnActivated(e);
+	//}
+	//long _activationWorkaroundTime;
 
 	//this was for testing document tabs. Now we don't use document tabs. All documents now are in single panel.
 	//void _OpenDocuments() {

@@ -106,7 +106,7 @@ namespace Au.Tools
 				}
 
 				if (TUtil.GetUsefulControlId(c, w, out int id)) {
-					f.idC = id.ToStringInvariant();
+					f.idC = id.ToS();
 					f.nameC_comments = cName;
 					f.classC_comments = cClass;
 				} else {

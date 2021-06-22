@@ -792,7 +792,7 @@ partial class TestScript
 		//int i = -100;
 		//nint n = i;
 		//var s1 = n.ToString();
-		//var s2 = n.ToStringInvariant();
+		//var s2 = n.ToS();
 		//print.it(n, s1, s2, (uint)s1[0], (uint)s2[0]);
 
 		////int i =unchecked((int) uint.MaxValue);

@@ -89,6 +89,19 @@ namespace Au.Types
 		}
 
 		/// <summary>
+		/// Gets attribute value converted to double number.
+		/// If the attribute does not exist, sets value=0 and returns false.
+		/// If the attribute value is empty or is not a valid number, sets value=0 and returns true.
+		/// </summary>
+		public static bool Attr(this XElement t, out double value, XName name)
+		{
+			var x = t.Attribute(name);
+			if(x == null) { value = 0d; return false; }
+			x.Value.ToNumber(out value);
+			return true;
+		}
+
+		/// <summary>
 		/// Gets attribute value converted to float number.
 		/// If the attribute does not exist, sets value=0 and returns false.
 		/// If the attribute value is empty or is not a valid number, sets value=0 and returns true.
@@ -96,7 +109,7 @@ namespace Au.Types
 		public static bool Attr(this XElement t, out float value, XName name)
 		{
 			var x = t.Attribute(name);
-			if(x == null) { value = 0F; return false; }
+			if(x == null) { value = 0f; return false; }
 			x.Value.ToNumber(out value);
 			return true;
 		}

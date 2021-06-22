@@ -49,7 +49,6 @@ class CiPopupList
 		_compl = compl;
 
 		_tv = new KTreeView {
-			ImageCache = App.ImageCache,
 			ItemMarginLeft = 20,
 			//HotTrack = true, //no
 			CustomDraw = new _CustomDraw(this)
@@ -350,8 +349,8 @@ class CiPopupList
 			//draw images: access, static/abstract
 			var cxy = _cd.imageRect.Width;
 			var ri = new System.Drawing.Rectangle(_cd.imageRect.left - cxy, _cd.imageRect.top + cxy / 4, cxy, cxy);
-			if (ci.AccessImageSource is string s1) g.DrawImage(App.ImageCache.Get(s1, _cd.dpi, true), ri);
-			if (ci.ModifierImageSource is string s2) g.DrawImage(App.ImageCache.Get(s2, _cd.dpi, true), ri);
+			if (ci.AccessImageSource is string s1) g.DrawImage(IconImageCache.Common.Get(s1, _cd.dpi, isImage: true), ri);
+			if (ci.ModifierImageSource is string s2) g.DrawImage(IconImageCache.Common.Get(s2, _cd.dpi, isImage: true), ri);
 
 			//draw group separator
 			if (_cd.index > 0) {

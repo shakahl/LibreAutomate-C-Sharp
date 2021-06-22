@@ -57,7 +57,7 @@ namespace Au.Controls
 						if (_isToolbar) w.SetExStyle(estyle);
 					};
 
-					base.Title = scriptt.name + " - " + _node.ToString();
+					base.Title = script.name + " - " + _node.ToString();
 					base.Owner = _owner;
 					base.WindowStartupLocation = WindowStartupLocation.Manual;
 					base.WindowStyle = WindowStyle.ToolWindow;

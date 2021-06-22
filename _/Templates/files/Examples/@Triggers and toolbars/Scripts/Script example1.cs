@@ -1,8 +1,8 @@
 /*/ runSingle true; c ..\Functions\Class1.cs; /*/ //.
 using Au;
-;scriptt.setup(trayIcon: true); //;
+;script.setup(trayIcon: true); //;
 
-//This is an example script used in scriptt.run examples somewhere in this project folder.
+//This is an example script used in script.run examples somewhere in this project folder.
 //It runs in separate process. You can edit and run it without restarting the main script process (triggers and toolbars).
 //Scripts don't have to be in this project folder.
 //Although this script is in the project folder, it is not part of the project (only the first script is).

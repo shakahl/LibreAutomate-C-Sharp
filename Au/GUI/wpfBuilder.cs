@@ -917,7 +917,7 @@ namespace Au
 					}
 					if (flags.Has(WBBFlags.OK)) {
 						try { w.DialogResult = true; }
-						catch (InvalidOperationException) { w.Close(); } //nonmodal
+						catch (InvalidOperationException) { w.Close(); } //nonmodal //SHOULDDO: find a better way to detect nonmodal
 					} else if (flags.Has(WBBFlags.Cancel)) {
 						w.Close(); //because IsCancel ignored if nonmodal
 					}

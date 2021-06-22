@@ -262,7 +262,7 @@ namespace Au.Tools
 				}
 				b.End();
 			}
-			int elem = _elm.SimpleElementId; if (elem != 0) _Set(elemA, elem.ToStringInvariant()); else elemA.Visible = false;
+			int elem = _elm.SimpleElementId; if (elem != 0) _Set(elemA, elem.ToS()); else elemA.Visible = false;
 			_Set(stateA, p.State.ToString());
 			_Set(rectA, $"{{W={p.Rect.Width} H={p.Rect.Height}}}");
 
@@ -523,7 +523,6 @@ namespace Au.Tools
 		bool _isWebIE; //_FillProperties sets it; then _FillTree uses it.
 
 		void _InitTree() {
-			_tree.ImageCache = App.ImageCache;
 			_tree.SingleClickActivate = true;
 			_tree.ItemActivated += (_, e) => {
 				_elm = (e.Item as _TreeItem).e;

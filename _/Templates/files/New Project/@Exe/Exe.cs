@@ -15,7 +15,7 @@ using System.Reflection;
 //[assembly: AssemblyTrademark("Legal trademarks")]
 
 class Script { static void Main(string[] a) => new Script(a); Script(string[] args) { //;;
-;scriptt.setup(trayIcon: true); //;
+;script.setup(trayIcon: true); //;
 
 /*
 To create .exe program from a script: in Properties select role exeProgram. This script is an example.

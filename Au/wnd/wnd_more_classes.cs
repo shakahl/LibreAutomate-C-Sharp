@@ -15,6 +15,7 @@ using System.Reflection;
 
 using Au.Types;
 using Au.More;
+using System.Buffers;
 
 namespace Au
 {
@@ -110,7 +111,7 @@ namespace Au
 					x = default;
 					if (saved == null) return false;
 					var a = new int[6];
-					for(int i = 0, j = 0; i < a.Length; i++) if (!saved.ToInt(out a[i], j, out j)) return false;
+					for (int i = 0, j = 0; i < a.Length; i++) if (!saved.ToInt(out a[i], j, out j)) return false;
 					x._r = (a[0], a[1], a[2], a[3]);
 					x.Dpi = a[4];
 					var flags = a[5];
@@ -367,12 +368,12 @@ namespace Au
 					try {
 						dynamic shell = Activator.CreateInstance(Type.GetTypeFromProgID("Shell.Application")); //speed: faster than calling a method
 						switch (what) {
-							case 0: shell.ToggleDesktop(); break;
-							case 1: shell.MinimizeAll(); break;
-							case 2: shell.UndoMinimizeALL(); break;
-							case 3: shell.CascadeWindows(); break;
-							case 4: shell.TileHorizontally(); break;
-							case 5: shell.TileVertically(); break;
+						case 0: shell.ToggleDesktop(); break;
+						case 1: shell.MinimizeAll(); break;
+						case 2: shell.UndoMinimizeALL(); break;
+						case 3: shell.CascadeWindows(); break;
+						case 4: shell.TileHorizontally(); break;
+						case 5: shell.TileVertically(); break;
 						}
 						Marshal.ReleaseComObject(shell);
 
@@ -393,7 +394,7 @@ namespace Au
 			//Also there are internal/undocumented interfaces to add/remove/switch desktops etc. There is a GitHub library. And another library that injects.
 
 			/// <summary>
-			/// Makes easier to send and receive data to/from other processes using message <msdn>WM_COPYDATA</msdn>.
+			/// Send/receive data to/from other process using message <msdn>WM_COPYDATA</msdn>.
 			/// </summary>
 			/// <remarks>
 			/// This struct is <msdn>COPYDATASTRUCT</msdn>.
@@ -406,43 +407,13 @@ namespace Au
 				//COPYDATASTRUCT fields
 				nint _dwData;
 				int _cbData;
-				void* _lpData;
-
-				#region send
-
-				/// <summary>
-				/// Sends string to a window of another process using API <msdn>SendMessage</msdn>(<msdn>WM_COPYDATA</msdn>).
-				/// </summary>
-				/// <returns><b>SendMessage</b>'s return value.</returns>
-				/// <param name="w">The window.</param>
-				/// <param name="dataId">Data id. It is <msdn>COPYDATASTRUCT.dwData</msdn>.</param>
-				/// <param name="s">Data. Can contain '\0' characters.</param>
-				/// <param name="wParam">wParam of WM_COPYDATA. Optional.</param>
-				public static nint SendString(wnd w, int dataId, string s, nint wParam = 0) {
-					fixed (char* p = s) {
-						var c = new CopyData { _dwData = dataId, _cbData = s.Length * 2, _lpData = p };
-						return w.Send(Api.WM_COPYDATA, wParam, &c);
-					}
-				}
-
-				/// <summary>
-				/// Sends byte[] to a window of another process using API <msdn>SendMessage</msdn>(<msdn>WM_COPYDATA</msdn>).
-				/// More info: <see cref="SendString"/>.
-				/// </summary>
-				public static unsafe nint SendBytes(wnd w, int dataId, byte[] a, nint wParam = 0) {
-					fixed (byte* p = a) {
-						var c = new CopyData { _dwData = dataId, _cbData = a.Length, _lpData = p };
-						return w.Send(Api.WM_COPYDATA, wParam, &c);
-					}
-				}
-
-				#endregion
+				byte* _lpData;
 
 				#region receive
 
 				/// <summary>
 				/// Initializes this variable from <i>lParam</i> of a received <msdn>WM_COPYDATA</msdn> message.
-				/// Then you can call methods and properties of this variable to get data in managed format.
+				/// Then you can call functions of this variable to get data in managed format.
 				/// </summary>
 				/// <param name="lParam"><i>lParam</i> of a <msdn>WM_COPYDATA</msdn> message received in a window procedure. It is <msdn>COPYDATASTRUCT</msdn> pointer.</param>
 				public CopyData(nint lParam) {
@@ -458,7 +429,7 @@ namespace Au
 				/// <summary>
 				/// Unmanaged data pointer. It is <msdn>COPYDATASTRUCT.lpData</msdn>.
 				/// </summary>
-				public void* RawData { get => _lpData; set => _lpData = value; }
+				public byte* RawData { get => _lpData; set => _lpData = value; }
 
 				/// <summary>
 				/// Unmanaged data size. It is <msdn>COPYDATASTRUCT.cbData</msdn>.
@@ -487,6 +458,169 @@ namespace Au
 				public static void EnableReceivingWM_COPYDATA() {
 					Api.ChangeWindowMessageFilter(Api.WM_COPYDATA, 1);
 				}
+
+				#endregion
+
+				#region send
+
+				/// <summary>
+				/// Sends string or other data to a window of any process. Uses API <msdn>SendMessage</msdn> <msdn>WM_COPYDATA</msdn>.
+				/// </summary>
+				/// <typeparam name="T">Type of data elements. For example, char for string, byte for byte[].</typeparam>
+				/// <param name="w">The window.</param>
+				/// <param name="dataId">Data id. It is <msdn>COPYDATASTRUCT.dwData</msdn>.</param>
+				/// <param name="data">Data. For example string or byte[]. String can contain '\0' characters.</param>
+				/// <param name="wParam">wParam. Can be any value. Optional.</param>
+				/// <returns><b>SendMessage</b>'s return value.</returns>
+				public static unsafe nint Send<T>(wnd w, int dataId, ReadOnlySpan<T> data, nint wParam = 0) where T : unmanaged {
+					fixed (T* p = data) {
+						var c = new CopyData { _dwData = dataId, _cbData = data.Length * sizeof(T), _lpData = (byte*)p };
+						return w.Send(Api.WM_COPYDATA, wParam, &c);
+					}
+				}
+
+				/// <summary>
+				/// Type of <see cref="SendReceive{TSend, TReceive}(wnd, int, ReadOnlySpan{TSend}, ResultReader{TReceive})"/> callback function.
+				/// </summary>
+				/// <param name="span">Received data buffer. The callback function can convert it to array, string, etc.</param>
+				public delegate void ResultReader<TReceive>(ReadOnlySpan<TReceive> span) where TReceive : unmanaged;
+				//compiler error if Action<ReadOnlySpan<TReceive>>.
+				//could instead use System.Buffers.ReadOnlySpanAction, but then need TState, which is difficult to use for return, and nobody would use, and would not make faster etc.
+
+				static readonly Lazy<IntPtr> s_mutex = new(Api.CreateMutex(null, false, "Au-mutex-wnd.more.Data"));
+				//TODO: maybe need Api.SECURITY_ATTRIBUTES.ForLowIL
+
+				/// <summary>
+				/// Sends string or other data to a window of any process. Uses API <msdn>SendMessage</msdn> <msdn>WM_COPYDATA</msdn>.
+				/// Receives string or other data returned by that window with <see cref="Return"/>.
+				/// </summary>
+				/// <typeparam name="TSend">Type of data elements. For example, char for string, byte for byte[]</typeparam>
+				/// <typeparam name="TReceive">Type of received data elements. For example, char for string, byte for byte[].</typeparam>
+				/// <param name="w">The window.</param>
+				/// <param name="dataId">Data id. It is <msdn>COPYDATASTRUCT.dwData</msdn>.</param>
+				/// <param name="send">Data to send. For example string or byte[]. String can contain '\0' characters.</param>
+				/// <param name="receive">Callback function that can convert the received data to desired format.</param>
+				/// <returns>false if failed.</returns>
+				public static unsafe bool SendReceive<TSend, TReceive>(wnd w, int dataId, ReadOnlySpan<TSend> send, ResultReader<TReceive> receive) where TSend : unmanaged where TReceive : unmanaged {
+					var mutex = s_mutex.Value;
+					if (Api.WaitForSingleObject(mutex, -1) is not (0 or Api.WAIT_ABANDONED_0)) return false;
+					try {
+						int len = (int)Send(w, dataId, send, Api.GetCurrentProcessId());
+						if (len == 0) return false;
+						var sm = SharedMemory_.ReturnDataPtr;
+						if (len > 0) { //shared memory
+							if (len <= SharedMemory_.ReturnDataSize) {
+								receive(new ReadOnlySpan<TReceive>((TReceive*)sm, len / sizeof(TReceive)));
+							} else {
+								using var m2 = SharedMemory_.Mapping.CreateOrOpen(new((char*)sm), len);
+								receive(new ReadOnlySpan<TReceive>((TReceive*)m2.Mem, len / sizeof(TReceive)));
+							}
+						} else { //process memory
+							var pm = (void*)*(long*)sm;
+							receive(new ReadOnlySpan<TReceive>((TReceive*)pm, -len / sizeof(TReceive)));
+							bool ok = Api.VirtualFree(pm);
+							Debug_.PrintIf(!ok, "VirtualFree");
+						}
+						return true;
+					}
+					finally { Api.ReleaseMutex(mutex); }
+				}
+
+				/// <summary>
+				/// Calls <see cref="SendReceive{TSend, TReceive}(wnd, int, ReadOnlySpan{TSend}, ResultReader{TReceive})"/> and gets the returned data as byte[].
+				/// </summary>
+				public static bool SendReceive<T>(wnd w, int dataId, ReadOnlySpan<T> send, out byte[] receive) where T : unmanaged {
+					byte[] r = null;
+					bool R = SendReceive<T, byte>(w, dataId, send, span => r = span.ToArray());
+					receive = r;
+					return R;
+				}
+
+				/// <summary>
+				/// Calls <see cref="SendReceive{TSend, TReceive}(wnd, int, ReadOnlySpan{TSend}, ResultReader{TReceive})"/> and gets the returned string.
+				/// </summary>
+				public static bool SendReceive<T>(wnd w, int dataId, ReadOnlySpan<T> send, out string receive) where T : unmanaged {
+					string r = null;
+					bool R = SendReceive<T, char>(w, dataId, send, span => r = span.ToString());
+					receive = r;
+					return R;
+				}
+				//public static bool SendReceive_<T>(wnd w, int dataId, ReadOnlySpan<T> send, out string receive, bool utf8) where T : unmanaged {
+				//	string r = null;
+				//	bool R = utf8
+				//		? SendReceive_<T, byte>(w, dataId, send, span => r = Encoding.UTF8.GetString(span))
+				//		: SendReceive_<T, char>(w, dataId, send, span => r = span.ToString());
+				//	receive = r;
+				//	return R;
+				//}
+
+				/// <summary>
+				/// Returns data to <see cref="SendReceive"/>.
+				/// </summary>
+				/// <param name="data"></param>
+				/// <param name="length"></param>
+				/// <param name="wParam"><i>wParam</i> of the received <b>WM_COPYDATA</b> message. Important, pass unchanged.</param>
+				/// <returns>Your window procedure must return this value.</returns>
+				public static unsafe int Return(void* data, int length, nint wParam) {
+					var sm = SharedMemory_.ReturnDataPtr;
+
+					//use shared memory of this library. Max 1 MB.
+					if (length <= SharedMemory_.ReturnDataSize) {
+						MemoryUtil.Copy(data, sm, length);
+						return length;
+					}
+
+					//allocate memory in caller process
+					try {
+						using var pm = new ProcessMemory((int)wParam, length);
+						pm.Write(data, length);
+						*(long*)sm = (long)pm.Mem;
+						pm.ForgetMem();
+						return -length;
+					}
+					catch { } //fails if that process has higher UAC IL. Rare.
+
+					//allocate new shared memory
+					try {
+						var smname = "Au-memory-" + Guid.NewGuid().ToString();
+						fixed (char* p = smname) MemoryUtil.Copy(p, sm, smname.Length * 2 + 2);
+						var m2 = SharedMemory_.Mapping.CreateOrOpen(smname, length);
+						MemoryUtil.Copy(data, m2.Mem, length);
+						Task.Run(() => { //wait until caller returns and then close the shared memory in this process
+							var mutex = s_mutex.Value;
+							if (Api.WaitForSingleObject(mutex, -1) is not (0 or Api.WAIT_ABANDONED_0)) { Debug_.Print("WaitForSingleObject"); return; }
+							Api.ReleaseMutex(mutex);
+							m2.Dispose();
+						});
+						return length;
+					}
+					catch { return 0; }
+
+					//speed when size 1 MB and hot CPU:
+					//	shared memory: 1000 mcs
+					//	process memory: 1500 mcs
+					//	shared memory 2: 2500 mcs
+				}
+
+				/// <summary>
+				/// Returns string or other data to <see cref="SendReceive"/>.
+				/// </summary>
+				/// <typeparam name="T">Type of data elements. For example, char for string, byte for byte[]</typeparam>
+				/// <param name="data"></param>
+				/// <param name="wParam"><i>wParam</i> of the received <b>WM_COPYDATA</b> message. Important, pass unchanged.</param>
+				/// <returns>Your window procedure must return this value.</returns>
+				public static unsafe int Return<T>(ReadOnlySpan<T> data, nint wParam) where T : unmanaged {
+					fixed (T* f = data) return Return(f, data.Length * sizeof(T), wParam);
+				}
+
+				//rejected. Don't need too many not important overloads. Good: in most cases data size is 2 times smaller. Same: speed.
+				//[SkipLocalsInit]
+				//public static unsafe int ReturnStringUtf8_(ReadOnlySpan<char> data, nint wParam) {
+				//	var e = Encoding.UTF8;
+				//	using var b = new FastBuffer<byte>(e.GetByteCount(data));
+				//	int len = e.GetBytes(data, new Span<byte>(b.p, b.n));
+				//	return ReturnData_(b.p, len, wParam);
+				//}
 
 				#endregion
 			}

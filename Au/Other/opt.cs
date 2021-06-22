@@ -337,7 +337,7 @@ namespace Au.Types
 		/// If not explicitly set, the default value depends on the build configuration of the main assembly: true if Debug, false if Release (optimize true). See <see cref="AssemblyUtil_.IsDebug"/>.
 		/// </summary>
 		public bool Verbose {
-			get => (_verbose ??= scriptt.isDebug) == true;
+			get => (_verbose ??= script.isDebug) == true;
 			set => _verbose = value;
 		}
 

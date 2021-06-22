@@ -289,7 +289,7 @@ namespace Au.Compiler
 				if(!filesystem.getProperties(xmlPath, out var px)) return null;
 
 				if(px.Size >= 10_000) {
-					var md5 = new Hash.MD5(); md5.Add(xmlPath.Lower());
+					var md5 = new Hash.MD5Context(); md5.Add(xmlPath.Lower());
 					var dbPath = folders.ThisAppTemp + md5.Hash.ToString() + ".db";
 					try {
 						if(!filesystem.getProperties(dbPath, out var pd) || pd.LastWriteTimeUtc != px.LastWriteTimeUtc) {

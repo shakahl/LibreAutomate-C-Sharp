@@ -27,26 +27,25 @@ static class CommandLine
 	/// Processes command line of this program.
 	/// Returns true if this instance must exit: 1. If finds previous program instance; then sends the command line to it if need. 2. If incorrect command line.
 	/// </summary>
-	public static bool OnProgramStarted(string[] a)
-	{
+	public static bool OnProgramStarted(string[] a) {
 		string s = null;
 		int cmd = 0;
 		bool activateWnd = true;
-		if(a.Length > 0) {
+		if (a.Length > 0) {
 			//print.it(a);
 
-			for(int i = 0; i < a.Length; i++) {
-				if(a[i].Starts('-')) a[i] = a[i].ReplaceAt(0, 1, "/");
-				if(a[i].Starts('/')) a[i] = a[i].Lower();
+			for (int i = 0; i < a.Length; i++) {
+				if (a[i].Starts('-')) a[i] = a[i].ReplaceAt(0, 1, "/");
+				if (a[i].Starts('/')) a[i] = a[i].Lower();
 			}
 
 			s = a[0];
-			if(s.Starts('/')) {
-				for(int i = 0; i < a.Length; i++) {
+			if (s.Starts('/')) {
+				for (int i = 0; i < a.Length; i++) {
 					s = a[i];
-					switch(s) {
+					switch (s) {
 					case "/test":
-						if(++i < a.Length) TestArg = a[i];
+						if (++i < a.Length) TestArg = a[i];
 						break;
 					case "/v":
 						StartVisible = true;
@@ -58,8 +57,8 @@ static class CommandLine
 					//rejected: /h start hidden. Not useful.
 				}
 			} else { //one or more files
-				if(a.Length == 1 && FilesModel.IsWorkspaceDirectoryOrZip_ShowDialogOpenImport(s, out cmd)) {
-					switch(cmd) {
+				if (a.Length == 1 && FilesModel.IsWorkspaceDirectoryOrZip_ShowDialogOpenImport(s, out cmd)) {
+					switch (cmd) {
 					case 1: WorkspaceDirectory = s; break;
 					case 2: _importWorkspace = s; break;
 					}
@@ -73,25 +72,25 @@ static class CommandLine
 		//single instance
 		//SHOULDDO: Api.CreateMutex()
 		s_mutex = new Mutex(true, "Aedit.Mutex.m3gVxcTJN02pDrHiQ00aSQ", out bool createdNew);
-		if(createdNew) return false;
+		if (createdNew) return false;
 
 		var w = wnd.findFast(null, c_msgWndClassName, true);
-		if(!w.Is0) {
-			if(activateWnd) {
+		if (!w.Is0) {
+			if (activateWnd) {
 				wnd wMain = (wnd)w.Send(Api.WM_USER);
-				if(!wMain.Is0) {
+				if (!wMain.Is0) {
 					try { wMain.Activate(); }
-					catch(Exception ex) { Debug_.Print(ex); }
+					catch (Exception ex) { Debug_.Print(ex); }
 				}
 			}
 
-			switch(cmd) {
+			switch (cmd) {
 			case 3: //import files
 				s = string.Join("\0", a);
 				break;
 			}
-			if(cmd != 0) {
-				wnd.more.CopyData.SendString(w, cmd, s);
+			if (cmd != 0) {
+				wnd.more.CopyData.Send<char>(w, cmd, s);
 			}
 		}
 		return true;
@@ -108,22 +107,21 @@ static class CommandLine
 	/// </summary>
 	public static bool StartVisible;
 
-	public static void OnProgramLoaded()
-	{
+	public static void OnProgramLoaded() {
 		wnd.more.uacEnableMessages(Api.WM_COPYDATA, /*Api.WM_DROPFILES, 0x0049,*/ Api.WM_USER, Api.WM_CLOSE);
 		//WM_COPYDATA, WM_DROPFILES and undocumented WM_COPYGLOBALDATA=0x0049 should enable drag/drop from lower UAC IL processes, but only through WM_DROPFILES/DragAcceptFiles, not OLE D&D.
 
 		wnd.more.registerWindowClass(c_msgWndClassName, _WndProc);
 		_msgWnd = wnd.more.createMessageOnlyWindow(c_msgWndClassName);
 
-		if(_importWorkspace != null || _importFiles != null) {
+		if (_importWorkspace != null || _importFiles != null) {
 			timerm.after(10, _ => {
 				try {
 					App.Wmain.ZShowAndActivate();
-					if(_importWorkspace != null) App.Model.ImportWorkspace(_importWorkspace);
+					if (_importWorkspace != null) App.Model.ImportWorkspace(_importWorkspace);
 					else App.Model.ImportFiles(_importFiles);
 				}
-				catch(Exception ex) { print.it(ex.Message); }
+				catch (Exception ex) { print.it(ex.Message); }
 			});
 		}
 	}
@@ -145,22 +143,21 @@ static class CommandLine
 	/// </summary>
 	public static wnd MsgWnd => _msgWnd;
 
-	static nint _WndProc(wnd w, int message, nint wParam, nint lParam)
-	{
-		switch(message) {
+	static nint _WndProc(wnd w, int message, nint wparam, nint lparam) {
+		switch (message) {
 		case Api.WM_COPYDATA:
-			if(App.Loaded >= EProgramState.Unloading) return default;
-			try { return _WmCopyData(wParam, lParam); }
-			catch(Exception ex) { print.it(ex.Message); }
+			if (App.Loaded >= EProgramState.Unloading) return default;
+			try { return _WmCopyData(wparam, lparam); }
+			catch (Exception ex) { print.it(ex.Message); }
 			return default;
 		case Api.WM_USER:
-			if(App.Loaded >= EProgramState.Unloading) return default;
-			int i = (int)wParam;
-			switch(i) {
+			if (App.Loaded >= EProgramState.Unloading) return default;
+			int i = (int)wparam;
+			switch (i) {
 			case 0:
 				return App.Hwnd.Handle;
 			case 10:
-				UacDragDrop.AdminProcess.OnTransparentWindowCreated((wnd)lParam);
+				UacDragDrop.AdminProcess.OnTransparentWindowCreated((wnd)lparam);
 				break;
 			case 20: //from Triggers.DisabledEverywhere
 				TriggersAndToolbars.OnDisableTriggers();
@@ -168,21 +165,20 @@ static class CommandLine
 			}
 			return 0;
 		case RunningTasks.WM_TASK_ENDED: //WM_USER+900
-			App.Tasks.TaskEnded2(wParam, lParam);
+			App.Tasks.TaskEnded2(wparam, lparam);
 			return 0;
 		}
 
-		return Api.DefWindowProc(w, message, wParam, lParam);
+		return Api.DefWindowProc(w, message, wparam, lparam);
 	}
 
-	static nint _WmCopyData(nint wParam, nint lParam)
-	{
-		var c = new wnd.more.CopyData(lParam);
-		int action = c.DataId;
+	static nint _WmCopyData(nint wparam, nint lparam) {
+		var c = new wnd.more.CopyData(lparam);
+		int action = Math2.LoWord(c.DataId), action2 = Math2.HiWord(c.DataId);
 		bool isString = action < 100;
 		string s = isString ? c.GetString() : null;
 		byte[] b = isString ? null : c.GetBytes();
-		switch(action) {
+		switch (action) {
 		case 1:
 			FilesModel.LoadWorkspace(s);
 			break;
@@ -190,19 +186,22 @@ static class CommandLine
 			App.Model.ImportWorkspace(s);
 			break;
 		case 3:
-			Api.ReplyMessage(1); //avoid 'wait' cursor while we'll show task dialog
+			Api.ReplyMessage(1); //avoid 'wait' cursor while we'll show dialog
 			App.Model.ImportFiles(s.Split('\0'));
 			break;
 		case 4:
-			var f1 = pathname.isFullPath(s) ? App.Model.FindByFilePath(s) : App.Model.Find(s, null);
-			if(f1 != null) App.Model.OpenAndGoTo(f1, (int)wParam - 1);
+			Api.ReplyMessage(1);
+			if (App.Model.Find(s, null) is FileNode f1) App.Model.OpenAndGoTo(f1, (int)wparam - 1);
 			else print.warning($"Script '{s}' not found.", -1);
 			break;
+		case 10:
+			s = DIcons.GetIconString(s, (EGetIcon)action2);
+			return s == null ? 0 : wnd.more.CopyData.Return<char>(s, wparam);
 		case 99: //run script from Au.CL.exe command line
-		case 100: //run script from script (scriptt.run/runWait)
+		case 100: //run script from script (script.run/runWait)
 			return _RunScript();
 		case 110: //received from our non-admin drop-target process on OnDragEnter
-			return UacDragDrop.AdminProcess.DragEvent((int)wParam, b);
+			return UacDragDrop.AdminProcess.DragEvent((int)wparam, b);
 		//case 120: //go to edit user-defined menu or toolbar source code
 		//	CiGoTo.EditMenuOrToolbar(b);
 		//	break;
@@ -213,22 +212,22 @@ static class CommandLine
 		return 1;
 
 		nint _RunScript() {
-			int mode = (int)wParam; //1 - wait, 3 - wait and get scriptt.writeResult output
+			int mode = (int)wparam; //1 - wait, 3 - wait and get script.writeResult output
 			string file; string[] args; string pipeName = null;
-			if(action == 99) {
-				var a = StringUtil.CommandLineToArray(s); if(a.Length == 0) return 0;
+			if (action == 99) {
+				var a = StringUtil.CommandLineToArray(s); if (a.Length == 0) return 0;
 				int nRemove = 0;
-				if(0 != (mode & 2)) pipeName = a[nRemove++];
+				if (0 != (mode & 2)) pipeName = a[nRemove++];
 				file = a[nRemove++];
 				args = a.Length == nRemove ? null : a.RemoveAt(0, nRemove);
 			} else {
 				var d = Serializer_.Deserialize(b);
 				file = d[0]; args = d[1]; pipeName = d[2];
 			}
-			var f = App.Model?.FindFile(file);
-			if(f == null) {
-				if(action == 99) print.it($"Command line: script '{file}' not found."); //else the caller script will throw exception
-				return (int)scriptt.RunResult_.notFound;
+			var f = App.Model?.FindCodeFile(file);
+			if (f == null) {
+				if (action == 99) print.it($"Command line: script '{file}' not found."); //else the caller script will throw exception
+				return (int)script.RunResult_.notFound;
 			}
 			return CompileRun.CompileAndRun(true, f, args, noDefer: 0 != (mode & 1), wrPipeName: pipeName);
 		}

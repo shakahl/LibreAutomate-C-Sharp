@@ -58,7 +58,7 @@ namespace Au
 		/// </param>
 		public trayIcon(int id = 0, bool disposeOnExit = true) {
 			_disposeOnExit = disposeOnExit;
-			_id = Hash.Fnv1(scriptt.name) + id;
+			_id = Hash.Fnv1(script.name) + id;
 			///// <param name="guid">A GUID that identifies the tray icon.</param>
 			//_guid=guid;
 		}
@@ -154,8 +154,8 @@ namespace Au
 			lock (this) {
 				if (_w.Is0) {
 					if (_disposeOnExit) process.thisProcessExit += _ => _Delete();
-					if (lockExit_) _hookDesktopSwitch = scriptt.HookDesktopSwitch_();
-					_w = wnd.more.createWindow(WndProc, true, "trayIcon", scriptt.name, WS.POPUP, WSE.NOACTIVATE);
+					if (lockExit_) _hookDesktopSwitch = script.HookDesktopSwitch_();
+					_w = wnd.more.createWindow(WndProc, true, "trayIcon", script.name, WS.POPUP, WSE.NOACTIVATE);
 				}
 
 				if (taskbarCreated) _visible = false;
@@ -292,7 +292,7 @@ namespace Au
 				} else if (msg == s_msgTaskbarCreated) { //explorer restarted or taskbar DPI changed
 					_Update(taskbarCreated: true);
 				} else if (msg == Api.WM_POWERBROADCAST) {
-					if (sleepExit_ && wParam == Api.PBT_APMSUSPEND) scriptt.ExitOnSleepOrDesktopSwitch_(sleep: true);
+					if (sleepExit_ && wParam == Api.PBT_APMSUSPEND) script.ExitOnSleepOrDesktopSwitch_(sleep: true);
 				}
 			}
 

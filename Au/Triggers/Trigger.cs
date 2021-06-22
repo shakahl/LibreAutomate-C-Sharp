@@ -135,7 +135,7 @@ namespace Au.Triggers
 						var t1 = perf.ms;
 						bool ok = v.f(args);
 						var td = perf.ms - t1;
-						if(td > 200) print.warning($"Too slow Triggers.FuncOf function of a window trigger. Should be < 10 ms, now {td} ms. Task name: {scriptt.name}.", -1);
+						if(td > 200) print.warning($"Too slow Triggers.FuncOf function of a window trigger. Should be < 10 ms, now {td} ms. Task name: {script.name}.", -1);
 						if(!ok) return false;
 					}
 				}

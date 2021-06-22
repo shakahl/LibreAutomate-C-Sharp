@@ -31,8 +31,7 @@ namespace Au.More
 
 		private readonly int index;
 
-		internal ILInstruction(OpCode code, byte[] instructionRawData, int instructionAddress, object instructionData, int index)
-		{
+		internal ILInstruction(OpCode code, byte[] instructionRawData, int instructionAddress, object instructionData, int index) {
 			this.operationCode = code;
 			this.instructionRawData = instructionRawData;
 			this.instructionAddress = instructionAddress;
@@ -40,10 +39,8 @@ namespace Au.More
 			this.index = index;
 		}
 
-		public OpCode Op
-		{
-			get
-			{
+		public OpCode Op {
+			get {
 				return this.operationCode;
 			}
 		}
@@ -51,10 +48,8 @@ namespace Au.More
 		/// <summary>
 		/// Gets the raw data.
 		/// </summary>
-		public byte[] RawData
-		{
-			get
-			{
+		public byte[] RawData {
+			get {
 				return this.instructionRawData;
 			}
 		}
@@ -62,10 +57,8 @@ namespace Au.More
 		/// <summary>
 		/// Gets the data.
 		/// </summary>
-		public object Data
-		{
-			get
-			{
+		public object Data {
+			get {
 				return this.instructionData;
 			}
 		}
@@ -73,10 +66,8 @@ namespace Au.More
 		/// <summary>
 		/// Gets the address of the instruction.
 		/// </summary>
-		public int Address
-		{
-			get
-			{
+		public int Address {
+			get {
 				return this.instructionAddress;
 			}
 		}
@@ -87,10 +78,8 @@ namespace Au.More
 		/// <value>
 		/// The index of the instruction.
 		/// </value>
-		public int InstructionIndex
-		{
-			get
-			{
+		public int InstructionIndex {
+			get {
 				return this.index;
 			}
 		}
@@ -99,17 +88,15 @@ namespace Au.More
 		/// Gets the value as integer
 		/// </summary>
 		/// <value>The data value.</value>
-		public int DataValue
-		{
-			get
-			{
+		public int DataValue {
+			get {
 				int value = 0;
-				if(this.Data != null) {
-					if(this.Data is byte) {
+				if (this.Data != null) {
+					if (this.Data is byte) {
 						value = (byte)this.Data;
-					} else if(this.Data is short) {
+					} else if (this.Data is short) {
 						value = (short)this.Data;
-					} else if(this.Data is int) {
+					} else if (this.Data is int) {
 						value = (int)this.Data;
 					}
 				}
@@ -122,10 +109,8 @@ namespace Au.More
 		/// Gets the length of the instructions and operands.
 		/// </summary>
 		/// <value>The length.</value>
-		public int Length
-		{
-			get
-			{
+		public int Length {
+			get {
 				return this.Op.Size + (this.RawData == null ? 0 : this.RawData.Length);
 			}
 		}
@@ -179,39 +164,35 @@ namespace Au.More
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ILReader"/> class.
 		/// </summary>
-		/// <param name="method">
-		/// The method.
-		/// </param>
-		public ILReader(MethodInfo method)
-		{
-			if(method == null) {
+		public ILReader(MethodInfo method, byte[] il = null) {
+			//au: il added because the caller itself gets IL array and does nothing if it's too big to disassemble. To avoid getting IL 2 times.
+
+			if (method == null) {
 				throw new ArgumentNullException("method");
 			}
 
-			this.intermediateLanguageProvider = ILReader.CreateILReaderProvider(method);
+			this.intermediateLanguageProvider = ILReader.CreateILReaderProvider(method, il);
 		}
 
 		/// <summary>
 		/// Gets the instructions.
 		/// </summary>
 		/// <value>The instructions.</value>
-		public IEnumerable<ILInstruction> Instructions
-		{
-			get
-			{
+		public IEnumerable<ILInstruction> Instructions {
+			get {
 				byte[] instructionBytes = this.intermediateLanguageProvider.GetMethodBody();
 				int instructionIndex = 0, startAddress;
-				for(int position = 0; position < instructionBytes.Length;) {
+				for (int position = 0; position < instructionBytes.Length;) {
 					startAddress = position;
 					short operationData = instructionBytes[position];
-					if(IsInstructionPrefix(operationData)) {
+					if (IsInstructionPrefix(operationData)) {
 						operationData = (short)((operationData << 8) | instructionBytes[++position]);
 					}
 
 					position++;
 
 					OpCode code;
-					if(!instructionLookup.Value.TryGetValue(operationData, out code)) {
+					if (!instructionLookup.Value.TryGetValue(operationData, out code)) {
 						throw new InvalidProgramException(string.Format("0x{0:X2} is not a valid op code.", operationData));
 					}
 
@@ -221,10 +202,10 @@ namespace Au.More
 					object objData = this.GetData(code, data);
 					position += dataSize;
 
-					if(code.OperandType == OperandType.InlineSwitch) {
+					if (code.OperandType == OperandType.InlineSwitch) {
 						dataSize = (int)objData;
 						int[] labels = new int[dataSize];
-						for(int index = 0; index < labels.Length; index++) {
+						for (int index = 0; index < labels.Length; index++) {
 							labels[index] = BitConverter.ToInt32(instructionBytes, position);
 							position += 4;
 						}
@@ -239,22 +220,14 @@ namespace Au.More
 		}
 
 
-		/// <summary>
-		/// Creates the IL reader provider.
-		/// </summary>
-		/// <param name="methodInfo">The MethodInfo object that represents the method to read..</param>
-		/// <returns>
-		/// The ILReader provider.
-		/// </returns>
-		private static IILReaderProvider CreateILReaderProvider(MethodInfo methodInfo)
-		{
+		private static IILReaderProvider CreateILReaderProvider(MethodInfo methodInfo, byte[] il = null) {
 #if FULL
-			IILReaderProvider reader = DynamicILReaderProvider.Create(methodInfo);
+			IILReaderProvider reader = DynamicILReaderProvider.Create(methodInfo, il);
 			if(reader != null) {
 				return reader;
 			}
 #endif
-			return new ILReaderProvider(methodInfo);
+			return new ILReaderProvider(methodInfo, il);
 		}
 
 		/// <summary>
@@ -263,8 +236,7 @@ namespace Au.More
 		/// <param name="value">The IL instruction as a byte.</param>
 		/// <remarks>IL instructions can either be 1 or 2 bytes.</remarks>
 		/// <returns>True if this IL instruction is a prefix indicating the instruction is two bytes long.</returns>
-		private static bool IsInstructionPrefix(short value)
-		{
+		private static bool IsInstructionPrefix(short value) {
 			return ((value & OpCodes.Prefix1.Value) == OpCodes.Prefix1.Value) || ((value & OpCodes.Prefix2.Value) == OpCodes.Prefix2.Value)
 						|| ((value & OpCodes.Prefix3.Value) == OpCodes.Prefix3.Value) || ((value & OpCodes.Prefix4.Value) == OpCodes.Prefix4.Value)
 						|| ((value & OpCodes.Prefix5.Value) == OpCodes.Prefix5.Value) || ((value & OpCodes.Prefix6.Value) == OpCodes.Prefix6.Value)
@@ -277,12 +249,11 @@ namespace Au.More
 		/// <returns>
 		/// A dictionary of IL instructions.
 		/// </returns>
-		private static Dictionary<short, OpCode> GetLookupTable()
-		{
+		private static Dictionary<short, OpCode> GetLookupTable() {
 			// Might be better to do an array lookup.  Use a seperate arrary for instructions without a prefix and array for each prefix.
 			Dictionary<short, OpCode> lookupTable = new Dictionary<short, OpCode>();
 			FieldInfo[] fields = typeof(OpCodes).GetFields(BindingFlags.Static | BindingFlags.Public);
-			foreach(FieldInfo field in fields) {
+			foreach (FieldInfo field in fields) {
 				OpCode code = (OpCode)field.GetValue(null);
 				lookupTable.Add(code.Value, code);
 			}
@@ -295,9 +266,8 @@ namespace Au.More
 		/// </summary>
 		/// <param name="operandType">Defines the type of operand.</param>
 		/// <returns>The size in bytes of the operand type.</returns>
-		private static int GetSize(OperandType operandType)
-		{
-			switch(operandType) {
+		private static int GetSize(OperandType operandType) {
+			switch (operandType) {
 			case OperandType.InlineNone:
 				return 0;
 			case OperandType.ShortInlineBrTarget:
@@ -325,10 +295,9 @@ namespace Au.More
 			}
 		}
 
-		private object GetData(OpCode code, byte[] rawData)
-		{
+		private object GetData(OpCode code, byte[] rawData) {
 			object data = null;
-			switch(code.OperandType) {
+			switch (code.OperandType) {
 			case OperandType.InlineField:
 				data = this.intermediateLanguageProvider.ResolveField(BitConverter.ToInt32(rawData, 0));
 				break;
@@ -389,10 +358,12 @@ namespace Au.More
 			Type ResolveType(int metadataToken);
 		}
 
-		class ILReaderProvider :IILReaderProvider
+		class ILReaderProvider : IILReaderProvider
 		{
-			public ILReaderProvider(MethodInfo method)
-			{
+			byte[] _il;
+
+			public ILReaderProvider(MethodInfo method, byte[] il = null) {
+				_il = il;
 				this.Method = method;
 				this.MethodBody = method.GetMethodBody();
 				this.MethodModule = method.Module;
@@ -404,38 +375,31 @@ namespace Au.More
 
 			public Module MethodModule { get; private set; }
 
-			public byte[] GetMethodBody()
-			{
-				return this.MethodBody.GetILAsByteArray();
+			public byte[] GetMethodBody() {
+				return _il ??= this.MethodBody.GetILAsByteArray();
 			}
 
-			public FieldInfo ResolveField(int metadataToken)
-			{
+			public FieldInfo ResolveField(int metadataToken) {
 				return this.MethodModule.ResolveField(metadataToken);
 			}
 
-			public MemberInfo ResolveMember(int metadataToken)
-			{
+			public MemberInfo ResolveMember(int metadataToken) {
 				return this.MethodModule.ResolveMember(metadataToken);
 			}
 
-			public MethodBase ResolveMethod(int metadataToken)
-			{
+			public MethodBase ResolveMethod(int metadataToken) {
 				return this.MethodModule.ResolveMethod(metadataToken);
 			}
 
-			public byte[] ResolveSignature(int metadataToken)
-			{
+			public byte[] ResolveSignature(int metadataToken) {
 				return this.MethodModule.ResolveSignature(metadataToken);
 			}
 
-			public string ResolveString(int metadataToken)
-			{
+			public string ResolveString(int metadataToken) {
 				return this.MethodModule.ResolveString(metadataToken);
 			}
 
-			public Type ResolveType(int metadataToken)
-			{
+			public Type ResolveType(int metadataToken) {
 				return this.MethodModule.ResolveType(metadataToken);
 			}
 		}

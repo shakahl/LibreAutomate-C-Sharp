@@ -60,6 +60,11 @@ static unsafe class Test
 {
 
 	public static void FromMenubar() {
+
+
+
+
+
 		//var doc = Panels.Editor.ZActiveDoc;
 
 		//Sci_GetStylingInfo(doc.ZSciPtr, 15, out var si); //fast

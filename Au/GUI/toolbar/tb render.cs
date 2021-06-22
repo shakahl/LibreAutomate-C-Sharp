@@ -125,22 +125,25 @@ namespace Au
 		}
 		ColorInt _borderColor;
 
-		void _Images() {
+		void _Images(bool onDpiChanged) {
 			foreach (var v in _a) {
+				if (onDpiChanged) {
+					if (v.image2 == null || v.image is not string) continue;
+					//will either find/return same bitmap in cache, or create new bitmap from XAML, or return found old XAML bitmap created for other DPI.
+					//note: will not reload non-XAML images, eg those created from native icons. They will be drawn DPI-scaled, slightly blurry.
+				}
+				//var old = v.image2;
 				v.image2 = _GetImage(v).image;
+				//if (onDpiChanged) print.it(old == v.image2);
 			}
 		}
 
-		private protected override void _ImageAsyncCompletion(Bitmap b, object o) {
-			ChangeImage_(o as ToolbarItem, b);
-		}
-
-		internal void ChangeImage_(ToolbarItem ti, Bitmap b) {
-			if (_closed) return;
-			ti.image2 = b;
-			ti.imageAsync = false;
-			_Invalidate(ti);
-		}
+		//not used
+		//internal void ChangeImage_(ToolbarItem ti, Bitmap b) {
+		//	if (_closed) return;
+		//	ti.image2 = b;
+		//	_Invalidate(ti);
+		//}
 
 		const TFFlags c_tff = TFFlags.NOPREFIX | TFFlags.EXPANDTABS;
 
