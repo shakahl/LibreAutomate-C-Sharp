@@ -241,7 +241,7 @@ class DOptions : KDialogWindow
 
 			//styles
 
-			sciStyles.zMarginWidth(1, 0);
+			sciStyles.zSetMarginWidth(1, 0);
 			styles.ToScintilla(sciStyles);
 			bool ignoreColorEvents = false;
 			int backColor = styles.BackgroundColor;
@@ -397,11 +397,11 @@ System.IO
 			.Validation(o => usings.Text.FindAny("= ") >= 0 ? "contains = or space" : null);
 		b.End();
 		b.End();
-		b.StartGrid<GroupBox>("Auto correction").Columns(0, 100, -1);
-		b.R.StartStack().Add<TextBlock>("Need Shift to exit (...) with").Add(out KCheckBox shiftEnter, "Enter").Margin("T4").Add(out KCheckBox shiftTab, "Tab").Margin("T4").End();
-		//b.R.Add(@"Break ""string""", out ComboBox breakString).Items(@"""abc"" + """"|""abc\r\n"" + """"|@""multiline""").Span(1); //rejected. Rarely used.
+		//b.StartGrid<GroupBox>("Auto correction").Columns(0, 100, -1);
+		////b.R.StartStack().Add<TextBlock>("Need Shift to exit (...) with").Add(out KCheckBox shiftEnter, "Enter").Margin("T4").Add(out KCheckBox shiftTab, "Tab").Margin("T4").End(); //rejected
+		////b.R.Add(@"Break ""string""", out ComboBox breakString).Items(@"""abc"" + """"|""abc\r\n"" + """"|@""multiline""").Span(1); //rejected. Rarely used.
 
-		b.End();
+		//b.End();
 		//b.StartGrid<GroupBox>("");
 		//b.End();
 		b.End();
@@ -412,13 +412,13 @@ System.IO
 
 		_b.OkApply += e => {
 			App.Settings.ci_complParen = complParen.SelectedIndex;
-			App.Settings.ci_shiftEnterAlways = (byte)(shiftEnter.True() ? 0 : 1);
-			App.Settings.ci_shiftTabAlways = (byte)(shiftTab.True() ? 0 : 1);
+			//App.Settings.ci_shiftEnterAlways = (byte)(shiftEnter.True() ? 0 : 1);
+			//App.Settings.ci_shiftTabAlways = (byte)(shiftTab.True() ? 0 : 1);
 			//App.Settings.ci_breakString = (byte)breakString.SelectedIndex;
 			App.Settings.ci_usings = usings.Text;
 		};
 
-		void _SnippetsButton(WBButtonClickArgs o) {
+		static void _SnippetsButton(WBButtonClickArgs o) {
 			switch(popupMenu.showSimple("1 Edit snippets|2 Find default snippets")) {
 			case 1: run.selectInExplorer(folders.ThisAppDocuments + @".settings\Snippets.xml"); break;
 			case 2: run.selectInExplorer(folders.ThisApp + @"Default\Snippets.xml"); break;

@@ -509,12 +509,12 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Gets custom icon string in specified format.
-			/// Returns null if no custom icon or if editor isn't running.
+			/// Gets icon string in specified format.
+			/// Returns null if editor isn't running or if the specified file does not have a custom icon.
 			/// </summary>
 			/// <param name="file">File/folder path etc, or icon name. See <see cref="EGetIcon"/>.</param>
 			/// <param name="what">The format of input and output strings.</param>
-			public static string GetCustomIcon(string file, EGetIcon what) {
+			public static string GetIcon(string file, EGetIcon what) {
 				var del = IconNameToXaml_;
 				if (del != null) return del(file, what);
 
@@ -525,6 +525,9 @@ namespace Au
 				//	Nothing good if the toolbar etc also uses XAML icons directly, eg for non-script items. And serializing is slow.
 				//	Now not actual because of cache.
 			}
+
+			//FUTURE: if editor isn't running, let GetIcon("icon name") try to get icon directly from database if available.
+			//public static string IconDatabasePath { get; set; }
 
 			/// <summary>
 			/// Editor sets this. Library uses it to avoid sendmessage.
@@ -598,7 +601,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// For <see cref="script.editor.GetCustomIcon"/>.
+	/// For <see cref="script.editor.GetIcon"/>.
 	/// </summary>
 	public enum EGetIcon
 	{

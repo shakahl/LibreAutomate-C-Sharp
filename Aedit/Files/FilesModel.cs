@@ -864,7 +864,7 @@ partial class FilesModel
 		if (fileType != EFileType.Folder) {
 			string relPath = template.Attr("n");
 			for (var p = template; (p = p.Parent).Name.LocalName != "files";) relPath = p.Attr("n") + "\\" + relPath;
-			if (fileType == EFileType.NotCodeFile) {
+			if (fileType == EFileType.Other) {
 				text = filesystem.loadText(FileNode.Templates.DefaultDirBS + relPath);
 			} else if (FileNode.Templates.IsStandardTemplateName(relPath, out var tt)) {
 				text = FileNode.Templates.Load(tt);
@@ -1384,7 +1384,7 @@ partial class FilesModel
 				} else {
 					item.Click += (_, e) => App.Model.NewItemX(x, beginRenaming: true);
 					var ft = FileNode.XmlTagToFileType(tag, canThrow: false);
-					item.Icon = ft == EFileType.NotCodeFile
+					item.Icon = ft == EFileType.Other
 						? new Image { Source = icon.of(templDir + relPath)?.ToWpfImage() }
 						: ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(FileNode.GetFileTypeImageSource(ft));
 				}

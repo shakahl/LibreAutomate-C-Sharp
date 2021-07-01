@@ -48,6 +48,8 @@ partial class CiStyling
 		XmlDocText,
 		XmlDocTag, //tags, CDATA, ///, etc
 
+		Image,
+
 		countUserDefined,
 
 		//STYLE_HIDDEN=31,
@@ -62,14 +64,17 @@ partial class CiStyling
 	{
 		public int color;
 		public bool bold;
+		public bool hidden;
+		//public bool small;
 
-		public TStyle(int color, bool bold) {
+		public TStyle(int color, bool bold, bool hidden = false) {
 			this.color = color;
 			this.bold = bold;
+			this.hidden = hidden;
+			//this.small = small;
 		}
 
-		public static implicit operator TStyle(int color) => new TStyle(color, false);
-		public static implicit operator TStyle((int color, bool bold) v) => new TStyle(v.color, v.bold);
+		public static implicit operator TStyle(int color) => new(color, false);
 
 		public static bool operator ==(TStyle a, TStyle b) => a.color == b.color && a.bold == b.bold;
 		public static bool operator !=(TStyle a, TStyle b) => !(a == b);
@@ -93,7 +98,7 @@ partial class CiStyling
 		public TStyle Keyword = 0x0000ff; //blue like in VS
 		public TStyle Namespace = 0x808000; //dark yellow
 		public TStyle Type = 0x0080c0; //like in VS but more blue
-		public TStyle Function = (0, true);
+		public TStyle Function = new(0, true);
 		public TStyle Variable = 0x204020; //dark green gray
 		public TStyle Constant = 0x204020; //like variable
 		public TStyle Label = 0xff00ff; //magenta
@@ -101,6 +106,11 @@ partial class CiStyling
 		public TStyle Excluded = 0x808080; //gray
 		public TStyle XmlDocText = 0x408000; //green like comment
 		public TStyle XmlDocTag = 0x808080; //gray
+
+		public TStyle Image = new(0xf0f0f0, false, true); //hidden
+		//public TStyle Image = 0xffffff; //visible only when selected or if dark theme
+		//public TStyle Image = 0xf0f0f0; //barely visible, unless selected or if dark theme
+		//public TStyle Image = 0xe0e0e0;
 
 		public TStyle LineNumber = 0x808080;
 
@@ -155,7 +165,7 @@ partial class CiStyling
 
 			static void _Style(ref TStyle r, string[] a) {
 				if (!a[1].NE()) r.color = a[1].ToInt();
-				if (a.Length > 2 && !a[2].NE()) r.bold = 0 != (1 & a[2].ToInt());
+				if (a.Length > 2 && !a[2].NE()) r.bold = 0 != (1 & a[2].ToInt()); else r.bold = false;
 			}
 		}
 
@@ -235,6 +245,17 @@ partial class CiStyling
 			void _Set(EToken tok, TStyle sty) {
 				sci.zStyleForeColor((int)tok, sty.color);
 				if (sty.bold) sci.zStyleBold((int)tok, true);
+				//cannot use hidden style or small font because of scintilla bug:
+				//	1. In wrap mode draws as many lines as with big font. Even caret is large and spans all lines.
+				//		Plus other anomalies, eg when scrolling.
+				//		I could not find a workaround. Tried SCI_SETLAYOUTCACHE, SCI_SETPOSITIONCACHE, SCI_SETHOTSPOTSINGLELINE, etc.
+				//	2. User cannot delete text containing hidden text.
+				//		Need to modify scintilla source; maybe just simply modify IsProtected() in Style.h.
+				//if (sty.hidden) sci.zStyleHidden((int)tok, true);
+				//if (sty.small) { sci.zStyleFont((int)tok, "Gabriola", 1); sci.Call(SCI_STYLESETCASE, (int)tok, 2); } //smallest font available on Win7 too
+
+				//if (sty.hidden) { sci.zStyleHidden((int)tok, true); }
+				//if (sty.hidden) { /*sci.zStyleHidden((int)tok, true);*/ sci.zStyleHotspot((int)tok, true); }
 			}
 
 			_Set(EToken.None, None);
@@ -255,6 +276,8 @@ partial class CiStyling
 			_Set(EToken.Excluded, Excluded);
 			_Set(EToken.XmlDocText, XmlDocText);
 			_Set(EToken.XmlDocTag, XmlDocTag);
+
+			_Set(EToken.Image, Image);
 
 			_Set((EToken)STYLE_LINENUMBER, LineNumber);
 		}

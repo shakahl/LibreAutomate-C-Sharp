@@ -26,6 +26,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
+using System.Diagnostics.CodeAnalysis;
+
+//TODO: need a workaround for Roslyn bug: in top-level statements keywords are insane. Eg is 'public' but no 'return'.
 
 partial class CiCompletion
 {
@@ -371,7 +374,7 @@ partial class CiCompletion
 			//info: some members of enum UnmanagedType are missing. Hidden with EditorBrowsableState.Never, don't know why.
 
 			//var testInternal = CodeInfo.Meta.TestInternal;
-			Dictionary<INamespaceOrTypeSymbol, List<int>> groups = canGroup ? new() : null;
+			Dictionary<INamespaceOrTypeSymbol, List<int>> groups = canGroup ? new(new CiNamespaceOrTypeSymbolEqualityComparer()) : null;
 			List<int> keywordsGroup = null, etcGroup = null, snippetsGroup = null;
 			bool hasNamespaces = false;
 			foreach (var ci in r.Items) {
@@ -532,7 +535,6 @@ partial class CiCompletion
 
 			List<string> groupsList = null;
 			if (canGroup && groups.Count + (keywordsGroup == null ? 0 : 1) + (etcGroup == null ? 0 : 1) + (snippetsGroup == null ? 0 : 1) > 1) {
-				//foreach(var v in groups) print.it(v.Key, v.Value.Count, v.Key.ContainingAssembly?.Name);
 				List<(string, List<int>)> g = null;
 				if (isDot) {
 					var gs = groups.ToList();
@@ -607,10 +609,6 @@ partial class CiCompletion
 					g = gs.Select(o => (o.Key.Name, o.Value)).ToList(); //list<(itype, list)> -> list<typeName, list>
 				} else {
 					g = groups.Select(o => (o.Key.QualifiedName(), o.Value)).ToList(); //dictionary<inamespace, list> -> list<namespaceName, list>
-					for (int i = g.Count - 1; i > 0; i--) { //join duplicate namespace names. If n assemblies have the same namespace, there are n namespace objects.
-						var nsName = g[i].Item1;
-						for (int j = 0; j < i; j++) if (g[j].Item1 == nsName) { g[j].Item2.AddRange(g[i].Item2); g.RemoveAt(i); break; }
-					}
 					//print.it("----");
 					//foreach(var v in g) print.it(v.Item1, v.Item2.Count);
 					g.Sort((e1, e2) => string.Compare(e1.Item1, e2.Item1, StringComparison.OrdinalIgnoreCase));

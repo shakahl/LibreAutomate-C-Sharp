@@ -183,7 +183,7 @@ namespace Au
 		/// <exception cref="AuWndException">Invalid window handle (the <i>area</i> argument).</exception>
 		/// <exception cref="ArgumentException">An argument is/contains a null/invalid value.</exception>
 		/// <exception cref="FileNotFoundException">Image file does not exist.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="more.loadImage"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="ImageUtil.LoadGdipBitmapFromFileOrResourceOrString"/>.</exception>
 		/// <exception cref="AuException">Something failed.</exception>
 		/// <remarks>
 		/// To create code for this function, use dialog "Find image or color in window".
@@ -311,7 +311,7 @@ namespace Au.Types
 	/// Has implicit conversions from:
 	/// - string - path of .png or .bmp file. If not full path, uses <see cref="folders.ThisAppImages"/>.
 	/// - string that starts with "resources/" or has prefix <c>"resource:"</c> - resource name; see <see cref="ResourceUtil.GetGdipBitmap"/>.
-	/// - string with prefix <c>"image:"</c> - Base64-encoded .png image embedded in script text.
+	/// - string with prefix <c>"image:"</c> - Base64 encoded .png image.
 	/// <br/>Can be created with dialog "Find image or color in window" or with function <b>Au.Controls.KImageUtil.ImageToString</b> (in Au.Controls.dll).
 	/// - <see cref="ColorInt"/>, <b>int</b> in 0xRRGGBB color format, <b>Color</b> - color. Alpha isn't used.
 	/// - <see cref="Bitmap"/> - image object.

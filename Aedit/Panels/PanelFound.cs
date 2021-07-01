@@ -35,7 +35,7 @@ class PanelFound : DockPanel
 	}
 
 	private void _c_ZHandleCreated() {
-		_c.zMarginWidth(1, 0);
+		_c.zSetMarginWidth(1, 0);
 		_c.zStyleFont(Sci.STYLE_DEFAULT, App.Wmain);
 		_c.zStyleClearAll();
 		_c.ZTags.SetLinkStyle(new SciTags.UserDefinedStyle(), (false, default), false);

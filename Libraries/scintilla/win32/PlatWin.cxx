@@ -508,6 +508,7 @@ public:
 	void RectangleDraw(PRectangle rc, ColourDesired fore, ColourDesired back) override;
 	void FillRectangle(PRectangle rc, ColourDesired back) override;
 	void FillRectangle(PRectangle rc, Surface &surfacePattern) override;
+	void DrawLineDots(PRectangle rc, ColourDesired color) override; //Au
 	void RoundedRectangle(PRectangle rc, ColourDesired fore, ColourDesired back) override;
 	void AlphaRectangle(PRectangle rc, int cornerSize, ColourDesired fill, int alphaFill,
 		ColourDesired outline, int alphaOutline, int flags) override;
@@ -693,6 +694,14 @@ void SurfaceGDI::FillRectangle(PRectangle rc, ColourDesired back) {
 	const RECT rcw = RectFromPRectangle(rc);
 	::SetBkColor(hdc, back.AsInteger());
 	::ExtTextOut(hdc, rcw.left, rcw.top, ETO_OPAQUE, &rcw, TEXT(""), 0, nullptr);
+}
+
+//Au: draw dots line
+void SurfaceGDI::DrawLineDots(PRectangle rc, ColourDesired color) {
+	const RECT r = RectFromPRectangle(rc);
+	auto oldPen = ::SelectObject(hdc, ::CreatePen(PS_DOT, 1, color.AsInteger()));
+	MoveTo(r.left, r.top); LineTo(r.right, r.top);
+	::DeleteObject(::SelectObject(hdc, oldPen));
 }
 
 void SurfaceGDI::FillRectangle(PRectangle rc, Surface &surfacePattern) {

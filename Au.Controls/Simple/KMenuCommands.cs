@@ -14,6 +14,9 @@ using System.Windows.Media;
 using System.Diagnostics;
 using System.Windows.Data;
 
+//TODO: when a checkbox button command invoked with a hotkey, now does not change check state in menu and toolbar.
+//	Only in Edit menu. Even if target="" and scintilla not focused. Works well in other menus. Don't know why.
+
 namespace Au.Controls
 {
 	/// <summary>

@@ -275,7 +275,6 @@ namespace Au.Types
 			if (n == 0) return ":: "; //shell root - Desktop
 			return ":: " + Convert2.HexEncode((void*)pidl, n);
 		}
-		//rejected: use base64-encoded ITEMIDLIST.
-		//	Shorter, but cannot easily split such string, for example in folders.UnexpandPath.
+		//rejected: use base64 ITEMIDLIST. Shorter, but cannot easily split, for example in folders.UnexpandPath.
 	}
 }

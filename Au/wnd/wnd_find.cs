@@ -50,7 +50,7 @@ namespace Au
 		/// Defines an object that must be in the client area of the window:
 		/// - UI element: <see cref="elmFinder"/> or string like <c>"name"</c> or <c>"e 'role' name"</c> or <c>"e 'role'"</c>.
 		/// - Child control: <see cref="wndChildFinder"/> or string like <c>"c 'cn' name"</c> or <c>"c '' name"</c> or <c>"c 'cn'"</c>.
-		/// - Image(s) or color(s): <see cref="uiimageFinder"/> or string <c>"image:..."</c> (uses <b>uiimage.find</b> with flag <see cref="IFFlags.WindowDC"/>).
+		/// - Image(s) or color(s): <see cref="uiimageFinder"/> or string <c>"image:..."</c> (uses <see cref="uiimage.find"/> with flag <see cref="IFFlags.WindowDC"/>).
 		/// </param>
 		/// <remarks>
 		/// To create code for this function, use dialog "Find window or control".

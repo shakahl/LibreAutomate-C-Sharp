@@ -13,6 +13,14 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Linq;
 
+//TODO: wnd.more ->
+//	desktop (in the future also could contain virtual desktop functions etc)
+//	WndUtil
+//	WndTaskbarButton
+//	WndCopyData
+//	WndSavedRect
+//	Maybe move some functions to wnd.
+
 namespace Au
 {
 	public partial struct wnd

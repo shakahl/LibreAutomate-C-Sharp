@@ -20,55 +20,6 @@ namespace Au
 {
 	public partial class uiimage
 	{
-		/// <summary>
-		/// Miscellaneous rarely used image functions.
-		/// </summary>
-		public static class more
-		{
-			/// <summary>
-			/// Loads image from file, resource or string.
-			/// </summary>
-			/// <param name="image">See <see cref="IFImage"/>.</param>
-			/// <exception cref="FileNotFoundException">Cannot find image file or resource.</exception>
-			/// <exception cref="ArgumentException">Bad image or string format.</exception>
-			/// <exception cref="Exception">Depending on <i>image</i> string format, exceptions of <see cref="Image.FromFile(string)"/>, <see cref="Bitmap(Stream)"/>, etc.</exception>
-			/// <remarks>
-			/// Calls <see cref="ImageUtil.LoadGdipBitmapFromFileOrResourceOrString"/>.
-			/// </remarks>
-			public static Bitmap loadImage(string image)
-				=> ImageUtil.LoadGdipBitmapFromFileOrResourceOrString(image);
-
-			/// <summary>
-			/// Creates Bitmap from a GDI bitmap.
-			/// </summary>
-			/// <param name="hbitmap">GDI bitmap handle. This function makes its copy.</param>
-			/// <remarks>
-			/// How this function is different from <see cref="Image.FromHbitmap"/>:
-			/// 1. Image.FromHbitmap usually creates bottom-up bitmap, which is incompatible with <see cref="find"/>. This function creates normal top-down bitmap, like <c>new Bitmap(...)</c>, <c>Bitmap.FromFile(...)</c> etc do.
-			/// 2. This function always creates bitmap of PixelFormat Format32bppRgb.
-			/// </remarks>
-			/// <exception cref="AuException">Failed. For example hbitmap is default(IntPtr).</exception>
-			/// <exception cref="Exception">Exceptions of Bitmap(int, int, PixelFormat) constructor.</exception>
-			public static unsafe Bitmap bitmapFromHbitmap(IntPtr hbitmap) {
-				var bh = new Api.BITMAPINFOHEADER() { biSize = sizeof(Api.BITMAPINFOHEADER) };
-				using (var dcs = new ScreenDC_()) {
-					if (0 == Api.GetDIBits(dcs, hbitmap, 0, 0, null, &bh, 0)) goto ge;
-					int wid = bh.biWidth, hei = bh.biHeight;
-					if (hei > 0) bh.biHeight = -bh.biHeight; else hei = -hei;
-					bh.biBitCount = 32;
-
-					var R = new Bitmap(wid, hei, PixelFormat.Format32bppRgb);
-					var d = R.LockBits(new Rectangle(0, 0, wid, hei), ImageLockMode.ReadWrite, R.PixelFormat);
-					bool ok = hei == Api.GetDIBits(dcs, hbitmap, 0, hei, (void*)d.Scan0, &bh, 0);
-					R.UnlockBits(d);
-					if (!ok) { R.Dispose(); goto ge; }
-					return R;
-				}
-				ge:
-				throw new AuException();
-			}
-		}
-
 		#region capture, etc
 
 		/// <summary>

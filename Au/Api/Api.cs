@@ -1216,8 +1216,8 @@ namespace Au.Types
 		[DllImport("uxtheme.dll", PreserveSig = true)]
 		internal static extern int BufferedPaintInit();
 
-		[DllImport("uxtheme.dll", PreserveSig = true)]
-		internal static extern int BufferedPaintUnInit();
+		//[DllImport("uxtheme.dll", PreserveSig = true)]
+		//internal static extern int BufferedPaintUnInit();
 
 		[DllImport("uxtheme.dll")]
 		internal static extern IntPtr BeginBufferedPaint(IntPtr hdcTarget, in RECT prcTarget, BP_BUFFERFORMAT dwFormat, ref BP_PAINTPARAMS pPaintParams, out IntPtr phdc);

@@ -350,7 +350,7 @@ namespace Au.Tools
 			var d = new OpenFileDialog { Filter = c_fileDialogFilter, DefaultExt = "png" };
 			if (d.ShowDialog(this) != true) return;
 			var f = d.FileName;
-			var im = System.Drawing.Image.FromFile(f) as System.Drawing.Bitmap;
+			var im = new Bitmap(f);
 			_imageFile = embed ? null : f;
 			_SetImage(null, im);
 		}

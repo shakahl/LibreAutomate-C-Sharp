@@ -34,6 +34,9 @@ static class CiUtil
 	//	return sym != null;
 	//}
 
+	public static bool Eq(this string t, TextSpan span, string s, bool ignoreCase = false)
+		=> t.Eq(span.Start..span.End, s, ignoreCase);
+
 	public static (ISymbol symbol, string keyword, HelpKind kind, SyntaxToken token) GetSymbolEtcFromPos(out CodeInfo.Context cd) {
 		var doc = Panels.Editor.ZActiveDoc; if (doc == null) { cd = default; return default; }
 		if (!CodeInfo.GetContextAndDocument(out cd)) return default;
@@ -353,7 +356,7 @@ static class CiUtil
 		}
 		if (m is MethodDeclarationSyntax mm) {
 			var rt = mm.ReturnType;
-			if (!code.Eq(rt.Span.Start..rt.Span.End, "void")) b.Append("\r\n/// <returns></returns>");
+			if (!code.Eq(rt.Span, "void")) b.Append("\r\n/// <returns></returns>");
 		}
 		return b.ToString();
 		//rejected: <typeparam name="TT"></typeparam>. Rarely used.

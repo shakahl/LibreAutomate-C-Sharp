@@ -140,11 +140,9 @@ namespace Au.Controls
 				switch (msg) {
 				case Api.WM_NCCREATE:
 					_w = w;
-					BufferedPaint.Init();
 					break;
 				case Api.WM_NCDESTROY:
 					_w = default;
-					BufferedPaint.Uninit();
 					break;
 				//case Api.WM_NCHITTEST: //never mind: if in Popup, probably click closes. Currently not using in popups.
 				//	return Api.HTTRANSPARENT;

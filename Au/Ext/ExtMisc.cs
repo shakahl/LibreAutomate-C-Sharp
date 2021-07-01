@@ -165,7 +165,7 @@ namespace Au.Types
 
 		//currently not used. Creates shorter string than ToString.
 		///// <summary>
-		///// Converts this <b>Guid</b> to Base-64 string.
+		///// Converts this <b>Guid</b> to Base64 string.
 		///// </summary>
 		//public static string ToBase64(this Guid t) => Convert.ToBase64String(new ReadOnlySpan<byte>((byte*)&t, sizeof(Guid)));
 
@@ -700,21 +700,23 @@ namespace Au.Types
 		#region System.Drawing
 
 		/// <summary>
-		/// Draws inset rectangle.
+		/// Draws inset or outset rectangle.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="pen">Pen with integer width and default alignment.</param>
 		/// <param name="r"></param>
+		/// <param name="outset">Draw outset.</param>
 		/// <remarks>
-		/// Calls <see cref="System.Drawing.Graphics.DrawRectangle"/> with arguments corrected so that it draws inside r. Does not use <see cref="System.Drawing.Drawing2D.PenAlignment.Inset"/>, it is unreliable.
+		/// Calls <see cref="System.Drawing.Graphics.DrawRectangle"/> with arguments corrected so that it draws inside or outside <i>r</i>. Does not use <see cref="System.Drawing.Drawing2D.PenAlignment"/>, it is unreliable.
 		/// </remarks>
-		public static void DrawRectangleInset(this System.Drawing.Graphics t, System.Drawing.Pen pen, RECT r) {
+		public static void DrawRectangleInset(this System.Drawing.Graphics t, System.Drawing.Pen pen, RECT r, bool outset = false) {
 			if (r.NoArea) return;
 			//pen.Alignment = PenAlignment.Inset; //no. Eg ignored if 1 pixel width.
 			//	MSDN: "A Pen that has its alignment set to Inset will yield unreliable results, sometimes drawing in the inset position and sometimes in the centered position.".
 			int w = (int)pen.Width, d = w / 2;
 			r.left += d; r.top += d;
 			r.right -= d = w - d; r.bottom -= d;
+			if (outset) r.Inflate(w, w);
 			t.DrawRectangle(pen, r);
 		}
 
@@ -724,9 +726,9 @@ namespace Au.Types
 		/// <remarks>
 		/// Creates pen and calls other overload.
 		/// </remarks>
-		public static void DrawRectangleInset(this System.Drawing.Graphics t, System.Drawing.Color penColor, int pedWidth, RECT r) {
-			using var pen = new System.Drawing.Pen(penColor, pedWidth);
-			DrawRectangleInset(t, pen, r);
+		public static void DrawRectangleInset(this System.Drawing.Graphics t, System.Drawing.Color penColor, int penWidth, RECT r, bool outset = false) {
+			using var pen = new System.Drawing.Pen(penColor, penWidth);
+			DrawRectangleInset(t, pen, r, outset);
 		}
 
 		/// <summary>

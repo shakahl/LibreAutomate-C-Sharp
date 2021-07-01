@@ -130,9 +130,6 @@ class PanelEdit : Grid
 			}
 		}
 
-		_activeDoc.Call(SCI_SETWRAPMODE, App.Settings.edit_wrap); //fast and does nothing if already is in that wrap state
-		_activeDoc.ZImages.Visible = App.Settings.edit_noImages ? AnnotationsVisible.ANNOTATION_HIDDEN : AnnotationsVisible.ANNOTATION_STANDARD;
-
 		Panels.Find.ZUpdateQuickResults(true);
 		return true;
 	}

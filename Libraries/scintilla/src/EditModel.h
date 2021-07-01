@@ -53,8 +53,10 @@ public:
 
 	Document *pdoc;
 
-	Sci_NotifyCallback cbNotify; void* cbNotifyParam; //Au: can use callback function instead of WM_NOTIFY.
-	Sci_AnnotationDrawCallback cbAnnotationDraw; void* cbAnnotationDrawParam; //Au: to draw in annotation eg image instead of text.
+	//Au
+	Sci_NotifyCallback cbNotify; void* cbNotifyParam; //can use callback function instead of WM_NOTIFY.
+	Sci_AnnotationDrawCallback cbAnnotationDraw; void* cbAnnotationDrawParam; //to draw in annotation eg image instead of text.
+	Sci_MarginDrawCallback cbMarginDraw; int cbMarginsMask; //to draw eg images in margin.
 
 	EditModel();
 	// Deleted so EditModel objects can not be copied.

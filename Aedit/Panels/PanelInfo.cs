@@ -38,7 +38,7 @@ class PanelInfo : Grid
 	private void _sci_ZHandleCreated() {
 		_sci.zStyleBackColor(Sci.STYLE_DEFAULT, 0xF0F0F0);
 		_sci.zStyleFont(Sci.STYLE_DEFAULT, App.Wmain);
-		_sci.zMarginWidth(1, 4);
+		_sci.zSetMarginWidth(1, 4);
 		_sci.zStyleClearAll();
 		_sci.Call(Sci.SCI_SETHSCROLLBAR);
 		_sci.Call(Sci.SCI_SETVSCROLLBAR);

@@ -72,8 +72,9 @@ EditModel::EditModel() : braces{} {
 	wrapWidth = LineLayout::wrapWidthInfinite;
 
 	//Au
-	cbNotify = 0; cbNotifyParam = 0;
-	cbAnnotationDraw = 0; cbAnnotationDrawParam = 0;
+	cbNotify = nullptr; cbNotifyParam = nullptr;
+	cbAnnotationDraw = nullptr; cbAnnotationDrawParam = nullptr;
+	cbMarginDraw = nullptr; cbMarginsMask = 0;
 
 	pdoc = new Document(SC_DOCUMENTOPTION_DEFAULT);
 	pdoc->AddRef();

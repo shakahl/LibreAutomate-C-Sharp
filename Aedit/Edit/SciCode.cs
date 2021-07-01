@@ -19,9 +19,6 @@ using Au.More;
 using Au.Controls;
 using static Au.Controls.Sci;
 using System.Windows.Input;
-using System.Windows.Interop;
-using System.Windows;
-using System.Windows.Controls;
 
 partial class SciCode : KScintilla
 {
@@ -34,15 +31,43 @@ partial class SciCode : KScintilla
 
 	//margins. Initially 0-4. We can add more with SCI_SETMARGINS.
 	public const int c_marginFold = 0;
-	public const int c_marginLineNumbers = 1;
+	public const int c_marginImages = 1;
 	public const int c_marginMarkers = 2; //breakpoints etc
+	public const int c_marginLineNumbers = 3;
+	public const int c_marginChanges = 4; //currently not impl, just adds some space between line numbers and text
 
 	//markers. We can use 0-24. Folding 25-31.
 	public const int c_markerUnderline = 0, c_markerBookmark = 1, c_markerBreakpoint = 2;
 	//public const int c_markerStepNext = 3;
 
 	//indicators. We can use 8-31. Lexers use 0-7. Draws indicators from smaller to bigger, eg error on warning.
-	public const int c_indicFind = 8, c_indicDiagHidden = 17, c_indicInfo = 18, c_indicWarning = 19, c_indicError = 20;
+	public const int c_indicFind = 8, c_indicImages = 9, c_indicDiagHidden = 17, c_indicInfo = 18, c_indicWarning = 19, c_indicError = 20;
+
+	//#if DEBUG
+	//	public const int c_indicTest = 21;
+	//	internal void TestHidden() {
+	//		string code = zText;
+	//		int start8 = code.Find("/*image:")+7;
+	//		int end8 = code.Find("*/");
+
+	//		byte style = 27;
+	//		zStyleHidden(style, true);
+
+	//		var b = new byte[end8-start8];
+	//		Array.Fill(b, style);
+
+	//		Call(SCI_STARTSTYLING, start8);
+	//		unsafe { fixed (byte* bp = b) Call(SCI_SETSTYLINGEX, b.Length, bp); }
+	//	}
+
+	//	internal void TestIndicators() {
+	//		Call(SCI_INDICSETFORE, c_indicTest, 0x008000);
+	//		Call(SCI_INDICSETSTYLE, c_indicTest, INDIC_BOX);
+	//		zIndicatorClear(c_indicTest);
+	//		int start = zSelectionStart8, end = zSelectionEnd8;
+	//		zIndicatorAdd(false, c_indicTest, start..end, 1);
+	//	}
+	//#endif
 
 	//static int _test;
 
@@ -53,21 +78,35 @@ partial class SciCode : KScintilla
 		_fn = file;
 		_fls = fls;
 
-		ZInitImagesStyle = ZImagesStyle.AnyString;
 		if (fls.IsBinary) ZInitReadOnlyAlways = true;
-
-		ZHandleCreated += _ZHandleCreated;
+		if (fls.IsImage) ZInitImages = true;
 
 		Name = "document";
 	}
 
-	void _ZHandleCreated() {
-		Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT /*| MOD.SC_MOD_INSERTCHECK*/));
+	protected override void ZOnHandleCreated() {
+		Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT /*| MOD.SC_MOD_INSERTCHECK*/
+			//| MOD.SC_MOD_CHANGEFOLD //only when text modified, but not when user clicks +-
+			));
 		Call(SCI_SETLEXER, (int)LexLanguage.SCLEX_NULL); //default SCLEX_CONTAINER
-		zMarginType(c_marginLineNumbers, SC_MARGIN_NUMBER);
+
+		zSetMarginType(c_marginFold, SC_MARGIN_SYMBOL);
+		zSetMarginType(c_marginImages, SC_MARGIN_SYMBOL);
+		Call(SCI_SETMARGINWIDTHN, c_marginImages, 0);
+		zSetMarginType(c_marginMarkers, SC_MARGIN_SYMBOL);
+		zSetMarginType(c_marginLineNumbers, SC_MARGIN_NUMBER);
+		//zSetMarginType(c_marginChanges, SC_MARGIN_SYMBOL);
+		Call(SCI_SETMARGINWIDTHN, c_marginChanges, 4);
+		Call(SCI_SETMARGINLEFT, 0, 2);
+
 		_InicatorsInit();
 
+		Call(SCI_SETWRAPMODE, App.Settings.edit_wrap);
+		Call(SCI_ASSIGNCMDKEY, Math2.MakeLparam(SCK_RETURN, SCMOD_CTRL | SCMOD_SHIFT), SCI_NEWLINE);
+
 		if (_fn.IsCodeFile) {
+			Call(SCI_SETEXTRADESCENT, 1); //eg to avoid drawing fold separator lines on text
+
 			//C# interprets Unicode newline characters NEL, LS and PS as newlines. Visual Studio too.
 			//	Scintilla and C++ lexer support it, but by default it is disabled.
 			//	If disabled, line numbers in errors/warnings/stacktraces may be incorrect.
@@ -101,6 +140,8 @@ partial class SciCode : KScintilla
 		//Call(SCI_SETVIEWWS, 1); Call(SCI_SETWHITESPACEFORE, 1, 0xcccccc);
 
 		_InitDragDrop();
+
+		//base.ZOnHandleCreated();
 	}
 
 	//Called by PanelEdit.ZOpen.
@@ -139,23 +180,26 @@ partial class SciCode : KScintilla
 	//	base.Dispose(disposing);
 	//}
 
-	protected unsafe override void ZOnSciNotify(ref SCNotification n) {
-		//switch(n.nmhdr.code) {
-		//case NOTIF.SCN_PAINTED:
-		////case NOTIF.SCN_UPDATEUI:
-		//case NOTIF.SCN_FOCUSIN:
-		//case NOTIF.SCN_FOCUSOUT:
-		//case NOTIF.SCN_DWELLSTART:
-		//case NOTIF.SCN_DWELLEND:
-		//case NOTIF.SCN_NEEDSHOWN:
-		//	break;
-		//case NOTIF.SCN_MODIFIED:
-		//	print.it(n.nmhdr.code, n.modificationType);
-		//	break;
-		//default:
-		//	print.it(n.nmhdr.code);
-		//	break;
+	protected override void ZOnSciNotify(ref SCNotification n) {
+		//if (test_) {
+		//	switch (n.nmhdr.code) {
+		//	case NOTIF.SCN_UPDATEUI:
+		//	case NOTIF.SCN_NEEDSHOWN:
+		//	case NOTIF.SCN_PAINTED:
+		//	case NOTIF.SCN_FOCUSIN:
+		//	case NOTIF.SCN_FOCUSOUT:
+		//	case NOTIF.SCN_DWELLSTART:
+		//	case NOTIF.SCN_DWELLEND:
+		//		break;
+		//	case NOTIF.SCN_MODIFIED:
+		//		print.it(n.nmhdr.code, n.modificationType);
+		//		break;
+		//	default:
+		//		print.it(n.nmhdr.code);
+		//		break;
+		//	}
 		//}
+
 
 		switch (n.nmhdr.code) {
 		case NOTIF.SCN_SAVEPOINTLEFT:
@@ -220,10 +264,19 @@ partial class SciCode : KScintilla
 				if (n.margin == c_marginFold) {
 					_FoldOnMarginClick(null, n.position);
 				}
-
-				//SHOULDDO: when clicked selbar to select a fold header line, should select all hidden lines. Like in VS.
 			}
 			break;
+		case NOTIF.SCN_STYLENEEDED when _fn.IsOtherFileType:
+			//scintilla repeatedly sends SCN_STYLENEEDED even if lexer type is SCLEX_NULL.
+			//	Old documentation and behavior: sends notifications when SCLEX_CONTAINER. No styling and notifications if SCLEX_NULL.
+			//	New documentation does not mention SCLEX_CONTAINER, SCLEX_NULL and even SCI_SETLEXER (replaced by SCI_SETILEXER?). But they are defined and used in scintilla.
+			//	Let's set styling to stop these notifications.
+			Call(SCI_STARTSTYLING);
+			Call(SCI_SETSTYLING, n.position, STYLE_DEFAULT);
+			break;
+			//case NOTIF.SCN_PAINTED:
+			//	_Paint(true);
+			//	break;
 		}
 
 		base.ZOnSciNotify(ref n);
@@ -237,13 +290,13 @@ partial class SciCode : KScintilla
 		return base.WndProc(hwnd, msg, wParam, lParam, ref handled);
 	}
 
-	bool _WndProc(wnd w, int msg, nint wParam, nint lParam, ref nint lResult) {
+	bool _WndProc(wnd w, int msg, nint wparam, nint lparam, ref nint lresult) {
 		switch (msg) {
 		case Api.WM_SETFOCUS:
 			if (!_noModelEnsureCurrentSelected) App.Model.EnsureCurrentSelected();
 			break;
 		case Api.WM_CHAR: {
-				int c = (int)wParam;
+				int c = (int)wparam;
 				if (c < 32) {
 					if (!(c == 9 || c == 10 || c == 13)) return true;
 				} else {
@@ -252,14 +305,14 @@ partial class SciCode : KScintilla
 			}
 			break;
 		case Api.WM_KEYDOWN: //SHOULDDO: test, maybe move to TranslateAccelerator
-			if ((KKey)wParam == KKey.Insert) return true;
+			if ((KKey)wparam == KKey.Insert) return true;
 			break;
 		case Api.WM_MBUTTONDOWN:
 			Api.SetFocus(w);
 			return true;
 		case Api.WM_RBUTTONDOWN: {
 				//workaround for Scintilla bug: when right-clicked a margin, if caret or selection start is at that line, goes to the start of line
-				POINT p = Math2.NintToPOINT(lParam);
+				POINT p = Math2.NintToPOINT(lparam);
 				int margin = zMarginFromPoint(p, false);
 				if (margin >= 0) {
 					var selStart = zSelectionStart8;
@@ -273,26 +326,33 @@ partial class SciCode : KScintilla
 			}
 			break;
 		case Api.WM_CONTEXTMENU: {
-				bool kbd = (int)lParam == -1;
-				int margin = kbd ? -1 : zMarginFromPoint(Math2.NintToPOINT(lParam), true);
+				bool kbd = (int)lparam == -1;
+				int margin = kbd ? -1 : zMarginFromPoint(Math2.NintToPOINT(lparam), true);
 				switch (margin) {
 				case -1:
 					var m = new KWpfMenu();
 					App.Commands[nameof(Menus.Edit)].CopyToMenu(m);
 					m.Show(this, byCaret: kbd);
 					break;
-				case c_marginLineNumbers:
-				case c_marginMarkers:
-					ZCommentLines(null);
+				case c_marginLineNumbers or c_marginMarkers or c_marginImages or c_marginChanges:
+					ZCommentLines(null, notSlashStar: true);
 					break;
 					//case c_marginFold:
 					//	break;
 				}
 				return true;
 			}
+			//case Api.WM_PAINT:
+			//	_Paint(false);
+			//	break;
+			//case Api.WM_PAINT: {
+			//		using var p1 = perf.local();
+			//		Call(msg, wparam, lparam);
+			//		return true;
+			//	}
 		}
 
-		//base.WndProc(ref m);
+		//Call(msg, wparam, lparam);
 
 		//in winforms version this was after base.WndProc. Now in hook cannot do it, therefore using async.
 		//SHOULDDO: superclass and use normal wndproc instead of hook. Now possible various anomalies because of async.
@@ -331,9 +391,6 @@ partial class SciCode : KScintilla
 			case (KKey.V, ModifierKeys.Control):
 				ZPaste();
 				return true;
-			case (KKey.W, ModifierKeys.Control):
-				Menus.Edit.View.Wrap_lines();
-				return true;
 			case (KKey.F12, 0):
 				Menus.Edit.Go_to_definition();
 				return true;
@@ -341,6 +398,7 @@ partial class SciCode : KScintilla
 				if (CodeInfo.SciCmdKey(this, key, mod)) return true;
 				switch ((key, mod)) {
 				case (KKey.Enter, 0):
+				case (KKey.Enter, ModifierKeys.Control | ModifierKeys.Shift):
 					zAddUndoPoint();
 					break;
 				}
@@ -384,7 +442,7 @@ partial class SciCode : KScintilla
 	internal void _SetLineNumberMarginWidth(bool onModified = false) {
 		int c = 4, lines = zLineCount;
 		while (lines > 999) { c++; lines /= 10; }
-		if (!onModified || c != _prevLineNumberMarginWidth) zMarginWidth(c_marginLineNumbers, _prevLineNumberMarginWidth = c, chars: true);
+		if (!onModified || c != _prevLineNumberMarginWidth) zSetMarginWidth(c_marginLineNumbers, _prevLineNumberMarginWidth = c, chars: true);
 	}
 	int _prevLineNumberMarginWidth;
 
@@ -578,18 +636,19 @@ partial class SciCode : KScintilla
 	[Flags]
 	public enum EView { Wrap = 1, Images = 2 }
 
-	internal void ZToggleView_call_from_menu_only_(EView what) {
+	internal static void ZToggleView_call_from_menu_only_(EView what) {
 		if (what.Has(EView.Wrap)) {
-			bool on = !App.Settings.edit_wrap;
-			App.Settings.edit_wrap = on;
-			Call(SCI_SETWRAPMODE, on);
+			App.Settings.edit_wrap ^= true;
+			foreach (var v in Panels.Editor.ZOpenDocs) v.Call(SCI_SETWRAPMODE, App.Settings.edit_wrap);
 		}
 		if (what.Has(EView.Images)) {
-			bool on = App.Settings.edit_noImages;
-			App.Settings.edit_noImages = !on;
-			ZImages.Visible = on ? AnnotationsVisible.ANNOTATION_STANDARD : AnnotationsVisible.ANNOTATION_HIDDEN;
+			App.Settings.edit_noImages ^= true;
+			foreach (var v in Panels.Editor.ZOpenDocs) v._ImagesOnOff();
 		}
-		//Panels.Editor._UpdateUI_EditView(); //don't need this, because this func called from menu commands only
+
+		//should not need this, because this func called from menu commands only.
+		//	But somehow KMenuCommands does not auto change menu/toolbar checked state for Edit menu. Need to fix it.
+		Panels.Editor._UpdateUI_EditView();
 	}
 
 	#endregion
@@ -744,7 +803,7 @@ partial class SciCode : KScintilla
 		zNormalizeRange(true, ref from, ref to);
 		//print.it(fromUtf16, from, to, zCurrentPos8);
 #if DEBUG
-		if(!(zCurrentPos8 >= from && (flags.Has(ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) ? zCurrentPos8 == to : zCurrentPos8 <= to))) {
+		if (!(zCurrentPos8 >= from && (flags.Has(ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) ? zCurrentPos8 == to : zCurrentPos8 <= to))) {
 			Debug_.Print("bad");
 			//CiUtil.HiliteRange(from, to);
 		}

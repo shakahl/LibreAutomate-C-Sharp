@@ -111,7 +111,7 @@ partial class CiStyling
 	/// Called when editor text modified.
 	/// </summary>
 	public void SciModified(SciCode doc, in SCNotification n) {
-		//Delay to avoid multiple styling/folding/canceling on multistep actions (replace text range, find/replace all, autocorrection) and fast automated text input.
+		//Delay to avoid multiple styling/folding/cancelling on multistep actions (replace text range, find/replace all, autocorrection) and fast automated text input.
 		_cancelTS?.Cancel(); _cancelTS = null;
 		_modFromEnd = Math.Min(_modFromEnd, doc.zLen8 - n.FinalPosition);
 		_modTimer ??= new timerm(_Modified);
@@ -155,7 +155,7 @@ partial class CiStyling
 		if (!cd.GetDocument()) return;
 #if PRINT
 		p1.Next('d');
-		print.it($"<><c green>style needed: {start8}-{end8}, lines {doc.LineFromPos(false, start8) + 1}-{doc.LineFromPos(false, end8)}<>");
+		print.it($"<><c green>style needed: {start8}-{end8}, lines {doc.zLineFromPos(false, start8) + 1}-{doc.zLineFromPos(false, end8)}<>");
 #endif
 		int start16 = doc.zPos16(start8), end16 = doc.zPos16(end8);
 
@@ -218,7 +218,7 @@ partial class CiStyling
 		var b = new byte[end8 - start8];
 
 		foreach (var v in a) {
-			//print.it(v.ClassificationType, v.TextSpan);
+			//print.it(v.ClassificationType, cd.code[v.TextSpan.Start..v.TextSpan.End]);
 			EToken style = v.ClassificationType switch {
 				#region
 				ClassificationTypeNames.ClassName => EToken.Type,
@@ -295,7 +295,26 @@ partial class CiStyling
 			//int spanStart16 = v.TextSpan.Start, spanEnd16 = v.TextSpan.End;
 			int spanStart16 = Math.Max(v.TextSpan.Start, start16), spanEnd16 = Math.Min(v.TextSpan.End, end16);
 			int spanStart8 = doc.zPos8(spanStart16), spanEnd8 = doc.zPos8(spanEnd16);
-			for (int i = spanStart8; i < spanEnd8; i++) b[i - start8] = (byte)style;
+			_SetStyleRange((byte)style);
+
+			void _SetStyleRange(byte style) {
+				for (int i = spanStart8; i < spanEnd8; i++) b[i - start8] = style;
+			}
+
+			//hide image Base64. Actually currently only changes color. Can't hide because of scintilla bugs.
+			if (v.TextSpan.Length > 10) {
+				//note: hide only @"image:string" and /*image:comment*/, but not "image:string" and //... /*image:comment*/.
+				//	It simplifies code and allows user to unhide if wants.
+				//	Where need some other comment before /*image:comment*/, use /*other comment*/ /*image:comment*/.
+				switch (style) {
+				case EToken.Comment when cd.code.AsSpan(v.TextSpan.Start).StartsWith("/*image:"):
+				case EToken.String when cd.code.AsSpan(v.TextSpan.Start).StartsWith("@\"image:"):
+					//spanStart8 += 7; spanEnd8 -= style == EToken.String ? 1 : 2; //if hidden style would work
+					if(style == EToken.String) { spanStart8 += 2; spanEnd8 -= 1; }
+					_SetStyleRange((byte)EToken.Image);
+					break;
+				}
+			}
 		}
 
 #if PRINT
@@ -308,7 +327,10 @@ partial class CiStyling
 #if PRINT
 		p1.Next('S');
 #endif
-		if (!minimal) _Fold(firstTime, cd, start8, end8);
+		if (!minimal) {
+			_Fold(firstTime, cd, start8, end8);
+			doc._ImagesGet(cd, a);
+		}
 #if PRINT
 		p1.NW('F');
 #endif
@@ -432,11 +454,15 @@ partial class CiStyling
 				foldStart = bp.Identifier.SpanStart;
 				break;
 			case LocalFunctionStatementSyntax lf when lf.Body != null:
-				fold = true;
+				fold = separator = true;
 				foldStart = lf.Identifier.SpanStart;
+				//SHOULDDO: also separator before, if previous sibling node is not local func
 				break;
 			case AnonymousFunctionExpressionSyntax af when af.ExpressionBody == null: //lambda, delegate(){}
 				fold = !(v.Parent is ArgumentSyntax);
+				break;
+			case LiteralExpressionSyntax li when li.IsKind(SyntaxKind.StringLiteralExpression) && code.Eq(span.Start, "@\"image:") && code.Eq(span.End - 1, '\"'):
+				fold = true;
 				break;
 			}
 			if (fold && !separator && code.IndexOf('\n', span.Start, span.End - span.Start) < 0) fold = false;
@@ -485,10 +511,10 @@ partial class CiStyling
 	static regexp s_rxComments = new(@"(?m)^[ \t]*//(?!\.\s|;|/[^/]).*(\R\s*//(?!\.\s|;|/[^/]).*)+");
 
 	static void _InitFolding(SciCode doc) {
-		const int foldMrgin = SciCode.c_marginFold;
-		doc.Call(SCI_SETMARGINTYPEN, foldMrgin, SC_MARGIN_SYMBOL);
-		doc.Call(SCI_SETMARGINMASKN, foldMrgin, SC_MASK_FOLDERS);
-		doc.Call(SCI_SETMARGINSENSITIVEN, foldMrgin, 1);
+		const int foldMargin = SciCode.c_marginFold;
+		doc.Call(SCI_SETMARGINTYPEN, foldMargin, SC_MARGIN_SYMBOL);
+		doc.Call(SCI_SETMARGINMASKN, foldMargin, SC_MASK_FOLDERS);
+		doc.Call(SCI_SETMARGINSENSITIVEN, foldMargin, 1);
 
 		doc.Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDEROPEN, SC_MARK_BOXMINUS);
 		doc.Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDER, SC_MARK_BOXPLUS);
@@ -510,9 +536,9 @@ partial class CiStyling
 		doc.Call(SCI_FOLDDISPLAYTEXTSETSTYLE, SC_FOLDDISPLAYTEXT_STANDARD);
 		doc.zStyleForeColor(STYLE_FOLDDISPLAYTEXT, 0x808080);
 
-		doc.Call(SCI_SETMARGINCURSORN, foldMrgin, SC_CURSORARROW);
+		doc.Call(SCI_SETMARGINCURSORN, foldMargin, SC_CURSORARROW);
 
-		doc.zMarginWidth(foldMrgin, 14);
+		doc.zSetMarginWidth(foldMargin, 14);
 	}
 
 	#endregion
@@ -695,3 +721,5 @@ partial class SciCode
 		return md5.Hash;
 	}
 }
+
+//shoulddo: it seems sometimes foldings not saved after closing document and then restarting program. Now cannot reproduce. Maybe then VS terminated process when compiling.

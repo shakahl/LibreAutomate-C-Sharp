@@ -26,7 +26,7 @@ namespace Au.Controls
 		public KSciInfoBox() {
 			ZInitReadOnlyAlways = true;
 			ZInitTagsStyle = ZTagsStyle.AutoAlways;
-			ZInitImagesStyle = ZImagesStyle.ImageTag;
+			ZInitImages = true;
 			ZInitUseDefaultContextMenu = true;
 			ZInitWrapVisuals = false;
 			ZWrapLines = true;
@@ -41,7 +41,7 @@ namespace Au.Controls
 			if (ZInitUseControlFont != null) zStyleFont(Sci.STYLE_DEFAULT, ZInitUseControlFont); //Segoe UI 9 is narrower but taller than the default Verdana 8. Also tested Calibri 9 (used for HtmlRenderer), but Verdana looks better.
 			zStyleClearAll();
 
-			zMarginWidth(1, 0);
+			zSetMarginWidth(1, 0);
 
 			SIZE z = ZInitBlankMargins;
 			z = Dpi.Scale(z, this.Hwnd);

@@ -54,34 +54,39 @@ partial class SciCode
 	}
 
 	/// <summary>
-	/// Comments (adds // or /**/) or uncomments selected text or current line.
+	/// Comments out (adds // or /**/) or uncomments selected text or current line.
 	/// </summary>
-	/// <param name="comment">Comment (true), uncomment (false) or toggle (null).</param>
-	public void ZCommentLines(bool? comment) {
+	/// <param name="comment">Comment out (true), uncomment (false) or toggle (null).</param>
+	/// <param name="notSlashStar">Comment out lines, even if there is nut-full-line selection.</param>
+	public void ZCommentLines(bool? comment, bool notSlashStar = false) {
 		if (zIsReadonly) return;
 
 		//how to comment/uncomment: // or /**/
-		int selStart = zSelectionStar16, selEnd = zSelectionEnd16, replStart = selStart, replEnd = selEnd;
-		bool com, slashStar = false, notSlashStar = false, isSelection = selEnd > selStart;
+		int selStart = zSelectionStart16, selEnd = zSelectionEnd16, replStart = selStart, replEnd = selEnd;
+		bool com, slashStar = false, isSelection = selEnd > selStart;
 		if (!CodeInfo.GetContextAndDocument(out var cd, selStart)) return;
 		string code = cd.code, s = null;
 		var root = cd.document.GetSyntaxRootAsync().Result;
-		var trivia = root.FindTrivia(selStart);
-		if (trivia.IsKind(SyntaxKind.MultiLineCommentTrivia)) {
-			var span = trivia.Span;
-			if (slashStar = comment != true && selEnd <= trivia.Span.End) {
-				com = false;
-				replStart = span.Start; replEnd = span.End;
-				s = code[(replStart + 2)..(replEnd - 2)];
-			} else notSlashStar = true;
+
+		if (!notSlashStar) {
+			var trivia = root.FindTrivia(selStart);
+			if (trivia.IsKind(SyntaxKind.MultiLineCommentTrivia)) {
+				var span = trivia.Span;
+				if (slashStar = comment != true && selEnd <= trivia.Span.End) {
+					com = false;
+					replStart = span.Start; replEnd = span.End;
+					s = code[(replStart + 2)..(replEnd - 2)];
+				} else notSlashStar = true;
+			}
 		}
+
 		if (!slashStar) {
 			//get start and end of lines containing selection
 			while (replStart > 0 && code[replStart - 1] != '\n') replStart--;
 			if (!(replEnd > replStart && code[replEnd - 1] == '\n')) while (replEnd < code.Length && code[replEnd] != '\r' && code[replEnd] != '\n') replEnd++;
 			if (replEnd == replStart) return;
 			//is the first line //comments ?
-			trivia = root.FindTrivia(replStart);
+			var trivia = root.FindTrivia(replStart);
 			if (trivia.IsKind(SyntaxKind.WhitespaceTrivia)) trivia = root.FindTrivia(trivia.Span.End);
 			if (trivia.IsKind(SyntaxKind.SingleLineCommentTrivia)) {
 				com = comment ?? false;
@@ -91,6 +96,7 @@ partial class SciCode
 				slashStar = isSelection && !notSlashStar && (selStart > replStart || selEnd < replEnd);
 				if (slashStar) { replStart = selStart; replEnd = selEnd; }
 			}
+
 			s = code[replStart..replEnd];
 			if (slashStar) {
 				s = "/*" + s + "*/";
@@ -98,6 +104,7 @@ partial class SciCode
 				s = com ? s.RegexReplace(@"(?m)^", "//") : s.RegexReplace(@"(?m)^([ \t]*)//", "$1");
 			}
 		}
+
 		bool caretAtEnd = isSelection && zCurrentPos16 == selEnd;
 		zReplaceRange(true, replStart, replEnd, s);
 		if (isSelection) {

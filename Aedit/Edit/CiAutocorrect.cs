@@ -26,18 +26,6 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 //SHOULDDO: decrease indent when typing }.
 //TODO: if TLS script, always ensure that at the end is a line with hidden semicolon.
 
-//TODO: Options -> Code -> Exit statement:
-//	combo "Enter (default)|Ctrl+Enter|Shift+Enter"
-
-
-//	check "Enter" (new line)
-//	check "Tab" (same line)
-
-//	Enter = check "Exit statement" (default)
-//	Ctrl+Enter = check "Exit statement"
-//	Shift+Enter = check "Exit statement"
-//	Tab = check "Exit statement" (default)
-
 class CiAutocorrect
 {
 	public class BeforeCharContext
@@ -179,6 +167,7 @@ class CiAutocorrect
 			var trivia = root.FindTrivia(pos);
 			if (!trivia.IsKind(SyntaxKind.MultiLineCommentTrivia)) return;
 			if (trivia.SpanStart != --pos) return;
+			if (pos > 0 && code[pos - 1] == '\n') replaceText = "\r\n*/";
 			tempRangeFrom = 0;
 		} else {
 			var token = root.FindToken(pos);

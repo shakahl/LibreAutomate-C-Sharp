@@ -23,6 +23,8 @@ namespace Au.Controls
 		public const int SCI_SETNOTIFYCALLBACK = 9503;
 		public delegate int Sci_AnnotationDrawCallback(void* cbParam, ref Sci_AnnotationDrawCallbackData d);
 		public const int SCI_SETANNOTATIONDRAWCALLBACK = 9504;
+		public delegate void Sci_MarginDrawCallback(ref Sci_MarginDrawCallbackData d);
+		public const int SCI_SETMARGINDRAWCALLBACK = 9505;
 		public const int SCI_ISXINMARGIN = 9506;
 		public const int SCI_DRAGDROP = 9507;
 
@@ -56,6 +58,12 @@ namespace Au.Controls
 			public RECT rect;
 			public byte* text;
 			public int textLen, line, annotLine;
+		};
+		public unsafe struct Sci_MarginDrawCallbackData
+		{
+			public IntPtr hdc;
+			public RECT rect;
+			public int margin, firstLine, lastLine;
 		};
 		public struct Sci_DragDropData
 		{

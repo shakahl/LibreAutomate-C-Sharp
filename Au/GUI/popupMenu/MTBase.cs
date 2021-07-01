@@ -18,7 +18,7 @@ namespace Au
 	/// <i>image</i> argument of "add item" functions can be:
 	/// - file/folder path (string) - the "show" function calls <see cref="icon.of"/> to get its icon. It also supports file type icons like ".txt", etc.
 	/// - file path with prefix "imagefile:" or resource path that starts with "resources/" or has prefix "resource:" - the "show" function loads .png or .xaml image file or resource.
-	/// - string with prefix "image:" - Base-64 encoded png file. Can be created with the "Find image..." dialog.
+	/// - string with prefix "image:" - Base64 encoded image file. Can be created with the "Find image..." dialog.
 	/// - <see cref="FolderPath"/> - same as folder path string.
 	/// - <see cref="Image"/> - image.
 	/// - <see cref="icon"/> - icon. The "add item" function disposes it.
@@ -57,7 +57,6 @@ namespace Au
 
 		private protected virtual void _WmNccreate(wnd w) {
 			_w = w;
-			BufferedPaint.Init();
 			MouseCursor.SetArrowCursor_(); //workaround for: briefly shows "wait" cursor when entering mouse first time in process
 		}
 
@@ -68,7 +67,6 @@ namespace Au
 				Marshal.ReleaseComObject(_stdAO);
 				_stdAO = null;
 			}
-			BufferedPaint.Uninit();
 		}
 
 		/// <summary>

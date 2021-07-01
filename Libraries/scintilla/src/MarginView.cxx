@@ -55,7 +55,7 @@ using namespace Scintilla;
 
 namespace Scintilla {
 
-void DrawWrapMarker(Surface *surface, PRectangle rcPlace,
+void DrawWrapMarker(Surface* surface, PRectangle rcPlace,
 	bool isEndMarker, ColourDesired wrapColour) {
 	surface->PenColour(wrapColour);
 
@@ -73,7 +73,7 @@ void DrawWrapMarker(Surface *surface, PRectangle rcPlace,
 	const int y = ircPlace.Height() / 2 + dy;
 
 	struct Relative {
-		Surface *surface;
+		Surface* surface;
 		int xBase;
 		int xDir;
 		int yBase;
@@ -107,31 +107,31 @@ MarginView::MarginView() noexcept {
 }
 
 void MarginView::DropGraphics(bool freeObjects) {
-	if (freeObjects) {
+	if(freeObjects) {
 		pixmapSelMargin.reset();
 		pixmapSelPattern.reset();
 		pixmapSelPatternOffset1.reset();
 	} else {
-		if (pixmapSelMargin)
+		if(pixmapSelMargin)
 			pixmapSelMargin->Release();
-		if (pixmapSelPattern)
+		if(pixmapSelPattern)
 			pixmapSelPattern->Release();
-		if (pixmapSelPatternOffset1)
+		if(pixmapSelPatternOffset1)
 			pixmapSelPatternOffset1->Release();
 	}
 }
 
-void MarginView::AllocateGraphics(const ViewStyle &vsDraw) {
-	if (!pixmapSelMargin)
+void MarginView::AllocateGraphics(const ViewStyle& vsDraw) {
+	if(!pixmapSelMargin)
 		pixmapSelMargin.reset(Surface::Allocate(vsDraw.technology));
-	if (!pixmapSelPattern)
+	if(!pixmapSelPattern)
 		pixmapSelPattern.reset(Surface::Allocate(vsDraw.technology));
-	if (!pixmapSelPatternOffset1)
+	if(!pixmapSelPatternOffset1)
 		pixmapSelPatternOffset1.reset(Surface::Allocate(vsDraw.technology));
 }
 
-void MarginView::RefreshPixMaps(Surface *surfaceWindow, WindowID wid, const ViewStyle &vsDraw) {
-	if (!pixmapSelPattern->Initialised()) {
+void MarginView::RefreshPixMaps(Surface* surfaceWindow, WindowID wid, const ViewStyle& vsDraw) {
+	if(!pixmapSelPattern->Initialised()) {
 		const int patternSize = 8;
 		pixmapSelPattern->InitPixMap(patternSize, patternSize, surfaceWindow, wid);
 		pixmapSelPatternOffset1->InitPixMap(patternSize, patternSize, surfaceWindow, wid);
@@ -145,25 +145,25 @@ void MarginView::RefreshPixMaps(Surface *surfaceWindow, WindowID wid, const View
 		ColourDesired colourFMFill = vsDraw.selbar;
 		ColourDesired colourFMStripes = vsDraw.selbarlight;
 
-		if (!(vsDraw.selbarlight == ColourDesired(0xff, 0xff, 0xff))) {
+		if(!(vsDraw.selbarlight == ColourDesired(0xff, 0xff, 0xff))) {
 			// User has chosen an unusual chrome colour scheme so just use the highlight edge colour.
 			// (Typically, the highlight colour is white.)
 			colourFMFill = vsDraw.selbarlight;
 		}
 
-		if (vsDraw.foldmarginColour.isSet) {
+		if(vsDraw.foldmarginColour.isSet) {
 			// override default fold margin colour
 			colourFMFill = vsDraw.foldmarginColour;
 		}
-		if (vsDraw.foldmarginHighlightColour.isSet) {
+		if(vsDraw.foldmarginHighlightColour.isSet) {
 			// override default fold margin highlight colour
 			colourFMStripes = vsDraw.foldmarginHighlightColour;
 		}
 
 		pixmapSelPattern->FillRectangle(rcPattern, colourFMFill);
 		pixmapSelPatternOffset1->FillRectangle(rcPattern, colourFMStripes);
-		for (int y = 0; y < patternSize; y++) {
-			for (int x = y % 2; x < patternSize; x += 2) {
+		for(int y = 0; y < patternSize; y++) {
+			for(int x = y % 2; x < patternSize; x += 2) {
 				const PRectangle rcPixel = PRectangle::FromInts(x, y, x + 1, y + 1);
 				pixmapSelPattern->FillRectangle(rcPixel, colourFMStripes);
 				pixmapSelPatternOffset1->FillRectangle(rcPixel, colourFMFill);
@@ -172,30 +172,29 @@ void MarginView::RefreshPixMaps(Surface *surfaceWindow, WindowID wid, const View
 	}
 }
 
-static int SubstituteMarkerIfEmpty(int markerCheck, int markerDefault, const ViewStyle &vs) {
-	if (vs.markers[markerCheck].markType == SC_MARK_EMPTY)
+static int SubstituteMarkerIfEmpty(int markerCheck, int markerDefault, const ViewStyle& vs) {
+	if(vs.markers[markerCheck].markType == SC_MARK_EMPTY)
 		return markerDefault;
 	return markerCheck;
 }
 
-void MarginView::PaintMargin(Surface *surface, Sci::Line topLine, PRectangle rc, PRectangle rcMargin,
-	const EditModel &model, const ViewStyle &vs) {
-
+void MarginView::PaintMargin(Surface* surface, Sci::Line topLine, PRectangle rc, PRectangle rcMargin,
+	const EditModel& model, const ViewStyle& vs) {
 	PRectangle rcSelMargin = rcMargin;
 	rcSelMargin.right = rcMargin.left;
-	if (rcSelMargin.bottom < rc.bottom)
+	if(rcSelMargin.bottom < rc.bottom)
 		rcSelMargin.bottom = rc.bottom;
 
 	const Point ptOrigin = model.GetVisibleOriginInMain();
 	FontAlias fontLineNumber = vs.styles[STYLE_LINENUMBER].font;
-	for (size_t margin = 0; margin < vs.ms.size(); margin++) {
-		if (vs.ms[margin].width > 0) {
+	for(size_t margin = 0; margin < vs.ms.size(); margin++) {
+		if(vs.ms[margin].width > 0) {
 
 			rcSelMargin.left = rcSelMargin.right;
 			rcSelMargin.right = rcSelMargin.left + vs.ms[margin].width;
 
-			if (vs.ms[margin].style != SC_MARGIN_NUMBER) {
-				if (vs.ms[margin].mask & SC_MASK_FOLDERS) {
+			if(vs.ms[margin].style != SC_MARGIN_NUMBER) {
+				if(vs.ms[margin].mask & SC_MASK_FOLDERS) {
 					// Required because of special way brush is created for selection margin
 					// Ensure patterns line up when scrolling with separate margin view
 					// by choosing correctly aligned variant.
@@ -204,7 +203,7 @@ void MarginView::PaintMargin(Surface *surface, Sci::Line topLine, PRectangle rc,
 						invertPhase ? *pixmapSelPattern : *pixmapSelPatternOffset1);
 				} else {
 					ColourDesired colour;
-					switch (vs.ms[margin].style) {
+					switch(vs.ms[margin].style) {
 					case SC_MARGIN_BACK:
 						colour = vs.styles[STYLE_DEFAULT].back;
 						break;
@@ -224,6 +223,9 @@ void MarginView::PaintMargin(Surface *surface, Sci::Line topLine, PRectangle rc,
 				surface->FillRectangle(rcSelMargin, vs.styles[STYLE_LINENUMBER].back);
 			}
 
+			//Au:
+			int cdFirstLine = -1, cdLastLine = 0;
+
 			const int lineStartPaint = static_cast<int>(rcMargin.top + ptOrigin.y) / vs.lineHeight;
 			Sci::Line visibleLine = model.TopLineOfMain() + lineStartPaint;
 			Sci::Position yposScreen = lineStartPaint * vs.lineHeight - static_cast<Sci::Position>(ptOrigin.y);
@@ -231,21 +233,21 @@ void MarginView::PaintMargin(Surface *surface, Sci::Line topLine, PRectangle rc,
 			// lessening of fold level which implies a 'fold tail' but which should not
 			// be displayed until the last of a sequence of whitespace.
 			bool needWhiteClosure = false;
-			if (vs.ms[margin].mask & SC_MASK_FOLDERS) {
+			if(vs.ms[margin].mask & SC_MASK_FOLDERS) {
 				const int level = model.pdoc->GetLevel(model.pcs->DocFromDisplay(visibleLine));
-				if (level & SC_FOLDLEVELWHITEFLAG) {
+				if(level & SC_FOLDLEVELWHITEFLAG) {
 					Sci::Line lineBack = model.pcs->DocFromDisplay(visibleLine);
 					int levelPrev = level;
-					while ((lineBack > 0) && (levelPrev & SC_FOLDLEVELWHITEFLAG)) {
+					while((lineBack > 0) && (levelPrev & SC_FOLDLEVELWHITEFLAG)) {
 						lineBack--;
 						levelPrev = model.pdoc->GetLevel(lineBack);
 					}
-					if (!(levelPrev & SC_FOLDLEVELHEADERFLAG)) {
-						if (LevelNumber(level) < LevelNumber(levelPrev))
+					if(!(levelPrev & SC_FOLDLEVELHEADERFLAG)) {
+						if(LevelNumber(level) < LevelNumber(levelPrev))
 							needWhiteClosure = true;
 					}
 				}
-				if (highlightDelimiter.isEnabled) {
+				if(highlightDelimiter.isEnabled) {
 					const Sci::Line lastLine = model.pcs->DocFromDisplay(topLine + model.LinesOnScreen()) + 1;
 					model.pdoc->GetHighlightDelimiters(highlightDelimiter,
 						model.pdoc->SciLineFromPosition(model.sel.MainCaret()), lastLine);
@@ -258,7 +260,7 @@ void MarginView::PaintMargin(Surface *surface, Sci::Line topLine, PRectangle rc,
 			const int folderEnd = SubstituteMarkerIfEmpty(SC_MARKNUM_FOLDEREND,
 				SC_MARKNUM_FOLDER, vs);
 
-			while ((visibleLine < model.pcs->LinesDisplayed()) && yposScreen < rc.bottom) {
+			while((visibleLine < model.pcs->LinesDisplayed()) && yposScreen < rc.bottom) {
 
 				PLATFORM_ASSERT(visibleLine < model.pcs->LinesDisplayed());
 				const Sci::Line lineDoc = model.pcs->DocFromDisplay(visibleLine);
@@ -268,43 +270,48 @@ void MarginView::PaintMargin(Surface *surface, Sci::Line topLine, PRectangle rc,
 				const bool firstSubLine = visibleLine == firstVisibleLine;
 				const bool lastSubLine = visibleLine == lastVisibleLine;
 
+				//Au:
+				if(firstSubLine) {
+					cdLastLine = (int)lineDoc; if(cdFirstLine < 0) cdFirstLine = cdLastLine;
+				}
+
 				int marks = model.pdoc->GetMark(lineDoc);
-				if (!firstSubLine)
+				if(!firstSubLine)
 					marks = 0;
 
 				bool headWithTail = false;
 
-				if (vs.ms[margin].mask & SC_MASK_FOLDERS) {
+				if(vs.ms[margin].mask & SC_MASK_FOLDERS) {
 					// Decide which fold indicator should be displayed
 					const int level = model.pdoc->GetLevel(lineDoc);
 					const int levelNext = model.pdoc->GetLevel(lineDoc + 1);
 					const int levelNum = LevelNumber(level);
 					const int levelNextNum = LevelNumber(levelNext);
-					if (level & SC_FOLDLEVELHEADERFLAG) {
-						if (firstSubLine) {
-							if (levelNum < levelNextNum) {
-								if (model.pcs->GetExpanded(lineDoc)) {
-									if (levelNum == SC_FOLDLEVELBASE)
+					if(level & SC_FOLDLEVELHEADERFLAG) {
+						if(firstSubLine) {
+							if(levelNum < levelNextNum) {
+								if(model.pcs->GetExpanded(lineDoc)) {
+									if(levelNum == SC_FOLDLEVELBASE)
 										marks |= 1 << SC_MARKNUM_FOLDEROPEN;
 									else
 										marks |= 1 << folderOpenMid;
 								} else {
-									if (levelNum == SC_FOLDLEVELBASE)
+									if(levelNum == SC_FOLDLEVELBASE)
 										marks |= 1 << SC_MARKNUM_FOLDER;
 									else
 										marks |= 1 << folderEnd;
 								}
-							} else if (levelNum > SC_FOLDLEVELBASE) {
+							} else if(levelNum > SC_FOLDLEVELBASE) {
 								marks |= 1 << SC_MARKNUM_FOLDERSUB;
 							}
 						} else {
-							if (levelNum < levelNextNum) {
-								if (model.pcs->GetExpanded(lineDoc)) {
+							if(levelNum < levelNextNum) {
+								if(model.pcs->GetExpanded(lineDoc)) {
 									marks |= 1 << SC_MARKNUM_FOLDERSUB;
-								} else if (levelNum > SC_FOLDLEVELBASE) {
+								} else if(levelNum > SC_FOLDLEVELBASE) {
 									marks |= 1 << SC_MARKNUM_FOLDERSUB;
 								}
-							} else if (levelNum > SC_FOLDLEVELBASE) {
+							} else if(levelNum > SC_FOLDLEVELBASE) {
 								marks |= 1 << SC_MARKNUM_FOLDERSUB;
 							}
 						}
@@ -312,28 +319,28 @@ void MarginView::PaintMargin(Surface *surface, Sci::Line topLine, PRectangle rc,
 						const Sci::Line firstFollowupLine = model.pcs->DocFromDisplay(model.pcs->DisplayFromDoc(lineDoc + 1));
 						const int firstFollowupLineLevel = model.pdoc->GetLevel(firstFollowupLine);
 						const int secondFollowupLineLevelNum = LevelNumber(model.pdoc->GetLevel(firstFollowupLine + 1));
-						if (!model.pcs->GetExpanded(lineDoc)) {
-							if ((firstFollowupLineLevel & SC_FOLDLEVELWHITEFLAG) &&
+						if(!model.pcs->GetExpanded(lineDoc)) {
+							if((firstFollowupLineLevel & SC_FOLDLEVELWHITEFLAG) &&
 								(levelNum > secondFollowupLineLevelNum))
 								needWhiteClosure = true;
 
-							if (highlightDelimiter.IsFoldBlockHighlighted(firstFollowupLine))
+							if(highlightDelimiter.IsFoldBlockHighlighted(firstFollowupLine))
 								headWithTail = true;
 						}
-					} else if (level & SC_FOLDLEVELWHITEFLAG) {
-						if (needWhiteClosure) {
-							if (levelNext & SC_FOLDLEVELWHITEFLAG) {
+					} else if(level & SC_FOLDLEVELWHITEFLAG) {
+						if(needWhiteClosure) {
+							if(levelNext & SC_FOLDLEVELWHITEFLAG) {
 								marks |= 1 << SC_MARKNUM_FOLDERSUB;
-							} else if (levelNextNum > SC_FOLDLEVELBASE) {
+							} else if(levelNextNum > SC_FOLDLEVELBASE) {
 								marks |= 1 << SC_MARKNUM_FOLDERMIDTAIL;
 								needWhiteClosure = false;
 							} else {
 								marks |= 1 << SC_MARKNUM_FOLDERTAIL;
 								needWhiteClosure = false;
 							}
-						} else if (levelNum > SC_FOLDLEVELBASE) {
-							if (levelNextNum < levelNum) {
-								if (levelNextNum > SC_FOLDLEVELBASE) {
+						} else if(levelNum > SC_FOLDLEVELBASE) {
+							if(levelNextNum < levelNum) {
+								if(levelNextNum > SC_FOLDLEVELBASE) {
 									marks |= 1 << SC_MARKNUM_FOLDERMIDTAIL;
 								} else {
 									marks |= 1 << SC_MARKNUM_FOLDERTAIL;
@@ -342,14 +349,14 @@ void MarginView::PaintMargin(Surface *surface, Sci::Line topLine, PRectangle rc,
 								marks |= 1 << SC_MARKNUM_FOLDERSUB;
 							}
 						}
-					} else if (levelNum > SC_FOLDLEVELBASE) {
-						if (levelNextNum < levelNum) {
+					} else if(levelNum > SC_FOLDLEVELBASE) {
+						if(levelNextNum < levelNum) {
 							needWhiteClosure = false;
-							if (levelNext & SC_FOLDLEVELWHITEFLAG) {
+							if(levelNext & SC_FOLDLEVELWHITEFLAG) {
 								marks |= 1 << SC_MARKNUM_FOLDERSUB;
 								needWhiteClosure = true;
-							} else if (lastSubLine) {
-								if (levelNextNum > SC_FOLDLEVELBASE) {
+							} else if(lastSubLine) {
+								if(levelNextNum > SC_FOLDLEVELBASE) {
 									marks |= 1 << SC_MARKNUM_FOLDERMIDTAIL;
 								} else {
 									marks |= 1 << SC_MARKNUM_FOLDERTAIL;
@@ -368,22 +375,22 @@ void MarginView::PaintMargin(Surface *surface, Sci::Line topLine, PRectangle rc,
 				PRectangle rcMarker = rcSelMargin;
 				rcMarker.top = static_cast<XYPOSITION>(yposScreen);
 				rcMarker.bottom = static_cast<XYPOSITION>(yposScreen + vs.lineHeight);
-				if (vs.ms[margin].style == SC_MARGIN_NUMBER) {
-					if (firstSubLine) {
+				if(vs.ms[margin].style == SC_MARGIN_NUMBER) {
+					if(firstSubLine) {
 						std::string sNumber;
-						if (lineDoc >= 0) {
+						if(lineDoc >= 0) {
 							sNumber = std::to_string(lineDoc + 1);
 						}
-						if (model.foldFlags & (SC_FOLDFLAG_LEVELNUMBERS | SC_FOLDFLAG_LINESTATE)) {
+						if(model.foldFlags & (SC_FOLDFLAG_LEVELNUMBERS | SC_FOLDFLAG_LINESTATE)) {
 							char number[100] = "";
-							if (model.foldFlags & SC_FOLDFLAG_LEVELNUMBERS) {
+							if(model.foldFlags & SC_FOLDFLAG_LEVELNUMBERS) {
 								const int lev = model.pdoc->GetLevel(lineDoc);
 								sprintf(number, "%c%c %03X %03X",
 									(lev & SC_FOLDLEVELHEADERFLAG) ? 'H' : '_',
 									(lev & SC_FOLDLEVELWHITEFLAG) ? 'W' : '_',
 									LevelNumber(lev),
 									lev >> 16
-									);
+								);
 							} else {
 								const int state = model.pdoc->GetLineState(lineDoc);
 								sprintf(number, "%0X", state);
@@ -397,23 +404,23 @@ void MarginView::PaintMargin(Surface *surface, Sci::Line topLine, PRectangle rc,
 						rcNumber.left = xpos;
 						DrawTextNoClipPhase(surface, rcNumber, vs.styles[STYLE_LINENUMBER],
 							rcNumber.top + vs.maxAscent, sNumber, drawAll);
-					} else if (vs.wrapVisualFlags & SC_WRAPVISUALFLAG_MARGIN) {
+					} else if(vs.wrapVisualFlags & SC_WRAPVISUALFLAG_MARGIN) {
 						PRectangle rcWrapMarker = rcMarker;
 						rcWrapMarker.right -= wrapMarkerPaddingRight;
 						rcWrapMarker.left = rcWrapMarker.right - vs.styles[STYLE_LINENUMBER].aveCharWidth;
-						if (!customDrawWrapMarker) {
+						if(!customDrawWrapMarker) {
 							DrawWrapMarker(surface, rcWrapMarker, false, vs.styles[STYLE_LINENUMBER].fore);
 						} else {
 							customDrawWrapMarker(surface, rcWrapMarker, false, vs.styles[STYLE_LINENUMBER].fore);
 						}
 					}
-				} else if (vs.ms[margin].style == SC_MARGIN_TEXT || vs.ms[margin].style == SC_MARGIN_RTEXT) {
+				} else if(vs.ms[margin].style == SC_MARGIN_TEXT || vs.ms[margin].style == SC_MARGIN_RTEXT) {
 					const StyledText stMargin = model.pdoc->MarginStyledText(lineDoc);
-					if (stMargin.text && ValidStyledText(vs, vs.marginStyleOffset, stMargin)) {
-						if (firstSubLine) {
+					if(stMargin.text && ValidStyledText(vs, vs.marginStyleOffset, stMargin)) {
+						if(firstSubLine) {
 							surface->FillRectangle(rcMarker,
 								vs.styles[stMargin.StyleAt(0) + vs.marginStyleOffset].back);
-							if (vs.ms[margin].style == SC_MARGIN_RTEXT) {
+							if(vs.ms[margin].style == SC_MARGIN_RTEXT) {
 								const int width = WidestLineWidth(surface, vs, vs.marginStyleOffset, stMargin);
 								rcMarker.left = rcMarker.right - width - 3;
 							}
@@ -422,31 +429,31 @@ void MarginView::PaintMargin(Surface *surface, Sci::Line topLine, PRectangle rc,
 						} else {
 							// if we're displaying annotation lines, colour the margin to match the associated document line
 							const int annotationLines = model.pdoc->AnnotationLines(lineDoc);
-							if (annotationLines && (visibleLine > lastVisibleLine - annotationLines)) {
+							if(annotationLines && (visibleLine > lastVisibleLine - annotationLines)) {
 								surface->FillRectangle(rcMarker, vs.styles[stMargin.StyleAt(0) + vs.marginStyleOffset].back);
 							}
 						}
 					}
 				}
 
-				if (marks) {
-					for (int markBit = 0; (markBit < 32) && marks; markBit++) {
-						if (marks & 1) {
+				if(marks) {
+					for(int markBit = 0; (markBit < 32) && marks; markBit++) {
+						if(marks & 1) {
 							LineMarker::typeOfFold tFold = LineMarker::undefined;
-							if ((vs.ms[margin].mask & SC_MASK_FOLDERS) && highlightDelimiter.IsFoldBlockHighlighted(lineDoc)) {
-								if (highlightDelimiter.IsBodyOfFoldBlock(lineDoc)) {
+							if((vs.ms[margin].mask & SC_MASK_FOLDERS) && highlightDelimiter.IsFoldBlockHighlighted(lineDoc)) {
+								if(highlightDelimiter.IsBodyOfFoldBlock(lineDoc)) {
 									tFold = LineMarker::body;
-								} else if (highlightDelimiter.IsHeadOfFoldBlock(lineDoc)) {
-									if (firstSubLine) {
+								} else if(highlightDelimiter.IsHeadOfFoldBlock(lineDoc)) {
+									if(firstSubLine) {
 										tFold = headWithTail ? LineMarker::headWithTail : LineMarker::head;
 									} else {
-										if (model.pcs->GetExpanded(lineDoc) || headWithTail) {
+										if(model.pcs->GetExpanded(lineDoc) || headWithTail) {
 											tFold = LineMarker::body;
 										} else {
 											tFold = LineMarker::undefined;
 										}
 									}
-								} else if (highlightDelimiter.IsTailOfFoldBlock(lineDoc)) {
+								} else if(highlightDelimiter.IsTailOfFoldBlock(lineDoc)) {
 									tFold = LineMarker::tail;
 								}
 							}
@@ -458,6 +465,20 @@ void MarginView::PaintMargin(Surface *surface, Sci::Line topLine, PRectangle rc,
 
 				visibleLine++;
 				yposScreen += vs.lineHeight;
+			}
+
+			//Au: call callback
+			if(model.cbMarginDraw && 0 != ((model.cbMarginsMask >> (int)margin) & 1) && cdFirstLine >= 0) {
+				Sci_MarginDrawCallbackData c = {};
+				c.margin = (int)margin;
+				c.firstLine = cdFirstLine;
+				c.lastLine = cdLastLine;
+				c.rect.left = (int)rcSelMargin.left;
+				c.rect.top = (int)rcSelMargin.top;
+				c.rect.right = (int)rcSelMargin.right;
+				c.rect.bottom = (int)rcSelMargin.bottom;
+				c.hdc = surface->get_hdc();
+				model.cbMarginDraw(c);
 			}
 		}
 	}

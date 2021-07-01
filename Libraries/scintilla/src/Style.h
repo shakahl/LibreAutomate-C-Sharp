@@ -85,6 +85,7 @@ public:
 	void ClearTo(const Style &source) noexcept;
 	void Copy(const Font &font_, const FontMeasurements &fm_) noexcept;
 	bool IsProtected() const noexcept { return !(changeable && visible);}
+	//bool IsProtected() const noexcept { return !changeable;} //Au: allow to delete etc hidden text. Currently not used.
 };
 
 }

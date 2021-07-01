@@ -186,7 +186,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 	/// <summary>
 	/// true if not script/class/folder.
 	/// </summary>
-	public bool IsNotCodeFile => _type == EFileType.NotCodeFile;
+	public bool IsOtherFileType => _type == EFileType.Other;
 
 	/// <summary>
 	/// File name with extension.
@@ -403,7 +403,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 			_ => null
 		};
 
-	string ITreeViewItem.ImageSource => CustomIconName ?? (IsNotCodeFile ? FilePath : GetFileTypeImageSource(FileType, _isExpanded));
+	string ITreeViewItem.ImageSource => CustomIconName ?? (IsOtherFileType ? FilePath : GetFileTypeImageSource(FileType, _isExpanded));
 
 	//has default implementation
 	//TVCheck ITreeViewItem.CheckState { get; }
@@ -860,23 +860,23 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 
 	/// <summary>
 	/// Gets file type from XML tag which should be "d", "s", "c" or "n".
-	/// If none, throws ArgumentException if canThrow, else returns EFileType.NotCodeFile.
+	/// If none, throws ArgumentException if canThrow, else returns EFileType.Other.
 	/// </summary>
 	public static EFileType XmlTagToFileType(string tag, bool canThrow) => tag switch {
 		"d" => EFileType.Folder,
 		"s" => EFileType.Script,
 		"c" => EFileType.Class,
-		"n" => EFileType.NotCodeFile,
-		_ => !canThrow ? EFileType.NotCodeFile : throw new ArgumentException("XML element name must be 'd', 's', 'c' or 'n'")
+		"n" => EFileType.Other,
+		_ => !canThrow ? EFileType.Other : throw new ArgumentException("XML element name must be 'd', 's', 'c' or 'n'")
 	};
 
 	/// <summary>
 	/// Detects file type from extension.
-	/// If .cs, returns Class, else NotCodeFile.
+	/// If .cs, returns Class, else Other.
 	/// Must be not folder.
 	/// </summary>
 	static EFileType _DetectFileType(string path) {
-		var type = EFileType.NotCodeFile;
+		var type = EFileType.Other;
 		if (path.Ends(".cs", true)) {
 			type = EFileType.Class;
 			//rejected. Unreliable and rarely useful. Does not detect scripts with top-level statements etc.
@@ -900,5 +900,5 @@ enum EFileType : byte
 	Folder, //must be 0
 	Script,
 	Class,
-	NotCodeFile,
+	Other,
 }

@@ -45,9 +45,9 @@ record AppSettings : JSettings
 
 	public int templ_use;
 
+	//public byte ci_shiftEnterAlways, ci_shiftTabAlways;
 	public bool ci_complGroup = true;
 	public int ci_complParen; //0 spacebar, 1 always, 2 never
-	public byte ci_shiftEnterAlways, ci_shiftTabAlways;
 	public string ci_usings = @"Au
 Au.Types
 Au.More

@@ -76,7 +76,7 @@ namespace Au.Controls
 	/// Also you can register custom link tags that call your callback functions.
 	/// See <see cref="AddLinkTag"/>, <see cref="AddCommonLinkTag"/>.
 	/// 
-	/// Tags are supported by some existing controls based on <see cref="KScintilla"/>. In the Au editor it is the output (use <see cref="print.it"/>, like in the example below). In this library - the <see cref="KSciInfoBox"/> control. To enable tags in other <see cref="KScintilla"/> controls, use <see cref="KScintilla.ZInitTagsStyle"/> and optionally <see cref="KScintilla.ZInitImagesStyle"/>.
+	/// Tags are supported by some existing controls based on <see cref="KScintilla"/>. In the Au editor it is the output (use <see cref="print.it"/>, like in the example below). In this library - the <see cref="KSciInfoBox"/> control. To enable tags in other <see cref="KScintilla"/> controls, use <see cref="KScintilla.ZInitTagsStyle"/> and optionally <see cref="KScintilla.ZInitImages"/>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[

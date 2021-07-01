@@ -316,6 +316,11 @@
             Almost all function/event names start with z or Z, because VS intellisense cannot group by inheritance and would mix with 300 WPF functions/events. Most public and internal Scintilla API wrapper functions have prefix z, others Z. Derived classes can use prefix for example zz and ZZ.
             </remarks>
         </member>
+        <member name="M:Au.Controls.KScintilla.ZOnHandleCreated">
+            <summary>
+            Invokes event <see cref="E:Au.Controls.KScintilla.ZHandleCreated"/>.
+            </summary>
+        </member>
         <member name="M:Au.Controls.KScintilla.ZOnSciNotify(Au.Controls.Sci.SCNotification@)">
             <summary>
             Raises the <see cref="E:Au.Controls.KScintilla.ZNotify"/> event.
@@ -379,29 +384,16 @@
             Must be set before creating control handle.
             </summary>
         </member>
-        <member name="T:Au.Controls.KScintilla.ZImagesStyle">
+        <member name="P:Au.Controls.KScintilla.ZInitImages">
             <summary>
-            See <see cref="P:Au.Controls.KScintilla.ZInitImagesStyle"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Controls.KScintilla.ZImagesStyle.NoImages">
-            <summary>Don't show images. The <see cref="P:Au.Controls.KScintilla.ZImages"/> property is null.</summary>
-        </member>
-        <member name="F:Au.Controls.KScintilla.ZImagesStyle.ImageTag">
-            <summary>Display only images specified in tags like &lt;image "image file path"&gt;, including icons of non-image file types.</summary>
-        </member>
-        <member name="F:Au.Controls.KScintilla.ZImagesStyle.AnyString">
-            <summary>Display images specified in any string like "image file path", and only of image file types. Then limits image height to 10 lines.</summary>
-        </member>
-        <member name="P:Au.Controls.KScintilla.ZInitImagesStyle">
-            <summary>
-            Whether and how to show images.
+            Whether to show images specified in tags like &lt;image "image file path"&gt;, including icons of non-image file types.
             Must be set before creating control handle.
+            If false, <see cref="P:Au.Controls.KScintilla.ZImages"/> property is null.
             </summary>
         </member>
         <member name="T:Au.Controls.KScintilla.ZTagsStyle">
             <summary>
-            See <see cref="P:Au.Controls.KScintilla.ZInitImagesStyle"/>.
+            See <see cref="P:Au.Controls.KScintilla.ZInitTagsStyle"/>.
             </summary>
         </member>
         <member name="F:Au.Controls.KScintilla.ZTagsStyle.NoTags">
@@ -475,6 +467,11 @@
             Gets style at position.
             Uses SCI_GETSTYLEAT.
             Returns 0 if pos is invalid.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zGetMarginX(System.Int32)">
+            <summary>
+            SCI_GETMARGINWIDTHN. Not DPI-scaled.
             </summary>
         </member>
         <member name="M:Au.Controls.KScintilla.zSetString(System.Int32,System.IntPtr,System.String,System.Boolean)">
@@ -697,7 +694,7 @@
             SCI_GETSELECTIONSTART UTF-8.
             </summary>
         </member>
-        <member name="P:Au.Controls.KScintilla.zSelectionStar16">
+        <member name="P:Au.Controls.KScintilla.zSelectionStart16">
             <summary>
             SCI_GETSELECTIONSTART UTF-16.
             </summary>
@@ -1174,13 +1171,12 @@
             Will auto-reload from files etc when need.
             </summary>
         </member>
-        <member name="M:Au.Controls.SciImages.#ctor(Au.Controls.KScintilla,System.Boolean)">
+        <member name="M:Au.Controls.SciImages.#ctor(Au.Controls.KScintilla)">
             <summary>
             Prepares this variable and the Scintilla control to display images.
             Calls SCI_ANNOTATIONSETVISIBLE(ANNOTATION_STANDARD). Need it because will draw images in annotation areas.
             </summary>
             <param name="c">The control.</param>
-            <param name="isEditor">Display images that are not in "&lt;image "path etc"&gt; tag. Then does not display icons of files that don't contain images. Then limits image height to 10 lines.</param>
         </member>
         <member name="M:Au.Controls.SciImages.ClearCache">
             <summary>
@@ -1252,7 +1248,7 @@
             Also you can register custom link tags that call your callback functions.
             See <see cref="M:Au.Controls.SciTags.AddLinkTag(System.String,System.Action{System.String})"/>, <see cref="M:Au.Controls.SciTags.AddCommonLinkTag(System.String,System.Action{System.String})"/>.
             
-            Tags are supported by some existing controls based on <see cref="T:Au.Controls.KScintilla"/>. In the Au editor it is the output (use <see cref="M:Au.print.it(System.String)"/>, like in the example below). In this library - the <see cref="T:Au.Controls.KSciInfoBox"/> control. To enable tags in other <see cref="T:Au.Controls.KScintilla"/> controls, use <see cref="P:Au.Controls.KScintilla.ZInitTagsStyle"/> and optionally <see cref="P:Au.Controls.KScintilla.ZInitImagesStyle"/>.
+            Tags are supported by some existing controls based on <see cref="T:Au.Controls.KScintilla"/>. In the Au editor it is the output (use <see cref="M:Au.print.it(System.String)"/>, like in the example below). In this library - the <see cref="T:Au.Controls.KSciInfoBox"/> control. To enable tags in other <see cref="T:Au.Controls.KScintilla"/> controls, use <see cref="P:Au.Controls.KScintilla.ZInitTagsStyle"/> and optionally <see cref="P:Au.Controls.KScintilla.ZInitImages"/>.
             </remarks>
             <example>
             <code><![CDATA[
@@ -1821,7 +1817,7 @@
             Can have prefix:
             "imagefile:" - path of png/bmp/jpg/gif/tif or xaml file.
             "resource:" - path of png/bmp/jpg/gif/tif or xaml resource. Don't need prefix if starts with "resources/", like "resources/file.png".
-            "image:" - Base-64 encoded png/bmp/jpg/gif/tif image.
+            "image:" - Base64 encoded image file.
             If without prefix, gets file icon; see <see cref="M:Au.icon.of(System.String,System.Int32,Au.Types.IconGetFlags)"/>.
             </summary>
             <remarks>
@@ -2565,11 +2561,11 @@
             Can be:
             - <see cref="T:System.Windows.Controls.Image"/> or other WPF control to assign directly to <see cref="P:System.Windows.Controls.MenuItem.Icon"/>.
             - <see cref="T:System.Windows.Media.ImageSource"/> - a WPF image. To create image from icon, use <see cref="M:Au.icon.ToWpfImage(System.Boolean)"/>.
-            - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or png image as Base-64 string with prefix "image:". Can be png or XAML file or resource. See <see cref="M:Au.More.ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>. Supports environment variables. If not full path, looks in <see cref="P:Au.folders.ThisAppImages"/>.
+            - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or Base64 encoded image with prefix "image:". Can be XAML file or resource. See <see cref="M:Au.More.ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>. Supports environment variables. If not full path, looks in <see cref="P:Au.folders.ThisAppImages"/>.
             - <see cref="T:System.Uri"/> - image file path, or resource pack URI, or URL. Does not support environment variables and <see cref="P:Au.folders.ThisAppImages"/>.
             
             If failed to find or load image file, prints warning (<see cref="M:Au.print.warning(System.String,System.Int32,System.String)"/>).
-            To create Base-64 string, use menu Code -> uiimage.
+            To create Base64 string, use menu Code -> uiimage.
             To add an image resource in Visual Studio, use build action "Resource" for the image file.
             </param>
             <value>Action called on click.</value>
@@ -2817,23 +2813,14 @@
         </member>
         <member name="T:Au.Controls.KImageUtil.ImageType">
             <summary>
-            Image type as detected by <see cref="M:Au.Controls.KImageUtil.ImageTypeFromString(System.Boolean,System.Int32@,System.String)"/>.
+            Image type detected by <see cref="M:Au.Controls.KImageUtil.ImageTypeFromString(System.Int32@,System.String)"/>.
             </summary>
         </member>
         <member name="F:Au.Controls.KImageUtil.ImageType.None">
             <summary>The string isn't image.</summary>
         </member>
-        <member name="F:Au.Controls.KImageUtil.ImageType.Xaml">
-            <summary>XAML image data.</summary>
-        </member>
-        <member name="F:Au.Controls.KImageUtil.ImageType.XamlIconName">
-            <summary>XAML icon name "*Pack.Icon color".</summary>
-        </member>
-        <member name="F:Au.Controls.KImageUtil.ImageType.Base64CompressedBmp">
-            <summary>Compressed and Base64-encoded .bmp file data with "~:" prefix. See <see cref="M:Au.Controls.KImageUtil.ImageToString(System.String)"/>.</summary>
-        </member>
-        <member name="F:Au.Controls.KImageUtil.ImageType.Base64PngGifJpg">
-            <summary>Base64-encoded .png/gif/jpg file data with "image:" prefix.</summary>
+        <member name="F:Au.Controls.KImageUtil.ImageType.Base64Image">
+            <summary>Base64 encoded image file data with prefix "image:" (.png/gif/jpg) or "image:WkJN" (compressed .bmp). See <see cref="M:Au.Controls.KImageUtil.ImageToString(System.String)"/>.</summary>
         </member>
         <member name="F:Au.Controls.KImageUtil.ImageType.Bmp">
             <summary>.bmp file path.</summary>
@@ -2851,23 +2838,27 @@
             <summary>Icon from a .dll or other file containing icons, like @"C:\a\b.dll,15".</summary>
         </member>
         <member name="F:Au.Controls.KImageUtil.ImageType.ShellIcon">
-            <summary>None of other image types, when <i>anyFile</i> is true.</summary>
+            <summary>None of other image types.</summary>
         </member>
-        <member name="M:Au.Controls.KImageUtil.ImageTypeFromString(System.Boolean,System.Int32@,System.Byte*,System.Int32)">
+        <member name="F:Au.Controls.KImageUtil.ImageType.Xaml">
+            <summary>XAML image data.</summary>
+        </member>
+        <member name="F:Au.Controls.KImageUtil.ImageType.XamlIconName">
+            <summary>XAML icon name "*Pack.Icon color".</summary>
+        </member>
+        <member name="M:Au.Controls.KImageUtil.ImageTypeFromString(System.Int32@,System.Byte*,System.Int32)">
             <summary>
             Gets image type from string.
             </summary>
-            <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
-            <param name="prefixLength">Length of prefix "imagefile:" or "image:" or "~:".</param>
-            <param name="s">File path etc. See <see cref="T:Au.Controls.KImageUtil.ImageType"/>.</param>
+            <param name="prefixLength">Length of prefix "imagefile:" or "image:".</param>
+            <param name="s">File path etc. See <see cref="T:Au.Controls.KImageUtil.ImageType"/>. It is UTF8 because used directly with Scintilla text.</param>
             <param name="length">If -1, calls CharPtr_.Length(s).</param>
         </member>
-        <member name="M:Au.Controls.KImageUtil.ImageTypeFromString(System.Boolean,System.Int32@,System.String)">
+        <member name="M:Au.Controls.KImageUtil.ImageTypeFromString(System.Int32@,System.String)">
             <summary>
             Gets image type from string.
             </summary>
-            <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
-            <param name="prefixLength">Length of prefix "imagefile:" or "image:" or "~:".</param>
+            <param name="prefixLength">Length of prefix "imagefile:" or "image:".</param>
             <param name="s">File path etc. See <see cref="T:Au.Controls.KImageUtil.ImageType"/>.</param>
         </member>
         <member name="M:Au.Controls.KImageUtil.BmpFileDataFromString(System.String,Au.Controls.KImageUtil.ImageType,System.Boolean,System.Nullable{System.ValueTuple{System.Int32,System.Nullable{Au.Types.SIZE}}})">
@@ -2875,7 +2866,7 @@
             Loads image and returns its data in .bmp file format.
             Returns null if fails, for example file not found or invalid Base64 string.
             </summary>
-            <param name="s">Depends on t. File path or resource name without prefix or Base64 image data without prefix.</param>
+            <param name="s">Depends on t. File path or resource name without prefix "imagefile:" or Base64 image data without prefix "image:".</param>
             <param name="t">Image type and string format.</param>
             <param name="searchPath">Use <see cref="M:Au.filesystem.searchPath(System.String,System.String[])"/></param>
             <param name="xaml">If not null, supports XAML images. See <see cref="M:Au.More.ImageUtil.LoadGdipBitmapFromXaml(System.String,System.Int32,System.Nullable{Au.Types.SIZE})"/>.</param>
@@ -2883,15 +2874,15 @@
         </member>
         <member name="M:Au.Controls.KImageUtil.BmpFileDataToString(System.Byte[])">
             <summary>
-            Compresses .bmp file data (<see cref="M:Au.More.Convert2.Compress(System.Byte[])"/>) and Base64-encodes.
-            Returns string with "~:" prefix.
+            Compresses .bmp file data (<see cref="M:Au.More.Convert2.Compress(System.ReadOnlySpan{System.Byte})"/>) and Base64-encodes.
+            Returns string with "image:" prefix.
             </summary>
         </member>
         <member name="M:Au.Controls.KImageUtil.ImageToString(System.String)">
             <summary>
             Converts image file data to string that can be used in source code instead of file path. It is supported by some functions of this library, for example <see cref="M:Au.uiimage.find(Au.Types.IFArea,Au.Types.IFImage,Au.Types.IFFlags,System.Int32,System.Func{Au.uiimage,Au.Types.IFAlso})"/>.
-            Returns string with prefix "image:" (Base-64 encoded .png/gif/jpg file data) or "~:" (Base-64 encoded compressed .bmp file data).
             Supports all <see cref="T:Au.Controls.KImageUtil.ImageType"/> formats. For non-image files gets icon. Converts icons to bitmap.
+            If <i>path</i> is of <see cref="T:Au.Controls.KImageUtil.ImageType"/> type <b>Base64Image</b>, <b>Xaml</b> or <b>XamlIconName</b>, returns <i>path</i>. Else returns Base64 encoded file data with prefix "image:" (.png/gif/jpg) or "image:WkJN" (compressed .bmp).
             Returns null if path is not a valid image string or the file does not exist or failed to load.
             </summary>
             <remarks>Supports environment variables etc. If not full path, searches in <see cref="P:Au.folders.ThisAppImages"/> and standard directories.</remarks>

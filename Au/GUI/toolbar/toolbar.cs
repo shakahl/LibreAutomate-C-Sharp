@@ -493,7 +493,7 @@ namespace Au
 					var dc = bp.DC;
 					using var g = System.Drawing.Graphics.FromHdc(dc);
 					g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-					_WmPaint(dc, g, bp.ClientRect, bp.UpdateRect);
+					_WmPaint(dc, g, bp.Rect, bp.UpdateRect);
 				}
 				//			perf.nw();
 				return default;

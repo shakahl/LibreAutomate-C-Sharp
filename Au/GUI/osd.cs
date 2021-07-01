@@ -181,7 +181,7 @@ namespace Au.Types
 					var dc = bp.DC;
 					using var g = Graphics.FromHdc(dc);
 					if (_opacity == 0) g.Clear((Color)TransparentColor);
-					OnPaint(dc, g, bp.ClientRect);
+					OnPaint(dc, g, bp.Rect);
 				}
 				return default;
 			case Api.WM_MOUSEACTIVATE:

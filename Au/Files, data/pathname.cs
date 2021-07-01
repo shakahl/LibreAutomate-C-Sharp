@@ -104,24 +104,20 @@ namespace Au
 		/// 
 		/// Supports only file-system paths. Returns false if path is URL (<see cref="isUrl"/>) or starts with <c>"::"</c>.
 		/// </remarks>
-		public static bool isFullPath(string path, bool orEnvVar = false) {
-			var s = path;
-			int len = s.Lenn();
-
+		public static bool isFullPath(ReadOnlySpan<char> path, bool orEnvVar = false) {
+			int len = path.Length;
 			if (len >= 2) {
-				if (s[1] == ':' && s[0].IsAsciiAlpha()) {
-					return len == 2 || IsSepChar_(s[2]);
+				if (path[1] == ':' && path[0].IsAsciiAlpha()) {
+					return len == 2 || IsSepChar_(path[2]);
 					//info: returns false if eg "c:abc" which means "abc" in current directory of drive "c:"
 				}
-				switch (s[0]) {
-				case '\\':
-				case '/':
-					return IsSepChar_(s[1]);
+				switch (path[0]) {
+				case '\\' or '/':
+					return IsSepChar_(path[1]);
 				case '%' when orEnvVar:
-					return len > 2 && s.IndexOf('%', 2) > 0;
+					return path[1..].IndexOf('%') > 1;
 				}
 			}
-
 			return false;
 		}
 
@@ -162,9 +158,9 @@ namespace Au
 		/// Supports prefixes <c>@"\\?\"</c> and <c>@"\\?\UNC\"</c>.
 		/// Supports separators <c>'\\'</c> and <c>'/'</c>.
 		/// </remarks>
-		public static int getRootLength(string path) {
+		public static int getRootLength(ReadOnlySpan<char> path) {
 			var s = path;
-			int i = 0, len = (s == null) ? 0 : s.Length;
+			int i = 0, len = s.Length;
 			if (len >= 2) {
 				switch (s[1]) {
 				case ':':
@@ -208,8 +204,8 @@ namespace Au
 		/// 
 		/// The protocol can be unknown. The function just checks string format, which is an ASCII alpha character followed by one or more ASCII alpha-numeric, '.', '-', '+' characters, followed by ':' character.
 		/// </remarks>
-		public static int getUrlProtocolLength(string s) {
-			int len = (s == null) ? 0 : s.Length;
+		public static int getUrlProtocolLength(ReadOnlySpan<char> s) {
+			int len = s.Length;
 			if (len > 2 && s[0].IsAsciiAlpha() && s[1] != ':') {
 				for (int i = 1; i < len; i++) {
 					var c = s[i];
@@ -229,7 +225,7 @@ namespace Au
 		/// <remarks>
 		/// URL examples: <c>"http:"</c>, <c>"http://www.x.com"</c>, <c>"file:///path"</c>, <c>"shell:etc"</c>.
 		/// </remarks>
-		public static bool isUrl(string s) {
+		public static bool isUrl(ReadOnlySpan<char> s) {
 			return 0 != getUrlProtocolLength(s);
 		}
 
@@ -302,11 +298,9 @@ namespace Au
 		/// <summary>
 		/// Returns true if ends with ':' preceded by a drive letter, like "C:" or "more\C:", but not like "moreC:".
 		/// </summary>
-		/// <param name="s">Can be null.</param>
-		/// <param name="length">Use when want to check drive at a middle, not at the end. Eg returns true if s is <c>@"C:\more"</c> and length is 2.</param>
-		static bool _EndsWithDriveWithoutSep(string s, int length = -1) {
+		static bool _EndsWithDriveWithoutSep(ReadOnlySpan<char> s) {
 			if (s == null) return false;
-			int i = ((length < 0) ? s.Length : length) - 1;
+			int i = s.Length - 1;
 			if (i < 1 || s[i] != ':') return false;
 			if (!s[--i].IsAsciiAlpha()) return false;
 			if (i > 0 && !IsSepChar_(s[i - 1])) return false;
@@ -458,15 +452,15 @@ namespace Au
 		/// Returns true if starts with "::".
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		internal static bool IsShellPath_(string s) {
-			return s != null && s.Length >= 2 && s[0] == ':' && s[1] == ':';
+		internal static bool IsShellPath_(ReadOnlySpan<char> s) {
+			return s.Length >= 2 && s[0] == ':' && s[1] == ':';
 		}
 
 		/// <summary>
 		/// Returns true if <c>IsShellPath_(s) || isUrl(s)</c>.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		internal static bool IsShellPathOrUrl_(string s) => IsShellPath_(s) || isUrl(s);
+		internal static bool IsShellPathOrUrl_(ReadOnlySpan<char> s) => IsShellPath_(s) || isUrl(s);
 
 		/// <summary>
 		/// If path is full path (see <see cref="isFullPath"/>) and does not start with <c>@"\\?\"</c>, prepends <c>@"\\?\"</c>.
@@ -526,11 +520,10 @@ namespace Au
 		/// Else returns 0.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		static int _GetPrefixLength(string s) {
-			if (s == null) return 0;
+		static int _GetPrefixLength(ReadOnlySpan<char> s) {
 			int len = s.Length;
 			if (len >= 4 && s[2] == '?' && IsSepChar_(s[0]) && IsSepChar_(s[1]) && IsSepChar_(s[3])) {
-				if (len >= 8 && IsSepChar_(s[7]) && s.Eq(4, "UNC", true)) return 8;
+				if (len >= 8 && IsSepChar_(s[7]) && s[4..].Eqi("UNC")) return 8;
 				return 4;
 			}
 			return 0;
@@ -676,8 +669,7 @@ namespace Au
 		/// <remarks>
 		/// Returns -1 if <c>'.'</c> is before <c>'\\'</c> or <c>'/'</c>.
 		/// </remarks>
-		public static int findExtension(string path) {
-			if (path == null) return -1;
+		public static int findExtension(ReadOnlySpan<char> path) {
 			int i;
 			for (i = path.Length - 1; i >= 0; i--) {
 				switch (path[i]) {
@@ -784,7 +776,7 @@ namespace Au
 					int j = getRootLength(s); if (j > 0 && IsSepChar_(s[j - 1])) j--;
 					if (i < j) return null;
 
-					if (withSeparator || _EndsWithDriveWithoutSep(s, i)) i++;
+					if (withSeparator || _EndsWithDriveWithoutSep(s.AsSpan(0, i))) i++;
 					return s.Remove(i);
 				}
 				break;
@@ -796,8 +788,8 @@ namespace Au
 		/// Returns true if s is like <c>".ext"</c> and the ext part does not contain characters <c>.\\/:</c>.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		internal static bool IsExtension_(string s) {
-			if (s == null || s.Length < 2 || s[0] != '.') return false;
+		internal static bool IsExtension_(ReadOnlySpan<char> s) {
+			if (s.Length < 2 || s[0] != '.') return false;
 			for (int i = 1; i < s.Length; i++) {
 				switch (s[i]) { case '.': case '\\': case '/': case ':': return false; }
 			}
@@ -808,8 +800,8 @@ namespace Au
 		/// Returns true if s is like "protocol:" and not like "c:" or "protocol:more".
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		internal static bool IsProtocol_(string s) {
-			return s != null && s.Ends(':') && getUrlProtocolLength(s) == s.Length;
+		internal static bool IsProtocol_(ReadOnlySpan<char> s) {
+			return s.Length > 2 && s[^1] == ':' && getUrlProtocolLength(s) == s.Length;
 		}
 
 		/// <summary>

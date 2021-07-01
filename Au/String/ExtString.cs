@@ -1379,13 +1379,13 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if specified part of string does not contain non-ASCII characters.
+		/// Returns true if does not contain non-ASCII characters.
 		/// </summary>
 		/// <seealso cref="IsAscii(ReadOnlySpan{char})"/>
 		public static bool IsAscii(this string t) => t.AsSpan().IsAscii();
 
 		/// <summary>
-		/// Returns true if specified part of string does not contain non-ASCII characters.
+		/// Returns true if does not contain non-ASCII characters.
 		/// </summary>
 		public static bool IsAscii(this ReadOnlySpan<char> t) {
 			foreach (char c in t) if (c > 0x7f) return false;
@@ -1393,12 +1393,17 @@ namespace Au
 		}
 
 		///// <summary>
-		///// Returns true if specified part of string does not contain non-ASCII characters.
+		///// Returns true if does not contain non-ASCII characters.
 		///// </summary>
 		//public static bool IsAscii(this ReadOnlySpan<byte> t) {
 		//	foreach (char c in t) if (c > 0x7f) return false;
 		//	return true;
 		//}
+
+		/// <summary>
+		/// Returns true if equals to <i>s</i>, case-insensitive.
+		/// </summary>
+		public static bool Eqi(this ReadOnlySpan<char> t, string s) => 0 == t.CompareTo(s, StringComparison.OrdinalIgnoreCase);
 
 		internal static void CopyTo_(this string t, char* p) => t.AsSpan().CopyTo(new Span<char>(p, t.Length));
 	}

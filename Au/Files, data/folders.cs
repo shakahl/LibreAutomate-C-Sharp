@@ -752,7 +752,7 @@ namespace Au
 		public static FolderPath getFolder(string folderName) {
 			if (folderName.NE()) return default;
 			bool isVirtual = folderName.Starts("shell.");
-			if (isVirtual) folderName = folderName[8..];
+			if (isVirtual) folderName = folderName[6..];
 
 			//properties of this class
 			Type ty = isVirtual ? typeof(shell) : typeof(folders);
@@ -877,7 +877,12 @@ namespace Au.Types
 
 		public static explicit operator FolderPath(string path) => new(path); //not implicit. Example: var s = "STRING " + folders.ThisApp; // converts "STRING " to FolderPath and result is @"STRING \C:\path"
 		public static implicit operator string(FolderPath f) => f._path;
+
 		public override string ToString() => _path;
+
+		public string Path => _path;
+
+		public bool IsNull => _path == null;
 
 		/// <summary>
 		/// Calls <see cref="pathname.combine"/>(fp, append).

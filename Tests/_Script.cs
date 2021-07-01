@@ -463,8 +463,6 @@ partial class TestScript
 
 		var im = +uiimage.find(w, image, IFFlags.WindowDC);
 
-		//var b = uiimage.more.loadImage(image);
-
 		//var h = Api.LoadImage(default, image, Api.IMAGE_BITMAP, 0, 0, Api.LR_LOADFROMFILE);
 		//var b = Bitmap.FromHbitmap(h);
 		//var d = b.LockBits(new Rectangle(default, b.Size), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);

@@ -42,7 +42,6 @@ namespace Au.Controls
 
 		KScintilla _c;
 		IntPtr _callbackPtr;
-		bool _isEditor;
 
 		class _ThreadSharedData
 		{
@@ -91,7 +90,7 @@ namespace Au.Controls
 			public int MaxCacheSize { get; set; } = 4 * 1024 * 1024;
 		}
 
-		//All SciImages2 of a thread share single cache etc.
+		//All SciImages of a thread share single cache etc.
 		[ThreadStatic] static _ThreadSharedData t_data;
 
 		/// <summary>
@@ -99,11 +98,9 @@ namespace Au.Controls
 		/// Calls SCI_ANNOTATIONSETVISIBLE(ANNOTATION_STANDARD). Need it because will draw images in annotation areas.
 		/// </summary>
 		/// <param name="c">The control.</param>
-		/// <param name="isEditor">Display images that are not in "&lt;image "path etc"&gt; tag. Then does not display icons of files that don't contain images. Then limits image height to 10 lines.</param>
-		internal SciImages(KScintilla c, bool isEditor = false) {
+		internal SciImages(KScintilla c) {
 			if (t_data == null) t_data = new _ThreadSharedData();
 			_c = c;
-			_isEditor = isEditor;
 			_sci_AnnotationDrawCallback = _AnnotationDrawCallback;
 			_callbackPtr = Marshal.GetFunctionPointerForDelegate(_sci_AnnotationDrawCallback);
 			_c.Call(SCI_SETANNOTATIONDRAWCALLBACK, 0, _callbackPtr);
@@ -153,22 +150,14 @@ namespace Au.Controls
 
 					//if(!isMulti) {
 					//	bool hide = true; int imStrEnd = i;
-					//	if(_isEditor) {
-					//		if(text[imStrStart + 1] == '~') { imStrStart += 3; imStrEnd--; } else hide = false;
-					//	} else {
-					//		if(imStrEnd < iTo && text[imStrEnd] == '>') imStrEnd++;
-					//		//print.it(imStrStart, imStrEnd);
-					//	}
+					//	if(imStrEnd < iTo && text[imStrEnd] == '>') imStrEnd++;
+					//	//print.it(imStrStart, imStrEnd);
 					//	if(hide) {
 					//		int len = imStrEnd - imStrStart;
 					//		_c.Call(SCI_STARTSTYLING, imStrStart + textPos);
 					//		_c.Call(SCI_SETSTYLING, len, STYLE_HIDDEN);
 					//	}
 					//}
-					if (!isMulti && _isEditor && text[imStrStart + 1] == '~') { //if !_isEditor, the <image...> tags are already hidden by SciTags
-						_c.Call(SCI_STARTSTYLING, imStrStart + 2 + textPos);
-						_c.Call(SCI_SETSTYLING, i - imStrStart - 3, STYLE_HIDDEN);
-					}
 				}
 
 				if (maxHeight == 0) continue;
@@ -324,10 +313,9 @@ namespace Au.Controls
 			if (iFrom == iTo || s[iFrom++] != '\"') { isMulti = false; return null; }
 			int i2 = iFrom - 1;
 
-			//if not editor, skip if not <image "..."
+			//skip if not <image "..."
 			if (!isMulti) {
-				if (_isEditor) imageStringStartPos = i - 1;
-				else if (i >= 8 && BytePtr_.AsciiStarts(s + i - 8, "<image ")) imageStringStartPos = i - 8;
+				if (i >= 8 && BytePtr_.AsciiStarts(s + i - 8, "<image ")) imageStringStartPos = i - 8;
 				else goto g1;
 			}
 
@@ -336,7 +324,7 @@ namespace Au.Controls
 			if (i3 >= i) { i2 = i3; iFrom = i3 + 1; isMulti = true; } else isMulti = false;
 
 			//is it an image string?
-			var imType = KImageUtil.ImageTypeFromString(!_isEditor, out int prefixLength, s + i, i2 - i);
+			var imType = KImageUtil.ImageTypeFromString(out int prefixLength, s + i, i2 - i);
 			if (imType == KImageUtil.ImageType.None) goto g1;
 			if (prefixLength == 10) { i += prefixLength; prefixLength = 0; } //"imagefile:"
 
@@ -360,7 +348,7 @@ namespace Au.Controls
 
 			//load
 			long t1 = computer.tickCountWithoutSleep;
-			byte[] b = KImageUtil.BmpFileDataFromString(path, imType, !_isEditor, (_c._dpi, null));
+			byte[] b = KImageUtil.BmpFileDataFromString(path, imType, true, (_c._dpi, null));
 			t1 = computer.tickCountWithoutSleep - t1; if (t1 > 1000) print.warning($"Time to load image '{path}' is {t1} ms.", -1, prefix: "<>Note: "); //eg if network path unavailable, may wait ~7 s
 			if (b == null) goto g1;
 			if (!KImageUtil.GetBitmapFileInfo_(b, out var q)) goto g1;
@@ -370,7 +358,7 @@ namespace Au.Controls
 				data = b,
 				nameHash = hash,
 				width = q.width,
-				height = Math.Min(q.height + IMAGE_MARGIN_TOP + IMAGE_MARGIN_BOTTOM, _isEditor ? 200 : 2000)
+				height = Math.Min(q.height + IMAGE_MARGIN_TOP + IMAGE_MARGIN_BOTTOM, 2000)
 			};
 
 			//add to cache
@@ -541,7 +529,7 @@ namespace Au.Controls
 				textPos = from2;
 			}
 
-			int r = _isEditor ? BytePtr_.AsciiFindChar(s, len, (byte)'\"') : BytePtr_.AsciiFindString(s, len, "<image \"");
+			int r = BytePtr_.AsciiFindString(s, len, "<image \"");
 			if (r < 0) return;
 			//tested: all this is faster than SCI_FINDTEXT. Much faster when need to search in big text.
 

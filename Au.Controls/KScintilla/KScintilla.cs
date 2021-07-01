@@ -38,6 +38,10 @@ namespace Au.Controls
 		Sci_NotifyCallback _notifyCallback;
 		internal int _dpi;
 
+#if DEBUG //we use many scintilla controls, but often want to test something on one of them. Then set test_ = true...
+		internal bool test_;
+#endif
+
 		static KScintilla() {
 			//if (default == Api.GetModuleHandle("SciLexer.dll"))
 			filesystem.more.loadDll64or32Bit("SciLexer.dll");
@@ -57,6 +61,9 @@ namespace Au.Controls
 
 		public event Action ZHandleCreated;
 
+		/// <summary>
+		/// Invokes event <see cref="ZHandleCreated"/>.
+		/// </summary>
 		protected virtual void ZOnHandleCreated() => ZHandleCreated?.Invoke();
 
 		protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
@@ -72,16 +79,15 @@ namespace Au.Controls
 			_sciPtr = _w.Send(SCI_GETDIRECTPOINTER);
 			Call(SCI_SETNOTIFYCALLBACK, 0, Marshal.GetFunctionPointerForDelegate(_notifyCallback = _NotifyCallback));
 
-			bool hasImages = ZInitImagesStyle != ZImagesStyle.NoImages;
 			bool hasTags = ZInitTagsStyle != ZTagsStyle.NoTags;
 			if (ZInitReadOnlyAlways) {
 				MOD mask = 0;
-				if (hasImages || hasTags) mask |= MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT;
+				if (ZInitImages || hasTags) mask |= MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT;
 				Call(SCI_SETMODEVENTMASK, (int)mask);
 			}
 			_InitDocument();
 			Call(SCI_SETSCROLLWIDTHTRACKING, 1);
-			Call(SCI_SETSCROLLWIDTH, Dpi.Scale(100, _dpi));
+			Call(SCI_SETSCROLLWIDTH, 1); //SHOULDDO: later make narrower when need, eg when folded long lines (alas there is no direct notification). Maybe use timer.
 			if (!ZInitUseDefaultContextMenu) Call(SCI_USEPOPUP);
 			Call(SCI_SETCARETWIDTH, Dpi.Scale(2, _dpi));
 			if (ZInitWrapVisuals) {
@@ -95,7 +101,7 @@ namespace Au.Controls
 
 			//note: cannot set styles here, because later derived class will call zStyleClearAll, which sets some special styles.
 
-			if (hasImages) ZImages = new SciImages(this, ZInitImagesStyle == ZImagesStyle.AnyString);
+			if (ZInitImages) ZImages = new SciImages(this);
 			if (hasTags) ZTags = new SciTags(this);
 
 			if (FocusManager.GetFocusScope(this) is Window fs && FocusManager.GetFocusedElement(fs) == this && Api.GetFocus() == wParent)
@@ -276,18 +282,18 @@ namespace Au.Controls
 		//}
 
 		unsafe void _NotifyModified(in SCNotification n) {
-			var code = n.modificationType;
-			//if(this.Name!= "Output_text") print.it(code, n.position);
-			if (0 != (code & (MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT))) {
+			var mt = n.modificationType;
+			//if(this.Name!= "Output_text") print.it(mt, n.position);
+			if (mt.HasAny(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT)) {
 				_text = null;
 				_posState = default;
 				_aPos.Clear();
 
-				bool ins = 0 != (code & MOD.SC_MOD_INSERTTEXT);
+				bool ins = mt.Has(MOD.SC_MOD_INSERTTEXT);
 				ZImages?.OnTextChanged_(ins, n);
 				ZTags?.OnTextChanged_(ins, n);
 			}
-			//if(0!=(code& MOD.SC_MOD_CHANGEANNOTATION)) ChangedAnnotation?.Invoke(this, ref n);
+			//if(mt.Has(MOD.SC_MOD_CHANGEANNOTATION)) ChangedAnnotation?.Invoke(this, ref n);
 		}
 
 		/// <summary>
@@ -295,8 +301,12 @@ namespace Au.Controls
 		/// </summary>
 		protected virtual void ZOnSciNotify(ref SCNotification n) {
 			ZNotify?.Invoke(this, ref n);
-			var e = ZTextChanged;
-			if (e != null && n.nmhdr.code == NOTIF.SCN_MODIFIED && 0 != (n.modificationType & (MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT))) e(this, EventArgs.Empty);
+			switch (n.nmhdr.code) {
+			case NOTIF.SCN_MODIFIED:
+				var e = ZTextChanged;
+				if (e != null && n.modificationType.HasAny(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT)) e(this, EventArgs.Empty);
+				break;
+			}
 		}
 
 		public delegate void ZEventHandler(KScintilla c, ref SCNotification n);
@@ -360,8 +370,8 @@ namespace Au.Controls
 		}
 
 #if DEBUG
-		void _DebugPrintMessage(int sciMessage) {
-			if (sciMessage < Sci.SCI_START) return;
+		static void _DebugPrintMessage(int sciMessage) {
+			if (sciMessage < SCI_START) return;
 			switch (sciMessage) {
 			case SCI_COUNTCODEUNITS:
 			case SCI_POSITIONRELATIVECODEUNITS:
@@ -373,7 +383,7 @@ namespace Au.Controls
 				return;
 			}
 			if (s_debugPM == null) {
-				s_debugPM = new Dictionary<int, string>();
+				s_debugPM = new();
 				foreach (var v in typeof(Sci).GetFields()) {
 					var s = v.Name;
 					//print.it(v.Name);
@@ -411,28 +421,14 @@ namespace Au.Controls
 		public virtual bool ZInitReadOnlyAlways { get; set; }
 
 		/// <summary>
-		/// See <see cref="ZInitImagesStyle"/>.
-		/// </summary>
-		public enum ZImagesStyle
-		{
-			/// <summary>Don't show images. The <see cref="ZImages"/> property is null.</summary>
-			NoImages,
-
-			/// <summary>Display only images specified in tags like &lt;image "image file path"&gt;, including icons of non-image file types.</summary>
-			ImageTag,
-
-			/// <summary>Display images specified in any string like "image file path", and only of image file types. Then limits image height to 10 lines.</summary>
-			AnyString
-		}
-
-		/// <summary>
-		/// Whether and how to show images.
+		/// Whether to show images specified in tags like &lt;image "image file path"&gt;, including icons of non-image file types.
 		/// Must be set before creating control handle.
+		/// If false, <see cref="ZImages"/> property is null.
 		/// </summary>
-		public virtual ZImagesStyle ZInitImagesStyle { get; set; }
+		public virtual bool ZInitImages { get; set; }
 
 		/// <summary>
-		/// See <see cref="ZInitImagesStyle"/>.
+		/// See <see cref="ZInitTagsStyle"/>.
 		/// </summary>
 		public enum ZTagsStyle
 		{

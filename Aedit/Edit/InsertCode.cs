@@ -92,7 +92,7 @@ static class InsertCode
 			c = App.FocusedElement;
 			if (c == null) return;
 		} else {
-			if (!c.IsFocused) //be careful with HwndHost
+			if (c != App.FocusedElement) //be careful with HwndHost
 				c.Focus();
 		}
 

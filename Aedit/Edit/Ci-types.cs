@@ -198,3 +198,65 @@ enum CiItemKind : sbyte { Class, Structure, Enum, Delegate, Interface, Method, E
 
 //don't reorder!
 enum CiItemAccess : sbyte { Public, Private, Protected, Internal }
+
+class CiNamespaceSymbolEqualityComparer : IEqualityComparer<INamespaceSymbol>
+{
+	public bool Equals(INamespaceSymbol x, INamespaceSymbol y) {
+		for (; ; ) {
+			if (x.MetadataName != y.MetadataName) return false;
+			x = x.ContainingNamespace;
+			y = y.ContainingNamespace;
+			if (x == null) return y == null;
+			if (y == null) return false;
+		}
+	}
+
+	public int GetHashCode(INamespaceSymbol obj) {
+		for (int r = obj.MetadataName.GetHashCode(); ;) {
+			obj = obj.ContainingNamespace;
+			if (obj == null) return r;
+			r ^= obj.MetadataName.GetHashCode();
+		}
+	}
+}
+
+class CiNamespaceOrTypeSymbolEqualityComparer : IEqualityComparer<INamespaceOrTypeSymbol>
+{
+	public bool Equals(INamespaceOrTypeSymbol x, INamespaceOrTypeSymbol y) {
+		for (; ; ) {
+			if (x.MetadataName != y.MetadataName) return false;
+			if ((x is INamespaceSymbol) != (y is INamespaceSymbol)) return false;
+			x = x.ContainingSymbol as INamespaceOrTypeSymbol;
+			y = y.ContainingSymbol as INamespaceOrTypeSymbol;
+			if (x == null) return y == null;
+			if (y == null) return false;
+		}
+	}
+
+	public int GetHashCode(INamespaceOrTypeSymbol obj) {
+		for (int r = obj.MetadataName.GetHashCode(); ;) {
+			obj = obj.ContainingSymbol as INamespaceOrTypeSymbol;
+			if (obj == null) return r;
+			r ^= obj.MetadataName.GetHashCode();
+		}
+	}
+}
+
+struct CiStringRange
+{
+	public readonly string code;
+	public readonly int start, end;
+	public readonly bool verbatim;
+
+	public CiStringRange(string code, int start, int end, bool verbatim) {
+		this.code = code; this.start = start; this.end = end; this.verbatim = verbatim;
+	}
+
+	public override string ToString() {
+		var s = code[start..end];
+		if (!verbatim) s.Unescape(out s);
+		return s;
+	}
+
+	public int Length => end - start;
+}

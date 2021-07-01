@@ -2080,6 +2080,12 @@ sptr_t ScintillaWin::WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam
 			cbAnnotationDraw = (Sci_AnnotationDrawCallback)lParam; cbAnnotationDrawParam = (void*)wParam;
 			break;
 
+			//Au: to draw in annotation eg image instead of text.
+		case SCI_SETMARGINDRAWCALLBACK:
+			cbMarginDraw = (Sci_MarginDrawCallback)lParam;
+			cbMarginsMask = (int)wParam;
+			break;
+
 			//Au
 		case SCI_ISXINMARGIN:
 			return PointInSelMargin(Point((XYPOSITION)(int)wParam, (XYPOSITION)(int)lParam));

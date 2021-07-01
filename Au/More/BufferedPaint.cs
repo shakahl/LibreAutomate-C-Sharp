@@ -8,15 +8,22 @@ namespace Au.More
 	/// </summary>
 	public struct BufferedPaint : IDisposable
 	{
-		/// <summary>
-		/// Calls API <msdn>BufferedPaintInit</msdn>.
-		/// </summary>
-		public static void Init() { Api.BufferedPaintInit(); } //fast
+		//rejected. Users often will forget it. Better init automatically.
+		///// <summary>
+		///// Calls API <msdn>BufferedPaintInit</msdn>.
+		///// </summary>
+		//public static void Init() { Api.BufferedPaintInit(); } //fast
 
-		/// <summary>
-		/// Calls API <msdn>BufferedPaintUnInit</msdn>.
-		/// </summary>
-		public static void Uninit() { Api.BufferedPaintUnInit(); }
+		///// <summary>
+		///// Calls API <msdn>BufferedPaintUnInit</msdn>.
+		///// </summary>
+		//public static void Uninit() { Api.BufferedPaintUnInit(); }
+
+		[ThreadStatic] static bool s_inited;
+		//never mind: should BufferedPaintUnInit before thread exits.
+		//	Not very important. Usually a process has single UI thread. Tested: 10000 threads without BufferedPaintUnInit don't leak much.
+		//	To detect thread exit could use eg FlsAlloc(callback)+FlsSetValue, or native dll thread detach.
+		//		But it can be dangerous (too late, eg C# thread variables are already cleared).
 
 		wnd _w;
 		IntPtr _dcn, _dcb;
@@ -36,9 +43,9 @@ namespace Au.More
 		public IntPtr DC => _dcb;
 
 		/// <summary>
-		/// Gets client area rectangle.
+		/// Gets client area rectangle or rectangle passed to constructor.
 		/// </summary>
-		public RECT ClientRect => _r;
+		public RECT Rect => _r;
 
 		/// <summary>
 		/// Gets bounding rectangle of the update region in client area rectangle.
@@ -52,11 +59,14 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Gets nonbuffered DC with API <msdn>BeginPaint</msdn> or <msdn>GetDC</msdn>. Then gets buffered DC with API <msdn>BeginBufferedPaint</msdn> for entire client area.
+		/// Gets nonbuffered DC with API <msdn>BeginPaint</msdn> or <msdn>GetDC</msdn>. Then gets buffered DC with API <msdn>BeginBufferedPaint</msdn> for entire client area or rectangle <i>r</i>.
 		/// </summary>
 		/// <param name="w"></param>
 		/// <param name="wmPaint">Use API <b>BeginPaint</b>/<b>EndPaint</b>. If false, uses <b>GetDC</b>/<b>ReleaseDC</b>.</param>
-		public unsafe BufferedPaint(wnd w, bool wmPaint) {
+		/// <param name="r">Part of client area.</param>
+		public unsafe BufferedPaint(wnd w, bool wmPaint, RECT? r = null) {
+			if (!s_inited) s_inited = 0 == Api.BufferedPaintInit();
+
 			_w = w;
 			if (_wmPaint = wmPaint) {
 				_dcn = Api.BeginPaint(w, out _ps);
@@ -65,7 +75,7 @@ namespace Au.More
 				_dcn = Api.GetDC(_w);
 			}
 
-			_r = _w.ClientRect;
+			_r = r ?? _w.ClientRect;
 			Api.BP_PAINTPARAMS pp = new() { cbSize = sizeof(Api.BP_PAINTPARAMS) };
 			//var ru = wmPaint ? _ps.rcPaint : _r; //the buffer bitmap is smaller when rcPaint smaller, but in most cases don't need to change painting code, although GetViewportOrgEx etc get 0 offsets of the buffer DC. However problem with brush alignment.
 			_hb = Api.BeginBufferedPaint(_dcn, _r, Api.BP_BUFFERFORMAT.BPBF_TOPDOWNDIB, ref pp, out _dcb); //BPBF_COMPATIBLEBITMAP slower //tested: works with 16 and 8 bit colors too

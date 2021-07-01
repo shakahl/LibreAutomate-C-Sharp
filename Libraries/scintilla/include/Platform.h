@@ -389,6 +389,7 @@ public:
 	virtual void RectangleDraw(PRectangle rc, ColourDesired fore, ColourDesired back)=0;
 	virtual void FillRectangle(PRectangle rc, ColourDesired back)=0;
 	virtual void FillRectangle(PRectangle rc, Surface &surfacePattern)=0;
+	virtual void DrawLineDots(PRectangle rc, ColourDesired color)=0; //Au
 	virtual void RoundedRectangle(PRectangle rc, ColourDesired fore, ColourDesired back)=0;
 	virtual void AlphaRectangle(PRectangle rc, int cornerSize, ColourDesired fill, int alphaFill,
 		ColourDesired outline, int alphaOutline, int flags)=0;

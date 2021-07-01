@@ -50,13 +50,11 @@ namespace Au.Controls
 				_w = w;
 				_hasHwnd = true;
 				_SetDpiAndItemSize(More.Dpi.OfWindow(_w));
-				BufferedPaint.Init();
 				break;
 			case Api.WM_NCDESTROY:
 				_w = default;
 				_hasHwnd = false;
 				_acc?.Dispose(); _acc = null;
-				BufferedPaint.Uninit();
 				break;
 			case Api.WM_PAINT:
 				using (var bp = new BufferedPaint(w, true)) _Render(bp.DC, bp.UpdateRect);

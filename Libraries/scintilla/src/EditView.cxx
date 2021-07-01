@@ -1354,11 +1354,11 @@ void EditView::DrawAnnotation(Surface *surface, const EditModel &model, const Vi
 			if(!AnnotationBoxedOrIndented(vsDraw.annotationVisible)) rcText.left = (XYPOSITION)(xStart + indent);
 			//Platform::DebugPrintf("%i %i %i", subLine, ll->lines, annotationLines);
 			c.step = 1;
-			c.hdc = surface->get_hdc();
 			c.rect.left = (int)rcText.left;
 			c.rect.top = (int)rcText.top;
 			c.rect.right = (int)rcText.right;
 			c.rect.bottom = (int)rcText.bottom;
+			c.hdc = surface->get_hdc();
 			int iw = model.cbAnnotationDraw(model.cbAnnotationDrawParam, c);
 			if(!iw) imageWidth = 0; else if(iw > imageWidth) imageWidth = iw;
 			if(imageWidth > lineWidthMaxSeen) lineWidthMaxSeen = imageWidth; //horz scroll bar
@@ -2137,7 +2137,7 @@ static void DrawFoldLines(Surface *surface, const EditModel &model, const ViewSt
 		if ((expanded && (model.foldFlags & SC_FOLDFLAG_LINEBEFORE_EXPANDED))
 			||
 			(!expanded && (model.foldFlags & SC_FOLDFLAG_LINEBEFORE_CONTRACTED))) {
-			if(!(level & 0x1000000)) //Au: QM2: don't draw lines over #region. Draw only over #sub and #ret. QM sets this flag in _FoldingCallback().
+			if(!(level & 0x1000000)) //Au: QM2: don't draw lines before #region. Draw only before #sub and #ret. QM sets this flag in _FoldingCallback().
 			{
 				PRectangle rcFoldLine = rcLine;
 				rcFoldLine.bottom = rcFoldLine.top + 1;
@@ -2150,7 +2150,9 @@ static void DrawFoldLines(Surface *surface, const EditModel &model, const ViewSt
 			(!expanded && (model.foldFlags & SC_FOLDFLAG_LINEAFTER_CONTRACTED))) {
 			PRectangle rcFoldLine = rcLine;
 			rcFoldLine.top = rcFoldLine.bottom - 1;
-			surface->FillRectangle(rcFoldLine, vsDraw.styles[STYLE_DEFAULT].fore);
+			//Au: draw dots line
+			//surface->FillRectangle(rcFoldLine, vsDraw.styles[STYLE_DEFAULT].fore);
+			surface->DrawLineDots(rcFoldLine, ColourDesired(0xc0c0c0));
 		}
 	}
 }

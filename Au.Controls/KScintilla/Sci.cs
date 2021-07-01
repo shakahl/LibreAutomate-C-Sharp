@@ -724,7 +724,7 @@ namespace Au.Controls
 		/// <summary>
 		/// SCI_GETSELECTIONSTART UTF-16.
 		/// </summary>
-		public int zSelectionStar16 => zPos16(zSelectionStart8);
+		public int zSelectionStart16 => zPos16(zSelectionStart8);
 
 		/// <summary>
 		/// SCI_GETSELECTIONEND UTF-8.
@@ -1150,6 +1150,8 @@ namespace Au.Controls
 
 			public bool IsBinary => _enc == _Encoding.Binary;
 
+			public bool IsImage { get; private set; }
+
 			/// <summary>
 			/// Loads file as UTF-8.
 			/// Returns byte[] that must be passed to <see cref="SetText"/>.
@@ -1163,9 +1165,11 @@ namespace Au.Controls
 			/// </remarks>
 			public byte[] Load(string file) {
 				_enc = _Encoding.Binary;
+				IsImage = false;
 				if (0 != file.Ends(true, ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani")) {
 					if (!filesystem.exists(file).isFile) throw new FileNotFoundException($"Could not find file '{file}'.");
-					return Encoding.UTF8.GetBytes($"//Image file @\"{file}\"\0");
+					IsImage = true;
+					return Encoding.UTF8.GetBytes($"<image \"{file}\">\0");
 				}
 
 				using var fr = filesystem.loadStream(file);

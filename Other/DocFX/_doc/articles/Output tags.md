@@ -62,4 +62,4 @@ Images are displayed below current line. Examples:
 
 Supports images of formats: png, bmp, jpg, gif, ico (only 16x16). For other file types and folders displays small file icon.
 
-Supports Base64-encoded png image file data. To create such string use dialog "Find image or color in window" or function **Au.Controls.KImageUtil.ImageToString** (in Au.Controls.dll).
+Supports Base64 encoded png image file data. To create such string use dialog "Find image or color in window" or function **Au.Controls.KImageUtil.ImageToString** (in Au.Controls.dll).

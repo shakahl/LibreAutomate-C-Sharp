@@ -65,7 +65,10 @@ class DIcons : KDialogWindow
 			tv.Redraw();
 		};
 		b.StartStack();
+
 		TextBox randFromTo = null, iconSizes = null;
+		KCheckBox setClipboard = null;
+
 		b.AddButton("Randomize colors", _ => _RandomizeColors());
 		b.Add("L %", out randFromTo, "30-70").Width(50);
 		b.End();
@@ -76,15 +79,16 @@ class DIcons : KDialogWindow
 		//b.AddButton("Random", null).Width(70); //idea: set random icons for multiple selected files. Probably too crazy.
 		b.End();
 		b.StartStack<Expander>("Insert code for menu/toolbar/etc icon", vertical: true);
+		b.Add(out setClipboard, "Clipboard");
 		b.StartStack();
-		b.Add<Label>("Add new line: ");
+		b.Add<Label>("Line: ");
 		b.AddButton(out var bCodeVar, "Variable = XAML", _ => _InsertCodeOrExport(tv, 0)).Disabled();
 		b.AddButton(out var bCodeField, "Field = XAML", _ => _InsertCodeOrExport(tv, 1)).Disabled();
 		b.End();
 		b.StartStack();
-		b.Add<Label>("Simply insert: ");
+		b.Add<Label>("Text: ");
 		b.AddButton(out var bCodeXaml, "XAML", _ => _InsertCodeOrExport(tv, 2)).Width(70).Disabled();
-		b.AddButton(out var bCodeName, "Name", _ => _InsertCodeOrExport(tv, 3)).Width(70).Disabled().Tooltip("Shorter, but works only when editor is running.\nCan be used with menus, toolbars and script.editor.GetCustomIcon.");
+		b.AddButton(out var bCodeName, "Name", _ => _InsertCodeOrExport(tv, 3)).Width(70).Disabled().Tooltip("Shorter, but works only when editor is running.\nCan be used with menus, toolbars and script.editor.GetIcon.");
 		b.End();
 		b.End();
 		b.StartStack<Expander>("Export to current workspace folder");
@@ -163,14 +167,15 @@ class DIcons : KDialogWindow
 
 		void _InsertCodeOrExport(KTreeView tv, int what) {
 			if (tv.SelectedItem is not _Item k) return;
+			string code = null;
 			if (what == 3) {
-				InsertCode.TextSimply(_ColorName(k));
+				code = _ColorName(k);
 			} else if (GetIconFromBigDB(k._table, k._name, _ItemColor(k), out var xaml)) {
 				xaml = xaml.Replace('\"', '\'').RegexReplace(@"\R\s*", "");
 				switch (what) {
-				case 0: InsertCode.Statements($"string icon{k._name} = \"{xaml}\";"); break;
-				case 1: InsertCode.Statements($"public const string {k._name} = \"{xaml}\";"); break;
-				case 2: InsertCode.TextSimply(xaml); break;
+				case 0: code = $"string icon{k._name} = \"{xaml}\";"; break;
+				case 1: code = $"public const string {k._name} = \"{xaml}\";"; break;
+				case 2: code = xaml; break;
 				case 10: _Export(false); break;
 				case 11: _Export(true); break;
 				}
@@ -190,6 +195,12 @@ class DIcons : KDialogWindow
 					if (fn == null) print.it("failed");
 					else print.it($"<>Icon exported to <open>{fn.ItemPath}<>");
 				}
+			}
+
+			if (code != null) {
+				if (setClipboard.True()) clipboard.text = code;
+				else if (what is 0 or 1) InsertCode.Statements(code);
+				else InsertCode.TextSimply(code);
 			}
 		}
 

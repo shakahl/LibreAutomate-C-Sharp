@@ -203,10 +203,10 @@ static class Menus
 		[Command(separator = true)]
 		public static class Selection
 		{
-			[Command(keysText = "R-click margin")]
+			[Command(keysText = "R-click margin", keys = "Ctrl+/")]
 			public static void Comment() { Panels.Editor.ZActiveDoc.ZCommentLines(true); }
 
-			[Command(keysText = "R-click margin")]
+			[Command(keysText = "R-click margin", keys = "Ctrl+\\")]
 			public static void Uncomment() { Panels.Editor.ZActiveDoc.ZCommentLines(false); }
 
 			[Command(keysText = "Tab")]
@@ -229,11 +229,11 @@ static class Menus
 		[Command]
 		public static class View
 		{
-			[Command(checkable = true, keysText = "Ctrl+W", image = "resources/images/wordwrap_16x.xaml")]
-			public static void Wrap_lines() { Panels.Editor.ZActiveDoc.ZToggleView_call_from_menu_only_(SciCode.EView.Wrap); }
+			[Command(checkable = true, keys = "Ctrl+W", image = "resources/images/wordwrap_16x.xaml")]
+			public static void Wrap_lines() { SciCode.ZToggleView_call_from_menu_only_(SciCode.EView.Wrap); }
 
 			[Command(checkable = true, image = "resources/images/image_16x.xaml")]
-			public static void Images_in_code() { Panels.Editor.ZActiveDoc.ZToggleView_call_from_menu_only_(SciCode.EView.Images); }
+			public static void Images_in_code() { SciCode.ZToggleView_call_from_menu_only_(SciCode.EView.Images); }
 		}
 	}
 

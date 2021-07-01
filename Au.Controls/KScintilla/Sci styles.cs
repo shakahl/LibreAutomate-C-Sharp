@@ -157,13 +157,13 @@ namespace Au.Controls
 
 		#region margins
 
-		public void zMarginType(int margin, int SC_MARGIN_) {
+		public void zSetMarginType(int margin, int SC_MARGIN_) {
 			Call(SCI_SETMARGINTYPEN, margin, SC_MARGIN_);
 		}
 
 		internal int[] _marginDpi;
 
-		public void zMarginWidth(int margin, int value, bool dpiScale = true, bool chars = false) {
+		public void zSetMarginWidth(int margin, int value, bool dpiScale = true, bool chars = false) {
 			if (dpiScale && value > 0) {
 				var a = _marginDpi ??= new int[Call(SCI_GETMARGINS)];
 				if (chars) {
@@ -180,13 +180,13 @@ namespace Au.Controls
 			Call(SCI_SETMARGINWIDTHN, margin, value);
 		}
 
-		//public void zMarginWidth(int margin, string textToMeasureWidth) {
+		//public void zSetMarginWidth(int margin, string textToMeasureWidth) {
 		//	int n = zStyleMeasureStringWidth(STYLE_LINENUMBER, textToMeasureWidth);
 		//	Call(SCI_SETMARGINWIDTHN, margin, n + 4);
 		//}
 
 		//not used
-		//public int zMarginWidth(int margin, bool dpiUnscale) {
+		//public int zGetMarginWidth(int margin, bool dpiUnscale) {
 		//	int R = Call(SCI_GETMARGINWIDTHN, margin);
 		//	if (dpiUnscale && R > 0) {
 		//		var a = _marginDpi;
@@ -209,6 +209,15 @@ namespace Au.Controls
 				for (int i = 0, n = Call(SCI_GETMARGINS), w = 0; i < n; i++) { w += Call(SCI_GETMARGINWIDTHN, i); if (w >= p.x) return i; }
 			}
 			return -1;
+		}
+
+		/// <summary>
+		/// SCI_GETMARGINWIDTHN. Not DPI-scaled.
+		/// </summary>
+		public (int left, int right) zGetMarginX(int margin) {
+			int x = 0;
+			for (int i = 0; i < margin; i++) x += Call(SCI_GETMARGINWIDTHN, i);
+			return (x, x + Call(SCI_GETMARGINWIDTHN, margin));
 		}
 
 		#endregion

@@ -13,7 +13,7 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Drawing.Drawing2D;
+//using System.Drawing.Drawing2D;
 //using System.Linq;
 
 #pragma warning disable 649
@@ -130,24 +130,15 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Image type as detected by <see cref="ImageTypeFromString(bool, out int, string)"/>.
+		/// Image type detected by <see cref="ImageTypeFromString(out int, string)"/>.
 		/// </summary>
 		public enum ImageType
 		{
 			/// <summary>The string isn't image.</summary>
 			None,
 
-			/// <summary>XAML image data.</summary>
-			Xaml,
-
-			/// <summary>XAML icon name "*Pack.Icon color".</summary>
-			XamlIconName,
-
-			/// <summary>Compressed and Base64-encoded .bmp file data with "~:" prefix. See <see cref="ImageToString(string)"/>.</summary>
-			Base64CompressedBmp,
-
-			/// <summary>Base64-encoded .png/gif/jpg file data with "image:" prefix.</summary>
-			Base64PngGifJpg,
+			/// <summary>Base64 encoded image file data with prefix "image:" (.png/gif/jpg) or "image:WkJN" (compressed .bmp). See <see cref="ImageToString(string)"/>.</summary>
+			Base64Image,
 
 			/// <summary>.bmp file path.</summary>
 			Bmp,
@@ -164,8 +155,14 @@ namespace Au.Controls
 			/// <summary>Icon from a .dll or other file containing icons, like @"C:\a\b.dll,15".</summary>
 			IconLib,
 
-			/// <summary>None of other image types, when <i>anyFile</i> is true.</summary>
+			/// <summary>None of other image types.</summary>
 			ShellIcon,
+
+			/// <summary>XAML image data.</summary>
+			Xaml,
+
+			/// <summary>XAML icon name "*Pack.Icon color".</summary>
+			XamlIconName,
 
 			//rejected. Where it used, we cannot know the assembly; maybe it is script's assembly and in editor we cannot get its resources or it is difficult (need to use meta).
 			///// <summary>"resource:name". An image resource name from managed resources of the entry assembly. In Visual Studio use build action "Resource".</summary>
@@ -175,27 +172,24 @@ namespace Au.Controls
 		/// <summary>
 		/// Gets image type from string.
 		/// </summary>
-		/// <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
-		/// <param name="prefixLength">Length of prefix "imagefile:" or "image:" or "~:".</param>
-		/// <param name="s">File path etc. See <see cref="ImageType"/>.</param>
+		/// <param name="prefixLength">Length of prefix "imagefile:" or "image:".</param>
+		/// <param name="s">File path etc. See <see cref="ImageType"/>. It is UTF8 because used directly with Scintilla text.</param>
 		/// <param name="length">If -1, calls CharPtr_.Length(s).</param>
-		internal static ImageType ImageTypeFromString(bool anyFile, out int prefixLength, byte* s, int length = -1) {
+		internal static ImageType ImageTypeFromString(out int prefixLength, byte* s, int length = -1) {
 			prefixLength = 0;
 			if (length < 0) length = BytePtr_.Length(s);
-			if (length < (anyFile ? 2 : 8)) return default; //C:\x.bmp or .h
+			if (length < 2) return default; //C:\x.bmp or .h
 			char c1 = (char)s[0], c2 = (char)s[1];
+
+			//FUTURE: rewrite this old code. Use Span etc. See SciCode.GetImages_.
 
 			//special strings
 			switch (c1) {
-			case '~':
-				if (c2 != ':') return default;
-				prefixLength = 2;
-				return ImageType.Base64CompressedBmp;
 			case 'i':
 				if (BytePtr_.AsciiStarts(s, "image:")) {
 					if (length < 10) return default;
 					prefixLength = 6;
-					return ImageType.Base64PngGifJpg;
+					return ImageType.Base64Image;
 				}
 				if (BytePtr_.AsciiStarts(s, "imagefile:")) {
 					s += 10; length -= 10;
@@ -241,26 +235,24 @@ namespace Au.Controls
 				}
 			}
 
-			if (anyFile) return ImageType.ShellIcon; //can be other file type, URL, .ext, :: ITEMIDLIST, ::{CLSID}
-			return default;
+			return ImageType.ShellIcon; //can be other file type, URL, .ext, :: ITEMIDLIST, ::{CLSID}
 		}
 
 		/// <summary>
 		/// Gets image type from string.
 		/// </summary>
-		/// <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
-		/// <param name="prefixLength">Length of prefix "imagefile:" or "image:" or "~:".</param>
+		/// <param name="prefixLength">Length of prefix "imagefile:" or "image:".</param>
 		/// <param name="s">File path etc. See <see cref="ImageType"/>.</param>
-		public static ImageType ImageTypeFromString(bool anyFile, out int prefixLength, string s) {
+		public static ImageType ImageTypeFromString(out int prefixLength, string s) {
 			var b = Convert2.ToUtf8(s);
-			fixed (byte* p = b) return ImageTypeFromString(true, out prefixLength, p, b.Length - 1);
+			fixed (byte* p = b) return ImageTypeFromString(out prefixLength, p, b.Length - 1);
 		}
 
 		/// <summary>
 		/// Loads image and returns its data in .bmp file format.
 		/// Returns null if fails, for example file not found or invalid Base64 string.
 		/// </summary>
-		/// <param name="s">Depends on t. File path or resource name without prefix or Base64 image data without prefix.</param>
+		/// <param name="s">Depends on t. File path or resource name without prefix "imagefile:" or Base64 image data without prefix "image:".</param>
 		/// <param name="t">Image type and string format.</param>
 		/// <param name="searchPath">Use <see cref="filesystem.searchPath"/></param>
 		/// <param name="xaml">If not null, supports XAML images. See <see cref="ImageUtil.LoadGdipBitmapFromXaml"/>.</param>
@@ -269,9 +261,7 @@ namespace Au.Controls
 			//print.it(t, s);
 			try {
 				switch (t) {
-				case ImageType.Bmp:
-				case ImageType.PngGifJpg:
-				case ImageType.Cur:
+				case ImageType.Bmp or ImageType.PngGifJpg or ImageType.Cur:
 					if (searchPath) {
 						s = filesystem.searchPath(s, folders.ThisAppImages);
 						if (s == null) return null;
@@ -284,25 +274,20 @@ namespace Au.Controls
 				}
 				g1:
 				switch (t) {
-				case ImageType.Base64CompressedBmp:
-					return Convert2.Decompress(Convert.FromBase64String(s));
-				case ImageType.Base64PngGifJpg:
-					using (var stream = new MemoryStream(Convert.FromBase64String(s), false)) {
-						return _ImageToBytes(Image.FromStream(stream));
-					}
+				case ImageType.Base64Image:
+					var a = Convert.FromBase64String(s);
+					if (s.Starts("WkJN")) return Convert2.Decompress(a.AsSpan(3));
+					return _ImageToBytes(new(new MemoryStream(a, false)));
 				//case ImageType.Resource:
 				//	return _ImageToBytes(ResourceUtil.GetGdipBitmap(s));
 				case ImageType.Bmp:
 					return File.ReadAllBytes(s);
 				case ImageType.PngGifJpg:
-					return _ImageToBytes(Image.FromFile(s));
-				case ImageType.Ico:
-				case ImageType.IconLib:
-				case ImageType.ShellIcon:
-				case ImageType.Cur:
+					return _ImageToBytes(new(s));
+				case ImageType.Ico or ImageType.IconLib or ImageType.ShellIcon or ImageType.Cur:
 					return _IconToBytes(s, t == ImageType.Cur, searchPath);
 				case ImageType.XamlIconName when xaml != null:
-					s = script.editor.GetCustomIcon(s, EGetIcon.IconNameToXaml);
+					s = script.editor.GetIcon(s, EGetIcon.IconNameToXaml);
 					if (s == null) break;
 					t = ImageType.Xaml;
 					goto g1;
@@ -315,7 +300,7 @@ namespace Au.Controls
 			return null;
 		}
 
-		static byte[] _ImageToBytes(Image im) {
+		static byte[] _ImageToBytes(Bitmap im) {
 			if (im == null) return null;
 			try {
 				//workaround for the black alpha problem. Does not make slower.
@@ -356,7 +341,7 @@ namespace Au.Controls
 			if (hi == default) return null;
 			try {
 				using var m = new MemoryBitmap(siz, siz);
-				RECT r = new RECT(0, 0, siz, siz);
+				RECT r = new (0, 0, siz, siz);
 				Api.FillRect(m.Hdc, r, Api.GetStockObject(0)); //WHITE_BRUSH
 				if (!Api.DrawIconEx(m.Hdc, 0, 0, hi, siz, siz)) return null;
 
@@ -378,7 +363,7 @@ namespace Au.Controls
 			}
 		}
 
-#if false //currently not used
+#if false //currently not used. If using, move to icon class.
 
 	/// <summary>
 	/// Gets icon or cursor size from its native handle.
@@ -403,28 +388,27 @@ namespace Au.Controls
 
 		/// <summary>
 		/// Compresses .bmp file data (<see cref="Convert2.Compress"/>) and Base64-encodes.
-		/// Returns string with "~:" prefix.
+		/// Returns string with "image:" prefix.
 		/// </summary>
 		public static string BmpFileDataToString(byte[] bmpFileData) {
 			if (bmpFileData == null) return null;
-			return "~:" + Convert.ToBase64String(Convert2.Compress(bmpFileData));
+			return "image:WkJN" + Convert.ToBase64String(Convert2.Compress(bmpFileData));
+			//WkJN is Base64 of "ZBM"
 		}
 
 		/// <summary>
 		/// Converts image file data to string that can be used in source code instead of file path. It is supported by some functions of this library, for example <see cref="uiimage.find"/>.
-		/// Returns string with prefix "image:" (Base-64 encoded .png/gif/jpg file data) or "~:" (Base-64 encoded compressed .bmp file data).
 		/// Supports all <see cref="ImageType"/> formats. For non-image files gets icon. Converts icons to bitmap.
+		/// If <i>path</i> is of <see cref="ImageType"/> type <b>Base64Image</b>, <b>Xaml</b> or <b>XamlIconName</b>, returns <i>path</i>. Else returns Base64 encoded file data with prefix "image:" (.png/gif/jpg) or "image:WkJN" (compressed .bmp).
 		/// Returns null if path is not a valid image string or the file does not exist or failed to load.
 		/// </summary>
 		/// <remarks>Supports environment variables etc. If not full path, searches in <see cref="folders.ThisAppImages"/> and standard directories.</remarks>
 		public static string ImageToString(string path) {
-			var t = ImageTypeFromString(true, out _, path);
+			var t = ImageTypeFromString(out _, path);
 			switch (t) {
 			case ImageType.None: return null;
-			case ImageType.Base64CompressedBmp:
-			case ImageType.Base64PngGifJpg:
-			//case ImageType.Resource:
-			//	return path;
+			case ImageType.Base64Image or ImageType.Xaml or ImageType.XamlIconName: return path;
+			//case ImageType.Resource: return path;
 			case ImageType.PngGifJpg:
 				path = filesystem.searchPath(path, folders.ThisAppImages); if (path == null) return null;
 				try { return "image:" + Convert.ToBase64String(filesystem.loadBytes(path)); }

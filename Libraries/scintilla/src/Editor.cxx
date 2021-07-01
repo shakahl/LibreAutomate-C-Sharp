@@ -4440,18 +4440,29 @@ void Editor::TrimAndSetSelection(Sci::Position currentPos_, Sci::Position anchor
 void Editor::LineSelection(Sci::Position lineCurrentPos_, Sci::Position lineAnchorPos_, bool wholeLine) {
 	Sci::Position selCurrentPos, selAnchorPos;
 	if (wholeLine) {
-		const Sci::Line lineCurrent_ = pdoc->SciLineFromPosition(lineCurrentPos_);
-		const Sci::Line lineAnchor_ = pdoc->SciLineFromPosition(lineAnchorPos_);
-		if (lineAnchorPos_ < lineCurrentPos_) {
-			selCurrentPos = pdoc->LineStart(lineCurrent_ + 1);
-			selAnchorPos = pdoc->LineStart(lineAnchor_);
-		} else if (lineAnchorPos_ > lineCurrentPos_) {
-			selCurrentPos = pdoc->LineStart(lineCurrent_);
-			selAnchorPos = pdoc->LineStart(lineAnchor_ + 1);
-		} else { // Same line, select it
-			selCurrentPos = pdoc->LineStart(lineAnchor_ + 1);
-			selAnchorPos = pdoc->LineStart(lineAnchor_);
+		//Au: if the last selected line is a fold-point, add hidden lines after it to the selection.
+		Sci::Line lineCurrent_ = pdoc->SciLineFromPosition(lineCurrentPos_);
+		Sci::Line lineAnchor_ = pdoc->SciLineFromPosition(lineAnchorPos_);
+		if(lineAnchorPos_ > lineCurrentPos_) {
+			lineAnchor_++;
+		} else {
+			while(!pcs->GetVisible(++lineCurrent_)) { }
 		}
+		selCurrentPos = pdoc->LineStart(lineCurrent_);
+		selAnchorPos = pdoc->LineStart(lineAnchor_);
+
+		//const Sci::Line lineCurrent_ = pdoc->SciLineFromPosition(lineCurrentPos_);
+		//const Sci::Line lineAnchor_ = pdoc->SciLineFromPosition(lineAnchorPos_);
+		//if (lineAnchorPos_ < lineCurrentPos_) {
+		//	selCurrentPos = pdoc->LineStart(lineCurrent_ + 1);
+		//	selAnchorPos = pdoc->LineStart(lineAnchor_);
+		//} else if (lineAnchorPos_ > lineCurrentPos_) {
+		//	selCurrentPos = pdoc->LineStart(lineCurrent_);
+		//	selAnchorPos = pdoc->LineStart(lineAnchor_ + 1);
+		//} else { // Same line, select it
+		//	selCurrentPos = pdoc->LineStart(lineAnchor_ + 1);
+		//	selAnchorPos = pdoc->LineStart(lineAnchor_);
+		//}
 	} else {
 		if (lineAnchorPos_ < lineCurrentPos_) {
 			selCurrentPos = StartEndDisplayLine(lineCurrentPos_, false) + 1;

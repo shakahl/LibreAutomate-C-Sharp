@@ -111,14 +111,14 @@ class PanelOutput : DockPanel
 
 			ZInitReadOnlyAlways = true;
 			ZInitTagsStyle = ZTagsStyle.AutoWithPrefix;
-			ZInitImagesStyle = ZImagesStyle.ImageTag;
+			ZInitImages = true;
 
 			//App.Commands[nameof(Menus.Tools.Output)].SetKeysTarget(this);
 		}
 
 		protected override void ZOnHandleCreated() {
 			_p._c_HandleCreated();
-			zMarginWidth(1, 3);
+			zSetMarginWidth(1, 3);
 			zStyleBackColor(STYLE_DEFAULT, 0xF7F7F7);
 			//zStyleFont(STYLE_DEFAULT, "Courier New", 8); //maybe better, except <b>
 			zStyleFont(STYLE_DEFAULT, "Consolas", 9);

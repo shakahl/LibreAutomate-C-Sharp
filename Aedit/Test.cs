@@ -43,29 +43,25 @@ using System.Windows.Forms;
 //using System.Resources;
 
 using static Au.Controls.Sci;
+using System.Drawing;
 
 #if TRACE
 
 #pragma warning disable 169
 
-//namespace Au.More
-//{
-//class uConvert {  }
-//class Uconvert {  }
-//class UConvert {  }
-//class convertutil {  }
-//}
-
 static unsafe class Test
 {
-
 	public static void FromMenubar() {
 
 
 
 
-
-		//var doc = Panels.Editor.ZActiveDoc;
+		var doc = Panels.Editor.ZActiveDoc;
+		//doc.test_ = true;
+		print.it(doc.zCurrentPos8);
+		//doc.TestHidden();
+		//doc.TestIndicators();
+		//doc.Call(SCI_SETSCROLLWIDTH, 1);
 
 		//Sci_GetStylingInfo(doc.ZSciPtr, 15, out var si); //fast
 		//print.it($"pos={doc.zCurrentPos8}, endStyled={si.endStyled}, endStyledLineStart={si.endStyledLineStart}, endStyledLine={si.endStyledLine+1}, visibleFrom={si.visibleFrom}, visibleFromLine={si.visibleFromLine+1}, visibleTo={si.visibleTo}, visibleToLine={si.visibleToLine+1}");

@@ -1169,12 +1169,20 @@ typedef void(__stdcall* Sci_NotifyCallback)(void* cbParam, struct SCNotification
 #define SCI_SETNOTIFYCALLBACK 9503
 
 struct _RECT { int left, top, right, bottom; };
+
 struct Sci_AnnotationDrawCallbackData
 {
 	int step; void* hdc; _RECT rect; const char* text; int textLen, line, annotLine;
 };
 typedef int(__stdcall* Sci_AnnotationDrawCallback)(void* cbParam, Sci_AnnotationDrawCallbackData& c);
 #define SCI_SETANNOTATIONDRAWCALLBACK 9504
+
+struct Sci_MarginDrawCallbackData
+{
+	void* hdc; _RECT rect; int margin, firstLine, lastLine;
+};
+typedef void(__stdcall* Sci_MarginDrawCallback)(Sci_MarginDrawCallbackData& c);
+#define SCI_SETMARGINDRAWCALLBACK 9505
 
 #define SCI_ISXINMARGIN 9506
 

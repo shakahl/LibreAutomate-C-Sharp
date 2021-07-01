@@ -24,6 +24,7 @@ using Microsoft.CodeAnalysis.Text;
 using System.Windows.Input;
 
 //TODO: support <inheritdoc>. VS supports it partially (shows only summary, no parameters/remarks/exceptions).
+//TODO: don't show black/unfolded text before Roslyn is ready. Then user can't work anyway, and waits until colored/folded, and the black text is annoying.
 
 static class CodeInfo
 {
@@ -351,7 +352,7 @@ print.it(""t"" + 'c' + 1);
 			document = null;
 			sciDoc = Panels.Editor.ZActiveDoc;
 			code = sciDoc.zText;
-			if (pos == -1) pos = sciDoc.zCurrentPos16; else if (pos == -2) pos = sciDoc.zSelectionStar16;
+			if (pos == -1) pos = sciDoc.zCurrentPos16; else if (pos == -2) pos = sciDoc.zSelectionStart16;
 			pos16 = pos;
 			if (isCodeFile = sciDoc.ZFile.IsCodeFile) meta = MetaComments.FindMetaComments(code);
 		}

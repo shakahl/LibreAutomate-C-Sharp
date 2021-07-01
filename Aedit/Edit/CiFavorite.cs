@@ -21,12 +21,11 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 using Microsoft.CodeAnalysis.Text;
 
-//FUTURE: favorite meta r and c. Then can add favorite namespaces from these too.
-
-//TODO: duplicates if using meta testInternal.
 //TODO: if in completion list selected like Favorite.Namespace.Enum, remove Favorite.Namespace and insert using Favorite.Namespace.
 
-//TODO: support using static.
+//FUTURE: favorite meta r and c. Then can add favorite namespaces from these too.
+
+//FUTURE: support using static.
 //	Then users could create their common "functions.cs" files used with meta c and 'using static'.
 //	When sharing in forums, recommend to put their functions.cs in patebin and in forum signature add link to it.
 
@@ -75,10 +74,15 @@ class CiFavorite
 					}
 
 					return new _NamespaceTypes(ns, types, em);
-				})
+				}, new CiNamespaceSymbolEqualityComparer())
 				.ToArray();
 
+			//foreach(var v in _namespaces) {
+			//	print.it(v.ns);
+			//}
+
 			static bool _IsHidden(ISymbol sym) {
+				//return !sym.IsEditorBrowsable(false, comp); //same result but much slower
 				return sym.GetAttributes().Any(
 					o => o.AttributeClass.Name == "EditorBrowsableAttribute" && o.ConstructorArguments.FirstOrDefault().Value is int i && i == (int)EditorBrowsableState.Never
 					);
@@ -90,6 +94,11 @@ class CiFavorite
 
 	public void AddCompletions(List<CiComplItem> items, Dictionary<INamespaceOrTypeSymbol, List<int>> groups, TextSpan span, CSharpSyntaxContext syncon, ITypeSymbol typeForExtensionMethods = null) {
 		if (!_Init()) return;
+
+		//note: compare name, not ISymbol etc reference.
+		//	For example when meta testInternal, all references of these assemblies are != ours, and we would add duplicates if comparing references.
+		//info: groups.Comparer is CiNamespaceOrTypeSymbolEqualityComparer. It compares by name. As well as our comparer used with GroupBy(namespace).
+		//	Therefore groups and _namespaces contain single item for each namespace full name. If comparing references, would contain multiple (eg when same namespace is in multiple assemblies).
 
 		//perf.first();
 		CiComplItem prevci = null; string prevname = null; //to join overloads
@@ -131,6 +140,7 @@ class CiFavorite
 				//don't add from namespaces specified in code (using directives)
 				var ns = nt.ns;
 				bool skip = groups.TryGetValue(ns, out var ati);
+				//print.it(skip, ns);
 				if (skip) {
 					//don't skip if the group contains single item "Unimported.Namespace.Type" for parameter enum or new, like in this code: run.it("", "", RFlags, new ROptions);
 					if (ati.Count == 1 && items[ati[0]].Text.Contains('.')) skip = false;
@@ -151,11 +161,10 @@ class CiFavorite
 						//although the namespace exists in groups, it may contain only some members, eg of Object or other base type
 						bool found = false;
 						for (int i = 0; i < nExist; i++)
-							if (items[ati[i]].Text == name) //fast
-								if (items[ati[i]].ci.Symbols?.Contains(t) ?? false) { //slower
-									found = true;
-									break;
-								}
+							if (items[ati[i]].Text == name) {
+								found = true;
+								break;
+							}
 						if (found) continue;
 						//print.it(name, items.Take(nExist).Select(o => o.Text));
 					}

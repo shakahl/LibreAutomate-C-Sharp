@@ -60,7 +60,7 @@ namespace Au.Controls
 		/// Can have prefix:
 		/// "imagefile:" - path of png/bmp/jpg/gif/tif or xaml file.
 		/// "resource:" - path of png/bmp/jpg/gif/tif or xaml resource. Don't need prefix if starts with "resources/", like "resources/file.png".
-		/// "image:" - Base-64 encoded png/bmp/jpg/gif/tif image.
+		/// "image:" - Base64 encoded image file.
 		/// If without prefix, gets file icon; see <see cref="icon.of"/>.
 		/// </summary>
 		/// <remarks>

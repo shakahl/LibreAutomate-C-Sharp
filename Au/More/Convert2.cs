@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-using System.Buffers;
+//using System.Buffers;
 using System.IO.Compression;
 
 using Au.Types;
@@ -18,18 +18,22 @@ using Au.Types;
 namespace Au.More
 {
 	/// <summary>
-	/// Data conversion functions - compress, hex-encode, Base64, UTF8.
+	/// Data conversion functions. Compression, hex encoding, UTF8.
 	/// </summary>
 	public static unsafe class Convert2
 	{
 		#region hex encode
 
 		/// <summary>
-		/// Converts binary data stored in any memory to hex-encoded string.
+		/// Converts binary data in any memory to hex encoded string.
 		/// </summary>
 		/// <param name="data">The data. Can be any valid memory of specified size, for example a struct address.</param>
 		/// <param name="size">data memory size (bytes).</param>
 		/// <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
+		/// <remarks>
+		/// The result string length is 2 * data length.
+		/// Often it's better to use <see cref="Convert.ToBase64String"/>, then result is 4/3 of data length. But cannot use Base64 eg for file names because it is case-sensitive. Both functions are fast.
+		/// </remarks>
 		public static string HexEncode(void* data, int size, bool upperCase = false) {
 			int u = (upperCase ? 'A' : 'a') - 10;
 			var bytes = (byte*)data;
@@ -50,35 +54,39 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Converts byte[] to hex-encoded string.
+		/// Converts data in byte[] or other memory to hex encoded string.
 		/// </summary>
-		/// <param name="a">The data.</param>
+		/// <param name="data">The data.</param>
 		/// <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
 		/// <remarks>
-		/// The result string length is 2 * array length.
-		/// In most cases it's better to use <see cref="Convert.ToBase64String(byte[])"/>, then result is 4/3 of array length. Both functions are fast.
+		/// The result string length is 2 * data length.
+		/// Often it's better to use <see cref="Convert.ToBase64String"/>, then result is 4/3 of data length. But cannot use Base64 eg for file names because it is case-sensitive. Both functions are fast.
 		/// </remarks>
-		public static string HexEncode(byte[] a, bool upperCase = false) {
-			fixed (byte* p = a) {
-				return HexEncode(p, a.Length, upperCase);
+		public static string HexEncode(ReadOnlySpan<byte> data, bool upperCase = false) {
+			fixed (byte* p = data) {
+				return HexEncode(p, data.Length, upperCase);
 			}
 		}
 
 		/// <summary>
-		/// Converts a struct variable to hex-encoded string.
+		/// Converts a struct variable to hex encoded string.
 		/// </summary>
 		/// <param name="x">Variable.</param>
 		/// <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
+		/// <remarks>
+		/// The result string length is 2 * data length.
+		/// Often it's better to use <see cref="Convert.ToBase64String"/>, then result is 4/3 of data length. But cannot use Base64 eg for file names because it is case-sensitive. Both functions are fast.
+		/// </remarks>
 		public static string HexEncode<T>(T x, bool upperCase = false) where T : unmanaged
 			=> HexEncode(&x, sizeof(T), upperCase);
 
 		/// <summary>
-		/// Converts hex-encoded string to binary data as byte[].
+		/// Converts hex encoded string to binary data.
 		/// </summary>
-		/// <param name="encoded">String or char[] or span of string/array/memory containing Hex-encoded data.</param>
+		/// <param name="encoded">String or char[] or span of string/array/memory containing hex encoded data.</param>
 		/// <remarks>
 		/// Skips spaces and other non-hex-digit characters. Example: "01 23 46 67" is the same as "01234667".
-		/// The number of hex-digit characters should be divisible by 2, else the last character is ignored.
+		/// The number of hex digit characters should be divisible by 2, else the last character is ignored.
 		/// </remarks>
 		[SkipLocalsInit]
 		public static byte[] HexDecode(ReadOnlySpan<char> encoded) {
@@ -90,15 +98,15 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Converts hex-encoded string to binary data. Stores it in caller's memory buffer.
-		/// Returns the number of bytes stored in <i>decoded</i> memory. It is equal or less than <c>Math.Min(bufferSize, encoded.Length/2)</c>.
+		/// Converts hex encoded string to binary data. Writes to caller's memory buffer.
+		/// Returns the number of bytes written in <i>decoded</i> memory. It is equal or less than <c>Math.Min(bufferSize, encoded.Length/2)</c>.
 		/// </summary>
-		/// <param name="encoded">String or char[] or span of string/array/memory containing Hex-encoded data.</param>
-		/// <param name="decoded">Memory buffer for the result.</param>
-		/// <param name="bufferSize">The max number of bytes that can be written to the <i>decoded</i> memory buffer.</param>
+		/// <param name="encoded">String or char[] or span of string/array/memory containing hex encoded data.</param>
+		/// <param name="decoded">Memory buffer for result.</param>
+		/// <param name="bufferSize">Max number of bytes that can be written to the <i>decoded</i> memory buffer.</param>
 		/// <remarks>
 		/// Skips spaces and other non-hex-digit characters. Example: "01 23 46 67" is the same as "01234667".
-		/// The number of hex-digit characters should be divisible by 2, else the last character is ignored.
+		/// The number of hex digit characters should be divisible by 2, else the last character is ignored.
 		/// </remarks>
 		public static int HexDecode(ReadOnlySpan<char> encoded, void* decoded, int bufferSize) {
 			if (encoded.Length == 0) return 0;
@@ -123,10 +131,10 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Converts hex-encoded string to a struct variable.
+		/// Converts hex encoded string to a struct variable.
 		/// Returns false if decoded size != <c>sizeof(T)</c>.
 		/// </summary>
-		/// <param name="encoded">String or char[] or span of string/array/memory containing Base64-encoded data.</param>
+		/// <param name="encoded">String or char[] or span of string/array/memory containing hex encoded data.</param>
 		/// <param name="decoded">The result variable.</param>
 		public static bool HexDecode<T>(ReadOnlySpan<char> encoded, out T decoded) where T : unmanaged {
 			T t;
@@ -139,133 +147,162 @@ namespace Au.More
 
 		#region base64
 
-		/// <summary>
-		/// Converts byte[] to Base64-encoded string that can be used in URLs and file names.
-		/// </summary>
-		/// <param name="bytes">Data to encode.</param>
-		/// <remarks>Like <see cref="Convert.ToBase64String(byte[])"/>, but instead of '/' and '+' uses '_' and '-'.</remarks>
-		public static string Base64UrlEncode(byte[] bytes) {
-			fixed (byte* p = bytes) return Base64UrlEncode(p, bytes.Length);
+		///// <summary>
+		///// Gets Base64 encoded string length for non-encoded length.
+		///// It is <c>(length + 2) / 3 * 4</c>.
+		///// </summary>
+		//public static int Base64EncodeLength(int length) => checked((length + 2) / 3 * 4);
 
-			//speed: same as Convert.ToBase64String
-		}
+		///// <summary>
+		///// Gets decoded data length from Base64 encoded string length, assuming there are no newlines and other whitespace characters.
+		///// It is <c>(int)(len * 3L / 4)</c> minus the number of padding '=' characters (max 2).
+		///// </summary>
+		//public static int Base64DecodeLength(ReadOnlySpan<char> encoded) {
+		//	int len = encoded.Length;
+		//	if (len == 0) return 0;
+		//	int r = (int)(len * 3L / 4);
+		//	if (0 == (len & 3)) {
+		//		if (encoded[len - 1] == '=') {
+		//			r--;
+		//			if (encoded[len - 2] == '=') r--;
+		//		}
+		//	}
+		//	return r;
+		//}
 
-		/// <summary>
-		/// Converts binary data stored in any memory to Base64-encoded string that can be used in URLs and file names.
-		/// </summary>
-		/// <param name="bytes">Data to encode.</param>
-		/// <param name="length">Number of bytes to encode.</param>
-		/// <remarks>Instead of '/' and '+' uses '_' and '-'.</remarks>
-		public static string Base64UrlEncode(void* bytes, int length) {
-			var ip = (IntPtr)bytes;
-			return string.Create(Base64UrlEncodeLength(length), (ip, length), static (span, tu) => {
-				Convert.TryToBase64Chars(new ReadOnlySpan<byte>((byte*)tu.ip, tu.length), span, out _);
-				for (int i = 0; i < span.Length; i++) {
-					switch (span[i]) { case '/': span[i] = '_'; break; case '+': span[i] = '-'; break; }
-				}
-			});
-		}
+		//currently not used in this lib. Not tested speed.
+		///// <summary>
+		///// Converts string span containing Base64 encoded data to byte[].
+		///// </summary>
+		///// <param name="encoded">String or char[] or span of string/array/memory containing Base64 encoded data.</param>
+		///// <param name="result"></param>
+		///// <returns>false if fails.</returns>
+		///// <remarks>
+		///// Uses <see cref="Convert.TryFromBase64Chars"/>.
+		///// </remarks>
+		//public static bool TryBase64Decode(ReadOnlySpan<char> encoded, out byte[] result) {
+		//	result = null;
+		//	encoded = encoded.Trim();
+		//	//todo: calc length: skip whitespace. Maybe bool parameter. Or use FastBuffer and copy, like in HexDecode.
+		//	var a = new byte[Base64DecodeLength(encoded)];
+		//	if (!Convert.TryFromBase64Chars(encoded, a, out int len)) return false;
+		//	if (len != a.Length) {
+		//		Debug_.Print($"{a.Length} {len}");
+		//		a = a.AsSpan(0, len).ToArray();
+		//	}
+		//	result = a;
+		//	return true;
+		//}
 
-		/// <summary>
-		/// Converts a struct variable to Base64-encoded string that can be used in URLs and file names.
-		/// </summary>
-		/// <param name="x">Variable.</param>
-		/// <remarks>Instead of '/' and '+' uses '_' and '-'.</remarks>
-		public static string Base64UrlEncode<T>(T x) where T : unmanaged {
-			return Base64UrlEncode(&x, sizeof(T));
-		}
+		//rejected: URL-safe Base64.
+		//	Not used in this lib.
+		//	Cannot be used in file names because case-sensitive.
+		//	If somebody wants URL-safe Base64, it's easy/fast to replace unsafe characters. Nobody would find and use these functions.
 
-		/// <summary>
-		/// Gets Base64-encoded string length for non-encoded length.
-		/// It is <c>(length + 2) / 3 * 4</c>.
-		/// </summary>
-		public static int Base64UrlEncodeLength(int length) => checked((length + 2) / 3 * 4);
+		///// <summary>
+		///// Converts byte[] or other memory to Base64 encoded string that can be used in URL.
+		///// </summary>
+		///// <param name="data">Data to encode.</param>
+		///// <remarks>Like <see cref="Convert.ToBase64String(byte[])"/>, but instead of '/' and '+' uses '_' and '-'.</remarks>
+		//public static string Base64UrlEncode(ReadOnlySpan<byte> data) {
+		//	fixed (byte* p = data) return Base64UrlEncode(p, data.Length);
 
-		/// <summary>
-		/// Gets decoded data length from Base64-encoded string length.
-		/// It is <c>(int)(len * 3L / 4)</c> minus the number of padding '=' characters (max 2).
-		/// </summary>
-		public static int Base64UrlDecodeLength(ReadOnlySpan<char> encoded) {
-			int len = encoded.Length;
-			if (len == 0) return 0;
-			int r = (int)(len * 3L / 4);
-			if (0 == (len & 3)) {
-				if (encoded[len - 1] == '=') {
-					r--;
-					if (encoded[len - 2] == '=') r--;
-				}
-			}
-			return r;
-		}
+		//	//speed: same as Convert.ToBase64String
+		//}
 
-		static void _Base64_Replace(ReadOnlySpan<char> encoded, char[] a) {
-			for (int i = 0; i < encoded.Length; i++) {
-				char c = encoded[i];
-				a[i] = c switch { '_' => '/', '-' => '+', _ => c, };
-			}
-		}
+		///// <summary>
+		///// Converts binary data stored in any memory to Base64 encoded string that can be used in URL.
+		///// </summary>
+		///// <param name="data">Data to encode.</param>
+		///// <param name="length">Number of bytes to encode.</param>
+		///// <remarks>Instead of '/' and '+' uses '_' and '-'.</remarks>
+		//public static string Base64UrlEncode(void* data, int length) {
+		//	var ip = (IntPtr)data;
+		//	return string.Create(Base64EncodeLength(length), (ip, length), static (span, tu) => {
+		//		Convert.TryToBase64Chars(new ReadOnlySpan<byte>((byte*)tu.ip, tu.length), span, out _);
+		//		for (int i = 0; i < span.Length; i++) {
+		//			switch (span[i]) { case '/': span[i] = '_'; break; case '+': span[i] = '-'; break; }
+		//		}
+		//	});
+		//}
 
-		/// <summary>
-		/// Converts string containing Base64-encoded data to byte[]. Supports standard encoding and URL-safe encoding.
-		/// </summary>
-		/// <param name="encoded">String or char[] or span of string/array/memory containing Base64-encoded data.</param>
-		/// <remarks>Like <see cref="Convert.FromBase64String(string)"/>, but the string can contain '_' and '-' instead of '/' and '+'.</remarks>
-		/// <exception cref="Exception">Exceptions of <see cref="Convert.FromBase64CharArray"/>.</exception>
-		public static byte[] Base64UrlDecode(ReadOnlySpan<char> encoded) {
-			char[] a = ArrayPool<char>.Shared.Rent(encoded.Length);
-			try {
-				_Base64_Replace(encoded, a);
-				return Convert.FromBase64CharArray(a, 0, encoded.Length);
-			}
-			finally { ArrayPool<char>.Shared.Return(a); }
-			//never mind: almost 2 times slower than Convert.FromBase64CharArray.
-			//	Normally this func is used with short strings and not with many strings in loop.
-			//	ArrayPool isn't as fast as should be. And copying to new array takes time.
-		}
+		///// <summary>
+		///// Converts a struct variable to Base64 encoded string that can be used in URL.
+		///// </summary>
+		///// <param name="x">Variable.</param>
+		///// <remarks>Instead of '/' and '+' uses '_' and '-'.</remarks>
+		//public static string Base64UrlEncode<T>(T x) where T : unmanaged {
+		//	return Base64UrlEncode(&x, sizeof(T));
+		//}
 
-		/// <summary>
-		/// Converts string containing Base64-encoded data to bytes and stores in memory of a Span variable. Supports standard encoding and URL-safe encoding.
-		/// Returns false if the encoded string is invalid or the buffer is too small.
-		/// </summary>
-		/// <param name="encoded">String or char[] or span of string/array/memory containing Base64-encoded data.</param>
-		/// <param name="decoded">Memory buffer for the result.</param>
-		/// <param name="decodedLength"></param>
-		/// <remarks>The string can contain '_' and '-' instead of '/' and '+'.</remarks>
-		public static bool Base64UrlDecode(ReadOnlySpan<char> encoded, Span<byte> decoded, out int decodedLength) {
-			char[] a = ArrayPool<char>.Shared.Rent(encoded.Length);
-			try {
-				_Base64_Replace(encoded, a);
-				return Convert.TryFromBase64Chars(new ReadOnlySpan<char>(a, 0, encoded.Length), decoded, out decodedLength);
-			}
-			finally { ArrayPool<char>.Shared.Return(a); }
-		}
+		//static void _Base64_Replace(ReadOnlySpan<char> encoded, char[] a) {
+		//	for (int i = 0; i < encoded.Length; i++) {
+		//		char c = encoded[i];
+		//		a[i] = c switch { '_' => '/', '-' => '+', _ => c, };
+		//	}
+		//}
 
-		/// <summary>
-		/// Converts string containing Base64-encoded data to bytes and stores in any memory. Supports standard encoding and URL-safe encoding.
-		/// Returns false if the encoded string is invalid or the buffer is too small.
-		/// </summary>
-		/// <param name="encoded">String or char[] or span of string/array/memory containing Base64-encoded data.</param>
-		/// <param name="decoded">Memory buffer for the result.</param>
-		/// <param name="bufferSize">The max number of bytes that can be written to the <i>decoded</i> memory buffer.</param>
-		/// <param name="decodedLength">Receives the number of bytes written to the <i>decoded</i> memory buffer.</param>
-		/// <remarks>The string can contain '_' and '-' instead of '/' and '+'.</remarks>
-		public static bool Base64UrlDecode(ReadOnlySpan<char> encoded, void* decoded, int bufferSize, out int decodedLength) {
-			return Base64UrlDecode(encoded, new Span<byte>(decoded, bufferSize), out decodedLength);
-		}
+		///// <summary>
+		///// Converts string containing Base64 encoded data to byte[]. Supports standard encoding and URL-safe encoding.
+		///// </summary>
+		///// <param name="encoded">String or char[] or span of string/array/memory containing Base64 encoded data.</param>
+		///// <remarks>Like <see cref="Convert.FromBase64String(string)"/>, but the string can contain '_' and '-' instead of '/' and '+'.</remarks>
+		///// <exception cref="Exception">Exceptions of <see cref="Convert.FromBase64CharArray"/>.</exception>
+		//public static byte[] Base64UrlDecode(ReadOnlySpan<char> encoded) {
+		//	char[] a = ArrayPool<char>.Shared.Rent(encoded.Length);
+		//	try {
+		//		_Base64_Replace(encoded, a);
+		//		return Convert.FromBase64CharArray(a, 0, encoded.Length);
+		//	}
+		//	finally { ArrayPool<char>.Shared.Return(a); }
+		//	//never mind: almost 2 times slower than Convert.FromBase64CharArray.
+		//	//	Normally this func is used with short strings and not with many strings in loop.
+		//	//	ArrayPool isn't as fast as should be. And copying to new array takes time.
+		//}
 
-		/// <summary>
-		/// Converts string containing Base64-encoded data to a struct variable. Supports standard encoding and URL-safe encoding.
-		/// Returns false if the encoded string is invalid or decoded size != <c>sizeof(T)</c>.
-		/// </summary>
-		/// <param name="encoded">String or char[] or span of string/array/memory containing Base64-encoded data.</param>
-		/// <param name="decoded">The result variable.</param>
-		/// <remarks>The string can contain '_' and '-' instead of '/' and '+'.</remarks>
-		public static bool Base64UrlDecode<T>(ReadOnlySpan<char> encoded, out T decoded) where T : unmanaged {
-			T t;
-			if (!Base64UrlDecode(encoded, &t, sizeof(T), out int n) || n != sizeof(T)) { decoded = default; return false; }
-			decoded = t;
-			return true;
-		}
+		///// <summary>
+		///// Converts string containing Base64 encoded data to bytes and stores in memory of a Span variable. Supports standard encoding and URL-safe encoding.
+		///// Returns false if the encoded string is invalid or the buffer is too small.
+		///// </summary>
+		///// <param name="encoded">String or char[] or span of string/array/memory containing Base64 encoded data.</param>
+		///// <param name="decoded">Memory buffer for the result.</param>
+		///// <param name="decodedLength"></param>
+		///// <remarks>The string can contain '_' and '-' instead of '/' and '+'.</remarks>
+		//public static bool Base64UrlDecode(ReadOnlySpan<char> encoded, Span<byte> decoded, out int decodedLength) {
+		//	char[] a = ArrayPool<char>.Shared.Rent(encoded.Length);
+		//	try {
+		//		_Base64_Replace(encoded, a);
+		//		return Convert.TryFromBase64Chars(new ReadOnlySpan<char>(a, 0, encoded.Length), decoded, out decodedLength);
+		//	}
+		//	finally { ArrayPool<char>.Shared.Return(a); }
+		//}
+
+		///// <summary>
+		///// Converts string containing Base64 encoded data to bytes and stores in any memory. Supports standard encoding and URL-safe encoding.
+		///// Returns false if the encoded string is invalid or the buffer is too small.
+		///// </summary>
+		///// <param name="encoded">String or char[] or span of string/array/memory containing Base64 encoded data.</param>
+		///// <param name="decoded">Memory buffer for the result.</param>
+		///// <param name="bufferSize">The max number of bytes that can be written to the <i>decoded</i> memory buffer.</param>
+		///// <param name="decodedLength">Receives the number of bytes written to the <i>decoded</i> memory buffer.</param>
+		///// <remarks>The string can contain '_' and '-' instead of '/' and '+'.</remarks>
+		//public static bool Base64UrlDecode(ReadOnlySpan<char> encoded, void* decoded, int bufferSize, out int decodedLength) {
+		//	return Base64UrlDecode(encoded, new Span<byte>(decoded, bufferSize), out decodedLength);
+		//}
+
+		///// <summary>
+		///// Converts string containing Base64 encoded data to a struct variable. Supports standard encoding and URL-safe encoding.
+		///// Returns false if the encoded string is invalid or decoded size != <c>sizeof(T)</c>.
+		///// </summary>
+		///// <param name="encoded">String or char[] or span of string/array/memory containing Base64 encoded data.</param>
+		///// <param name="decoded">The result variable.</param>
+		///// <remarks>The string can contain '_' and '-' instead of '/' and '+'.</remarks>
+		//public static bool Base64UrlDecode<T>(ReadOnlySpan<char> encoded, out T decoded) where T : unmanaged {
+		//	T t;
+		//	if (!Base64UrlDecode(encoded, &t, sizeof(T), out int n) || n != sizeof(T)) { decoded = default; return false; }
+		//	decoded = t;
+		//	return true;
+		//}
 
 		#endregion
 
@@ -275,50 +312,39 @@ namespace Au.More
 		/// Compresses data using <see cref="DeflateStream"/>.
 		/// </summary>
 		/// <param name="data"></param>
-		/// <exception cref="Exception">Exceptions of DeflateStream.</exception>
-		public static byte[] Compress(byte[] data) {
-			using var memoryStream = new MemoryStream();
-			using var deflateStream = new DeflateStream(memoryStream, CompressionMode.Compress);
-			deflateStream.Write(data, 0, data.Length);
-			return memoryStream.ToArray();
+		/// <exception cref="Exception">Exceptions of <b>DeflateStream</b>.</exception>
+		public static byte[] Compress(ReadOnlySpan<byte> data) {
+			using var ms = new MemoryStream();
+			using (var ds = new DeflateStream(ms, CompressionLevel.Optimal)) ds.Write(data); //note: must dispose before ToArray
+			return ms.ToArray();
+			//tested: GZipStream same compression but adds 18 bytes header. DeflateStream does not add any header.
+			//tested: bz2 and 7z compression isn't much better with single 15 kb bmp file.
 		}
 
 		/// <summary>
-		/// Decompresses data using <see cref="DeflateStream"/>.
-		/// Returns byte[] containing decompressed data.
+		/// Decompresses data. Uses <see cref="DeflateStream"/>.
 		/// </summary>
-		/// <param name="compressedData">Compressed data.</param>
-		/// <param name="index">Start index of compressed data in the compressedData array.</param>
-		/// <param name="count">Length of compressed data in the compressedData array.</param>
-		/// <exception cref="Exception">Exceptions of DeflateStream.</exception>
-		public static byte[] Decompress(byte[] compressedData, int index = 0, int count = -1) {
+		/// <returns>Decompressed data.</returns>
+		/// <param name="compressed">Compressed data.</param>
+		/// <exception cref="Exception">Exceptions of <b>DeflateStream</b>.</exception>
+		public static byte[] Decompress(ReadOnlySpan<byte> compressed) {
 			using var stream = new MemoryStream();
-			Decompress(stream, compressedData, index, count);
+			Decompress(compressed, stream);
 			return stream.ToArray();
 		}
 
 		/// <summary>
-		/// Decompresses data using <see cref="DeflateStream"/>.
-		/// Writes the decompressed data to a caller-provided memory stream.
+		/// Decompresses data to a caller-provided memory stream. Uses <see cref="DeflateStream"/>.
 		/// </summary>
-		/// <param name="streamForDecompressedData">A memory stream where this function will write decompressed data. See example.</param>
-		/// <param name="compressedData">Compressed data.</param>
-		/// <param name="index">Start index of compressed data in the compressedData array.</param>
-		/// <param name="count">Length of compressed data in the compressedData array.</param>
-		/// <exception cref="Exception">Exceptions of DeflateStream.</exception>
-		/// <example>
-		/// This code is used by the other Decompress overload.
-		/// <code><![CDATA[
-		/// using var stream = new MemoryStream();
-		/// Decompress(stream, compressedData, index, count);
-		/// return stream.ToArray();
-		/// ]]></code>
-		/// </example>
-		public static void Decompress(Stream streamForDecompressedData, byte[] compressedData, int index = 0, int count = -1) {
-			if (count < 0) count = compressedData.Length - index;
-			using var compressStream = new MemoryStream(compressedData, index, count, false);
-			using var deflateStream = new DeflateStream(compressStream, CompressionMode.Decompress);
-			deflateStream.CopyTo(streamForDecompressedData);
+		/// <param name="compressed">Compressed data.</param>
+		/// <param name="decompressed">Stream for decompressed data.</param>
+		/// <exception cref="Exception">Exceptions of <b>DeflateStream</b>.</exception>
+		public static void Decompress(ReadOnlySpan<byte> compressed, Stream decompressed) {
+			fixed(byte* p = compressed) {
+				using var compressStream = new UnmanagedMemoryStream(p, compressed.Length);
+				using var deflateStream = new DeflateStream(compressStream, CompressionMode.Decompress);
+				deflateStream.CopyTo(decompressed);
+			}
 
 			//note: cannot deflateStream.Read directly to array because its Length etc are not supported.
 			//note: also cannot use decompressedStream.GetBuffer because it can be bigger.

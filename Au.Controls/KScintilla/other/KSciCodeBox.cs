@@ -16,7 +16,7 @@ namespace Au.Controls
 		protected override void ZOnHandleCreated() {
 			base.ZOnHandleCreated();
 
-			zMarginWidth(1, 0);
+			zSetMarginWidth(1, 0);
 			//zStyleFont(Sci.STYLE_DEFAULT, );
 			zSetLexerCpp();
 			zIsReadonly = true;

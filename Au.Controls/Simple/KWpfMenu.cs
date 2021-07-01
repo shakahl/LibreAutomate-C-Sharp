@@ -89,11 +89,11 @@ namespace Au.Controls
 		/// Can be:
 		/// - <see cref="Image"/> or other WPF control to assign directly to <see cref="MenuItem.Icon"/>.
 		/// - <see cref="ImageSource"/> - a WPF image. To create image from icon, use <see cref="icon.ToWpfImage"/>.
-		/// - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or png image as Base-64 string with prefix "image:". Can be png or XAML file or resource. See <see cref="ImageUtil.LoadWpfImageElementFromFileOrResourceOrString"/>. Supports environment variables. If not full path, looks in <see cref="folders.ThisAppImages"/>.
+		/// - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or Base64 encoded image with prefix "image:". Can be XAML file or resource. See <see cref="ImageUtil.LoadWpfImageElementFromFileOrResourceOrString"/>. Supports environment variables. If not full path, looks in <see cref="folders.ThisAppImages"/>.
 		/// - <see cref="Uri"/> - image file path, or resource pack URI, or URL. Does not support environment variables and <see cref="folders.ThisAppImages"/>.
 		/// 
 		/// If failed to find or load image file, prints warning (<see cref="print.warning"/>).
-		/// To create Base-64 string, use menu Code -> uiimage.
+		/// To create Base64 string, use menu Code -> uiimage.
 		/// To add an image resource in Visual Studio, use build action "Resource" for the image file.
 		/// </param>
 		/// <value>Action called on click.</value>

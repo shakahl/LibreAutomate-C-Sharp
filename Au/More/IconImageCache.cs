@@ -88,11 +88,11 @@ namespace Au.More
 			lock (this) {
 				bool isXaml = isImage && (imageSource.Starts('<') || imageSource.Ends(".xaml", true));
 				if (!isImage && imageSource.Ends(".cs", true) && !pathname.isFullPath(imageSource, orEnvVar: true)) {
-					imageSource = script.editor.GetCustomIcon(imageSource, EGetIcon.PathToIconName);
+					imageSource = script.editor.GetIcon(imageSource, EGetIcon.PathToIconName);
 					//p1.Next('x');
 					if (imageSource == null) return null;
 					isImage = true;
-					//SHOULDDO: use Dictionary<imageSource, iconName> to avoid frequent GetCustomIcon for same imageSource. It seems currently don't need it for this library.
+					//SHOULDDO: use Dictionary<imageSource, iconName> to avoid frequent GetIcon for same imageSource. It seems currently don't need it for this library.
 					//rejected: Move this code to the caller that needs it (MTBase).
 				}
 				bool isIconName = isImage && !isXaml && imageSource.Starts('*');
@@ -166,7 +166,7 @@ namespace Au.More
 								b = icon.of(imageSource, _imageSize)?.ToGdipBitmap();
 							} else {
 								if (isIconName) {
-									imageSource = script.editor.GetCustomIcon(imageSource, EGetIcon.IconNameToXaml);
+									imageSource = script.editor.GetIcon(imageSource, EGetIcon.IconNameToXaml);
 									//p1.Next('X');
 									if (imageSource == null) return null;
 								}

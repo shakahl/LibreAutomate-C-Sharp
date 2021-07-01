@@ -102,7 +102,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">An argument is/contains a null/invalid value.</exception>
 		/// <exception cref="FileNotFoundException">Image file does not exist.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="uiimage.more.loadImage"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="ImageUtil.LoadGdipBitmapFromFileOrResourceOrString"/>.</exception>
 		public uiimageFinder(IFImage image, IFFlags flags = 0, int colorDiff = 0, Func<uiimage, IFAlso> also = null) {
 			_flags = flags;
 			_colorDiff = (uint)colorDiff; if (_colorDiff > 250) throw new ArgumentOutOfRangeException("colorDiff range: 0 - 250");

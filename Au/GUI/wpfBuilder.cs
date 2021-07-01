@@ -20,6 +20,7 @@ using System.Windows.Media;
 using System.Xml.Linq;
 using System.Windows.Data;
 using System.Windows.Input;
+using Au.More;
 
 //Problem: Roslyn/VS on exception in a chained method gives line number of the chain start, not of the method.
 
@@ -1387,7 +1388,7 @@ namespace Au
 		/// Tooltip with content created by another wpfBuilder.
 		/// <code><![CDATA[
 		/// var btt = new wpfBuilder() //creates tooltip content
-		/// 	.R.Add<Image>().Image(icon.stock(StockIcon.INFO))
+		/// 	.R.Add<Image>().Image(icon.stock(StockIcon.INFO).ToWpfImage())
 		/// 	.R.Add<TextBlock>().Text("Some ", "<b>text", ".")
 		/// 	.End();
 		/// 
@@ -1933,13 +1934,21 @@ namespace Au
 		/// <param name="stretch"><see cref="Image.Stretch"/>.</param>
 		/// <param name="stretchDirection"><see cref="Image.StretchDirection"/>.</param>
 		/// <exception cref="NotSupportedException">The last added element is not <b>Image</b>.</exception>
+		/// <remarks>
+		/// To load vector images from XAML, don't use <b>Image</b> control and this function. Instead create control from XAML, for example with <see cref="ImageUtil.LoadWpfImageElementFromFileOrResourceOrString"/>, and add it with <see cref="Add(FrameworkElement, WBAdd)"/>.
+		/// </remarks>
 		/// <seealso cref="icon.ToWpfImage"/>
+		/// <seealso cref="ImageUtil"/>
 		public wpfBuilder Image(ImageSource source, Stretch stretch = Stretch.None, StretchDirection stretchDirection = StretchDirection.DownOnly)
 			 => _Image(source, null, stretch, stretchDirection);
 
 		wpfBuilder _Image(ImageSource source, string file, Stretch stretch, StretchDirection stretchDirection) {
 			var c = Last as Image ?? throw new NotSupportedException("Image(): Last added must be Image");
-			if (file != null) try { source = new BitmapImage(_Uri(file)); } catch (Exception ex) { print.warning(ex.ToString(), -1); }
+			if (file != null) {
+				//try { source = new BitmapImage(_Uri(file)); }
+				try { source = ImageUtil.LoadWpfImageFromFileOrResourceOrString(file); }
+				catch (Exception ex) { print.warning(ex.ToString(), -1); }
+			}
 			c.Stretch = stretch; //default Uniform
 			c.StretchDirection = stretchDirection; //default Both
 			c.Source = source;
@@ -1949,7 +1958,7 @@ namespace Au
 		/// <summary>
 		/// Loads image from a file or URL into the last added <see cref="System.Windows.Controls.Image"/>.
 		/// </summary>
-		/// <param name="source">File path or URL. Sets <see cref="Image.Source"/>.</param>
+		/// <param name="source">File path etc. See <see cref="ImageUtil.LoadWpfImageFromFileOrResourceOrString"/>. Sets <see cref="Image.Source"/>.</param>
 		/// <param name="stretch"><see cref="Image.Stretch"/>.</param>
 		/// <param name="stretchDirection"><see cref="Image.StretchDirection"/>.</param>
 		/// <exception cref="NotSupportedException">The last added element is not <b>Image</b>.</exception>
