@@ -4,7 +4,7 @@ uid: script
 
 # Scripts
 
-To automate something, you create a script. It is a text file containg C# code. Click the "New Script" button on the toolbar.
+To automate something, you create a script. It is a text file containg C# code. Click the "New" button on the toolbar.
 
 C# is a programming language, one of the most popular. You'll have to learn it a bit. For example [here](https://docs.microsoft.com/en-us/dotnet/csharp/).
 

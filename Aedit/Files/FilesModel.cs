@@ -529,7 +529,7 @@ partial class FilesModel
 			var doc = Panels.Editor.ZActiveDoc;
 			if (line >= 0) {
 				int i = doc.zLineStart(false, line);
-				if (columnOrPos > 0) i = doc.zPos8(doc.zPos16(i) + columnOrPos); //not SCI_FINDCOLUMN, it calculates tabs
+				if (columnOrPos > 0) i = doc.zPos8(Math.Min(doc.zPos16(i) + columnOrPos, doc.zLen16)); //not SCI_FINDCOLUMN, it calculates tabs
 				columnOrPos = i;
 			}
 			if (wasOpen) doc.zGoToPos(false, columnOrPos);
@@ -1386,7 +1386,7 @@ partial class FilesModel
 					var ft = FileNode.XmlTagToFileType(tag, canThrow: false);
 					item.Icon = ft == EFileType.Other
 						? new Image { Source = icon.of(templDir + relPath)?.ToWpfImage() }
-						: ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(FileNode.GetFileTypeImageSource(ft));
+						: ImageUtil.LoadWpfImageElement(FileNode.GetFileTypeImageSource(ft));
 				}
 				mParent.Items.Add(item);
 			}

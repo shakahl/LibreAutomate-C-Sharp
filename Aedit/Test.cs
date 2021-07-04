@@ -51,14 +51,21 @@ using System.Drawing;
 
 static unsafe class Test
 {
-	public static void FromMenubar() {
+	//static void _ColorQuantizer() {
+	//	for (int i = 0; i < 8; i++) {
+	//		var r = new RECT(30, i * 100, 32, 32);
+	//		var a = ColorQuantizer.MakeScreenshotComment(r);
+	//	}
+	//}
 
+	public static void FromMenubar() {
+		//_ColorQuantizer();
 
 
 
 		var doc = Panels.Editor.ZActiveDoc;
 		//doc.test_ = true;
-		print.it(doc.zCurrentPos8);
+		//print.it(doc.zCurrentPos8);
 		//doc.TestHidden();
 		//doc.TestIndicators();
 		//doc.Call(SCI_SETSCROLLWIDTH, 1);

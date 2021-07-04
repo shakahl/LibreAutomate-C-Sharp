@@ -45,10 +45,10 @@ namespace Au
 				else if(isURL) fileType = fileType.RemoveSuffix(1); //"proto:" -> "proto"
 				if(fileType.NE()) return null;
 
-				string R, userChoiceKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\" + fileType + @"\UserChoice";
-				if(ARegistry.GetString(out R, "ProgId", userChoiceKey)) return R;
+				string userChoiceKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\" + fileType + @"\UserChoice";
+				if(Registry.GetValue(userChoiceKey, "ProgId", null) is string s1) return s1;
 				if(isURL) return fileType;
-				if(ARegistry.GetString(out R, "", fileType, Registry.ClassesRoot)) return R;
+				if(Registry.ClassesRoot.GetValue(fileType, null) is string s2) return s2;
 				return null;
 
 				//note: IQueryAssociations.GetKey is very slow.
@@ -115,7 +115,7 @@ namespace Au
 				var ok1 = getFileId(path1, out var fid1);
 				var ok2 = getFileId(path2, out var fid2);
 				if(ok1 && ok2) return fid1 == fid2;
-				print.warning("GetFileId failed"); //CONSIDER: throw
+				print.warning("GetFileId() failed"); //CONSIDER: throw
 				return false;
 			}
 

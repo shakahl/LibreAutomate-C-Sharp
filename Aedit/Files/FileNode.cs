@@ -395,11 +395,17 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 
 	void ITreeViewItem.SetNewText(string text) { FileRename(text); }
 
-	public static string GetFileTypeImageSource(EFileType ft, bool expanded = false)
+	public const string
+		c_imageScript = "*FileIcons.CsScript #73BF00",
+		c_imageClass = "*Codicons.SymbolClass #008EEE",
+		c_imageFolder = "*Material.FolderOutline #EABB00",
+		c_imageFolderOpen = "*Material.FolderOpenOutline #EABB00";
+
+	public static string GetFileTypeImageSource(EFileType ft, bool openFolder = false)
 		=> ft switch {
-			EFileType.Script => "resources/images/csfile_16x.xaml",
-			EFileType.Class => "resources/images/csclassfile_16x.xaml",
-			EFileType.Folder => expanded ? "resources/images/folderopened_16x.xaml" : "resources/images/folderclosed_16x.xaml",
+			EFileType.Script => c_imageScript,
+			EFileType.Class => c_imageClass,
+			EFileType.Folder => openFolder ? c_imageFolderOpen : c_imageFolder,
 			_ => null
 		};
 

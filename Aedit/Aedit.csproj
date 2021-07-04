@@ -58,27 +58,9 @@
 	  <Page Remove="Resources\ci\Snippet.xaml" />
 	  <Page Remove="Resources\ci\Structure.xaml" />
 	  <Page Remove="Resources\ci\TypeParameter.xaml" />
-	  <Page Remove="Resources\Images\BuildSelection_16x.xaml" />
-	  <Page Remove="Resources\Images\Copy_16x.xaml" />
-	  <Page Remove="Resources\Images\CSClassFile_16x.xaml" />
-	  <Page Remove="Resources\Images\CSFile_16x.xaml" />
-	  <Page Remove="Resources\Images\Cut_16x.xaml" />
 	  <Page Remove="Resources\Images\ExpandDown_16x.xaml" />
 	  <Page Remove="Resources\Images\ExpandRight_16x.xaml" />
-	  <Page Remove="Resources\Images\FindInFile_16x.xaml" />
-	  <Page Remove="Resources\Images\FolderClosed_16x.xaml" />
-	  <Page Remove="Resources\Images\FolderOpened_16x.xaml" />
-	  <Page Remove="Resources\Images\Image_16x.xaml" />
-	  <Page Remove="Resources\Images\Paste_16x.xaml" />
-	  <Page Remove="Resources\Images\Redo_16x.xaml" />
-	  <Page Remove="Resources\Images\SaveAll_16x.xaml" />
 	  <Page Remove="Resources\Images\SettingsGroup_16x.xaml" />
-	  <Page Remove="Resources\Images\StartWithoutDebug_16x.xaml" />
-	  <Page Remove="Resources\Images\StatusHelp_16x.xaml" />
-	  <Page Remove="Resources\Images\Stop_16x.xaml" />
-	  <Page Remove="Resources\Images\test.xaml" />
-	  <Page Remove="Resources\Images\Undo_16x.xaml" />
-	  <Page Remove="Resources\Images\WordWrap_16x.xaml" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -122,39 +104,13 @@
 	  <Resource Include="Resources\ci\Snippet.xaml" />
 	  <Resource Include="Resources\ci\Structure.xaml" />
 	  <Resource Include="Resources\ci\TypeParameter.xaml" />
-	  <Resource Include="Resources\Images\CSClassFile_16x.xaml">
-	    <Generator></Generator>
-	  </Resource>
-	  <Resource Include="Resources\Images\CSFile_16x.xaml">
-	    <Generator></Generator>
-	  </Resource>
 	  <Resource Include="Resources\Images\ExpandDown_16x.xaml">
 	    <Generator></Generator>
 	  </Resource>
 	  <Resource Include="Resources\Images\ExpandRight_16x.xaml">
 	    <Generator></Generator>
 	  </Resource>
-	  <Resource Include="Resources\Images\FolderClosed_16x.xaml">
-	    <Generator></Generator>
-	  </Resource>
-	  <Resource Include="Resources\Images\FolderOpened_16x.xaml">
-	    <Generator></Generator>
-	  </Resource>
-	  <Resource Include="Resources\Images\test.xaml" />
-	  <Resource Include="Resources\Images\BuildSelection_16x.xaml" />
-	  <Resource Include="Resources\Images\Copy_16x.xaml" />
-	  <Resource Include="Resources\Images\Cut_16x.xaml" />
-	  <Resource Include="Resources\Images\FindInFile_16x.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </Resource>
-	  <Resource Include="Resources\Images\Image_16x.xaml" />
-	  <Resource Include="Resources\Images\Paste_16x.xaml" />
-	  <Resource Include="Resources\Images\Redo_16x.xaml" />
-	  <Resource Include="Resources\Images\SaveAll_16x.xaml" />
 	  <Resource Include="Resources\Images\SettingsGroup_16x.xaml" />
-	  <Resource Include="Resources\Images\StartWithoutDebug_16x.xaml" />
-	  <Resource Include="Resources\Images\StatusHelp_16x.xaml" />
-	  <Resource Include="Resources\Images\Stop_16x.xaml" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -184,10 +140,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Resource Include="Resources\Images\NewFile_16x.xaml" />
-	  <Resource Include="Resources\Images\Property_16x.xaml" />
-	  <Resource Include="Resources\Images\Undo_16x.xaml" />
-	  <Resource Include="Resources\Images\WordWrap_16x.xaml" />
 	  <Resource Include="Tools\Keys.txt" />
 	  <Resource Include="Tools\Regex.txt" />
 	</ItemGroup>

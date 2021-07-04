@@ -192,7 +192,7 @@ static class CommandLine
 		case 4:
 			Api.ReplyMessage(1);
 			if (App.Model.Find(s, null) is FileNode f1) App.Model.OpenAndGoTo(f1, (int)wparam - 1);
-			else print.warning($"Script '{s}' not found.", -1);
+			else print.warning($"Script not found: '{s}'.", -1);
 			break;
 		case 10:
 			s = DIcons.GetIconString(s, (EGetIcon)action2);

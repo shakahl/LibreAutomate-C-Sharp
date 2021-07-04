@@ -183,7 +183,7 @@ namespace Au
 		/// <exception cref="AuWndException">Invalid window handle (the <i>area</i> argument).</exception>
 		/// <exception cref="ArgumentException">An argument is/contains a null/invalid value.</exception>
 		/// <exception cref="FileNotFoundException">Image file does not exist.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="ImageUtil.LoadGdipBitmapFromFileOrResourceOrString"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="ImageUtil.LoadGdipBitmap"/>.</exception>
 		/// <exception cref="AuException">Something failed.</exception>
 		/// <remarks>
 		/// To create code for this function, use dialog "Find image or color in window".

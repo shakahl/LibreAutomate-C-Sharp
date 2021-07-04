@@ -18,6 +18,8 @@ using System.Reflection;
 //TODO: remove runSingle. Maybe need something similar, but not to limit to single running task. As an alternative could use script.setup(runSingle: true) or script.mutex().
 //	Then maybe let script.setup sleepExit default true, and on first run print info about it.
 //	IDEA: script.setup(bool? trayIcon=null). If null, changes editor's icon; maybe only if role miniProgram.
+//	Or maybe use different tray icon for runSingle. Maybe then don't change editor's tray icon when runSingle running.
+//	Maybe also add default icon to exeProgram.
 
 namespace Au
 {
@@ -412,10 +414,6 @@ namespace Au
 				}
 			});
 		}
-
-		//TODO: change Task.exe icon.
-		//	Maybe also use different tray icon for runSingle. Maybe then don't change editor's tray icon when runSingle running.
-		//	Maybe also add default icon to exeProgram.
 
 #if false //not sure is it useful. Unreliable. Should use hook to detect user-pressed, but then UAC makes less reliable. Can instead use script.setup (Win+L, Ctrl+Alt+Delete and sleep-exit are reliable). If useful, can instead add script.setup parameter keyExit.
 		/// <summary>

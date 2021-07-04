@@ -579,7 +579,7 @@ namespace Au
 			Icon ic = Icon.FromHandle(_handle);
 			Bitmap im = null;
 			try { im = ic.ToBitmap(); }
-			catch (Exception e) { print.warning(e.ToString(), -1); }
+			catch (Exception e) { print.warning("ToGdipBitmap() failed. " + e.ToString(), -1); }
 			ic.Dispose(); //actually don't need
 			if (destroyIcon) Dispose();
 			return im;
@@ -597,7 +597,7 @@ namespace Au
 		public System.Windows.Media.Imaging.BitmapSource ToWpfImage(bool destroyIcon = true) {
 			if (_handle == default) return null;
 			try { return System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(_handle, default, default); }
-			catch (Exception e) { print.warning(e.ToString(), -1); return null; }
+			catch (Exception e) { print.warning("ToWpfImage() failed. " + e.ToString(), -1); return null; }
 			finally { if (destroyIcon) Dispose(); }
 		}
 

@@ -495,5 +495,72 @@ namespace Au.Controls
 
 		//	return r;
 		//}
+
+		/// <summary>
+		/// Converts XAML image to native icon file data.
+		/// </summary>
+		/// <param name="stream">Stream to write icon file data. Writes from start.</param>
+		/// <param name="image">Image XAML. See <see cref="ImageUtil.LoadWpfImageElement"/>.</param>
+		/// <param name="sizes">Sizes of icon images to add to the ico file. For example 16, 24, 32, 48, 64. Sizes can be 1 to 256 inclusive.</param>
+		/// <exception cref="ArgumentOutOfRangeException">An invalid size.</exception>
+		/// <exception cref="Exception"></exception>
+		public static unsafe void XamlImageToIconFile(Stream stream, string image, params int[] sizes) {
+			var e = ImageUtil.LoadWpfImageElement(image);
+			stream.Position = Math2.AlignUp(sizeof(Api.NEWHEADER) + sizeof(Api.ICONDIRENTRY) * sizes.Length, 4);
+			var a = stackalloc Api.ICONDIRENTRY[sizes.Length];
+			for (int i = 0; i < sizes.Length; i++) {
+				int size = sizes[i];
+				if (size < 1 || size > 256) throw new ArgumentOutOfRangeException();
+				using var b = ImageUtil.ConvertWpfImageElementToGdipBitmap(e, 96, (size, size));
+				int pos = (int)stream.Position;
+				b.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+				byte bsize = (byte)(size == 256 ? 0 : checked((byte)size));
+				a[i] = new Api.ICONDIRENTRY { bWidth = bsize, bHeight = bsize, wBitCount = 32, dwBytesInRes = (int)stream.Position - pos, dwImageOffset = pos };
+			}
+			var posEnd = stream.Position;
+			stream.Position = 0;
+			var h = new Api.NEWHEADER { wResType = 1, wResCount = (ushort)sizes.Length };
+			stream.Write(new(&h, sizeof(Api.NEWHEADER)));
+			stream.Write(new(a, sizeof(Api.ICONDIRENTRY) * sizes.Length));
+			stream.Position = posEnd;
+		}
+
+		///
+		public static void XamlImageToIconFile(string file, string image, params int[] sizes) {
+			file = pathname.NormalizeForNET_(file);
+			using var stream = File.OpenWrite(file);
+			XamlImageToIconFile(stream, image, sizes);
+		}
+
+		//currently not used.
+		///// <summary>
+		///// Creates GDI+ <b>Bitmap</b> from a GDI bitmap.
+		///// </summary>
+		///// <param name="hbitmap">GDI bitmap handle.</param>
+		///// <remarks>
+		///// How this function is different from <see cref="System.Drawing.Image.FromHbitmap"/>:
+		///// 1. <b>Image.FromHbitmap</b> usually creates bottom-up bitmap, which is incompatible with <see cref="uiimage.find"/>. This function creates normal top-down bitmap, like <c>new Bitmap(...)</c>, <c>Bitmap.FromFile(...)</c> etc.
+		///// 2. This function always creates bitmap of <b>PixelFormat</b> <b>Format32bppRgb</b>.
+		///// </remarks>
+		///// <exception cref="AuException">Failed. For example <i>hbitmap</i> is default(IntPtr).</exception>
+		///// <exception cref="Exception">Exceptions of Bitmap(int, int, PixelFormat) constructor.</exception>
+		//public static unsafe System.Drawing.Bitmap ConvertHbitmapToGdipBitmap(IntPtr hbitmap) {
+		//	var bh = new Api.BITMAPINFOHEADER() { biSize = sizeof(Api.BITMAPINFOHEADER) };
+		//	using (var dcs = new ScreenDC_()) {
+		//		if (0 == Api.GetDIBits(dcs, hbitmap, 0, 0, null, &bh, 0)) goto ge;
+		//		int wid = bh.biWidth, hei = bh.biHeight;
+		//		if (hei > 0) bh.biHeight = -bh.biHeight; else hei = -hei;
+		//		bh.biBitCount = 32;
+
+		//		var R = new System.Drawing.Bitmap(wid, hei, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
+		//		var d = R.LockBits(new System.Drawing.Rectangle(0, 0, wid, hei), System.Drawing.Imaging.ImageLockMode.ReadWrite, R.PixelFormat);
+		//		bool ok = hei == Api.GetDIBits(dcs, hbitmap, 0, hei, (void*)d.Scan0, &bh, 0);
+		//		R.UnlockBits(d);
+		//		if (!ok) { R.Dispose(); goto ge; }
+		//		return R;
+		//	}
+		//	ge:
+		//	throw new AuException();
+		//}
 	}
 }

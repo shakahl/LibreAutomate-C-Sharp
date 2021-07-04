@@ -23,6 +23,9 @@ namespace Au.Tools
 			//int color = 0; using (var dc = new ScreenDC_()) { color = Api.GetPixel(dc, p.x, p.y); }
 			string path = wnd.more.getWindowsStoreAppId(w, true, true);
 
+			const int sh = 30;
+			var screenshot = App.Settings.edit_noImages ? null : ColorQuantizer.MakeScreenshotComment(new(p.x - sh, p.y - sh / 2, sh * 2, sh), dpi: App.Hwnd);
+
 			var m = new popupMenu();
 			m["Find window"] = o => _Insert(_Wnd_Find(w, default, false));
 			m["Find control"] = o => _Insert(_Wnd_Find(w, c, false));
@@ -33,10 +36,10 @@ namespace Au.Tools
 				m["Window"] = o => _Insert(_Wnd_Find(w, default, false) + _Click(w, "w"));
 				m["Control"] = o => _Insert(_Wnd_Find(w, c, false) + _Click(c, "c"));
 				m.Last.IsDisabled = c.Is0;
-				m["Screen"] = o => _Insert($"mouse.click({p.x}, {p.y});");
+				m["Screen"] = o => _Insert($"mouse.click({p.x}, {p.y});{screenshot}");
 				string _Click(wnd w, string v) {
 					w.MapScreenToClient(ref p);
-					return $"\r\nAMouse.Click({v}, {p.x}, {p.y});";
+					return $"\r\nmouse.click({v}, {p.x}, {p.y});{screenshot}";
 				}
 			});
 			//	m.Submenu("Get color", m => {

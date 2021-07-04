@@ -119,7 +119,7 @@ namespace Au.More
 			//		3. Memory<T>/MemoryHandle. Same speed as GCHandle. MemoryHandle is bigger and managed.
 			//	Tested: MemoryPool is slower than ArrayPool and creates garbage.
 
-			//tested: MemoryUtil becomes much slower starting from 1 MB. Then AVirtualMemory is several times faster (else much slower). But with this buffer size it does not matter.
+			//tested: heap memory allocation becomes much slower starting from 1 MB. Then virtual memory is several times faster (else much slower). But with this buffer size it does not matter.
 		}
 
 		/// <summary>
@@ -225,7 +225,7 @@ namespace Au.Types
 {
 	//error CS1657: Cannot use 'b' as a ref or out value because it is a 'using variable'.
 	//If in, compiles, but very slow. Probably copies t because calls More() which isn't readonly.
-	//public static partial class AExtAu
+	//public static partial class ExtAu
 	//{
 	//	public static unsafe bool GetString2(this ref FastBuffer<char> t, int r, out string s, BSFlags flags = 0, string sDefault = null) {
 	//		...

@@ -434,8 +434,8 @@ namespace Au
 		public static elm fromComObject(IntPtr x)
 		{
 			if(x == default) return null;
-			if(AMarshal.QueryInterface(x, out IntPtr iacc, Api.IID_IAccessible)
-				|| AMarshal.QueryService(x, out iacc, Api.IID_IAccessible)
+			if(MarshalUtil.QueryInterface(x, out IntPtr iacc, Api.IID_IAccessible)
+				|| MarshalUtil.QueryService(x, out iacc, Api.IID_IAccessible)
 				) return new elm(iacc);
 			return null;
 		}

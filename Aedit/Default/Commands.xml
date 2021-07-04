@@ -1,6 +1,5 @@
 ﻿<!--
-If this is the default commands file, please don't edit/delete it.
-If this is the customized commands file, you can edit it to customize menu commands and toolbars. Then restart the program.
+If this is NOT the default commands file, you can edit it to customize menu commands and toolbars. Then restart the program.
 	To add a command to a toolbar, add command's XML element to the toolbar's XML element.
 	To reset everything, delete this file. To reset some toolbars, delete all commands in their XML elements.
 
@@ -9,19 +8,19 @@ Most command names are like default menu item text, with _ instead of space and 
 	The program prints all available command names if this file contains unknown commands. The same for toolbar names.
 
 Command XML attributes:
-color - text color. Value: .NET color name or #RRGGBB or #RGB.
-text - menu item text. Also button text, if btext not specified. Insert _ before Alt-underlined character.
-image - image file. Can be xaml, png or other format supported by WPF. Path can start with %EnvVariable% or %folders.Folder%.
-keys - keyboard or/and mouse shortcut(s), like "Ctrl+E, Shift+M-click". Mouse can be: Click, D-click, R-click, M-click, Wheel.
+	color - text color. Value: .NET color name or #RRGGBB or #RGB.
+	text - menu item text and toolbar button text. Insert _ before Alt-underlined character.
+	image - icon name (see menu Tools -> Icons) or image file (xaml, png). See ImageUtil.LoadWpfImageElement.
+	keys - keyboard or/and mouse shortcut(s), like "Ctrl+E, Shift+M-click". See keys.more.parseHotkeyString.
 
 These attributes are used only for toolbar buttons:
-separator - add separator before. Value: none.
-hide - overflow mode. Value: always, never, asNeeded (default).
-imageAt - show image + text; image at this side. Value: left, top, right, bottom. For submenu-items always left.
-btext - button text.
+	separator - add separator before. Value: none.
+	hide - overflow mode. Value: always, never, asNeeded (default).
+	imageAt - show image + text; image at this side. Value: left, top, right, bottom. For submenu-items always left.
+	btext - button text. Use if it is different than menu item text.
 
 All attributes are optional. The Example command contains all.
-<Example color="green" text="Text1" image="c:\m\n.png" keys="Ctrl+H" separator="1" hide="1" imageAt="left" btext="Text2"/>
+<Example color="green" text="Ab" image="*Material.Forum #A6C639" keys="Ctrl+H" separator="1" hide="1" imageAt="left" btext="Bc"/>
 -->
 <commands>
 	<!-- Customized commands that don't have a toolbar button. -->
@@ -32,12 +31,14 @@ All attributes are optional. The Example command contains all.
 	<File>
 		<New />
 		<Properties />
+		<Rename />
+		<MultiSelect_files />
 		<Save_now />
 	</File>
 	<Run>
 		<Compile />
-		<Start />
-		<End />
+		<Run_script />
+		<End_task />
 	</Run>
 	<Edit>
 		<Find />

@@ -150,7 +150,7 @@ namespace Au
 				[Flags]
 				internal enum WFlags_
 				{
-					//these were used by AElement.
+					//these were used by elm.
 					//ChromeYes = 1,
 					//ChromeNo = 2,
 				}

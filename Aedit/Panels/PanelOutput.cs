@@ -33,7 +33,7 @@ class PanelOutput : DockPanel
 		App.Commands.BindKeysTarget(this, "Output");
 	}
 
-	public void ZClear() { _c.zClearText(); }
+	public void ZClear() { _c.zClearText(); _c.Call(SCI_SETSCROLLWIDTH, 1); }
 
 	public void ZCopy() { _c.Call(SCI_COPY); }
 
@@ -144,7 +144,7 @@ class PanelOutput : DockPanel
 				ZTags.PrintServerProcessMessages(App.PrintServer, _onServerMessage ??= _OnServerMessage);
 				return default;
 			case Api.WM_MBUTTONDOWN:
-				zClearText();
+				_p.ZClear();
 				return default;
 			case Api.WM_CONTEXTMENU:
 				var m = new ContextMenu { PlacementTarget = this };

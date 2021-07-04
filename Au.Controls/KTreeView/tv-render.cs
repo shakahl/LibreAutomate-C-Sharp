@@ -223,13 +223,16 @@ namespace Au.Controls
 						if (cd == null || !cd.DrawBackground()) {
 							int color = item.Color;
 							if (color != -1 || backColor == 0xffffff) { //custom or white
+								int xBack = r.left;
 								if (color == -1) {
 									if (v.isSelected) color = isFocusedControl ? 0xffd5c4 : 0xe0e0e0;
 									else color = (HotTrack && index == _hotIndex) ? 0xfff0e8 : backColor;
+									if (color != backColor) xBack = xText - _imageMarginX / 2; //don't draw selection background under icon and checkbox
 								}
 								if (color != backColor) {
 									var brush = Api.CreateSolidBrush(color);
-									Api.FillRect(dc, r, brush);
+									var r2 = r; r2.left = xBack;
+									Api.FillRect(dc, r2, brush);
 									Api.DeleteObject(brush);
 								}
 							} else { //probably high contrast

@@ -40,7 +40,7 @@ class DIcons : KDialogWindow
 	string _color = "#000000";
 	Random _random;
 	int _dpi;
-	bool _withCollection;
+	//bool _withCollection;
 
 	DIcons() {
 		Title = "Icons";
@@ -52,7 +52,8 @@ class DIcons : KDialogWindow
 
 		//left - edit control and tree view
 		b.Row(-1).StartDock();
-		b.Add(out TextBox tName).Dock(Dock.Top).Tooltip("Search. Examples: part, start*, *end.");
+		b.Add(out TextBox tName).Tooltip("Search.\nPart of icon name, or wildcard expression.\nExamples: part, Part (match case), start*, *end, **rc regex case-sensitive.").Dock(Dock.Top);
+		//b.Focus(); //currently cannot use this because of WPF tooltip bugs
 		b.xAddInBorder(out KTreeView tv); //tv.SingleClickActivate = true;
 		b.End();
 
@@ -67,7 +68,6 @@ class DIcons : KDialogWindow
 		b.StartStack();
 
 		TextBox randFromTo = null, iconSizes = null;
-		KCheckBox setClipboard = null;
 
 		b.AddButton("Randomize colors", _ => _RandomizeColors());
 		b.Add("L %", out randFromTo, "30-70").Width(50);
@@ -79,7 +79,7 @@ class DIcons : KDialogWindow
 		//b.AddButton("Random", null).Width(70); //idea: set random icons for multiple selected files. Probably too crazy.
 		b.End();
 		b.StartStack<Expander>("Insert code for menu/toolbar/etc icon", vertical: true);
-		b.Add(out setClipboard, "Clipboard");
+		b.Add(out KCheckBox setClipboard, "Clipboard");
 		b.StartStack();
 		b.Add<Label>("Line: ");
 		b.AddButton(out var bCodeVar, "Variable = XAML", _ => _InsertCodeOrExport(tv, 0)).Disabled();
@@ -87,8 +87,8 @@ class DIcons : KDialogWindow
 		b.End();
 		b.StartStack();
 		b.Add<Label>("Text: ");
+		b.AddButton(out var bCodeName, "Name", _ => _InsertCodeOrExport(tv, 3)).Width(70).Disabled().Tooltip("Shorter string than XAML, but works only when editor is running.\nCan be used with custom menus and toolbars, editor menus and toolbars (edit Commands.xml), script.editor.GetIcon, IconImageCache, ImageUtil, output tag <image>.");
 		b.AddButton(out var bCodeXaml, "XAML", _ => _InsertCodeOrExport(tv, 2)).Width(70).Disabled();
-		b.AddButton(out var bCodeName, "Name", _ => _InsertCodeOrExport(tv, 3)).Width(70).Disabled().Tooltip("Shorter, but works only when editor is running.\nCan be used with menus, toolbars and script.editor.GetIcon.");
 		b.End();
 		b.End();
 		b.StartStack<Expander>("Export to current workspace folder");
@@ -99,15 +99,15 @@ class DIcons : KDialogWindow
 		b.StartStack<Expander>("Other actions");
 		b.AddButton("Clear program's icon cache", _ => IconImageCache.Common.Clear(redrawWindows: true));
 		b.End();
-		b.StartGrid<Expander>("List display options");
-		//b.Add("Background", out ComboBox cBackground).Items("Default|Control|White|Black)");
-		//cBackground.SelectionChanged += (o, e) => _ChangeBackground();
-		b.Add(out KCheckBox cCollection, "Collection");
-		cCollection.CheckChanged += (_, _) => {
-			_withCollection = cCollection.True();
-			tv.Redraw();
-		};
-		b.End();
+		//b.StartGrid<Expander>("List display options");
+		////b.Add("Background", out ComboBox cBackground).Items("Default|Control|White|Black)");
+		////cBackground.SelectionChanged += (o, e) => _ChangeBackground();
+		//b.Add(out KCheckBox cCollection, "Collection");
+		//cCollection.CheckChanged += (_, _) => {
+		//	_withCollection = cCollection.True();
+		//	tv.Redraw();
+		//};
+		//b.End();
 		b.Row(-1);
 		b.R.Add<TextBlock>().Align("R").Text("Thanks to ", "<a>MahApps.Metro.IconPacks", new Action(() => run.it("https://github.com/MahApps/MahApps.Metro.IconPacks")));
 		b.End();
@@ -134,8 +134,16 @@ class DIcons : KDialogWindow
 
 		tName.TextChanged += (_, _) => {
 			var name = tName.Text;
-			bool wild = name.FindAny("*?") >= 0;
-			var e = name.NE() ? _a : _a.Where(o => wild ? o._name.Like(name, true) : o._name.Contains(name, StringComparison.OrdinalIgnoreCase));
+			wildex wild = null;
+			StringComparison comp = StringComparison.OrdinalIgnoreCase;
+			if (!name.NE()) {
+				bool matchCase = name.RegexIsMatch("[A-Z]");
+				if (name.FindAny("*?") >= 0) {
+					try { wild = new wildex(name, matchCase && !name.Starts("**")); }
+					catch { name = ""; }
+				} else if (matchCase) comp = StringComparison.Ordinal;
+			}
+			var e = name.NE() ? _a : _a.Where(o => wild?.Match(o._name) ?? o._name.Contains(name, comp));
 			tv.SetItems(e, false);
 			_EnableControls(false);
 		};
@@ -187,7 +195,7 @@ class DIcons : KDialogWindow
 					//CONSIDER: if path exists, show dialog
 					if (ico) {
 						var sizes = iconSizes.Text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(o => o.ToInt()).ToArray();
-						ImageUtil.XamlImageToIconFile(path, xaml, sizes);
+						KImageUtil.XamlImageToIconFile(path, xaml, sizes);
 					} else {
 						filesystem.saveText(path, xaml);
 					}
@@ -257,7 +265,8 @@ class DIcons : KDialogWindow
 			_table = table; _name = name;
 		}
 
-		string ITreeViewItem.DisplayText => s_dialog._withCollection ? (_name + "          (" + _table + ")") : _name;
+		//string ITreeViewItem.DisplayText => s_dialog._withCollection ? (_name + new string(' ', Math.Max(8, 40 - _name.Length * 2)) + "(" + _table + ")") : _name;
+		string ITreeViewItem.DisplayText => _name + new string(' ', Math.Max(8, 40 - _name.Length * 2)) + "(" + _table + ")";
 
 		System.Drawing.Bitmap ITreeViewItem.Image {
 			//note: don't store UIElement or Bitmap. They can use hundreds MB of memory and it does not make faster/better. Let GC dispose unused objects asap.

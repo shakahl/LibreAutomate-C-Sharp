@@ -513,7 +513,7 @@ namespace Au.Controls
 				case Image im: return new Image { Source = im.Source };
 				case UIElement e when e.Uid is string res: //see _SetImage
 					if (ResourceUtil.HasResourcePrefix(res)) return ResourceUtil.GetXamlObject(res) as UIElement;
-					if (res.Starts("source:")) return ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(res[7..]);
+					if (res.Starts("source:")) return ImageUtil.LoadWpfImageElement(res[7..]);
 					break;
 				}
 				return null;
@@ -522,16 +522,17 @@ namespace Au.Controls
 			bool _SetImage(string image, _CustomizeContext customizing = null) {
 				bool custom = customizing != null;
 				try {
-					var ie = custom
-						? ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(image)
-						: ResourceUtil.GetWpfImageElement(image);
-					if (ie is not Image) ie.Uid = (custom ? "source:" : "resource:") + image; //xaml source for _CopyImage
+					bool res = !(custom || image.Starts('*'));
+					var ie = res
+						? ResourceUtil.GetWpfImageElement(image)
+						: ImageUtil.LoadWpfImageElement(image);
+					if (ie is not Image) ie.Uid = (res ? "resource:" : "source:") + image; //xaml source for _CopyImage
 					_mi.Icon = ie;
 					return true;
 				}
 				catch (Exception ex) {
 					if (custom) customizing.Error("failed to load image", ex);
-					else print.it($"Failed to load image resource {image}. {ex.ToStringWithoutStack()}");
+					else print.it($"Failed to load image {image}. {ex.ToStringWithoutStack()}");
 				}
 				return false;
 			}
@@ -579,6 +580,11 @@ namespace Au.Controls
 			public event EventHandler CanExecuteChanged;
 
 			#endregion
+
+			/// <summary>
+			/// Finds and returns toolbar button that has this command. Returns null if not found.
+			/// </summary>
+			public ButtonBase FindButtonInToolbar(ToolBar tb) => tb.Items.OfType<ButtonBase>().FirstOrDefault(o => o.Command == this);
 
 			//public void Test() {
 			//	foreach (var v in CanExecuteChanged.GetInvocationList()) {
@@ -725,10 +731,6 @@ namespace Au.Controls
 		void _Customize() {
 			if (!filesystem.exists(_customizedFile, true).isFile) filesystem.copy(_defaultFile, _customizedFile);
 			run.selectInExplorer(_customizedFile);
-		}
-
-		private void AProcess_Exit(object sender, EventArgs e) {
-			throw new NotImplementedException();
 		}
 
 		void _ContextMenu(object sender, ContextMenuEventArgs e) {

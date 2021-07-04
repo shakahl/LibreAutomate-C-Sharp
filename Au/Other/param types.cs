@@ -14,7 +14,7 @@ using System.Reflection;
 
 namespace Au.Types
 {
-#if false //rejected. More convenient to use, but makes code less clear. With Range everything is clear: null means "all"; for just start index use 'i..'; many users know Range, and would have to learn about ARange.
+#if false //rejected. More convenient to use, but makes code less clear. With Range everything is clear: null means "all"; for just start index use 'i..'; many users know Range, and would have to learn about RANGE.
 	/// <summary>
 	/// Represents a range that has start and end indexes.
 	/// </summary>
@@ -25,18 +25,18 @@ namespace Au.Types
 	/// 
 	/// Used for parameters of functions that allow to specify a range (part) of a string, array or other collection. Callers can specify a range or just start index. Or callers can omit the optional parameter to use whole collection. The called function retrieves real start/end indexes with <see cref="GetRealRange"/>.
 	/// </remarks>
-	public struct ARange : IEquatable<ARange>
+	public struct RANGE : IEquatable<RANGE>
 	{
 		int _start;
 		int _endPlus1;
 
 		/// <summary>
-		/// Initializes a new <see cref="ARange"/> instance with the specified starting and ending indexes.
+		/// Initializes a new <see cref="RANGE"/> instance with the specified starting and ending indexes.
 		/// </summary>
 		/// <param name="start">The start index of the range.</param>
 		/// <param name="end">The end index of the range. The default value -1 means that the end index will be equal to the length of the collection (string, array, etc) with which will be used this variable.</param>
 		/// <exception cref="ArgumentOutOfRangeException"><i>start</i> is less than 0 or <i>end</i> is less than -1.</exception>
-		public ARange(int start, int end = -1)
+		public RANGE(int start, int end = -1)
 		{
 			if(start < 0 || end < -1) throw new ArgumentOutOfRangeException();
 			_start = start;
@@ -44,9 +44,9 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Initializes a new <see cref="ARange"/> instance with the specified starting and ending indexes specified using <b>Index</b>.
+		/// Initializes a new <see cref="RANGE"/> instance with the specified starting and ending indexes specified using <b>Index</b>.
 		/// </summary>
-		public ARange(Index start, Index end)
+		public RANGE(Index start, Index end)
 		{
 			_start = start.IsFromEnd ? ~start.Value : start.Value;
 			_endPlus1 = (end.IsFromEnd ? ~end.Value : end.Value) + 1;
@@ -78,13 +78,13 @@ namespace Au.Types
 		}
 
 		///
-		public static implicit operator ARange(int start) => new ARange(start);
+		public static implicit operator RANGE(int start) => new RANGE(start);
 
 		///
-		public static implicit operator ARange(Range r) => new ARange(r.Start, r.End);
+		public static implicit operator RANGE(Range r) => new RANGE(r.Start, r.End);
 
 		///
-		public static implicit operator ARange(Index start) => new ARange(start, Index.End);
+		public static implicit operator RANGE(Index start) => new RANGE(start, Index.End);
 
 		///
 		public override string ToString()
@@ -98,10 +98,10 @@ namespace Au.Types
 		}
 
 		///
-		public override bool Equals(object value) => value is ARange r && Equals(r);
+		public override bool Equals(object value) => value is RANGE r && Equals(r);
 
 		///
-		public bool Equals(ARange other) => other._start == _start && other._endPlus1 == _endPlus1;
+		public bool Equals(RANGE other) => other._start == _start && other._endPlus1 == _endPlus1;
 
 		///
 		public override int GetHashCode() => HashCode.Combine(_start.GetHashCode(), _endPlus1.GetHashCode());

@@ -211,7 +211,7 @@ namespace Au
 		/// Users may choose to not show notifications, depending on various conditions. Look in Windows Settings app, Notifications &amp; actions.
 		/// </remarks>
 		public void ShowNotification(string title, string text, TINFlags flags = 0, icon icon = default) {
-			if (!_Update(n: new(title, text, flags, icon))) print.warning("ShowNotification failed. " + lastError.message);
+			if (!_Update(n: new(title, text, flags, icon))) print.warning("ShowNotification() failed. " + lastError.message);
 		}
 
 		record _Notification(string title, string text, TINFlags flags, icon icon);

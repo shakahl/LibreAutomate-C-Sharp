@@ -625,7 +625,7 @@ namespace Au.Compiler
 
 		static void _GetIconFromXaml(string xaml, out MemoryStream ms) {
 			ms = new MemoryStream();
-			ImageUtil.XamlImageToIconFile(ms, xaml, 16, 24, 32, 48, 64);
+			Au.Controls.KImageUtil.XamlImageToIconFile(ms, xaml, 16, 24, 32, 48, 64);
 			ms.Position = 0;
 		}
 

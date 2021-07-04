@@ -1821,7 +1821,7 @@
             If without prefix, gets file icon; see <see cref="M:Au.icon.of(System.String,System.Int32,Au.Types.IconGetFlags)"/>.
             </summary>
             <remarks>
-            To load image the control calls <see cref="M:Au.More.ImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String,System.Nullable{System.ValueTuple{System.Int32,System.Nullable{Au.Types.SIZE}}})"/> or <see cref="M:Au.More.ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.
+            To load image the control calls <see cref="M:Au.More.ImageUtil.LoadGdipBitmap(System.String,System.Nullable{System.ValueTuple{System.Int32,System.Nullable{Au.Types.SIZE}}})"/> or <see cref="M:Au.More.ImageUtil.LoadWpfImageElement(System.String)"/>.
             The control uses <see cref="T:Au.More.IconImageCache"/>; see <see cref="P:Au.Controls.KTreeView.ImageCache"/>.
             </remarks>
         </member>
@@ -2235,6 +2235,11 @@
             When disabled or enabled with <see cref="P:Au.Controls.KMenuCommands.Command.Enabled"/>.
             </summary>
         </member>
+        <member name="M:Au.Controls.KMenuCommands.Command.FindButtonInToolbar(System.Windows.Controls.ToolBar)">
+            <summary>
+            Finds and returns toolbar button that has this command. Returns null if not found.
+            </summary>
+        </member>
         <member name="M:Au.Controls.KMenuCommands.InitToolbarsAndCustomize(System.String,System.String,System.Windows.Controls.ToolBar[])">
             <summary>
             Adds toolbar buttons specified in <i>xmlFileCustomized</i> or <i>xmlFileDefault</i>. Applies customizations specified there.
@@ -2561,7 +2566,7 @@
             Can be:
             - <see cref="T:System.Windows.Controls.Image"/> or other WPF control to assign directly to <see cref="P:System.Windows.Controls.MenuItem.Icon"/>.
             - <see cref="T:System.Windows.Media.ImageSource"/> - a WPF image. To create image from icon, use <see cref="M:Au.icon.ToWpfImage(System.Boolean)"/>.
-            - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or Base64 encoded image with prefix "image:". Can be XAML file or resource. See <see cref="M:Au.More.ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>. Supports environment variables. If not full path, looks in <see cref="P:Au.folders.ThisAppImages"/>.
+            - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or Base64 encoded image with prefix "image:". Can be XAML file or resource. See <see cref="M:Au.More.ImageUtil.LoadWpfImageElement(System.String)"/>. Supports environment variables. If not full path, looks in <see cref="P:Au.folders.ThisAppImages"/>.
             - <see cref="T:System.Uri"/> - image file path, or resource pack URI, or URL. Does not support environment variables and <see cref="P:Au.folders.ThisAppImages"/>.
             
             If failed to find or load image file, prints warning (<see cref="M:Au.print.warning(System.String,System.Int32,System.String)"/>).
@@ -2886,6 +2891,19 @@
             Returns null if path is not a valid image string or the file does not exist or failed to load.
             </summary>
             <remarks>Supports environment variables etc. If not full path, searches in <see cref="P:Au.folders.ThisAppImages"/> and standard directories.</remarks>
+        </member>
+        <member name="M:Au.Controls.KImageUtil.XamlImageToIconFile(System.IO.Stream,System.String,System.Int32[])">
+            <summary>
+            Converts XAML image to native icon file data.
+            </summary>
+            <param name="stream">Stream to write icon file data. Writes from start.</param>
+            <param name="image">Image XAML. See <see cref="M:Au.More.ImageUtil.LoadWpfImageElement(System.String)"/>.</param>
+            <param name="sizes">Sizes of icon images to add to the ico file. For example 16, 24, 32, 48, 64. Sizes can be 1 to 256 inclusive.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">An invalid size.</exception>
+            <exception cref="T:System.Exception"></exception>
+        </member>
+        <member name="M:Au.Controls.KImageUtil.XamlImageToIconFile(System.String,System.String,System.Int32[])">
+            
         </member>
         <member name="T:Au.Tools.KCheckTextBox">
             <summary>

@@ -192,7 +192,7 @@ namespace Au
 
 		readonly object _o; //string, regexp, Regex or wildex[]. Tested: getting string etc with '_obj as string' is fast.
 		readonly WXType _type;
-		readonly bool _ignoreCase; //CONSIDER: default true. In find-window class/program ignore and use false.
+		readonly bool _ignoreCase;
 		readonly bool _not;
 
 		/// <param name="wildcardExpression">
@@ -200,14 +200,15 @@ namespace Au
 		/// Cannot be null (throws exception).
 		/// "" will match "".
 		/// </param>
+		/// <param name="matchCase">Case-sensitive even if there is no **c.</param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentException">Invalid <c>"**options "</c> or regular expression.</exception>
-		public wildex([ParamString(PSFormat.wildex)] string wildcardExpression)
+		public wildex([ParamString(PSFormat.wildex)] string wildcardExpression, bool matchCase = false)
 		{
 			var w = wildcardExpression;
 			if(w == null) throw new ArgumentNullException();
 			_type = WXType.Wildcard;
-			_ignoreCase = true;
+			_ignoreCase = !matchCase;
 			string[] split = null;
 
 			if(w.Length >= 3 && w[0] == '*' && w[1] == '*') {
@@ -219,7 +220,7 @@ namespace Au
 					case 'm': _type = WXType.Multi; break;
 					case 'c': _ignoreCase = false; break;
 					case 'n': _not = true; break;
-					case ' ': w = w.Substring(i + 1); goto g1;
+					case ' ': w = w[(i + 1)..]; goto g1;
 					case '(':
 						if(w[i - 1] != 'm') goto ge;
 						for(j = ++i; j < w.Length; j++) if(w[j] == ')') break;

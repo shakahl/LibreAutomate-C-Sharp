@@ -27,13 +27,13 @@ namespace Au.Controls
 
 			TextBox tH = null, tL = null, tS = null;
 
-			var fColor = new TextBlock { Text = "Color", ToolTip = "Color 0xRRGGBB", Foreground = Brushes.Black };
+			var fColor = new TextBlock { Text = "Color", ToolTip = "Color RRGGBB", Foreground = Brushes.Black };
 			p2.Children.Add(fColor);
 
 			var bColor = new Rectangle { Width = 9, Height = 9, Fill = Brushes.Black, Margin = new Thickness(4, 2, 4, 0) };
 			p2.Children.Add(bColor);
 
-			_tColor = new() { Width = 68, Text = "0x000000" };
+			_tColor = new() { Width = 68, Text = "000000" };
 			_tColor.TextChanged += (o, e) => {
 				int col = _GetColor(bgr: true);
 				if (!_hlsChanging) {
@@ -278,12 +278,13 @@ namespace Au.Controls
 
 		void _SetColor(int color, bool bgr) {
 			if (bgr) color = ColorInt.SwapRB(color);
-			var s = "0x" + color.ToS("X6");
+			var s = color.ToS("X6");
 			_tColor.Text = s;
 		}
 
 		int _GetColor(bool bgr) {
-			int col = _tColor.Text.ToInt();
+			var s = _tColor.Text;
+			int col = s.ToInt(s.Starts('#') ? 1 : (s.Starts("0x") ? 2 : 0), STIFlags.IsHexWithout0x);
 			if (bgr) col = ColorInt.SwapRB(col);
 			return col;
 		}

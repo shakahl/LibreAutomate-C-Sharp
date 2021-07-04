@@ -13,6 +13,8 @@ using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
 
+//FUTURE: support columns. Maybe use \t of specified widths.
+
 namespace Au.Controls
 {
 	/// <summary>

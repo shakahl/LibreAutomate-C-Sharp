@@ -64,7 +64,7 @@ namespace Au.Controls
 		/// If without prefix, gets file icon; see <see cref="icon.of"/>.
 		/// </summary>
 		/// <remarks>
-		/// To load image the control calls <see cref="ImageUtil.LoadGdipBitmapFromFileOrResourceOrString"/> or <see cref="ImageUtil.LoadWpfImageElementFromFileOrResourceOrString"/>.
+		/// To load image the control calls <see cref="ImageUtil.LoadGdipBitmap"/> or <see cref="ImageUtil.LoadWpfImageElement"/>.
 		/// The control uses <see cref="IconImageCache"/>; see <see cref="KTreeView.ImageCache"/>.
 		/// </remarks>
 		string ImageSource => null;

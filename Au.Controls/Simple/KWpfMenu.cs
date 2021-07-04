@@ -89,7 +89,7 @@ namespace Au.Controls
 		/// Can be:
 		/// - <see cref="Image"/> or other WPF control to assign directly to <see cref="MenuItem.Icon"/>.
 		/// - <see cref="ImageSource"/> - a WPF image. To create image from icon, use <see cref="icon.ToWpfImage"/>.
-		/// - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or Base64 encoded image with prefix "image:". Can be XAML file or resource. See <see cref="ImageUtil.LoadWpfImageElementFromFileOrResourceOrString"/>. Supports environment variables. If not full path, looks in <see cref="folders.ThisAppImages"/>.
+		/// - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or Base64 encoded image with prefix "image:". Can be XAML file or resource. See <see cref="ImageUtil.LoadWpfImageElement"/>. Supports environment variables. If not full path, looks in <see cref="folders.ThisAppImages"/>.
 		/// - <see cref="Uri"/> - image file path, or resource pack URI, or URL. Does not support environment variables and <see cref="folders.ThisAppImages"/>.
 		/// 
 		/// If failed to find or load image file, prints warning (<see cref="print.warning"/>).
@@ -220,7 +220,7 @@ namespace Au.Controls
 					ImageSource iso = null;
 					switch (icon) {
 					case string s:
-						return ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(s);
+						return ImageUtil.LoadWpfImageElement(s);
 					case Uri s:
 						iso = BitmapFrame.Create(s);
 						break;
@@ -232,7 +232,7 @@ namespace Au.Controls
 					}
 					if (iso != null) return new Image { Source = iso };
 				}
-				catch (Exception ex) { print.warning(ex.ToStringWithoutStack()); }
+				catch (Exception ex) { print.warning("Failed to load menu item image. " + ex.ToStringWithoutStack()); }
 			}
 			return null;
 			//rejected: cache, like popupMenu.

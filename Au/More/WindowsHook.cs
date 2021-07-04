@@ -326,7 +326,7 @@ namespace Au.More
 		public void Unhook() {
 			if (_hh != default) {
 				bool ok = Api.UnhookWindowsHookEx(_hh);
-				if (!ok) print.warning($"WindowsHook.Unhook failed ({_hookTypeString}). {lastError.message}");
+				if (!ok) print.warning($"WindowsHook.Unhook() failed ({_hookTypeString}). {lastError.message}");
 				_hh = default;
 			}
 		}

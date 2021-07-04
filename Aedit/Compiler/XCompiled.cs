@@ -315,7 +315,7 @@ namespace Au.Compiler
 			void _ClearCache() {
 				_data = null;
 				try { filesystem.delete(CacheDirectory); }
-				catch (AuException e) { print.warning(e.ToString(), -1); }
+				catch (AuException e) { print.warning("Failed to delete compiled script assembly cache. " + e.ToString(), -1); }
 			}
 		}
 

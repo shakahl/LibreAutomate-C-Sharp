@@ -80,8 +80,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Enumerates visual descendant objects, including parts of composite controls, and calls callback function <i>f</i> for each.
-		/// When <i>f</i> returns true, stops and returns that object. Returns null if <i>f</i> does not return true.
+		/// Enumerates visual descendant objects, including parts of composite controls.
 		/// </summary>
 		public static IEnumerable<DependencyObject> VisualDescendants(this DependencyObject t) {
 			for (int i = 0, n = VisualTreeHelper.GetChildrenCount(t); i < n; i++) {
@@ -95,8 +94,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Enumerates visual descendant objects, including parts of composite controls, and calls callback function <i>f</i> for each.
-		/// When <i>f</i> returns true, stops and returns that object. Returns null if <i>f</i> does not return true.
+		/// Enumerates logical descendant objects, including parts of composite controls.
 		/// </summary>
 		public static System.Collections.IEnumerable LogicalDescendants(this DependencyObject t) {
 			//foreach (var v in LogicalTreeHelper.GetChildren(t)) {

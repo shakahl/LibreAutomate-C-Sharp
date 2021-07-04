@@ -138,8 +138,6 @@ namespace Au.Types
 #pragma warning restore 1591 //XML doc
 	}
 
-	//CONSIDER: rename to ARect, APoint, ASize. For case-insensitive languages like VB.NET.
-
 	/// <summary>
 	/// Rectangle coordinates left top right bottom.
 	/// </summary>

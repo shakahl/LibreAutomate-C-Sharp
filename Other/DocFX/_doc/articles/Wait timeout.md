@@ -22,6 +22,6 @@ if(w.Is0) { print.it("timeout"); return; }
 print.it(w);
 
 //wait for hotkey max 5 seconds. Then exit.
-if(!AKeyb.WaitForHotkey(-5, "Ctrl+Shift+K")) return;
+if(!keys.waitForHotkey(-5, "Ctrl+Shift+K")) return;
 print.it("hotkey");
 ```

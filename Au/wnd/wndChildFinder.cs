@@ -196,7 +196,7 @@ namespace Au
 									return -1;
 								}
 								catch (AuException e) { //probably process of higher UAC integrity level
-									print.warning($"Failed to get .NET control names. {e.Message}");
+									print.warning($"Failed to get winforms control names. {e.Message}");
 									return -1;
 								}
 							}

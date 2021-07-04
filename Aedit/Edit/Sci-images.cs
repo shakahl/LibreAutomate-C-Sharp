@@ -53,7 +53,7 @@ partial class SciCode
 		//remove StaticSymbol. It is added for each static symbol, randomly before or after. Makes code difficult.
 		var a = list.Where(o => o.ClassificationType != ClassificationTypeNames.StaticSymbol).ToArray();
 
-		zIndicatorClear(true, c_indicImages, a[0].TextSpan.Start..a[^1].TextSpan.End);
+		if (a.Length > 0) zIndicatorClear(true, c_indicImages, a[0].TextSpan.Start..a[^1].TextSpan.End);
 
 		string code = cd.code;
 		int maxWidth = 0;
@@ -89,7 +89,7 @@ partial class SciCode
 			bool isImage = imType is ImageType.Base64Image or ImageType.PngGifJpg or ImageType.Bmp or ImageType.Xaml;
 			if (isImage) {
 				if (!(_im.cache ??= new()).TryGetValue(s, out b)) {
-					try { b = ImageUtil.LoadGdipBitmapFromFileOrResourceOrString(s, (_dpi, null)); }
+					try { b = ImageUtil.LoadGdipBitmap(s, (_dpi, null)); }
 					catch { b = null; }
 					_im.cache[s] = b;
 				}

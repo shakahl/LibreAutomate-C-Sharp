@@ -178,7 +178,7 @@ namespace Au.More
 			if (_a != null) {
 				foreach (var hh in _a) {
 					if (hh == default) continue;
-					if (!Api.UnhookWinEvent(hh)) print.warning("WinEventHook.Unhook failed.");
+					if (!Api.UnhookWinEvent(hh)) print.warning("WinEventHook.Unhook() failed.");
 				}
 				_a = null;
 			}

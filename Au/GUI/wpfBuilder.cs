@@ -351,7 +351,7 @@ namespace Au
 
 		#region ctors, window
 
-		//	static readonly DependencyProperty _AWpfBuilderProperty = DependencyProperty.RegisterAttached("_wpfBuilder", typeof(wpfBuilder), typeof(Panel));
+		//	static readonly DependencyProperty _wpfBuilderProperty = DependencyProperty.RegisterAttached("_wpfBuilder", typeof(wpfBuilder), typeof(Panel));
 		static ConditionalWeakTable<Panel, wpfBuilder> s_cwt = new();
 		//which is better? Both fast.
 
@@ -1922,7 +1922,7 @@ namespace Au
 				default: bad = true; break;
 				}
 			}
-			catch (Exception ex) { print.warning(ex.ToString(), -1); }
+			catch (Exception ex) { print.warning("LoadFile() failed. " + ex.ToString(), -1); }
 			if (bad) throw new NotSupportedException("LoadFile(): Unsupported type of element or source.");
 			return this;
 		}
@@ -1935,7 +1935,7 @@ namespace Au
 		/// <param name="stretchDirection"><see cref="Image.StretchDirection"/>.</param>
 		/// <exception cref="NotSupportedException">The last added element is not <b>Image</b>.</exception>
 		/// <remarks>
-		/// To load vector images from XAML, don't use <b>Image</b> control and this function. Instead create control from XAML, for example with <see cref="ImageUtil.LoadWpfImageElementFromFileOrResourceOrString"/>, and add it with <see cref="Add(FrameworkElement, WBAdd)"/>.
+		/// To load vector images from XAML, don't use <b>Image</b> control and this function. Instead create control from XAML, for example with <see cref="ImageUtil.LoadWpfImageElement"/>, and add it with <see cref="Add(FrameworkElement, WBAdd)"/>.
 		/// </remarks>
 		/// <seealso cref="icon.ToWpfImage"/>
 		/// <seealso cref="ImageUtil"/>
@@ -1946,8 +1946,8 @@ namespace Au
 			var c = Last as Image ?? throw new NotSupportedException("Image(): Last added must be Image");
 			if (file != null) {
 				//try { source = new BitmapImage(_Uri(file)); }
-				try { source = ImageUtil.LoadWpfImageFromFileOrResourceOrString(file); }
-				catch (Exception ex) { print.warning(ex.ToString(), -1); }
+				try { source = ImageUtil.LoadWpfImage(file); }
+				catch (Exception ex) { print.warning("Image() failed. " + ex.ToString(), -1); }
 			}
 			c.Stretch = stretch; //default Uniform
 			c.StretchDirection = stretchDirection; //default Both
@@ -1958,7 +1958,7 @@ namespace Au
 		/// <summary>
 		/// Loads image from a file or URL into the last added <see cref="System.Windows.Controls.Image"/>.
 		/// </summary>
-		/// <param name="source">File path etc. See <see cref="ImageUtil.LoadWpfImageFromFileOrResourceOrString"/>. Sets <see cref="Image.Source"/>.</param>
+		/// <param name="source">File path etc. See <see cref="ImageUtil.LoadWpfImage"/>. Sets <see cref="Image.Source"/>.</param>
 		/// <param name="stretch"><see cref="Image.Stretch"/>.</param>
 		/// <param name="stretchDirection"><see cref="Image.StretchDirection"/>.</param>
 		/// <exception cref="NotSupportedException">The last added element is not <b>Image</b>.</exception>

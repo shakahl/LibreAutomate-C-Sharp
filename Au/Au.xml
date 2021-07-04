@@ -587,14 +587,12 @@
         </member>
         <member name="M:Au.Types.ExtWpf.VisualDescendants(System.Windows.DependencyObject)">
             <summary>
-            Enumerates visual descendant objects, including parts of composite controls, and calls callback function <i>f</i> for each.
-            When <i>f</i> returns true, stops and returns that object. Returns null if <i>f</i> does not return true.
+            Enumerates visual descendant objects, including parts of composite controls.
             </summary>
         </member>
         <member name="M:Au.Types.ExtWpf.LogicalDescendants(System.Windows.DependencyObject)">
             <summary>
-            Enumerates visual descendant objects, including parts of composite controls, and calls callback function <i>f</i> for each.
-            When <i>f</i> returns true, stops and returns that object. Returns null if <i>f</i> does not return true.
+            Enumerates logical descendant objects, including parts of composite controls.
             </summary>
         </member>
         <member name="M:Au.Types.ExtWpf.VisualAncestors(System.Windows.DependencyObject,System.Boolean,System.Object)">
@@ -8098,11 +8096,11 @@
             <param name="dpi">DPI of window that will display the image. See <see cref="T:Au.More.Dpi"/>.</param>
             <param name="isImage">
             false - get file/folder/filetype/url/etc icon with <see cref="M:Au.icon.of(System.String,System.Int32,Au.Types.IconGetFlags)"/>. If <i>imageSource</i> is relative path of a .cs file, gets its custom icon as image; returns null if no custom icon or if editor isn't running.
-            true - load image from xaml/png/etc file, resource or string with <see cref="M:Au.More.ImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String,System.Nullable{System.ValueTuple{System.Int32,System.Nullable{Au.Types.SIZE}}})"/> or <see cref="M:Au.More.ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>. If editor is running, also supports icon name like "*Pack.Icon color"; see menu -> Tools -> Icons.
+            true - load image from xaml/png/etc file, resource or string with <see cref="M:Au.More.ImageUtil.LoadGdipBitmap(System.String,System.Nullable{System.ValueTuple{System.Int32,System.Nullable{Au.Types.SIZE}}})"/> or <see cref="M:Au.More.ImageUtil.LoadWpfImageElement(System.String)"/>. If editor is running, also supports icon name like "*Pack.Icon color"; see menu -> Tools -> Icons.
             
             To detect whether as string is an image, call <see cref="M:Au.More.ImageUtil.HasImageOrResourcePrefix(System.String)"/>; if it returns true, it is image.
             </param>
-            <param name="onException">Action to call when fails to load image. If null, calls <see cref="M:Au.print.warning(System.String,System.Int32,System.String)"/>. Parameters are image source string and exception.</param>
+            <param name="onException">Action to call when fails to load image. If null, then silently returns null. Parameters are image source string and exception.</param>
         </member>
         <member name="M:Au.More.IconImageCache.Dispose">
             <summary>
@@ -8137,27 +8135,27 @@
         </member>
         <member name="M:Au.More.ImageUtil.LoadImageStreamFromString(System.String)">
             <summary>
-            Loads image as stream from Base64 string.
+            Loads image file data as stream from Base64 string.
             </summary>
             <param name="s">Base64 encoded image string with prefix "image:".</param>
             <exception cref="T:System.ArgumentException">String does not start with "image:" or is invalid Base64.</exception>
             <exception cref="T:System.Exception"><see cref="M:Au.More.Convert2.Decompress(System.ReadOnlySpan{System.Byte})"/> exceptions (when compressed .bmp).</exception>
         </member>
-        <member name="M:Au.More.ImageUtil.LoadGdipBitmapFromString(System.String)">
+        <member name="M:Au.More.ImageUtil._LoadGdipBitmapFromString(System.String)">
             <summary>
             Loads GDI+ image from Base64 string.
             </summary>
             <param name="s">Base64 encoded image string with prefix "image:".</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.More.ImageUtil.LoadImageStreamFromString(System.String)"/> and <see cref="M:System.Drawing.Bitmap.#ctor(System.IO.Stream)"/>.</exception>
         </member>
-        <member name="M:Au.More.ImageUtil.LoadWpfImageFromString(System.String)">
+        <member name="M:Au.More.ImageUtil._LoadWpfImageFromString(System.String)">
             <summary>
             Loads WPF image from Base64 string.
             </summary>
             <param name="s">Base64 encoded image string with prefix "image:".</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.More.ImageUtil.LoadImageStreamFromString(System.String)"/> and <see cref="M:System.Windows.Media.Imaging.BitmapFrame.Create(System.IO.Stream)"/>.</exception>
         </member>
-        <member name="M:Au.More.ImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String,System.Nullable{System.ValueTuple{System.Int32,System.Nullable{Au.Types.SIZE}}})">
+        <member name="M:Au.More.ImageUtil.LoadGdipBitmap(System.String,System.Nullable{System.ValueTuple{System.Int32,System.Nullable{Au.Types.SIZE}}})">
             <summary>
             Loads GDI+ image from file, resource or string.
             </summary>
@@ -8170,7 +8168,7 @@
             <param name="xaml">If not null, supports XAML images. See <see cref="M:Au.More.ImageUtil.LoadGdipBitmapFromXaml(System.String,System.Int32,System.Nullable{Au.Types.SIZE})"/>.</param>
             <exception cref="T:System.Exception">Depending on <i>image</i> string format, exceptions of <see cref="M:System.IO.File.OpenRead(System.String)"/>, <see cref="M:System.Drawing.Bitmap.#ctor(System.IO.Stream)"/>, etc.</exception>
         </member>
-        <member name="M:Au.More.ImageUtil.LoadWpfImageFromFileOrResourceOrString(System.String)">
+        <member name="M:Au.More.ImageUtil.LoadWpfImage(System.String)">
             <summary>
             Loads WPF image or icon from file, resource or string.
             </summary>
@@ -8182,7 +8180,7 @@
             </param>
             <exception cref="T:System.Exception"></exception>
         </member>
-        <member name="M:Au.More.ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)">
+        <member name="M:Au.More.ImageUtil.LoadWpfImageElement(System.String)">
             <summary>
             Loads WPF image element from file, resource or string. Supports xaml, png and other image formats supported by WPF.
             </summary>
@@ -8190,7 +8188,7 @@
             Can be:
             - file path; can be .xaml, .png etc; supports environment variables etc, see <see cref="M:Au.pathname.expand(System.String,System.Nullable{System.Boolean})"/>; can have prefix "imagefile:".
             - resource path that starts with "resources/" or has prefix "resource:"; uses <see cref="M:Au.More.ResourceUtil.GetXamlObject(System.String)"/> if ends with ".xaml", else <see cref="M:Au.More.ResourceUtil.GetWpfImage(System.String)"/>.
-            - Base64 encoded image string with prefix "image:"; uses<see cref="M:Au.More.ImageUtil.LoadWpfImageFromString(System.String)"/>.
+            - Base64 encoded image string with prefix "image:"; uses<see cref="M:Au.More.ImageUtil.LoadImageStreamFromString(System.String)"/>.
             - XAML string that starts with "&lt;".
             - XAML icon name like "*Pack.Icon color"; uses <see cref="M:Au.script.editor.GetIcon(System.String,Au.Types.EGetIcon)"/>, unavailable if editor isn't running.
             </param>
@@ -8203,12 +8201,12 @@
             <summary>
             Loads GDI+ image from WPF XAML file or string.
             </summary>
-            <param name="image">XAML file, resource or string. See <see cref="M:Au.More.ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.</param>
+            <param name="image">XAML file, resource or string. See <see cref="M:Au.More.ImageUtil.LoadWpfImageElement(System.String)"/>.</param>
             <param name="dpi">DPI of window that will display the image.</param>
             <param name="size">Final image size in logical pixels (not DPI-scaled). If null, uses element's <b>DesiredSize</b> property, max 1024x1024.</param>
             <exception cref="T:System.Exception"></exception>
             <remarks>
-            Calls <see cref="M:Au.More.ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/> and <see cref="M:Au.More.ImageUtil.ConvertWpfImageElementToGdipBitmap(System.Windows.FrameworkElement,System.Int32,System.Nullable{Au.Types.SIZE})"/>.
+            Calls <see cref="M:Au.More.ImageUtil.LoadWpfImageElement(System.String)"/> and <see cref="M:Au.More.ImageUtil.ConvertWpfImageElementToGdipBitmap(System.Windows.FrameworkElement,System.Int32,System.Nullable{Au.Types.SIZE})"/>.
             Don't use the <b>Tag</b> property of the bitmap. It keeps bitmap data.
             </remarks>
         </member>
@@ -8226,19 +8224,6 @@
             <remarks>
             The <b>Tag</b> property of the bitmap is array of bitmap pixels; don't replace.
             </remarks>
-        </member>
-        <member name="M:Au.More.ImageUtil.XamlImageToIconFile(System.IO.Stream,System.String,System.Int32[])">
-            <summary>
-            Converts XAML image to native icon file data.
-            </summary>
-            <param name="stream">Stream to write icon file data. Writes from start.</param>
-            <param name="image">Image XAML. See <see cref="M:Au.More.ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.</param>
-            <param name="sizes">Sizes of icon images to add to the ico file. For example 16, 24, 32, 48, 64. Sizes can be 1 to 256 inclusive.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">An invalid size.</exception>
-            <exception cref="T:System.Exception"></exception>
-        </member>
-        <member name="M:Au.More.ImageUtil.XamlImageToIconFile(System.String,System.String,System.Int32[])">
-            
         </member>
         <member name="T:Au.More.Math2">
             <summary>
@@ -11616,7 +11601,7 @@
             This class wraps a SQLite API object sqlite3* and related sqlite3_x functions. They are documented perfectly in the SQLite website.
             Uses this unmanaged dll: folders.ThisApp + @"64\sqlite3.dll". In 32-bit process - "32" instead of "64".
             
-            To correctly close the database file, at first need to dipose all child objects, such as <see cref="T:Au.sqliteStatement"/>, then dispose the <b>sqlite</b> object. To dispose a static <b>ASlite</b> variable, you may want to use <see cref="E:Au.process.thisProcessExit"/> event. Although this class has a finalizer that disposes the object (closes database), you should always dispose explicitly. Finalizers don't run on process exit.
+            To correctly close the database file, at first need to dipose all child objects, such as <see cref="T:Au.sqliteStatement"/>, then dispose the <b>sqlite</b> object. To dispose a static <b>sqlite</b> variable, you may want to use <see cref="E:Au.process.thisProcessExit"/> event. Although this class has a finalizer that disposes the object (closes database), you should always dispose explicitly. Finalizers don't run on process exit.
             </remarks>
             <seealso cref="T:Au.sqliteStatement"/>
             <example>
@@ -15184,7 +15169,7 @@
             <param name="stretchDirection"><see cref="P:System.Windows.Controls.Image.StretchDirection"/>.</param>
             <exception cref="T:System.NotSupportedException">The last added element is not <b>Image</b>.</exception>
             <remarks>
-            To load vector images from XAML, don't use <b>Image</b> control and this function. Instead create control from XAML, for example with <see cref="M:Au.More.ImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>, and add it with <see cref="M:Au.wpfBuilder.Add(System.Windows.FrameworkElement,Au.Types.WBAdd)"/>.
+            To load vector images from XAML, don't use <b>Image</b> control and this function. Instead create control from XAML, for example with <see cref="M:Au.More.ImageUtil.LoadWpfImageElement(System.String)"/>, and add it with <see cref="M:Au.wpfBuilder.Add(System.Windows.FrameworkElement,Au.Types.WBAdd)"/>.
             </remarks>
             <seealso cref="M:Au.icon.ToWpfImage(System.Boolean)"/>
             <seealso cref="T:Au.More.ImageUtil"/>
@@ -15193,7 +15178,7 @@
             <summary>
             Loads image from a file or URL into the last added <see cref="T:System.Windows.Controls.Image"/>.
             </summary>
-            <param name="source">File path etc. See <see cref="M:Au.More.ImageUtil.LoadWpfImageFromFileOrResourceOrString(System.String)"/>. Sets <see cref="P:System.Windows.Controls.Image.Source"/>.</param>
+            <param name="source">File path etc. See <see cref="M:Au.More.ImageUtil.LoadWpfImage(System.String)"/>. Sets <see cref="P:System.Windows.Controls.Image.Source"/>.</param>
             <param name="stretch"><see cref="P:System.Windows.Controls.Image.Stretch"/>.</param>
             <param name="stretchDirection"><see cref="P:System.Windows.Controls.Image.StretchDirection"/>.</param>
             <exception cref="T:System.NotSupportedException">The last added element is not <b>Image</b>.</exception>
@@ -20448,12 +20433,13 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.wildex.#ctor(System.String)">
+        <member name="M:Au.wildex.#ctor(System.String,System.Boolean)">
             <param name="wildcardExpression">
             [Wildcard expression](xref:wildcard_expression).
             Cannot be null (throws exception).
             "" will match "".
             </param>
+            <param name="matchCase">Case-sensitive even if there is no **c.</param>
             <exception cref="T:System.ArgumentNullException"></exception>
             <exception cref="T:System.ArgumentException">Invalid <c>"**options "</c> or regular expression.</exception>
         </member>
@@ -25017,7 +25003,7 @@
             <exception cref="T:Au.Types.AuWndException">Invalid window handle (the <i>area</i> argument).</exception>
             <exception cref="T:System.ArgumentException">An argument is/contains a null/invalid value.</exception>
             <exception cref="T:System.IO.FileNotFoundException">Image file does not exist.</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.More.ImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String,System.Nullable{System.ValueTuple{System.Int32,System.Nullable{Au.Types.SIZE}}})"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.More.ImageUtil.LoadGdipBitmap(System.String,System.Nullable{System.ValueTuple{System.Int32,System.Nullable{Au.Types.SIZE}}})"/>.</exception>
             <exception cref="T:Au.Types.AuException">Something failed.</exception>
             <remarks>
             To create code for this function, use dialog "Find image or color in window".
@@ -25179,7 +25165,7 @@
             </summary>
             <exception cref="T:System.ArgumentException">An argument is/contains a null/invalid value.</exception>
             <exception cref="T:System.IO.FileNotFoundException">Image file does not exist.</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.More.ImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String,System.Nullable{System.ValueTuple{System.Int32,System.Nullable{Au.Types.SIZE}}})"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.More.ImageUtil.LoadGdipBitmap(System.String,System.Nullable{System.ValueTuple{System.Int32,System.Nullable{Au.Types.SIZE}}})"/>.</exception>
         </member>
         <member name="M:Au.uiimageFinder.Find(Au.Types.IFArea)">
             <summary>

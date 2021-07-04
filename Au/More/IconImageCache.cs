@@ -77,11 +77,11 @@ namespace Au.More
 		/// <param name="dpi">DPI of window that will display the image. See <see cref="Dpi"/>.</param>
 		/// <param name="isImage">
 		/// false - get file/folder/filetype/url/etc icon with <see cref="icon.of"/>. If <i>imageSource</i> is relative path of a .cs file, gets its custom icon as image; returns null if no custom icon or if editor isn't running.
-		/// true - load image from xaml/png/etc file, resource or string with <see cref="ImageUtil.LoadGdipBitmapFromFileOrResourceOrString"/> or <see cref="ImageUtil.LoadWpfImageElementFromFileOrResourceOrString"/>. If editor is running, also supports icon name like "*Pack.Icon color"; see menu -> Tools -> Icons.
+		/// true - load image from xaml/png/etc file, resource or string with <see cref="ImageUtil.LoadGdipBitmap"/> or <see cref="ImageUtil.LoadWpfImageElement"/>. If editor is running, also supports icon name like "*Pack.Icon color"; see menu -> Tools -> Icons.
 		/// 
 		/// To detect whether as string is an image, call <see cref="ImageUtil.HasImageOrResourcePrefix"/>; if it returns true, it is image.
 		/// </param>
-		/// <param name="onException">Action to call when fails to load image. If null, calls <see cref="print.warning"/>. Parameters are image source string and exception.</param>
+		/// <param name="onException">Action to call when fails to load image. If null, then silently returns null. Parameters are image source string and exception.</param>
 		public unsafe Bitmap Get(string imageSource, int dpi, bool isImage, Action<string, Exception> onException = null) {
 			if (_disposed) throw new ObjectDisposedException(nameof(IconImageCache));
 			//var p1 = perf.local();
@@ -171,12 +171,12 @@ namespace Au.More
 									if (imageSource == null) return null;
 								}
 								if (isXaml) b = ImageUtil.LoadGdipBitmapFromXaml(imageSource, dpi, (_imageSize, _imageSize));
-								else b = ImageUtil.LoadGdipBitmapFromFileOrResourceOrString(imageSource);
+								else b = ImageUtil.LoadGdipBitmap(imageSource);
 							}
 						}
 						catch (Exception ex) {
 							if (onException != null) onException(imageSource, ex);
-							else print.warning(ex.ToStringWithoutStack());
+							//else print.warning("IconImageCache.Get() failed. " + ex.ToStringWithoutStack()); //no. Often prints while editing text.
 						}
 					}
 					//p1.Next('L');

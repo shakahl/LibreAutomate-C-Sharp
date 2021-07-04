@@ -15,43 +15,41 @@ using System.Reflection;
 using Microsoft.Win32;
 using Au.More;
 using Au.Tools;
-using System.Windows.Input;
-using System.Linq;
-using System.Windows;
+//using System.Linq;
 
 static class Menus
 {
 	[Command(target = "Files")]
 	public static class File
 	{
-		[Command(target = "", image = "resources/images/newfile_16x.xaml")]
+		[Command(target = "", image = "*Typicons.DocumentAdd #008EEE")]
 		public static class New
 		{
 			static FileNode _New(string name) => App.Model.NewItem(name, beginRenaming: true);
 
-			[Command('s', keys = "Ctrl+N", keysText = "Ctrl+N", image = "resources/images/csfile_16x.xaml")]
+			[Command('s', keys = "Ctrl+N", keysText = "Ctrl+N", image = FileNode.c_imageScript)]
 			public static void New_script() { _New("Script.cs"); }
 
-			[Command('c', image = "resources/images/csclassfile_16x.xaml")]
+			[Command('c', image = FileNode.c_imageClass)]
 			public static void New_class() { _New("Class.cs"); }
 
-			[Command('f', image = "resources/images/folderclosed_16x.xaml")]
+			[Command('f', image = FileNode.c_imageFolder)]
 			public static void New_folder() { _New(null); }
 		}
 
-		[Command(separator = true, keys = "F2")]
-		public static void Rename() { App.Model.RenameSelected(); }
-
-		[Command(keysText = "Delete")]
+		[Command("Delete...", separator = true, keysText = "Delete", image = "*Typicons.DocumentDelete #FF4040")]
 		public static void Delete() { App.Model.DeleteSelected(); }
 
-		[Command("...", image = "resources/images/property_16x.xaml")]
+		[Command(keys = "F2", image = "*BoxIcons.RegularRename #73BF00")]
+		public static void Rename() { App.Model.RenameSelected(); }
+
+		[Command(image = "*Ionicons.OptionsMD #73BF00")]
 		public static void Properties() { App.Model.Properties(); }
 
 		[Command("Copy, paste")]
 		public static class CopyPaste
 		{
-			[Command("Multi-select", checkable = true)]
+			[Command("Multi-select", checkable = true, image = "*Modern.ListTwo #73BF00", tooltip = "Multi-select (with Ctrl or Shift).\nDouble click to open.")]
 			public static void MultiSelect_files() { Panels.Files.TreeControl.SetMultiSelect(toggle: true); }
 
 			[Command("Cu_t", separator = true, keysText = "Ctrl+X")]
@@ -150,7 +148,7 @@ static class Menus
 			[Command("...")]
 			public static void New_workspace() { FilesModel.NewWorkspaceUI(); }
 
-			[Command(separator = true, keys = "Ctrl+S", image = "resources/images/saveall_16x.xaml")]
+			[Command(separator = true, keys = "Ctrl+S", image = "*BoxIcons.RegularSave #EABB00")]
 			public static void Save_now() { App.Model?.Save.AllNowIfNeed(); }
 		}
 
@@ -167,52 +165,52 @@ static class Menus
 	[Command(target = "Edit")]
 	public static class Edit
 	{
-		[Command(keysText = "Ctrl+Z", image = "resources/images/undo_16x.xaml")]
+		[Command(keysText = "Ctrl+Z", image = "*Ionicons.UndoiOS #9F5300")]
 		public static void Undo() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_UNDO); }
 
-		[Command(keysText = "Ctrl+Y", image = "resources/images/redo_16x.xaml")]
+		[Command(keysText = "Ctrl+Y", image = "*Ionicons.RedoiOS #9F5300")]
 		public static void Redo() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_REDO); }
 
-		[Command('t', separator = true, keysText = "Ctrl+X", image = "resources/images/cut_16x.xaml")]
+		[Command('t', separator = true, keysText = "Ctrl+X", image = "*Zondicons.EditCut #9F5300")]
 		public static void Cut() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_CUT); }
 
-		[Command(keysText = "Ctrl+C", image = "resources/images/copy_16x.xaml")]
+		[Command(keysText = "Ctrl+C", image = "*Material.ContentCopy #9F5300")]
 		public static void Copy() { Panels.Editor.ZActiveDoc.ZCopy(); }
 
-		[Command(keysText = "Ctrl+V", image = "resources/images/paste_16x.xaml")]
+		[Command(keysText = "Ctrl+V", image = "*Material.ContentPaste #9F5300")]
 		public static void Paste() { Panels.Editor.ZActiveDoc.ZPaste(); }
 
-		[Command()]
+		[Command(image = "*Material.Forum #9F5300")]
 		public static void Forum_copy() { Panels.Editor.ZActiveDoc.ZCopy(forum: true); }
 
-		[Command(separator = true, keys = "Ctrl+F", image = "resources/images/findinfile_16x.xaml")]
+		[Command(separator = true, keys = "Ctrl+F", image = "*Material.FindReplace #008EEE")]
 		public static void Find() { Panels.Find.ZCtrlF(Panels.Editor.ZActiveDoc); }
 
 		//[Command(keys = "Ctrl+Shift+F")]
 		//public static void Find_in_files() { Panels.Find.ZCtrlF(Panels.Editor.ZActiveDoc, findInFiles: true); }
 
-		[Command(separator = true, keysText = "Ctrl+Space")]
+		[Command(separator = true, keysText = "Ctrl+Space", image = "*FontAwesome.ListUlSolid #B340FF")]
 		public static void Autocompletion_list() { CodeInfo.ShowCompletionList(Panels.Editor.ZActiveDoc); }
 
-		[Command(keysText = "Ctrl+Shift+Space")]
+		[Command(keysText = "Ctrl+Shift+Space", image = "*RemixIcon.ParenthesesLine #B340FF")]
 		public static void Parameter_info() { CodeInfo.ShowSignature(); }
 
-		[Command(keysText = "F12, Ctrl+click")]
+		[Command(keysText = "F12, Ctrl+click", image = "*RemixIcon.WalkFill #B340FF")]
 		public static void Go_to_definition() { CiGoTo.GoToSymbolFromPos(); }
 
 		[Command(separator = true)]
 		public static class Selection
 		{
-			[Command(keysText = "R-click margin", keys = "Ctrl+/")]
+			[Command(keysText = "R-click margin", keys = "Ctrl+/", image = "*BoxIcons.RegularCommentAdd #9F5300")]
 			public static void Comment() { Panels.Editor.ZActiveDoc.ZCommentLines(true); }
 
-			[Command(keysText = "R-click margin", keys = "Ctrl+\\")]
+			[Command(keysText = "R-click margin", keys = "Ctrl+\\", image = "*BoxIcons.RegularCommentMinus #9F5300")]
 			public static void Uncomment() { Panels.Editor.ZActiveDoc.ZCommentLines(false); }
 
-			[Command(keysText = "Tab")]
+			[Command(keysText = "Tab", image = "*Material.FormatIndentIncrease #9F5300")]
 			public static void Indent() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_TAB); }
 
-			[Command(keysText = "Shift+Tab")]
+			[Command(keysText = "Shift+Tab", image = "*Material.FormatIndentDecrease #9F5300")]
 			public static void Unindent() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_BACKTAB); }
 
 			[Command(keysText = "Ctrl+A")]
@@ -222,17 +220,17 @@ static class Menus
 		[Command]
 		public static class Convert
 		{
-			[Command]
+			[Command(image = "*Codicons.SymbolClass #B340FF", tooltip = "Convert to script class")]
 			public static void To_script_class() { InsertCode.ConvertTlsScriptToClass(); }
 		}
 
 		[Command]
 		public static class View
 		{
-			[Command(checkable = true, keys = "Ctrl+W", image = "resources/images/wordwrap_16x.xaml")]
+			[Command(checkable = true, keys = "Ctrl+W", image = "*Codicons.WordWrap #73BF00")]
 			public static void Wrap_lines() { SciCode.ZToggleView_call_from_menu_only_(SciCode.EView.Wrap); }
 
-			[Command(checkable = true, image = "resources/images/image_16x.xaml")]
+			[Command(checkable = true, image = "*Material.TooltipImageOutline #73BF00")]
 			public static void Images_in_code() { SciCode.ZToggleView_call_from_menu_only_(SciCode.EView.Images); }
 		}
 	}
@@ -265,11 +263,11 @@ static class Menus
 	[Command(target = "Edit")]
 	public static class Run
 	{
-		[Command(keys = "F5", image = "resources/images/startwithoutdebug_16x.xaml")]
-		public static void Start() { CompileRun.CompileAndRun(true, App.Model.CurrentFile, runFromEditor: true); }
+		[Command(keys = "F5", image = "*Codicons.DebugStart #40B000")]
+		public static void Run_script() { CompileRun.CompileAndRun(true, App.Model.CurrentFile, runFromEditor: true); }
 
-		[Command(image = "resources/images/stop_16x.xaml")]
-		public static void End() {
+		[Command(image = "*PicolIcons.BadgeStop #606060")]
+		public static void End_task() {
 			var f = App.Model.CurrentFile;
 			if (f != null) {
 				if (f.FindProject(out _, out var fMain)) f = fMain;
@@ -285,10 +283,10 @@ static class Menus
 			}
 		}
 
-		//[Command(image = "resources/images/pause_16x.xaml")]
+		//[Command(image = "")]
 		//public static void Pause() { }
 
-		[Command(keys = "F7", image = "resources/images/buildselection_16x.xaml")]
+		[Command(keys = "F7", image = "*VaadinIcons.Compile #008EEE")]
 		public static void Compile() { CompileRun.CompileAndRun(false, App.Model.CurrentFile); }
 
 		[Command("...")]
@@ -347,10 +345,10 @@ static class Menus
 	[Command(target = "")]
 	public static class Tools
 	{
-		[Command(image = "resources/images/settingsgroup_16x.xaml")]
+		[Command(image = "*PicolIcons.Settings #73BF00")]
 		public static void Options() { DOptions.ZShow(); }
 
-		[Command]
+		[Command(image = "*FontAwesome.IconsSolid #73BF00")]
 		public static void Icons() { DIcons.ZShow(); }
 
 		[Command(separator = true, target = "Output")]
@@ -382,13 +380,13 @@ static class Menus
 	[Command(target = "")]
 	public static class Help
 	{
-		[Command]
+		[Command(image = "*RPGAwesome.Help #BB54FF")]
 		public static void Program_help() { HelpUtil.AuHelp(""); }
 
-		[Command]
+		[Command(image = "*RPGAwesome.Help #EABB00")]
 		public static void Library_help() { HelpUtil.AuHelp("api/"); }
 
-		[Command(keys = "F1", image = "resources/images/statushelp_16x.xaml")]
+		[Command(keys = "F1", image = "*RPGAwesome.Help #70B0FF")]
 		public static void Context_help() {
 			var w = Api.GetFocus();
 			if (w.ClassNameIs("HwndWrapper*")) {
