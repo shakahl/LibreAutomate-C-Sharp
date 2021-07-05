@@ -365,6 +365,12 @@ static class InsertCode
 		//tested: Microsoft.CodeAnalysis.CSharp.ImplementInterface.CSharpImplementInterfaceService works but the result is badly formatted (without spaces, etc). Internal, undocumented.
 	}
 
+	public static void AddFileDescription() {
+		var doc = Panels.Editor.ZActiveDoc;if (doc == null) return;
+		doc.zInsertText(false, 0, "/// Description\r\n\r\n");
+		doc.zSelect(false, 4, 15, makeVisible: true);
+	}
+
 	public static void ConvertTlsScriptToClass() {
 		//SHOULDDO: use CompilationUnitSyntax.Usings etc, like in _FindUsings.
 		if (!CodeInfo.GetContextAndDocument(out var cd) /*|| !cd.sciDoc.ZFile.IsScript*/) return;

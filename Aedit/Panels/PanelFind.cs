@@ -15,6 +15,8 @@ using System.Media;
 //CONSIDER: right-click "Find" - search backward. The same for "Replace" (reject "find next"). Rarely used.
 //CONSIDER: option to replace and don't find next until next click. Eg Eclipse has buttons "Replace" and "Replace/Find". Or maybe delay to preview.
 
+//TODO: remove "Name" checkbox. Instead add textbox at the bottom of Files panel. Use wildex.
+
 class PanelFind : UserControl
 {
 	TextBox _tFind, _tReplace;
@@ -39,7 +41,7 @@ class PanelFind : UserControl
 		b.StartStack();
 		b.Add(out _cFolder, ImageUtil.LoadWpfImageElement(FileNode.c_imageFolder)).Padding(1, 0, 1, 1).Tooltip("Let 'In files' search only in current project or root folder");
 		_cFolder.Style = cstyle;
-		b.AddButton(ImageUtil.LoadWpfImageElement("*Microns.OptionsHorizontal #73BF00"), _bOptions_Click).Tooltip("More options");
+		b.AddButton(ImageUtil.LoadWpfImageElement("*EvaIcons.Options2 #99BF00"), _bOptions_Click).Tooltip("More options");
 		b.Last.Style = bstyle;
 		b.End();
 

@@ -888,9 +888,13 @@ partial class FilesModel
 		var f = new FileNode(this, name, fileType);
 		f.Common_MoveCopyNew(target, pos);
 
-		if (fileType == EFileType.Folder && template != null) {
-			foreach (var x in template.Elements()) {
-				_NewItem(f, FNPosition.Inside, x, x.Attr("n"));
+		if (template != null) {
+			if (template.Attr(out string icon, "icon")) f.CustomIconName = icon;
+
+			if (fileType == EFileType.Folder) {
+				foreach (var x in template.Elements()) {
+					_NewItem(f, FNPosition.Inside, x, x.Attr("n"));
+				}
 			}
 		}
 

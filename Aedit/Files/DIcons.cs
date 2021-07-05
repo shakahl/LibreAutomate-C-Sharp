@@ -21,13 +21,15 @@ using Au.Tools;
 
 class DIcons : KDialogWindow
 {
-	public static void ZShow() {
+	/// <param name="fileIcon">Called from file Properties dialog. <i>find</i> is null or full icon name.</param>
+	public static void ZShow(bool fileIcon = false, string find = null) {
 		if (s_dialog == null) {
-			s_dialog = new();
+			s_dialog = new(expandFileIcon: fileIcon, randomizeColors: find == null);
 			s_dialog.Show();
 		} else {
 			s_dialog.Activate();
 		}
+		if (find != null) s_dialog._tName.Text = find;
 	}
 	static DIcons s_dialog;
 
@@ -41,8 +43,9 @@ class DIcons : KDialogWindow
 	Random _random;
 	int _dpi;
 	//bool _withCollection;
+	TextBox _tName;
 
-	DIcons() {
+	DIcons(bool expandFileIcon, bool randomizeColors) {
 		Title = "Icons";
 		Owner = App.Wmain;
 
@@ -52,7 +55,10 @@ class DIcons : KDialogWindow
 
 		//left - edit control and tree view
 		b.Row(-1).StartDock();
-		b.Add(out TextBox tName).Tooltip("Search.\nPart of icon name, or wildcard expression.\nExamples: part, Part (match case), start*, *end, **rc regex case-sensitive.").Dock(Dock.Top);
+		b.Add(out _tName).Tooltip(@"Search.
+Part of icon name, or wildcard expression.
+Examples: part, Part (match case), start*, *end, **rc regex case-sensitive.
+Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 		//b.Focus(); //currently cannot use this because of WPF tooltip bugs
 		b.xAddInBorder(out KTreeView tv); //tv.SingleClickActivate = true;
 		b.End();
@@ -73,11 +79,14 @@ class DIcons : KDialogWindow
 		b.Add("L %", out randFromTo, "30-70").Width(50);
 		b.End();
 		b.AddSeparator().Margin("B20");
-		b.StartStack<Expander>("Set icon of selected files");
+
+		b.StartStack<Expander>(out var exp1, "Set icon of selected files");
 		b.AddButton(out var bThis, "This", _ => _SetIcon(tv)).Width(70).Disabled();
 		b.AddButton("Default", _ => _SetIcon(null)).Width(70);
 		//b.AddButton("Random", null).Width(70); //idea: set random icons for multiple selected files. Probably too crazy.
 		b.End();
+		if(expandFileIcon) exp1.IsExpanded = true;
+
 		b.StartStack<Expander>("Insert code for menu/toolbar/etc icon", vertical: true);
 		b.Add(out KCheckBox setClipboard, "Clipboard");
 		b.StartStack();
@@ -91,14 +100,17 @@ class DIcons : KDialogWindow
 		b.AddButton(out var bCodeXaml, "XAML", _ => _InsertCodeOrExport(tv, 2)).Width(70).Disabled();
 		b.End();
 		b.End();
+
 		b.StartStack<Expander>("Export to current workspace folder");
 		b.AddButton(out var bExportXaml, ".xaml", _ => _InsertCodeOrExport(tv, 10)).Width(70).Disabled();
 		b.AddButton(out var bExportIco, ".ico", _ => _InsertCodeOrExport(tv, 11)).Width(70).Disabled();
 		b.Add("sizes", out iconSizes, "16,24,32,48,64").Width(100);
 		b.End();
+
 		b.StartStack<Expander>("Other actions");
 		b.AddButton("Clear program's icon cache", _ => IconImageCache.Common.Clear(redrawWindows: true));
 		b.End();
+
 		//b.StartGrid<Expander>("List display options");
 		////b.Add("Background", out ComboBox cBackground).Items("Default|Control|White|Black)");
 		////cBackground.SelectionChanged += (o, e) => _ChangeBackground();
@@ -108,6 +120,7 @@ class DIcons : KDialogWindow
 		//	tv.Redraw();
 		//};
 		//b.End();
+
 		b.Row(-1);
 		b.R.Add<TextBlock>().Align("R").Text("Thanks to ", "<a>MahApps.Metro.IconPacks", new Action(() => run.it("https://github.com/MahApps/MahApps.Metro.IconPacks")));
 		b.End();
@@ -128,24 +141,37 @@ class DIcons : KDialogWindow
 				}
 			}
 			_a.Sort((a, b) => string.Compare(a._name, b._name, StringComparison.OrdinalIgnoreCase));
-			_RandomizeColors();
+			if (randomizeColors) _RandomizeColors();
 			tv.SetItems(_a, false);
 		};
 
-		tName.TextChanged += (_, _) => {
-			var name = tName.Text;
-			wildex wild = null;
-			StringComparison comp = StringComparison.OrdinalIgnoreCase;
+		_tName.TextChanged += (_, _) => {
+			string name = _tName.Text, table = null;
+			Func<_Item, bool> f = null;
+			bool select = false;
 			if (!name.NE()) {
-				bool matchCase = name.RegexIsMatch("[A-Z]");
-				if (name.FindAny("*?") >= 0) {
-					try { wild = new wildex(name, matchCase && !name.Starts("**")); }
-					catch { name = ""; }
-				} else if (matchCase) comp = StringComparison.Ordinal;
+				if (select = name.RegexMatch(@"^\*(\w+)\.(\w+) #(\w+)$", out var m)) { //full name with * and #color
+					table = m[1].Value;
+					name = m[2].Value;
+					f = o => o._name == name && o._table == table;
+					colors.Color = m[3].Value.ToInt(0, STIFlags.IsHexWithout0x);
+				} else {
+					if (name.RegexMatch(@"^(\w+)\.(.+)", out m)) { table = m[1].Value; name = m[2].Value; }
+					wildex wild = null;
+					StringComparison comp = StringComparison.OrdinalIgnoreCase;
+					bool matchCase = name.RegexIsMatch("[A-Z]");
+					if (wildex.hasWildcardChars(name)) {
+						try { wild = new wildex(name, matchCase && !name.Starts("**")); }
+						catch { name = null; }
+					} else if (matchCase) comp = StringComparison.Ordinal;
+
+					if (name != null) f = o => (table == null || o._table.Eqi(table)) && (wild?.Match(o._name) ?? o._name.Contains(name, comp));
+				}
 			}
-			var e = name.NE() ? _a : _a.Where(o => wild?.Match(o._name) ?? o._name.Contains(name, comp));
+			var e = f == null ? _a : _a.Where(f);
 			tv.SetItems(e, false);
-			_EnableControls(false);
+			if (select && (select = e.Count() == 1)) tv.Select(0);
+			_EnableControls(select);
 		};
 
 		tv.SelectedSingle += (o, i) => {

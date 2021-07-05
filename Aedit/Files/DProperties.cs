@@ -90,6 +90,7 @@ class DProperties : KDialogWindow
 		b.AddButton(out addResource, "Resource ▾", _ButtonClick_addResource);
 		b.End();
 		b.StartStack(vertical: true).Add("Find in lists", out findInLists).Tooltip("In button drop-down lists show only items containing this text").End();
+		b.AddButton("Change icon", _ => DIcons.ZShow(true, _f.CustomIconName)).Margin("T8B8");
 		b.End();
 		b.R.AddOkCancel();
 		b.End();

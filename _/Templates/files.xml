@@ -2,7 +2,7 @@
   <s n="Script.cs" i="1" />
   <c n="Class.cs" i="2" />
   <d n="More" i="66">
-    <c n="Partial.cs" i="3" />
+    <c n="Partial.cs" i="3" icon="*Codicons.SymbolClass #99BF00" />
     <n n="File.txt" i="67" />
   </d>
   <d n="New project" i="6">
@@ -23,20 +23,20 @@
     </d>
     <d n="@Triggers and toolbars" i="15">
       <n n="Readme.txt" i="16" />
-      <s n="Triggers and toolbars.cs" i="17" />
+      <s n="Triggers and toolbars.cs" i="17" icon="*FileIcons.CsScript #008EEE" />
       <d n="Triggers" i="18">
-        <c n="Hotkey triggers.cs" i="19" />
-        <c n="Autotext triggers.cs" i="20" />
-        <c n="Mouse triggers.cs" i="21" />
-        <c n="Window triggers.cs" i="22" />
+        <c n="Hotkey triggers.cs" i="19" icon="*Codicons.SymbolClass #99BF00" />
+        <c n="Autotext triggers.cs" i="20" icon="*Codicons.SymbolClass #99BF00" />
+        <c n="Mouse triggers.cs" i="21" icon="*Codicons.SymbolClass #99BF00" />
+        <c n="Window triggers.cs" i="22" icon="*Codicons.SymbolClass #99BF00" />
       </d>
       <d n="Toolbars" i="23">
-        <c n="Common toolbars.cs" i="24" />
-        <c n="Window toolbars.cs" i="25" />
-        <c n="Window toolbars template.cs" i="26" />
+        <c n="Common toolbars.cs" i="24" icon="*Codicons.SymbolClass #99BF00" />
+        <c n="Window toolbars.cs" i="25" icon="*Codicons.SymbolClass #99BF00" />
+        <c n="Window toolbars template.cs" i="26" icon="*Codicons.SymbolClass #99BF00" />
       </d>
       <d n="Functions" i="27">
-        <c n="Partial1.cs" i="28" />
+        <c n="Partial1.cs" i="28" icon="*Codicons.SymbolClass #99BF00" />
         <c n="Class1.cs" i="29" />
       </d>
       <d n="Scripts" i="30">

@@ -40,16 +40,16 @@ static class Menus
 		[Command("Delete...", separator = true, keysText = "Delete", image = "*Typicons.DocumentDelete #FF4040")]
 		public static void Delete() { App.Model.DeleteSelected(); }
 
-		[Command(keys = "F2", image = "*BoxIcons.RegularRename #73BF00")]
+		[Command(keys = "F2", image = "*BoxIcons.RegularRename #505050")]
 		public static void Rename() { App.Model.RenameSelected(); }
 
-		[Command(image = "*Ionicons.OptionsMD #73BF00")]
+		[Command(image = "*RemixIcon.ChatSettingsLine #99BF00")]
 		public static void Properties() { App.Model.Properties(); }
 
 		[Command("Copy, paste")]
 		public static class CopyPaste
 		{
-			[Command("Multi-select", checkable = true, image = "*Modern.ListTwo #73BF00", tooltip = "Multi-select (with Ctrl or Shift).\nDouble click to open.")]
+			[Command("Multi-select", checkable = true, image = "*Modern.ListTwo #99BF00", tooltip = "Multi-select (with Ctrl or Shift).\nDouble click to open.")]
 			public static void MultiSelect_files() { Panels.Files.TreeControl.SetMultiSelect(toggle: true); }
 
 			[Command("Cu_t", separator = true, keysText = "Ctrl+X")]
@@ -180,7 +180,7 @@ static class Menus
 		[Command(keysText = "Ctrl+V", image = "*Material.ContentPaste #9F5300")]
 		public static void Paste() { Panels.Editor.ZActiveDoc.ZPaste(); }
 
-		[Command(image = "*Material.Forum #9F5300")]
+		[Command(image = "*Material.ForumOutline #9F5300")]
 		public static void Forum_copy() { Panels.Editor.ZActiveDoc.ZCopy(forum: true); }
 
 		[Command(separator = true, keys = "Ctrl+F", image = "*Material.FindReplace #008EEE")]
@@ -217,20 +217,18 @@ static class Menus
 			public static void Select_all() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_SELECTALL); }
 		}
 
-		[Command]
-		public static class Convert
-		{
-			[Command(image = "*Codicons.SymbolClass #B340FF", tooltip = "Convert to script class")]
-			public static void To_script_class() { InsertCode.ConvertTlsScriptToClass(); }
-		}
+		//[Command]
+		//public static class Convert
+		//{
+		//}
 
 		[Command]
 		public static class View
 		{
-			[Command(checkable = true, keys = "Ctrl+W", image = "*Codicons.WordWrap #73BF00")]
+			[Command(checkable = true, keys = "Ctrl+W", image = "*Codicons.WordWrap #99BF00")]
 			public static void Wrap_lines() { SciCode.ZToggleView_call_from_menu_only_(SciCode.EView.Wrap); }
 
-			[Command(checkable = true, image = "*Material.TooltipImageOutline #73BF00")]
+			[Command(checkable = true, image = "*Material.TooltipImageOutline #99BF00")]
 			public static void Images_in_code() { SciCode.ZToggleView_call_from_menu_only_(SciCode.EView.Images); }
 		}
 	}
@@ -258,6 +256,12 @@ static class Menus
 
 		[Command(keysText = "Ctrl+Shift+Win+W")]
 		public static void Quick_capture() { print.it("Info: To quickly capture a window and insert code to find it etc, move the mouse to the window and press Ctrl+Shift+Win+W."); }
+
+		[Command(separator = true, image = "*Material.CommentEditOutline #B340FF")]
+		public static void Add_file_description() { InsertCode.AddFileDescription(); }
+
+		[Command(image = "*Codicons.SymbolClass #B340FF")]
+		public static void Convert_to_script_class() { InsertCode.ConvertTlsScriptToClass(); }
 	}
 
 	[Command(target = "Edit")]
@@ -266,7 +270,7 @@ static class Menus
 		[Command(keys = "F5", image = "*Codicons.DebugStart #40B000")]
 		public static void Run_script() { CompileRun.CompileAndRun(true, App.Model.CurrentFile, runFromEditor: true); }
 
-		[Command(image = "*PicolIcons.BadgeStop #606060")]
+		[Command(image = "*PicolIcons.BadgeStop #505050")]
 		public static void End_task() {
 			var f = App.Model.CurrentFile;
 			if (f != null) {
@@ -345,10 +349,10 @@ static class Menus
 	[Command(target = "")]
 	public static class Tools
 	{
-		[Command(image = "*PicolIcons.Settings #73BF00")]
+		[Command(image = "*PicolIcons.Settings #99BF00")]
 		public static void Options() { DOptions.ZShow(); }
 
-		[Command(image = "*FontAwesome.IconsSolid #73BF00")]
+		[Command(image = "*FontAwesome.IconsSolid #99BF00")]
 		public static void Icons() { DIcons.ZShow(); }
 
 		[Command(separator = true, target = "Output")]
