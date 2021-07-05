@@ -245,6 +245,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 			_icon = value;
 			_model.Save.WorkspaceLater();
 			FilesModel.Redraw(this);
+			//TODO: remove from XCompiled
 		}
 	}
 

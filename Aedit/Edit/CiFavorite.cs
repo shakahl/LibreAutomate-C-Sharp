@@ -21,6 +21,7 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 using Microsoft.CodeAnalysis.Text;
 
+//TODO: test C# 10 'global using'.
 //TODO: if in completion list selected like Favorite.Namespace.Enum, remove Favorite.Namespace and insert using Favorite.Namespace.
 
 //FUTURE: favorite meta r and c. Then can add favorite namespaces from these too.

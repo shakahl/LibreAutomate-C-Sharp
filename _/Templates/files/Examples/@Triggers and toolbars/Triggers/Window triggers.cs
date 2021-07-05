@@ -4,6 +4,7 @@ using Au.Triggers;
 partial class Script {
 [Triggers]
 void WindowTriggers() {
+	Triggers.Options.ThreadNew();
 	
 	//Add window triggers here.
 	//To add triggers can be used snippets. Start typing "trig" and you will see snippets in the completion list.

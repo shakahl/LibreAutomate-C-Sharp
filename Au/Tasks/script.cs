@@ -523,6 +523,8 @@ namespace Au
 				//	Nothing good if the toolbar etc also uses XAML icons directly, eg for non-script items. And serializing is slow.
 				//	Now not actual because of cache.
 			}
+			//TODO: get common icon too.
+			//TODO: let WPF and winforms windows use script's icon. Now WPF uses only if exe; winforms never.
 
 			//FUTURE: if editor isn't running, let GetIcon("icon name") try to get icon directly from database if available.
 			//public static string IconDatabasePath { get; set; }

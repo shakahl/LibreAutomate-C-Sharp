@@ -33,7 +33,7 @@ namespace Au.Triggers
 	{
 		NoWarning = 1,
 		Single = 2,
-		MtaThread = 4,
+		//MtaThread = 4,
 		//BackgroundThread=8, //rejected. Always background. Foreground has no sense here. If need, can easily set in code.
 	}
 
@@ -101,19 +101,19 @@ namespace Au.Triggers
 		/// Run trigger actions in new threads.
 		/// </summary>
 		/// <param name="single">Don't run if this action is already running. If false, multiple action instances can run paralelly in multiple threads.</param>
-		/// <param name="mta">Don't set <see cref="ApartmentState.STA"/>.</param>
 		/// <remarks>
-		/// The action can run simultaneously with other actions.
+		/// The action can run simultaneously with other actions. The thread is STA.
 		/// </remarks>
-		public void ThreadNew(bool single = false, bool mta = false) {
+		public void ThreadNew(bool single = false/*, bool mta = false*/) {
 			_New();
 			_new.thread = TOThread.New;
 			_new.ifRunningWaitMS = 0;
 			TOFlags f = 0;
 			if (single) f |= TOFlags.Single;
-			if (mta) f |= TOFlags.MtaThread;
+			//if (mta) f |= TOFlags.MtaThread;
 			_new.flags = f;
 		}
+		///// <param name="mta">Don't set <see cref="ApartmentState.STA"/>.</param>
 
 		/// <summary>
 		/// Run trigger actions in thread pool threads.
@@ -291,7 +291,8 @@ namespace Au.Triggers
 				if (canRun) {
 					if (threadId == TOThread.New) {
 						var thread = new Thread(actionWrapper.Invoke) { IsBackground = true };
-						if (!opt1.flags.Has(TOFlags.MtaThread)) thread.SetApartmentState(ApartmentState.STA);
+						//if (!opt1.flags.Has(TOFlags.MtaThread))
+						thread.SetApartmentState(ApartmentState.STA);
 						if (single) _d[trigger] = thread;
 						try { thread.Start(); }
 						catch (OutOfMemoryException) { //too many threads, probably 32-bit process
@@ -323,7 +324,7 @@ namespace Au.Triggers
 			print.warning("There is not enough memory available to start the trigger action thread.", -1); //info: -1 because would need much memory for stack trace
 		}
 
-		List<_Thread> _a = new List<_Thread>();
+		List<_Thread> _a = new();
 		System.Collections.Concurrent.ConcurrentDictionary<ActionTrigger, object> _d;
 
 		class _Thread
@@ -383,10 +384,8 @@ namespace Au.Triggers
 					if (_running) {
 						if (ifRunningWaitMS == 0) {
 							if (!trigger.options.flags.Has(TOFlags.NoWarning))
-								print.it("Warning: can't run the trigger action because an action is running in this thread." +
-									" To run simultaneously or wait, use one of Triggers.Options.ThreadX functions." +
-									" To disable this warning: Triggers.Options.Thread(noWarning: true);." +
-									" Trigger: " + trigger);
+								print.it($"<>Warning: can't run the trigger action because an action is running in this thread. <open {trigger.sourceFile}|{trigger.sourceLine}>Trigger<>: {trigger}."
+									+ " <fold>\tTo run simultaneously or wait, use one of Triggers.Options.ThreadX functions.\r\n\tTo disable this warning: Triggers.Options.Thread(noWarning: true);.</fold>");
 							return false;
 						}
 						R = false;

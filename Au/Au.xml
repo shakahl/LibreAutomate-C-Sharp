@@ -22745,14 +22745,13 @@
             The action must be as fast as possible, else it will block triggers etc. Use to create and show toolbars (<see cref="T:Au.toolbar"/>). Rarely used for other purposes.
             </remarks>
         </member>
-        <member name="M:Au.Triggers.TriggerOptions.ThreadNew(System.Boolean,System.Boolean)">
+        <member name="M:Au.Triggers.TriggerOptions.ThreadNew(System.Boolean)">
             <summary>
             Run trigger actions in new threads.
             </summary>
             <param name="single">Don't run if this action is already running. If false, multiple action instances can run paralelly in multiple threads.</param>
-            <param name="mta">Don't set <see cref="F:System.Threading.ApartmentState.STA"/>.</param>
             <remarks>
-            The action can run simultaneously with other actions.
+            The action can run simultaneously with other actions. The thread is STA.
             </remarks>
         </member>
         <member name="M:Au.Triggers.TriggerOptions.ThreadPool(System.Boolean)">
