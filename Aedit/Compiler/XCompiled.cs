@@ -80,14 +80,8 @@ namespace Au.Compiler
 						case 't':
 							r.role = (ERole)value.ToInt(offs);
 							break;
-						case 'a':
-							r.runSingle = true;
-							break;
 						case 'n':
 							r.ifRunning = (EIfRunning)value.ToInt(offs);
-							break;
-						case 'N':
-							r.ifRunning2 = (EIfRunning2)value.ToInt(offs);
 							break;
 						case 'u':
 							r.uac = (EUac)value.ToInt(offs);
@@ -177,12 +171,10 @@ namespace Au.Compiler
 				if (_data == null && !_Open()) _data = new();
 
 				/*
-	IDmain|=path.exe|tN|aN|nN|NN|uN|fN|b|pMD5project|cIDcode|lIDlibrary|xIDresource|kIDicon|mIDmanifest|yIDres|sIDsign|oIDconfig|*ref
+	IDmain|=path.exe|tN|nN|uN|fN|b|pMD5project|cIDcode|lIDlibrary|xIDresource|kIDicon|mIDmanifest|yIDres|sIDsign|oIDconfig|*ref
 	= - outFile
 	t - role
-	a - runSingle
 	n - ifRunning
-	N - ifRunning2
 	u - uac
 	f - miniFlags
 	b - bit32
@@ -204,9 +196,7 @@ namespace Au.Compiler
 				using (new StringBuilder_(out var b)) {
 					if (m.OutputPath != null) b.Append("|=").Append(outFile); //else f.Id in cache
 					if (m.Role != MetaComments.DefaultRole(m.IsScript)) b.Append("|t").Append((int)m.Role);
-					if (m.RunSingle) b.Append("|a");
 					if (m.IfRunning != default) b.Append("|n").Append((int)m.IfRunning);
-					if (m.IfRunning2 != default) b.Append("|N").Append((int)m.IfRunning2);
 					if (m.Uac != default) b.Append("|u").Append((int)m.Uac);
 					if (miniFlags != default) b.Append("|f").Append((int)miniFlags);
 					if (m.Bit32) b.Append("|b");

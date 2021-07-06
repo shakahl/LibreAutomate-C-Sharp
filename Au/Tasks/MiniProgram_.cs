@@ -44,9 +44,6 @@ print.it(perf.ms-Int64.Parse(args[0]));
 //	Workaround: use CBT hook. It receives HCBT_ACTIVATE even when the window does not become the foreground window.
 //		On HCBT_ACTIVATE, async-call SetForegroundWindow. Also, editor calls AllowSetForegroundWindow before starting task.
 
-//PROBLEM: although Script.Main starts fast, but the process ends slowly, because of .NET.
-//	Eg if starting an empty "runSingle" script every <50 ms, sometimes cannot start.
-
 //FUTURE: option to start without preloading.
 
 namespace Au.More

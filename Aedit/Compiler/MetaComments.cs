@@ -100,18 +100,12 @@ namespace Au.Compiler
 	/// 
 	/// <h3>Settings used to run the compiled script</h3>
 	/// <code><![CDATA[
-	/// runSingle false|true - whether to allow single running task, etc. Default: false. More info below.
 	/// ifRunning warn_restart|warn|cancel_restart|cancel|wait_restart|wait|run_restart|run|restart //what to do if this script is already running. Default: warn_restart. More info below.
-	/// ifRunning2 same|warn|cancel|wait //what to do if another "runSingle" script is running. Default: same. More info below.
 	/// uac inherit|user|admin //UAC integrity level (IL) of the task process. Default: inherit. More info below.
 	/// bit32 false|true //if true, the task process is 32-bit even on 64-bit OS. It can use 32-bit and AnyCPU dlls, but not 64-bit dlls. Default: false.
 	/// ]]></code>
 	/// Here word "task" is used for "script that is running or should start".
-	/// Options 'runSingle', 'ifRunning', 'ifRunning2' and 'uac' are applied only when the task is started from editor process, not when it runs as independent exe program.
-	/// 
-	/// About runSingle:
-	/// Multiple "runSingle" tasks cannot run simultaneously. Other tasks can run simultaneously. See also option 'ifRunning'.
-	/// The task also is green (if true) or blue (if false) in the "Tasks" panel. "runSingle" tasks change the tray icon and exit on PC sleep; other tasks don't.
+	/// Options 'ifRunning' and 'uac' are applied only when the task is started from editor process, not when it runs as independent exe program.
 	/// 
 	/// About ifRunning:
 	/// When trying to start this script, what to do if it is already running. Values:
@@ -121,10 +115,6 @@ namespace Au.Compiler
 	/// run - run simultaneously.
 	/// restart - end it and run.
 	/// If ends with _restart, the Run button/menu will restart. Useful for quick edit-test.
-	/// 
-	/// About ifRunning2:
-	/// When trying to start this "runSingle" script, what to do if another "runSingle" script is running.
-	/// If same (default), inherits from ifRunning, or uses warn if unavailable. Other values (warn, cancel, wait) are like ifRunning.
 	/// 
 	/// About uac:
 	/// inherit (default) - the task process has the same UAC integrity level (IL) as the editor process.
@@ -275,22 +265,10 @@ namespace Au.Compiler
 		public MetaFileAndString PostBuild { get; private set; }
 
 		/// <summary>
-		/// Meta option 'runSingle'.
-		/// Default: false.
-		/// </summary>
-		public bool RunSingle { get; private set; }
-
-		/// <summary>
 		/// Meta option 'ifRunning'.
 		/// Default: warn_restart (warn and don't run, but restart if from editor).
 		/// </summary>
 		public EIfRunning IfRunning { get; private set; }
-
-		/// <summary>
-		/// Meta option 'ifRunning2'.
-		/// Default: same (as IfRunning, or warn).
-		/// </summary>
-		public EIfRunning2 IfRunning2 { get; private set; }
 
 		/// <summary>
 		/// Meta option 'uac'.
@@ -563,17 +541,9 @@ namespace Au.Compiler
 				_Specified(EMSpecified.outputPath);
 				if (!forCodeInfo) OutputPath = _GetOutPath(value);
 				break;
-			case "runSingle":
-				_Specified(EMSpecified.runSingle);
-				if (_TrueFalse(out bool rs, value)) RunSingle = rs;
-				break;
 			case "ifRunning":
 				_Specified(EMSpecified.ifRunning);
 				if (_Enum(out EIfRunning ifR, value)) IfRunning = ifR;
-				break;
-			case "ifRunning2":
-				_Specified(EMSpecified.ifRunning2);
-				if (_Enum(out EIfRunning2 ifR2, value)) IfRunning2 = ifR2;
 				break;
 			case "uac":
 				_Specified(EMSpecified.uac);
@@ -721,9 +691,8 @@ namespace Au.Compiler
 		}
 
 		bool _FinalCheckOptions(FileNode f) {
-			const EMSpecified c_spec1 = EMSpecified.runSingle | EMSpecified.ifRunning | EMSpecified.ifRunning2
-				| EMSpecified.uac | EMSpecified.bit32 | EMSpecified.manifest | EMSpecified.icon | EMSpecified.console;
-			const string c_spec1S = "cannot use runSingle, ifRunning, ifRunning2, uac, bit32, manifest, icon, console";
+			const EMSpecified c_spec1 = EMSpecified.ifRunning | EMSpecified.uac | EMSpecified.bit32 | EMSpecified.manifest | EMSpecified.icon | EMSpecified.console;
+			const string c_spec1S = "cannot use ifRunning, uac, bit32, manifest, icon, console";
 
 			bool needOP = false;
 			switch (Role) {
@@ -746,8 +715,6 @@ namespace Au.Compiler
 			}
 			if (needOP) OutputPath ??= GetDefaultOutputPath(f, Role, withEnvVar: false);
 
-			if ((IfRunning | EIfRunning._norestartFlag) == EIfRunning.run && RunSingle) return _ErrorM("ifRunning run with runSingle true");
-			if (Specified.Has(EMSpecified.ifRunning2) && !RunSingle) return _ErrorM("ifRunning2 without runSingle true");
 			if (IconFile?.IsFolder ?? false) if (Role != ERole.exeProgram) return _ErrorM("icon folder can be used only with role exeProgram"); //difficult to add multiple icons if miniProgram
 
 			//if(ResFile != null) {
@@ -895,7 +862,6 @@ namespace Au.Compiler
 	enum EUac { inherit, user, admin }
 
 	enum EIfRunning { warn_restart, warn, cancel_restart, cancel, wait_restart, wait, run_restart, run, restart, _norestartFlag = 1 }
-	enum EIfRunning2 { same, warn, cancel, wait }
 
 	/// <summary>
 	/// Flags for <see cref="MetaComments.Parse"/>
@@ -923,25 +889,22 @@ namespace Au.Compiler
 	[Flags]
 	enum EMSpecified
 	{
-		runSingle = 1,
-		ifRunning = 1 << 1,
-		ifRunning2 = 1 << 2,
-		uac = 1 << 3,
-		bit32 = 1 << 4,
-		optimize = 1 << 5,
-		define = 1 << 6,
-		warningLevel = 1 << 7,
-		noWarnings = 1 << 8,
-		testInternal = 1 << 9,
-		preBuild = 1 << 10,
-		postBuild = 1 << 11,
-		outputPath = 1 << 12,
-		role = 1 << 13,
-		icon = 1 << 14,
-		manifest = 1 << 15,
-		sign = 1 << 16,
-		xmlDoc = 1 << 17,
-		console = 1 << 18,
-		//resFile = 1<<,
+		ifRunning = 1,
+		uac = 1 << 1,
+		bit32 = 1 << 2,
+		optimize = 1 << 3,
+		define = 1 << 4,
+		warningLevel = 1 << 5,
+		noWarnings = 1 << 6,
+		testInternal = 1 << 7,
+		preBuild = 1 << 8,
+		postBuild = 1 << 9,
+		outputPath = 1 << 10,
+		role = 1 << 11,
+		icon = 1 << 12,
+		manifest = 1 << 13,
+		sign = 1 << 14,
+		xmlDoc = 1 << 15,
+		console = 1 << 16,
 	}
 }

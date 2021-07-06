@@ -57,7 +57,7 @@ List of files open in the code editor.
 Right-click - context menu. Middle-click - close.
 
 #### Tasks
-Running scripts. The color depends on the runSingle property: blue if false, green if true.
+Running scripts.
 
 Right-click - context menu (end process etc). Middle-click - close.
 
@@ -101,11 +101,6 @@ Various tool windows.
 Program help and library reference.
 
 ### Tray icon
-Shows program status.
-
 Click - show and activate editor window. Right-click - show context menu. Middle-click - disable/enable triggers.
 
-Colors:
-- blue - default.
-- green - a script task is running. Only if its runSingle property is true.
-- gray - triggers are disabled.
+Color gray if triggers are disabled.

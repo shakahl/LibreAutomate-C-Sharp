@@ -22,9 +22,9 @@ class DProperties : KDialogWindow
 
 	//controls
 	readonly KSciInfoBox info;
-	readonly ComboBox role, ifRunning, ifRunning2, uac, warningLevel;
+	readonly ComboBox role, ifRunning, uac, warningLevel;
 	readonly TextBox testScript, outputPath, icon, manifest, sign, define, noWarnings, testInternal, preBuild, postBuild, findInLists;
-	readonly KCheckBox runSingle, bit32, xmlDoc, console, optimize;
+	readonly KCheckBox bit32, xmlDoc, console, optimize;
 	readonly Expander gRun, gAssembly, gCompile;
 	readonly Button addAssembly, addComRegistry, addComBrowse, addProject, addClassFile, addResource, outputPathB;
 
@@ -43,14 +43,14 @@ class DProperties : KDialogWindow
 			.R.Add("role", out role).Skip()
 			.Add("testScript", out testScript).Validation(o => _ValidateFile(o, "testScript"));
 		b.End();
+
 		b.StartStack(out gRun, "Run", vertical: true);
-		b.StartGrid().Columns(0, 120, 20, 0, 0, -1)
+		b.StartGrid().Columns(0, 120, -1, 0, 80)
 			.Add("ifRunning", out ifRunning).Skip()
-			.Add(out runSingle, "runSingle").Align(y: "C").Margin("R20")
-			.Add("ifRunning2", out ifRunning2);
-		b.R.Add("uac", out uac).Span(1);
+			.Add("uac", out uac);
 		b.End();
 		b.End().Brush(Brushes.OldLace);
+
 		b.StartStack(out gAssembly, "Assembly", vertical: true);
 		b.StartGrid().Columns(0, -1, 30)
 			.Add("outputPath", out outputPath)
@@ -67,6 +67,7 @@ class DProperties : KDialogWindow
 			.End();
 		b.End();
 		b.End().Brush(Brushes.OldLace);
+
 		b.StartGrid(out gCompile, "Compile").Columns(0, 50, 20, 0, -1);
 		b.R.Add(out optimize, "optimize").Align(y: "C").Skip(2)
 			.Add("define", out define);
@@ -78,6 +79,7 @@ class DProperties : KDialogWindow
 			.Add("postBuild", out postBuild).Validation(o => _ValidateFile(o, "postBuild"));
 		b.End();
 		b.End().Brush(Brushes.OldLace);
+
 		b.End();
 		b.StartStack(vertical: true).Margin("L20"); //right column
 		b.StartGrid<GroupBox>("Add reference");
@@ -109,7 +111,6 @@ class DProperties : KDialogWindow
 		testScript.Text = _f.TestScript?.ItemPath;
 		//Run
 		_InitCombo(ifRunning, "warn_restart|warn|cancel_restart|cancel|wait_restart|wait|run_restart|run|restart", _meta.ifRunning);
-		_InitCombo(ifRunning2, "same|warn|cancel|wait", _meta.ifRunning2);
 		_InitCombo(uac, "inherit|user|admin", _meta.uac);
 		if (_meta.bit32 == "true") bit32.IsChecked = true;
 		//Assembly
@@ -163,24 +164,11 @@ class DProperties : KDialogWindow
 		void _ChangedRole() {
 			_ShowHide(testScript, _role is Au.Compiler.ERole.classLibrary or Au.Compiler.ERole.classFile);
 			_ShowCollapse(_role is Au.Compiler.ERole.miniProgram or Au.Compiler.ERole.exeProgram, gRun, console, icon, bit32);
-			_ChangedRunSingle();
 			_ShowCollapse(_role is Au.Compiler.ERole.exeProgram or Au.Compiler.ERole.classLibrary, outputPath, outputPathB, xmlDoc);
 			_ShowCollapse(_role == Au.Compiler.ERole.exeProgram, manifest);
 			_ShowCollapse(_role != Au.Compiler.ERole.classFile, gAssembly, gCompile);
 			addProject.IsEnabled = _role != Au.Compiler.ERole.classFile;
 		}
-		void _ChangedRunSingle() {
-			_ShowHide(ifRunning2, _IsChecked(runSingle));
-		}
-		if (_meta.runSingle == "true") { runSingle.IsChecked = true; _ShowHide(ifRunning2, true); }
-		runSingle.CheckChanged += (_, _) => {
-			_ChangedRunSingle();
-			if (_IsIfRunningRunAndRunSingle()) ifRunning.SelectedItem = "warn_restart";
-		};
-		ifRunning.SelectionChanged += (_, _) => {
-			if (_IsIfRunningRunAndRunSingle()) runSingle.IsChecked = false;
-		};
-		bool _IsIfRunningRunAndRunSingle() => _IsChecked(runSingle) && (_Get(ifRunning)?.Starts("run") ?? false);
 
 		string _ValidateFile(FrameworkElement e, string name, bool? folder = false) {
 			return (_Get(e as TextBox) is string s && null == _f.FindRelative(s, folder)) ? name + " file not found" : null;
@@ -200,8 +188,6 @@ class DProperties : KDialogWindow
 		_f.TestScript = _Get(testScript) is string sts ? _f.FindRelative(sts, false) : null; //validated
 
 		_meta.ifRunning = _Get(ifRunning, nullIfDefault: true);
-		_meta.runSingle = _Get(runSingle);
-		_meta.ifRunning2 = _Get(ifRunning2, nullIfDefault: true);
 		_meta.uac = _Get(uac, nullIfDefault: true);
 		_meta.bit32 = _Get(bit32);
 
@@ -581,23 +567,7 @@ This option is saved in current workspace, not in meta comments.
 Suffix _restart means restart if starting the script with the Run button/menu.
 Default is warn_restart.
 
-This option is ignored when the task runs as .exe program started not from editor.
-");
-		info.AddElem(runSingle,
-@"<b>runSingle</b> - whether tasks can run simultaneously, etc.
- • <i>false</i> (default) - multiple tasks can run simultaneously (see ifRunning).
- • <i>true</i> (checked in Properties) - multiple such tasks cannot run simultaneously. The editor's tray icon is green when running; also green text in the ""Tasks"" panel. By default script.setup ends the task on PC sleep and desktop switch (Ctrl+Alt+Delete, Win+L, etc).
-
-This option is ignored when the task runs as .exe program started not from editor.
-");
-		info.AddElem(ifRunning2,
-@"<b>ifRunning2</b> - when trying to start this ""runSingle"" script, what to do if another ""runSingle"" script is running.
- • <i>same</i> (default) - same as of ifRunning: cancel if cancel[_restart], wait if wait[_restart], else warn.
- • <i>warn</i> - write warning in output and don't run.
- • <i>cancel</i> - don't run.
- • <i>wait</i> - run later, when it ends.
-
-This option is ignored when the task runs as .exe program started not from editor.
+This option is ignored when the task runs as .exe program started not from editor; instead use code: script.single(""unique string"");.
 ");
 		info.AddElem(uac,
 @"<b>uac</b> - <help articles/UAC>UAC<> integrity level (IL) of the task process.

@@ -237,7 +237,7 @@ static class App
 	internal static class TrayIcon
 	{
 		static IntPtr[] _icons;
-		static bool _disabled, _running;
+		static bool _disabled;
 		static wnd _wNotify;
 
 		const int c_msgBreakMessageLoop = Api.WM_APP;
@@ -246,7 +246,7 @@ static class App
 
 		internal static void Update_() {
 			if (_icons == null) {
-				_icons = new IntPtr[3];
+				_icons = new IntPtr[2];
 
 				s_msgTaskbarCreated = wnd.more.registerMessage("TaskbarCreated", uacEnable: true);
 
@@ -287,7 +287,7 @@ static class App
 		}
 
 		static IntPtr _GetIcon() {
-			int i = _running ? 2 : (_disabled ? 1 : 0);
+			int i = _disabled ? 1 : 0;
 			ref IntPtr icon = ref _icons[i];
 			if (icon == default) Api.LoadIconMetric(Api.GetModuleHandle(null), Api.IDI_APPLICATION + i, 0, out icon);
 			return icon;
@@ -360,12 +360,7 @@ static class App
 
 		public static bool Disabled {
 			get => _disabled;
-			set { if (value == _disabled) return; _disabled = value; if (!_running) Update_(); }
-		}
-
-		public static bool Running {
-			get => _running;
-			set { if (value == _running) return; _running = value; Update_(); }
+			set { if (value == _disabled) return; _disabled = value; Update_(); }
 		}
 	}
 }

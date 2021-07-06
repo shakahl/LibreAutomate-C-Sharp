@@ -43,7 +43,7 @@ print.it("<>Code example:\r\n<code>Mouse.Click(10, 20); //comments</code>");
 | `<explore>C:\files\example<>` | Selects a file or folder in File Explorer.<br/>Calls function [run.selectInExplorer]().
 | `<google s1>text<>`<br/>`<google>s1<>`<br/>`<google s1|s2>text<>` | Google. Opens this URL:<br/>`$"http://www.google.com/search?q={s1}{s2}"`<br/>Don't need to URL-encode.
 | `<help>Class.Function<>`<br/>`<help Au.Namespace.Class>text<>`<br/>`<help articles/Output tags>text<>` | Opens a help page of this library.
-| `<open>Script5.cs<>`<br/>`<open \Folder\Script5.cs>text<>`<br/>`<open Script5.cs|10>text<>`<br/>`<open Script5.cs|10|15>text<>` | Opens a script or other file of current workspace in the code editor.<br/>Can be file name, relative path in workspace, or full path.<br/>The 10 is 1-based line index.<br/>The 15 is 1-based character index in line.
+| `<open>Script5.cs<>`<br/>`<open \Folder\Script5.cs>text<>`<br/>`<open Script5.cs|10>text<>`<br/>`<open Script5.cs|10|15>text<>`<br/>`<open Script5.cs||100>text<>`<br/>`<open Script5.cs|||word>text<>` | Opens a script or other file of current workspace in the code editor. Optionally moves text cursor.<br/>Can be file name, relative path in workspace, or full path.<br/>The 10 is 1-based line index.<br/>The 15 is 1-based character index in line.<br/>The 100 is 0-based character index in text.<br/>The word is text to find, whole word(s).
 | `<script>Script5.cs<>`<br/>`<script \Folder\Script5.cs>text<>`<br/>`<script Script5.cs|args0|args1>text<>` | Runs a script.
 
 #### Other tags

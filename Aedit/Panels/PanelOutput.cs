@@ -245,7 +245,8 @@ class PanelOutput : DockPanel
 		static void _OpenLink(string s) {
 			//print.it(s);
 			var a = s.Split('|');
-			App.Model.OpenAndGoTo2(a[0], a.Length > 1 ? a[1] : null, a.Length > 2 ? a[2] : null);
+			if(a.Length > 3) App.Model.OpenAndGoTo3(a[0], a[3]);
+			else App.Model.OpenAndGoTo2(a[0], a.Length > 1 ? a[1] : null, a.Length > 2 ? a[2] : null);
 		}
 
 		static void _RunScript(string s) {

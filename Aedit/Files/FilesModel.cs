@@ -243,7 +243,7 @@ partial class FilesModel
 			name.ToInt(out long id, 1);
 			return FindById(id);
 		}
-		if(pathname.isFullPath(name)) return FindByFilePath(name, folder);
+		if (pathname.isFullPath(name)) return FindByFilePath(name, folder);
 		return Root.FindDescendant(name, folder);
 		//rejected: support name without extension, like now FindCodeFile.
 	}
@@ -521,12 +521,17 @@ partial class FilesModel
 	/// <param name="f"></param>
 	/// <param name="line">If not negative, goes to this 0-based line.</param>
 	/// <param name="columnOrPos">If not negative, goes to this 0-based position in text (if line negative) or to this 0-based column in line.</param>
-	public bool OpenAndGoTo(FileNode f, int line = -1, int columnOrPos = -1) {
+	/// <param name="findText">If not null, finds this text (<b>FindWord</b>), and goes there if found. Then <i>line</i> and <i>columnPos</i> not used.</param>
+	public bool OpenAndGoTo(FileNode f, int line = -1, int columnOrPos = -1, string findText = null) {
 		App.Wmain.ZShowAndActivate();
 		bool wasOpen = _currentFile == f;
 		if (!SetCurrentFile(f)) return false;
+		var doc = Panels.Editor.ZActiveDoc;
+		if (findText != null) {
+			line = -1;
+			columnOrPos = doc.zText.FindWord(findText);
+		}
 		if (line >= 0 || columnOrPos >= 0) {
-			var doc = Panels.Editor.ZActiveDoc;
 			if (line >= 0) {
 				int i = doc.zLineStart(false, line);
 				if (columnOrPos > 0) i = doc.zPos8(Math.Min(doc.zPos16(i) + columnOrPos, doc.zLen16)); //not SCI_FINDCOLUMN, it calculates tabs
@@ -540,11 +545,11 @@ partial class FilesModel
 	}
 
 	/// <summary>
-	/// Finds file and calls <see cref="OpenAndGoTo(FileNode, int, int)"/>. Does nothing if not found.
+	/// Finds code file and calls <see cref="OpenAndGoTo(FileNode, int, int, string)"/>. Does nothing if not found.
 	/// </summary>
-	public bool OpenAndGoTo(string file, int line = -1, int columnOrPos = -1) {
+	public bool OpenAndGoTo(string file, int line = -1, int columnOrPos = -1, string findText = null) {
 		var f = FindCodeFile(file); if (f == null) return false;
-		return OpenAndGoTo(f, line, columnOrPos);
+		return OpenAndGoTo(f, line, columnOrPos, findText);
 	}
 
 	/// <summary>
@@ -567,6 +572,18 @@ partial class FilesModel
 		int line = line1Based.NE() ? -1 : line1Based.ToInt() - 1;
 		int columnOrPos = -1; if (!column1BasedOrPos.NE()) columnOrPos = column1BasedOrPos.ToInt() - (line < 0 ? 0 : 1);
 		return OpenAndGoTo(f, line, columnOrPos);
+	}
+
+	/// <summary>
+	/// Finds code file, selects the node, opens in the code editor, searches for the specified text. If finds, goes there.
+	/// Returns false if failed to find file or select.
+	/// </summary>
+	/// <param name="fileOrFolder">See <see cref="Find"/>.</param>
+	/// <param name="findText"></param>
+	public bool OpenAndGoTo3(string fileOrFolder, string findText) {
+		var f = FindCodeFile(fileOrFolder);
+		if (f == null) return false;
+		return OpenAndGoTo(f, findText: findText);
 	}
 
 	#endregion

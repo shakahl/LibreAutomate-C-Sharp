@@ -20,7 +20,7 @@ using Au.Compiler;
 class MetaCommentsParser
 {
 	FileNode _fn;
-	public string role, runSingle, ifRunning, ifRunning2, uac, bit32,
+	public string role, ifRunning, uac, bit32,
 		optimize, warningLevel, noWarnings, testInternal, define, preBuild, postBuild,
 		outputPath, console, icon, manifest, /*resFile,*/ sign, xmlDoc;
 	List<string> _r, _pr, _c, _resource, _com;
@@ -46,9 +46,7 @@ class MetaCommentsParser
 		switch (name) {
 		case "role": role = value; break;
 		case "outputPath": outputPath = value; break;
-		case "runSingle": runSingle = value; break;
 		case "ifRunning": ifRunning = value; break;
-		case "ifRunning2": ifRunning2 = value; break;
 		case "uac": uac = value; break;
 		case "bit32": bit32 = value; break;
 		case "optimize": optimize = value; break;
@@ -89,8 +87,6 @@ class MetaCommentsParser
 		_Append("role", role);
 
 		_Append("ifRunning", ifRunning);
-		_Append("runSingle", runSingle);
-		_Append("ifRunning2", ifRunning2);
 		_Append("uac", uac);
 		_Append("bit32", bit32);
 

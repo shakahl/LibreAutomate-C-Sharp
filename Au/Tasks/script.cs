@@ -15,12 +15,6 @@ using System.Reflection;
 
 //CONSIDER: script.canPause. Let user explicitly insert this at all points where the script can be safely paused. Also option to allow to pause at every key/mouse/etc function.
 
-//TODO: remove runSingle. Maybe need something similar, but not to limit to single running task. As an alternative could use script.setup(runSingle: true) or script.mutex().
-//	Then maybe let script.setup sleepExit default true, and on first run print info about it.
-//	IDEA: script.setup(bool? trayIcon=null). If null, changes editor's icon; maybe only if role miniProgram.
-//	Or maybe use different tray icon for runSingle. Maybe then don't change editor's tray icon when runSingle running.
-//	Maybe also add default icon to exeProgram.
-
 namespace Au
 {
 	/// <summary>
@@ -42,6 +36,25 @@ namespace Au
 		/// </summary>
 		public static SRole role => s_role;
 		internal static SRole s_role;
+
+		/// <summary>
+		/// Gets path of script file in workspace.
+		/// </summary>
+		/// <remarks>
+		/// The default compiler adds <see cref="PathInWorkspaceAttribute"/> to the main assembly. Then at run time this property returns its value. Returns null if compiled by some other compiler.
+		/// </remarks>
+		public static string path => s_pathInWorkspace ??= Assembly.GetEntryAssembly()?.GetCustomAttribute<PathInWorkspaceAttribute>()?.Path;
+		static string s_pathInWorkspace;
+		//note: GetEntryAssembly returns null in func called by host through coreclr_create_delegate.
+
+		/// <summary>
+		/// Returns true if the build configuration of the main assembly is Debug. Returns false if Release (optimize true).
+		/// </summary>
+		public static bool isDebug => s_debug ??= AssemblyUtil_.IsDebug(Assembly.GetEntryAssembly());
+		static bool? s_debug;
+		//note: GetEntryAssembly returns null in func called by host through coreclr_create_delegate.
+
+		#region run
 
 		/// <summary>
 		/// Starts executing a script. Does not wait.
@@ -101,7 +114,7 @@ namespace Au
 			var data = Serializer_.Serialize(script, args, tr.pipeName);
 			int pid = (int)wnd.more.CopyData.Send<byte>(w, 100, data, mode);
 			switch ((RunResult_)pid) {
-			case RunResult_.failed: return !waitMode ? -1 : throw new AuException("*start task"); //don't throw, eg maybe cannot run because other "runSingle" script is running
+			case RunResult_.failed: return !waitMode ? -1 : throw new AuException("*start task");
 			case RunResult_.notFound: throw new FileNotFoundException($"Script '{script}' not found.");
 			case RunResult_.editorThread: case RunResult_.deferred: return 0;
 			}
@@ -201,12 +214,6 @@ namespace Au
 		};
 
 		/// <summary>
-		/// Finds editor's message-only window used with WM_COPYDATA etc.
-		/// </summary>
-		internal static wnd WndMsg_ => s_wndMsg.FindFast(null, "Aedit.m3gVxcTJN02pDrHiQ00aSQ", true);
-		static wnd.Cached_ s_wndMsg;
-
-		/// <summary>
 		/// Writes a string result for the task that called <see cref="runWait(out string, string, string[])"/> or <see cref="runWait(Action{string}, string, string[])"/> to run this task, or for the program that executed "Au.CL.exe" to run this task with command line like "Au.CL.exe **Script5.cs".
 		/// Returns false if this task was not started in such a way. Returns null if failed to write, except when s is null/"".
 		/// </summary>
@@ -232,19 +239,18 @@ namespace Au
 			return false;
 		}
 
+		#endregion
+
 		/// <summary>
-		/// Adds various useful features to this script task (running script): tray icon, exit on Ctrl+Alt+Delete, etc.
+		/// Adds various features to this script task (running script): tray icon, exit on Ctrl+Alt+Delete, etc.
+		/// Tip: in Options -> Templates you can set default code for new scripts.
 		/// </summary>
 		/// <param name="trayIcon">Add standard tray icon. See <see cref="trayIcon"/>.</param>
-		/// <param name="sleepExit">
-		/// End this process when computer is going to sleep or hibernate.
-		/// If null (default), same as runSingle property of the script.
-		/// </param>
+		/// <param name="sleepExit">End this process when computer is going to sleep or hibernate.</param>
 		/// <param name="lockExit">
 		/// End this process when the active desktop has been switched (PC locked, Ctrl+Alt+Delete, screen saver, etc, except UAC consent).
 		/// Then to end this process you can use hotkeys Win+L (lock computer) and Ctrl+Alt+Delete.
 		/// Most mouse, keyboard, clipboard and window functions don't work when other desktop is active. Many of them then throw exception, and the script would end anyway.
-		/// If null (default), same as runSingle property of the script.
 		/// </param>
 		/// <param name="debug">Call <see cref="DebugTraceListener.Setup"/>(usePrint: true).</param>
 		/// <param name="exception">What to do on unhandled exception (event <see cref="AppDomain.UnhandledException"/>).</param>
@@ -255,7 +261,7 @@ namespace Au
 		/// 
 		/// Does nothing if role editorExtension.
 		/// </remarks>
-		public static void setup(bool trayIcon = false, bool? sleepExit = null, bool? lockExit = null, bool debug = false, UExcept exception = UExcept.Print | UExcept.Exit, [CallerFilePath] string f_ = null) {
+		public static void setup(bool trayIcon = false, bool sleepExit = false, bool lockExit = false, bool debug = false, UExcept exception = UExcept.Print | UExcept.Exit, [CallerFilePath] string f_ = null) {
 			if (role == SRole.EditorExtension) return;
 			if (s_setup) throw new InvalidOperationException("script.setup already called");
 			s_setup = true;
@@ -266,22 +272,17 @@ namespace Au
 			//info: default false, because slow and rarely used. //TODO: default true in miniProgram. Remove parameter, or make bool? debug.
 			if (debug) DebugTraceListener.Setup(usePrint: true);
 
-			if ((sleepExit == null || lockExit == null) && isRunSingle) { //fast
-				sleepExit ??= true;
-				lockExit ??= true;
-			}
-
 			if (trayIcon) {
-				TrayIcon_(sleepExit == true, lockExit == true, f_: f_);
-			} else if (sleepExit == true || lockExit == true) {
+				TrayIcon_(sleepExit, lockExit, f_: f_);
+			} else if (sleepExit || lockExit) {
 				Au.run.thread(() => {
-					if (sleepExit == true) {
+					if (sleepExit) {
 						var w = wnd.Internal_.CreateWindowDWP(messageOnly: false, t_eocWP = (w, m, wp, lp) => {
 							if (m == Api.WM_POWERBROADCAST && wp == Api.PBT_APMSUSPEND) ExitOnSleepOrDesktopSwitch_(sleep: true);
 							return Api.DefWindowProc(w, m, wp, lp);
 						}); //message-only windows don't receive WM_POWERBROADCAST
 					}
-					if (lockExit == true) HookDesktopSwitch_();
+					if (lockExit) HookDesktopSwitch_();
 					while (Api.GetMessage(out var m) > 0) Api.DispatchMessage(m);
 				});
 			}
@@ -324,12 +325,6 @@ namespace Au
 		static UExcept s_setupException = UExcept.Print | UExcept.Exit;
 		internal static Exception s_unhandledException; //for process.thisProcessExit
 
-		internal static void ExitOnSleepOrDesktopSwitch_(bool sleep) {
-			string runSingle = isRunSingle ? " (depends on runSingle)" : null;
-			print.it($"Info: task '{name}' ended because of {(sleep ? "PC sleep" : "switched desktop")} at {DateTime.Now.ToShortTimeString()}. See script.setup in script{runSingle}. See also Options -> Templates.");
-			Environment.Exit(2);
-		}
-
 		internal static WinEventHook HookDesktopSwitch_() {
 			return new WinEventHook(EEvent.SYSTEM_DESKTOPSWITCH, 0, k => {
 				if (miscInfo.isInputDesktop()) return;
@@ -340,21 +335,41 @@ namespace Au
 			//tested: on Win+L works immediately. OS switches desktop 2 times. At first briefly, then makes defaul again, then on key etc switches again to show password field.
 		}
 
-		/// <summary>
-		/// Returns true if runSingle true.
-		/// </summary>
-		/// <remarks>
-		/// If script properties contain runSingle true, the default compiler adds <see cref="RunSingleAttribute"/> to the main assembly. Then at run time this property returns true.
-		/// </remarks>
-		public static bool isRunSingle => s_runSingle ??= null != Assembly.GetEntryAssembly()?.GetCustomAttribute<RunSingleAttribute>();
-		static bool? s_runSingle;
-		//note: GetEntryAssembly returns null in func called by host through coreclr_create_delegate.
+		internal static void ExitOnSleepOrDesktopSwitch_(bool sleep) {
+			print.it($"<>Info: task <open {path}|||script.setup>{name}<> ended because of {(sleep ? "PC sleep" : "switched desktop")} at {DateTime.Now.ToShortTimeString()}.");
+			Environment.Exit(2);
+		}
 
 		/// <summary>
-		/// Returns true if the build configuration of the main assembly is Debug. Returns false if Release (optimize true).
+		/// Ensures that multiple script tasks that call this function don't run simultaneously. Like C# 'lock' keyword for threads.
 		/// </summary>
-		public static bool isDebug => s_debug ??= AssemblyUtil_.IsDebug(Assembly.GetEntryAssembly());
-		static bool? s_debug;
+		/// <param name="mutex">Mutex name. Only tasks that use same mutex cannot run simultaneously.</param>
+		/// <param name="wait">If a task is running (other or same), wait max this milliseconds. If 0 (default), does not wait. If -1, waits without a timeout.</param>
+		/// <param name="silent">Don't print "cannot run".</param>
+		/// <exception cref="InvalidOperationException">Already called.</exception>
+		/// <remarks>
+		/// If cannot run because a task is running (other or same), calls <c>Environment.Exit(3);</c>.
+		/// </remarks>
+		public static void single(string mutex = "Au-mutex-script.single", int wait = 0, bool silent = false) {
+			//FUTURE: parameter bool endOther. Like meta ifRunning restart.
+
+			var m = Api.CreateMutex(null, false, mutex ?? "Au-mutex-script.single");
+			if (default != Interlocked.CompareExchange(ref s_singleMutex, m, default)) { Api.CloseHandle(m); throw new InvalidOperationException(); }
+			var r = Api.WaitForSingleObject(s_singleMutex, wait);
+			//print.it(r);
+			if (r is not (0 or Api.WAIT_ABANDONED)) {
+				if (!silent) print.it($"<>Note: script task <open {path}|||script.single>{name}<> cannot run because a task is running.");
+				Environment.Exit(3);
+			}
+			//SHOULDDO: release mutex when main script function ends.
+			//	If with UsingEndAction, caller code must be like 'using var single = script.single();'.
+			//	Cannot release in process exit event. It runs in another thread. Also, it's better to release ASAP.
+			//	Could ignore it, but if released ASAP, users could start the script more frequently.
+			//		The process ends slowly, because of .NET. Eg if starting an empty script every <50 ms, sometimes cannot start.
+			//		TODO: try in process exit event to close handle. The mutex will be abandoned like now, but maybe sooner.
+			//return new(() => Api.ReleaseMutex(s_singleMutex));
+		}
+		static IntPtr s_singleMutex;
 
 		/// <summary>
 		/// Adds standard tray icon.
@@ -402,7 +417,7 @@ namespace Au
 						menu(ti, m);
 						if (m.Last != null && !m.Last.IsSeparator) m.Separator();
 					}
-					if (canEdit) m["Edit script\tClick"] = _ => editor.OpenAndGoToLine(f_, 0);
+					if (canEdit) m["Open script\tClick"] = _ => editor.OpenAndGoToLine(f_, 0);
 					m["End task\tM-click" + (sleepExit ? ", Sleep" : null) + (lockExit ? ", Win+L, Ctrl+Alt+Delete" : null)] = _ => Environment.Exit(2);
 					if (canEdit) m["End and edit"] = _ => { editor.OpenAndGoToLine(f_, 0); Environment.Exit(2); };
 					m.Show(MSFlags.AlignCenterH | MSFlags.AlignRectBottomTop, /*excludeRect: ti.GetRect(out var r1) ? r1 : null,*/ owner: ti.Hwnd);
@@ -483,6 +498,12 @@ namespace Au
 			}, background: true, sta: false);
 		}
 #endif
+
+		/// <summary>
+		/// Finds editor's message-only window used with WM_COPYDATA etc.
+		/// </summary>
+		internal static wnd WndMsg_ => s_wndMsg.FindFast(null, "Aedit.m3gVxcTJN02pDrHiQ00aSQ", true);
+		static wnd.Cached_ s_wndMsg;
 
 		/// <summary>
 		/// Contains static functions to interact with the script editor, if available.
@@ -628,10 +649,16 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// The default compiler adds this attribute to the main assembly if runSingle true.
+	/// The default compiler adds this attribute to the main assembly if role is miniProgram or exeProgram.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly)]
-	public sealed class RunSingleAttribute : Attribute { }
+	public sealed class PathInWorkspaceAttribute : Attribute {
+		/// <summary>Path of main file in workspace.</summary>
+		public readonly string Path;
+
+		///
+		public PathInWorkspaceAttribute(string path) { Path = path; }
+	}
 
 	/// <summary>
 	/// The default compiler adds this attribute to the main assembly if using non-default references (meta r) that aren't in editor's folder or its subfolder "Libraries". Allows to find them at run time. Only if role miniProgram (default).

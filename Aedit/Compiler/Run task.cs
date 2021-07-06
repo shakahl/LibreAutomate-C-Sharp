@@ -136,16 +136,14 @@ class RunningTask : ITreeViewItem
 	public readonly FileNode f;
 	public readonly int taskId;
 	//public readonly int processId;
-	public readonly bool isRunSingle;
 
 	static int s_taskId;
 
-	public RunningTask(FileNode f, WaitHandle hProcess, bool isRunSingle) {
+	public RunningTask(FileNode f, WaitHandle hProcess) {
 		taskId = ++s_taskId;
 		this.f = f;
 		_process = hProcess;
 		//processId = Api.GetProcessId(hProcess.SafeWaitHandle.DangerousGetHandle());
-		this.isRunSingle = isRunSingle;
 
 		RecentTT.TaskEvent(true, this);
 
@@ -220,7 +218,7 @@ class RunningTask : ITreeViewItem
 
 	//int ITreeViewItem.Color { get; }
 
-	int ITreeViewItem.TextColor => isRunSingle ? 0x8000 : 0xff0000;
+	//int ITreeViewItem.TextColor => 0xff0000;
 
 	#endregion
 }
@@ -241,16 +239,14 @@ class RunningTasks
 		}
 	}
 
-	readonly List<RunningTask> _a;
-	readonly List<_WaitingTask> _q; //not Queue because may need to remove item at any index
+	readonly List<RunningTask> _a = new();
+	readonly List<_WaitingTask> _q = new(); //not Queue because may need to remove item at any index
 	bool _updateUI;
 	volatile bool _disposed;
 
 	public IReadOnlyList<RunningTask> Items => _a;
 
 	public RunningTasks() {
-		_a = new List<RunningTask>();
-		_q = new List<_WaitingTask>();
 		App.Timer1sOr025s += _TimerUpdateUI;
 		script.s_role = SRole.EditorExtension;
 	}
@@ -326,7 +322,6 @@ class RunningTasks
 
 	void _TimerUpdateUI() {
 		if (!_updateUI) return;
-		App.TrayIcon.Running = GetRunsingleTask() != null;
 		if (!App.Wmain.IsVisible) return;
 		_UpdatePanels();
 	}
@@ -346,17 +341,6 @@ class RunningTasks
 		for (int i = 0; i < _a.Count; i++) {
 			var r = _a[i];
 			if (r.f == f && r.IsRunning) return r;
-		}
-		return null;
-	}
-
-	/// <summary>
-	/// Gets the "runSingle" running task (meta runSingle). Returns null if no such task.
-	/// </summary>
-	public RunningTask GetRunsingleTask() {
-		for (int i = 0; i < _a.Count; i++) {
-			var r = _a[i];
-			if (r.isRunSingle && r.IsRunning) return r;
 		}
 		return null;
 	}
@@ -394,11 +378,9 @@ class RunningTasks
 	}
 
 	/// <summary>
-	/// Ends single task, if still running.
-	/// If rt==null, ends the "runSingle" task, if running.
+	/// Ends a task, if still running.
 	/// </summary>
-	public void EndTask(RunningTask rt = null) {
-		if (rt == null) { rt = App.Tasks.GetRunsingleTask(); if (rt == null) return; }
+	public void EndTask(RunningTask rt) {
 		if (_a.Contains(rt)) _EndTask(rt);
 	}
 
@@ -409,15 +391,8 @@ class RunningTasks
 
 	bool _CanRunNow(FileNode f, Compiler.CompResults r, out RunningTask running, bool runFromEditor = false) {
 		running = null;
-		switch (r.runSingle) {
-		case true:
-			running = GetRunsingleTask();
-			break;
-		case false when !(r.ifRunning == EIfRunning.run || (r.ifRunning == EIfRunning.run_restart && !runFromEditor)):
-			running = _GetRunning(f);
-			break;
-		default: return true;
-		}
+		if (r.ifRunning == EIfRunning.run || (r.ifRunning == EIfRunning.run_restart && !runFromEditor)) return true;
+		running = _GetRunning(f);
 		return running == null;
 	}
 
@@ -439,15 +414,7 @@ class RunningTasks
 		g1:
 		if(!ignoreLimits && !_CanRunNow(f, r, out var running, runFromEditor)) {
 			var ifRunning = r.ifRunning;
-			bool same = running.f == f;
-			if (!same) {
-				ifRunning = r.ifRunning2 switch {
-					EIfRunning2.cancel => EIfRunning.cancel,
-					EIfRunning2.wait => EIfRunning.wait,
-					EIfRunning2.warn => EIfRunning.warn,
-					_ => (ifRunning | EIfRunning._norestartFlag) switch { EIfRunning.cancel => EIfRunning.cancel, EIfRunning.wait => EIfRunning.wait, _ => EIfRunning.warn }
-				};
-			} else if (!ifRunning.Has(EIfRunning._norestartFlag) && ifRunning != EIfRunning.restart) {
+			if (!ifRunning.Has(EIfRunning._norestartFlag) && ifRunning != EIfRunning.restart) {
 				if (runFromEditor) ifRunning = EIfRunning.restart;
 				else ifRunning |= EIfRunning._norestartFlag;
 			}
@@ -461,8 +428,7 @@ class RunningTasks
 			case EIfRunning.restart when _EndTask(running):
 				goto g1;
 			default: //warn
-				string s1 = same ? "it" : $"{running.f.SciLink}";
-				print.it($"<>Cannot start {f.SciLink} because {s1} is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>ifRunning<>, <c green>ifRunning2<>, <c green>runSingle<>.");
+				print.it($"<>Cannot start {f.SciLink} because it is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>ifRunning<>.");
 				break;
 			}
 			return 0;
@@ -558,7 +524,7 @@ class RunningTasks
 			return 0;
 		}
 
-		var rt = new RunningTask(f, hProcess, r.runSingle);
+		var rt = new RunningTask(f, hProcess);
 		_Add(rt);
 		return pid;
 	}
@@ -592,17 +558,9 @@ class RunningTasks
 	public unsafe int RunCompiled(FileNode f, Compiler.CompResults r, string[] args,
 		bool noDefer = false, string wrPipeName = null, bool ignoreLimits = false, bool runFromEditor = false) {
 		g1:
-		if (!ignoreLimits && !_CanRunNow(f, r, out var running, runFromEditor)) {
+		if (!ignoreLimits && !_CanRunNow(f, r, out var running, runFromEditor)) {//TODO: test
 			var ifRunning = r.ifRunning;
-			bool same = running.f == f;
-			if (!same) {
-				ifRunning = r.ifRunning2 switch {
-					EIfRunning2.cancel => EIfRunning.cancel,
-					EIfRunning2.wait => EIfRunning.wait,
-					EIfRunning2.warn => EIfRunning.warn,
-					_ => (ifRunning | EIfRunning._norestartFlag) switch { EIfRunning.cancel => EIfRunning.cancel, EIfRunning.wait => EIfRunning.wait, _ => EIfRunning.warn }
-				};
-			} else if (!ifRunning.Has(EIfRunning._norestartFlag) && ifRunning != EIfRunning.restart) {
+			if (!ifRunning.Has(EIfRunning._norestartFlag) && ifRunning != EIfRunning.restart) {
 				if (runFromEditor) ifRunning = EIfRunning.restart;
 				else ifRunning |= EIfRunning._norestartFlag;
 			}
@@ -616,8 +574,7 @@ class RunningTasks
 			case EIfRunning.restart when _EndTask(running):
 				goto g1;
 			default: //warn
-				string s1 = same ? "it" : $"{running.f.SciLink}";
-				print.it($"<>Cannot start {f.SciLink} because {s1} is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>ifRunning<>, <c green>ifRunning2<>, <c green>runSingle<>.");
+				print.it($"<>Cannot start {f.SciLink} because it is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>ifRunning<>.");
 				break;
 			}
 			return 0;
@@ -716,7 +673,7 @@ class RunningTasks
 			return 0;
 		}
 
-		var rt = new RunningTask(f, hProcess, r.runSingle);
+		var rt = new RunningTask(f, hProcess);
 		_Add(rt);
 		return pid;
 	}

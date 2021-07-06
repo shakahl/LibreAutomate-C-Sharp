@@ -88,9 +88,7 @@ namespace Au.Compiler
 			public string file;
 
 			public ERole role;
-			public bool runSingle;
 			public EIfRunning ifRunning;
-			public EIfRunning2 ifRunning2;
 			public EUac uac;
 			public MiniProgram_.EFlags flags;
 			public bool bit32;
@@ -294,9 +292,7 @@ namespace Au.Compiler
 
 			r.name = m.Name;
 			r.role = m.Role;
-			r.runSingle = m.RunSingle;
 			r.ifRunning = m.IfRunning;
-			r.ifRunning2 = m.IfRunning2;
 			r.uac = m.Uac;
 			r.bit32 = m.Bit32;
 			r.notInCache = notInCache;
@@ -377,7 +373,7 @@ namespace Au.Compiler
 				}
 
 				if (m.Role is ERole.miniProgram or ERole.exeProgram) {
-					if (m.RunSingle) sb.AppendLine($"[assembly: Au.Types.RunSingle]");
+					sb.AppendLine($"[assembly: Au.Types.PathInWorkspace(\"{m.MainFile.f.ItemPath.Escape()}\")]");
 					if (m.Role == ERole.exeProgram) {
 						sb.AppendLine(@"class ModuleInit__ { [System.Runtime.CompilerServices.ModuleInitializer] internal static void Init() { Au.script.AppModuleInit_(); }}");
 					}

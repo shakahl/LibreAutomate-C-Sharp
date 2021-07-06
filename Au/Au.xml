@@ -5539,7 +5539,7 @@
         </member>
         <member name="T:Au.Types.UExcept">
             <summary>
-            Flags for <see cref="M:Au.script.setup(System.Boolean,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Boolean,Au.Types.UExcept,System.String)"/> parameter <i>exception</i>. Defines what to do on unhandled exception.
+            Flags for <see cref="M:Au.script.setup(System.Boolean,System.Boolean,System.Boolean,System.Boolean,Au.Types.UExcept,System.String)"/> parameter <i>exception</i>. Defines what to do on unhandled exception.
             Default flags is <b>Print</b> and <b>Exit</b>, even if <b>Setup</b> not called (with default compiler only).
             </summary>
         </member>
@@ -5589,10 +5589,16 @@
             Output must be icon XAML.
             </summary>
         </member>
-        <member name="T:Au.Types.RunSingleAttribute">
+        <member name="T:Au.Types.PathInWorkspaceAttribute">
             <summary>
-            The default compiler adds this attribute to the main assembly if runSingle true.
+            The default compiler adds this attribute to the main assembly if role is miniProgram or exeProgram.
             </summary>
+        </member>
+        <member name="F:Au.Types.PathInWorkspaceAttribute.Path">
+            <summary>Path of main file in workspace.</summary>
+        </member>
+        <member name="M:Au.Types.PathInWorkspaceAttribute.#ctor(System.String)">
+            
         </member>
         <member name="T:Au.Types.RefPathsAttribute">
             <summary>
@@ -20831,7 +20837,7 @@
             If your app doesn't want to use current culture (default in .NET apps), it can set these properties = <see cref="P:System.Globalization.CultureInfo.InvariantCulture"/> or set this property = true.
             It prevents potential bugs when app/script/components don't specify invariant culture in string functions and 'number to/from string' functions.
             Also, there is a bug in 'number to/from string' functions in some .NET versions with some cultures: they use wrong minus sign, not ASII '-' which is specified in Control Panel.
-            The default compiler sets this property = true; as well as <see cref="M:Au.script.setup(System.Boolean,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Boolean,Au.Types.UExcept,System.String)"/>.
+            The default compiler sets this property = true; as well as <see cref="M:Au.script.setup(System.Boolean,System.Boolean,System.Boolean,System.Boolean,Au.Types.UExcept,System.String)"/>.
             </remarks>
         </member>
         <member name="M:Au.process.ThisProcessMinimizePhysicalMemory_(System.Int32)">
@@ -21136,6 +21142,19 @@
             If this script task has been started from editor, returns script's role property. Else returns <b>ExeProgram</b>.
             </summary>
         </member>
+        <member name="P:Au.script.path">
+            <summary>
+            Gets path of script file in workspace.
+            </summary>
+            <remarks>
+            The default compiler adds <see cref="T:Au.Types.PathInWorkspaceAttribute"/> to the main assembly. Then at run time this property returns its value. Returns null if compiled by some other compiler.
+            </remarks>
+        </member>
+        <member name="P:Au.script.isDebug">
+            <summary>
+            Returns true if the build configuration of the main assembly is Debug. Returns false if Release (optimize true).
+            </summary>
+        </member>
         <member name="M:Au.script.run(System.String,System.String[])">
             <summary>
             Starts executing a script. Does not wait.
@@ -21179,11 +21198,6 @@
             <exception cref="T:System.IO.FileNotFoundException">Script file not found.</exception>
             <exception cref="T:Au.Types.AuException">Failed to start script.</exception>
         </member>
-        <member name="P:Au.script.WndMsg_">
-            <summary>
-            Finds editor's message-only window used with WM_COPYDATA etc.
-            </summary>
-        </member>
         <member name="M:Au.script.writeResult(System.String)">
             <summary>
             Writes a string result for the task that called <see cref="M:Au.script.runWait(System.String@,System.String,System.String[])"/> or <see cref="M:Au.script.runWait(System.Action{System.String},System.String,System.String[])"/> to run this task, or for the program that executed "Au.CL.exe" to run this task with command line like "Au.CL.exe **Script5.cs".
@@ -21196,20 +21210,16 @@
             The program that executed "Au.CL.exe" to run this task with command line like "Au.CL.exe **Script5.cs" can read the string from the redirected standard output in real time, or the string is written to its console in real time. The string encoding is UTF8; if you use a bat file or cmd.exe and want to get correct Unicode text, execute this before, to change console code page to UTF-8: <c>chcp 65001</c>.
             </remarks>
         </member>
-        <member name="M:Au.script.setup(System.Boolean,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Boolean,Au.Types.UExcept,System.String)">
+        <member name="M:Au.script.setup(System.Boolean,System.Boolean,System.Boolean,System.Boolean,Au.Types.UExcept,System.String)">
             <summary>
             Adds various useful features to this script task (running script): tray icon, exit on Ctrl+Alt+Delete, etc.
             </summary>
             <param name="trayIcon">Add standard tray icon. See <see cref="M:Au.script.trayIcon(System.Int32,System.Action{Au.trayIcon},System.Action{Au.trayIcon,Au.popupMenu},System.String)"/>.</param>
-            <param name="sleepExit">
-            End this process when computer is going to sleep or hibernate.
-            If null (default), same as runSingle property of the script.
-            </param>
+            <param name="sleepExit">End this process when computer is going to sleep or hibernate.</param>
             <param name="lockExit">
             End this process when the active desktop has been switched (PC locked, Ctrl+Alt+Delete, screen saver, etc, except UAC consent).
             Then to end this process you can use hotkeys Win+L (lock computer) and Ctrl+Alt+Delete.
             Most mouse, keyboard, clipboard and window functions don't work when other desktop is active. Many of them then throw exception, and the script would end anyway.
-            If null (default), same as runSingle property of the script.
             </param>
             <param name="debug">Call <see cref="M:Au.More.DebugTraceListener.Setup(System.Boolean)"/>(usePrint: true).</param>
             <param name="exception">What to do on unhandled exception (event <see cref="E:System.AppDomain.UnhandledException"/>).</param>
@@ -21226,18 +21236,17 @@
             If role miniProgram or exeProgram, default compiler adds module initializer that calls this. If using other compiler, called from <b>Setup</b>.
             </summary>
         </member>
-        <member name="P:Au.script.isRunSingle">
+        <member name="M:Au.script.single(System.String,System.Int32,System.Boolean)">
             <summary>
-            Returns true if runSingle true.
+            Ensures that multiple script tasks that call this function don't run simultaneously. Like C# 'lock' keyword for threads.
             </summary>
+            <param name="mutex">Mutex name. Only tasks that use same mutex cannot run simultaneously.</param>
+            <param name="wait">If a task is running (other or same), wait max this milliseconds. If 0 (default), does not wait. If -1, waits without a timeout.</param>
+            <param name="silent">Don't print "cannot run".</param>
+            <exception cref="T:System.InvalidOperationException">Already called.</exception>
             <remarks>
-            If script properties contain runSingle true, the default compiler adds <see cref="T:Au.Types.RunSingleAttribute"/> to the main assembly. Then at run time this property returns true.
+            If cannot run because a task is running (other or same), calls <c>Environment.Exit(3);</c>.
             </remarks>
-        </member>
-        <member name="P:Au.script.isDebug">
-            <summary>
-            Returns true if the build configuration of the main assembly is Debug. Returns false if Release (optimize true).
-            </summary>
         </member>
         <member name="M:Au.script.trayIcon(System.Int32,System.Action{Au.trayIcon},System.Action{Au.trayIcon,Au.popupMenu},System.String)">
             <summary>
@@ -21266,6 +21275,11 @@
             ]]></code>
             </example>
             <seealso cref="T:Au.trayIcon"/>
+        </member>
+        <member name="P:Au.script.WndMsg_">
+            <summary>
+            Finds editor's message-only window used with WM_COPYDATA etc.
+            </summary>
         </member>
         <member name="T:Au.script.editor">
             <summary>
@@ -22726,7 +22740,7 @@
             Run actions always in the same dedicated thread that does not end when actions end.
             </summary>
             <param name="thread">A number that you want to use to identify the thread. Can be 0-127. Default 0.</param>
-            <param name="ifRunningWaitMS">Defines when to start an action if an action (other or same) is currently running in this thread. If 0 (default), don't run. If -1 (<b>Timeout.Infinite</b>), run when that action ends (and possibly other queed actions). If &gt; 0, run when that action ends, if it ends within this time from now; the time is in milliseconds.</param>
+            <param name="wait">Defines when to start an action if an action (other or same) is currently running in this thread. If 0 (default), don't run. If -1 (<b>Timeout.Infinite</b>), run when that action ends (and possibly other queed actions). If &gt; 0, run when that action ends, if it ends within this time from now; the time is in milliseconds.</param>
             <param name="noWarning">No warning when cannot start an action because an action is running and ifRunningWaitMS==0.</param>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <remarks>

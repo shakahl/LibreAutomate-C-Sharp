@@ -21,7 +21,7 @@ namespace Au.Triggers
 		public Action<TOBAArgs> after;
 		public sbyte thread; //>=0 dedicated or <0 TOThread
 		public TOFlags flags;
-		public int ifRunningWaitMS;
+		public int wait;
 
 		public TOptions Clone() => this.MemberwiseClone() as TOptions;
 	}
@@ -65,7 +65,7 @@ namespace Au.Triggers
 		/// Run actions always in the same dedicated thread that does not end when actions end.
 		/// </summary>
 		/// <param name="thread">A number that you want to use to identify the thread. Can be 0-127. Default 0.</param>
-		/// <param name="ifRunningWaitMS">Defines when to start an action if an action (other or same) is currently running in this thread. If 0 (default), don't run. If -1 (<b>Timeout.Infinite</b>), run when that action ends (and possibly other queed actions). If &gt; 0, run when that action ends, if it ends within this time from now; the time is in milliseconds.</param>
+		/// <param name="wait">Defines when to start an action if an action (other or same) is currently running in this thread. If 0 (default), don't run. If -1 (<b>Timeout.Infinite</b>), run when that action ends (and possibly other queed actions). If &gt; 0, run when that action ends, if it ends within this time from now; the time is in milliseconds.</param>
 		/// <param name="noWarning">No warning when cannot start an action because an action is running and ifRunningWaitMS==0.</param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
@@ -75,11 +75,11 @@ namespace Au.Triggers
 		/// The thread has <see cref="ApartmentState.STA"/>.
 		/// There are several <b>ThreadX</b> functions. Only the last called function is active. If none called, it is the same as called this function without arguments.
 		/// </remarks>
-		public void Thread(int thread = 0, int ifRunningWaitMS = 0, bool noWarning = false) {
+		public void Thread(int thread = 0, int wait = 0, bool noWarning = false) {
 			_New();
 			if ((uint)thread > 127) throw new ArgumentOutOfRangeException();
 			_new.thread = (sbyte)thread;
-			_new.ifRunningWaitMS = ifRunningWaitMS >= -1 ? ifRunningWaitMS : throw new ArgumentOutOfRangeException();
+			_new.wait = wait >= -1 ? wait : throw new ArgumentOutOfRangeException();
 			_new.flags = noWarning ? TOFlags.NoWarning : 0;
 		}
 		//CONSIDER: make default ifRunningWaitMS = 1000 if it is another action.
@@ -93,7 +93,7 @@ namespace Au.Triggers
 		public void ThreadMain() {
 			_New();
 			_new.thread = TOThread.Main;
-			_new.ifRunningWaitMS = 0;
+			_new.wait = 0;
 			_new.flags = 0;
 		}
 
@@ -107,7 +107,7 @@ namespace Au.Triggers
 		public void ThreadNew(bool single = false/*, bool mta = false*/) {
 			_New();
 			_new.thread = TOThread.New;
-			_new.ifRunningWaitMS = 0;
+			_new.wait = 0;
 			TOFlags f = 0;
 			if (single) f |= TOFlags.Single;
 			//if (mta) f |= TOFlags.MtaThread;
@@ -126,14 +126,9 @@ namespace Au.Triggers
 		public void ThreadPool(bool single = false) {
 			_New();
 			_new.thread = TOThread.Pool;
-			_new.ifRunningWaitMS = 0;
+			_new.wait = 0;
 			_new.flags = single ? TOFlags.Single : 0;
 		}
-
-		//rejected: RunSingle - don't run simultaneously with a "runSingle" script or another such action.
-		//	For key/autotext/mouse triggers it has no sense. If user uses kyboard/mouse while a runSingle script is running, then why action can't.
-		//	For window triggers usually has no sense too. If an unwanted window appears during a runSingle script, it usually breaks the script anyway. And it is rare.
-		//	Trigger actions should be short/fast. For long code let use scripts.
 
 		/// <summary>
 		/// A function to run before the trigger action.
@@ -380,7 +375,7 @@ namespace Au.Triggers
 
 				bool R = true;
 				lock (_q) {
-					int ifRunningWaitMS = trigger.options.ifRunningWaitMS;
+					int ifRunningWaitMS = trigger.options.wait;
 					if (_running) {
 						if (ifRunningWaitMS == 0) {
 							if (!trigger.options.flags.Has(TOFlags.NoWarning))
