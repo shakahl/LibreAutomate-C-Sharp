@@ -301,9 +301,9 @@ namespace Au.Triggers
 
 			if (!s_wasRun) {
 				s_wasRun = true;
-				wnd.more.registerWindowClass(c_cn);
+				WndUtil.RegisterWindowClass(c_cn);
 			}
-			_wMsg = wnd.more.createMessageOnlyWindow(_WndProc, c_cn);
+			_wMsg = WndUtil.CreateMessageOnlyWindow(_WndProc, c_cn);
 			_mainThreadId = Api.GetCurrentThreadId();
 			_winTimerPeriod = 0;
 			_winTimerLastTime = 0;

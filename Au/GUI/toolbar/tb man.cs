@@ -465,7 +465,7 @@ namespace Au
 			//
 			//SIZE _GetMinSize()
 			//{
-			//	int k = Border < TBBorder.ThreeD ? 1 : wnd.more.borderWidth(_w);//?
+			//	int k = Border < TBBorder.ThreeD ? 1 : WndUtil.BorderWidth(_w);//?
 			//	k *= 2;
 			//	var ms = _Scale(MinimumSize);
 			//	return (Math.Max(k, ms.Width), Math.Max(k, ms.Height));

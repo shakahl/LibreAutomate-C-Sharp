@@ -114,7 +114,7 @@ namespace Au.Tools
 			_con = w;
 			_uncheckControl = uncheckControl;
 
-			wnd.more.SavedRect.Restore(this, App.Settings.tools_Dwnd_wndPos, o => App.Settings.tools_Dwnd_wndPos = o);
+			WndSavedRect.Restore(this, App.Settings.tools_Dwnd_wndPos, o => App.Settings.tools_Dwnd_wndPos = o);
 		}
 
 		static Dwnd() {
@@ -687,7 +687,7 @@ namespace Au.Tools
 				b.AppendLine(")");
 				var estyle = w.ExStyle;
 				b.Append("<i>ExStyle<>:  0x").Append(((uint)estyle).ToString("X8")).Append(" (").Append(estyle.ToString()).AppendLine(")");
-				//b.Append("<i>Class style<>:  0x").AppendLine(((uint)wnd.more.getClassLong(w, GCL.STYLE)).ToString("X8"));
+				//b.Append("<i>Class style<>:  0x").AppendLine(((uint)WndUtil.GetClassLong(w, GCL.STYLE)).ToString("X8"));
 				if (!isCon) {
 					b.Append("<i>Is...<>:    ");
 					_AppendIs(w.IsPopupWindow, "IsPopupWindow");

@@ -524,7 +524,7 @@ class PanelFind : UserControl
 			});
 
 			bool _OpenLinkClicked(string file, bool replaceAll = false) {
-				var f = App.Model.Find(file, null); //<id>
+				var f = App.Model.Find(file); //<id>
 				if (f == null) return false;
 				if (f.IsFolder) f.SelectSingle();
 				else {

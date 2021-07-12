@@ -41,17 +41,18 @@ All attributes are optional. The Example command contains all.
 		<End_task />
 	</Run>
 	<Edit>
-		<Find />
-		<Undo separator="" />
+		<Undo />
 		<Redo />
 		<Cut separator="" />
 		<Copy />
 		<Paste />
 		<Wrap_lines separator="" />
 		<Images_in_code />
+		<Find separator="" />
 	</Edit>
 	<Tools>
 		<Options />
+		<Icons />
 	</Tools>
 	<Help>
 		<Context_help />

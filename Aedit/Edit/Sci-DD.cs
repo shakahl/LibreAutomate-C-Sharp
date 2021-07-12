@@ -162,10 +162,10 @@ partial class SciCode
 
 			if (!s.NE()) {
 				var z = new Sci_DragDropData { x = xy.x, y = xy.y };
-				var s8 = Convert2.ToUtf8(s);
+				var s8 = Encoding.UTF8.GetBytes(s);
 				fixed (byte* p8 = s8) {
 					z.text = p8;
-					z.len = s8.Length - 1;
+					z.len = s8.Length;
 					if (!_justText || 0 == ((DragDropEffects)effect & DragDropEffects.Move)) z.copy = 1;
 					CodeInfo.Pasting(_sci);
 					_sci.Call(SCI_DRAGDROP, 2, &z);

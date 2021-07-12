@@ -686,15 +686,8 @@ namespace Au
 			//_Debug("_GetBitmapBits", 3);
 
 			void _GetBits(uint* pixels) {
-				var h = new Api.BITMAPINFOHEADER {
-					biSize = sizeof(Api.BITMAPINFOHEADER),
-					biWidth = areaWidth,
-					biHeight = -areaHeight,
-					biPlanes = 1,
-					biBitCount = 32,
-					//biCompression = 0, //BI_RGB
-				};
-				if (areaHeight != Api.GetDIBits(_ad.mb.Hdc, _ad.mb.Hbitmap, 0, areaHeight, pixels, &h, 0)) //DIB_RGB_COLORS
+				var bi = new Api.BITMAPINFO(areaWidth, -areaHeight, 32);
+				if (areaHeight != Api.GetDIBits(_ad.mb.Hdc, _ad.mb.Hbitmap, 0, areaHeight, pixels, ref bi, 0)) //DIB_RGB_COLORS
 					throw new AuException("GetDIBits");
 
 				//remove alpha. Don't need for area.

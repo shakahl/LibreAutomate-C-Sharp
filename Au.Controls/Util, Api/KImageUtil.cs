@@ -123,6 +123,9 @@ namespace Au.Controls
 					x.bitCount = ch->bcBitCount;
 				} else return false;
 
+				//x.height = Math.Abs(x.height); //no, then draws incorrectly if top-down
+				if (x.height <= 0) return false; //rare
+
 				x.biHeader = h;
 				return true;
 				//note: don't check f->bfSize. Sometimes it is incorrect (> or < memSize). All programs open such files. Instead check other data later.
@@ -244,7 +247,7 @@ namespace Au.Controls
 		/// <param name="prefixLength">Length of prefix "imagefile:" or "image:".</param>
 		/// <param name="s">File path etc. See <see cref="ImageType"/>.</param>
 		public static ImageType ImageTypeFromString(out int prefixLength, string s) {
-			var b = Convert2.ToUtf8(s);
+			var b = Convert2.Utf8Encode(s);
 			fixed (byte* p = b) return ImageTypeFromString(out prefixLength, p, b.Length - 1);
 		}
 
@@ -258,7 +261,7 @@ namespace Au.Controls
 		/// <param name="xaml">If not null, supports XAML images. See <see cref="ImageUtil.LoadGdipBitmapFromXaml"/>.</param>
 		/// <remarks>Supports environment variables etc. If not full path, searches in <see cref="folders.ThisAppImages"/>.</remarks>
 		public static byte[] BmpFileDataFromString(string s, ImageType t, bool searchPath = false, (int dpi, SIZE? size)? xaml = null) {
-			//print.it(t, s);
+			//print.qm2.write(t);
 			try {
 				switch (t) {
 				case ImageType.Bmp or ImageType.PngGifJpg or ImageType.Cur:
@@ -276,7 +279,7 @@ namespace Au.Controls
 				switch (t) {
 				case ImageType.Base64Image:
 					var a = Convert.FromBase64String(s);
-					if (s.Starts("WkJN")) return Convert2.Decompress(a.AsSpan(3));
+					if (s.AsSpan().TrimStart().StartsWith("WkJN")) return Convert2.BrotliDecompress(a.AsSpan(3));
 					return _ImageToBytes(new(new MemoryStream(a, false)));
 				//case ImageType.Resource:
 				//	return _ImageToBytes(ResourceUtil.GetGdipBitmap(s));
@@ -348,13 +351,11 @@ namespace Au.Controls
 				int headersSize = sizeof(BITMAPFILEHEADER) + sizeof(Api.BITMAPINFOHEADER);
 				var a = new byte[headersSize + siz * siz * 3];
 				fixed (byte* p = a) {
-					BITMAPFILEHEADER* f = (BITMAPFILEHEADER*)p;
-					Api.BITMAPINFOHEADER* h = (Api.BITMAPINFOHEADER*)(f + 1);
-					for (int i = 0; i < headersSize; i++) p[i] = 0;
-					byte* bits = p + headersSize;
-					h->biSize = sizeof(Api.BITMAPINFOHEADER); h->biBitCount = 24; h->biWidth = siz; h->biHeight = siz; h->biPlanes = 1;
-					if (0 == Api.GetDIBits(m.Hdc, m.Hbitmap, 0, siz, bits, h, 0)) return null; //DIB_RGB_COLORS
+					var f = (BITMAPFILEHEADER*)p;
 					f->bfType = ((byte)'M' << 8) | (byte)'B'; f->bfOffBits = headersSize; f->bfSize = a.Length;
+					var bi = new Api.BITMAPINFO(siz, siz, 24);
+					if (siz != Api.GetDIBits(m.Hdc, m.Hbitmap, 0, siz, p + headersSize, ref bi, 0)) return null; //DIB_RGB_COLORS
+					MemoryUtil.Copy(&bi, f + 1, bi.biSize);
 				}
 				return a;
 			}
@@ -387,12 +388,12 @@ namespace Au.Controls
 #endif
 
 		/// <summary>
-		/// Compresses .bmp file data (<see cref="Convert2.Compress"/>) and Base64-encodes.
+		/// Compresses .bmp file data (<see cref="Convert2.BrotliCompress"/>) and Base64-encodes.
 		/// Returns string with "image:" prefix.
 		/// </summary>
 		public static string BmpFileDataToString(byte[] bmpFileData) {
 			if (bmpFileData == null) return null;
-			return "image:WkJN" + Convert.ToBase64String(Convert2.Compress(bmpFileData));
+			return "image:WkJN" + Convert.ToBase64String(Convert2.BrotliCompress(bmpFileData));
 			//WkJN is Base64 of "ZBM"
 		}
 

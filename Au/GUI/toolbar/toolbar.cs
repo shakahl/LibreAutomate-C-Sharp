@@ -355,7 +355,7 @@ namespace Au
 			var r = owned ? owner.Rect : screen.Rect; //create in center of owner window or screen, to minimize possibility of DPI change when setting final position
 			r = new(r.CenterX - size.width / 2, r.CenterY - size.height / 2, size.width, size.height);
 			Dpi.AdjustWindowRectEx(_dpi, ref r, style, estyle);
-			wnd.more.createWindow(_WndProc, true, "Au.toolbar", _name, style, estyle, r.left, r.top, r.Width, r.Height);
+			WndUtil.CreateWindow(_WndProc, true, "Au.toolbar", _name, style, estyle, r.left, r.top, r.Width, r.Height);
 			_created = true;
 		}
 
@@ -449,13 +449,13 @@ namespace Au
 
 		static void _RegisterWinclass() {
 			if (0 == Interlocked.Exchange(ref s_winclassRegistered, 1)) {
-				wnd.more.registerWindowClass("Au.toolbar"/*, etc: new() { style = Api.CS_HREDRAW | Api.CS_VREDRAW, mCursor = MCursor.Arrow }*/);
+				WndUtil.RegisterWindowClass("Au.toolbar"/*, etc: new() { style = Api.CS_HREDRAW | Api.CS_VREDRAW, mCursor = MCursor.Arrow }*/);
 			}
 		}
 		static int s_winclassRegistered;
 
 		unsafe nint _WndProc(wnd w, int msg, nint wParam, nint lParam) {
-			//wnd.more.printMsg(w, msg, wParam, lParam);
+			//WndUtil.PrintMsg(w, msg, wParam, lParam);
 
 			switch (msg) {
 			case Api.WM_LBUTTONDOWN:
@@ -665,7 +665,7 @@ namespace Au
 					bool ok = false;
 					try {
 						_Invalidate(_iClick = i);
-						ok = wnd.more.dragLoop(_w, MButtons.Left, d => {
+						ok = WndUtil.DragLoop(_w, MButtons.Left, d => {
 							if (d.Msg.message != Api.WM_MOUSEMOVE) return;
 							int j = _HitTest(Math2.NintToPOINT(d.Msg.lParam));
 							if ((j == i) == _noHotClick) {

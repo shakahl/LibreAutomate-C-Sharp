@@ -76,7 +76,7 @@ namespace Au.Controls
 				}
 				return r;
 			} //SHOULDDO: now calls v.Items 2 times (_CountVisible and _AddVisible). It can be expensive.
-			
+
 			if (n == 0) {
 				_avi = Array.Empty<_VisibleItem>();
 				_dvi = null;
@@ -857,14 +857,12 @@ namespace Au.Controls
 			_dd = null;
 		}
 
-		//TODO: don't use folder icon to drop into. Drop into if in horizontal center 50%.
-
 		/// <summary>
 		/// Can be called from "drag over" override or event handler to show/hide insertion mark, expand/collapse folder and scroll if need.
 		/// </summary>
 		/// <param name="canDrop">Can drop here. If false, hides insertion mark and returns.</param>
 		/// <remarks>
-		/// Draws black line between nearest items. If mouse is on a folder image, draws rectangle.
+		/// Draws black line between nearest items. If mouse is on a folder vertical center, draws rectangle.
 		/// When mouse is on a folder, expands it if pressed key Right and collapses if Left.
 		/// Scrolls when mouse is near top or bottom or pressed key Down, Up, PageDown, PageUp, Home or End.
 		/// </remarks>
@@ -974,13 +972,14 @@ namespace Au.Controls
 			}
 			if (HitTest(d.xy, out var h)) {
 				d.targetIndex = h.index;
-				bool folder = h.item.IsFolder, image = h.part == TVParts.Image, bottom = d.xy.y >= _ItemTop(h.index) + (_itemHeight + 1) / 2;
-				if (folder && bottom && !image && h.index < _avi.Length - 1 && _avi[h.index + 1].level > _avi[h.index].level) { //between folder and its first child
-					d.targetIndex++;
-					//folder = false;
-				} else {
-					if (!(d.intoFolder = folder & image)) d.insertAfter = bottom;
-				}
+				double y = d.xy.y, top = _ItemTop(h.index), quarter = _itemHeight / 4d;
+				bool after = y >= top + quarter * 2;
+				if (h.item.IsFolder && y >= top + quarter) {
+					if (y < top + quarter * 3) d.intoFolder = true;
+					else if (h.index < _avi.Length - 1 && _avi[h.index + 1].level > _avi[h.index].level) d.targetIndex++; //between folder and its first child
+					else d.insertAfter = after;
+				} else d.insertAfter = after;
+
 				d.targetItem = _avi[d.targetIndex].item;
 			} else {
 				d.targetIndex = -1;

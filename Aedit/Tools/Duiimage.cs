@@ -78,7 +78,7 @@ namespace Au.Tools
 			b.End();
 			_noeventValueChanged = false;
 
-			wnd.more.SavedRect.Restore(this, App.Settings.tools_Duiimage_wndPos, o => App.Settings.tools_Duiimage_wndPos = o);
+			WndSavedRect.Restore(this, App.Settings.tools_Duiimage_wndPos, o => App.Settings.tools_Duiimage_wndPos = o);
 		}
 
 		static Duiimage() {
@@ -409,10 +409,10 @@ namespace Au.Tools
 		public string ZResultCode { get; private set; }
 
 		private void _bOK_Click(WBButtonClickArgs e) {
-			ZResultCode = _code.zText;
-			if (ZResultCode.NE()) { ZResultCode = null; e.Cancel = true; return; }
-
-			InsertCode.Statements(ZResultCode);
+			var s = _code.zText;
+			if (s.NE()) { ZResultCode = null; e.Cancel = true; return; }
+			ZResultCode = s = s.Replace("@\"image:", "@\"image:\r\n");
+			InsertCode.Statements(s);
 		}
 
 		private void _bTest_Click(WBButtonClickArgs ea) {
@@ -484,7 +484,7 @@ If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits ma
 
 			protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
 				var wParent = (wnd)hwndParent.Handle;
-				_w = wnd.more.createWindow(_wndProc = _WndProc, false, "Static", null, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
+				_w = WndUtil.CreateWindow(_wndProc = _WndProc, false, "Static", null, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
 
 				return new HandleRef(this, _w.Handle);
 			}
@@ -506,7 +506,7 @@ If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits ma
 			WNDPROC _wndProc;
 			nint _WndProc(wnd w, int msg, nint wParam, nint lParam) {
 				//var pmo = new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
-				//if (wnd.more.printMsg(out string s, _w, msg, wParam, lParam, pmo)) print.it("<><c green>" + s + "<>");
+				//if (WndUtil.PrintMsg(out string s, _w, msg, wParam, lParam, pmo)) print.it("<><c green>" + s + "<>");
 
 				switch (msg) {
 				case Api.WM_NCHITTEST:

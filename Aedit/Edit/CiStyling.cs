@@ -29,6 +29,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 
+//TODO: bad folding if big code. Need to click several times until folds correctly.
+
 partial class CiStyling
 {
 	/// <summary>
@@ -247,7 +249,7 @@ partial class CiStyling
 				//ClassificationTypeNames.PreprocessorText => EStyle.None,
 				ClassificationTypeNames.PropertyName => EToken.Function,
 				ClassificationTypeNames.Punctuation => EToken.Punctuation,
-				ClassificationTypeNames.RecordName => EToken.Type,
+				ClassificationTypeNames.RecordClassName or ClassificationTypeNames.RecordStructName => EToken.Type,
 				ClassificationTypeNames.StringEscapeCharacter => EToken.StringEscape,
 				ClassificationTypeNames.StringLiteral => EToken.String,
 				ClassificationTypeNames.StructName => EToken.Type,

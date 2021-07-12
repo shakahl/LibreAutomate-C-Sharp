@@ -1,10 +1,11 @@
-/// Script description.
-/// It is optional.
+/// Description.
 
-/*/ runSingle true; /*/ //.
+//.
 using Au;
 using System.Text;
-;script.setup(trayIcon: true); //;
+script.single();
+script.setup(trayIcon: true);
+//;
 
 /*
 The programming language is C#.
@@ -15,14 +16,14 @@ Also you can create and use new functions, classes, libraries and .exe programs.
 
 A script can optionally start with a description as /// comments.
 Then can be /*/ /*/ comments with script properties used by the editor program.
-Then 'using' directives.
+Then 'using' directives. Don't need those specified in file global.cs.
 Then script.setup or/and other code that sets run time properties. Optional.
 Then your script. It can contain local functions anywhere.
 Then optionally you can define classes and other types.
 
 This syntax is known as "C# top-level statements". It is simple and concise,
 but has some limitations. You can instead use a class with Main function. Try
-menu Edit -> Convert -> To script class.
+menu Code -> Convert to script class.
 
 The //. and //; are used to fold (hide) code. Click the small [+] box at
 the top-left to see and edit that code when need. 

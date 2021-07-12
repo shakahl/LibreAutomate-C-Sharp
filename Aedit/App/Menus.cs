@@ -352,7 +352,7 @@ static class Menus
 		[Command(image = "*PicolIcons.Settings #99BF00")]
 		public static void Options() { DOptions.ZShow(); }
 
-		[Command(image = "*FontAwesome.IconsSolid #99BF00")]
+		[Command(image = "*FontAwesome.IconsSolid #EABB00")]
 		public static void Icons() { DIcons.ZShow(); }
 
 		[Command(separator = true, target = "Output")]

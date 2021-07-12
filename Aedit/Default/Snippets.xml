@@ -140,7 +140,7 @@ finally {  }]]>
 			<list item="OK button and &amp;error icon">dialog.showError("$end$");</list>
 			<list item="OK and &amp;Cancel buttons">if (!dialog.showOkCancel("$end$")) return;</list>
 			<list item="&amp;Yes and No buttons">if (!dialog.showYesNo("$end$")) return;</list>
-			<list item="Custom &amp;buttons" using="Au.Types">
+			<list item="Custom &amp;buttons">
 				<![CDATA[int button = dialog.show("$end$", "", "1 OK|0 Cancel|2 Yes|3 No|4 Retry|5 Close|10 Button1|11 Button2", flags: DFlags.CommandLinks);
 switch (button) {
 case 1:  break;
@@ -219,12 +219,12 @@ mouse.move(w, );]]>
 			<list item="Start new thread">
 				<![CDATA[run.thread(() => { $end$ }, background: true);]]>
 			</list>
-			<list item="Use thread pool" using="System.Threading.Tasks">
+			<list item="Use thread pool">
 				<![CDATA[Task.Run(() => { $end$ });]]>
 			</list>
 		</snippet>
 
-		<snippet name="stringBuilderSnippet" info="Create string with StringBuilder." using="System.Text">
+		<snippet name="stringBuilderSnippet" info="Create string with StringBuilder.">
 			<![CDATA[var b = new StringBuilder();
 b.Append($end$);
 b.AppendLine();
@@ -356,7 +356,7 @@ default: return;
 			</list>
 		</snippet>
 
-		<snippet name="wpfSnippet" info="Create dialog window with controls." using="Au.Types;System.Windows;System.Windows.Controls;System.Windows.Controls.Primitives;System.Windows.Media" more="See also: dialogSnippet, menu File -> New -> Templates.">
+		<snippet name="wpfSnippet" info="Create dialog window with controls." using="System.Windows;System.Windows.Controls;System.Windows.Controls.Primitives;System.Windows.Media" more="See also: dialogSnippet, menu File -> New -> Templates.">
 			<list item="Simple">
 				<![CDATA[var b = new wpfBuilder("Window").WinSize(400);
 b.R.Add("Text", out TextBox text1).Focus();
@@ -448,7 +448,7 @@ if (!b.ShowDialog()) return;
 			<![CDATA[script.run(@"$end$\Folder\Script$end$.cs");]]>
 		</snippet>
 
-		<snippet name="failedSnippet" info="Throw 'failed' exception." more="Exception text is optional." using="Au.Types">
+		<snippet name="failedSnippet" info="Throw 'failed' exception." more="Exception text is optional.">
 			<![CDATA[throw new AuException($end$);]]>
 		</snippet>
 
@@ -595,7 +595,7 @@ void Toolbar_$end$RenameMe$end$(Au.Triggers.TriggerArgs ta = null) {
 	<group context="Namespace|Type|Line">
 		<!-- snippets that are valid in types, namespaces and global scope, at the start of line -->
 
-		<snippet name="nativeApiSnippet" info="Adds class for Windows API or other native API." using="Au.Types">
+		<snippet name="nativeApiSnippet" info="Adds class for Windows API or other native API.">
 			<![CDATA[/// <summary>
 /// Add an empty class like this in scripts (at the end) and projects (in any file) where you want to use native API. Change the class name (api) if want.
 /// Then, whenever you need an API function etc, type the class name and dot (api.). The completion list contains API names and adds declarations to this class.
@@ -606,7 +606,7 @@ unsafe class api : NativeApi {}
 ]]>
 		</snippet>
 
-		<snippet name="settingsSnippet" info="Adds record for settings used by this script/program/library/etc." using="Au.Types;System">
+		<snippet name="settingsSnippet" info="Adds record for settings used by this script/program/library/etc.">
 			<![CDATA[/// <summary>
 /// Settings of this script/program/library/etc.
 /// Function <see cref="MySettings.Load"/> loads settings from file or creates default; returns new variable through which you can get/set settings like <c>var v = sett.i; sett.i = 2;</c>.

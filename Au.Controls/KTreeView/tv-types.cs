@@ -270,7 +270,7 @@ namespace Au.Controls
 		/// <summary>If true, should insert after the drop target item. Else before. Not used if <b>intoFolder</b> is true.</summary>
 		public bool insertAfter;
 
-		/// <summary><b>xy</b> is on a folder image, therefore should move to the folder.</summary>
+		/// <summary><b>xy</b> is in a folder center, therefore should move to the folder.</summary>
 		public bool intoFolder;
 	}
 

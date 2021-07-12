@@ -1,5 +1,3 @@
-using Au;
-using Au.Types;
 using System.Windows;
 using System.Windows.Controls;
 

@@ -268,9 +268,6 @@ class CiAutocorrect
 		else c.ignoreChar = true;
 	}
 
-	//TODO: implement App.Settings.ci_shiftEnterAlways and ci_shiftTabAlways.
-	//	Also exit from "..." (like var s="string";), '...', [...], <...>.
-
 	static bool _OnEnterOrSemicolon(bool anywhere, bool onSemicolon, out BeforeCharContext bcc) {
 		bcc = null; //need to return it only if onSemicolon==true and anywhere==false and returns true
 		bool onEnterWithoutMod = !(onSemicolon | anywhere);

@@ -1,4 +1,4 @@
-﻿/*/ runSingle true; /*/ //.
-using Au;
-;script.setup(trayIcon: true); //;
+﻿//.
+script.setup(trayIcon: true);
+//;
 

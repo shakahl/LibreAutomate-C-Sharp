@@ -217,8 +217,8 @@ class UacDragDrop
 		public static void MainDD(string[] args) {
 			_msgWnd = (wnd)args[1].ToInt();
 
-			wnd.more.registerWindowClass("Aedit.DD", _WndProc);
-			_w = wnd.more.createWindow("Aedit.DD", null, WS.POPUP | WS.DISABLED, WSE.LAYERED | WSE.NOACTIVATE | WSE.TOOLWINDOW | WSE.TOPMOST);
+			WndUtil.RegisterWindowClass("Aedit.DD", _WndProc);
+			_w = WndUtil.CreateWindow("Aedit.DD", null, WS.POPUP | WS.DISABLED, WSE.LAYERED | WSE.NOACTIVATE | WSE.TOOLWINDOW | WSE.TOPMOST);
 			Api.SetLayeredWindowAttributes(_w, 0, 1, 2);
 
 			Api.OleInitialize(default);
@@ -261,7 +261,7 @@ class UacDragDrop
 				DDData r = default;
 				if (_enteredOnce = r.GetData(d)) {
 					var b = Serializer_.Serialize(effect, grfKeyState, pt.x, pt.y, r.files, r.shell, r.text, r.linkName);
-					effect = (int)wnd.more.CopyData.Send<byte>(_msgWnd, 110, b, (int)DDEvent.Enter);
+					effect = (int)WndCopyData.Send<byte>(_msgWnd, 110, b, (int)DDEvent.Enter);
 				} else {
 					_Exit();
 				}
@@ -270,18 +270,18 @@ class UacDragDrop
 			void Api.IDropTarget.DragOver(int grfKeyState, POINT pt, ref int effect) {
 				if (!_enteredOnce) { effect = 0; return; }
 				var b = Serializer_.Serialize(effect, grfKeyState, pt.x, pt.y);
-				effect = (int)wnd.more.CopyData.Send<byte>(_msgWnd, 110, b, (int)DDEvent.Over);
+				effect = (int)WndCopyData.Send<byte>(_msgWnd, 110, b, (int)DDEvent.Over);
 			}
 
 			void Api.IDropTarget.Drop(IDataObject d, int grfKeyState, POINT pt, ref int effect) {
 				if (!_enteredOnce) { effect = 0; return; }
 				_Exit();
 				var b = Serializer_.Serialize(effect, grfKeyState, pt.x, pt.y);
-				effect = (int)wnd.more.CopyData.Send<byte>(_msgWnd, 110, b, (int)DDEvent.Drop);
+				effect = (int)WndCopyData.Send<byte>(_msgWnd, 110, b, (int)DDEvent.Drop);
 			}
 
 			void Api.IDropTarget.DragLeave() {
-				if (_enteredOnce) wnd.more.CopyData.Send<byte>(_msgWnd, 110, Serializer_.Serialize(), (int)DDEvent.Leave);
+				if (_enteredOnce) WndCopyData.Send<byte>(_msgWnd, 110, Serializer_.Serialize(), (int)DDEvent.Leave);
 			}
 		}
 	}

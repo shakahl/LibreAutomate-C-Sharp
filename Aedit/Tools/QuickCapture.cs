@@ -21,7 +21,7 @@ namespace Au.Tools
 			var p = mouse.xy;
 			wnd w0 = wnd.fromXY(p), w = w0.Window, c = w == w0 ? default : w0;
 			//int color = 0; using (var dc = new ScreenDC_()) { color = Api.GetPixel(dc, p.x, p.y); }
-			string path = wnd.more.getWindowsStoreAppId(w, true, true);
+			string path = WndUtil.GetWindowsStoreAppId(w, true, true);
 
 			const int sh = 30;
 			var screenshot = App.Settings.edit_noImages ? null : ColorQuantizer.MakeScreenshotComment(new(p.x - sh, p.y - sh / 2, sh * 2, sh), dpi: App.Hwnd);

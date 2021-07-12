@@ -123,7 +123,7 @@ namespace Au.Tools
 
 			_elm = e; //will be processed in OnLoad
 
-			wnd.more.SavedRect.Restore(this, App.Settings.tools_Delm_wndPos, o => App.Settings.tools_Delm_wndPos = o);
+			WndSavedRect.Restore(this, App.Settings.tools_Delm_wndPos, o => App.Settings.tools_Delm_wndPos = o);
 		}
 
 		static Delm() {

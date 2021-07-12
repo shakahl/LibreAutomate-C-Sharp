@@ -40,7 +40,7 @@ namespace Au.More
 		/// </summary>
 		/// <param name="s">Base64 encoded image string with prefix "image:".</param>
 		/// <exception cref="ArgumentException">String does not start with "image:" or is invalid Base64.</exception>
-		/// <exception cref="Exception"><see cref="Convert2.Decompress"/> exceptions (when compressed .bmp).</exception>
+		/// <exception cref="Exception"><see cref="Convert2.BrotliDecompress"/> exceptions (when compressed .bmp).</exception>
 		public static MemoryStream LoadImageStreamFromString(string s) {
 			if (!HasImageStringPrefix(s)) throw new ArgumentException("String must start with \"image:\".");
 			int start = 6; while (start < s.Length && s[start] <= ' ') start++; //can be eg "image:\r\n..."
@@ -50,10 +50,7 @@ namespace Au.More
 			var b = new byte[n];
 			if (!Convert.TryFromBase64Chars(s.AsSpan(start), b, out n)) throw new ArgumentException("Invalid Base64 string");
 			if (!compressedBmp) return new MemoryStream(b, 0, n, false);
-			var stream = new MemoryStream();
-			Convert2.Decompress(b.AsSpan(0, n), stream);
-			return stream;
-			//size and speed of "image:" and "image:WkJN": "image:" usually is bigger by 10-20% and faster by ~25%
+			return new MemoryStream(Convert2.BrotliDecompress(b.AsSpan(0, n)), false);
 		}
 
 		/// <summary>

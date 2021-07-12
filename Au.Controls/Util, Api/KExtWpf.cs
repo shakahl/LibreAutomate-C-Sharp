@@ -17,12 +17,10 @@ using Au.Types;
 using Au.More;
 using Au.Controls;
 
-//TODO: KPopupListBox popup does not close on click outside, unless activated other window. Only in Dwnd. Tested: StaysOpen always false.
-
 namespace Au.Tools
 {
 	/// <summary>
-	/// KCheckBox and TextBox.
+	/// KCheckBox and TextBox. Optionally + Button and KPopupListBox.
 	/// </summary>
 	public class KCheckTextBox
 	{
@@ -40,7 +38,7 @@ namespace Au.Tools
 			t.Tag = this;
 			_button = button;
 			if (_button != null) {
-				_button.ClickMode = ClickMode.Press;
+				//_button.ClickMode = ClickMode.Press; //open on button down. But then Popup.StaysOpen=false does not work. Tried async, but same. //SHOULDDO: replace Popup in KPopupListBox with KPopup.
 				_button.Click += (_, _) => {
 					if (_popup?.IsOpen ?? false) {
 						_popup.IsOpen = false;

@@ -84,6 +84,7 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 		b.AddButton(out var bThis, "This", _ => _SetIcon(tv)).Width(70).Disabled();
 		b.AddButton("Default", _ => _SetIcon(null)).Width(70);
 		//b.AddButton("Random", null).Width(70); //idea: set random icons for multiple selected files. Probably too crazy.
+		b.AddButton("Show current", _ => _tName.Text = FilesModel.TreeControl.SelectedItems.FirstOrDefault()?.CustomIconName).Margin("L20");
 		b.End();
 		if(expandFileIcon) exp1.IsExpanded = true;
 
@@ -396,7 +397,7 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 #endif
 
 	public static string GetIconString(string s, EGetIcon what) {
-		if (what != EGetIcon.IconNameToXaml) s = App.Model.Find(s, null)?.CustomIconName;
+		if (what != EGetIcon.IconNameToXaml) s = App.Model.Find(s)?.ImageSource;
 		if (what != EGetIcon.PathToIconName && s != null) TryGetIconFromBigDB(s, out s);
 		return s;
 	}

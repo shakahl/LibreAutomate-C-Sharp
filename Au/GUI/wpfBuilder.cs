@@ -423,13 +423,15 @@ namespace Au
 						}
 					}
 					_window.SnapsToDevicePixels = true; //workaround for black line at bottom, for example when there is single CheckBox in Grid.
-														//				_window.UseLayoutRounding=true; //not here. Makes many controls bigger by 1 pixel when resizing window with grid, etc. Maybe OK if in _Add (for each non-panel element).
+														//_window.UseLayoutRounding=true; //not here. Makes many controls bigger by 1 pixel when resizing window with grid, etc. Maybe OK if in _Add (for each non-panel element).
 					if (_window.WindowStartupLocation == default) _window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
 					if (winTopmost) _window.Topmost = true;
 					if (!winWhite) _window.Background = SystemColors.ControlBrush;
 				}
 			}
 			s_cwt.Add(_p.panel, this);
+
+			if (script.role == SRole.MiniProgram && _window != null) Loaded += () => { }; //set custom icon if need
 		}
 
 		/// <summary>
@@ -540,7 +542,7 @@ namespace Au
 		/// - Window is loaded.
 		/// </exception>
 		/// <remarks>
-		/// Calls <see cref="wnd.more.SavedRect.Restore"/>.
+		/// Calls <see cref="WndSavedRect.Restore"/>.
 		/// Call this function before showing the window. Don't change location/size-related window properties after that.
 		/// If you use <see cref="WinSize"/>, call it before. It is used if size is still not saved. The same if you set window position or state.
 		/// </remarks>
@@ -557,7 +559,7 @@ namespace Au
 		public wpfBuilder WinSaved(string saved, Action<string> save) {
 			_ThrowIfNotWindow();
 			_ThrowIfWasWinRectXY(); _wasWinXY = 2;
-			wnd.more.SavedRect.Restore(_window, saved, save);
+			WndSavedRect.Restore(_window, saved, save);
 			return this;
 		}
 
@@ -647,6 +649,17 @@ namespace Au
 			var p = sender as Panel;
 			if (!p.IsVisible) return;
 			p.Loaded -= _Panel_Loaded;
+
+			//if role miniProgram, use assembly icon instead of apphost icon
+			if (script.role == SRole.MiniProgram && _window != null && _window.Icon == null) {
+				var hm = Api.GetModuleHandle(Assembly.GetEntryAssembly().Location);
+				if (default != Api.FindResource(hm, Api.IDI_APPLICATION, Api.RT_GROUP_ICON)) {
+					var w = _window.Hwnd();
+					icon.FromModuleHandle_(hm, Dpi.Scale(16, w))?.SetWindowIcon(w, false);
+					icon.FromModuleHandle_(hm, Dpi.Scale(32, w))?.SetWindowIcon(w, true);
+				}
+			}
+
 			_loadedEvent?.Invoke();
 		}
 
@@ -2222,7 +2235,8 @@ namespace Au.Types
 	/// <summary>
 	/// Used with <see cref="wpfBuilder"/> constructor to specify the type of the root panel.
 	/// </summary>
-	public enum WBPanelType {
+	public enum WBPanelType
+	{
 		///
 		Grid,
 		///
@@ -2239,7 +2253,8 @@ namespace Au.Types
 	/// Flags for <see cref="wpfBuilder.Add"/>.
 	/// </summary>
 	[Flags]
-	public enum WBAdd {
+	public enum WBAdd
+	{
 		/// <summary>
 		/// Add as child of <see cref="wpfBuilder.Last"/>, which can be of type (or base type):
 		/// - <see cref="ContentControl"/>. Adds as its <see cref="ContentControl.Content"/> property. For example you can add a <b>CheckBox</b> in a <b>Button</b>.
@@ -2264,7 +2279,8 @@ namespace Au.Types
 	/// To specify minimal and maximal values, pass a range like <c>100..500</c>.
 	/// To specify width or height and minimal or/and maximal values, pass a tuple like <c>(100, 50..)</c> or <c>(100, ..200)</c> or <c>(100, 50..200)</c>.
 	/// </remarks>
-	public struct WBLength {
+	public struct WBLength
+	{
 		double _v;
 		Range _r;
 
@@ -2322,7 +2338,8 @@ namespace Au.Types
 	/// Used with <see cref="wpfBuilder"/> functions to specify width/height of columns and rows. Allows to specify minimal and/or maximal values too.
 	/// Like <see cref="WBLength"/>, but has functions to create <see cref="ColumnDefinition"/> and <see cref="RowDefinition"/>. Also has implicit conversion from these types.
 	/// </summary>
-	public struct WBGridLength {
+	public struct WBGridLength
+	{
 		double _v;
 		Range _r;
 		DefinitionBase _def;
@@ -2382,7 +2399,8 @@ namespace Au.Types
 	/// <summary>
 	/// Arguments for <see cref="wpfBuilder.AlsoAll"/> callback function.
 	/// </summary>
-	public class WBAlsoAllArgs {
+	public class WBAlsoAllArgs
+	{
 		/// <summary>
 		/// Gets 0-based column index of last added control, or -1 if not in grid.
 		/// </summary>
@@ -2397,7 +2415,8 @@ namespace Au.Types
 	/// <summary>
 	/// Arguments for <see cref="wpfBuilder.AddButton"/> callback function.
 	/// </summary>
-	public class WBButtonClickArgs : CancelEventArgs {
+	public class WBButtonClickArgs : CancelEventArgs
+	{
 		/// <summary>
 		/// Gets the button.
 		/// </summary>
@@ -2413,7 +2432,8 @@ namespace Au.Types
 	/// Flags for <see cref="wpfBuilder.AddButton"/>.
 	/// </summary>
 	[Flags]
-	public enum WBBFlags {
+	public enum WBBFlags
+	{
 		/// <summary>It is OK button (<see cref="Button.IsDefault"/>, closes window, validates, <see cref="wpfBuilder.OkApply"/> event).</summary>
 		OK = 1,
 
@@ -2428,7 +2448,8 @@ namespace Au.Types
 	}
 }
 
-namespace Au.More {
+namespace Au.More
+{
 	//rejected. Unsafe etc. For example, when assigning to object, uses CheckBool whereas the user may expect bool.
 	//	/// <summary>
 	//	/// <see cref="CheckBox"/> that can be used like bool.

@@ -127,7 +127,7 @@ namespace Au
 		/// </remarks>
 		public static void doEvents() {
 			while (Api.PeekMessage(out var m, default, 0, 0, Api.PM_REMOVE)) {
-				//wnd.more.printMsg(m);
+				//WndUtil.PrintMsg(m);
 				if (m.message == Api.WM_QUIT) { Api.PostQuitMessage((int)m.wParam); break; }
 				Api.TranslateMessage(m);
 				Api.DispatchMessage(m);

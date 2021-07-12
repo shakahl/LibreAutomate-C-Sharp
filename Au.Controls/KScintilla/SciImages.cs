@@ -293,7 +293,7 @@ namespace Au.Controls
 				//info: now len<=n
 				if (imageLen < n) {
 					if (imageLen != 0) { p += imageLen; n -= imageLen; }
-					return Convert2.FromUtf8(p, n);
+					return Encoding.UTF8.GetString(p, n);
 				}
 			}
 			return "";

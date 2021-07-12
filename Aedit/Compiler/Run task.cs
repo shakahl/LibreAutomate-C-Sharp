@@ -57,7 +57,7 @@ static class CompileRun
 			if (f2 != null) {
 				if (!f2.FindProject(out projFolder, out projMain)) f = f2;
 				else if (projMain != f) f = projMain;
-				else { print.it($"<>The test script {f2.SciLink} cannot be in the project folder {projFolder.SciLink}"); return 0; }
+				else { print.it($"<>The test script {f2.SciLink()} cannot be in the project folder {projFolder.SciLink()}"); return 0; }
 			}
 		}
 
@@ -84,20 +84,20 @@ static class CompileRun
 	static void _OnRunClassFile(FileNode f, FileNode projFolder) {
 		if (!s_isRegisteredLinkRCF) { s_isRegisteredLinkRCF = true; SciTags.AddCommonLinkTag("+runClass", _SciLink_RunClassFile); }
 		var ids = f.IdStringWithWorkspace;
-		var s2 = projFolder != null ? "" : $", project (<+runClass \"2|{ids}\">create<>) or role exeProgram (<+runClass \"1|{ids}\">add<>)";
-		print.it($"<>Cannot run '{f.Name}'. It is a class file without a test script (<+runClass \"3|{ids}\">create<>){s2}.");
+		var s2 = projFolder != null ? "" : $" or project (<+runClass \"2|{ids}\">create<>). Or <+runClass \"1|{ids}\">change<> role";
+		print.it($"<>Cannot run '{f.Name}'. It is a class file. Need a test script (<+runClass \"3|{ids}\">create<>){s2}.");
 	}
 
 	static void _SciLink_RunClassFile(string s) {
 		int action = s.ToInt(); //1 add meta role miniProgram, 2 create Script project, 3 create new test script and set "run" attribute
-		var f = App.Model.Find(s[2..], null); if (f == null) return;
-		if (action == 1) { //add meta role exeProgram
+		var f = App.Model.Find(s[2..]); if (f == null) return;
+		if (action == 1) { //change role
 			if (!App.Model.SetCurrentFile(f)) return;
 			App.Model.Properties();
 		} else {
 			FileNode f2;
 			if (action == 2) { //create project
-				if (!_NewItem(out f2, @"New Project\@@Script")) return;
+				if (!_NewItem(out f2, @"New project\@Script")) return;
 				f.FileMove(f2, FNPosition.After);
 			} else { //create test script
 				s = "test " + pathname.getNameNoExt(f.Name);
@@ -204,9 +204,9 @@ class RunningTask : ITreeViewItem
 
 	#region ITreeViewItem
 
-	string ITreeViewItem.DisplayText => (f as ITreeViewItem).DisplayText;
+	string ITreeViewItem.DisplayText => f.DisplayName;
 
-	string ITreeViewItem.ImageSource => (f as ITreeViewItem).ImageSource;
+	string ITreeViewItem.ImageSource => f.ImageSource;
 
 	///TVCheck ITreeViewItem.CheckState { get; }
 
@@ -558,7 +558,7 @@ class RunningTasks
 	public unsafe int RunCompiled(FileNode f, Compiler.CompResults r, string[] args,
 		bool noDefer = false, string wrPipeName = null, bool ignoreLimits = false, bool runFromEditor = false) {
 		g1:
-		if (!ignoreLimits && !_CanRunNow(f, r, out var running, runFromEditor)) {//TODO: test
+		if (!ignoreLimits && !_CanRunNow(f, r, out var running, runFromEditor)) {
 			var ifRunning = r.ifRunning;
 			if (!ifRunning.Has(EIfRunning._norestartFlag) && ifRunning != EIfRunning.restart) {
 				if (runFromEditor) ifRunning = EIfRunning.restart;
@@ -574,7 +574,7 @@ class RunningTasks
 			case EIfRunning.restart when _EndTask(running):
 				goto g1;
 			default: //warn
-				print.it($"<>Cannot start {f.SciLink} because it is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>ifRunning<>.");
+				print.it($"<>Cannot start {f.SciLink()} because it is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>ifRunning<>.");
 				break;
 			}
 			return 0;
@@ -605,7 +605,7 @@ class RunningTasks
 				//break;
 				case UacIL.System:
 				case UacIL.Protected:
-					print.it($"<>Cannot run {f.SciLink}. Meta comment option <c green>uac {r.uac}<> cannot be used when the UAC integrity level of this process is {IL}. Supported levels are Medium, High and uiAccess.");
+					print.it($"<>Cannot run {f.SciLink()}. Meta comment option <c green>uac {r.uac}<> cannot be used when the UAC integrity level of this process is {IL}. Supported levels are Medium, High and uiAccess.");
 					return 0;
 					//info: cannot start Medium IL process from System process. Would need another function. Never mind.
 				}

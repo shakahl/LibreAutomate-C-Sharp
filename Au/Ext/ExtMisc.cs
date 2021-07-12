@@ -555,6 +555,55 @@ namespace Au.Types
 		}
 
 		/// <summary>
+		/// Adds key/value to dictionary. If the key already exists, adds the value to the same key as <b>List</b> item and returns the <b>List</b>; else returns null.
+		/// </summary>
+		/// <exception cref="ArgumentException">key/value already exists.</exception>
+		internal static List<TValue> MultiAdd_<TKey, TValue>(this Dictionary<TKey, object> t, TKey k, TValue v) where TValue : class {
+			if (t.TryAdd(k, v)) return null;
+			var o = t[k];
+			if (o is List<TValue> a) {
+				if (!a.Contains(v)) { a.Add(v); return a; }
+			} else {
+				var g = o as TValue;
+				if (g == null && o != null) throw new ArgumentException("bad type");
+				if (v != g) { t[k] = a = new List<TValue> { g, v }; return a; }
+			}
+			throw new ArgumentException("key/value already exists");
+		}
+
+		/// <summary>
+		/// If dictionary contains key <i>k</i> that contains value <i>v</i> (as single value or in <b>List</b>), removes the value (and key if it was single value) and returns true.
+		/// </summary>
+		internal static bool MultiRemove_<TKey, TValue>(this Dictionary<TKey, object> t, TKey k, TValue v) where TValue : class {
+			if (!t.TryGetValue(k, out var o)) return false;
+			if (o is List<TValue> a) {
+				if (!a.Remove(v)) return false;
+				if (a.Count == 1) t[k] = a[0];
+			} else {
+				var g = o as TValue;
+				if (g == null && o != null) throw new ArgumentException("bad type");
+				if (v != g) return false;
+				t.Remove(k);
+			}
+			return true;
+		}
+
+		/// <summary>
+		/// If dictionary contains key <i>k</i>, gets its value (<i>v</i>) or list of values (<i>a</i>) and returns true.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="k"></param>
+		/// <param name="v">Receives single value, or null if the key has multiple values.</param>
+		/// <param name="a">Receives multiple values, or null if the key has single value.</param>
+		internal static bool MultiGet_<TKey, TValue>(this Dictionary<TKey, object> t, TKey k, out TValue v, out List<TValue> a) where TValue : class {
+			bool r = t.TryGetValue(k, out var o);
+			v = o as TValue;
+			a = o as List<TValue>;
+			if (v == null && a == null && o != null) throw new ArgumentException("bad type");
+			return r;
+		}
+
+		/// <summary>
 		/// Returns <b>Length</b>, or 0 if null.
 		/// </summary>
 		internal static int Lenn_<T>(this T[] t) => t?.Length ?? 0;

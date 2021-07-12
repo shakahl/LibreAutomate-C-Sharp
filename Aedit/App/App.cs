@@ -248,10 +248,10 @@ static class App
 			if (_icons == null) {
 				_icons = new IntPtr[2];
 
-				s_msgTaskbarCreated = wnd.more.registerMessage("TaskbarCreated", uacEnable: true);
+				s_msgTaskbarCreated = WndUtil.RegisterMessage("TaskbarCreated", uacEnable: true);
 
-				wnd.more.registerWindowClass("Aedit.TrayNotify", _WndProc);
-				_wNotify = wnd.more.createWindow("Aedit.TrayNotify", null, WS.POPUP, WSE.NOACTIVATE);
+				WndUtil.RegisterWindowClass("Aedit.TrayNotify", _WndProc);
+				_wNotify = WndUtil.CreateWindow("Aedit.TrayNotify", null, WS.POPUP, WSE.NOACTIVATE);
 				//not message-only, because must receive s_msgTaskbarCreated and also used for context menu
 
 				process.thisProcessExit += _ => {
@@ -297,7 +297,7 @@ static class App
 
 		static void _Notified(nint wParam, nint lParam) {
 			int msg = Math2.LoWord(lParam);
-			//if (msg != Api.WM_MOUSEMOVE) wnd.more.printMsg(default, msg, 0, 0);
+			//if (msg != Api.WM_MOUSEMOVE) WndUtil.PrintMsg(default, msg, 0, 0);
 			switch (msg) {
 			case Api.WM_LBUTTONUP:
 				_ShowWindow();
@@ -312,7 +312,7 @@ static class App
 		}
 
 		static nint _WndProc(wnd w, int m, nint wParam, nint lParam) {
-			//wnd.more.printMsg(w, m, wParam, lParam);
+			//WndUtil.PrintMsg(w, m, wParam, lParam);
 			if (m == c_msgNotify) _Notified(wParam, lParam);
 			else if (m == s_msgTaskbarCreated) _Add(true); //when explorer restarted or taskbar DPI changed
 			else if (m == Api.WM_DESTROY) _Exit();

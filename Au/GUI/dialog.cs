@@ -828,7 +828,7 @@ namespace Au
 						_controls.RadioId = rRadioButton;
 					}
 
-					wnd.more.waitForAnActiveWindow();
+					WndUtil.WaitForAnActiveWindow();
 				}
 			}
 			finally {
@@ -1243,7 +1243,7 @@ namespace Au
 			//It is safer (the dialog will not receive Edit notifications) and helps to solve Tab/Esc problems.
 			var pStyle = WS.CHILD | WS.VISIBLE | WS.CLIPCHILDREN | WS.CLIPSIBLINGS; //don't need WS_TABSTOP
 			var pExStyle = WSE.NOPARENTNOTIFY; //not WSE.CONTROLPARENT
-			_editParent = wnd.more.createWindow("#32770", null, pStyle, pExStyle, r.left, r.top, r.Width, r.Height, parent);
+			_editParent = WndUtil.CreateWindow("#32770", null, pStyle, pExStyle, r.left, r.top, r.Width, r.Height, parent);
 			Api.SetWindowLongPtr(_editParent, GWL.DWL.DLGPROC, Marshal.GetFunctionPointerForDelegate(_editControlParentProcHolder = _EditControlParentProc));
 
 			//Create Edit or ComboBox control.
@@ -1256,8 +1256,8 @@ namespace Au
 			case DEdit.Multiline: style |= (WS)(Api.ES_MULTILINE | Api.ES_AUTOVSCROLL | Api.ES_WANTRETURN) | WS.VSCROLL; break;
 			case DEdit.Combo: style |= (WS)(Api.CBS_DROPDOWN | Api.CBS_AUTOHSCROLL) | WS.VSCROLL; cn = "ComboBox"; break;
 			}
-			_editWnd = wnd.more.createWindow(cn, null, style, WSE.CLIENTEDGE, 0, 0, r.Width, r.Height, _editParent);
-			wnd.more.setFont(_editWnd, _editFont);
+			_editWnd = WndUtil.CreateWindow(cn, null, style, WSE.CLIENTEDGE, 0, 0, r.Width, r.Height, _editParent);
+			WndUtil.SetFont(_editWnd, _editFont);
 
 			//Init the control.
 			_editWnd.SetText(_controls.EditText);

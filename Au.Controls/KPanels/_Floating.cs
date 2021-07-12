@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Linq;
+//using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -65,7 +65,7 @@ namespace Au.Controls
 					base.ShowActivated = false;
 
 					if (defaultRect) this.SetRect(rect);
-					else wnd.more.SavedRect.Restore(this, _node._floatSavedRect);
+					else WndSavedRect.Restore(this, _node._floatSavedRect);
 
 					_owner.Closing += _Owner_Closing;
 					_owner.IsVisibleChanged += _Owner_IsVisibleChanged;
@@ -99,7 +99,7 @@ namespace Au.Controls
 
 				public void Save() {
 					//print.it("save");
-					_node._floatSavedRect = new wnd.more.SavedRect(this).ToString();
+					_node._floatSavedRect = new WndSavedRect(this).ToString();
 				}
 
 				protected override void OnSourceInitialized(EventArgs e) {
@@ -110,7 +110,7 @@ namespace Au.Controls
 
 				private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
 					//var w = (wnd)hwnd;
-					//wnd.more.printMsg(w, msg, wParam, lParam);
+					//WndUtil.PrintMsg(w, msg, wParam, lParam);
 					switch (msg) {
 					case Api.WM_MOUSEACTIVATE:
 						bool no = Math2.LoWord(lParam) != Api.HTCLIENT;
@@ -162,7 +162,7 @@ namespace Au.Controls
 					var w = this.Hwnd();
 					RECT r = w.Rect;
 					POINT offs = (p.x - r.left, p.y - r.top);
-					bool ok = wnd.more.dragLoop(w, MButtons.Left, d => {
+					bool ok = WndUtil.DragLoop(w, MButtons.Left, d => {
 						if (d.Msg.message != Api.WM_MOUSEMOVE) return;
 
 						p = mouse.xy;

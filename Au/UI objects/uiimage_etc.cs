@@ -78,27 +78,19 @@ namespace Au
 			if (usePrintWindow && Api.PrintWindow(w, mb.Hdc, Api.PW_CLIENTONLY | (osVersion.minWin8_1 ? Api.PW_RENDERFULLCONTENT : 0))) {
 				//print.it("PrintWindow OK");
 			} else {
-				using (var dc = new WindowDC_(w)) {
-					if (dc.Is0) w.ThrowNoNative("Failed");
-					uint rop = !w.Is0 ? Api.SRCCOPY : Api.SRCCOPY | Api.CAPTUREBLT;
-					bool ok = Api.BitBlt(mb.Hdc, 0, 0, r.Width, r.Height, dc, r.left, r.top, rop);
-					Debug.Assert(ok); //the API fails only if a HDC is invalid
-				}
+				using var dc = new WindowDC_(w);
+				if (dc.Is0) w.ThrowNoNative("Failed");
+				uint rop = !w.Is0 ? Api.SRCCOPY : Api.SRCCOPY | Api.CAPTUREBLT;
+				bool ok = Api.BitBlt(mb.Hdc, 0, 0, r.Width, r.Height, dc, r.left, r.top, rop);
+				Debug.Assert(ok); //the API fails only if a HDC is invalid
 			}
 
 			var R = new Bitmap(r.Width, r.Height, PixelFormat.Format32bppRgb);
 			try {
-				var bh = new Api.BITMAPINFOHEADER() {
-					biSize = sizeof(Api.BITMAPINFOHEADER),
-					biWidth = r.Width,
-					biHeight = -r.Height, //use -height for top-down
-					biPlanes = 1,
-					biBitCount = 32,
-					//biCompression = 0, //BI_RGB
-				};
+				var bi = new Api.BITMAPINFO(r.Width, -r.Height, 32);
 				var d = R.LockBits(new Rectangle(0, 0, r.Width, r.Height), ImageLockMode.ReadWrite, R.PixelFormat); //tested: fast, no copy
 				try {
-					var apiResult = Api.GetDIBits(mb.Hdc, mb.Hbitmap, 0, r.Height, (void*)d.Scan0, &bh, 0); //DIB_RGB_COLORS
+					var apiResult = Api.GetDIBits(mb.Hdc, mb.Hbitmap, 0, r.Height, (void*)d.Scan0, ref bi, 0); //DIB_RGB_COLORS
 					if (apiResult != r.Height) throw new AuException("GetDIBits");
 					_SetAlpha(d, r, path);
 				}
@@ -301,7 +293,7 @@ namespace Au
 				_flags = flags;
 				_cursor = MouseCursor.Load(ResourceUtil.GetBytes("<Au>resources/red_cross_cursor.cur"), 32);
 				_dpi = screen.primary.Dpi;
-				_w = wnd.more.createWindow(_WndProc, true, "#32770", "Au.uiimage.CaptureUI", WS.POPUP | WS.VISIBLE, WSE.TOOLWINDOW | WSE.TOPMOST, r.left, r.top, r.Width, r.Height);
+				_w = WndUtil.CreateWindow(_WndProc, true, "#32770", "Au.uiimage.CaptureUI", WS.POPUP | WS.VISIBLE, WSE.TOOLWINDOW | WSE.TOPMOST, r.left, r.top, r.Width, r.Height);
 				_w.ActivateL();
 
 				try {
@@ -331,7 +323,7 @@ namespace Au
 			}
 
 			nint _WndProc(wnd w, int msg, nint wParam, nint lParam) {
-				//wnd.more.printMsg(w, msg, wParam, lParam);
+				//WndUtil.PrintMsg(w, msg, wParam, lParam);
 
 				switch (msg) {
 				case Api.WM_NCDESTROY:
@@ -466,7 +458,7 @@ namespace Au
 					bool notFirstMove = false;
 					_capturing = true;
 					try {
-						if (!wnd.more.dragLoop(_w, MButtons.Left, m => {
+						if (!WndUtil.DragLoop(_w, MButtons.Left, m => {
 							if (m.Msg.message != Api.WM_MOUSEMOVE) return;
 							POINT p = m.Msg.pt; _w.MapScreenToClient(ref p);
 							using var g = Graphics.FromHwnd(_w.Handle);

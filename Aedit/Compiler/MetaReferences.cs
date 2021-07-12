@@ -40,7 +40,7 @@ namespace Au.Compiler
 		class _MR
 		{
 			public readonly string name, path;
-			WeakReference<PortableExecutableReference> _wr;
+			readonly WeakReference<PortableExecutableReference> _wr = new(null);
 			PortableExecutableReference _refKeeper;
 			long _timeout;
 
@@ -51,7 +51,6 @@ namespace Au.Compiler
 				//print.it(name);
 				this.name = name;
 				this.path = path;
-				_wr = new WeakReference<PortableExecutableReference>(null);
 			}
 
 			public PortableExecutableReference Ref {
@@ -77,8 +76,8 @@ namespace Au.Compiler
 										if(timeNow >= t) v._refKeeper = null;
 										else nKeep++;
 									}
-									//print.it("timer", nRemoved);
-									s_isTimer = nKeep > 0 ? s_timer.Change(c_timerPeriod, -1) : false;
+									//print.it("timer", nKeep);
+									s_isTimer = nKeep > 0 && s_timer.Change(c_timerPeriod, -1);
 								}
 								if(nKeep == 0) GC.Collect();
 							});
@@ -107,8 +106,8 @@ namespace Au.Compiler
 
 		class _MR2 : _MR
 		{
-			string _alias;
-			bool _isCOM;
+			readonly string _alias;
+			readonly bool _isCOM;
 
 			public _MR2(string name, string path, string alias, bool isCOM) : base(name, path)
 			{
@@ -116,15 +115,14 @@ namespace Au.Compiler
 				_isCOM = isCOM;
 			}
 
-			public MetadataReferenceProperties Prop
-				=> new MetadataReferenceProperties(aliases: _alias == null ? default : ImmutableArray.Create(_alias), embedInteropTypes: _isCOM);
+			public MetadataReferenceProperties Prop => new(aliases: _alias == null ? default : ImmutableArray.Create(_alias), embedInteropTypes: _isCOM);
 
 			public bool PropEq(string alias, bool isCOM) => isCOM == _isCOM && alias == _alias;
 		}
 
-		static List<_MR> s_cache = new List<_MR>();
-		static Timer s_timer; //TODO: timerm. Previously Timer used less CPU, but now several times more. Maybe in Core.
-		static bool s_isTimer; //TODO: remove (timerm has a property)
+		static readonly List<_MR> s_cache = new();
+		static Timer s_timer;
+		static bool s_isTimer;
 
 		/// <summary>
 		/// List containing <see cref="DefaultReferences"/> + references for which was called <see cref="Resolve"/> of this MetaReferences variable.
@@ -384,6 +382,6 @@ namespace Au.Compiler
 			/// <param name="refName">Like "mscorlib" or "System.Drawing" or "Au".</param>
 			public bool HaveRef(string refName) => _refs?.Contains(refName) ?? false;
 		}
-		static _NetDocumentationProvider s_netDocProvider;
+		static readonly _NetDocumentationProvider s_netDocProvider;
 	}
 }

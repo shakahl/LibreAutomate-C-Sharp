@@ -488,6 +488,13 @@ namespace Au
 		public static bool NE(this string t) => t == null || t.Length == 0;
 
 		/// <summary>
+		/// Returns this string, or null if it is "" or null.
+		/// </summary>
+		/// <param name="t">This string.</param>
+		internal static string NullIfEmpty_(this string t) => t.NE() ? null : t;
+		//not public because probably too rarely used.
+
+		/// <summary>
 		/// This function can be used with foreach to split this string into substrings as start/end offsets.
 		/// </summary>
 		/// <param name="t">This string.</param>
@@ -587,7 +594,7 @@ namespace Au
 		/// <param name="options"></param>
 		/// <seealso cref="Segments"/>
 		/// <seealso cref="SegSep.Line"/>
-		public static string[] Lines(this string t, int maxCount, StringSplitOptions options=0) {
+		public static string[] Lines(this string t, int maxCount, StringSplitOptions options = 0) {
 			if (options.Has(StringSplitOptions.RemoveEmptyEntries)) return t.Split(s_rn, maxCount, options); //30% slower than above
 			return t.Split(s_rns, maxCount, options); //60% slower than above
 		}
@@ -1401,9 +1408,14 @@ namespace Au
 		//}
 
 		/// <summary>
+		/// Returns true if equals to <i>s</i>, case-sensitive.
+		/// </summary>
+		public static bool Eq(this ReadOnlySpan<char> t, string s) => t.Equals(s, StringComparison.Ordinal);
+
+		/// <summary>
 		/// Returns true if equals to <i>s</i>, case-insensitive.
 		/// </summary>
-		public static bool Eqi(this ReadOnlySpan<char> t, string s) => 0 == t.CompareTo(s, StringComparison.OrdinalIgnoreCase);
+		public static bool Eqi(this ReadOnlySpan<char> t, string s) => t.Equals(s, StringComparison.OrdinalIgnoreCase);
 
 		internal static void CopyTo_(this string t, char* p) => t.AsSpan().CopyTo(new Span<char>(p, t.Length));
 	}

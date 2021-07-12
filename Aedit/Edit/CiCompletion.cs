@@ -29,6 +29,8 @@ using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 using System.Diagnostics.CodeAnalysis;
 
 //TODO: need a workaround for Roslyn bug: in top-level statements keywords are insane. Eg is 'public' but no 'return'.
+//TODO: (it seems after updating Roslyn), after typing "print.it(Example.Add(" shows completions. Then if you type a number, selects something containing it in the list.
+//	Other example: g=new byte[1], shows completions and selects Int16.
 
 partial class CiCompletion
 {

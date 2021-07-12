@@ -59,7 +59,7 @@ namespace Au.More
 
 		/// <summary>
 		/// Gets pointer to the shared memory "return data" buffer.
-		/// Used by <see cref="wnd.more.CopyData.Return"/>.
+		/// Used by <see cref="WndCopyData.Return"/>.
 		/// </summary>
 		public static byte* ReturnDataPtr => (byte*)Ptr + c_size / 2;
 

@@ -1,13 +1,13 @@
-In files of this folder you can define all your triggers (hotkeys etc) and toolbars.
+In files of this folder you can define triggers (hotkeys etc) and toolbars.
 There are several examples. Click the Run button to run the script and see how it works.
 Add your triggers near the example triggers. Delete or comment out unused examples.
 Add/remove toolbars in a similar way. Create more "partial" files for toolbars if need.
 After editing project files, click the Run button to restart the script.
 
-This folder and its missing files are automatically added when you click a T&T menu item.
+This folder and its missing files are automatically added when you click a TT menu item.
 Also it sets to run the script at program startup (Options -> General -> Run scripts...).
 
-This folder is a script project. It is one big script divided into multiple files. The
+This folder is a script project. It is one script divided into multiple files. The
 script starts in file "Triggers and toolbars". It calls function RunTriggersAndToolbars,
 which calls functions with attribute [Triggers] or [Toolbars]; they are in other files.
 Then it runs all the time, waiting for trigger events and clicked toolbar buttons.
@@ -29,7 +29,7 @@ crash the main process. The script can be anywhere (in project folder or outside
 
 To disable a trigger, comment out the trigger code line or move it from this folder. Then
 click Run to restart the script. To disable/enable all triggers, use the tray icon (menu
-or middle-click) or menu Run. See also examples in class ActionTriggers help.
+or middle-click) or menu TT. See also examples in class ActionTriggers help.
 Also you can comment out the [Triggers] attribute to disable all triggers defined there.
 
 Avoid multiple scripts with triggers running all the time. It makes your computer slower.
@@ -38,7 +38,8 @@ Also you can define menus. They are like toolbars, but displayed temporarily and
 can be in any script. To create menus and menu items, use snippets that start with "menu".
 
 If after editing or deleting files something does not work and you don't know how to fix it:
-1. Click a T&T menu item Edit... . It adds missing files.
-2. Or create new project again: menu File -> New -> Examples -> @Triggers and toolbars.
-Then either fix your old project or move triggers etc from it to the new project. Then delete
-the unused project folder and restore folder name if changed.
+1. Click a TT menu item Edit... . It adds missing files.
+	If you want to replace an existing file, at first remove it from the folder.
+2. Or create new project again: menu File -> New -> Default -> @Triggers and toolbars.
+	Then either fix your old project or move triggers etc from it to the new project.
+	Then delete the unused project folder and restore folder name if changed.

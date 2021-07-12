@@ -309,11 +309,11 @@ namespace Au.More
 		#region compress
 
 		/// <summary>
-		/// Compresses data using <see cref="DeflateStream"/>.
+		/// Compresses data. Uses <see cref="DeflateStream"/>.
 		/// </summary>
 		/// <param name="data"></param>
 		/// <exception cref="Exception">Exceptions of <b>DeflateStream</b>.</exception>
-		public static byte[] Compress(ReadOnlySpan<byte> data) {
+		public static byte[] DeflateCompress(ReadOnlySpan<byte> data) {
 			using var ms = new MemoryStream();
 			using (var ds = new DeflateStream(ms, CompressionLevel.Optimal)) ds.Write(data); //note: must dispose before ToArray
 			return ms.ToArray();
@@ -327,9 +327,9 @@ namespace Au.More
 		/// <returns>Decompressed data.</returns>
 		/// <param name="compressed">Compressed data.</param>
 		/// <exception cref="Exception">Exceptions of <b>DeflateStream</b>.</exception>
-		public static byte[] Decompress(ReadOnlySpan<byte> compressed) {
+		public static byte[] DeflateDecompress(ReadOnlySpan<byte> compressed) {
 			using var stream = new MemoryStream();
-			Decompress(compressed, stream);
+			DeflateDecompress(compressed, stream);
 			return stream.ToArray();
 		}
 
@@ -339,8 +339,8 @@ namespace Au.More
 		/// <param name="compressed">Compressed data.</param>
 		/// <param name="decompressed">Stream for decompressed data.</param>
 		/// <exception cref="Exception">Exceptions of <b>DeflateStream</b>.</exception>
-		public static void Decompress(ReadOnlySpan<byte> compressed, Stream decompressed) {
-			fixed(byte* p = compressed) {
+		public static void DeflateDecompress(ReadOnlySpan<byte> compressed, Stream decompressed) {
+			fixed (byte* p = compressed) {
 				using var compressStream = new UnmanagedMemoryStream(p, compressed.Length);
 				using var deflateStream = new DeflateStream(compressStream, CompressionMode.Decompress);
 				deflateStream.CopyTo(decompressed);
@@ -350,17 +350,57 @@ namespace Au.More
 			//note: also cannot use decompressedStream.GetBuffer because it can be bigger.
 		}
 
+		/// <summary>
+		/// Compresses data. Uses <see cref="BrotliEncoder"/>.
+		/// </summary>
+		/// <param name="data"></param>
+		/// <param name="level">Compression level, 0 (no compression) to 11 (maximal compression). Default 6. Bigger levels don't make much smaller but can make much slower.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>level</i>.</exception>
+		/// <exception cref="OutOfMemoryException"></exception>
+		public static unsafe byte[] BrotliCompress(ReadOnlySpan<byte> data, int level = 6) {
+			int n = BrotliEncoder.GetMaxCompressedLength(data.Length);
+			var b = MemoryUtil.Alloc(n);
+			try {
+				if (!BrotliEncoder.TryCompress(data, new(b, n), out n, level, 22)) throw new AuException();
+				return new Span<byte>(b, n).ToArray();
+			}
+			finally { MemoryUtil.Free(b); }
+		}
+
+		/// <summary>
+		/// Decompresses data. Uses <see cref="BrotliDecoder"/>.
+		/// </summary>
+		/// <returns>Decompressed data.</returns>
+		/// <param name="compressed">Compressed data.</param>
+		/// <exception cref="ArgumentException">Invalid data.</exception>
+		/// <exception cref="OutOfMemoryException"></exception>
+		public static unsafe byte[] BrotliDecompress(ReadOnlySpan<byte> compressed) {
+			int n = checked(compressed.Length * 4 + 8000);
+			for (int i = 0; i < 3; i++) if (n < 512_000) n *= 2;
+			//print.it(compressed.Length, n, n/compressed.Length); //usually ~ 80 KB
+			for (; ; n = checked(n * 2)) {
+				byte* b = null;
+				try {
+					b = MemoryUtil.Alloc(n);
+					if (BrotliDecoder.TryDecompress(compressed, new(b, n), out int nw)) return new Span<byte>(b, nw).ToArray();
+					if (nw == 0) throw new ArgumentException("cannot decompress this data");
+					//print.it(n);
+				}
+				finally { MemoryUtil.Free(b); }
+			}
+		}
+
 		#endregion
 
 		#region utf8
 
 		/// <summary>
-		/// Converts string to UTF-8 byte[]. Appends "\0" or some other string.
+		/// Converts string to UTF-8 byte[]. Can append "\0" (default) or some other string.
 		/// </summary>
 		/// <param name="chars">String or char[] or span of string/array/memory.</param>
-		/// <param name="append">An optional ASCII string to append. For example "\0" (default) or "\r\n" or null.</param>
+		/// <param name="append">A string to append, or null. For example "\0" (default) or "\r\n". Must contain only ASCII characters.</param>
 		/// <exception cref="ArgumentException"><i>append</i> contains non-ASCII characters.</exception>
-		public static byte[] ToUtf8(ReadOnlySpan<char> chars, string append = "\0") {
+		public static byte[] Utf8Encode(ReadOnlySpan<char> chars, string append = "\0") {
 			int n = Encoding.UTF8.GetByteCount(chars);
 			int nAppend = append.Lenn();
 			var r = new byte[n + nAppend];
@@ -378,17 +418,13 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Converts UTF8 string to C# string (which is UTF16).
-		/// The terminating '\0' character is not included in the returned string.
+		/// Converts '\0'-terminated UTF8 string to C# string (UTF16).
 		/// </summary>
 		/// <param name="utf8">UTF8 string. If null, returns null.</param>
-		/// <param name="length">Length of <i>utf8</i>. If negative, the function finds length; then <i>utf8</i> must be '\0'-terminated.</param>
-		public static string FromUtf8(byte* utf8, int length = -1) {
-			if (utf8 == null) return null;
-			int n = length;
-			if (n < 0) n = BytePtr_.Length(utf8); else if (n > 0 && utf8[n - 1] == 0) n--;
-			return Encoding.UTF8.GetString(utf8, n);
-		}
+		/// <remarks>
+		/// Finds '\0' and calls <c>Encoding.UTF8.GetString</c>. Don't use this function when UTF8 string length is known; call <c>Encoding.UTF8.GetString</c> directly.
+		/// </remarks>
+		public static string Utf8Decode(byte* utf8) => utf8 == null ? null : Encoding.UTF8.GetString(utf8, BytePtr_.Length(utf8)) ;
 
 		#endregion
 	}

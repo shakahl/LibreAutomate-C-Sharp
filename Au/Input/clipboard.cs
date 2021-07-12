@@ -434,7 +434,7 @@ namespace Au
 			}
 
 			nint _WndProc(wnd w, int message, nint wParam, nint lParam) {
-				//wnd.more.printMsg(w, message, wParam, lParam);
+				//WndUtil.PrintMsg(w, message, wParam, lParam);
 
 				switch (message) {
 				//case Api.WM_DESTROY:

@@ -48,25 +48,7 @@ record AppSettings : JSettings
 	//public byte ci_shiftEnterAlways, ci_shiftTabAlways;
 	public bool ci_complGroup = true;
 	public int ci_complParen; //0 spacebar, 1 always, 2 never
-	public string ci_usings = @"Au
-Au.Types
-Au.More
-System
-System.Collections.Generic
-System.Collections.Concurrent
-System.Linq
-System.Text
-System.Threading.Tasks
-System.Threading
-System.Diagnostics
-System.Globalization
-System.IO
-System.IO.Compression
-System.Media
-System.Runtime.CompilerServices
-System.Runtime.InteropServices
-Microsoft.Win32
-";
+	public string ci_usings;
 	//public SIZE ci_sizeSignXaml, ci_sizeComplXaml, ci_sizeComplList;
 
 	public string db_copy_ref, db_copy_doc, db_copy_winapi;

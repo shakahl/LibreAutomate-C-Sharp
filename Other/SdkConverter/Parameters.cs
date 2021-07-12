@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 
 using Au;
 using Au.Types;
+using Au.More;
 
 namespace SdkConverter
 {
@@ -26,7 +27,7 @@ namespace SdkConverter
 		/// <summary>
 		/// Used with all non-nested _GetParameters().
 		/// </summary>
-		List<_PARAMETER> _params = new List<_PARAMETER>();
+		List<_PARAMETER> _params = new();
 
 		/// <summary>
 		/// Parses parameters and stores their iTok/nTok in p.

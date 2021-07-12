@@ -205,13 +205,7 @@ class CiText
 			//print.it($"{v.Tag}, '{v.Text}', {v.Style}, navHint='{v.NavigationHint}', navTarget='{v.NavigationTarget}'");
 			string s = v.Text, c = null;
 			switch (v.Tag) {
-			case TextTags.Class:
-			case TextTags.Struct:
-			case TextTags.Enum:
-			case TextTags.Interface:
-			case TextTags.Delegate:
-			case TextTags.TypeParameter:
-			case TextTags.Record:
+			case TextTags.Class or TextTags.Struct or TextTags.Enum or TextTags.Interface or TextTags.Delegate or TextTags.TypeParameter or TextTags.Record or TextTags.RecordStruct:
 				c = "type";
 				break;
 			case TextTags.Keyword:
@@ -236,6 +230,7 @@ class CiText
 			case TextTags.Text:
 				if (v.Style == 0) _ProcessText();
 				break;
+			case TextTags.CodeBlockStart or TextTags.CodeBlockEnd: continue;
 #if DEBUG
 			case TextTags.Space:
 			case TextTags.Constant:

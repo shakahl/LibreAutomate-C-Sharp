@@ -1663,7 +1663,7 @@
             </summary>
             <param name="canDrop">Can drop here. If false, hides insertion mark and returns.</param>
             <remarks>
-            Draws black line between nearest items. If mouse is on a folder image, draws rectangle.
+            Draws black line between nearest items. If mouse is on a folder vertical center, draws rectangle.
             When mouse is on a folder, expands it if pressed key Right and collapses if Left.
             Scrolls when mouse is near top or bottom or pressed key Down, Up, PageDown, PageUp, Home or End.
             </remarks>
@@ -1981,7 +1981,7 @@
             <summary>If true, should insert after the drop target item. Else before. Not used if <b>intoFolder</b> is true.</summary>
         </member>
         <member name="F:Au.Controls.TVDropInfo.intoFolder">
-            <summary><b>xy</b> is on a folder image, therefore should move to the folder.</summary>
+            <summary><b>xy</b> is in a folder center, therefore should move to the folder.</summary>
         </member>
         <member name="M:Au.Controls.KCheckBox.OnCheckChanged(System.Windows.RoutedEventArgs)">
             <summary>
@@ -2879,7 +2879,7 @@
         </member>
         <member name="M:Au.Controls.KImageUtil.BmpFileDataToString(System.Byte[])">
             <summary>
-            Compresses .bmp file data (<see cref="M:Au.More.Convert2.Compress(System.ReadOnlySpan{System.Byte})"/>) and Base64-encodes.
+            Compresses .bmp file data (<see cref="M:Au.More.Convert2.BrotliCompress(System.ReadOnlySpan{System.Byte},System.Int32)"/>) and Base64-encodes.
             Returns string with "image:" prefix.
             </summary>
         </member>
@@ -2907,7 +2907,7 @@
         </member>
         <member name="T:Au.Tools.KCheckTextBox">
             <summary>
-            KCheckBox and TextBox.
+            KCheckBox and TextBox. Optionally + Button and KPopupListBox.
             </summary>
         </member>
         <member name="M:Au.Tools.KCheckTextBox.#ctor(Au.Controls.KCheckBox,System.Windows.Controls.TextBox,System.Windows.Controls.Button)">

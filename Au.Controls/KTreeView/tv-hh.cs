@@ -18,15 +18,15 @@ namespace Au.Controls
 		public wnd Hwnd => _w;
 
 		static KTreeView() {
-			wnd.more.registerWindowClass(c_winClassName);
+			WndUtil.RegisterWindowClass(c_winClassName);
 		}
 
 		protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
 			var wParent = (wnd)hwndParent.Handle;
 #if true
-			wnd.more.createWindow(_wndProc = _WndProc, false, c_winClassName, Name, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
+			WndUtil.CreateWindow(_wndProc = _WndProc, false, c_winClassName, Name, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
 #else //the below code works, but not on Win7. The above code works if WS.DISABLED or WM_NCHITTEST returns HTTRANSPARENT. WPF can remove WS.DISABLED.
-			_w=wnd.more.createWindow(_wndProc = _WndProc, false, c_winClassName, null, WS.CHILD|WS.CLIPCHILDREN, WSE.TRANSPARENT|WSE.LAYERED, 0, 0, 10, 10, wParent);
+			_w=WndUtil.CreateWindow(_wndProc = _WndProc, false, c_winClassName, null, WS.CHILD|WS.CLIPCHILDREN, WSE.TRANSPARENT|WSE.LAYERED, 0, 0, 10, 10, wParent);
 	//		_w.SetTransparency(true, 255);
 			Api.SetLayeredWindowAttributes(_w, 0, 0, 0);
 #endif
@@ -41,7 +41,7 @@ namespace Au.Controls
 		WNDPROC _wndProc;
 		nint _WndProc(wnd w, int msg, nint wParam, nint lParam) {
 			//var pmo = new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
-			//if (wnd.more.printMsg(out string s, _w, msg, wParam, lParam, pmo)) print.it("<><c green>" + s + "<>");
+			//if (WndUtil.PrintMsg(out string s, _w, msg, wParam, lParam, pmo)) print.it("<><c green>" + s + "<>");
 
 			if (_vscroll.WndProc(w, msg, wParam, lParam) || _hscroll.WndProc(w, msg, wParam, lParam)) return default;
 

@@ -47,7 +47,7 @@ static class RecentTT
 		z.ToInt(out long id, 0, out int i); i++;
 
 		int j = z.IndexOf('\0', i);
-		var fn = App.Model.FindByFilePath(z[i..j], false);
+		var fn = App.Model.FindByFilePath(z[i..j], FNFind.CodeFile);
 		if (fn == null) return; //deleted item?
 		int line = z.ToInt(++j);
 

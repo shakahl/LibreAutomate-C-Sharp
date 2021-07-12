@@ -41,7 +41,7 @@ class DProperties : KDialogWindow
 		b.R.StartStack(vertical: true); //left column
 		b.StartGrid().Columns(0, -1, 20, 0, -1.15)
 			.R.Add("role", out role).Skip()
-			.Add("testScript", out testScript).Validation(o => _ValidateFile(o, "testScript"));
+			.Add("testScript", out testScript).Validation(o => _ValidateFile(o, "testScript", FNFind.CodeFile));
 		b.End();
 
 		b.StartStack(out gRun, "Run", vertical: true);
@@ -57,9 +57,9 @@ class DProperties : KDialogWindow
 			.AddButton(out outputPathB, "...", _ButtonClick_outputPath)
 			.End();
 		b.StartGrid().Columns(0, -1, 20, 0, -1);
-		b.R.Add("icon", out icon).Skip().Validation(o => _ValidateFile(o, "icon", folder: null))
-			.Add("manifest", out manifest).Validation(o => _ValidateFile(o, "manifest"));
-		b.R.Add("sign", out sign).Skip().Validation(o => _ValidateFile(o, "sign"));
+		b.R.Add("icon", out icon).Skip().Validation(o => _ValidateFile(o, "icon", FNFind.Any))
+			.Add("manifest", out manifest).Validation(o => _ValidateFile(o, "manifest", FNFind.File));
+		b.R.Add("sign", out sign).Skip().Validation(o => _ValidateFile(o, "sign", FNFind.File));
 		b.StartStack()
 			.Add(out bit32, "bit32").Align(y: "C")
 			.Add(out console, "console").Align(y: "C").Margin(15)
@@ -75,8 +75,8 @@ class DProperties : KDialogWindow
 			.Add("noWarnings", out noWarnings);
 		b.R.Add("testInternal", out testInternal);
 		b.R.StartGrid().Columns(0, -1, 20, 0, -1)
-			.Add("preBuild", out preBuild).Skip().Validation(o => _ValidateFile(o, "preBuild"))
-			.Add("postBuild", out postBuild).Validation(o => _ValidateFile(o, "postBuild"));
+			.Add("preBuild", out preBuild).Skip().Validation(o => _ValidateFile(o, "preBuild", FNFind.CodeFile))
+			.Add("postBuild", out postBuild).Validation(o => _ValidateFile(o, "postBuild", FNFind.CodeFile));
 		b.End();
 		b.End().Brush(Brushes.OldLace);
 
@@ -92,7 +92,7 @@ class DProperties : KDialogWindow
 		b.AddButton(out addResource, "Resource ▾", _ButtonClick_addResource);
 		b.End();
 		b.StartStack(vertical: true).Add("Find in lists", out findInLists).Tooltip("In button drop-down lists show only items containing this text").End();
-		b.AddButton("Change icon", _ => DIcons.ZShow(true, _f.CustomIconName)).Margin("T8B8");
+		//b.AddButton("Change icon", _ => DIcons.ZShow(true, _f.CustomIconName)).Margin("T8B8"); //rejected
 		b.End();
 		b.R.AddOkCancel();
 		b.End();
@@ -170,8 +170,8 @@ class DProperties : KDialogWindow
 			addProject.IsEnabled = _role != Au.Compiler.ERole.classFile;
 		}
 
-		string _ValidateFile(FrameworkElement e, string name, bool? folder = false) {
-			return (_Get(e as TextBox) is string s && null == _f.FindRelative(s, folder)) ? name + " file not found" : null;
+		string _ValidateFile(FrameworkElement e, string name, FNFind kind) {
+			return (_Get(e as TextBox) is string s && null == _f.FindRelative(s, kind)) ? name + " file not found" : null;
 		}
 
 		//b.Loaded += () => {
@@ -185,7 +185,7 @@ class DProperties : KDialogWindow
 	void _GetMeta() {
 		//info: _Get returns null if hidden
 
-		_f.TestScript = _Get(testScript) is string sts ? _f.FindRelative(sts, false) : null; //validated
+		_f.TestScript = _Get(testScript) is string sts ? _f.FindRelative(sts, FNFind.CodeFile) : null; //validated
 
 		_meta.ifRunning = _Get(ifRunning, nullIfDefault: true);
 		_meta.uac = _Get(uac, nullIfDefault: true);

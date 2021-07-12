@@ -241,7 +241,7 @@ namespace Au.More
 		/// <code><![CDATA[
 		/// using var hook = WindowsHook.ThreadCallWndProc(x => {
 		/// 	ref var m = ref *x.msg;
-		/// 	wnd.more.printMsg(out var s, m.hwnd, m.message, m.wParam, m.lParam);
+		/// 	WndUtil.PrintMsg(out var s, m.hwnd, m.message, m.wParam, m.lParam);
 		/// 	print.it(s, x.sentByOtherThread);
 		/// });
 		/// dialog.show("hook");

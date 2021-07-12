@@ -346,7 +346,7 @@ namespace Au.Controls
 		}
 
 		unsafe nint? _Hook(wnd w, int msg, nint wParam, nint lParam) {
-			//wnd.more.printMsg((wnd)hwnd, msg, wParam, lParam);
+			//WndUtil.PrintMsg((wnd)hwnd, msg, wParam, lParam);
 			//if (msg == Api.WM_ACTIVATE && wParam != 0) print.it("ACTIVATE");
 
 			switch (msg) {

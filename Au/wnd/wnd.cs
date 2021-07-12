@@ -24,7 +24,7 @@ namespace Au
 	/// 
 	/// There are two main types of windows - top-level windows and controls. Controls are child windows of top-level windows.
 	/// 
-	/// More functions are in the nested classes - <see cref="more"/>, <see cref="more.desktop"/> etc. They are used mostly in programming, rarely in automation scripts.
+	/// More window functions are in types named like <b>WndX</b>, in namespace <b>Au.More</b>. They are used mostly in programming, rarely in automation scripts.
 	/// 
 	/// What happens when a <b>wnd</b> member function fails:
 	/// - Functions that get window properties don't throw exceptions. They return false/0/null/empty. Most of them support <see cref="lastError"/>, and it is mentioned in function documentation.
@@ -246,22 +246,10 @@ namespace Au
 		/// Calls API <msdn>PostMessage</msdn>.
 		/// Returns its return value (false if failed). Supports <see cref="lastError"/>.
 		/// </summary>
-		/// <seealso cref="more.postThreadMessage"/>
+		/// <seealso cref="WndUtil.PostThreadMessage"/>
 		public bool Post(int message, nint wParam = 0, nint lParam = 0) {
 			//Debug.Assert(!Is0); //no, can be used for "post thread message"
 			return Api.PostMessage(this, message, wParam, lParam);
-		}
-
-		public static partial class more
-		{
-			/// <summary>
-			/// Posts a message to the message queue of the specified thread. Of this thread if <i>threadId</i> is 0.
-			/// Calls API <msdn>PostThreadMessage</msdn>. 
-			/// Returns false if failed. Supports <see cref="lastError"/>.
-			/// </summary>
-			public static bool postThreadMessage(int threadId, int message, nint wParam = 0, nint lParam = 0) {
-				return Api.PostThreadMessage(threadId, message, wParam, lParam);
-			}
 		}
 
 		#endregion
@@ -662,7 +650,7 @@ namespace Au
 
 				if (!IsOfThisThread) {
 					if (wasMinimized) ActivateL(); //fix Windows bug: if window of another thread, deactivates currently active window and does not activate this window
-					else if (state == Api.SW_MINIMIZE) more.waitForAnActiveWindow();
+					else if (state == Api.SW_MINIMIZE) WndUtil.WaitForAnActiveWindow();
 				}
 			}
 
@@ -774,7 +762,7 @@ namespace Au
 			static void _EnableActivate_MinRes() {
 				Debug_.Print("EnableActivate: need min/res");
 
-				wnd t = more.createWindow(WindowClassDWP, null, WS.POPUP | WS.MINIMIZE | WS.VISIBLE, WSE.TOOLWINDOW);
+				wnd t = WndUtil.CreateWindow(WindowClassDWP, null, WS.POPUP | WS.MINIMIZE | WS.VISIBLE, WSE.TOOLWINDOW);
 				//info: When restoring, the window must be visible, or may not work.
 				try {
 					var wp = new Api.WINDOWPLACEMENT { showCmd = Api.SW_RESTORE };
@@ -822,7 +810,7 @@ namespace Au
 					//Sometimes after SetForegroundWindow there is no active window for several ms. Not if the window is of this thread.
 					if (w == getwnd.root) return active.Is0;
 					//CONSIDER: if GetForegroundWindow is not w, send WM_NULL. Info: https://blogs.msdn.microsoft.com/oldnewthing/20161118-00/?p=94745
-					return more.waitForAnActiveWindow();
+					return WndUtil.WaitForAnActiveWindow();
 				}
 				//catch(AuWndException) { return false; }
 				catch { return false; }
@@ -988,49 +976,12 @@ namespace Au
 
 		/// <summary>
 		/// Lightweight version of <see cref="Activate()"/>.
-		/// Just calls <see cref="more.enableActivate"/>, API <msdn>SetForegroundWindow</msdn> and makes sure that it actually worked, but does not check whether it activated exactly this window.
+		/// Just calls <see cref="WndUtil.EnableActivate"/>, API <msdn>SetForegroundWindow</msdn> and makes sure that it actually worked, but does not check whether it activated exactly this window.
 		/// No exceptions, does not unhide, does not restore minimized, does not check is it a top-level window or control, etc.
 		/// Returns false if fails.
 		/// </summary>
 		public bool ActivateL() {
 			return Internal_.ActivateL(this);
-		}
-
-		public static partial class more
-		{
-			/// <summary>
-			/// Waits while there is no active window.
-			/// It sometimes happens after closing, minimizing or switching the active window, briefly until another window becomes active.
-			/// Waits max 500 ms, then returns false if there is no active window.
-			/// Processes Windows messages that are in the message queue of this thread.
-			/// Don't need to call this after calling functions of this library.
-			/// </summary>
-			public static bool waitForAnActiveWindow() {
-				for (int i = 1; i < 32; i++) {
-					Au.wait.doEvents();
-					if (!active.Is0) return true;
-					Au.wait.ms(i);
-				}
-				return false;
-				//Call this after showing a dialog API.
-				//	In a thread that does not process messages, after closing a dialog may be not updated key states.
-				//	Processing remaining unprocessed messages fixes it.
-			}
-
-			/// <summary>
-			/// Temporarily enables this process to activate windows with API <msdn>SetForegroundWindow</msdn>.
-			/// Returns false if fails.
-			/// </summary>
-			/// <param name="processId">Process id. If not 0, enables that process to activate windows too. If -1, all processes will be enabled.</param>
-			/// <remarks>
-			/// In some cases you may need this function because Windows often disables API <msdn>SetForegroundWindow</msdn> to not allow background applications to activate windows while the user is working (using keyboard/mouse) with the currently active window. Then <b>SetForegroundWindow</b> usually just makes the window's taskbar button flash.
-			/// Usually you don't call <b>SetForegroundWindow</b> directly. It is called by some other functions.
-			/// Don't need to call this function before calling <see cref="wnd.Activate"/> and other functions of this library that activate windows.
-			/// </remarks>
-			public static bool enableActivate(int processId = 0) {
-				if (!Internal_.EnableActivate(false)) return false;
-				return processId == 0 || Api.AllowSetForegroundWindow(processId);
-			}
 		}
 
 		//Too unreliable.
@@ -2265,7 +2216,18 @@ namespace Au
 		/// w.Prop.Remove("example"); //you should always remove window properties if don't want to see unrelated applications crashing after some time. And don't use many unique property names.
 		/// ]]></code>
 		/// </example>
-		public WProp Prop => new WProp(this);
+		public WProp Prop => new(this);
+
+		/// <summary>
+		/// Returns an object that manages the taskbar button of this window: flash, progress, add/delete.
+		/// </summary>
+		/// <example>
+		/// <code><![CDATA[
+		/// var w = +wnd.find("*Notepad", "Notepad");
+		/// w.TaskbarButton.Delete();
+		/// ]]></code>
+		/// </example>
+		public WTaskbarButton TaskbarButton => new(this);
 
 		#endregion
 
@@ -2796,7 +2758,7 @@ namespace Au
 				}
 			}
 			MinimalSleepNoCheckThread_();
-			more.waitForAnActiveWindow();
+			WndUtil.WaitForAnActiveWindow();
 
 			return !IsAlive;
 		}
@@ -2835,106 +2797,6 @@ namespace Au
 
 namespace Au.Types
 {
-	/// <summary>
-	/// Sets, gets, removes and lists window properties using API <msdn>SetProp</msdn> and co.
-	/// </summary>
-	public struct WProp
-	{
-		wnd _w;
-
-		internal WProp(wnd w) => _w = w;
-
-		/// <summary>
-		/// Gets a window property.
-		/// Calls API <msdn>GetProp</msdn> and returns its return value.
-		/// </summary>
-		/// <param name="name">Property name.</param>
-		/// <remarks>Supports <see cref="lastError"/>.</remarks>
-		public nint this[string name] => Api.GetProp(_w, name);
-
-		/// <summary>
-		/// Gets a window property.
-		/// Calls API <msdn>GetProp</msdn> and returns its return value.
-		/// </summary>
-		/// <param name="atom">Property name atom in the global atom table.</param>
-		/// <remarks>
-		/// This overload uses atom instead of string. I's about 3 times faster. See API <msdn>GlobalAddAtom</msdn>, <msdn>GlobalDeleteAtom</msdn>.
-		/// </remarks>
-		public nint this[ushort atom] => Api.GetProp(_w, atom);
-
-		/// <summary>
-		/// Sets a window property.
-		/// Calls API <msdn>SetProp</msdn> and returns its return value.
-		/// </summary>
-		/// <param name="name">Property name.</param>
-		/// <param name="value">Property value.</param>
-		/// <remarks>
-		/// Supports <see cref="lastError"/>.
-		/// 
-		/// Later call <see cref="Remove(string)"/> to remove the property. If you use many unique property names and don't remove the properties, the property name strings can fill the global atom table which is of a fixed size (about 48000) and which is used by all processes for various purposes.
-		/// </remarks>
-		public bool Set(string name, nint value) {
-			return Api.SetProp(_w, name, value);
-		}
-
-		/// <summary>
-		/// Sets a window property.
-		/// Calls API <msdn>SetProp</msdn> and returns its return value.
-		/// </summary>
-		/// <param name="atom">Property name atom in the global atom table.</param>
-		/// <param name="value">Property value.</param>
-		/// <remarks>
-		/// This overload uses atom instead of string. I's about 3 times faster. See API <msdn>GlobalAddAtom</msdn>, <msdn>GlobalDeleteAtom</msdn>.
-		/// </remarks>
-		public bool Set(ushort atom, nint value) {
-			return Api.SetProp(_w, atom, value);
-		}
-
-		/// <summary>
-		/// Removes a window property.
-		/// Calls API <msdn>RemoveProp</msdn> and returns its return value.
-		/// </summary>
-		/// <param name="name">Property name. Other overload allows to use global atom instead, which is faster.</param>
-		/// <remarks>Supports <see cref="lastError"/>.</remarks>
-		public nint Remove(string name) {
-			return Api.RemoveProp(_w, name);
-		}
-
-		/// <summary>
-		/// Removes a window property.
-		/// Calls API <msdn>RemoveProp</msdn> and returns its return value.
-		/// </summary>
-		/// <param name="atom">Property name atom in the global atom table.</param>
-		public nint Remove(ushort atom) {
-			return Api.RemoveProp(_w, atom);
-		}
-
-		/// <summary>
-		/// Gets list of window properties.
-		/// Uses API <msdn>EnumPropsEx</msdn>.
-		/// </summary>
-		/// <remarks>
-		/// Returns 0-length list if fails. Fails if invalid window or access denied ([](xref:uac)). Supports <see cref="lastError"/>.
-		/// </remarks>
-		public Dictionary<string, nint> GetList() {
-			var a = new Dictionary<string, nint>();
-			Api.EnumPropsEx(_w, (w, name, data, p) => {
-				string s;
-				if ((long)name < 0x10000) s = "#" + (int)name; else s = Marshal.PtrToStringUni(name);
-				a.Add(s, data);
-				return true;
-			}, default);
-			return a;
-		}
-
-		/// <summary>
-		/// Calls <see cref="GetList"/> and converts to string.
-		/// </summary>
-		public override string ToString() {
-			return string.Join("\r\n", GetList());
-		}
-	}
-
 	/// <summary>
 	/// Flags for <see cref="wnd.SetStyle"/> and <see cref="wnd.SetExStyle"/>.
 	/// </summary>

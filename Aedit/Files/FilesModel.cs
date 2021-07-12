@@ -34,6 +34,7 @@ partial class FilesModel
 	public readonly string CacheDirectory; //for any cache files
 	public readonly AutoSave Save;
 	readonly Dictionary<uint, FileNode> _idMap;
+	internal readonly Dictionary<string, object> _nameMap;
 	public List<FileNode> OpenFiles;
 	readonly string _dbFile;
 	public readonly sqlite DB;
@@ -63,7 +64,8 @@ partial class FilesModel
 			filesystem.createDirectory(FilesDirectory);
 			Save = new AutoSave(this);
 		}
-		_idMap = new Dictionary<uint, FileNode>();
+		_idMap = new();
+		_nameMap = new(StringComparer.OrdinalIgnoreCase);
 
 		Root = FileNode.Load(WorkspaceFile, this); //recursively creates whole model tree; caller handles exceptions
 
@@ -181,6 +183,7 @@ partial class FilesModel
 		OpenFiles = new List<FileNode>();
 		if (s_isNewWorkspace) {
 			s_isNewWorkspace = false;
+			AddMissingDefaultFiles(true, true);
 			SetCurrentFile(Root.FirstChild, newFile: true);
 		} else {
 			LoadState(openFiles: true);
@@ -191,6 +194,7 @@ partial class FilesModel
 	}
 
 	static bool s_isNewWorkspace;
+	internal bool NoGlobalCs_; //used by MetaComments.Parse
 
 	public event Action WorkspaceLoadedAndDocumentsOpened;
 
@@ -229,44 +233,64 @@ partial class FilesModel
 	/// </summary>
 	/// <param name="name">
 	/// Can be:
-	/// Name, like "name.cs".
+	/// Name, like "name.cs" or just "name".
 	/// Relative path like @"\name.cs" or @"\subfolder\name.cs".
 	/// Full path in this workspace or of a linked external file.
 	/// &lt;id&gt; - enclosed <see cref="FileNode.IdString"/>, or <see cref="FileNode.IdStringWithWorkspace"/>.
 	/// 
 	/// Case-insensitive. If enclosed in &lt;&gt;, can be followed by any text.
+	/// If just "name" and not found and name does not end with ".cs", tries to find name + ".cs".
 	/// </param>
-	/// <param name="folder">true - folder, false - file, null - any (prefer file if not id and not relative).</param>
-	public FileNode Find(string name, bool? folder) {
+	/// <param name="kind">Ignored if <i>name</i> is id.</param>
+	public FileNode Find(string name, FNFind kind = FNFind.Any) {
 		if (name.NE()) return null;
 		if (name[0] == '<') {
 			name.ToInt(out long id, 1);
 			return FindById(id);
 		}
-		if (pathname.isFullPath(name)) return FindByFilePath(name, folder);
-		return Root.FindDescendant(name, folder);
-		//rejected: support name without extension, like now FindCodeFile.
+		if (pathname.isFullPath(name)) return FindByFilePath(name, kind);
+		if (name[0] == '\\') return Root.FindDescendant(name, kind);
+		return _FindByName(name, kind);
+
+		FileNode _FindByName(string name, FNFind kind) {
+			if (_nameMap.MultiGet_(name, out FileNode v, out var a)) {
+				if (v != null) return KindFilter_(v, kind);
+				FileNode first = null; List<string> other = null;
+				foreach (var f in a) {
+					if (KindFilter_(f, kind) == null) continue;
+					if (first == null) first = f; else (other ??= new()).Add(f.SciLink(path: true));
+				}
+				if (other != null) print.warning($"Found multiple '{name}'. Use path if possible, or rename.\r\n\tUsing the first found item, path {first.SciLink(path: true)}.\r\n\tOther items: {string.Join(", ", other)}.", -1);
+				return first;
+			}
+			if (kind != FNFind.Folder && !name.Ends(".cs", true)) return _FindByName(name + ".cs", kind);
+			return null;
+		}
 	}
 
+	internal static FileNode KindFilter_(FileNode f, FNFind kind) => kind switch {
+		FNFind.File => !f.IsFolder ? f : null,
+		FNFind.Folder => f.IsFolder ? f : null,
+		FNFind.CodeFile => f.IsCodeFile ? f : null,
+		FNFind.Class => f.IsClass ? f : null,
+		//FNFind.Script => f.IsScript ? f : null,
+		_ => f,
+	};
+
 	/// <summary>
-	/// Calls <see cref="Find(string, bool?)"/>(name, false).
-	/// If not found and name does not end with ".cs", tries to find name + ".cs".
+	/// Calls <see cref="Find(string, FNFind)"/>(name, FNFind.CodeFile).
 	/// </summary>
-	public FileNode FindCodeFile(string name) {
-		var f = Find(name, false);
-		if (f == null && !name.Ends(".cs", true)) f = Find(name + ".cs", false);
-		return f;
-	}
+	public FileNode FindCodeFile(string name) => Find(name, FNFind.CodeFile);
 
 	/// <summary>
 	/// Finds file or folder by its file path (<see cref="FileNode.FilePath"/>).
 	/// </summary>
 	/// <param name="path">Full path of a file in this workspace or of a linked external file.</param>
-	/// <param name="folder">true - folder, false - file, null - any.</param>
-	public FileNode FindByFilePath(string path, bool? folder = null) {
+	/// <param name="kind"></param>
+	public FileNode FindByFilePath(string path, FNFind kind = FNFind.Any) {
 		var d = FilesDirectory;
-		if (path.Starts(d, true) && path.Eq(d.Length, '\\')) return Root.FindDescendant(path[d.Length..], folder); //is in workspace folder
-		if (folder != true) foreach (var f in Root.Descendants()) if (f.IsLink && path.Eqi(f.LinkTarget)) return f; //find link
+		if (path.Starts(d, true) && path.Eq(d.Length, '\\')) return Root.FindDescendant(path[d.Length..], kind); //is in workspace folder
+		if (kind != FNFind.Folder) foreach (var f in Root.Descendants()) if (f.IsLink && path.Eqi(f.LinkTarget)) return KindFilter_(f, kind); //find link
 		return null;
 	}
 
@@ -284,7 +308,7 @@ partial class FilesModel
 	/// <summary>
 	/// Adds id/f to the dictionary that is used by <see cref="FindById"/> etc.
 	/// If id is 0 or duplicate, generates new.
-	/// Returns id or the generated id.
+	/// Returns <i>id</i> or the generated id.
 	/// </summary>
 	public uint AddGetId(FileNode f, uint id = 0) {
 		g1:
@@ -440,8 +464,8 @@ partial class FilesModel
 	FileNode _currentFile;
 
 	/// <summary>
-	/// Selects the node and opens its file in the code editor.
-	/// Returns false if failed to select, for example if f is a folder.
+	/// Selects the node. If not folder, opens its file in the code editor.
+	/// Returns false if failed to open, for example if <i>f</i> is a folder.
 	/// </summary>
 	public bool SetCurrentFile(FileNode f, bool dontChangeTreeSelection = false, bool newFile = false, bool? focusEditor = true) {
 		if (IsAlien(f)) return false;
@@ -516,7 +540,7 @@ partial class FilesModel
 
 	/// <summary>
 	/// Selects the node, opens its file in the code editor, optionally goes to the specified position or line or line/column.
-	/// Returns false if failed to select, for example if f is a folder.
+	/// Returns false if failed to open, for example if it is a folder (then just selects folder).
 	/// </summary>
 	/// <param name="f"></param>
 	/// <param name="line">If not negative, goes to this 0-based line.</param>
@@ -563,7 +587,7 @@ partial class FilesModel
 	/// If column1BasedOrPos or line1Based not empty, searches only files, not folders.
 	/// </remarks>
 	public bool OpenAndGoTo2(string fileOrFolder, string line1Based = null, string column1BasedOrPos = null) {
-		var f = line1Based.NE() && column1BasedOrPos.NE() ? Find(fileOrFolder, null) : FindCodeFile(fileOrFolder);
+		var f = Find(fileOrFolder, line1Based.NE() && column1BasedOrPos.NE() ? FNFind.Any : FNFind.CodeFile);
 		if (f == null) return false;
 		if (f.IsFolder) {
 			f.SelectSingle();
@@ -625,8 +649,9 @@ partial class FilesModel
 
 		foreach (var k in e) {
 			try { DB?.Execute("DELETE FROM _editor WHERE id=?", k.Id); } catch (SLException ex) { Debug_.Print(ex); }
-			Au.Compiler.Compiler.OnFileDeleted(this, k);
+			Au.Compiler.Compiler.Uncache(k);
 			_idMap[k.Id] = null;
+			_nameMap.MultiRemove_(k.Name, k);
 			k.IsDeleted = true;
 		}
 
@@ -764,7 +789,7 @@ partial class FilesModel
 	/// <summary>
 	/// Creates new item.
 	/// Opens file, or selects folder, or opens main file of project folder. Optionally begins renaming.
-	/// Loads files.xml, finds template's element and calls <see cref="NewItemX"/>; it calls <see cref="NewItemLLX"/>.
+	/// Loads files.xml, finds template's element and calls <see cref="NewItemX"/>; it calls <see cref="NewItemLX"/>.
 	/// </summary>
 	/// <param name="template">
 	/// Relative path of a file or folder in the Templates\files folder. Case-sensitive, as in workspace.
@@ -795,22 +820,22 @@ partial class FilesModel
 		if (template != null) {
 			x = FileNode.Templates.LoadXml(template); if (x == null) return null;
 		}
-		return NewItemLLX(x, where, name);
+		return NewItemLX(x, where, name);
 	}
 
 	/// <summary>
 	/// Creates new item.
 	/// Opens file, or selects folder, or opens main file of project folder. Optionally begins renaming.
-	/// Calls <see cref="NewItemLLX"/>.
+	/// Calls <see cref="NewItemLX"/>.
 	/// <param name="template">An XElement of files.xml of the Templates workspace. If null, creates folder.</param>
 	/// <param name="where">If null, adds at the context menu position or top.</param>
 	/// <param name="name">If not null, creates with this name. Else gets name from template. In any case makes unique name.</param>
 	/// </summary>
 	public FileNode NewItemX(XElement template, (FileNode target, FNPosition pos)? where = null, string name = null, bool beginRenaming = false, EdNewFileText text = null) {
-		var f = NewItemLLX(template, where, name);
+		var f = NewItemLX(template, where, name);
 		if (f == null) return null;
 
-		if (beginRenaming && template != null && FileNode.Templates.IsInExamples(template)) beginRenaming = false;
+		if (beginRenaming && template != null && FileNode.Templates.IsInExamplesOrDefault(template)) beginRenaming = false;
 
 		if (f.IsFolder) {
 			if (f.IsProjectFolder(out var main) && main != null) SetCurrentFile(f = main, newFile: true); //open the main file of the new project folder
@@ -829,7 +854,11 @@ partial class FilesModel
 					if (me == 0) s = _MetaPlusText(s); //never mind: should skip script doc comments at start. Rare and not important.
 					else s = s.Insert(me - 3, (s[me - 4] == ' ' ? "" : " ") + text.meta + " ");
 				}
-				if (!text.text.NE()) s = s.RegexReplace(@"\R\R\K", text.text, 1, 0, me..);
+				if (!text.text.NE()) {
+					if (s.NE()) s = text.text;
+					else if (s.RegexMatch(@"\R\R", 0, out RXGroup g, range: me..)) s = s.Insert(g.End, text.text);
+					else if (s.RegexMatch(@"\R\z", 0, out g, range: me..)) s = s + "\r\n" + text.text;
+				}
 			}
 			Panels.Editor.ZActiveDoc.zSetText(s);
 
@@ -848,7 +877,7 @@ partial class FilesModel
 	/// <param name="template">An XElement of files.xml of the Templates workspace. If null, creates folder.</param>
 	/// <param name="where">If null, adds at the context menu position or top.</param>
 	/// <param name="name">If not null, creates with this name. Else gets name from template. In any case makes unique name.</param>
-	public FileNode NewItemLLX(XElement template, (FileNode target, FNPosition pos)? where = null, string name = null) {
+	public FileNode NewItemLX(XElement template, (FileNode target, FNPosition pos)? where = null, string name = null) {
 		var (target, pos) = where ?? _GetInsertPos();
 		FileNode newParent = (pos == FNPosition.Inside) ? target : target.Parent;
 
@@ -861,7 +890,7 @@ partial class FilesModel
 			} else {
 				name = template.Attr("n");
 				if (isFolder && name.Starts('!')) name = name[1..];
-				append1 = !FileNode.Templates.IsInExamples(template);
+				append1 = !FileNode.Templates.IsInExamplesOrDefault(template);
 			}
 			//let unique names start from 1
 			if (append1) {
@@ -1033,7 +1062,7 @@ partial class FilesModel
 			}
 
 			//create new folder for workspace's items
-			var folder = NewItemLLX(null, where, folderName);
+			var folder = NewItemLX(null, where, folderName);
 			if (folder == null) return;
 
 			if (notWorkspace) {
@@ -1127,7 +1156,7 @@ partial class FilesModel
 
 				if (fromWorkspaceDir) {
 					var relPath = path[FilesDirectory.Length..];
-					var fExists = this.Find(relPath, null);
+					var fExists = this.Find(relPath);
 					if (fExists != null) {
 						fExists.FileMove(target, pos);
 						continue;
@@ -1191,7 +1220,7 @@ partial class FilesModel
 			if (!filesystem.exists(path, true).isFile) return null;
 
 			var relPath = path[FilesDirectory.Length..];
-			var fExists = this.Find(relPath, null);
+			var fExists = this.Find(relPath);
 			if (fExists != null) {
 				if (fExists.IsFolder) return null;
 				R = fExists;
@@ -1312,9 +1341,8 @@ partial class FilesModel
 		catch (Exception ex) { Debug_.Print(ex); }
 	}
 
-	private void _watcher_Event2(FileSystemEventArgs e) //in main thread
-	{
-		var f = Find("\\" + e.Name, null);
+	private void _watcher_Event2(FileSystemEventArgs e) { //in main thread
+		var f = Find("\\" + e.Name);
 		//if(e is RenamedEventArgs r) print.it(e.ChangeType, r.OldName, e.Name, r.OldFullPath, e.FullPath, f); else print.it(e.ChangeType, e.Name, e.FullPath, f);
 		if (f == null || f.IsLink) return;
 		//Debug_.Print($"<><c blue>File {e.ChangeType.ToString().Lower()} externally: {f}  ({e.FullPath})<>");
@@ -1419,6 +1447,22 @@ partial class FilesModel
 
 	#region other
 
+	/// <summary>
+	/// Adds some default files if missing.
+	/// </summary>
+	/// <param name="scriptForNewWorkspace">If empty workspace, creates new empty script from current template.</param>
+	/// <param name="globalCs">If class file "global.cs" not found, creates it in existing or new folder "Classes".</param>
+	public void AddMissingDefaultFiles(bool scriptForNewWorkspace = false, bool globalCs = false) {
+		if (scriptForNewWorkspace && Root.FirstChild == null) {
+			NewItem(@"Script.cs");
+		}
+		if (globalCs && null == Find("global.cs", FNFind.Class)) {
+			var folder = Find(@"\Classes", FNFind.Folder);
+			if (folder == null) folder = NewItemL(null, (Root, FNPosition.Inside), "Classes");
+			NewItemL(@"Default\global.cs", (folder, FNPosition.Inside));
+		}
+	}
+
 	public class UserData
 	{
 		public string guid { get; set; }
@@ -1516,10 +1560,15 @@ partial class FilesModel
 	#endregion
 }
 
-public enum FNPosition
+enum FNPosition
 {
 	//note: must match Aga.Controls.Tree.NodePosition
 	Inside, Before, After
+}
+
+enum FNFind
+{
+	Any, File, Folder, CodeFile, Class/*, Script*/ //Script not useful because class files can be executable too
 }
 
 class EdNewFileText

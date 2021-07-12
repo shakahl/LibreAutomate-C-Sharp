@@ -12,6 +12,7 @@ using System.Reflection;
 //using System.Linq;
 
 using Au.Types;
+using Au.More;
 
 namespace Au
 {
@@ -124,7 +125,7 @@ namespace Au
 		/// On Windows 10 few windows have Metro style.
 		/// On Windows 7 there are no Metro style windows.
 		/// </summary>
-		/// <seealso cref="more.getWindowsStoreAppId"/>
+		/// <seealso cref="WndUtil.GetWindowsStoreAppId"/>
 		public bool IsWindows8MetroStyle {
 			get {
 				if (!osVersion.minWin8) return false;
@@ -139,7 +140,7 @@ namespace Au
 		/// <summary>
 		/// On Windows 10 and later returns non-zero if this is a UWP app window: 1 if class name is "ApplicationFrameWindow", 2 if "Windows.UI.Core.CoreWindow".
 		/// </summary>
-		/// <seealso cref="more.getWindowsStoreAppId"/>
+		/// <seealso cref="WndUtil.GetWindowsStoreAppId"/>
 		public int IsUwpApp {
 			get {
 				if (!osVersion.minWin10) return 0;

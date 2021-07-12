@@ -1,5 +1,3 @@
-using Au;
-using Au.Types;
 using Au.Triggers;
 
 partial class Script {

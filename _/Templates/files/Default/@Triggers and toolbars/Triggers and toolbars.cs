@@ -1,11 +1,9 @@
 //.
-using Au;
-using Au.Types;
 using Au.Triggers;
-using System;
 using System.Reflection;
 partial class Script { static void Main(string[] a) => new Script(a); Script(string[] args) { //;;
-;script.setup(trayIcon: !true); //;
+script.setup();
+//;
 
 //Here you can add code that runs at startup. Set variables, etc.
 //Add triggers and toolbars in other files of this project. More info in "Readme.txt".

@@ -7,29 +7,33 @@ using System.IO;
 
 //This small program modifies the Roslyn solution.
 //Setup:
-//Download Roslyn solution to Q:\Downloads\roslyn-master.
+//Download Roslyn solution to Q:\Downloads\roslyn-main.
 //Open Roslyn.sln.
-//To make VS not so slow, select all folders and unload projects. Then load only the 6 projects we need:
+//To make VS not so slow, select all folders and unload projects. Then load Microsoft.CodeAnalysis.CSharp.Features with entire dependency tree. It loads projects we need:
 //	In folder Compilers: Core\Microsoft.CodeAnalysis, CSharp\Microsoft.CodeAnalysis.CSharp.
 //	In folder Features: Microsoft.CodeAnalysis.CSharp.Features, Microsoft.CodeAnalysis.Features.
 //	In folder Workspaces: Microsoft.CodeAnalysis.CSharp.Workspaces, Microsoft.CodeAnalysis.Workspaces.
+//	Several other.
+//From Microsoft.CodeAnalysis.Features dependencies remove Scripting. Unload Scripting project. Because it does not compile, and not useful.
 //Edit as described in the '#if false' block at the bottom of this file.
 //Run this project. It modifies Roslyn solution project files.
-//In Roslyn solution compile Microsoft.CodeAnalysis.CSharp.Features. It also compiles other 5. Copies the 6 dlls to Q:\app\Au\Other\CompilerDlls.
-//In editor project: Add references to the 6 dlls that are in folder Q:\app\Au\Other\CompilerDlls. On build will copy to _.
+//In Roslyn solution compile Microsoft.CodeAnalysis.CSharp.Features. It also compiles all dependency projects. Copies 7 dlls to Q:\app\Au\Other\CompilerDlls.
+//In editor project: Add references to the 6 dlls from folder Q:\app\Au\Other\CompilerDlls (listed above). On build will copy to _.
 //	VS will detect when the dlls modified when building Roslyn.
 //To get other dlls:
-//	Install or update Microsoft.CodeAnalysis.Features from NuGet in this project.
-//	Optionally remove the main 6 references, to reduce noise in Object Browser etc.
-//	Copy these dlls from C:\Users\G\.nuget\packages to _ (don't remember, maybe to Q:\app\Au\Other\CompilerDlls):
+//	Install or update Microsoft.CodeAnalysis.CSharp.Features from NuGet in this project.
+//	Compile. Copy these dlls from the bin folder to _:
 //		Microsoft.CodeAnalysis.FlowAnalysis.Utilities.dll
 //		Microsoft.DiaSymReader.dll
 //		System.Composition.AttributedModel.dll
 //		System.Composition.Hosting.dll
 //		System.Composition.Runtime.dll
 //		System.Composition.TypedParts.dll
-//		maybe in the future will need System.Composition.Convention.dll
-//If at run time says "dll not found", try to add the dll to references.
+//		Microsoft.VisualStudio.Debugger.Contracts.dll
+//		Maybe should also add these, but works without:
+//			System.Composition.Convention.dll
+//			CSharpSyntaxGenerator.dll
+//In Roslyn artifacts folder find xml doc files and copy to _.
 
 namespace CompilerDlls
 {
@@ -47,7 +51,7 @@ namespace CompilerDlls
 		{
 			bool writeFile = true;
 
-			string roslynDir = @"Q:\Downloads\roslyn-master\src\";
+			string roslynDir = @"Q:\Downloads\roslyn-main\src\";
 
 			var project = @"</Project>";
 			var copy = @"  <Target Name=""PostBuild"" AfterTargets=""PostBuildEvent"">
@@ -60,6 +64,7 @@ namespace CompilerDlls
 			_Mod(@"Compilers\Core\Portable\Microsoft.CodeAnalysis.csproj", (project, copy, -1));
 			_Mod(@"Workspaces\CSharp\Portable\Microsoft.CodeAnalysis.CSharp.Workspaces.csproj", (project, copy, -1));
 			_Mod(@"Workspaces\Core\Portable\Microsoft.CodeAnalysis.Workspaces.csproj", (project, copy, -1));
+			_Mod(@"Tools\Source\CompilerGeneratorTools\Source\CSharpSyntaxGenerator\CSharpSyntaxGenerator.csproj", (project, copy, -1));
 
 			//how: 0 replace, 1 insert after, -1 insert before
 			void _Mod(string file, params (string find, string add, int how)[] p)
@@ -105,9 +110,7 @@ namespace CompilerDlls
 				return true;
 			}
 
-			Console.WriteLine(@"Roslyn source has heen modified successfully.
-	Please compile project Microsoft.CodeAnalysis.CSharp.Features in Roslyn solution.
-	It will compile 6 projects.");
+			Console.WriteLine(@"Roslyn source has heen modified successfully.");
 		}
 	}
 }
@@ -122,12 +125,12 @@ namespace CompilerDlls
 //3. In the { } add line: Symbols = Symbols, //au
 //4. Below the method add property: internal System.Collections.Generic.IReadOnlyList<ISymbol> Symbols { get; set; } //au
 //5. Open Features\Core\Portable\Completion\Providers\SymbolCompletionItem.cs.
-//6. In method CreateWorker find: tags: tags);
-//7. Below add: item.Symbols = symbols; //au
+//6. In method CreateWorker find statement that starts with: var item = CommonCompletionItem.Create(
+//7. Below that statement add: item.Symbols = symbols; //au
 
 // - Add Symbol property to the SymbolKeySignatureHelpItem class:
 //1. Open Features\Core\Portable\SignatureHelp\AbstractSignatureHelpProvider.SymbolKeySignatureHelpItem.cs.
-//2. Add property: internal ISymbol Symbol { get; } //au
+//2. Add property: internal ISymbol? Symbol { get; } //au
 //3. In ctor add:  Symbol = symbol; //au
 
 // - Let it don't try to load VB assemblies, because then exception when debugging:
@@ -195,4 +198,8 @@ namespace CompilerDlls
         //    return (result != null) ? result.Keys : SpecializedCollections.EmptyEnumerable<ImmutableArray<byte>>();
         //}
 
+// - Remove code that uses Scripting project:
+//1. In Features\Core\Portable\Completion\Providers\Scripting\AbstractDirectivePathCompletionProvider.cs remove 2 Scripting usings and 1 code block that uses it.
+//2. In Features\Core\Portable\Completion\Providers\Scripting\AbstractReferenceDirectiveCompletionProvider.cs remove 1 Scripting using and remove entire body of ProvideCompletionsAsync.
+//3. Remove entire Features\Core\Portable\Completion\Providers\Scripting\GlobalAssemblyCacheCompletionHelper.cs.
 #endif

@@ -279,18 +279,18 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Casts this to <see cref="WndButton"/>.
+		/// Casts this to <see cref="WButton"/>.
 		/// </summary>
-		public WndButton AsButton => (WndButton)this;
+		public WButton AsButton => new(this);
 
 		/// <summary>
 		/// Finds a child button by id and sends a "click" message. Does not use the mouse.
-		/// Calls <see cref="WndButton.Click(bool)"/>.
+		/// Calls <see cref="WButton.Click(bool)"/>.
 		/// </summary>
 		/// <param name="buttonId">Control id of the button. This function calls <see cref="ChildById"/> to find the button.</param>
 		/// <param name="useElm">Use <see cref="elm.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
 		/// <exception cref="NotFoundException">Button not found.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="ChildById"/> and <see cref="WndButton.Click(bool)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="ChildById"/> and <see cref="WButton.Click(bool)"/>.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// wnd.find("Options").ButtonClick(2);
@@ -305,13 +305,13 @@ namespace Au
 
 		/// <summary>
 		/// Finds a child button by name and sends a "click" message. Does not use the mouse.
-		/// Calls <see cref="WndButton.Click(bool)"/>.
+		/// Calls <see cref="WButton.Click(bool)"/>.
 		/// </summary>
 		/// <param name="buttonName">Button name. This function calls <see cref="Child"/> to find the button.</param>
 		/// <param name="cn">Button class name to pass to <see cref="Child"/>.</param>
 		/// <param name="useElm">Use <see cref="elm.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
 		/// <exception cref="NotFoundException">Button not found.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="Child"/> and <see cref="WndButton.Click(bool)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Child"/> and <see cref="WButton.Click(bool)"/>.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// wnd.find("Options").ButtonClick("Cancel");
@@ -399,19 +399,21 @@ namespace Au.Types
 	/// wnd.find("Options").Child("Cancel").AsButton.Click();
 	/// ]]></code>
 	/// </example>
-	public struct WndButton
+	public struct WButton
 	{
 		/// <summary>
 		/// Button handle as wnd.
 		/// </summary>
 		public wnd W { get; }
 
-		WndButton(wnd w) { W = w; }
+		internal WButton(wnd w) { W = w; }
 
 		///
-		public static implicit operator wnd(WndButton b) => b.W;
-		///
-		public static explicit operator WndButton(wnd w) => new WndButton(w);
+		public static implicit operator wnd(WButton b) => b.W;
+
+		/////
+		//public static explicit operator WButton(wnd w) => new(w);
+
 		///
 		public override string ToString() => W.ToString();
 

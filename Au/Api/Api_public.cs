@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Au.More;
+using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -89,7 +90,7 @@ namespace Au.Types
 		public POINT pt;
 
 		public override string ToString() {
-			wnd.more.printMsg(out string s, this, new() { Indent = false, Number = false });
+			WndUtil.PrintMsg(out string s, this, new() { Indent = false, Number = false });
 			return s;
 		}
 
@@ -235,7 +236,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Window class long constants. Used with <see cref="wnd.more.getClassLong"/>.
+	/// Window class long constants. Used with <see cref="WndUtil.GetClassLong"/>.
 	/// See API <msdn>WNDCLASSEX</msdn>, <msdn>GetClassLong</msdn>.
 	/// </summary>
 	public static class GCL

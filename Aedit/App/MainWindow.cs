@@ -27,7 +27,7 @@ partial class MainWindow : Window
 		App.Wmain = this;
 		Title = App.AppName; //don't append document name etc
 
-		wnd.more.SavedRect.Restore(this, App.Settings.wndPos, o => App.Settings.wndPos = o);
+		WndSavedRect.Restore(this, App.Settings.wndPos, o => App.Settings.wndPos = o);
 		//SHOULDDO: now on Win8 first time very small if high DPI and small screen. Don't use default window size. Or test with small screen on all OS.
 
 		Panels.LoadAndCreateToolbars();
@@ -41,7 +41,7 @@ partial class MainWindow : Window
 		App.Commands.InitToolbarsAndCustomize(folders.ThisAppBS + @"Default\Commands.xml", AppSettings.DirBS + "Commands.xml", atb);
 
 		var bRun = App.Commands[nameof(Menus.Run.Run_script)].FindButtonInToolbar(Panels.TRun);
-		if (bRun != null) { bRun.Width = 40; bRun.Margin = new(20, 0, 20, 0); } //make Run button bigger
+		if (bRun != null) { bRun.Width = 40; bRun.Margin = new(10, 0, 10, 0); } //make Run button bigger //SHOULDDO: bad if vertical toolbar
 
 		Panels.CreatePanels();
 
@@ -54,6 +54,7 @@ partial class MainWindow : Window
 		//timerm.after(100, _ => App.Model.Properties());
 		//timerm.after(100, _ => Menus.File.Workspace.New_workspace());
 		//timerm.after(100, _ => DIcons.ZShow());
+		//timerm.after(500, _ => { new Au.Tools.Dwnd(wnd.find(null, "Shell_TrayWnd")).Show(); });
 
 //		timerm.after(100, _ => {
 //#if !true

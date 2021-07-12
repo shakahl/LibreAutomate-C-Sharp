@@ -244,7 +244,7 @@ namespace Au.Compiler
 		List<FileNode> _filesC; //files added through meta option 'c'. Finally parsed and added to Files.
 
 		/// <summary>
-		/// Count of files added through meta option 'c'. They are at the end of <see cref="CodeFiles"/>.
+		/// Count of files added through meta option 'c' and "global.cs". They are at the end of <see cref="CodeFiles"/>.
 		/// </summary>
 		public int CountC => _filesC?.Count ?? 0;
 
@@ -356,6 +356,18 @@ namespace Au.Compiler
 			Errors = new ErrBuilder();
 			_flags = flags;
 
+			//always compile global.cs
+			var model = f.Model;
+			//var glob = model.Find(@"\Classes\global.cs", FNFind.Class) ?? model.Find("global.cs", FNFind.Class);
+			var glob = model.Find("global.cs", FNFind.Class);
+			if (glob != null) {
+				_filesC = new() { glob };
+			} else if (!model.NoGlobalCs_) {
+				model.NoGlobalCs_ = true;
+				Panels.Output.ZOutput.ZTags.AddLinkTag("+restoreGlobal", _ => App.Model.AddMissingDefaultFiles(globalCs: true));
+				print.warning("Class file \"global.cs\" not found. <+restoreGlobal>Restore<>.", -1, "<>");
+			}
+
 			_ParseFile(f, true);
 
 			if (projFolder != null) {
@@ -363,9 +375,9 @@ namespace Au.Compiler
 			}
 
 			if (_filesC != null) {
-				foreach (var ff in _filesC) {
-					if (CodeFiles.Exists(o => o.f == ff)) continue;
-					_ParseFile(ff, false);
+				for (int i = 0; i < _filesC.Count; i++) { //not foreach
+					var ff = _filesC[i];
+					if (!_CodeFilesContains(ff)) _ParseFile(ff, false);
 				}
 			}
 
@@ -389,6 +401,13 @@ namespace Au.Compiler
 				return false;
 			}
 			return true;
+		}
+
+		bool _CodeFilesContains(FileNode f) {
+			//return CodeFiles.Exists(o => o.f == f); //garbage
+			var a = CodeFiles;
+			for (int i = a.Count; --i >= 0;) if (a[i].f == f) return true;
+			return false;
 		}
 
 		/// <summary>
@@ -467,7 +486,7 @@ namespace Au.Compiler
 				}
 				return;
 			case "c":
-				var ff = _GetFile(value, null);
+				var ff = _GetFile(value, FNFind.Any);
 				if (ff != null) {
 					if (ff.IsFolder) {
 						foreach (var v in ff.Descendants()) if (v.IsClass) _AddC(v);
@@ -486,7 +505,7 @@ namespace Au.Compiler
 				//	if (!forCodeInfo) (Resources ??= new()).Add(new(null, value[..^11]));
 				//} else
 				{
-					var fs1 = _GetFileAndString(value, null);
+					var fs1 = _GetFileAndString(value, FNFind.Any);
 					if (!forCodeInfo && fs1.f != null) {
 						Resources ??= new();
 						if (!Resources.Exists(o => o.f == fs1.f && o.s == fs1.s)) Resources.Add(fs1);
@@ -531,11 +550,11 @@ namespace Au.Compiler
 				break;
 			case "preBuild":
 				_Specified(EMSpecified.preBuild);
-				PreBuild = _GetFileAndString(value);
+				PreBuild = _GetFileAndString(value, FNFind.CodeFile);
 				break;
 			case "postBuild":
 				_Specified(EMSpecified.postBuild);
-				PostBuild = _GetFileAndString(value);
+				PostBuild = _GetFileAndString(value, FNFind.CodeFile);
 				break;
 			case "outputPath":
 				_Specified(EMSpecified.outputPath);
@@ -563,11 +582,11 @@ namespace Au.Compiler
 			//	break;
 			case "manifest":
 				_Specified(EMSpecified.manifest);
-				ManifestFile = _GetFile(value);
+				ManifestFile = _GetFile(value, FNFind.File);
 				break;
 			case "icon":
 				_Specified(EMSpecified.icon);
-				IconFile = _GetFile(value, folder: null);
+				IconFile = _GetFile(value, FNFind.Any);
 				break;
 			//case "resFile":
 			//	_Specified(EMSpecified.resFile);
@@ -575,7 +594,7 @@ namespace Au.Compiler
 			//	break;
 			case "sign":
 				_Specified(EMSpecified.sign);
-				SignFile = _GetFile(value);
+				SignFile = _GetFile(value, FNFind.File);
 				break;
 			case "xmlDoc":
 				_Specified(EMSpecified.xmlDoc);
@@ -644,11 +663,11 @@ namespace Au.Compiler
 		}
 		static readonly Dictionary<Type, (string name, int value)[]> s_enumCache = new();
 
-		FileNode _GetFile(string s, bool? folder = false) {
-			var f = _fn.FindRelative(s, folder);
+		FileNode _GetFile(string s, FNFind kind) {
+			var f = _fn.FindRelative(s, kind);
 			if (f == null) {
-				string s2 = pathname.findExtension(s) < 0 ? ". If it is a code file, append \".cs\"." : null;
-				_ErrorV($"file '{s}' does not exist in this workspace{s2}");
+				if (kind != FNFind.Any && null != _fn.FindRelative(s)) _ErrorV($"file '{s}' is of wrong type");
+				else _ErrorV($"file '{s}' does not exist in this workspace");
 				return null;
 			}
 			int v = filesystem.exists(s = f.FilePath, true);
@@ -656,14 +675,14 @@ namespace Au.Compiler
 			return f;
 		}
 
-		MetaFileAndString _GetFileAndString(string s, bool? folder = false) {
+		MetaFileAndString _GetFileAndString(string s, FNFind kind) {
 			string s2 = null;
 			int i = s.Find(" /");
 			if (i > 0) {
 				s2 = s[(i + 2)..];
 				s = s[..i];
 			}
-			return new(_GetFile(s, folder), s2);
+			return new(_GetFile(s, kind), s2);
 		}
 
 		string _GetOutPath(string s) {
@@ -677,9 +696,9 @@ namespace Au.Compiler
 		}
 
 		bool _PR(ref string value) {
-			var f = _GetFile(value); if (f == null) return false;
+			var f = _GetFile(value, FNFind.CodeFile); if (f == null) return false;
 			if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
-			foreach (var v in CodeFiles) if (v.f == f) return _ErrorV("circular reference");
+			if (_CodeFilesContains(f)) return _ErrorV("circular reference");
 			if (!_flags.Has(EMPFlags.ForCodeInfo)) {
 				if (!Compiler.Compile(ECompReason.CompileIfNeed, out var r, f, projFolder)) return _ErrorV("failed to compile library");
 				//print.it(r.role, r.file);

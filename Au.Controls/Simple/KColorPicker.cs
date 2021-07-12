@@ -112,7 +112,7 @@ namespace Au.Controls
 			public wnd Hwnd => _w;
 
 			static _Palette() {
-				wnd.more.registerWindowClass(c_winClassName);
+				WndUtil.RegisterWindowClass(c_winClassName);
 			}
 
 			public _Palette(KColorPicker cp) {
@@ -121,7 +121,7 @@ namespace Au.Controls
 
 			protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
 				var wParent = (wnd)hwndParent.Handle;
-				wnd.more.createWindow(_wndProc = _WndProc, false, c_winClassName, null, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
+				WndUtil.CreateWindow(_wndProc = _WndProc, false, c_winClassName, null, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
 
 				return new HandleRef(this, _w.Handle);
 			}
@@ -135,7 +135,7 @@ namespace Au.Controls
 			WNDPROC _wndProc;
 			nint _WndProc(wnd w, int msg, nint wParam, nint lParam) {
 				//var pmo = new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
-				//if (wnd.more.printMsg(out string s, _w, msg, wParam, lParam, pmo)) print.it("<><c green>" + s + "<>");
+				//if (WndUtil.PrintMsg(out string s, _w, msg, wParam, lParam, pmo)) print.it("<><c green>" + s + "<>");
 
 				switch (msg) {
 				case Api.WM_NCCREATE:

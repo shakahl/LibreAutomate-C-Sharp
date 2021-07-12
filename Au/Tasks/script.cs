@@ -112,7 +112,7 @@ namespace Au
 			if (needResult && !tr.Init()) throw new AuException("*get task results");
 
 			var data = Serializer_.Serialize(script, args, tr.pipeName);
-			int pid = (int)wnd.more.CopyData.Send<byte>(w, 100, data, mode);
+			int pid = (int)WndCopyData.Send<byte>(w, 100, data, mode);
 			switch ((RunResult_)pid) {
 			case RunResult_.failed: return !waitMode ? -1 : throw new AuException("*start task");
 			case RunResult_.notFound: throw new FileNotFoundException($"Script '{script}' not found.");
@@ -269,7 +269,7 @@ namespace Au
 			s_setupException = exception;
 			if (!s_appModuleInit) AppModuleInit_(); //if role miniProgram, called by MiniProgram_.Init; else if default compiler, the call is compiled into code; else called now.
 
-			//info: default false, because slow and rarely used. //TODO: default true in miniProgram. Remove parameter, or make bool? debug.
+			//info: default false, because slow and rarely used.
 			if (debug) DebugTraceListener.Setup(usePrint: true);
 
 			if (trayIcon) {
@@ -301,8 +301,11 @@ namespace Au
 			process.thisProcessCultureIsInvariant = true;
 			//#endif
 
+			AppDomain.CurrentDomain.ProcessExit += (_, _) => { Exiting_ = true; };
+
 			AppDomain.CurrentDomain.UnhandledException += (_, u) => {
 				if (!u.IsTerminating) return; //never seen, but anyway
+				Exiting_ = true;
 				var e = (Exception)u.ExceptionObject; //probably non-Exception object is impossible in C#
 				s_unhandledException = e;
 				if (s_setupException.Has(UExcept.Print)) print.it(e);
@@ -324,6 +327,8 @@ namespace Au
 		static bool s_appModuleInit;
 		static UExcept s_setupException = UExcept.Print | UExcept.Exit;
 		internal static Exception s_unhandledException; //for process.thisProcessExit
+
+		internal static bool Exiting_ { get; private set; }
 
 		internal static WinEventHook HookDesktopSwitch_() {
 			return new WinEventHook(EEvent.SYSTEM_DESKTOPSWITCH, 0, k => {
@@ -353,7 +358,7 @@ namespace Au
 		public static void single(string mutex = "Au-mutex-script.single", int wait = 0, bool silent = false) {
 			//FUTURE: parameter bool endOther. Like meta ifRunning restart.
 
-			var m = Api.CreateMutex(null, false, mutex ?? "Au-mutex-script.single");
+			var m = Api.CreateMutex(null, false, mutex ?? "Au-mutex-script.single"); //tested: don't need Api.SECURITY_ATTRIBUTES.ForLowIL
 			if (default != Interlocked.CompareExchange(ref s_singleMutex, m, default)) { Api.CloseHandle(m); throw new InvalidOperationException(); }
 			var r = Api.WaitForSingleObject(s_singleMutex, wait);
 			//print.it(r);
@@ -361,12 +366,9 @@ namespace Au
 				if (!silent) print.it($"<>Note: script task <open {path}|||script.single>{name}<> cannot run because a task is running.");
 				Environment.Exit(3);
 			}
-			//SHOULDDO: release mutex when main script function ends.
-			//	If with UsingEndAction, caller code must be like 'using var single = script.single();'.
-			//	Cannot release in process exit event. It runs in another thread. Also, it's better to release ASAP.
-			//	Could ignore it, but if released ASAP, users could start the script more frequently.
-			//		The process ends slowly, because of .NET. Eg if starting an empty script every <50 ms, sometimes cannot start.
-			//		TODO: try in process exit event to close handle. The mutex will be abandoned like now, but maybe sooner.
+			//never mind: should release mutex.
+			//	Cannot release in process exit event. It runs in another thread.
+			//	Cannot use UsingEndAction, because then caller code must be like 'using var single = script.single();'.
 			//return new(() => Api.ReleaseMutex(s_singleMutex));
 		}
 		static IntPtr s_singleMutex;
@@ -480,8 +482,8 @@ namespace Au
 							if (Api.RegisterHotKey(default, atom, mod, key)) Api.KillTimer(default, timerR);
 						} else if (m.wParam == timerW) {
 							Api.KillTimer(default, timerW);
-							var w = wnd.more.createMessageOnlyWindow((w, m, wp, lp) => {
-								//wnd.more.printMsg(w, m, wp, lp); //no WM_SYSCOMMAND
+							var w = WndUtil.CreateMessageOnlyWindow((w, m, wp, lp) => {
+								//WndUtil.PrintMsg(w, m, wp, lp); //no WM_SYSCOMMAND
 								//if (m == Api.WM_ACTIVATE && wp == 1) w.Post(Api.WM_HOTKEY, atom);
 								if (m == Api.WM_ACTIVATE && wp == 1) Environment.Exit(exitCode);
 								return Api.DefWindowProc(w, m, wp, lp);
@@ -524,12 +526,12 @@ namespace Au
 			public static void OpenAndGoToLine(string file, int line) {
 				var w = WndMsg_; if (w.Is0) return;
 				Api.AllowSetForegroundWindow(w.ProcessId);
-				wnd.more.CopyData.Send<char>(w, 4, file, line);
+				WndCopyData.Send<char>(w, 4, file, line);
 			}
 
 			/// <summary>
 			/// Gets icon string in specified format.
-			/// Returns null if editor isn't running or if the specified file does not have a custom icon.
+			/// Returns null if editor isn't running or if file does not exist.
 			/// </summary>
 			/// <param name="file">File/folder path etc, or icon name. See <see cref="EGetIcon"/>.</param>
 			/// <param name="what">The format of input and output strings.</param>
@@ -538,14 +540,12 @@ namespace Au
 				if (del != null) return del(file, what);
 
 				var w = WndMsg_; if (w.Is0) return null;
-				wnd.more.CopyData.SendReceive<char>(w, (int)Math2.MakeLparam(10, (int)what), file, out string r);
+				WndCopyData.SendReceive<char>(w, (int)Math2.MakeLparam(10, (int)what), file, out string r);
 				return r;
 				//rejected: add option to get serialized Bitmap instead. Now loads XAML in this process. It is 230 ms and +27 MB.
 				//	Nothing good if the toolbar etc also uses XAML icons directly, eg for non-script items. And serializing is slow.
 				//	Now not actual because of cache.
 			}
-			//TODO: get common icon too.
-			//TODO: let WPF and winforms windows use script's icon. Now WPF uses only if exe; winforms never.
 
 			//FUTURE: if editor isn't running, let GetIcon("icon name") try to get icon directly from database if available.
 			//public static string IconDatabasePath { get; set; }

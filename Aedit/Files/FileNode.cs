@@ -55,7 +55,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 	public FileNode(FilesModel model, string name, EFileType type) {
 		_model = model;
 		_type = type;
-		_name = name;
+		_SetName(name);
 		_id = _model.AddGetId(this);
 	}
 
@@ -65,7 +65,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 	public FileNode(FilesModel model, string name, string sourcePath, bool isFolder, string linkTarget = null) {
 		_model = model;
 		_type = isFolder ? EFileType.Folder : _DetectFileType(sourcePath);
-		_name = name;
+		_SetName(name);
 		_id = _model.AddGetId(this);
 		if (!linkTarget.NE() && !isFolder) _linkTarget = linkTarget;
 	}
@@ -74,7 +74,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 	//Deep-copies fields from f, except _model, _name, _id (generates new) and _testScriptId.
 	FileNode(FilesModel model, FileNode f, string name) {
 		_model = model;
-		_name = name;
+		_SetName(name);
 		_type = f._type;
 		_state = f._state;
 		_flags = f._flags;
@@ -96,7 +96,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 			while (x.MoveToNextAttribute()) {
 				var v = x.Value; if (v.NE()) continue;
 				switch (x.Name) {
-				case "n": _name = v; break;
+				case "n": _SetName(v); break;
 				case "i": v.ToInt(out id); break;
 				case "f": _flags = (_Flags)v.ToInt(); break;
 				case "path": if (!IsFolder) _linkTarget = v; break;
@@ -198,6 +198,12 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 	/// </summary>
 	public string DisplayName => _displayName ??= _name.RemoveSuffix(".cs", true);
 
+	void _SetName(string name) {
+		if (_name != null) _model._nameMap.MultiRemove_(_name, this); //renaming
+		_model._nameMap.MultiAdd_(_name = name, this);
+		_displayName = null;
+	}
+
 	/// <summary>
 	/// Unique id in this workspace. To find faster, with database, etc.
 	/// Root id is 0.
@@ -219,7 +225,8 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 	/// <summary>
 	/// Formats SciTags &lt;open&gt; link tag to open this file.
 	/// </summary>
-	public string SciLink => $"<open \"{IdStringWithWorkspace}\">{_name}<>";
+	/// <param name="path">In link name use <see cref="ItemPath"/> instead of name.</param>
+	public string SciLink(bool path = false) => $"<open \"{IdStringWithWorkspace}\">{(path ? ItemPath : _name)}<>";
 
 	/// <summary>
 	/// true if is external file, ie not in this workspace folder.
@@ -244,8 +251,8 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 		set {
 			_icon = value;
 			_model.Save.WorkspaceLater();
+			Compiler.Uncache(this);
 			FilesModel.Redraw(this);
-			//TODO: remove from XCompiled
 		}
 	}
 
@@ -397,7 +404,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 	void ITreeViewItem.SetNewText(string text) { FileRename(text); }
 
 	public const string
-		c_imageScript = "*FileIcons.CsScript #73BF00",
+		c_imageScript = "*Material.ScriptOutline #73BF00",
 		c_imageClass = "*Codicons.SymbolClass #008EEE",
 		c_imageFolder = "*Material.FolderOutline #EABB00",
 		c_imageFolderOpen = "*Material.FolderOpenOutline #EABB00";
@@ -410,7 +417,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 			_ => null
 		};
 
-	string ITreeViewItem.ImageSource => CustomIconName ?? (IsOtherFileType ? FilePath : GetFileTypeImageSource(FileType, _isExpanded));
+	public string ImageSource => CustomIconName ?? (IsOtherFileType ? FilePath : GetFileTypeImageSource(FileType, _isExpanded));
 
 	//has default implementation
 	//TVCheck ITreeViewItem.CheckState { get; }
@@ -472,48 +479,67 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 	/// Returns null if not found; also if name is null/"".
 	/// </summary>
 	/// <param name="name">Name like "name.cs" or relative path like @"\name.cs" or @"\subfolder\name.cs".</param>
-	/// <param name="folder">true - folder, false - file, null - any (prefer file if not relative).</param>
-	public FileNode FindDescendant(string name, bool? folder) {
+	/// <param name="kind"></param>
+	public FileNode FindDescendant(string name, FNFind kind = FNFind.Any) {
 		if (name.NE()) return null;
-		if (name[0] == '\\') return _FindRelative(name, folder);
-		return _FindIn(Descendants(), name, folder, true);
+		if (name[0] == '\\') return _FindRelative(name, kind);
+		return _FindIn(Descendants(), name, kind, true);
 	}
 
-	static FileNode _FindIn(IEnumerable<FileNode> e, string name, bool? folder, bool preferFile) {
-		if (preferFile) {
-			if (!folder.GetValueOrDefault()) { //any or file
-				var f = _FindIn(e, name, false); if (f != null) return f;
+	static FileNode _FindIn(IEnumerable<FileNode> e, ReadOnlySpan<char> name, FNFind kind, bool preferFile) {
+		FileNode folder = null;
+		foreach (var f in e) {
+			if (!name.Eqi(f._name)) continue;
+			if (null == FilesModel.KindFilter_(f, kind)) continue;
+			if (preferFile && f.IsFolder) { folder ??= f; continue; }
+			return f;
+		}
+		return folder;
+	}
+
+	FileNode _FindRelative(string name, FNFind kind) {
+#if true //fast, but allocates
+		int i = name.LastIndexOf('\\');
+		var lastName = name[(i + 1)..]; //never mind: allocation. To avoid allocation would need to enumerate without dictionary, and in big workspace it can be 100 times slower.
+		if (_model._nameMap.MultiGet_(lastName, out FileNode v, out var a)) {
+			if (a != null) {
+				foreach (var f in a) if (_Cmp(f)) return f;
+			} else {
+				if (_Cmp(v)) return v;
 			}
-			if (!folder.HasValue || folder.GetValueOrDefault()) { //any or folder
-				return _FindIn(e, name, true);
-			}
-		} else {
-			if (folder.HasValue) return _FindIn(e, name, folder.GetValueOrDefault());
-			foreach (var f in e) if (f._name.Eqi(name)) return f;
 		}
 		return null;
-	}
 
-	static FileNode _FindIn(IEnumerable<FileNode> e, string name, bool folder) {
-		foreach (var f in e) if (f.IsFolder == folder && f._name.Eqi(name)) return f;
-		return null;
-	}
-
-	FileNode _FindRelative(string name, bool? folder) {
+		bool _Cmp(FileNode f) {
+			if (null == FilesModel.KindFilter_(f, kind)) return false;
+			f = f.Parent;
+			for (int j = i; j > 0; f = f.Parent) {
+				int k = name.LastIndexOf('\\', j - 1);
+				//int k = j; while (--k >= 0 && name[k] != '\\') { }
+				if (!name.Eq((k + 1)..j, f.Name ?? "", true)) return false;
+				j = k;
+			}
+			return f == this;
+		}
+#else //allocation-free, without dictionary
 		if (name.Starts(@"\\")) return null;
 		var f = this; int lastSegEnd = -1;
 		foreach (var v in name.Segments(@"\", SegFlags.NoEmpty)) {
-			var e = f.Children();
-			var s = name[v.Range];
-			if ((lastSegEnd = v.end) == name.Length) {
-				f = _FindIn(e, s, folder, false);
-			} else {
-				f = _FindIn(e, s, true);
+			var s = name.AsSpan(v.start, v.Length);
+			bool last = (lastSegEnd = v.end) == name.Length;
+			for (f = f.FirstChild; f != null; f = f.Next) {
+				if (last) {
+					if (null != FilesModel.KindFilter_(f, kind) && s.Eqi(f._name)) break;
+					//if (s.Eqi(f._name) && null != FilesModel.KindFilter_(f, kind)) break;
+				} else {
+					if (f.IsFolder && s.Eqi(f._name)) break;
+				}
 			}
 			if (f == null) return null;
 		}
 		if (lastSegEnd != name.Length) return null; //prevents finding when name is "" or @"\" or @"xxx\".
 		return f;
+#endif
 	}
 
 	/// <summary>
@@ -521,9 +547,9 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 	/// Returns null if not found; also if name is null/"".
 	/// </summary>
 	/// <param name="relativePath">Examples: "name.cs", @"subfolder\name.cs", @".\subfolder\name.cs", @"..\parent\name.cs", @"\root path\name.cs".</param>
-	/// <param name="folder">true - folder, false - file, null - any.</param>
-	public FileNode FindRelative(string relativePath, bool? folder) {
-		if (!IsFolder) return Parent.FindRelative(relativePath, folder);
+	/// <param name="folder"></param>
+	public FileNode FindRelative(string relativePath, FNFind kind = FNFind.Any) {
+		if (!IsFolder) return Parent.FindRelative(relativePath, kind);
 		var s = relativePath;
 		if (s.NE()) return null;
 		FileNode p = this;
@@ -533,11 +559,11 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 			for (; s.Eq(i, @"..\"); i += 3) { p = p.Parent; if (p == null) return null; }
 			if (i == 0 && s.Starts(@".\")) i = 2;
 			if (i != 0) {
-				if (i == s.Length) return (p == Root || !(folder ?? true)) ? null : p;
-				s = s.Substring(i);
+				if (i == s.Length) return (p == Root || !(kind is FNFind.Any or FNFind.Folder)) ? null : p;
+				s = s[i..];
 			}
 		}
-		return p._FindRelative(s, folder);
+		return p._FindRelative(s, kind);
 	}
 
 	/// <summary>
@@ -548,7 +574,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 	public FileNode[] FindAllDescendantFiles(string name) {
 		if (!name.NE()) {
 			if (name[0] == '\\') {
-				var f1 = _FindRelative(name, false);
+				var f1 = _FindRelative(name, FNFind.File);
 				if (f1 != null) return new FileNode[] { f1 };
 			} else {
 				return Descendants().Where(k => !k.IsFolder && k._name.Eqi(name)).ToArray();
@@ -648,7 +674,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 		}
 
 		bool _Exists(string s) {
-			if (null != _FindIn(folder.Children(), s, null, false)) return true;
+			if (null != _FindIn(folder.Children(), s, FNFind.Any, false)) return true;
 			if (filesystem.exists(folder.FilePath + "\\" + s)) return true; //orphaned file?
 			return false;
 		}
@@ -688,7 +714,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 		/// Returns null if template not found. Exception if fails to load file.
 		/// Uses caching to avoid loading file each time, but reloads if file modified; don't modify the XML DOM.
 		/// </summary>
-		/// <param name="template">null or relative path of template in Templates\files. Case-sensitive.</param>
+		/// <param name="template">null or relative path of template in Templates\files. Case-insensitive.</param>
 		public static XElement LoadXml(string template = null) {
 			//load files.xml first time, or reload if file modified
 			filesystem.getProperties(s_xmlFilePath, out var fp, FAFlags.UseRawPath);
@@ -700,7 +726,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 			var x = s_xml;
 			if (template != null) {
 				var a = template.Split('\\');
-				for (int i = 0; i < a.Length; i++) x = x?.Elem(i < a.Length - 1 ? "d" : null, "n", a[i]);
+				for (int i = 0; i < a.Length; i++) x = x?.Elem(i < a.Length - 1 ? "d" : null, "n", a[i], ignoreCase: true);
 				Debug.Assert(x != null);
 			}
 			return x;
@@ -709,7 +735,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 		static readonly string s_xmlFilePath = folders.ThisAppBS + @"Templates\files.xml";
 		static DateTime s_xmlFileTime;
 
-		public static bool IsInExamples(XElement x) => x.Ancestors().Any(o => o.Attr("n") == "Examples");
+		public static bool IsInExamplesOrDefault(XElement x) => x.Ancestors().Any(o => o.Attr("n") is "Examples" or "Default");
 	}
 
 	[Flags]
@@ -741,8 +767,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 			if (!_model.TryFileOperation(() => filesystem.rename(this.FilePath, name, FIfExists.Fail))) return false;
 		}
 
-		_name = name;
-		_displayName = null;
+		_SetName(name);
 		_model.Save.WorkspaceLater();
 		FilesModel.Redraw(this, remeasure: true);
 		CodeInfo.FilesChanged();
@@ -791,7 +816,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 				if (!_model.TryFileOperation(() => filesystem.move(this.FilePath, newParent.FilePath + "\\" + name, FIfExists.Fail))) return false;
 			}
 
-			if (name != _name) { _name = name; _displayName = null; }
+			if (name != _name) _SetName(name);
 		}
 
 		//move tree node

@@ -102,7 +102,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfCustomControlLibrary", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsWin32", "Test Projects\CsWin32\CsWin32.csproj", "{961DA435-5800-4CEE-928D-4928B3D3CB2A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Icons", "Other\Icons\Icons.csproj", "{7FCC730B-79F3-4ED1-B9EC-2BF330CD9D3B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Icons", "Other\Icons\Icons.csproj", "{7FCC730B-79F3-4ED1-B9EC-2BF330CD9D3B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -389,7 +389,7 @@ partial class TestScript
 
 			//void _B(TBBorder b){
 			//	t.Border = b;
-			//	//print.it(wnd.more.borderWidth((wnd)t.Control));
+			//	//print.it(WndUtil.BorderWidth((wnd)t.Control));
 			//}
 
 			//t.Bounds = new Rectangle(i * 300 + 700, 200, 200, 200);

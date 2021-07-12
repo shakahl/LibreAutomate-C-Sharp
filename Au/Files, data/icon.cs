@@ -431,24 +431,27 @@ namespace Au
 		/// <param name="resourceId">Native resource id. Default <msdn>IDI_APPLICATION</msdn> (C# compilers add app icon with this id).</param>
 		/// <remarks>
 		/// If role miniProgram (default), at first looks in main assembly (.dll); if not found there, looks in .exe file. Else only in .exe file.
+		/// 
+		/// The icon is cached and protected from destroying. Don't need to destroy it, and not error to do it.
 		/// </remarks>
 		public static icon ofThisApp(int size = 16, int resourceId = Api.IDI_APPLICATION) {
-			var h = GetAppIconModuleHandle_(resourceId);
-			if (h == default) return null;
-			size = _NormalizeIconSizeArgument(size);
-			return _New(Api.LoadImage(h, resourceId, Api.IMAGE_ICON, size, size, Api.LR_SHARED));
+			var hm = GetAppIconModuleHandle_(resourceId);
+			return FromModuleHandle_(hm, size, resourceId);
 
 			//This is not 100% reliable because the icon id 32512 (IDI_APPLICATION) is undocumented.
 			//I could not find a .NET method to get icon directly from native resources of assembly.
 			//Could use the resource emumeration API...
 			//info: MSDN lies that with LR_SHARED gets a cached icon regardless of size argument. Caches each size separately. Tested on Win 10, 7, XP.
 
-			//SHOULDOO: test LoadIconWithScaleDown.
-			//rejected doc, because may change in the future:
-			///// <remarks>
-			///// The icon is cached and protected from destroying, therefore don't need to destroy it, and not error to do it.
-			///// </remarks>
+			//TEST: LoadIconWithScaleDown.
 		}
+
+		internal static icon FromModuleHandle_(IntPtr hm, int size = 16, int resourceId = Api.IDI_APPLICATION) {
+			if (hm == default) return null;
+			size = _NormalizeIconSizeArgument(size);
+			return _New(Api.LoadImage(hm, resourceId, Api.IMAGE_ICON, size, size, Api.LR_SHARED));
+		}
+
 
 		/// <summary>
 		/// Gets icon of tray icon size from unmanaged resources of this program or system.
@@ -459,7 +462,7 @@ namespace Au
 		/// 
 		/// The icon can be in main assembly (if role miniProgram) or in the program file (.exe). If not found, loads standard icon, see API <b>LoadIconMetric</b>.
 		/// </remarks>
-		public static icon trayIcon(int resourceId = Api.IDI_APPLICATION/*, bool large = false*/) {
+		public static icon trayIcon(int resourceId = Api.IDI_APPLICATION/*, bool big = false*/) {
 #if true
 			IntPtr hi = default; int hr = 1;
 			if (script.role == SRole.MiniProgram) hr = Api.LoadIconMetric(Api.GetModuleHandle(Assembly.GetEntryAssembly().Location), resourceId, 0, out hi);
@@ -468,9 +471,9 @@ namespace Au
 			return hr == 0 ? _New(hi) : null;
 #else //10% slower
 			var h = GetAppIconModuleHandle_();
-			return 0 == Api.LoadIconMetric(h, resourceId, /*large ? 1 :*/ 0, out var hi) ? new(hi) : null;
+			return 0 == Api.LoadIconMetric(h, resourceId, /*big ? 1 :*/ 0, out var hi) ? new(hi) : null;
 #endif
-			//can load large icon too, but not very useful.
+			//can load big icon too, but not very useful.
 		}
 
 		/// <summary>
@@ -489,7 +492,7 @@ namespace Au
 		/// Gets native module handle of exe or dll that contains specified icon. Returns default if no icon.
 		/// If role miniProgram, at first looks in main assembly (.dll).
 		/// </summary>
-		internal static IntPtr GetAppIconModuleHandle_(int resourceId) { //used by dialog
+		internal static IntPtr GetAppIconModuleHandle_(int resourceId) {
 			if (script.role == SRole.MiniProgram) {
 				var h1 = Api.GetModuleHandle(Assembly.GetEntryAssembly().Location);
 				if (default != Api.FindResource(h1, resourceId, Api.RT_GROUP_ICON)) return h1;
@@ -506,7 +509,7 @@ namespace Au
 		/// <param name="w">Window of any process.</param>
 		/// <param name="size">Icon width and height. Default 16.</param>
 		public static icon ofWindow(wnd w, int size = 16) {
-			//int size = Api.GetSystemMetrics(large ? Api.SM_CXICON : Api.SM_CXSMICON);
+			//int size = Api.GetSystemMetrics(big ? Api.SM_CXICON : Api.SM_CXSMICON);
 
 			//support Windows Store apps
 			if (1 == wnd.Internal_.GetWindowsStoreAppId(w, out var appId, true)) {
@@ -514,17 +517,26 @@ namespace Au
 				if (v != null) return v;
 			}
 
-			bool large = size >= 24; //SHOULDDO: make high-DPI-aware. How?
-			bool ok = w.SendTimeout(2000, out nint R, Api.WM_GETICON, large ? 1 : 0);
-			if (R == 0 && ok) w.SendTimeout(2000, out R, Api.WM_GETICON, large ? 0 : 1);
-			if (R == 0) R = wnd.more.getClassLong(w, large ? GCL.HICON : GCL.HICONSM);
-			if (R == 0) R = wnd.more.getClassLong(w, large ? GCL.HICONSM : GCL.HICON);
+			bool big = size >= 24; //SHOULDDO: make high-DPI-aware. How?
+			bool ok = w.SendTimeout(2000, out nint R, Api.WM_GETICON, big ? 1 : 0);
+			if (R == 0 && ok) w.SendTimeout(2000, out R, Api.WM_GETICON, big ? 0 : 1);
+			if (R == 0) R = WndUtil.GetClassLong(w, big ? GCL.HICON : GCL.HICONSM);
+			if (R == 0) R = WndUtil.GetClassLong(w, big ? GCL.HICONSM : GCL.HICON);
 			//tested this code with DPI 125%. Small icon of most windows match DPI (20), some 16, some 24.
 			//tested: undocumented API InternalGetWindowIcon does not get icon of winstore app.
 
 			//Copy, because will DestroyIcon, also it resizes if need.
 			if (R != 0) R = Api.CopyImage(R, Api.IMAGE_ICON, size, size, 0);
 			return _New(R);
+		}
+
+		/// <summary>
+		/// Sends <msdn>WM_SETICON</msdn> message.
+		/// </summary>
+		/// <param name="w"></param>
+		/// <param name="big"></param>
+		public void SetWindowIcon(wnd w, bool big) {
+			w.Send(Api.WM_SETICON, big ? 1 : 0, _handle);
 		}
 
 		/// <summary>
@@ -594,11 +606,19 @@ namespace Au
 		/// If true (default), destroys the native icon object; also clears this variable and don't need to dispose it.
 		/// If false, later will need to dispose this variable.
 		/// </param>
+		/// <remarks>
+		/// The image is not suitable for WPF window icon. Instead use <see cref="SetWindowIcon"/> or WPF image loading functions.
+		/// </remarks>
 		public System.Windows.Media.Imaging.BitmapSource ToWpfImage(bool destroyIcon = true) {
 			if (_handle == default) return null;
 			try { return System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(_handle, default, default); }
 			catch (Exception e) { print.warning("ToWpfImage() failed. " + e.ToString(), -1); return null; }
 			finally { if (destroyIcon) Dispose(); }
+
+			//why not suitable for WPF window icon:
+			//1. Shadows in alpha area. As a workaround could get icon bits and call BitmapFrame.Create(), but
+			//2. For window need 2 icons - small and big.
+			//See script "HICON to ImageSource".
 		}
 
 		/// <summary>

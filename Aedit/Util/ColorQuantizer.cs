@@ -27,7 +27,7 @@ unsafe class ColorQuantizer
 		try {
 			var b = uiimage.capture(r);
 			var a = Quantize(b, 16);
-			var z = Convert2.Compress(a);
+			var z = Convert2.BrotliCompress(a);
 			return " /*image:\r\nWkJN" + Convert.ToBase64String(z) + "*/";
 		}
 		catch (Exception e1) { print.warning("MakeScreenshotComment() failed. " + e1.ToStringWithoutStack()); return null; }
@@ -194,7 +194,8 @@ unsafe class ColorQuantizer
 			var newBits = pret + bitsOffset;
 			for (int y = 0; y < _height; y++) {
 				byte* new_bits = newBits + (y * lineSize);
-				int lineStart = y * _width;
+				int yy = topDown ? _height - y - 1 : y; //always save as bottom-up
+				int lineStart = yy * _width;
 
 				if (bpp == 8) {
 					for (int x = 0; x < _width; x++)
@@ -214,7 +215,7 @@ unsafe class ColorQuantizer
 			var h2 = (Api.BITMAPINFOHEADER*)(f2 + 1);
 			h2->biSize = sizeof(Api.BITMAPINFOHEADER); h2->biPlanes = 1;
 			h2->biBitCount = (ushort)bpp; h2->biClrUsed = nColors;
-			h2->biWidth = _width; h2->biHeight = _height * (topDown ? -1 : 1);
+			h2->biWidth = _width; h2->biHeight = _height;
 		}
 
 		//Debug_.MemoryPrint_();

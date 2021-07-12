@@ -134,7 +134,7 @@ namespace Au
 		MenuItem _result;
 
 		static popupMenu() {
-			wnd.more.registerWindowClass("Au.popupMenu", etc: new() { style = Api.CS_HREDRAW | Api.CS_VREDRAW | Api.CS_DROPSHADOW, mCursor = MCursor.Arrow });
+			WndUtil.RegisterWindowClass("Au.popupMenu", etc: new() { style = Api.CS_HREDRAW | Api.CS_VREDRAW | Api.CS_DROPSHADOW, mCursor = MCursor.Arrow });
 		}
 
 		/// <summary>
@@ -471,7 +471,7 @@ namespace Au
 							}
 							if (!Api.PeekMessage(out m, default, 0, 0, Api.PM_REMOVE)) break;
 							if (handled) continue;
-							//wnd.more.printMsg(m, pmo);
+							//WndUtil.PrintMsg(m, pmo);
 							if (m.message == Api.WM_CHAR) {
 								_TopMenu()._WmChar((char)m.wParam);
 								continue;
@@ -608,7 +608,7 @@ namespace Au
 			_size.window = r.Size; _size.client = z; _size.border = -r.top;
 			Api.CalculatePopupWindowPosition(p, r.Size, (uint)flags & 0xffffff, excludeRect.GetValueOrDefault(), out r);
 
-			_w = wnd.more.createWindow(_WndProc, true, "Au.popupMenu", null, style, estyle, r.left, r.top, r.Width, r.Height, owner);
+			_w = WndUtil.CreateWindow(_WndProc, true, "Au.popupMenu", null, style, estyle, r.left, r.top, r.Width, r.Height, owner);
 			_SetScrollbar(needScroll);
 
 			_w.ShowL(true);
@@ -700,8 +700,8 @@ namespace Au
 
 		nint _WndProc(wnd w, int msg, nint wParam, nint lParam) {
 			//var pmo = new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
-			//if (wnd.more.printMsg(out string s, w, msg, wParam, lParam, pmo)) print.it("<><c green>" + s + "<>");
-			//wnd.more.printMsg(w, msg, wParam, lParam);
+			//if (WndUtil.PrintMsg(out string s, w, msg, wParam, lParam, pmo)) print.it("<><c green>" + s + "<>");
+			//WndUtil.PrintMsg(w, msg, wParam, lParam);
 
 			if (_scroll.WndProc(w, msg, wParam, lParam)) return default;
 

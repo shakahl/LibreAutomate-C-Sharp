@@ -138,7 +138,7 @@ class PanelOutput : DockPanel
 		}
 
 		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
-			//wnd.more.printMsg(out var s, default, msg, wParam, lParam); print.qm2.write(s);
+			//WndUtil.PrintMsg(out var s, default, msg, wParam, lParam); print.qm2.write(s);
 			switch (msg) {
 			case Api.WM_APP:
 				ZTags.PrintServerProcessMessages(App.PrintServer, _onServerMessage ??= _OnServerMessage);

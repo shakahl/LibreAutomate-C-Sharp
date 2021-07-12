@@ -111,15 +111,16 @@ namespace Au.Controls
 			Call(sciMessage, wParam, b.p);
 			Debug.Assert(b[len] == 0);
 			if (findLength) len = b.FindStringLengthAnsi();
-			return _FromUtf8(b, len);
+			print.it(len);
+			return Encoding.UTF8.GetString(b, len);
 		}
 
-		static string _FromUtf8(byte* b, int n = -1) => Convert2.FromUtf8(b, n);
+		static string _FromUtf8(byte* b) => Convert2.Utf8Decode(b);
 
-		static byte[] _ToUtf8(string s) => Convert2.ToUtf8(s);
+		static byte[] _ToUtf8(string s) => Convert2.Utf8Encode(s);
 
 		static byte[] _ToUtf8(string s, out int utf8Length) {
-			var r = Convert2.ToUtf8(s);
+			var r = Convert2.Utf8Encode(s);
 			utf8Length = r.Length - 1;
 			return r;
 		}
@@ -360,7 +361,7 @@ namespace Au.Controls
 				return;
 			}
 
-			var a = Convert2.ToUtf8(s, andRN ? "\r\n" : "");
+			var a = Convert2.Utf8Encode(s, andRN ? "\r\n" : "");
 			using (new _NoReadonly(this))
 				fixed (byte* b = a) Call(SCI_APPENDTEXT, a.Length, b);
 

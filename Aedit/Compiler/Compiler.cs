@@ -325,6 +325,7 @@ namespace Au.Compiler
 			foreach (var v in compilation.SourceModule.GetAttributes()) {
 				//print.it(v.AttributeClass.Name);
 				if (v.AttributeClass.Name == "DefaultCharSetAttribute") { needDefaultCharset = false; break; }
+				//note: cannot add [DefaultCharSet] to global.cs. Then could not easily change elsewhere, error "Duplicate 'DefaultCharSet' attribute". Also there is NO_GLOBAL.
 			}
 			bool needTargetFramework = false;
 			if (m.Role is ERole.exeProgram or ERole.classLibrary) {
@@ -746,7 +747,7 @@ namespace Au.Compiler
 		static List<string> s_renamedFiles;
 		static timerm s_rfTimer;
 
-		//TODO: remove this? Probably fails anyway. Will delete when this app starts next time.
+		//SHOULDDO: remove this? Probably fails anyway. Will delete when this app starts next time.
 		static void _DeleteRenamedLockedFiles(timerm timer) {
 			var a = s_renamedFiles;
 			for (int i = a.Count; --i >= 0;) {

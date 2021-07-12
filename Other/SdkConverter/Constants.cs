@@ -12,6 +12,8 @@ using System.IO;
 using Au;
 using Au.Types;
 
+//TODO: WM_ must be int, not uint.
+
 namespace SdkConverter
 {
 	unsafe partial class Converter

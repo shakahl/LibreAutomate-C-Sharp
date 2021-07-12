@@ -71,7 +71,7 @@ namespace Au.Controls
 			_dpi = Dpi.OfWindow(wParent);
 			WS style = WS.CHILD; if (ZInitBorder) style |= WS.BORDER;
 			//note: no WS_VISIBLE. WPF will manage it. It can cause visual artefacts occasionally, eg scrollbar in WPF area.
-			_w = wnd.more.createWindow("Scintilla", Name, style, 0, 0, 0, 0, 0, wParent);
+			_w = WndUtil.CreateWindow("Scintilla", Name, style, 0, 0, 0, 0, 0, wParent);
 			//size 0 0 is not the best, but it is a workaround for WPF bugs
 
 			//CONSIDER: register window class "KScintilla"
@@ -127,7 +127,7 @@ namespace Au.Controls
 		}
 
 		protected override void DestroyWindowCore(HandleRef hwnd) {
-			wnd.more.destroyWindow((wnd)hwnd.Handle);
+			WndUtil.DestroyWindow((wnd)hwnd.Handle);
 			_w = default;
 			_acc?.Dispose(); _acc = null;
 		}
@@ -139,9 +139,9 @@ namespace Au.Controls
 		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam_, IntPtr lParam, ref bool handled) {
 			nint wParam = wParam_; //if parameters are nint, this func is OK, but somehow error if a derived class that overrides this method calls base.WndProc.
 
-			//if(Tag is string s1 && s1 == "test") wnd.more.printMsg(_w, msg, wParam, lParam);
-			//if(this.Parent?.Name == "Output") wnd.more.printMsg(_w, msg, wParam, lParam, Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_PAINT, Api.WM_IME_SETCONTEXT, Api.WM_IME_NOTIFY);
-			//if () wnd.more.printMsg(_w, msg, wParam, lParam);
+			//if(Tag is string s1 && s1 == "test") WndUtil.PrintMsg(_w, msg, wParam, lParam);
+			//if(this.Parent?.Name == "Output") WndUtil.PrintMsg(_w, msg, wParam, lParam, Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_PAINT, Api.WM_IME_SETCONTEXT, Api.WM_IME_NOTIFY);
+			//if () WndUtil.PrintMsg(_w, msg, wParam, lParam);
 
 			bool call = false;
 			switch (msg) {

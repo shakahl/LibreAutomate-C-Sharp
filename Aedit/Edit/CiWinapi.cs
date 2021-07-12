@@ -85,7 +85,7 @@ class CiWinapi
 		SciCode doc = cd.sciDoc;
 		FileNode fSelect = null;
 		if (sr.SyntaxTree != semo.SyntaxTree) {
-			var f = App.Model.Find(sr.SyntaxTree.FilePath, false);
+			var f = App.Model.Find(sr.SyntaxTree.FilePath, FNFind.CodeFile);
 			if (!App.Model.SetCurrentFile(f, dontChangeTreeSelection: true)) return false;
 			doc = Panels.Editor.ZActiveDoc;
 			fSelect = cd.sciDoc.ZFile;

@@ -156,13 +156,13 @@ namespace Au.Types
 			if ((s_isWinClassRegistered & regMask) == 0) {
 				var ce = new RWCEtc() { style = Api.CS_HREDRAW | Api.CS_VREDRAW, mCursor = MCursor.Arrow };
 				if (Shadow) ce.style |= Api.CS_DROPSHADOW;
-				wnd.more.registerWindowClass(cn, null, ce);
+				WndUtil.RegisterWindowClass(cn, null, ce);
 				s_isWinClassRegistered |= regMask;
 			}
 
 			var es = WSE.TOOLWINDOW | WSE.TOPMOST | WSE.LAYERED | WSE.TRANSPARENT | WSE.NOACTIVATE;
 			if (ClickToClose) es &= ~WSE.TRANSPARENT;
-			_w = wnd.more.createWindow(WndProc, true, cn, Name, WS.POPUP, es); //note: don't set rect here: can be painting problems when resizing
+			_w = WndUtil.CreateWindow(WndProc, true, cn, Name, WS.POPUP, es); //note: don't set rect here: can be painting problems when resizing
 			_SetOpacity();
 			if (!_r.Is0) _w.SetWindowPos(SWPFlags.NOACTIVATE, _r.left, _r.top, _r.Width, _r.Height, SpecHWND.TOPMOST);
 		}

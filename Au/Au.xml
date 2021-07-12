@@ -38,6 +38,21 @@
             If o is not null, calls <see cref="M:System.Runtime.InteropServices.Marshal.ReleaseComObject(System.Object)"/>.
             </summary>
         </member>
+        <member name="T:Au.Types.Api.BITMAPINFO">
+            <summary>
+            BITMAPINFOHEADER members and 3 uints for color table etc.
+            </summary>
+        </member>
+        <member name="M:Au.Types.Api.BITMAPINFO.#ctor(System.Int32)">
+            <summary>
+            Sets biSize=sizeof(BITMAPINFOHEADER). Note: it is less than sizeof(BITMAPINFO).
+            </summary>
+        </member>
+        <member name="M:Au.Types.Api.BITMAPINFO.#ctor(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Sets width/height/bitcount/planes fields. Sets biSize=sizeof(BITMAPINFOHEADER). Note: it is less than sizeof(BITMAPINFO).
+            </summary>
+        </member>
         <member name="M:Au.Types.Api.SetDIBitsToDevice(System.IntPtr,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Void*,System.Void*,System.UInt32)">
             <summary>
             lpbmi can be BITMAPINFOHEADER/BITMAPV5HEADER or BITMAPCOREHEADER.
@@ -268,7 +283,7 @@
         </member>
         <member name="T:Au.Types.GCL">
             <summary>
-            Window class long constants. Used with <see cref="M:Au.wnd.more.getClassLong(Au.wnd,System.Int32)"/>.
+            Window class long constants. Used with <see cref="M:Au.More.WndUtil.GetClassLong(Au.wnd,System.Int32)"/>.
             See API <msdn>WNDCLASSEX</msdn>, <msdn>GetClassLong</msdn>.
             </summary>
         </member>
@@ -471,6 +486,26 @@
             <typeparam name="TValue"></typeparam>
             <param name="t"></param>
             <param name="predicate"></param>
+        </member>
+        <member name="M:Au.Types.ExtMisc.MultiAdd_``2(System.Collections.Generic.Dictionary{``0,System.Object},``0,``1)">
+            <summary>
+            Adds key/value to dictionary. If the key already exists, adds the value to the same key as <b>List</b> item and returns the <b>List</b>; else returns null.
+            </summary>
+            <exception cref="T:System.ArgumentException">key/value already exists.</exception>
+        </member>
+        <member name="M:Au.Types.ExtMisc.MultiRemove_``2(System.Collections.Generic.Dictionary{``0,System.Object},``0,``1)">
+            <summary>
+            If dictionary contains key <i>k</i> that contains value <i>v</i> (as single value or in <b>List</b>), removes the value (and key if it was single value) and returns true.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtMisc.MultiGet_``2(System.Collections.Generic.Dictionary{``0,System.Object},``0,``1@,System.Collections.Generic.List{``1}@)">
+            <summary>
+            If dictionary contains key <i>k</i>, gets its value (<i>v</i>) or list of values (<i>a</i>) and returns true.
+            </summary>
+            <param name="t"></param>
+            <param name="k"></param>
+            <param name="v">Receives single value, or null if the key has multiple values.</param>
+            <param name="a">Receives multiple values, or null if the key has single value.</param>
         </member>
         <member name="M:Au.Types.ExtMisc.Lenn_``1(``0[])">
             <summary>
@@ -6021,82 +6056,6 @@
             In some cases may be incorrect, for example if windows moved/opened/closed/etc while capturing.
             </summary>
         </member>
-        <member name="T:Au.Types.WProp">
-            <summary>
-            Sets, gets, removes and lists window properties using API <msdn>SetProp</msdn> and co.
-            </summary>
-        </member>
-        <member name="P:Au.Types.WProp.Item(System.String)">
-            <summary>
-            Gets a window property.
-            Calls API <msdn>GetProp</msdn> and returns its return value.
-            </summary>
-            <param name="name">Property name.</param>
-            <remarks>Supports <see cref="T:Au.lastError"/>.</remarks>
-        </member>
-        <member name="P:Au.Types.WProp.Item(System.UInt16)">
-            <summary>
-            Gets a window property.
-            Calls API <msdn>GetProp</msdn> and returns its return value.
-            </summary>
-            <param name="atom">Property name atom in the global atom table.</param>
-            <remarks>
-            This overload uses atom instead of string. I's about 3 times faster. See API <msdn>GlobalAddAtom</msdn>, <msdn>GlobalDeleteAtom</msdn>.
-            </remarks>
-        </member>
-        <member name="M:Au.Types.WProp.Set(System.String,System.IntPtr)">
-            <summary>
-            Sets a window property.
-            Calls API <msdn>SetProp</msdn> and returns its return value.
-            </summary>
-            <param name="name">Property name.</param>
-            <param name="value">Property value.</param>
-            <remarks>
-            Supports <see cref="T:Au.lastError"/>.
-            
-            Later call <see cref="M:Au.Types.WProp.Remove(System.String)"/> to remove the property. If you use many unique property names and don't remove the properties, the property name strings can fill the global atom table which is of a fixed size (about 48000) and which is used by all processes for various purposes.
-            </remarks>
-        </member>
-        <member name="M:Au.Types.WProp.Set(System.UInt16,System.IntPtr)">
-            <summary>
-            Sets a window property.
-            Calls API <msdn>SetProp</msdn> and returns its return value.
-            </summary>
-            <param name="atom">Property name atom in the global atom table.</param>
-            <param name="value">Property value.</param>
-            <remarks>
-            This overload uses atom instead of string. I's about 3 times faster. See API <msdn>GlobalAddAtom</msdn>, <msdn>GlobalDeleteAtom</msdn>.
-            </remarks>
-        </member>
-        <member name="M:Au.Types.WProp.Remove(System.String)">
-            <summary>
-            Removes a window property.
-            Calls API <msdn>RemoveProp</msdn> and returns its return value.
-            </summary>
-            <param name="name">Property name. Other overload allows to use global atom instead, which is faster.</param>
-            <remarks>Supports <see cref="T:Au.lastError"/>.</remarks>
-        </member>
-        <member name="M:Au.Types.WProp.Remove(System.UInt16)">
-            <summary>
-            Removes a window property.
-            Calls API <msdn>RemoveProp</msdn> and returns its return value.
-            </summary>
-            <param name="atom">Property name atom in the global atom table.</param>
-        </member>
-        <member name="M:Au.Types.WProp.GetList">
-            <summary>
-            Gets list of window properties.
-            Uses API <msdn>EnumPropsEx</msdn>.
-            </summary>
-            <remarks>
-            Returns 0-length list if fails. Fails if invalid window or access denied ([](xref:uac)). Supports <see cref="T:Au.lastError"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.Types.WProp.ToString">
-            <summary>
-            Calls <see cref="M:Au.Types.WProp.GetList"/> and converts to string.
-            </summary>
-        </member>
         <member name="T:Au.Types.WSFlags">
             <summary>
             Flags for <see cref="M:Au.wnd.SetStyle(Au.Types.WS,Au.Types.WSFlags)"/> and <see cref="M:Au.wnd.SetExStyle(Au.Types.WSE,Au.Types.WSFlags)"/>.
@@ -6114,6 +6073,68 @@
         <member name="F:Au.Types.WSFlags.UpdateClient">
             <summary>Update client area.</summary>
         </member>
+        <member name="T:Au.Types.PrintMsgOptions">
+            <summary>
+            Options for <see cref="M:Au.More.WndUtil.PrintMsg(System.String@,Au.wnd,System.Int32,System.IntPtr,System.IntPtr,Au.Types.PrintMsgOptions,System.String)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.PrintMsgOptions.#ctor">
+            
+        </member>
+        <member name="M:Au.Types.PrintMsgOptions.#ctor(System.Int32[])">
+            <summary>
+            Sets <see cref="P:Au.Types.PrintMsgOptions.Skip"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Types.PrintMsgOptions.Number">
+            <summary>
+            Prepend counter 1, 2, 3...
+            Default true.
+            </summary>
+        </member>
+        <member name="P:Au.Types.PrintMsgOptions.Indent">
+            <summary>
+            Prepend one or more tabs if the caller function (usually WndProc) is called recursively.
+            Default true.
+            </summary>
+        </member>
+        <member name="P:Au.Types.PrintMsgOptions.Skip">
+            <summary>
+            Ignore these messages.
+            To specify a range of messages, use two array elements: first message and negative last message.
+            </summary>
+        </member>
+        <member name="P:Au.Types.PrintMsgOptions.WindowProperties">
+            <summary>
+            Append window classname, name and rectangle.
+            </summary>
+        </member>
+        <member name="T:Au.Types.WDLArgs">
+            <summary>
+            <see cref="M:Au.More.WndUtil.DragLoop(Au.Types.AnyWnd,Au.Types.MButtons,System.Action{Au.Types.WDLArgs})"/> callback function arguments.
+            </summary>
+        </member>
+        <member name="F:Au.Types.WDLArgs.Msg">
+            <summary>
+            Current message retrieved by API <msdn>GetMessage</msdn>.
+            API <msdn>MSG</msdn>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.WDLArgs.Cursor">
+            <summary>
+            Native cursor handle. The callback function can set this to temporarily set cursor.
+            </summary>
+        </member>
+        <member name="M:Au.Types.WDLArgs.Stop">
+            <summary>
+            The callback function can call this to end the operation.
+            </summary>
+        </member>
+        <member name="T:Au.Types.RWCEtc">
+            <summary>
+            Used with <see cref="M:Au.More.WndUtil.RegisterWindowClass(System.String,Au.Types.WNDPROC,Au.Types.RWCEtc)"/>.
+            </summary>
+        </member>
         <member name="T:Au.Types.WCFlags">
             <summary>
             Flags for <see cref="M:Au.wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.wnd,System.Boolean},System.Int32)"/>.
@@ -6125,7 +6146,7 @@
         <member name="F:Au.Types.WCFlags.DirectChild">
             <summary>Skip indirect descendant controls (children of children and so on).</summary>
         </member>
-        <member name="T:Au.Types.WndButton">
+        <member name="T:Au.Types.WButton">
             <summary>
             Like <see cref="T:Au.wnd"/>, but has only button, check box and radio button functions - <b>Click</b>, <b>Check</b> etc.
             See also <see cref="P:Au.wnd.AsButton"/>.
@@ -6136,21 +6157,18 @@
             ]]></code>
             </example>
         </member>
-        <member name="P:Au.Types.WndButton.W">
+        <member name="P:Au.Types.WButton.W">
             <summary>
             Button handle as wnd.
             </summary>
         </member>
-        <member name="M:Au.Types.WndButton.op_Implicit(Au.Types.WndButton)~Au.wnd">
+        <member name="M:Au.Types.WButton.op_Implicit(Au.Types.WButton)~Au.wnd">
             
         </member>
-        <member name="M:Au.Types.WndButton.op_Explicit(Au.wnd)~Au.Types.WndButton">
+        <member name="M:Au.Types.WButton.ToString">
             
         </member>
-        <member name="M:Au.Types.WndButton.ToString">
-            
-        </member>
-        <member name="M:Au.Types.WndButton.Click(System.Boolean)">
+        <member name="M:Au.Types.WButton.Click(System.Boolean)">
             <summary>
             Sends a "click" message to this button control. Does not use the mouse.
             </summary>
@@ -6167,10 +6185,10 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Types.WndButton.Check(System.Boolean,System.Boolean)">
+        <member name="M:Au.Types.WButton.Check(System.Boolean,System.Boolean)">
             <summary>
             Checks or unchecks this check box. Does not use the mouse.
-            Calls <see cref="M:Au.Types.WndButton.SetCheckState(System.Int32,System.Boolean)"/> with state 0 or 1.
+            Calls <see cref="M:Au.Types.WButton.SetCheckState(System.Int32,System.Boolean)"/> with state 0 or 1.
             </summary>
             <param name="on">Checks if true, unchecks if false.</param>
             <param name="useElm"></param>
@@ -6181,7 +6199,7 @@
             If this is a radio button, does not uncheck other radio buttons in its group.
             </remarks>
         </member>
-        <member name="M:Au.Types.WndButton.SetCheckState(System.Int32,System.Boolean)">
+        <member name="M:Au.Types.WButton.SetCheckState(System.Int32,System.Boolean)">
             <summary>
             Sets checkbox state. Does not use the mouse.
             </summary>
@@ -6196,13 +6214,13 @@
             If this is a radio button, does not uncheck other radio buttons in its group.
             </remarks>
         </member>
-        <member name="M:Au.Types.WndButton.IsChecked(System.Boolean)">
+        <member name="M:Au.Types.WButton.IsChecked(System.Boolean)">
             <summary>
             Gets check state of this check box or radio button.
-            Calls <see cref="M:Au.Types.WndButton.GetCheckState(System.Boolean)"/> and returns true if it returns 1.
+            Calls <see cref="M:Au.Types.WButton.GetCheckState(System.Boolean)"/> and returns true if it returns 1.
             </summary>
         </member>
-        <member name="M:Au.Types.WndButton.GetCheckState(System.Boolean)">
+        <member name="M:Au.Types.WButton.GetCheckState(System.Boolean)">
             <summary>
             Gets check state of this check box or radio button.
             Returns 0 if unchecked, 1 if checked, 2 if indeterminate. Also returns 0 if this is not a button or if failed to get state.
@@ -6370,71 +6388,123 @@
             If the point is not in client area, don't look for descendants; if with flag <b>OrThis</b> and the point is in this (non-client area), return this, else return default(wnd).
             </summary>
         </member>
-        <member name="T:Au.Types.PrintMsgOptions">
+        <member name="T:Au.Types.WProp">
             <summary>
-            Options for <see cref="M:Au.wnd.more.printMsg(System.String@,Au.wnd,System.Int32,System.IntPtr,System.IntPtr,Au.Types.PrintMsgOptions,System.String)"/>.
+            Sets, gets, removes and lists window properties using API <msdn>SetProp</msdn> and co.
             </summary>
         </member>
-        <member name="M:Au.Types.PrintMsgOptions.#ctor">
+        <member name="P:Au.Types.WProp.Item(System.String)">
+            <summary>
+            Gets a window property.
+            Calls API <msdn>GetProp</msdn> and returns its return value.
+            </summary>
+            <param name="name">Property name.</param>
+            <remarks>Supports <see cref="T:Au.lastError"/>.</remarks>
+        </member>
+        <member name="P:Au.Types.WProp.Item(System.UInt16)">
+            <summary>
+            Gets a window property.
+            Calls API <msdn>GetProp</msdn> and returns its return value.
+            </summary>
+            <param name="atom">Property name atom in the global atom table.</param>
+            <remarks>
+            This overload uses atom instead of string. I's about 3 times faster. See API <msdn>GlobalAddAtom</msdn>, <msdn>GlobalDeleteAtom</msdn>.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.WProp.Set(System.String,System.IntPtr)">
+            <summary>
+            Sets a window property.
+            Calls API <msdn>SetProp</msdn> and returns its return value.
+            </summary>
+            <param name="name">Property name.</param>
+            <param name="value">Property value.</param>
+            <remarks>
+            Supports <see cref="T:Au.lastError"/>.
             
+            Later call <see cref="M:Au.Types.WProp.Remove(System.String)"/> to remove the property. If you use many unique property names and don't remove the properties, the property name strings can fill the global atom table which is of a fixed size (about 48000) and which is used by all processes for various purposes.
+            </remarks>
         </member>
-        <member name="M:Au.Types.PrintMsgOptions.#ctor(System.Int32[])">
+        <member name="M:Au.Types.WProp.Set(System.UInt16,System.IntPtr)">
             <summary>
-            Sets <see cref="P:Au.Types.PrintMsgOptions.Skip"/>.
+            Sets a window property.
+            Calls API <msdn>SetProp</msdn> and returns its return value.
+            </summary>
+            <param name="atom">Property name atom in the global atom table.</param>
+            <param name="value">Property value.</param>
+            <remarks>
+            This overload uses atom instead of string. I's about 3 times faster. See API <msdn>GlobalAddAtom</msdn>, <msdn>GlobalDeleteAtom</msdn>.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.WProp.Remove(System.String)">
+            <summary>
+            Removes a window property.
+            Calls API <msdn>RemoveProp</msdn> and returns its return value.
+            </summary>
+            <param name="name">Property name. Other overload allows to use global atom instead, which is faster.</param>
+            <remarks>Supports <see cref="T:Au.lastError"/>.</remarks>
+        </member>
+        <member name="M:Au.Types.WProp.Remove(System.UInt16)">
+            <summary>
+            Removes a window property.
+            Calls API <msdn>RemoveProp</msdn> and returns its return value.
+            </summary>
+            <param name="atom">Property name atom in the global atom table.</param>
+        </member>
+        <member name="M:Au.Types.WProp.GetList">
+            <summary>
+            Gets list of window properties.
+            Uses API <msdn>EnumPropsEx</msdn>.
+            </summary>
+            <remarks>
+            Returns 0-length list if fails. Fails if invalid window or access denied ([](xref:uac)). Supports <see cref="T:Au.lastError"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.WProp.ToString">
+            <summary>
+            Calls <see cref="M:Au.Types.WProp.GetList"/> and converts to string.
             </summary>
         </member>
-        <member name="P:Au.Types.PrintMsgOptions.Number">
+        <member name="T:Au.Types.WTaskbarButton">
             <summary>
-            Prepend counter 1, 2, 3...
-            Default true.
+            Taskbar button flash, progress, add/delete.
             </summary>
         </member>
-        <member name="P:Au.Types.PrintMsgOptions.Indent">
+        <member name="M:Au.Types.WTaskbarButton.Flash(System.Int32)">
             <summary>
-            Prepend one or more tabs if the caller function (usually WndProc) is called recursively.
-            Default true.
+            Starts or stops flashing the taskbar button of this window.
+            </summary>
+            <param name="count">The number of times to flash. If 0, stops flashing.</param>
+        </member>
+        <member name="M:Au.Types.WTaskbarButton.SetProgressState(Au.Types.WTBProgressState)">
+            <summary>
+            Sets the state of the progress indicator displayed on the taskbar button of this window.
+            Calls <msdn>ITaskbarList3.SetProgressState</msdn>.
+            </summary>
+            <param name="state">Progress indicator state and color.</param>
+        </member>
+        <member name="M:Au.Types.WTaskbarButton.SetProgressValue(System.Int32,System.Int32)">
+            <summary>
+            Sets the value of the progress indicator displayed on the taskbar button of this window.
+            Calls <msdn>ITaskbarList3.SetProgressValue</msdn>.
+            </summary>
+            <param name="progressValue">Progress indicator value, 0 to progressTotal.</param>
+            <param name="progressTotal">Max progress indicator value.</param>
+        </member>
+        <member name="M:Au.Types.WTaskbarButton.Add">
+            <summary>
+            Adds taskbar button of this window.
+            Calls <msdn>ITaskbarList.AddTab</msdn>.
             </summary>
         </member>
-        <member name="P:Au.Types.PrintMsgOptions.Skip">
+        <member name="M:Au.Types.WTaskbarButton.Delete">
             <summary>
-            Ignore these messages.
-            To specify a range of messages, use two array elements: first message and negative last message.
-            </summary>
-        </member>
-        <member name="P:Au.Types.PrintMsgOptions.WindowProperties">
-            <summary>
-            Append window classname, name and rectangle.
-            </summary>
-        </member>
-        <member name="T:Au.Types.WDLArgs">
-            <summary>
-            <see cref="M:Au.wnd.more.dragLoop(Au.Types.AnyWnd,Au.Types.MButtons,System.Action{Au.Types.WDLArgs})"/> callback function arguments.
-            </summary>
-        </member>
-        <member name="F:Au.Types.WDLArgs.Msg">
-            <summary>
-            Current message retrieved by API <msdn>GetMessage</msdn>.
-            API <msdn>MSG</msdn>.
-            </summary>
-        </member>
-        <member name="F:Au.Types.WDLArgs.Cursor">
-            <summary>
-            Native cursor handle. The callback function can set this to temporarily set cursor.
-            </summary>
-        </member>
-        <member name="M:Au.Types.WDLArgs.Stop">
-            <summary>
-            The callback function can call this to end the operation.
-            </summary>
-        </member>
-        <member name="T:Au.Types.RWCEtc">
-            <summary>
-            Used with <see cref="M:Au.wnd.more.registerWindowClass(System.String,Au.Types.WNDPROC,Au.Types.RWCEtc)"/>.
+            Deletes taskbar button of this window.
+            Calls <msdn>ITaskbarList.DeleteTab</msdn>.
             </summary>
         </member>
         <member name="T:Au.Types.WTBProgressState">
             <summary>
-            Used by <see cref="M:Au.wnd.more.taskbarButton.setProgressState(Au.wnd,Au.Types.WTBProgressState)"/>.
+            Used by <see cref="M:Au.Types.WTaskbarButton.SetProgressState(Au.Types.WTBProgressState)"/>.
             </summary>
         </member>
         <member name="T:Au.More.XmlUtil">
@@ -7279,7 +7349,7 @@
         <member name="P:Au.More.SharedMemory_.ReturnDataPtr">
             <summary>
             Gets pointer to the shared memory "return data" buffer.
-            Used by <see cref="M:Au.wnd.more.CopyData.Return(System.Void*,System.Int32,System.IntPtr)"/>.
+            Used by <see cref="M:Au.More.WndCopyData.Return(System.Void*,System.Int32,System.IntPtr)"/>.
             </summary>
         </member>
         <member name="F:Au.More.SharedMemory_.ReturnDataSize">
@@ -7499,14 +7569,14 @@
             <param name="encoded">String or char[] or span of string/array/memory containing hex encoded data.</param>
             <param name="decoded">The result variable.</param>
         </member>
-        <member name="M:Au.More.Convert2.Compress(System.ReadOnlySpan{System.Byte})">
+        <member name="M:Au.More.Convert2.DeflateCompress(System.ReadOnlySpan{System.Byte})">
             <summary>
-            Compresses data using <see cref="T:System.IO.Compression.DeflateStream"/>.
+            Compresses data. Uses <see cref="T:System.IO.Compression.DeflateStream"/>.
             </summary>
             <param name="data"></param>
             <exception cref="T:System.Exception">Exceptions of <b>DeflateStream</b>.</exception>
         </member>
-        <member name="M:Au.More.Convert2.Decompress(System.ReadOnlySpan{System.Byte})">
+        <member name="M:Au.More.Convert2.DeflateDecompress(System.ReadOnlySpan{System.Byte})">
             <summary>
             Decompresses data. Uses <see cref="T:System.IO.Compression.DeflateStream"/>.
             </summary>
@@ -7514,7 +7584,7 @@
             <param name="compressed">Compressed data.</param>
             <exception cref="T:System.Exception">Exceptions of <b>DeflateStream</b>.</exception>
         </member>
-        <member name="M:Au.More.Convert2.Decompress(System.ReadOnlySpan{System.Byte},System.IO.Stream)">
+        <member name="M:Au.More.Convert2.DeflateDecompress(System.ReadOnlySpan{System.Byte},System.IO.Stream)">
             <summary>
             Decompresses data to a caller-provided memory stream. Uses <see cref="T:System.IO.Compression.DeflateStream"/>.
             </summary>
@@ -7522,21 +7592,40 @@
             <param name="decompressed">Stream for decompressed data.</param>
             <exception cref="T:System.Exception">Exceptions of <b>DeflateStream</b>.</exception>
         </member>
-        <member name="M:Au.More.Convert2.ToUtf8(System.ReadOnlySpan{System.Char},System.String)">
+        <member name="M:Au.More.Convert2.BrotliCompress(System.ReadOnlySpan{System.Byte},System.Int32)">
             <summary>
-            Converts string to UTF-8 byte[]. Appends "\0" or some other string.
+            Compresses data. Uses <see cref="T:System.IO.Compression.BrotliEncoder"/>.
+            </summary>
+            <param name="data"></param>
+            <param name="level">Compression level, 0 (no compression) to 11 (maximal compression). Default 6. Bigger levels don't make much smaller but can make much slower.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>level</i>.</exception>
+            <exception cref="T:System.OutOfMemoryException"></exception>
+        </member>
+        <member name="M:Au.More.Convert2.BrotliDecompress(System.ReadOnlySpan{System.Byte})">
+            <summary>
+            Decompresses data. Uses <see cref="T:System.IO.Compression.BrotliDecoder"/>.
+            </summary>
+            <returns>Decompressed data.</returns>
+            <param name="compressed">Compressed data.</param>
+            <exception cref="T:System.ArgumentException">Invalid data.</exception>
+            <exception cref="T:System.OutOfMemoryException"></exception>
+        </member>
+        <member name="M:Au.More.Convert2.Utf8Encode(System.ReadOnlySpan{System.Char},System.String)">
+            <summary>
+            Converts string to UTF-8 byte[]. Can append "\0" (default) or some other string.
             </summary>
             <param name="chars">String or char[] or span of string/array/memory.</param>
-            <param name="append">An optional ASCII string to append. For example "\0" (default) or "\r\n" or null.</param>
+            <param name="append">A string to append, or null. For example "\0" (default) or "\r\n". Must contain only ASCII characters.</param>
             <exception cref="T:System.ArgumentException"><i>append</i> contains non-ASCII characters.</exception>
         </member>
-        <member name="M:Au.More.Convert2.FromUtf8(System.Byte*,System.Int32)">
+        <member name="M:Au.More.Convert2.Utf8Decode(System.Byte*)">
             <summary>
-            Converts UTF8 string to C# string (which is UTF16).
-            The terminating '\0' character is not included in the returned string.
+            Converts '\0'-terminated UTF8 string to C# string (UTF16).
             </summary>
             <param name="utf8">UTF8 string. If null, returns null.</param>
-            <param name="length">Length of <i>utf8</i>. If negative, the function finds length; then <i>utf8</i> must be '\0'-terminated.</param>
+            <remarks>
+            Finds '\0' and calls <c>Encoding.UTF8.GetString</c>. Don't use this function when UTF8 string length is known; call <c>Encoding.UTF8.GetString</c> directly.
+            </remarks>
         </member>
         <member name="T:Au.More.DebugTraceListener">
             <summary>
@@ -8145,7 +8234,7 @@
             </summary>
             <param name="s">Base64 encoded image string with prefix "image:".</param>
             <exception cref="T:System.ArgumentException">String does not start with "image:" or is invalid Base64.</exception>
-            <exception cref="T:System.Exception"><see cref="M:Au.More.Convert2.Decompress(System.ReadOnlySpan{System.Byte})"/> exceptions (when compressed .bmp).</exception>
+            <exception cref="T:System.Exception"><see cref="M:Au.More.Convert2.BrotliDecompress(System.ReadOnlySpan{System.Byte})"/> exceptions (when compressed .bmp).</exception>
         </member>
         <member name="M:Au.More.ImageUtil._LoadGdipBitmapFromString(System.String)">
             <summary>
@@ -9399,7 +9488,7 @@
             <code><![CDATA[
             using var hook = WindowsHook.ThreadCallWndProc(x => {
             	ref var m = ref *x.msg;
-            	wnd.more.printMsg(out var s, m.hwnd, m.message, m.wParam, m.lParam);
+            	WndUtil.PrintMsg(out var s, m.hwnd, m.message, m.wParam, m.lParam);
             	print.it(s, x.sentByOtherThread);
             });
             dialog.show("hook");
@@ -9927,6 +10016,449 @@
         </member>
         <member name="F:Au.More.MiniProgram_.EFlags.Console">
             <summary>Has meta console true.</summary>
+        </member>
+        <member name="T:Au.More.WndCopyData">
+            <summary>
+            Send/receive data to/from other process using message <msdn>WM_COPYDATA</msdn>.
+            </summary>
+            <remarks>
+            This struct is <msdn>COPYDATASTRUCT</msdn>.
+            <note>By default [](xref:uac) blocks messages sent from processes of lower integrity level. Call <see cref="M:Au.More.WndCopyData.EnableReceivingWM_COPYDATA"/> if need.</note>
+            </remarks>
+            <seealso cref="T:System.IO.MemoryMappedFiles.MemoryMappedFile"/>
+            <seealso cref="T:System.IO.Pipes.NamedPipeServerStream"/>
+        </member>
+        <member name="M:Au.More.WndCopyData.#ctor(System.IntPtr)">
+            <summary>
+            Initializes this variable from <i>lParam</i> of a received <msdn>WM_COPYDATA</msdn> message.
+            Then you can call functions of this variable to get data in managed format.
+            </summary>
+            <param name="lParam"><i>lParam</i> of a <msdn>WM_COPYDATA</msdn> message received in a window procedure. It is <msdn>COPYDATASTRUCT</msdn> pointer.</param>
+        </member>
+        <member name="P:Au.More.WndCopyData.DataId">
+            <summary>
+            Data id. It is <msdn>COPYDATASTRUCT.dwData</msdn>.
+            </summary>
+        </member>
+        <member name="P:Au.More.WndCopyData.RawData">
+            <summary>
+            Unmanaged data pointer. It is <msdn>COPYDATASTRUCT.lpData</msdn>.
+            </summary>
+        </member>
+        <member name="P:Au.More.WndCopyData.RawDataSize">
+            <summary>
+            Unmanaged data size. It is <msdn>COPYDATASTRUCT.cbData</msdn>.
+            </summary>
+        </member>
+        <member name="M:Au.More.WndCopyData.GetString">
+            <summary>
+            Gets received data as string.
+            </summary>
+        </member>
+        <member name="M:Au.More.WndCopyData.GetBytes">
+            <summary>
+            Gets received data as byte[].
+            </summary>
+        </member>
+        <member name="M:Au.More.WndCopyData.EnableReceivingWM_COPYDATA">
+            <summary>
+            Calls API <msdn>ChangeWindowMessageFilter</msdn>(<b>WM_COPYDATA</b>). Then windows of this process can receive this message from lower [](xref:uac) integrity level processes.
+            </summary>
+        </member>
+        <member name="M:Au.More.WndCopyData.Send``1(Au.wnd,System.Int32,System.ReadOnlySpan{``0},System.IntPtr)">
+            <summary>
+            Sends string or other data to a window of any process. Uses API <msdn>SendMessage</msdn> <msdn>WM_COPYDATA</msdn>.
+            </summary>
+            <typeparam name="T">Type of data elements. For example, char for string, byte for byte[].</typeparam>
+            <param name="w">The window.</param>
+            <param name="dataId">Data id. It is <msdn>COPYDATASTRUCT.dwData</msdn>.</param>
+            <param name="data">Data. For example string or byte[]. String can contain '\0' characters.</param>
+            <param name="wParam">wParam. Can be any value. Optional.</param>
+            <returns><b>SendMessage</b>'s return value.</returns>
+        </member>
+        <member name="T:Au.More.WndCopyData.ResultReader`1">
+            <summary>
+            Type of <see cref="M:Au.More.WndCopyData.SendReceive``2(Au.wnd,System.Int32,System.ReadOnlySpan{``0},Au.More.WndCopyData.ResultReader{``1})"/> callback function.
+            </summary>
+            <param name="span">Received data buffer. The callback function can convert it to array, string, etc.</param>
+        </member>
+        <member name="M:Au.More.WndCopyData.SendReceive``2(Au.wnd,System.Int32,System.ReadOnlySpan{``0},Au.More.WndCopyData.ResultReader{``1})">
+            <summary>
+            Sends string or other data to a window of any process. Uses API <msdn>SendMessage</msdn> <msdn>WM_COPYDATA</msdn>.
+            Receives string or other data returned by that window with <see cref="M:Au.More.WndCopyData.Return(System.Void*,System.Int32,System.IntPtr)"/>.
+            </summary>
+            <typeparam name="TSend">Type of data elements. For example, char for string, byte for byte[]</typeparam>
+            <typeparam name="TReceive">Type of received data elements. For example, char for string, byte for byte[].</typeparam>
+            <param name="w">The window.</param>
+            <param name="dataId">Data id. It is <msdn>COPYDATASTRUCT.dwData</msdn>.</param>
+            <param name="send">Data to send. For example string or byte[]. String can contain '\0' characters.</param>
+            <param name="receive">Callback function that can convert the received data to desired format.</param>
+            <returns>false if failed.</returns>
+        </member>
+        <member name="M:Au.More.WndCopyData.SendReceive``1(Au.wnd,System.Int32,System.ReadOnlySpan{``0},System.Byte[]@)">
+            <summary>
+            Calls <see cref="M:Au.More.WndCopyData.SendReceive``2(Au.wnd,System.Int32,System.ReadOnlySpan{``0},Au.More.WndCopyData.ResultReader{``1})"/> and gets the returned data as byte[].
+            </summary>
+        </member>
+        <member name="M:Au.More.WndCopyData.SendReceive``1(Au.wnd,System.Int32,System.ReadOnlySpan{``0},System.String@)">
+            <summary>
+            Calls <see cref="M:Au.More.WndCopyData.SendReceive``2(Au.wnd,System.Int32,System.ReadOnlySpan{``0},Au.More.WndCopyData.ResultReader{``1})"/> and gets the returned string.
+            </summary>
+        </member>
+        <member name="M:Au.More.WndCopyData.Return(System.Void*,System.Int32,System.IntPtr)">
+            <summary>
+            Returns data to <see cref="M:Au.More.WndCopyData.SendReceive``2(Au.wnd,System.Int32,System.ReadOnlySpan{``0},Au.More.WndCopyData.ResultReader{``1})"/>.
+            </summary>
+            <param name="data"></param>
+            <param name="length"></param>
+            <param name="wParam"><i>wParam</i> of the received <b>WM_COPYDATA</b> message. Important, pass unchanged.</param>
+            <returns>Your window procedure must return this value.</returns>
+        </member>
+        <member name="M:Au.More.WndCopyData.Return``1(System.ReadOnlySpan{``0},System.IntPtr)">
+            <summary>
+            Returns string or other data to <see cref="M:Au.More.WndCopyData.SendReceive``2(Au.wnd,System.Int32,System.ReadOnlySpan{``0},Au.More.WndCopyData.ResultReader{``1})"/>.
+            </summary>
+            <typeparam name="T">Type of data elements. For example, char for string, byte for byte[]</typeparam>
+            <param name="data"></param>
+            <param name="wParam"><i>wParam</i> of the received <b>WM_COPYDATA</b> message. Important, pass unchanged.</param>
+            <returns>Your window procedure must return this value.</returns>
+        </member>
+        <member name="T:Au.More.WndSavedRect">
+            <summary>
+            Helps to save and restore window rectangle and state. Ensures in screen, per-monitor-DPI-aware, etc.
+            </summary>
+            <example>
+            <code><![CDATA[
+            class Form9 : Form {
+            	const string c_rkey = @"HKEY_CURRENT_USER\Software\Au\Test", c_rvalue = @"Form9.Rect";
+            	
+            	public Form9() {
+            		this.StartPosition = FormStartPosition.Manual;
+            		if (WndSavedRect.FromString(Registry.GetValue(c_rkey, c_rvalue, null) as string, out var v)) {
+            			this.Bounds = v.NormalizeRect();
+            			if(v.Maximize) this.WindowState = FormWindowState.Maximized;
+            		}
+            		//the same:
+            		//WndSavedRect.Restore(this, Registry.GetValue(c_rkey, c_rvalue, null) as string);
+            	}
+            
+            	protected override void OnFormClosing(FormClosingEventArgs e) {
+            		Registry.SetValue(c_rkey, c_rvalue, new WndSavedRect(this).ToString());
+            		base.OnFormClosing(e);
+            	}
+            }
+            ]]></code>
+            The same in 2 lines.
+            <code><![CDATA[
+            class Form8 : Form {
+            	const string c_rkey = @"HKEY_CURRENT_USER\Software\Au\Test", c_rvalue = @"Form8.Rect";
+            	
+            	public Form8() {
+            		WndSavedRect.Restore(this, Registry.GetValue(c_rkey, c_rvalue, null) as string, s1 => Registry.SetValue(c_rkey, c_rvalue, s1.ToString()));
+            	}
+            }
+            ]]></code>
+            WPF window created with <see cref="T:Au.wpfBuilder"/>.
+            <code><![CDATA[
+            const string c_rkey = @"HKEY_CURRENT_USER\Software\Au\Test", c_rvalue = @"Wpf7.Rect";
+            var b = new wpfBuilder("Window").WinSize(400).R.AddOkCancel().End();
+            	
+            WndSavedRect.Restore(b.Window, Registry.GetValue(c_rkey, c_rvalue, null) as string, s1 => Registry.SetValue(c_rkey, c_rvalue, s1));
+            
+            //the same
+            //b.WinSaved(Registry.GetValue(c_rkey, c_rvalue, null) as string, s1 => Registry.SetValue(c_rkey, c_rvalue, s1));
+            
+            if (!b.ShowDialog()) return;
+            ]]></code>
+            </example>
+        </member>
+        <member name="P:Au.More.WndSavedRect.RawRect">
+            <summary>
+            Window rectangle in normal state (not maximized/minimized), as retrieved by API <msdn>GetWindowPlacement</msdn>.
+            </summary>
+        </member>
+        <member name="P:Au.More.WndSavedRect.Dpi">
+            <summary>
+            <see cref="M:Au.More.Dpi.OfWindow(Au.wnd,System.Boolean)"/>.
+            </summary>
+        </member>
+        <member name="P:Au.More.WndSavedRect.Maximize">
+            <summary>
+            The window should be maximized.
+            </summary>
+        </member>
+        <member name="P:Au.More.WndSavedRect.IsToolWindow">
+            <summary>
+            <see cref="P:Au.wnd.IsToolWindow"/>. If false, <see cref="P:Au.More.WndSavedRect.RawRect"/> may have an offset that depends on work area.
+            </summary>
+        </member>
+        <member name="M:Au.More.WndSavedRect.ToString">
+            <summary>
+            Converts this object to string for saving.
+            The string is very simple, like "1 2 3 4 5 6".
+            </summary>
+        </member>
+        <member name="M:Au.More.WndSavedRect.FromString(System.String,Au.More.WndSavedRect@)">
+            <summary>
+            Creates <b>WndSavedRect</b> from string created by <see cref="M:Au.More.WndSavedRect.ToString"/>.
+            Returns false if the string is null or invalid.
+            </summary>
+            <param name="saved">String created by <see cref="M:Au.More.WndSavedRect.ToString"/>.</param>
+            <param name="x">Result.</param>
+        </member>
+        <member name="M:Au.More.WndSavedRect.#ctor(Au.wnd)">
+            <summary>
+            Gets window rectangle and state for saving. Usually called when closing the window.
+            See also <see cref="M:Au.More.WndSavedRect.ToString"/>.
+            </summary>
+            <exception cref="T:Au.Types.AuWndException">Failed to get rectangle, probably invalid window handle.</exception>
+        </member>
+        <member name="M:Au.More.WndSavedRect.#ctor(System.Windows.Forms.Form)">
+            <summary>
+            Gets window rectangle and state for saving. Usually called when closing the window.
+            See also <see cref="M:Au.More.WndSavedRect.ToString"/>.
+            </summary>
+            <exception cref="T:Au.Types.AuWndException">Failed to get rectangle, probably invalid window handle.</exception>
+        </member>
+        <member name="M:Au.More.WndSavedRect.#ctor(System.Windows.Window)">
+            <summary>
+            Gets window rectangle and state for saving. Usually called when closing the window.
+            See also <see cref="M:Au.More.WndSavedRect.ToString"/>.
+            </summary>
+            <exception cref="T:Au.Types.AuWndException">Failed to get rectangle, probably invalid window handle.</exception>
+        </member>
+        <member name="M:Au.More.WndSavedRect.NormalizeRect">
+            <summary>
+            Gets real rectangle for restoring saved window rectangle.
+            </summary>
+            <remarks>
+            It is recommended to call this before creating window, and create window with the returned rectangle. Also set maximized state if <see cref="P:Au.More.WndSavedRect.Maximize"/>.
+            If it is not possible, can be called later, for example when window is created but still invisible. However then possible various problems, for example may need to set window rectangle two times, because the window may be for example DPI-scaled when moving to another screen etc.
+            
+            This function ensures the window is in screen, ensures correct size when screen DPI changed, etc.
+            </remarks>
+        </member>
+        <member name="M:Au.More.WndSavedRect.Restore(System.Windows.Forms.Form,System.String,System.Action{System.String})">
+            <summary>
+            Calls <see cref="M:Au.More.WndSavedRect.FromString(System.String,Au.More.WndSavedRect@)"/>. If it returns true, sets <i>form</i> bounds = <see cref="M:Au.More.WndSavedRect.NormalizeRect"/>, maximizes if need, StartPosition=Manual, and returns true.
+            Call this function before showing form, for example in constructor.
+            </summary>
+            <param name="form"></param>
+            <param name="saved">String created by <see cref="M:Au.More.WndSavedRect.ToString"/>.</param>
+            <param name="save">If not null, called when closing the window. Receives string for saving. Can save it in registry, file, anywhere.</param>
+        </member>
+        <member name="M:Au.More.WndSavedRect.Restore(System.Windows.Window,System.String,System.Action{System.String})">
+            <summary>
+            Calls <see cref="M:Au.More.WndSavedRect.FromString(System.String,Au.More.WndSavedRect@)"/>. If it returns true, calls <see cref="M:Au.More.WndSavedRect.NormalizeRect"/>, <see cref="M:Au.Types.ExtWpf.SetRect(System.Windows.Window,Au.Types.RECT)"/>, maximizes if need and returns true.
+            Call this function before showing window.
+            </summary>
+            <param name="w"></param>
+            <param name="saved">String created by <see cref="M:Au.More.WndSavedRect.ToString"/>.</param>
+            <param name="save">If not null, called when closing the window. Receives string for saving. Can save it in registry, file, anywhere.</param>
+            <exception cref="T:System.InvalidOperationException">Window is loaded.</exception>
+        </member>
+        <member name="T:Au.More.WndUtil">
+            <summary>
+            Miscellaneous window-related functions. Rarely used in automation scripts.
+            </summary>
+        </member>
+        <member name="M:Au.More.WndUtil.RegisterWindowClass(System.String,Au.Types.WNDPROC,Au.Types.RWCEtc)">
+            <summary>
+            Registers new window class in this process.
+            </summary>
+            <param name="className">Class name.</param>
+            <param name="wndProc">
+            Delegate of a window procedure. See <msdn>Window Procedures</msdn>.
+            
+            Use null when you need a different delegate (method or target object) for each window instance; create windows with <see cref="M:Au.More.WndUtil.CreateWindow(Au.Types.WNDPROC,System.Boolean,System.String,System.String,Au.Types.WS,Au.Types.WSE,System.Int32,System.Int32,System.Int32,System.Int32,Au.wnd,System.IntPtr,System.IntPtr,System.IntPtr)"/> or <see cref="M:Au.More.WndUtil.CreateMessageOnlyWindow(Au.Types.WNDPROC,System.String)"/>.
+            If not null, it must be a static method; create windows with any other function, including API <msdn>CreateWindowEx</msdn>.
+            </param>
+            <param name="etc">
+            Can be used to specify API <msdn>WNDCLASSEX</msdn> fields.
+            To set cursor use field <b>mCursor</b> (standard cursor) or <b>hCursor</b> (native handle of a custom cursor).
+            If null, this function sets arrow cursor and style CS_VREDRAW | CS_HREDRAW.
+            </param>
+            <exception cref="T:System.ArgumentException"><i>wndProc</i> is an instance method. Must be static method or null. If need instance method, use null here and pass <i>wndProc</i> to <see cref="M:Au.More.WndUtil.CreateWindow(Au.Types.WNDPROC,System.Boolean,System.String,System.String,Au.Types.WS,Au.Types.WSE,System.Int32,System.Int32,System.Int32,System.Int32,Au.wnd,System.IntPtr,System.IntPtr,System.IntPtr)"/>.</exception>
+            <exception cref="T:System.InvalidOperationException">The class already registered with this function and different <i>wndProc</i> (another method or another target object).</exception>
+            <exception cref="T:System.ComponentModel.Win32Exception">Failed, for example if the class already exists and was registered not with this function.</exception>
+            <remarks>
+            Calls API <msdn>RegisterClassEx</msdn>.
+            The window class is registered until this process ends. Don't need to unregister.
+            If called next time for the same window class, does nothing if <i>wndProc</i> is equal to the previous (or both null). Then ignores <i>etc</i>. Throws exception if different.
+            Thread-safe.
+            Protects the <i>wndProc</i> delegate from GC.
+            </remarks>
+        </member>
+        <member name="M:Au.More.WndUtil.CreateWindow(Au.Types.WNDPROC,System.Boolean,System.String,System.String,Au.Types.WS,Au.Types.WSE,System.Int32,System.Int32,System.Int32,System.Int32,Au.wnd,System.IntPtr,System.IntPtr,System.IntPtr)">
+            <summary>
+            Creates native/unmanaged window (API <msdn>CreateWindowEx</msdn>) and sets its window procedure.
+            </summary>
+            <param name="wndProc">Window procedure.</param>
+            <param name="keepAlive">
+            Protect <i>wndProc</i> from GC (garbage collector) until the window is destroyed (message <msdn>WM_NCDESTROY</msdn> recived or thread ended).
+            <note type="important">In some cases it may prevent destroying the window until thread ends, and it can be a big memory leak. For example WPF then does not destroy HwndHost-ed controls. Then let <i>keepAlive</i>=false and manually manage <i>wndProc</i> lifetime, for example keep it as a field of the wrapper class.</note>
+            </param>
+            <exception cref="T:Au.Types.AuException">Failed to create window. Unlikely.</exception>
+            <remarks>
+            If the class was registered with <see cref="M:Au.More.WndUtil.RegisterWindowClass(System.String,Au.Types.WNDPROC,Au.Types.RWCEtc)"/> with null <i>wndProc</i>, the <i>wndProc</i> function will receive all messages. Else will not receive messages sent before <b>CreateWindowEx</b> returns (WM_CREATE etc).
+            
+            To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="M:Au.More.WndUtil.DestroyWindow(Au.wnd)"/>, <see cref="M:Au.wnd.Close(System.Boolean,System.Boolean)"/>, API <msdn>WM_CLOSE</msdn>.
+            </remarks>
+        </member>
+        <member name="M:Au.More.WndUtil.CreateWindow(System.String,System.String,Au.Types.WS,Au.Types.WSE,System.Int32,System.Int32,System.Int32,System.Int32,Au.wnd,System.IntPtr,System.IntPtr,System.IntPtr)">
+            <summary>
+            Creates native/unmanaged window.
+            </summary>
+            <exception cref="T:Au.Types.AuException">Failed to create window. Unlikely.</exception>
+            <remarks>
+            Calls API <msdn>CreateWindowEx</msdn>.
+            To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="M:Au.More.WndUtil.DestroyWindow(Au.wnd)"/>, <see cref="M:Au.wnd.Close(System.Boolean,System.Boolean)"/>, API <msdn>WM_CLOSE</msdn>.
+            </remarks>
+            <seealso cref="M:Au.More.WndUtil.RegisterWindowClass(System.String,Au.Types.WNDPROC,Au.Types.RWCEtc)"/>
+        </member>
+        <member name="M:Au.More.WndUtil.CreateMessageOnlyWindow(System.String)">
+            <summary>
+            Creates native/unmanaged <msdn>message-only window</msdn>.
+            </summary>
+            <param name="className">Window class name. Can be any existing class.</param>
+            <exception cref="T:Au.Types.AuException">Failed to create window. Unlikely.</exception>
+            <remarks>
+            Styles: WS_POPUP, WS_EX_NOACTIVATE.
+            To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="M:Au.More.WndUtil.DestroyWindow(Au.wnd)"/>, <see cref="M:Au.wnd.Close(System.Boolean,System.Boolean)"/>, API <msdn>WM_CLOSE</msdn>.
+            </remarks>
+        </member>
+        <member name="M:Au.More.WndUtil.CreateMessageOnlyWindow(Au.Types.WNDPROC,System.String)">
+            <summary>
+            Creates native/unmanaged <msdn>message-only window</msdn> and sets its window procedure.
+            </summary>
+            <param name="className">Window class name.</param>
+            <param name="wndProc"></param>
+            <exception cref="T:Au.Types.AuException">Failed to create window. Unlikely.</exception>
+            <remarks>
+            Styles: WS_POPUP, WS_EX_NOACTIVATE.
+            Calls <see cref="M:Au.More.WndUtil.CreateWindow(Au.Types.WNDPROC,System.Boolean,System.String,System.String,Au.Types.WS,Au.Types.WSE,System.Int32,System.Int32,System.Int32,System.Int32,Au.wnd,System.IntPtr,System.IntPtr,System.IntPtr)"/> with <i>keepAlive</i>=true.
+            </remarks>
+        </member>
+        <member name="M:Au.More.WndUtil.DestroyWindow(Au.wnd)">
+            <summary>
+            Destroys a native window of this thread.
+            Calls API <msdn>DestroyWindow</msdn>.
+            Returns false if failed. Supports <see cref="T:Au.lastError"/>.
+            </summary>
+            <seealso cref="M:Au.wnd.Close(System.Boolean,System.Boolean)"/>
+        </member>
+        <member name="M:Au.More.WndUtil.SetFont(Au.wnd,System.IntPtr)">
+            <summary>
+            Sets font.
+            </summary>
+            <param name="w"></param>
+            <param name="font">
+            Native font handle.
+            If default(IntPtr), sets font that is used by most windows and controls on this computer, usually Segoe UI, 9, DPI-scaled for w screen.
+            </param>
+            <remarks>
+            Sends <msdn>WM_SETFONT</msdn> message.
+            </remarks>
+        </member>
+        <member name="M:Au.More.WndUtil.GetWindowsStoreAppId(Au.wnd,System.Boolean,System.Boolean)">
+            <summary>
+            Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
+            Returns null if fails. Returns null if called on Windows 7 unless <i>getExePathIfNotWinStoreApp</i> true.
+            </summary>
+            <param name="w"></param>
+            <param name="prependShellAppsFolder">Prepend <c>@"shell:AppsFolder\"</c> (to run or get icon).</param>
+            <param name="getExePathIfNotWinStoreApp">Get program path if it is not a Windows Store app.</param>
+            <remarks>
+            Windows Store app window class name can be "Windows.UI.Core.CoreWindow" or "ApplicationFrameWindow".
+            </remarks>
+        </member>
+        <member name="M:Au.More.WndUtil.GetClassLong(Au.wnd,System.Int32)">
+            <summary>
+            Calls API <msdn>GetClassLongPtr</msdn>.
+            </summary>
+            <remarks>
+            Supports <see cref="T:Au.lastError"/>.
+            For index can be used constants from <see cref="T:Au.Types.GCL"/>. All values are the same in 32-bit and 64-bit process.
+            In 32-bit process actually calls <b>GetClassLong</b>, because <b>GetClassLongPtr</b> is unavailable.
+            </remarks>
+        </member>
+        <member name="M:Au.More.WndUtil.RegisterMessage(System.String,System.Boolean)">
+            <summary>
+            Calls API <msdn>RegisterWindowMessage</msdn>.
+            </summary>
+            <param name="name">Message name. Can be any unique string.</param>
+            <param name="uacEnable">Also call API <msdn>ChangeWindowMessageFilter</msdn> for the message. More info: <see cref="M:Au.More.WndUtil.UacEnableMessages(System.Int32[])"/>.</param>
+        </member>
+        <member name="M:Au.More.WndUtil.UacEnableMessages(System.Int32[])">
+            <summary>
+            Calls API <msdn>ChangeWindowMessageFilter</msdn> for each message in the list of messages.
+            It allows processes of lower [](xref:uac) integrity level to send these messages to this process.
+            </summary>
+        </member>
+        <member name="M:Au.More.WndUtil.PrintMsg(System.String@,Au.wnd,System.Int32,System.IntPtr,System.IntPtr,Au.Types.PrintMsgOptions,System.String)">
+            <summary>
+            Writes a Windows message to a string.
+            If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
+            </summary>
+        </member>
+        <member name="M:Au.More.WndUtil.PrintMsg(Au.wnd,System.Int32,System.IntPtr,System.IntPtr,Au.Types.PrintMsgOptions,System.String)">
+            <summary>
+            Writes a Windows message to the output, unless it is specified in <i>options</i>.
+            </summary>
+        </member>
+        <member name="M:Au.More.WndUtil.PrintMsg(System.String@,Au.Types.MSG@,Au.Types.PrintMsgOptions,System.String)">
+            <summary>
+            Writes a Windows message to a string.
+            If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
+            </summary>
+            <remarks>
+            The <i>m</i> parameter also accepts <b>System.Windows.Interop.MSG</b> (WPF) and <b>System.Windows.Forms.Message</b>.
+            </remarks>
+        </member>
+        <member name="M:Au.More.WndUtil.PrintMsg(Au.Types.MSG@,Au.Types.PrintMsgOptions,System.String)">
+            <summary>
+            Writes a Windows message to the output, unless it is specified in <i>options</i>.
+            </summary>
+            <remarks>
+            The <i>m</i> parameter also accepts <b>System.Windows.Interop.MSG</b> (WPF) and <b>System.Windows.Forms.Message</b>.
+            </remarks>
+        </member>
+        <member name="M:Au.More.WndUtil.DragLoop(Au.Types.AnyWnd,Au.Types.MButtons,System.Action{Au.Types.WDLArgs})">
+            <summary>
+            Simple non-OLE drag operation.
+            Returns true if dropped, false if cancelled.
+            </summary>
+            <param name="window">Window or control that owns the drag operation. Must be of this thread.</param>
+            <param name="mouseButton">Mouse button that is used for the drag operation: Left, Right, Middle.</param>
+            <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
+        </member>
+        <member name="M:Au.More.WndUtil.WaitForAnActiveWindow">
+            <summary>
+            Waits while there is no active window.
+            It sometimes happens after closing, minimizing or switching the active window, briefly until another window becomes active.
+            Waits max 500 ms, then returns false if there is no active window.
+            Processes Windows messages that are in the message queue of this thread.
+            Don't need to call this after calling functions of this library.
+            </summary>
+        </member>
+        <member name="M:Au.More.WndUtil.EnableActivate(System.Int32)">
+            <summary>
+            Temporarily enables this process to activate windows with API <msdn>SetForegroundWindow</msdn>.
+            Returns false if fails.
+            </summary>
+            <param name="processId">Process id. If not 0, enables that process to activate windows too. If -1, all processes will be enabled.</param>
+            <remarks>
+            In some cases you may need this function because Windows often disables API <msdn>SetForegroundWindow</msdn> to not allow background applications to activate windows while the user is working (using keyboard/mouse) with the currently active window. Then <b>SetForegroundWindow</b> usually just makes the window's taskbar button flash.
+            Usually you don't call <b>SetForegroundWindow</b> directly. It is called by some other functions.
+            Don't need to call this function before calling <see cref="M:Au.wnd.Activate"/> and other functions of this library that activate windows.
+            </remarks>
+        </member>
+        <member name="M:Au.More.WndUtil.PostThreadMessage(System.Int32,System.Int32,System.IntPtr,System.IntPtr)">
+            <summary>
+            Posts a message to the message queue of the specified thread. Of this thread if <i>threadId</i> is 0.
+            Calls API <msdn>PostThreadMessage</msdn>. 
+            Returns false if failed. Supports <see cref="T:Au.lastError"/>.
+            </summary>
         </member>
         <member name="T:Au.filesystem">
             <summary>
@@ -10893,6 +11425,8 @@
             <param name="resourceId">Native resource id. Default <msdn>IDI_APPLICATION</msdn> (C# compilers add app icon with this id).</param>
             <remarks>
             If role miniProgram (default), at first looks in main assembly (.dll); if not found there, looks in .exe file. Else only in .exe file.
+            
+            The icon is cached and protected from destroying. Don't need to destroy it, and not error to do it.
             </remarks>
         </member>
         <member name="M:Au.icon.trayIcon(System.Int32)">
@@ -10929,6 +11463,13 @@
             <param name="w">Window of any process.</param>
             <param name="size">Icon width and height. Default 16.</param>
         </member>
+        <member name="M:Au.icon.SetWindowIcon(Au.wnd,System.Boolean)">
+            <summary>
+            Sends <msdn>WM_SETICON</msdn> message.
+            </summary>
+            <param name="w"></param>
+            <param name="big"></param>
+        </member>
         <member name="M:Au.icon.create(System.Int32,System.Int32,System.Action{System.Drawing.Graphics})">
             <summary>
             Creates icon at run time.
@@ -10962,6 +11503,9 @@
             If true (default), destroys the native icon object; also clears this variable and don't need to dispose it.
             If false, later will need to dispose this variable.
             </param>
+            <remarks>
+            The image is not suitable for WPF window icon. Instead use <see cref="M:Au.icon.SetWindowIcon(Au.wnd,System.Boolean)"/> or WPF image loading functions.
+            </remarks>
         </member>
         <member name="P:Au.icon.Size">
             <summary>
@@ -14449,7 +14993,7 @@
             - Window is loaded.
             </exception>
             <remarks>
-            Calls <see cref="M:Au.wnd.more.SavedRect.Restore(System.Windows.Forms.Form,System.String,System.Action{System.String})"/>.
+            Calls <see cref="M:Au.More.WndSavedRect.Restore(System.Windows.Forms.Form,System.String,System.Action{System.String})"/>.
             Call this function before showing the window. Don't change location/size-related window properties after that.
             If you use <see cref="M:Au.wpfBuilder.WinSize(System.Nullable{Au.Types.WBLength},System.Nullable{Au.Types.WBLength})"/>, call it before. It is used if size is still not saved. The same if you set window position or state.
             </remarks>
@@ -19060,6 +19604,12 @@
             </summary>
             <param name="t">This string.</param>
         </member>
+        <member name="M:Au.ExtString.NullIfEmpty_(System.String)">
+            <summary>
+            Returns this string, or null if it is "" or null.
+            </summary>
+            <param name="t">This string.</param>
+        </member>
         <member name="M:Au.ExtString.Segments(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})">
             <summary>
             This function can be used with foreach to split this string into substrings as start/end offsets.
@@ -19419,6 +19969,11 @@
         <member name="M:Au.ExtString.IsAscii(System.ReadOnlySpan{System.Char})">
             <summary>
             Returns true if does not contain non-ASCII characters.
+            </summary>
+        </member>
+        <member name="M:Au.ExtString.Eq(System.ReadOnlySpan{System.Char},System.String)">
+            <summary>
+            Returns true if equals to <i>s</i>, case-sensitive.
             </summary>
         </member>
         <member name="M:Au.ExtString.Eqi(System.ReadOnlySpan{System.Char},System.String)">
@@ -20928,7 +21483,7 @@
             - Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
             - Shell object's ITEMIDLIST like <c>":: ITEMIDLIST"</c>. See <see cref="M:Au.Types.Pidl.ToHexString"/>, <see cref="T:Au.folders.shell"/>. Can be used to open virtual folders and items like Control Panel.
             - Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="M:Au.Types.Pidl.ToShellString(Au.Types.SIGDN,System.Boolean)"/>. Can be used to open virtual folders and items like Control Panel.
-            - To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="M:Au.wnd.more.getWindowsStoreAppId(Au.wnd,System.Boolean,System.Boolean)"/> or Google.
+            - To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="M:Au.More.WndUtil.GetWindowsStoreAppId(Au.wnd,System.Boolean,System.Boolean)"/> or Google.
             
             Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="M:Au.pathname.expand(System.String,System.Nullable{System.Boolean})"/>.
             </remarks>
@@ -21212,7 +21767,8 @@
         </member>
         <member name="M:Au.script.setup(System.Boolean,System.Boolean,System.Boolean,System.Boolean,Au.Types.UExcept,System.String)">
             <summary>
-            Adds various useful features to this script task (running script): tray icon, exit on Ctrl+Alt+Delete, etc.
+            Adds various features to this script task (running script): tray icon, exit on Ctrl+Alt+Delete, etc.
+            Tip: in Options -> Templates you can set default code for new scripts.
             </summary>
             <param name="trayIcon">Add standard tray icon. See <see cref="M:Au.script.trayIcon(System.Int32,System.Action{Au.trayIcon},System.Action{Au.trayIcon,Au.popupMenu},System.String)"/>.</param>
             <param name="sleepExit">End this process when computer is going to sleep or hibernate.</param>
@@ -21302,7 +21858,7 @@
         <member name="M:Au.script.editor.GetIcon(System.String,Au.Types.EGetIcon)">
             <summary>
             Gets icon string in specified format.
-            Returns null if editor isn't running or if the specified file does not have a custom icon.
+            Returns null if editor isn't running or if file does not exist.
             </summary>
             <param name="file">File/folder path etc, or icon name. See <see cref="T:Au.Types.EGetIcon"/>.</param>
             <param name="what">The format of input and output strings.</param>
@@ -25211,7 +25767,7 @@
             
             There are two main types of windows - top-level windows and controls. Controls are child windows of top-level windows.
             
-            More functions are in the nested classes - <see cref="T:Au.wnd.more"/>, <see cref="T:Au.wnd.more.desktop"/> etc. They are used mostly in programming, rarely in automation scripts.
+            More window functions are in types named like <b>WndX</b>, in namespace <b>Au.More</b>. They are used mostly in programming, rarely in automation scripts.
             
             What happens when a <b>wnd</b> member function fails:
             - Functions that get window properties don't throw exceptions. They return false/0/null/empty. Most of them support <see cref="T:Au.lastError"/>, and it is mentioned in function documentation.
@@ -25341,524 +25897,7 @@
             Calls API <msdn>PostMessage</msdn>.
             Returns its return value (false if failed). Supports <see cref="T:Au.lastError"/>.
             </summary>
-            <seealso cref="M:Au.wnd.more.postThreadMessage(System.Int32,System.Int32,System.IntPtr,System.IntPtr)"/>
-        </member>
-        <member name="T:Au.wnd.more">
-            <summary>
-            Miscellaneous window-related functions and classes. Rarely used, or useful only for programmers.
-            </summary>
-        </member>
-        <member name="M:Au.wnd.more.postThreadMessage(System.Int32,System.Int32,System.IntPtr,System.IntPtr)">
-            <summary>
-            Posts a message to the message queue of the specified thread. Of this thread if <i>threadId</i> is 0.
-            Calls API <msdn>PostThreadMessage</msdn>. 
-            Returns false if failed. Supports <see cref="T:Au.lastError"/>.
-            </summary>
-        </member>
-        <member name="M:Au.wnd.more.waitForAnActiveWindow">
-            <summary>
-            Waits while there is no active window.
-            It sometimes happens after closing, minimizing or switching the active window, briefly until another window becomes active.
-            Waits max 500 ms, then returns false if there is no active window.
-            Processes Windows messages that are in the message queue of this thread.
-            Don't need to call this after calling functions of this library.
-            </summary>
-        </member>
-        <member name="M:Au.wnd.more.enableActivate(System.Int32)">
-            <summary>
-            Temporarily enables this process to activate windows with API <msdn>SetForegroundWindow</msdn>.
-            Returns false if fails.
-            </summary>
-            <param name="processId">Process id. If not 0, enables that process to activate windows too. If -1, all processes will be enabled.</param>
-            <remarks>
-            In some cases you may need this function because Windows often disables API <msdn>SetForegroundWindow</msdn> to not allow background applications to activate windows while the user is working (using keyboard/mouse) with the currently active window. Then <b>SetForegroundWindow</b> usually just makes the window's taskbar button flash.
-            Usually you don't call <b>SetForegroundWindow</b> directly. It is called by some other functions.
-            Don't need to call this function before calling <see cref="M:Au.wnd.Activate"/> and other functions of this library that activate windows.
-            </remarks>
-        </member>
-        <member name="M:Au.wnd.more.registerWindowClass(System.String,Au.Types.WNDPROC,Au.Types.RWCEtc)">
-            <summary>
-            Registers new window class in this process.
-            </summary>
-            <param name="className">Class name.</param>
-            <param name="wndProc">
-            Delegate of a window procedure. See <msdn>Window Procedures</msdn>.
-            
-            Use null when you need a different delegate (method or target object) for each window instance; create windows with <see cref="M:Au.wnd.more.createWindow(Au.Types.WNDPROC,System.Boolean,System.String,System.String,Au.Types.WS,Au.Types.WSE,System.Int32,System.Int32,System.Int32,System.Int32,Au.wnd,System.IntPtr,System.IntPtr,System.IntPtr)"/> or <see cref="M:Au.wnd.more.createMessageOnlyWindow(Au.Types.WNDPROC,System.String)"/>.
-            If not null, it must be a static method; create windows with any other function, including API <msdn>CreateWindowEx</msdn>.
-            </param>
-            <param name="etc">
-            Can be used to specify API <msdn>WNDCLASSEX</msdn> fields.
-            To set cursor use field <b>mCursor</b> (standard cursor) or <b>hCursor</b> (native handle of a custom cursor).
-            If null, this function sets arrow cursor and style CS_VREDRAW | CS_HREDRAW.
-            </param>
-            <exception cref="T:System.ArgumentException"><i>wndProc</i> is an instance method. Must be static method or null. If need instance method, use null here and pass <i>wndProc</i> to <see cref="M:Au.wnd.more.createWindow(Au.Types.WNDPROC,System.Boolean,System.String,System.String,Au.Types.WS,Au.Types.WSE,System.Int32,System.Int32,System.Int32,System.Int32,Au.wnd,System.IntPtr,System.IntPtr,System.IntPtr)"/>.</exception>
-            <exception cref="T:System.InvalidOperationException">The class already registered with this function and different <i>wndProc</i> (another method or another target object).</exception>
-            <exception cref="T:System.ComponentModel.Win32Exception">Failed, for example if the class already exists and was registered not with this function.</exception>
-            <remarks>
-            Calls API <msdn>RegisterClassEx</msdn>.
-            The window class is registered until this process ends. Don't need to unregister.
-            If called next time for the same window class, does nothing if <i>wndProc</i> is equal to the previous (or both null). Then ignores <i>etc</i>. Throws exception if different.
-            Thread-safe.
-            Protects the <i>wndProc</i> delegate from GC.
-            </remarks>
-        </member>
-        <member name="M:Au.wnd.more.createWindow(Au.Types.WNDPROC,System.Boolean,System.String,System.String,Au.Types.WS,Au.Types.WSE,System.Int32,System.Int32,System.Int32,System.Int32,Au.wnd,System.IntPtr,System.IntPtr,System.IntPtr)">
-            <summary>
-            Creates native/unmanaged window (API <msdn>CreateWindowEx</msdn>) and sets its window procedure.
-            </summary>
-            <param name="wndProc">Window procedure.</param>
-            <param name="keepAlive">
-            Protect <i>wndProc</i> from GC (garbage collector) until the window is destroyed (message <msdn>WM_NCDESTROY</msdn> recived or thread ended).
-            <note type="important">In some cases it may prevent destroying the window until thread ends, and it can be a big memory leak. For example WPF then does not destroy HwndHost-ed controls. Then let <i>keepAlive</i>=false and manually manage <i>wndProc</i> lifetime, for example keep it as a field of the wrapper class.</note>
-            </param>
-            <exception cref="T:Au.Types.AuException">Failed to create window. Unlikely.</exception>
-            <remarks>
-            If the class was registered with <see cref="M:Au.wnd.more.registerWindowClass(System.String,Au.Types.WNDPROC,Au.Types.RWCEtc)"/> with null <i>wndProc</i>, the <i>wndProc</i> function will receive all messages. Else will not receive messages sent before <b>CreateWindowEx</b> returns (WM_CREATE etc).
-            
-            To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="M:Au.wnd.more.destroyWindow(Au.wnd)"/>, <see cref="M:Au.wnd.Close(System.Boolean,System.Boolean)"/>, API <msdn>WM_CLOSE</msdn>.
-            </remarks>
-        </member>
-        <member name="M:Au.wnd.more.createWindow(System.String,System.String,Au.Types.WS,Au.Types.WSE,System.Int32,System.Int32,System.Int32,System.Int32,Au.wnd,System.IntPtr,System.IntPtr,System.IntPtr)">
-            <summary>
-            Creates native/unmanaged window.
-            </summary>
-            <exception cref="T:Au.Types.AuException">Failed to create window. Unlikely.</exception>
-            <remarks>
-            Calls API <msdn>CreateWindowEx</msdn>.
-            To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="M:Au.wnd.more.destroyWindow(Au.wnd)"/>, <see cref="M:Au.wnd.Close(System.Boolean,System.Boolean)"/>, API <msdn>WM_CLOSE</msdn>.
-            </remarks>
-            <seealso cref="M:Au.wnd.more.registerWindowClass(System.String,Au.Types.WNDPROC,Au.Types.RWCEtc)"/>
-        </member>
-        <member name="M:Au.wnd.more.createMessageOnlyWindow(System.String)">
-            <summary>
-            Creates native/unmanaged <msdn>message-only window</msdn>.
-            </summary>
-            <param name="className">Window class name. Can be any existing class.</param>
-            <exception cref="T:Au.Types.AuException">Failed to create window. Unlikely.</exception>
-            <remarks>
-            Styles: WS_POPUP, WS_EX_NOACTIVATE.
-            To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="M:Au.wnd.more.destroyWindow(Au.wnd)"/>, <see cref="M:Au.wnd.Close(System.Boolean,System.Boolean)"/>, API <msdn>WM_CLOSE</msdn>.
-            </remarks>
-        </member>
-        <member name="M:Au.wnd.more.createMessageOnlyWindow(Au.Types.WNDPROC,System.String)">
-            <summary>
-            Creates native/unmanaged <msdn>message-only window</msdn> and sets its window procedure.
-            </summary>
-            <param name="className">Window class name.</param>
-            <param name="wndProc"></param>
-            <exception cref="T:Au.Types.AuException">Failed to create window. Unlikely.</exception>
-            <remarks>
-            Styles: WS_POPUP, WS_EX_NOACTIVATE.
-            Calls <see cref="M:Au.wnd.more.createWindow(Au.Types.WNDPROC,System.Boolean,System.String,System.String,Au.Types.WS,Au.Types.WSE,System.Int32,System.Int32,System.Int32,System.Int32,Au.wnd,System.IntPtr,System.IntPtr,System.IntPtr)"/> with <i>keepAlive</i>=true.
-            </remarks>
-        </member>
-        <member name="M:Au.wnd.more.destroyWindow(Au.wnd)">
-            <summary>
-            Destroys a native window of this thread.
-            Calls API <msdn>DestroyWindow</msdn>.
-            Returns false if failed. Supports <see cref="T:Au.lastError"/>.
-            </summary>
-            <seealso cref="M:Au.wnd.Close(System.Boolean,System.Boolean)"/>
-        </member>
-        <member name="M:Au.wnd.more.setFont(Au.wnd,System.IntPtr)">
-            <summary>
-            Sets font.
-            </summary>
-            <param name="w"></param>
-            <param name="font">
-            Native font handle.
-            If default(IntPtr), sets font that is used by most windows and controls on this computer, usually Segoe UI, 9, DPI-scaled for w screen.
-            </param>
-            <remarks>
-            Sends <msdn>WM_SETFONT</msdn> message.
-            </remarks>
-        </member>
-        <member name="M:Au.wnd.more.getWindowsStoreAppId(Au.wnd,System.Boolean,System.Boolean)">
-            <summary>
-            Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
-            Returns null if fails. Returns null if called on Windows 7 unless <i>getExePathIfNotWinStoreApp</i> true.
-            </summary>
-            <param name="w"></param>
-            <param name="prependShellAppsFolder">Prepend <c>@"shell:AppsFolder\"</c> (to run or get icon).</param>
-            <param name="getExePathIfNotWinStoreApp">Get program path if it is not a Windows Store app.</param>
-            <remarks>
-            Windows Store app window class name can be "Windows.UI.Core.CoreWindow" or "ApplicationFrameWindow".
-            </remarks>
-        </member>
-        <member name="M:Au.wnd.more.getClassLong(Au.wnd,System.Int32)">
-            <summary>
-            Calls API <msdn>GetClassLongPtr</msdn>.
-            </summary>
-            <remarks>
-            Supports <see cref="T:Au.lastError"/>.
-            For index can be used constants from <see cref="T:Au.Types.GCL"/>. All values are the same in 32-bit and 64-bit process.
-            In 32-bit process actually calls <b>GetClassLong</b>, because <b>GetClassLongPtr</b> is unavailable.
-            </remarks>
-        </member>
-        <member name="M:Au.wnd.more.registerMessage(System.String,System.Boolean)">
-            <summary>
-            Calls API <msdn>RegisterWindowMessage</msdn>.
-            </summary>
-            <param name="name">Message name. Can be any unique string.</param>
-            <param name="uacEnable">Also call API <msdn>ChangeWindowMessageFilter</msdn> for the message. More info: <see cref="M:Au.wnd.more.uacEnableMessages(System.Int32[])"/>.</param>
-        </member>
-        <member name="M:Au.wnd.more.uacEnableMessages(System.Int32[])">
-            <summary>
-            Calls API <msdn>ChangeWindowMessageFilter</msdn> for each message in the list of messages.
-            It allows processes of lower [](xref:uac) integrity level to send these messages to this process.
-            </summary>
-        </member>
-        <member name="M:Au.wnd.more.printMsg(System.String@,Au.wnd,System.Int32,System.IntPtr,System.IntPtr,Au.Types.PrintMsgOptions,System.String)">
-            <summary>
-            Writes a Windows message to a string.
-            If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
-            </summary>
-        </member>
-        <member name="M:Au.wnd.more.printMsg(Au.wnd,System.Int32,System.IntPtr,System.IntPtr,Au.Types.PrintMsgOptions,System.String)">
-            <summary>
-            Writes a Windows message to the output, unless it is specified in <i>options</i>.
-            </summary>
-        </member>
-        <member name="M:Au.wnd.more.printMsg(System.String@,Au.Types.MSG@,Au.Types.PrintMsgOptions,System.String)">
-            <summary>
-            Writes a Windows message to a string.
-            If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
-            </summary>
-            <remarks>
-            The <i>m</i> parameter also accepts <b>System.Windows.Interop.MSG</b> (WPF) and <b>System.Windows.Forms.Message</b>.
-            </remarks>
-        </member>
-        <member name="M:Au.wnd.more.printMsg(Au.Types.MSG@,Au.Types.PrintMsgOptions,System.String)">
-            <summary>
-            Writes a Windows message to the output, unless it is specified in <i>options</i>.
-            </summary>
-            <remarks>
-            The <i>m</i> parameter also accepts <b>System.Windows.Interop.MSG</b> (WPF) and <b>System.Windows.Forms.Message</b>.
-            </remarks>
-        </member>
-        <member name="M:Au.wnd.more.dragLoop(Au.Types.AnyWnd,Au.Types.MButtons,System.Action{Au.Types.WDLArgs})">
-            <summary>
-            Simple non-OLE drag operation.
-            Returns true if dropped, false if cancelled.
-            </summary>
-            <param name="window">Window or control that owns the drag operation. Must be of this thread.</param>
-            <param name="mouseButton">Mouse button that is used for the drag operation: Left, Right, Middle.</param>
-            <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
-        </member>
-        <member name="T:Au.wnd.more.SavedRect">
-            <summary>
-            Helps to save and restore window rectangle and state. Ensures in screen, per-monitor-DPI-aware, etc.
-            </summary>
-            <example>
-            <code><![CDATA[
-            class Form9 : Form {
-            	const string c_rkey = @"HKEY_CURRENT_USER\Software\Au\Test", c_rvalue = @"Form9.Rect";
-            	
-            	public Form9() {
-            		this.StartPosition = FormStartPosition.Manual;
-            		if (wnd.more.SavedRect.FromString(Registry.GetValue(c_rkey, c_rvalue, null) as string, out var v)) {
-            			this.Bounds = v.NormalizeRect();
-            			if(v.Maximize) this.WindowState = FormWindowState.Maximized;
-            		}
-            		//the same:
-            		//wnd.more.SavedRect.Restore(this, Registry.GetValue(c_rkey, c_rvalue, null) as string);
-            	}
-            
-            	protected override void OnFormClosing(FormClosingEventArgs e) {
-            		Registry.SetValue(c_rkey, c_rvalue, new wnd.more.SavedRect(this).ToString());
-            		base.OnFormClosing(e);
-            	}
-            }
-            ]]></code>
-            The same in 2 lines.
-            <code><![CDATA[
-            class Form8 : Form {
-            	const string c_rkey = @"HKEY_CURRENT_USER\Software\Au\Test", c_rvalue = @"Form8.Rect";
-            	
-            	public Form8() {
-            		wnd.more.SavedRect.Restore(this, Registry.GetValue(c_rkey, c_rvalue, null) as string, s1 => Registry.SetValue(c_rkey, c_rvalue, s1.ToString()));
-            	}
-            }
-            ]]></code>
-            WPF window created with <see cref="T:Au.wpfBuilder"/>.
-            <code><![CDATA[
-            const string c_rkey = @"HKEY_CURRENT_USER\Software\Au\Test", c_rvalue = @"Wpf7.Rect";
-            var b = new wpfBuilder("Window").WinSize(400).R.AddOkCancel().End();
-            	
-            wnd.more.SavedRect.Restore(b.Window, Registry.GetValue(c_rkey, c_rvalue, null) as string, s1 => Registry.SetValue(c_rkey, c_rvalue, s1));
-            
-            //the same
-            //b.WinSaved(Registry.GetValue(c_rkey, c_rvalue, null) as string, s1 => Registry.SetValue(c_rkey, c_rvalue, s1));
-            
-            if (!b.ShowDialog()) return;
-            ]]></code>
-            </example>
-        </member>
-        <member name="P:Au.wnd.more.SavedRect.RawRect">
-            <summary>
-            Window rectangle in normal state (not maximized/minimized), as retrieved by API <msdn>GetWindowPlacement</msdn>.
-            </summary>
-        </member>
-        <member name="P:Au.wnd.more.SavedRect.Dpi">
-            <summary>
-            <see cref="M:Au.More.Dpi.OfWindow(Au.wnd,System.Boolean)"/>.
-            </summary>
-        </member>
-        <member name="P:Au.wnd.more.SavedRect.Maximize">
-            <summary>
-            The window should be maximized.
-            </summary>
-        </member>
-        <member name="P:Au.wnd.more.SavedRect.IsToolWindow">
-            <summary>
-            <see cref="P:Au.wnd.IsToolWindow"/>. If false, <see cref="P:Au.wnd.more.SavedRect.RawRect"/> may have an offset that depends on work area.
-            </summary>
-        </member>
-        <member name="M:Au.wnd.more.SavedRect.ToString">
-            <summary>
-            Converts this object to string for saving.
-            The string is very simple, like "1 2 3 4 5 6".
-            </summary>
-        </member>
-        <member name="M:Au.wnd.more.SavedRect.FromString(System.String,Au.wnd.more.SavedRect@)">
-            <summary>
-            Creates <b>SavedRect</b> from string created by <see cref="M:Au.wnd.more.SavedRect.ToString"/>.
-            Returns false if the string is null or invalid.
-            </summary>
-            <param name="saved">String created by <see cref="M:Au.wnd.more.SavedRect.ToString"/>.</param>
-            <param name="x">Result.</param>
-        </member>
-        <member name="M:Au.wnd.more.SavedRect.#ctor(Au.wnd)">
-            <summary>
-            Gets window rectangle and state for saving. Usually called when closing the window.
-            See also <see cref="M:Au.wnd.more.SavedRect.ToString"/>.
-            </summary>
-            <exception cref="T:Au.Types.AuWndException">Failed to get rectangle, probably invalid window handle.</exception>
-        </member>
-        <member name="M:Au.wnd.more.SavedRect.#ctor(System.Windows.Forms.Form)">
-            <summary>
-            Gets window rectangle and state for saving. Usually called when closing the window.
-            See also <see cref="M:Au.wnd.more.SavedRect.ToString"/>.
-            </summary>
-            <exception cref="T:Au.Types.AuWndException">Failed to get rectangle, probably invalid window handle.</exception>
-        </member>
-        <member name="M:Au.wnd.more.SavedRect.#ctor(System.Windows.Window)">
-            <summary>
-            Gets window rectangle and state for saving. Usually called when closing the window.
-            See also <see cref="M:Au.wnd.more.SavedRect.ToString"/>.
-            </summary>
-            <exception cref="T:Au.Types.AuWndException">Failed to get rectangle, probably invalid window handle.</exception>
-        </member>
-        <member name="M:Au.wnd.more.SavedRect.NormalizeRect">
-            <summary>
-            Gets real rectangle for restoring saved window rectangle.
-            </summary>
-            <remarks>
-            It is recommended to call this before creating window, and create window with the returned rectangle. Also set maximized state if <see cref="P:Au.wnd.more.SavedRect.Maximize"/>.
-            If it is not possible, can be called later, for example when window is created but still invisible. However then possible various problems, for example may need to set window rectangle two times, because the window may be for example DPI-scaled when moving to another screen etc.
-            
-            This function ensures the window is in screen, ensures correct size when screen DPI changed, etc.
-            </remarks>
-        </member>
-        <member name="M:Au.wnd.more.SavedRect.Restore(System.Windows.Forms.Form,System.String,System.Action{System.String})">
-            <summary>
-            Calls <see cref="M:Au.wnd.more.SavedRect.FromString(System.String,Au.wnd.more.SavedRect@)"/>. If it returns true, sets <i>form</i> bounds = <see cref="M:Au.wnd.more.SavedRect.NormalizeRect"/>, maximizes if need, StartPosition=Manual, and returns true.
-            Call this function before showing form, for example in constructor.
-            </summary>
-            <param name="form"></param>
-            <param name="saved">String created by <see cref="M:Au.wnd.more.SavedRect.ToString"/>.</param>
-            <param name="save">If not null, called when closing the window. Receives string for saving. Can save it in registry, file, anywhere.</param>
-        </member>
-        <member name="M:Au.wnd.more.SavedRect.Restore(System.Windows.Window,System.String,System.Action{System.String})">
-            <summary>
-            Calls <see cref="M:Au.wnd.more.SavedRect.FromString(System.String,Au.wnd.more.SavedRect@)"/>. If it returns true, calls <see cref="M:Au.wnd.more.SavedRect.NormalizeRect"/>, <see cref="M:Au.Types.ExtWpf.SetRect(System.Windows.Window,Au.Types.RECT)"/>, maximizes if need and returns true.
-            Call this function before showing window.
-            </summary>
-            <param name="w"></param>
-            <param name="saved">String created by <see cref="M:Au.wnd.more.SavedRect.ToString"/>.</param>
-            <param name="save">If not null, called when closing the window. Receives string for saving. Can save it in registry, file, anywhere.</param>
-            <exception cref="T:System.InvalidOperationException">Window is loaded.</exception>
-        </member>
-        <member name="T:Au.wnd.more.taskbarButton">
-            <summary>
-            Taskbar button flash, progress, add/delete.
-            </summary>
-        </member>
-        <member name="M:Au.wnd.more.taskbarButton.flash(Au.wnd,System.Int32)">
-            <summary>
-            Starts or stops flashing the taskbar button.
-            </summary>
-            <param name="w">Window.</param>
-            <param name="count">The number of times to flash. If 0, stops flashing.</param>
-        </member>
-        <member name="M:Au.wnd.more.taskbarButton.setProgressState(Au.wnd,Au.Types.WTBProgressState)">
-            <summary>
-            Sets the state of the progress indicator displayed on the taskbar button.
-            Calls <msdn>ITaskbarList3.SetProgressState</msdn>.
-            </summary>
-            <param name="w">Button's window.</param>
-            <param name="state">Progress indicator state and color.</param>
-        </member>
-        <member name="M:Au.wnd.more.taskbarButton.setProgressValue(Au.wnd,System.Int32,System.Int32)">
-            <summary>
-            Sets the value of the progress indicator displayed on the taskbar button.
-            Calls <msdn>ITaskbarList3.SetProgressValue</msdn>.
-            </summary>
-            <param name="w">Button's window.</param>
-            <param name="progressValue">Progress indicator value, 0 to progressTotal.</param>
-            <param name="progressTotal">Max progress indicator value.</param>
-        </member>
-        <member name="M:Au.wnd.more.taskbarButton.add(Au.wnd)">
-            <summary>
-            Adds taskbar button.
-            Calls <msdn>ITaskbarList.AddTab</msdn>.
-            </summary>
-            <param name="w">Button's window.</param>
-        </member>
-        <member name="M:Au.wnd.more.taskbarButton.delete(Au.wnd)">
-            <summary>
-            Deletes taskbar button.
-            Calls <msdn>ITaskbarList.DeleteTab</msdn>.
-            </summary>
-            <param name="w">Button's window.</param>
-        </member>
-        <member name="T:Au.wnd.more.desktop">
-            <summary>
-            Arranges windows, shows/hides desktop. The same as the taskbar right-click menu commands.
-            </summary>
-        </member>
-        <member name="M:Au.wnd.more.desktop.toggleShowDesktop">
-            <summary>
-            Shows or hides desktop.
-            If there are non-minimized main windows, minimizes them. Else restores windows recently minimized by this function.
-            </summary>
-        </member>
-        <member name="M:Au.wnd.more.desktop.minimizeWindows">
-            <summary>
-            Minimizes main windows.
-            </summary>
-        </member>
-        <member name="M:Au.wnd.more.desktop.cascadeWindows">
-            <summary>
-            Cascades non-minimized main windows.
-            </summary>
-        </member>
-        <member name="M:Au.wnd.more.desktop.tileWindows(System.Boolean)">
-            <summary>
-            Arranges non-minimized main windows horizontally or vertically.
-            </summary>
-        </member>
-        <member name="M:Au.wnd.more.desktop.undoMinimizeEtc">
-            <summary>
-            Restores windows recently minimized, cascaded or tiled with other functions of this class.
-            </summary>
-        </member>
-        <member name="T:Au.wnd.more.CopyData">
-            <summary>
-            Send/receive data to/from other process using message <msdn>WM_COPYDATA</msdn>.
-            </summary>
-            <remarks>
-            This struct is <msdn>COPYDATASTRUCT</msdn>.
-            <note>By default [](xref:uac) blocks messages sent from processes of lower integrity level. Call <see cref="M:Au.wnd.more.CopyData.EnableReceivingWM_COPYDATA"/> if need.</note>
-            </remarks>
-            <seealso cref="T:System.IO.MemoryMappedFiles.MemoryMappedFile"/>
-            <seealso cref="T:System.IO.Pipes.NamedPipeServerStream"/>
-        </member>
-        <member name="M:Au.wnd.more.CopyData.#ctor(System.IntPtr)">
-            <summary>
-            Initializes this variable from <i>lParam</i> of a received <msdn>WM_COPYDATA</msdn> message.
-            Then you can call functions of this variable to get data in managed format.
-            </summary>
-            <param name="lParam"><i>lParam</i> of a <msdn>WM_COPYDATA</msdn> message received in a window procedure. It is <msdn>COPYDATASTRUCT</msdn> pointer.</param>
-        </member>
-        <member name="P:Au.wnd.more.CopyData.DataId">
-            <summary>
-            Data id. It is <msdn>COPYDATASTRUCT.dwData</msdn>.
-            </summary>
-        </member>
-        <member name="P:Au.wnd.more.CopyData.RawData">
-            <summary>
-            Unmanaged data pointer. It is <msdn>COPYDATASTRUCT.lpData</msdn>.
-            </summary>
-        </member>
-        <member name="P:Au.wnd.more.CopyData.RawDataSize">
-            <summary>
-            Unmanaged data size. It is <msdn>COPYDATASTRUCT.cbData</msdn>.
-            </summary>
-        </member>
-        <member name="M:Au.wnd.more.CopyData.GetString">
-            <summary>
-            Gets received data as string.
-            </summary>
-        </member>
-        <member name="M:Au.wnd.more.CopyData.GetBytes">
-            <summary>
-            Gets received data as byte[].
-            </summary>
-        </member>
-        <member name="M:Au.wnd.more.CopyData.EnableReceivingWM_COPYDATA">
-            <summary>
-            Calls API <msdn>ChangeWindowMessageFilter</msdn>(<b>WM_COPYDATA</b>). Then windows of this process can receive this message from lower [](xref:uac) integrity level processes.
-            </summary>
-        </member>
-        <member name="M:Au.wnd.more.CopyData.Send``1(Au.wnd,System.Int32,System.ReadOnlySpan{``0},System.IntPtr)">
-            <summary>
-            Sends string or other data to a window of any process. Uses API <msdn>SendMessage</msdn> <msdn>WM_COPYDATA</msdn>.
-            </summary>
-            <typeparam name="T">Type of data elements. For example, char for string, byte for byte[].</typeparam>
-            <param name="w">The window.</param>
-            <param name="dataId">Data id. It is <msdn>COPYDATASTRUCT.dwData</msdn>.</param>
-            <param name="data">Data. For example string or byte[]. String can contain '\0' characters.</param>
-            <param name="wParam">wParam. Can be any value. Optional.</param>
-            <returns><b>SendMessage</b>'s return value.</returns>
-        </member>
-        <member name="T:Au.wnd.more.CopyData.ResultReader`1">
-            <summary>
-            Type of <see cref="M:Au.wnd.more.CopyData.SendReceive``2(Au.wnd,System.Int32,System.ReadOnlySpan{``0},Au.wnd.more.CopyData.ResultReader{``1})"/> callback function.
-            </summary>
-            <param name="span">Received data buffer. The callback function can convert it to array, string, etc.</param>
-        </member>
-        <member name="M:Au.wnd.more.CopyData.SendReceive``2(Au.wnd,System.Int32,System.ReadOnlySpan{``0},Au.wnd.more.CopyData.ResultReader{``1})">
-            <summary>
-            Sends string or other data to a window of any process. Uses API <msdn>SendMessage</msdn> <msdn>WM_COPYDATA</msdn>.
-            Receives string or other data returned by that window with <see cref="M:Au.wnd.more.CopyData.Return(System.Void*,System.Int32,System.IntPtr)"/>.
-            </summary>
-            <typeparam name="TSend">Type of data elements. For example, char for string, byte for byte[]</typeparam>
-            <typeparam name="TReceive">Type of received data elements. For example, char for string, byte for byte[].</typeparam>
-            <param name="w">The window.</param>
-            <param name="dataId">Data id. It is <msdn>COPYDATASTRUCT.dwData</msdn>.</param>
-            <param name="send">Data to send. For example string or byte[]. String can contain '\0' characters.</param>
-            <param name="receive">Callback function that can convert the received data to desired format.</param>
-            <returns>false if failed.</returns>
-        </member>
-        <member name="M:Au.wnd.more.CopyData.SendReceive``1(Au.wnd,System.Int32,System.ReadOnlySpan{``0},System.Byte[]@)">
-            <summary>
-            Calls <see cref="M:Au.wnd.more.CopyData.SendReceive``2(Au.wnd,System.Int32,System.ReadOnlySpan{``0},Au.wnd.more.CopyData.ResultReader{``1})"/> and gets the returned data as byte[].
-            </summary>
-        </member>
-        <member name="M:Au.wnd.more.CopyData.SendReceive``1(Au.wnd,System.Int32,System.ReadOnlySpan{``0},System.String@)">
-            <summary>
-            Calls <see cref="M:Au.wnd.more.CopyData.SendReceive``2(Au.wnd,System.Int32,System.ReadOnlySpan{``0},Au.wnd.more.CopyData.ResultReader{``1})"/> and gets the returned string.
-            </summary>
-        </member>
-        <member name="M:Au.wnd.more.CopyData.Return(System.Void*,System.Int32,System.IntPtr)">
-            <summary>
-            Returns data to <see cref="M:Au.wnd.more.CopyData.SendReceive``2(Au.wnd,System.Int32,System.ReadOnlySpan{``0},Au.wnd.more.CopyData.ResultReader{``1})"/>.
-            </summary>
-            <param name="data"></param>
-            <param name="length"></param>
-            <param name="wParam"><i>wParam</i> of the received <b>WM_COPYDATA</b> message. Important, pass unchanged.</param>
-            <returns>Your window procedure must return this value.</returns>
-        </member>
-        <member name="M:Au.wnd.more.CopyData.Return``1(System.ReadOnlySpan{``0},System.IntPtr)">
-            <summary>
-            Returns string or other data to <see cref="M:Au.wnd.more.CopyData.SendReceive``2(Au.wnd,System.Int32,System.ReadOnlySpan{``0},Au.wnd.more.CopyData.ResultReader{``1})"/>.
-            </summary>
-            <typeparam name="T">Type of data elements. For example, char for string, byte for byte[]</typeparam>
-            <param name="data"></param>
-            <param name="wParam"><i>wParam</i> of the received <b>WM_COPYDATA</b> message. Important, pass unchanged.</param>
-            <returns>Your window procedure must return this value.</returns>
+            <seealso cref="M:Au.More.WndUtil.PostThreadMessage(System.Int32,System.Int32,System.IntPtr,System.IntPtr)"/>
         </member>
         <member name="M:Au.wnd.ThrowIf0">
             <summary>
@@ -26241,7 +26280,7 @@
         <member name="M:Au.wnd.ActivateL">
             <summary>
             Lightweight version of <see cref="M:Au.wnd.Activate"/>.
-            Just calls <see cref="M:Au.wnd.more.enableActivate(System.Int32)"/>, API <msdn>SetForegroundWindow</msdn> and makes sure that it actually worked, but does not check whether it activated exactly this window.
+            Just calls <see cref="M:Au.More.WndUtil.EnableActivate(System.Int32)"/>, API <msdn>SetForegroundWindow</msdn> and makes sure that it actually worked, but does not check whether it activated exactly this window.
             No exceptions, does not unhide, does not restore minimized, does not check is it a top-level window or control, etc.
             Returns false if fails.
             </summary>
@@ -26872,6 +26911,17 @@
             print.it(w.Prop["example"]);
             print.it(w.Prop); //all w properties
             w.Prop.Remove("example"); //you should always remove window properties if don't want to see unrelated applications crashing after some time. And don't use many unique property names.
+            ]]></code>
+            </example>
+        </member>
+        <member name="P:Au.wnd.TaskbarButton">
+            <summary>
+            Returns an object that manages the taskbar button of this window: flash, progress, add/delete.
+            </summary>
+            <example>
+            <code><![CDATA[
+            var w = +wnd.find("*Notepad", "Notepad");
+            w.TaskbarButton.Delete();
             ]]></code>
             </example>
         </member>
@@ -27733,18 +27783,18 @@
         </member>
         <member name="P:Au.wnd.AsButton">
             <summary>
-            Casts this to <see cref="T:Au.Types.WndButton"/>.
+            Casts this to <see cref="T:Au.Types.WButton"/>.
             </summary>
         </member>
         <member name="M:Au.wnd.ButtonClick(System.Int32,System.Boolean)">
             <summary>
             Finds a child button by id and sends a "click" message. Does not use the mouse.
-            Calls <see cref="M:Au.Types.WndButton.Click(System.Boolean)"/>.
+            Calls <see cref="M:Au.Types.WButton.Click(System.Boolean)"/>.
             </summary>
             <param name="buttonId">Control id of the button. This function calls <see cref="M:Au.wnd.ChildById(System.Int32,Au.Types.WCFlags)"/> to find the button.</param>
             <param name="useElm">Use <see cref="M:Au.elm.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
             <exception cref="T:Au.Types.NotFoundException">Button not found.</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.wnd.ChildById(System.Int32,Au.Types.WCFlags)"/> and <see cref="M:Au.Types.WndButton.Click(System.Boolean)"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.wnd.ChildById(System.Int32,Au.Types.WCFlags)"/> and <see cref="M:Au.Types.WButton.Click(System.Boolean)"/>.</exception>
             <example>
             <code><![CDATA[
             wnd.find("Options").ButtonClick(2);
@@ -27754,13 +27804,13 @@
         <member name="M:Au.wnd.ButtonClick(System.String,System.String,System.Boolean)">
             <summary>
             Finds a child button by name and sends a "click" message. Does not use the mouse.
-            Calls <see cref="M:Au.Types.WndButton.Click(System.Boolean)"/>.
+            Calls <see cref="M:Au.Types.WButton.Click(System.Boolean)"/>.
             </summary>
             <param name="buttonName">Button name. This function calls <see cref="M:Au.wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.wnd,System.Boolean},System.Int32)"/> to find the button.</param>
             <param name="cn">Button class name to pass to <see cref="M:Au.wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.wnd,System.Boolean},System.Int32)"/>.</param>
             <param name="useElm">Use <see cref="M:Au.elm.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
             <exception cref="T:Au.Types.NotFoundException">Button not found.</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.wnd,System.Boolean},System.Int32)"/> and <see cref="M:Au.Types.WndButton.Click(System.Boolean)"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.wnd,System.Boolean},System.Int32)"/> and <see cref="M:Au.Types.WButton.Click(System.Boolean)"/>.</exception>
             <example>
             <code><![CDATA[
             wnd.find("Options").ButtonClick("Cancel");
@@ -28088,7 +28138,7 @@
             <summary>
             Gets the active (foreground) window.
             Calls API <msdn>GetForegroundWindow</msdn>.
-            Returns default(wnd) if there is no active window; more info: <see cref="M:Au.wnd.more.waitForAnActiveWindow"/>.
+            Returns default(wnd) if there is no active window; more info: <see cref="M:Au.More.WndUtil.WaitForAnActiveWindow"/>.
             </summary>
         </member>
         <member name="P:Au.wnd.IsActive">
@@ -28138,13 +28188,13 @@
             On Windows 10 few windows have Metro style.
             On Windows 7 there are no Metro style windows.
             </summary>
-            <seealso cref="M:Au.wnd.more.getWindowsStoreAppId(Au.wnd,System.Boolean,System.Boolean)"/>
+            <seealso cref="M:Au.More.WndUtil.GetWindowsStoreAppId(Au.wnd,System.Boolean,System.Boolean)"/>
         </member>
         <member name="P:Au.wnd.IsUwpApp">
             <summary>
             On Windows 10 and later returns non-zero if this is a UWP app window: 1 if class name is "ApplicationFrameWindow", 2 if "Windows.UI.Core.CoreWindow".
             </summary>
-            <seealso cref="M:Au.wnd.more.getWindowsStoreAppId(Au.wnd,System.Boolean,System.Boolean)"/>
+            <seealso cref="M:Au.More.WndUtil.GetWindowsStoreAppId(Au.wnd,System.Boolean,System.Boolean)"/>
         </member>
         <member name="M:Au.wnd.MinimalSleepIfOtherThread_">
             <summary>

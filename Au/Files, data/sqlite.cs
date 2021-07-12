@@ -98,7 +98,7 @@ namespace Au
 				file = pathname.normalize(file);
 				if (flags.Has(SLFlags.SQLITE_OPEN_CREATE) && !filesystem.exists(file, true).isFile) filesystem.createDirectoryFor(file);
 			}
-			var r = SLApi.sqlite3_open_v2(Convert2.ToUtf8(file), ref _db, flags, null);
+			var r = SLApi.sqlite3_open_v2(Convert2.Utf8Encode(file), ref _db, flags, null);
 			if (r != 0) {
 				Dispose();
 				throw new SLException(r, "sqlite3_open " + file);
@@ -139,7 +139,7 @@ namespace Au
 		/// <param name="sql">SQL statement, or several ;-separated statements.</param>
 		/// <exception cref="SLException">Failed to execute sql.</exception>
 		public void Execute(string sql) {
-			var b = Convert2.ToUtf8(sql);
+			var b = Convert2.Utf8Encode(sql);
 			byte* es = null; //gets better error text than sqlite3_errstr; sqlite3_errmsg gets nothing after sqlite3_exec.
 			var r = SLApi.sqlite3_exec(_db, b, default, default, &es);
 			if (r != 0) throw new SLException(r, "sqlite3_exec", SLUtil_.ToStringAndFree(es));
@@ -350,7 +350,7 @@ namespace Au
 				if (0 == SLApi.sqlite3_prepare16_v3(_db, p, -1, 0, ref x, null)) {
 					var e = SLApi.sqlite3_step(x);
 					Debug.Assert(e == SLError.Row || e == SLError.Done);
-					if (e == SLError.Row) r = Convert2.FromUtf8(SLApi.sqlite3_column_text(x, 0));
+					if (e == SLError.Row) r = Convert2.Utf8Decode(SLApi.sqlite3_column_text(x, 0));
 					SLApi.sqlite3_finalize(x);
 				}
 			}
@@ -449,7 +449,7 @@ namespace Au
 
 		int _B(SLIndexOrName p) {
 			if (p.name == null) return p.index;
-			int r = SLApi.sqlite3_bind_parameter_index(_st, Convert2.ToUtf8(p.name));
+			int r = SLApi.sqlite3_bind_parameter_index(_st, Convert2.Utf8Encode(p.name));
 			if (r == 0) throw new SLException($"Parameter '{p.name}' does not exist in the SQL statement.");
 			return r;
 		}
@@ -693,7 +693,7 @@ namespace Au
 				if (t != null) return new string(t, 0, SLApi.sqlite3_column_bytes16(_st, icol));
 			} else {
 				byte* t = SLApi.sqlite3_column_text(_st, icol);
-				if (t != null) return Convert2.FromUtf8(t, SLApi.sqlite3_column_bytes(_st, icol));
+				if (t != null) return Encoding.UTF8.GetString(t, SLApi.sqlite3_column_bytes(_st, icol));
 			}
 			_WarnGet();
 			return null;
@@ -755,7 +755,7 @@ namespace Au
 		/// <summary>
 		/// sqlite3_column_name.
 		/// </summary>
-		public string ColumnName(int index) => Convert2.FromUtf8(SLApi.sqlite3_column_name(_st, index));
+		public string ColumnName(int index) => Convert2.Utf8Decode(SLApi.sqlite3_column_name(_st, index));
 
 		/// <summary>
 		/// Finds column by name in results.
@@ -771,7 +771,7 @@ namespace Au
 						if (BytePtr_.AsciiEq(b, name)) return i;
 					}
 				} else {
-					var bname = Convert2.ToUtf8(name);
+					var bname = Convert2.Utf8Encode(name);
 					for (int i = 0; i < n; i++) {
 						byte* b = SLApi.sqlite3_column_name(_st, i);
 						if (BytePtr_.Eq(b, bname)) return i;
@@ -929,7 +929,7 @@ namespace Au.More
 	internal static unsafe class SLUtil_
 	{
 		internal static string ToStringAndFree(byte* utf8) {
-			var r = Convert2.FromUtf8(utf8);
+			var r = Convert2.Utf8Decode(utf8);
 			SLApi.sqlite3_free(utf8);
 			return r;
 		}

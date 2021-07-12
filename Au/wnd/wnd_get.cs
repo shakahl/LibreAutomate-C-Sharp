@@ -12,6 +12,7 @@ using System.Reflection;
 //using System.Linq;
 
 using Au.Types;
+using Au.More;
 
 namespace Au
 {
@@ -645,7 +646,7 @@ namespace Au
 		/// <summary>
 		/// Gets the active (foreground) window.
 		/// Calls API <msdn>GetForegroundWindow</msdn>.
-		/// Returns default(wnd) if there is no active window; more info: <see cref="more.waitForAnActiveWindow"/>.
+		/// Returns default(wnd) if there is no active window; more info: <see cref="WndUtil.WaitForAnActiveWindow"/>.
 		/// </summary>
 		public static wnd active => Api.GetForegroundWindow();
 

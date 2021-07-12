@@ -78,9 +78,9 @@ class PanelOpen : DockPanel
 
 		#region ITreeViewItem
 
-		string ITreeViewItem.DisplayText => (f as ITreeViewItem).DisplayText;
+		string ITreeViewItem.DisplayText => f.DisplayName;
 
-		string ITreeViewItem.ImageSource => (f as ITreeViewItem).ImageSource;
+		string ITreeViewItem.ImageSource => f.ImageSource;
 
 		#endregion
 	}

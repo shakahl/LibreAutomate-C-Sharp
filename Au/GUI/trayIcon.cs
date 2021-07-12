@@ -39,8 +39,8 @@ namespace Au
 		//	Guid _guid;
 
 		static trayIcon() {
-			s_msgTaskbarCreated = wnd.more.registerMessage("TaskbarCreated", uacEnable: true);
-			wnd.more.registerWindowClass("trayIcon");
+			s_msgTaskbarCreated = WndUtil.RegisterMessage("TaskbarCreated", uacEnable: true);
+			WndUtil.RegisterWindowClass("trayIcon");
 		}
 		static int s_msgTaskbarCreated;
 
@@ -151,11 +151,12 @@ namespace Au
 		}
 
 		bool _Update(bool icon = false, bool tooltip = false, _Notification n = null, bool taskbarCreated = false) {
+			if (script.Exiting_) return false;
 			lock (this) {
 				if (_w.Is0) {
 					if (_disposeOnExit) process.thisProcessExit += _ => _Delete();
 					if (lockExit_) _hookDesktopSwitch = script.HookDesktopSwitch_();
-					_w = wnd.more.createWindow(WndProc, true, "trayIcon", script.name, WS.POPUP, WSE.NOACTIVATE);
+					_w = WndUtil.CreateWindow(WndProc, true, "trayIcon", script.name, WS.POPUP, WSE.NOACTIVATE);
 				}
 
 				if (taskbarCreated) _visible = false;

@@ -309,8 +309,8 @@ namespace Au.Compiler
 			}
 		}
 
-		public static void OnFileDeleted(FilesModel m, FileNode f) {
-			XCompiled.OfWorkspace(m).Remove(f, true);
+		public static void Uncache(FileNode f) {
+			XCompiled.OfWorkspace(f.Model).Remove(f, true);
 		}
 	}
 }

@@ -1,4 +1,11 @@
-﻿using System;
+﻿//This was born before came C# 10 with its 'global using'. Now mostly used namespaces are in "global.cs".
+//Still this can be used for other namespaces, probably not so frequently used.
+//Main difference:
+//	For namespaces specified in "global.cs" as 'global using' don't need 'using' in other files.
+//	For namespaces specified in favorites (Options -> Code) still need 'using';
+//		if no 'using', editor shows their members in completion list, and automatically adds 'using' when selected in list or pasted code that needs it.
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -21,12 +28,11 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 using Microsoft.CodeAnalysis.Text;
 
-//TODO: test C# 10 'global using'.
-//TODO: if in completion list selected like Favorite.Namespace.Enum, remove Favorite.Namespace and insert using Favorite.Namespace.
+//SHOULDDO: if in completion list selected like Favorite.Namespace.Enum, remove Favorite.Namespace and insert using Favorite.Namespace.
 
-//FUTURE: favorite meta r and c. Then can add favorite namespaces from these too.
+//rejected: favorite meta r and c. Can add in "global.cs" instead.
 
-//FUTURE: support using static.
+//rejected: support favorite using static. Can use 'global using static'.
 //	Then users could create their common "functions.cs" files used with meta c and 'using static'.
 //	When sharing in forums, recommend to put their functions.cs in patebin and in forum signature add link to it.
 

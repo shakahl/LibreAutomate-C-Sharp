@@ -197,7 +197,7 @@ namespace Au
 			/// <param name="wndProcUnsafe">If not null, replaces window procedure (SetWindowLongPtr). The caller must protect the delegate from GC.</param>
 			public static wnd CreateWindowDWP(bool messageOnly, WNDPROC wndProcUnsafe = null) {
 				var cn = WindowClassDWP;
-				var w = messageOnly ? more.createMessageOnlyWindow(cn) : more.createWindow(cn);
+				var w = messageOnly ? WndUtil.CreateMessageOnlyWindow(cn) : WndUtil.CreateWindow(cn);
 				if (wndProcUnsafe != null) Api.SetWindowLongPtr(w, GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProcUnsafe));
 				return w;
 			}

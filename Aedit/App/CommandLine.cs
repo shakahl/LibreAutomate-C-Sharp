@@ -90,7 +90,7 @@ static class CommandLine
 				break;
 			}
 			if (cmd != 0) {
-				wnd.more.CopyData.Send<char>(w, cmd, s);
+				WndCopyData.Send<char>(w, cmd, s);
 			}
 		}
 		return true;
@@ -108,11 +108,11 @@ static class CommandLine
 	public static bool StartVisible;
 
 	public static void OnProgramLoaded() {
-		wnd.more.uacEnableMessages(Api.WM_COPYDATA, /*Api.WM_DROPFILES, 0x0049,*/ Api.WM_USER, Api.WM_CLOSE);
+		WndUtil.UacEnableMessages(Api.WM_COPYDATA, /*Api.WM_DROPFILES, 0x0049,*/ Api.WM_USER, Api.WM_CLOSE);
 		//WM_COPYDATA, WM_DROPFILES and undocumented WM_COPYGLOBALDATA=0x0049 should enable drag/drop from lower UAC IL processes, but only through WM_DROPFILES/DragAcceptFiles, not OLE D&D.
 
-		wnd.more.registerWindowClass(c_msgWndClassName, _WndProc);
-		_msgWnd = wnd.more.createMessageOnlyWindow(c_msgWndClassName);
+		WndUtil.RegisterWindowClass(c_msgWndClassName, _WndProc);
+		_msgWnd = WndUtil.CreateMessageOnlyWindow(c_msgWndClassName);
 
 		if (_importWorkspace != null || _importFiles != null) {
 			timerm.after(10, _ => {
@@ -173,7 +173,7 @@ static class CommandLine
 	}
 
 	static nint _WmCopyData(nint wparam, nint lparam) {
-		var c = new wnd.more.CopyData(lparam);
+		var c = new WndCopyData(lparam);
 		int action = Math2.LoWord(c.DataId), action2 = Math2.HiWord(c.DataId);
 		bool isString = action < 100;
 		string s = isString ? c.GetString() : null;
@@ -191,12 +191,12 @@ static class CommandLine
 			break;
 		case 4:
 			Api.ReplyMessage(1);
-			if (App.Model.Find(s, null) is FileNode f1) App.Model.OpenAndGoTo(f1, (int)wparam - 1);
-			else print.warning($"Script not found: '{s}'.", -1);
+			if (App.Model.Find(s) is FileNode f1) App.Model.OpenAndGoTo(f1, (int)wparam - 1);
+			else print.warning($"File not found: '{s}'.", -1);
 			break;
 		case 10:
 			s = DIcons.GetIconString(s, (EGetIcon)action2);
-			return s == null ? 0 : wnd.more.CopyData.Return<char>(s, wparam);
+			return s == null ? 0 : WndCopyData.Return<char>(s, wparam);
 		case 99: //run script from Au.CL.exe command line
 		case 100: //run script from script (script.run/runWait)
 			return _RunScript();

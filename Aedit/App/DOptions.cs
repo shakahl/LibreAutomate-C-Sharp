@@ -46,8 +46,8 @@ class DOptions : KDialogWindow
 
 		_General();
 		//_Files();
-		_Templates();
 		_Font();
+		_Templates();
 		_Code();
 
 		//_tc.SelectedIndex = 2;
@@ -136,55 +136,6 @@ class DOptions : KDialogWindow
 		_b.OkApply += e => {
 
 		};
-	}
-
-	void _Templates() {
-		var b = _Page("Templates").Columns(0, 100, -1, 0, 100);
-		b.R.Add("Template", out ComboBox template).Items("Script|Class")
-			.Skip().Add("Use", out ComboBox use).Items("Default|Custom");
-		b.Row(-1).Add(out KSciCodeBoxWnd sci).Span(5); sci.ZInitBorder = true;
-		b.End();
-
-		string[] customText = new string[2];
-		var useCustom = (FileNode.ETempl)App.Settings.templ_use;
-
-		template.SelectionChanged += _Combo_Changed;
-		use.SelectionChanged += _Combo_Changed;
-		sci.ZTextChanged += (_, _) => customText[template.SelectedIndex] = sci.zText;
-		b.Loaded += () => {
-			_Combo_Changed(template, null);
-		};
-
-		_b.OkApply += e => {
-			for (int i = 0; i < customText.Length; i++) {
-				string text = customText[i]; if (text == null) continue;
-				var tt = (FileNode.ETempl)(1 << i);
-				var file = FileNode.Templates.FilePathRaw(tt, true);
-				try {
-					if (text == FileNode.Templates.Load(tt, false)) {
-						filesystem.delete(file);
-					} else {
-						filesystem.saveText(file, text);
-					}
-				}
-				catch (Exception ex) { print.it(ex.ToStringWithoutStack()); }
-			}
-			App.Settings.templ_use = (int)useCustom;
-		};
-
-		void _Combo_Changed(object sender, SelectionChangedEventArgs e) {
-			int i = template.SelectedIndex;
-			FileNode.ETempl tt = i switch { 1 => FileNode.ETempl.Class, _ => FileNode.ETempl.Script, };
-			if (sender == template) use.SelectedIndex = useCustom.Has(tt) ? 1 : 0;
-			bool custom = use.SelectedIndex > 0;
-			string text = null;
-			if (e != null) {
-				useCustom.SetFlag(tt, custom);
-				if (custom) text = customText[i];
-			}
-			text ??= FileNode.Templates.Load(tt, custom);
-			sci.ZSetText(text, readonlyFrom: custom ? -1 : 0);
-		}
 	}
 
 	void _Font() {
@@ -379,6 +330,55 @@ To apply changes after deleting etc, restart this application.
 		};
 	}
 
+	void _Templates() {
+		var b = _Page("Templates").Columns(0, 100, -1, 0, 100);
+		b.R.Add("Template", out ComboBox template).Items("Script|Class")
+			.Skip().Add("Use", out ComboBox use).Items("Default|Custom");
+		b.Row(-1).Add(out KSciCodeBoxWnd sci).Span(5); sci.ZInitBorder = true;
+		b.End();
+
+		string[] customText = new string[2];
+		var useCustom = (FileNode.ETempl)App.Settings.templ_use;
+
+		template.SelectionChanged += _Combo_Changed;
+		use.SelectionChanged += _Combo_Changed;
+		sci.ZTextChanged += (_, _) => customText[template.SelectedIndex] = sci.zText;
+		b.Loaded += () => {
+			_Combo_Changed(template, null);
+		};
+
+		_b.OkApply += e => {
+			for (int i = 0; i < customText.Length; i++) {
+				string text = customText[i]; if (text == null) continue;
+				var tt = (FileNode.ETempl)(1 << i);
+				var file = FileNode.Templates.FilePathRaw(tt, true);
+				try {
+					if (text == FileNode.Templates.Load(tt, false)) {
+						filesystem.delete(file);
+					} else {
+						filesystem.saveText(file, text);
+					}
+				}
+				catch (Exception ex) { print.it(ex.ToStringWithoutStack()); }
+			}
+			App.Settings.templ_use = (int)useCustom;
+		};
+
+		void _Combo_Changed(object sender, SelectionChangedEventArgs e) {
+			int i = template.SelectedIndex;
+			FileNode.ETempl tt = i switch { 1 => FileNode.ETempl.Class, _ => FileNode.ETempl.Script, };
+			if (sender == template) use.SelectedIndex = useCustom.Has(tt) ? 1 : 0;
+			bool custom = use.SelectedIndex > 0;
+			string text = null;
+			if (e != null) {
+				useCustom.SetFlag(tt, custom);
+				if (custom) text = customText[i];
+			}
+			text ??= FileNode.Templates.Load(tt, custom);
+			sci.ZSetText(text, readonlyFrom: custom ? -1 : 0);
+		}
+	}
+
 	void _Code() {
 		var b = _Page("Code", WBPanelType.VerticalStack);
 		b.StartGrid<GroupBox>("Completion list").Columns(250, 30, -1);
@@ -388,11 +388,13 @@ To apply changes after deleting etc, restart this application.
 		b.End();
 		b.Skip().StartGrid(); //right
 		b.R.Add("Favorite namespaces", out TextBox usings, App.Settings.ci_usings, row2: -1).Multiline(90, TextWrapping.NoWrap)
-			.Tooltip(@"Completion list will contain types and extension methods from these namespaces even if there is no using directive in code.
+			.Tooltip(@"Completion list will contain types and extension methods from these namespaces even if there is no 'using' directive.
 Also on paste will add missing using directives.
-Supports only namespaces from default assemblies (.NET and Au).
+The list should contain only namespaces from default assemblies (.NET and Au).
+The list should not contain namespaces specified in file ""global.cs"" (for them don't need 'using' altogether).
 Examples:
-System.IO
+System.Windows
+System.Windows.Controls
 //Commented.Out")
 			.Validation(o => usings.Text.FindAny("= ") >= 0 ? "contains = or space" : null);
 		b.End();
@@ -415,7 +417,7 @@ System.IO
 			//App.Settings.ci_shiftEnterAlways = (byte)(shiftEnter.True() ? 0 : 1);
 			//App.Settings.ci_shiftTabAlways = (byte)(shiftTab.True() ? 0 : 1);
 			//App.Settings.ci_breakString = (byte)breakString.SelectedIndex;
-			App.Settings.ci_usings = usings.Text;
+			App.Settings.ci_usings = usings.Text.NullIfEmpty_();
 		};
 
 		static void _SnippetsButton(WBButtonClickArgs o) {

@@ -36,6 +36,7 @@ namespace Au.More
 		static bool s_setup;
 
 		///
+		//[DebuggerHidden] //then stops in .NET code, even if in VS Options -> Debug checked "Enable Just My Code" and unchecked "Enable .NET framework source stepping"
 		public override void Fail(string message, string detailMessage) {
 			var s = message;
 			if (s.NE()) s = detailMessage; else if (!detailMessage.NE()) s = message + "\r\n" + detailMessage;

@@ -180,13 +180,63 @@ namespace Au.Types
 		}
 
 		/// <summary>
+		/// BITMAPINFOHEADER members and 3 uints for color table etc.
+		/// </summary>
+		internal struct BITMAPINFO
+		{
+			public readonly int biSize;
+			public int biWidth;
+			public int biHeight;
+			public ushort biPlanes;
+			public ushort biBitCount;
+			public int biCompression;
+			public int biSizeImage;
+			public int biXPelsPerMeter;
+			public int biYPelsPerMeter;
+			public int biClrUsed;
+			public int biClrImportant;
+			public fixed uint bmiColors[3]; //info: GetDIBits(DIB_RGB_COLORS) sets 0xFF0000, 0xFF00, 0xFF. Note: with 8-bit colors bitmaps need 256, but this library does not use it.
+
+			/// <summary>
+			/// Sets biSize=sizeof(BITMAPINFOHEADER). Note: it is less than sizeof(BITMAPINFO).
+			/// </summary>
+			public BITMAPINFO(int _) : this() { biSize = sizeof(BITMAPINFOHEADER); }
+
+			/// <summary>
+			/// Sets width/height/bitcount/planes fields. Sets biSize=sizeof(BITMAPINFOHEADER). Note: it is less than sizeof(BITMAPINFO).
+			/// </summary>
+			public BITMAPINFO(int width, int height, int bitCount) : this(0) { biWidth = width; biHeight = height; biBitCount = (ushort)bitCount; biPlanes = 1; }
+
+			//little tested
+			///// <summary>
+			///// Gets DIB bits of compatible bitmap. Uses API <msdn>GetDIBits</msdn>. Returns null if failed.
+			///// </summary>
+			///// <param name="hb">Bitmap handle.</param>
+			///// <param name="topDown">Create top-down DIB.</param>
+			///// <param name="dc">Eg <see cref="ScreenDC_"/>.</param>
+			///// <param name="palColors">Use DIB_PAL_COLORS.</param>
+			//public byte[] GetBitmapBits(IntPtr hb, bool topDown, IntPtr dc, bool palColors = false) {
+			//	biBitCount = 0; //biBitCount=(ushort)bitCount; //somehow fails if bitCount is 32 and bitmap is 32-bit
+			//	if (0 == GetDIBits(dc, hb, 0, 0, null, ref this, palColors ? 1 : 0)) return null;
+			//	var r = new byte[biSizeImage];
+			//	fixed (byte* p = r) {
+			//		int hei = biHeight; if (topDown) biHeight = -hei;
+			//		var k = GetDIBits(dc, hb, 0, hei, p, ref this, palColors ? 1 : 0);
+			//		biHeight = hei;
+			//		if (k == 0) return null;
+			//	}
+			//	return r;
+			//}
+		}
+
+		[DllImport("gdi32.dll")]
+		internal static extern int GetDIBits(IntPtr hdc, IntPtr hbm, int start, int cLines, void* lpvBits, ref BITMAPINFO lpbmi, int usage);
+
+		/// <summary>
 		/// lpbmi can be BITMAPINFOHEADER/BITMAPV5HEADER or BITMAPCOREHEADER.
 		/// </summary>
 		[DllImport("gdi32.dll")]
 		internal static extern int SetDIBitsToDevice(IntPtr hdc, int xDest, int yDest, int w, int h, int xSrc, int ySrc, int StartScan, int cLines, void* lpvBits, void* lpbmi, uint ColorUse);
-
-		[DllImport("gdi32.dll")]
-		internal static extern int GetDIBits(IntPtr hdc, IntPtr hbm, int start, int cLines, void* lpvBits, BITMAPINFOHEADER* lpbmi, uint usage);
 
 		//internal const int WHITE_BRUSH = 0;
 		//internal const int LTGRAY_BRUSH = 1;
