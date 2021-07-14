@@ -86,6 +86,7 @@ static class CompileRun
 		var ids = f.IdStringWithWorkspace;
 		var s2 = projFolder != null ? "" : $" or project (<+runClass \"2|{ids}\">create<>). Or <+runClass \"1|{ids}\">change<> role";
 		print.it($"<>Cannot run '{f.Name}'. It is a class file. Need a test script (<+runClass \"3|{ids}\">create<>){s2}.");
+		//TODO: if global.cs, include only "need test script".
 	}
 
 	static void _SciLink_RunClassFile(string s) {

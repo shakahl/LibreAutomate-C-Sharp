@@ -13,7 +13,7 @@ using System.Reflection;
 //[assembly: AssemblyCopyright("Copyright © 2020")]
 //[assembly: AssemblyTrademark("Legal trademarks")]
 
-class Script { static void Main(string[] a) => new Script(a); Script(string[] args) { //;;
+class Program { static void Main(string[] a) => new Program(a); Program(string[] args) { //;;
 script.setup(trayIcon: true);
 //;
 

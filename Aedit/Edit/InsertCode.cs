@@ -177,7 +177,7 @@ static class InsertCode
 			if (end2 < 0) foreach (var v in cu.GetLeadingTrivia()) if (v.IsDirective) end2 = v.FullSpan.End; //skip directives
 			if (end2 < 0) {
 				end2 = k.meta.end; //skip meta
-				if(end2 == 0) if (k.code.RegexMatch(@"(\s*///.*\R)+", 0, out RXGroup g1, RXFlags.ANCHORED, end2..)) end2 = g1.End; //skip ///comments
+				if (end2 == 0) if (k.code.RegexMatch(@"(\s*///.*\R)+", 0, out RXGroup g1, RXFlags.ANCHORED, end2..)) end2 = g1.End; //skip ///comments
 				if (k.code.RegexMatch(@"\s*//.+\R", 0, out RXGroup g2, RXFlags.ANCHORED, end2..)) end2 = g2.End; //skip 1 line of //comments, because usually it is //. for folding
 			}
 			start = end = end2;
@@ -366,37 +366,54 @@ static class InsertCode
 	}
 
 	public static void AddFileDescription() {
-		var doc = Panels.Editor.ZActiveDoc;if (doc == null) return;
+		var doc = Panels.Editor.ZActiveDoc; if (doc == null) return;
 		doc.zInsertText(false, 0, "/// Description\r\n\r\n");
 		doc.zSelect(false, 4, 15, makeVisible: true);
 	}
 
-	public static void ConvertTlsScriptToClass() {
-		//SHOULDDO: use CompilationUnitSyntax.Usings etc, like in _FindUsings.
+	public static void AddClassProgram() {
+		var a = new string[] {
+			"class Program { static void Main(string[] a) => new Program(a); Program(string[] args) { //;;",
+			"class Program { static void Main(string[] args) { //;;",
+		};
+		int pm = popupMenu.showSimple(a) - 1; if (pm < 0) return;
+
 		if (!CodeInfo.GetContextAndDocument(out var cd) /*|| !cd.sciDoc.ZFile.IsScript*/) return;
-		var root = cd.document.GetSyntaxRootAsync().Result;
-		int start = -1, end = cd.code.Length;
-		foreach (var v in root.ChildNodes()) {
-			switch (v) {
-			case UsingDirectiveSyntax or ExternAliasDirectiveSyntax:
-			case AttributeListSyntax als when als.Target.Identifier.Text is "module" or "assembly":
-				break;
-			case GlobalStatementSyntax:
-				if (start < 0) start = v.FullSpan.Start;
-				break;
-			default:
-				//CiUtil.PrintNode(v);
-				end = v.FullSpan.Start;
-				goto g1;
+		var cu = cd.document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
+
+		int start, end = cd.code.Length;
+		var members = cu.Members;
+		if (members.Any()) {
+			start = _FindRealStart(false, members[0]);
+			if (members[0] is not GlobalStatementSyntax) end = start;
+			else if (members.FirstOrDefault(v => v is not GlobalStatementSyntax) is SyntaxNode sn) end = _FindRealStart(true, sn);
+
+			int _FindRealStart(bool needEnd, SyntaxNode sn) {
+				int start = sn.SpanStart;
+				//find first empty line in comments before
+				var t = sn.GetLeadingTrivia();
+				for (int i = t.Count; --i >= 0;) {
+					var v = t[i];
+					int ss = v.SpanStart;
+					if (ss < cd.meta.end) break;
+					//if (needEnd) { print.it($"{v.Kind()}, '{v}'"); continue; }
+					var k = v.Kind();
+					if (k == SyntaxKind.EndOfLineTrivia) {
+						while (i > 0 && t[i - 1].IsKind(SyntaxKind.WhitespaceTrivia)) i--;
+						if (i == 0 || t[i - 1].IsKind(k)) return needEnd ? ss : v.Span.End;
+					} else if (k == SyntaxKind.SingleLineCommentTrivia) {
+						if (cd.code.Eq(ss, "//.") && char.IsWhiteSpace(cd.code[ss + 3])) break;
+					} else if (k is not (SyntaxKind.WhitespaceTrivia or SyntaxKind.MultiLineCommentTrivia or SyntaxKind.SingleLineDocumentationCommentTrivia or SyntaxKind.MultiLineDocumentationCommentTrivia)) {
+						break; //eg #directive
+					}
+				}
+				return start;
 			}
-		}
-		g1:
-		if (start < 0) start = end;
+		} else start = end;
+		//CiUtil.HiliteRange(start, end); return;
 
 		using var undo = new KScintilla.UndoAction(cd.sciDoc);
 		cd.sciDoc.zInsertText(true, end, "\r\n}\r\n}\r\n");
-		string s = "class Script { static void Main(string[] a) => new Script(a); Script(string[] args) { //;;\r\n";
-		//string s = "new K(args); class K { public K(string[] args) { //;;\r\n";
-		cd.sciDoc.zInsertText(true, start, s);
+		cd.sciDoc.zInsertText(true, start, a[pm] + "\r\n");
 	}
 }

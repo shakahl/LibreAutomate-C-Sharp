@@ -1,6 +1,6 @@
 ﻿/// Part of a partial class in a project folder.
 
-partial class Script {
+partial class Program {
 
 void Function1() {
 	

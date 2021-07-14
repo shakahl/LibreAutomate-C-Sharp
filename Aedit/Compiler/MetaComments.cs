@@ -232,21 +232,14 @@ namespace Au.Compiler
 
 		/// <summary>
 		/// All C# files of this compilation.
-		/// The main C# file, then other files of its project, and at the end all unique C# files added through meta option 'c' (see <see cref="CountC"/>).
+		/// The order is optimized for compilation and does not match the natural order.
 		/// </summary>
 		public List<MetaCodeFile> CodeFiles { get; private set; }
 
 		/// <summary>
-		/// CodeFiles[0].
+		/// The compilation entry file. Probably not <c>CodeFiles[0]</c>.
 		/// </summary>
-		public MetaCodeFile MainFile => CodeFiles[0];
-
-		List<FileNode> _filesC; //files added through meta option 'c'. Finally parsed and added to Files.
-
-		/// <summary>
-		/// Count of files added through meta option 'c' and "global.cs". They are at the end of <see cref="CodeFiles"/>.
-		/// </summary>
-		public int CountC => _filesC?.Count ?? 0;
+		public MetaCodeFile MainFile { get; private set; }
 
 		/// <summary>
 		/// Unique resource files added through meta option 'resource' in all C# files of this compilation.
@@ -356,29 +349,10 @@ namespace Au.Compiler
 			Errors = new ErrBuilder();
 			_flags = flags;
 
-			//always compile global.cs
-			var model = f.Model;
-			//var glob = model.Find(@"\Classes\global.cs", FNFind.Class) ?? model.Find("global.cs", FNFind.Class);
-			var glob = model.Find("global.cs", FNFind.Class);
-			if (glob != null) {
-				_filesC = new() { glob };
-			} else if (!model.NoGlobalCs_) {
-				model.NoGlobalCs_ = true;
-				Panels.Output.ZOutput.ZTags.AddLinkTag("+restoreGlobal", _ => App.Model.AddMissingDefaultFiles(globalCs: true));
-				print.warning("Class file \"global.cs\" not found. <+restoreGlobal>Restore<>.", -1, "<>");
-			}
-
-			_ParseFile(f, true);
+			_ParseFile(f, true, false);
 
 			if (projFolder != null) {
-				foreach (var ff in projFolder.EnumProjectClassFiles(f)) _ParseFile(ff, false);
-			}
-
-			if (_filesC != null) {
-				for (int i = 0; i < _filesC.Count; i++) { //not foreach
-					var ff = _filesC[i];
-					if (!_CodeFilesContains(ff)) _ParseFile(ff, false);
-				}
+				foreach (var ff in projFolder.EnumProjectClassFiles(f)) _ParseFile(ff, false, false);
 			}
 
 			//define d:DEBUG_ONLY, r:RELEASE_ONLY
@@ -403,25 +377,22 @@ namespace Au.Compiler
 			return true;
 		}
 
-		bool _CodeFilesContains(FileNode f) {
-			//return CodeFiles.Exists(o => o.f == f); //garbage
-			var a = CodeFiles;
-			for (int i = a.Count; --i >= 0;) if (a[i].f == f) return true;
-			return false;
-		}
-
 		/// <summary>
 		/// Extracts meta comments from a single C# file.
 		/// </summary>
 		/// <param name="f"></param>
 		/// <param name="isMain">If false, it is a file added through meta option 'c'.</param>
-		void _ParseFile(FileNode f, bool isMain) {
+		void _ParseFile(FileNode f, bool isMain, bool isC) {
+			if (!isMain && _CodeFilesContains(f)) return;
 			//var p1 = perf.local();
 			string code = f.GetText(cache: true);
 			//p1.Next();
 			bool isScript = f.IsScript;
+			var cf = new MetaCodeFile(f, code, isMain, isC);
 
-			if (_isMain = isMain) {
+			if (isMain) {
+				MainFile = cf;
+
 				Name = pathname.getNameNoExt(f.Name);
 				IsScript = isScript;
 
@@ -435,15 +406,26 @@ namespace Au.Compiler
 				References = new();
 			}
 
-			CodeFiles.Add(new MetaCodeFile(f, code));
+			CodeFiles.Add(cf);
+			int nc = CodeFiles.Count;
+			var fPrev = _f; _f = cf;
 
-			_fn = f;
-			_code = code;
+			if (isMain) { //add global.cs
+				var model = f.Model;
+				//var glob = model.Find(@"\Classes\global.cs", FNFind.Class) ?? model.Find("global.cs", FNFind.Class);
+				var glob = model.Find("global.cs", FNFind.Class);
+				if (glob != null) {
+					_ParseFile(glob, false, true);
+				} else if (!model.NoGlobalCs_) {
+					model.NoGlobalCs_ = true;
+					Panels.Output.ZOutput.ZTags.AddLinkTag("+restoreGlobal", _ => App.Model.AddMissingDefaultFiles(globalCs: true));
+					print.warning("Class file \"global.cs\" not found. <+restoreGlobal>Restore<>.", -1, "<>");
+				}
+			}
 
 			var meta = FindMetaComments(code);
 			if (meta.end > 0) {
 				if (isMain) MetaRange = meta;
-
 				foreach (var t in EnumOptions(code, meta)) {
 					//var p1 = perf.local();
 					_ParseOption(t.Name(), t.Value(), t.nameStart, t.valueStart);
@@ -451,11 +433,18 @@ namespace Au.Compiler
 				}
 			}
 			//p1.NW();
+
+			//let at first compile "global.cs" and meta c files. Why:
+			//	1. If they have same classes etc or assembly/module attributes, it's better to show error in current file.
+			//	2. If they have module initializers, it's better to call them first.
+			if (CodeFiles.Count > nc) { // Then better error when
+				CodeFiles.RemoveAt(nc - 1);
+				CodeFiles.Add(cf);
+			}
+			_f = fPrev;
 		}
 
-		bool _isMain;
-		FileNode _fn;
-		string _code;
+		MetaCodeFile _f; //current
 
 		void _ParseOption(string name, string value, int iName, int iValue) {
 			//print.it(name, value);
@@ -468,7 +457,7 @@ namespace Au.Compiler
 			switch (name) {
 			case "r":
 			case "com":
-			case "pr" when _isMain:
+			case "pr" when _f.isMain:
 				if (name[0] == 'p') {
 					//Specified |= EMSpecified.pr;
 					if (!_PR(ref value) || forCodeInfo) return;
@@ -489,14 +478,10 @@ namespace Au.Compiler
 				var ff = _GetFile(value, FNFind.Any);
 				if (ff != null) {
 					if (ff.IsFolder) {
-						foreach (var v in ff.Descendants()) if (v.IsClass) _AddC(v);
+						foreach (var v in ff.Descendants()) if (v.IsClass) _ParseFile(v, false, true);
 					} else {
-						if (!ff.IsClass) { _ErrorV("must be a class file"); return; }
-						_AddC(ff);
-					}
-					void _AddC(FileNode ff) {
-						_filesC ??= new();
-						if (!_filesC.Contains(ff)) _filesC.Add(ff);
+						if (ff.IsClass) _ParseFile(ff, false, true);
+						else _ErrorV("must be a class file");
 					}
 				}
 				return;
@@ -513,7 +498,7 @@ namespace Au.Compiler
 				}
 				return;
 			}
-			if (!_isMain) {
+			if (!_f.isMain) {
 				_ErrorN($"in this file only these options can be used: 'r', 'c', 'resource', 'com'. Others only in the main file of the compilation - {MainFile.f.Name}.");
 				return;
 			}
@@ -608,12 +593,14 @@ namespace Au.Compiler
 			}
 		}
 
+		#region util
+
 		int _nameFrom, _nameTo, _valueFrom, _valueTo;
 
 		bool _Error(string s, int from, int to) {
 			if (!_flags.Has(EMPFlags.ForCodeInfo)) {
-				Errors.AddError(_fn, _code, from, "error in meta: " + s);
-			} else if (_fn == Panels.Editor.ZActiveDoc.ZFile) {
+				Errors.AddError(_f.f, _f.code, from, "error in meta: " + s);
+			} else if (_f.f == Panels.Editor.ZActiveDoc.ZFile) {
 				CodeInfo._diag.AddMetaError(from, to, s);
 			}
 			return false;
@@ -664,10 +651,10 @@ namespace Au.Compiler
 		static readonly Dictionary<Type, (string name, int value)[]> s_enumCache = new();
 
 		FileNode _GetFile(string s, FNFind kind) {
-			var f = _fn.FindRelative(s, kind);
+			var f = _f.f.FindRelative(s, kind, orAnywhere: true);
 			if (f == null) {
-				if (kind != FNFind.Any && null != _fn.FindRelative(s)) _ErrorV($"file '{s}' is of wrong type");
-				else _ErrorV($"file '{s}' does not exist in this workspace");
+				//if (kind != FNFind.Any && null != _f.f.FindRelative(s)) _ErrorV($"file '{s}' is of wrong type"); else //unlikely
+				_ErrorV($"file '{s}' does not exist in this workspace");
 				return null;
 			}
 			int v = filesystem.exists(s = f.FilePath, true);
@@ -689,16 +676,25 @@ namespace Au.Compiler
 			s = s.TrimEnd('\\');
 			if (!pathname.isFullPathExpand(ref s)) {
 				if (s.Starts('%')) _ErrorV("relative path starts with %");
-				if (s.Starts('\\')) s = _fn.Model.FilesDirectory + s;
-				else s = pathname.getDirectory(_fn.FilePath, true) + s;
+				if (s.Starts('\\')) s = _f.f.Model.FilesDirectory + s;
+				else s = pathname.getDirectory(_f.f.FilePath, true) + s;
 			}
 			return pathname.Normalize_(s, noExpandEV: true);
 		}
 
+		bool _CodeFilesContains(FileNode f) {
+			//return CodeFiles.Exists(o => o.f == f); //garbage
+			var a = CodeFiles;
+			for (int i = a.Count; --i >= 0;) if (a[i].f == f) return true;
+			return false;
+		}
+
+		#endregion
+
 		bool _PR(ref string value) {
 			var f = _GetFile(value, FNFind.CodeFile); if (f == null) return false;
 			if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
-			if (_CodeFilesContains(f)) return _ErrorV("circular reference");
+			if (f == MainFile.f) return _ErrorV("circular reference");
 			if (!_flags.Has(EMPFlags.ForCodeInfo)) {
 				if (!Compiler.Compile(ECompReason.CompileIfNeed, out var r, f, projFolder)) return _ErrorV("failed to compile library");
 				//print.it(r.role, r.file);
@@ -864,8 +860,12 @@ namespace Au.Compiler
 	{
 		public FileNode f;
 		public string code;
+		public bool isMain;
 
-		public MetaCodeFile(FileNode f, string code) { this.f = f; this.code = code; }
+		/// <summary>Added through meta option 'c' or "global.cs".</summary>
+		public bool isC;
+
+		public MetaCodeFile(FileNode f, string code, bool isMain, bool isC) { this.f = f; this.code = code; this.isMain = isMain; this.isC = isC; }
 	}
 
 	struct MetaFileAndString

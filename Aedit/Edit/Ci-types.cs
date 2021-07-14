@@ -22,7 +22,7 @@ using Microsoft.CodeAnalysis.Completion;
 
 class CiComplItem : ITreeViewItem
 {
-	public readonly CompletionItem ci;
+	public CompletionItem ci;
 	public readonly CiItemKind kind;
 	public readonly CiItemAccess access;
 	readonly CiComplProvider _provider;
@@ -101,6 +101,10 @@ class CiComplItem : ITreeViewItem
 		bool isComment = !desc.NE();
 		if (_dtext != null && !isComment && commentOffset == 0) return;
 		_dtext = this.Text + ci.DisplayTextSuffix + (isComment ? "    //" : null) + desc;
+		if (!ci.DisplayTextPrefix.NE()) {
+			_dtext = ci.DisplayTextPrefix + _dtext;
+			Debug_.PrintIf(ci.DisplayTextPrefix != "(", $"{_dtext}, {ci.DisplayTextPrefix}"); //seen only of casts, eg "(" + "int" + ")"
+		}
 		commentOffset = isComment ? _dtext.Length - desc.Length - 6 : 0;
 	}
 
@@ -119,6 +123,7 @@ class CiComplItem : ITreeViewItem
 		CiItemKind.LocalVariable => "resources/ci/localvariable.xaml",
 		CiItemKind.Method => "resources/ci/method.xaml",
 		CiItemKind.Namespace => "resources/ci/namespace.xaml",
+		CiItemKind.Operator => "resources/ci/operator.xaml",
 		CiItemKind.Property => "resources/ci/property.xaml",
 		CiItemKind.Snippet => "resources/ci/snippet.xaml",
 		CiItemKind.Structure => "resources/ci/structure.xaml",
@@ -193,8 +198,8 @@ enum CiComplItemHiddenBy : byte { FilterText = 1, Kind = 2, Always = 4 }
 [Flags]
 enum CiComplItemMoveDownBy : sbyte { Name = 1, Obsolete = 2, FilterText = 4 }
 
-//don't reorder!
-enum CiItemKind : sbyte { Class, Structure, Enum, Delegate, Interface, Method, ExtensionMethod, Property, Event, Field, LocalVariable, Constant, EnumMember, Namespace, Keyword, Label, Snippet, TypeParameter, None }
+//don't reorder! Must match CiUtil.ItemKindNames. In this order are displayed group buttons in the completion popup. See also code in CiWinapi.cs: " WHERE kind<=" + (int)CiItemKind.Delegate;.
+enum CiItemKind : sbyte { Class, Structure, Enum, Delegate, Interface, Method, ExtensionMethod, Property, Operator, Event, Field, LocalVariable, Constant, EnumMember, Namespace, Keyword, Label, Snippet, TypeParameter, None }
 
 //don't reorder!
 enum CiItemAccess : sbyte { Public, Private, Protected, Internal }

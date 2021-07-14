@@ -1,7 +1,7 @@
 //.
 using Au.Triggers;
 using System.Reflection;
-partial class Script { static void Main(string[] a) => new Script(a); Script(string[] args) { //;;
+partial class Program { static void Main(string[] a) => new Program(a); Program(string[] args) { //;;
 script.setup();
 //;
 
@@ -26,7 +26,7 @@ bool _enableToolbarExamples = true;
 
 //This code manages your triggers and toolbars. Don't delete, it is not an example code.
 
-partial class Script {
+partial class Program {
 
 /// <summary>
 /// Use this to add triggers, set trigger options, etc. Example:<br/> <c>Triggers.Hotkey["Ctrl+E"] = o => print.it(o.Trigger);</c>.
@@ -51,7 +51,7 @@ void RunTriggersAndToolbars() {
 //		}
 	}
 	
-	foreach(var mi in typeof(Script).GetMethods(BindingFlags.DeclaredOnly | BindingFlags.NonPublic | BindingFlags.Instance)) {
+	foreach(var mi in typeof(Program).GetMethods(BindingFlags.DeclaredOnly | BindingFlags.NonPublic | BindingFlags.Instance)) {
 		bool tb = mi.IsDefined(typeof(ToolbarsAttribute), false);
 		if(!(tb || mi.IsDefined(typeof(TriggersAttribute), false))) continue;
 		

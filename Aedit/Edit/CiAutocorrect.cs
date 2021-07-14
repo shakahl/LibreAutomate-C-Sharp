@@ -24,7 +24,6 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 
 //SHOULDDO: decrease indent when typing }.
-//TODO: if TLS script, always ensure that at the end is a line with hidden semicolon.
 
 class CiAutocorrect
 {
@@ -649,8 +648,8 @@ class CiAutocorrect
 						//print.it("--" + v.GetType().Name, v.Span, pos);
 						continue; //these can be if we are in a lambda block. And maybe more, nevermind.
 					case CompilationUnitSyntax:
-					case ClassDeclarationSyntax k1 when k1.Identifier.Text is "Script" or "Program": //don't indent script class content
-					case ConstructorDeclarationSyntax k2 when k2.Identifier.Text is "Script" or "Program": //don't indent script constructor content
+					case ClassDeclarationSyntax k1 when k1.Identifier.Text is "Program" or "Script": //don't indent script class content
+					case ConstructorDeclarationSyntax k2 when k2.Identifier.Text is "Program" or "Script": //don't indent script constructor content
 					case GlobalStatementSyntax: //don't indent top-level statements
 						goto endLoop1;
 					}

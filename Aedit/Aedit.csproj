@@ -49,6 +49,7 @@
 	  <Page Remove="Resources\ci\LocalVariable.xaml" />
 	  <Page Remove="Resources\ci\Method.xaml" />
 	  <Page Remove="Resources\ci\Namespace.xaml" />
+	  <Page Remove="Resources\ci\Operator.xaml" />
 	  <Page Remove="Resources\ci\OverlayAbstract.xaml" />
 	  <Page Remove="Resources\ci\OverlayInternal.xaml" />
 	  <Page Remove="Resources\ci\OverlayPrivate.xaml" />
@@ -95,6 +96,7 @@
 	  <Resource Include="Resources\ci\LocalVariable.xaml" />
 	  <Resource Include="Resources\ci\Method.xaml" />
 	  <Resource Include="Resources\ci\Namespace.xaml" />
+	  <Resource Include="Resources\ci\Operator.xaml" />
 	  <Resource Include="Resources\ci\OverlayAbstract.xaml" />
 	  <Resource Include="Resources\ci\OverlayInternal.xaml" />
 	  <Resource Include="Resources\ci\OverlayPrivate.xaml" />

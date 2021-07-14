@@ -1,6 +1,6 @@
 using Au.Triggers;
 
-partial class Script {
+partial class Program {
 [Triggers]
 void HotkeyTriggers() {
 	var hk = Triggers.Hotkey;

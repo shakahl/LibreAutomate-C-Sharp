@@ -311,7 +311,6 @@ class CiPopupList
 			Range black, green;
 			if (ci.commentOffset == 0) { black = ..s.Length; green = default; } else { black = ..ci.commentOffset; green = ci.commentOffset..; }
 
-			Debug_.PrintIf(!ci.ci.DisplayTextPrefix.NE(), s); //we don't support prefix; never seen.
 			int xEndOfText = 0;
 			int color = ci.moveDown.HasAny(CiComplItemMoveDownBy.Name | CiComplItemMoveDownBy.FilterText) ? 0x808080 : _textColor;
 			_tr.MoveTo(_cd.xText, _cd.yText);

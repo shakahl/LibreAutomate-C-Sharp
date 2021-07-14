@@ -1,6 +1,6 @@
 using Au.Triggers;
 
-partial class Script {
+partial class Program {
 [Triggers]
 void WindowTriggers() {
 	Triggers.Options.ThreadNew();

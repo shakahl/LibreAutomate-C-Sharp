@@ -261,7 +261,7 @@ static class Menus
 		public static void Add_file_description() { InsertCode.AddFileDescription(); }
 
 		[Command(image = "*Codicons.SymbolClass #B340FF")]
-		public static void Convert_to_script_class() { InsertCode.ConvertTlsScriptToClass(); }
+		public static void Add_class_Program() { InsertCode.AddClassProgram(); }
 	}
 
 	[Command(target = "Edit")]

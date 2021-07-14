@@ -497,7 +497,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 		return folder;
 	}
 
-	FileNode _FindRelative(string name, FNFind kind) {
+	FileNode _FindRelative(string name, FNFind kind, bool orAnywhere = false) {
 #if true //fast, but allocates
 		int i = name.LastIndexOf('\\');
 		var lastName = name[(i + 1)..]; //never mind: allocation. To avoid allocation would need to enumerate without dictionary, and in big workspace it can be 100 times slower.
@@ -506,6 +506,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 				foreach (var f in a) if (_Cmp(f)) return f;
 			} else {
 				if (_Cmp(v)) return v;
+				if (orAnywhere && i < 0) return v;
 			}
 		}
 		return null;
@@ -547,9 +548,10 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 	/// Returns null if not found; also if name is null/"".
 	/// </summary>
 	/// <param name="relativePath">Examples: "name.cs", @"subfolder\name.cs", @".\subfolder\name.cs", @"..\parent\name.cs", @"\root path\name.cs".</param>
-	/// <param name="folder"></param>
-	public FileNode FindRelative(string relativePath, FNFind kind = FNFind.Any) {
-		if (!IsFolder) return Parent.FindRelative(relativePath, kind);
+	/// <param name="kind"></param>
+	/// <param name="orAnywhere">If <i>relativePath</i> is filename and does not exist in this folder, if single such file exists anywhere, return that file.</param>
+	public FileNode FindRelative(string relativePath, FNFind kind = FNFind.Any, bool orAnywhere = false) {
+		if (!IsFolder) return Parent.FindRelative(relativePath, kind, orAnywhere);
 		var s = relativePath;
 		if (s.NE()) return null;
 		FileNode p = this;
@@ -563,7 +565,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 				s = s[i..];
 			}
 		}
-		return p._FindRelative(s, kind);
+		return p._FindRelative(s, kind, orAnywhere);
 	}
 
 	/// <summary>

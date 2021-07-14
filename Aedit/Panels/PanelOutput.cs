@@ -190,7 +190,7 @@ class PanelOutput : DockPanel
 						//print.qm2.write("'"+k+"'");
 						if (s.Eq(k.start, "   at ")) {
 							if (isMain) {
-								//if(stackEnd2 == 0 && s.Eq(k.start, "   at Script.Main(String[] args) in ")) stackEnd2 = k.start; //rejected. In some cases may cut something important.
+								//if(stackEnd2 == 0 && s.Eq(k.start, "   at A.Main(String[] args) in ")) stackEnd2 = k.start; //rejected. In some cases may cut something important.
 								continue;
 							}
 							if (!s_rx2.MatchG(s, out var g, 1, (k.start + 6)..k.end)) continue; //note: no "   at " if this is an inner exception marker. Also in aggregate exception stack trace.
@@ -201,9 +201,9 @@ class PanelOutput : DockPanel
 							.Append("line ").Append(s, i1, len1).Append("<> in <z 0xFAFAD2>").Append(f.Name).Append("<>");
 
 							isMain
-								= s.Eq(k.start, "   at Script..ctor(String[] args) in ")
+								= s.Eq(k.start, "   at <Program>$.<Main>$(String[] args) in ") //top-level statements
 								|| s.Eq(k.start, "   at Program..ctor(String[] args) in ")
-								|| s.Eq(k.start, "   at <Program>$.<Main>$(String[] args) in "); //top-level statements
+								|| s.Eq(k.start, "   at Script..ctor(String[] args) in ");
 							if (!isMain || !f.IsScript) b.Append(", <\a>").Append(s, k.start + 6, g.Start - k.start - 10).Append("</\a>");
 							b.AppendLine();
 

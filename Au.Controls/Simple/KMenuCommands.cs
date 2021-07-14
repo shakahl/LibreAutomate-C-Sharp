@@ -699,14 +699,14 @@ namespace Au.Controls
 					var tbname = xtb.Name.LocalName;
 					if (tbname != "menu") {
 						foreach (var v in toolbars) if (v.Name == tbname) { tb = v; goto g1; }
-						print.it($"{xmlFile}: unknown toolbar '{tbname}'. Toolbars: {string.Join(", ", toolbars.Select(o => o.Name))}.");
+						print.it($"<><explore>{xmlFile}<>: unknown toolbar '{tbname}'. Toolbars: {string.Join(", ", toolbars.Select(o => o.Name))}.");
 						continue;
 						g1:;
 					}
 					foreach (var v in xtb.Elements()) {
 						var name = v.Name.LocalName;
 						if (_d.TryGetValue(name, out var c)) c.Customize_(v, tb, context);
-						else print.it($"{xmlFile}: unknown command '{name}'. Commands: {string.Join(", ", _d.Keys)}.");
+						else print.it($"<><explore>{xmlFile}<>: unknown command '{name}'. Commands: {string.Join(", ", _d.Keys)}.");
 					}
 				}
 			}

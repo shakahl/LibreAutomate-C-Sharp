@@ -171,7 +171,7 @@ class DProperties : KDialogWindow
 		}
 
 		string _ValidateFile(FrameworkElement e, string name, FNFind kind) {
-			return (_Get(e as TextBox) is string s && null == _f.FindRelative(s, kind)) ? name + " file not found" : null;
+			return (_Get(e as TextBox) is string s && null == _f.FindRelative(s, kind, orAnywhere: true)) ? name + " file not found" : null;
 		}
 
 		//b.Loaded += () => {
@@ -185,7 +185,7 @@ class DProperties : KDialogWindow
 	void _GetMeta() {
 		//info: _Get returns null if hidden
 
-		_f.TestScript = _Get(testScript) is string sts ? _f.FindRelative(sts, FNFind.CodeFile) : null; //validated
+		_f.TestScript = _Get(testScript) is string sts ? _f.FindRelative(sts, FNFind.CodeFile, orAnywhere: true) : null; //validated
 
 		_meta.ifRunning = _Get(ifRunning, nullIfDefault: true);
 		_meta.uac = _Get(uac, nullIfDefault: true);

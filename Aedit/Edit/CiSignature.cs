@@ -208,7 +208,8 @@ class CiSignature
 
 		if (!_textPopup.IsVisible) {
 			CodeInfo.HideTextPopupAndTempWindows();
-			CodeInfo._compl.Cancel();
+			if (CodeInfo._compl.IsVisibleUI) //without this does not show completions with selected enum when typed Function( when first parameter is enum
+				CodeInfo._compl.Cancel();
 		}
 
 		_textPopup.Show(Panels.Editor.ZActiveDoc, rect, System.Windows.Controls.Dock.Bottom);

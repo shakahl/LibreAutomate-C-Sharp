@@ -70,7 +70,7 @@ partial class SciCode
 				s = sr.ToString();
 			} else if (null != (s = _IsFolders(a[i], ref i))) {
 				imType = _ImageTypeFromString(s);
-			} else if (a[i].ClassificationType == ClassificationTypeNames.Comment) {
+			} else if (i < a.Length && a[i].ClassificationType == ClassificationTypeNames.Comment) {
 				var ts = a[i].TextSpan;
 #if !true
 				int j = code.Find("/*image:", ts.Start..ts.End) + 2; if (j < 2) continue;

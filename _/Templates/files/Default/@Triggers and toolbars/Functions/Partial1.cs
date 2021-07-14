@@ -1,6 +1,6 @@
 
 
-partial class Script {
+partial class Program {
 
 void Function1() {
 	

@@ -27,10 +27,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 using System.Diagnostics.CodeAnalysis;
-
-//TODO: need a workaround for Roslyn bug: in top-level statements keywords are insane. Eg is 'public' but no 'return'.
-//TODO: (it seems after updating Roslyn), after typing "print.it(Example.Add(" shows completions. Then if you type a number, selects something containing it in the list.
-//	Other example: g=new byte[1], shows completions and selects Int16.
+using Microsoft.CodeAnalysis.Options;
 
 partial class CiCompletion
 {
@@ -192,7 +189,8 @@ partial class CiCompletion
 				model = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false); //speed: does not make slower, because GetCompletionsAsync calls it too
 				root = model.Root as CompilationUnitSyntax;
 				var node = root.FindToken(position).Parent;
-				syncon = CSharpSyntaxContext.CreateContext(document.Project.Solution.Workspace, model, position, cancelToken);
+				var wspace = document.Project.Solution.Workspace;
+				syncon = CSharpSyntaxContext.CreateContext(wspace, model, position, cancelToken);
 				p1.Next('s');
 
 				//never mind: To make faster in some cases, could now return if in comments or non-regex etc string.
@@ -208,8 +206,10 @@ partial class CiCompletion
 				//	s_workaround1 = true;
 				//}
 
+				//print.it(syncon.IsGlobalStatementContext);
+
 				var trigger = ch == default ? default : CompletionTrigger.CreateInsertionTrigger(ch);
-				var r1 = await completionService.GetCompletionsAsync(document, position, trigger, cancellationToken: cancelToken).ConfigureAwait(false);
+				var r1 = await completionService.GetCompletionsAsync(document, position, trigger, null, _Options(wspace), cancelToken).ConfigureAwait(false);
 				p1.Next('C');
 				if (r1 != null) {
 					canGroup = true;
@@ -379,8 +379,11 @@ partial class CiCompletion
 			Dictionary<INamespaceOrTypeSymbol, List<int>> groups = canGroup ? new(new CiNamespaceOrTypeSymbolEqualityComparer()) : null;
 			List<int> keywordsGroup = null, etcGroup = null, snippetsGroup = null;
 			bool hasNamespaces = false;
-			foreach (var ci in r.Items) {
+			foreach (var ci_ in r.Items) {
+				var ci = ci_;
 				Debug.Assert(ci.Symbols == null || ci.Symbols.Count > 0); //we may use code ci?.Symbols[0]. Roslyn uses this code in CompletionItem ctor: var firstSymbol = symbols[0];
+
+
 				var v = new CiComplItem(provider, ci);
 				var sym = v.FirstSymbol;
 				//print.it(ci.DisplayText, sym);
@@ -470,9 +473,13 @@ partial class CiCompletion
 				case CiItemKind.LocalVariable:
 					if (isDot) continue; //see the bug comments below
 					break;
+				case CiItemKind.Keyword when syncon.IsGlobalStatementContext:
+					if (ci.DisplayText == "from") v.ci = ci.WithDisplayText("return").WithFilterText("return").WithSortText("return"); //Roslyn bug: no 'return', but is 'from' (why?)
+					//print.it(ci.DisplayText);
+					break;
 				}
 
-				static bool _IsOurScriptClass(INamedTypeSymbol t) => t.Name is "Script" or "Program";
+				static bool _IsOurScriptClass(INamedTypeSymbol t) => t.Name is "Program" or "Script";
 
 				if (sym != null && v.kind != CiItemKind.LocalVariable && v.kind != CiItemKind.Namespace && v.kind != CiItemKind.TypeParameter) {
 					bool isObsolete = ci.Symbols.All(sy => sy.GetAttributes().Any(o => o.AttributeClass.Name == "ObsoleteAttribute")); //can be several overloads, some obsolete but others not
@@ -876,8 +883,7 @@ partial class CiCompletion
 			if (ch == default) { //completed with Enter, Tab, Space or click
 				string s2 = null;
 				switch (item.kind) {
-				case CiItemKind.Method:
-				case CiItemKind.ExtensionMethod:
+				case CiItemKind.Method or CiItemKind.ExtensionMethod:
 					ch = '(';
 					break;
 				case CiItemKind.Keyword:
@@ -931,8 +937,7 @@ partial class CiCompletion
 						break;
 					}
 					break;
-				case CiItemKind.Class:
-				case CiItemKind.Structure:
+				case CiItemKind.Class or CiItemKind.Structure:
 					if (ci.DisplayTextSuffix == "<>") ch = '<';
 					else _NewExpression();
 					break;
@@ -981,8 +986,7 @@ partial class CiCompletion
 				}
 			} else if (!(ch == '(' || ch == '<' || _data.noAutoSelect)) { //completed with ';' or ',' or '.' or '?' or '-' or any other non-identifier char space, Tab, Enter
 				switch (item.kind) {
-				case CiItemKind.Method:
-				case CiItemKind.ExtensionMethod:
+				case CiItemKind.Method or CiItemKind.ExtensionMethod:
 					s += "()";
 					break;
 				}
@@ -1049,7 +1053,7 @@ partial class CiCompletion
 	}
 
 	/// <summary>
-	/// Esc, Arrow, Page, Hoe, End.
+	/// Esc, Arrow, Page, Home, End.
 	/// </summary>
 	public bool OnCmdKey_SelectOrHide(KKey key) => _data != null && _popupList.OnCmdKey(key);
 
@@ -1070,6 +1074,23 @@ partial class CiCompletion
 		//if (s.Eq(i, "ObjectAndWith")) return CiComplProvider.ObjectAndWithInitializer;
 		//if (s.Eq(i, "AttributeNamedParameter")) return CiComplProvider.AttributeNamedParameter; //don't use because can be mixed with other symbols
 		return CiComplProvider.Other;
+	}
+
+	static OptionSet s_options;
+	static OptionSet _Options(Workspace ws) {
+		if (s_options == null) {
+			s_options = ws.Options;
+
+			//Disable option TriggerInArgumentLists (show completions when typed '(' or '[' or space in argument list). Then eg typing a number selects something containing it in the list (it seems in VS not).
+			s_options = s_options.WithChangedOption(new OptionKey(CompletionOptions.TriggerInArgumentLists, "C#"), false);
+
+			//s_options = s_options.WithChangedOption(new OptionKey(CompletionOptions.ShowItemsFromUnimportedNamespaces, "C#"), true); //does not work automatically
+
+			//foreach(var v in CompletionOptions.GetDev15CompletionOptions()) {
+			//	print.it(v);
+			//}
+		}
+		return s_options;
 	}
 }
 

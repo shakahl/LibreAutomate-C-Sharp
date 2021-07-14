@@ -1,6 +1,6 @@
 using Au.Triggers;
 
-partial class Script {
+partial class Program {
 
 [Toolbars]
 void CommonToolbars() {

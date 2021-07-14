@@ -163,6 +163,7 @@ namespace Au.Compiler
 
 			if (needOutputFiles) {
 				_AddAttributesEtc(ref compilation, m, out bool refPaths);
+				p1.Next('a');
 				if (refPaths) r.flags |= MiniProgram_.EFlags.RefPaths;
 
 				//if empty script, error "no Main". Users would not understand why. Append semicolon to make compiler detect top-level statements.
@@ -317,7 +318,7 @@ namespace Au.Compiler
 		//}
 
 		/// <summary>
-		/// Adds some attributes. Also adds module initializer for role exeProgram.
+		/// Adds some module/assembly attributes. Also adds module initializer for role exeProgram.
 		/// </summary>
 		static void _AddAttributesEtc(ref CSharpCompilation compilation, MetaComments m, out bool refPaths) {
 			refPaths = false;
@@ -364,7 +365,7 @@ namespace Au.Compiler
 					//	Could define here, but then warning "already defined in assembly X" when compiling 2 projects (meta pr) with that attribute.
 					//	never mind: Au.dll must exist by the compiled assembly, even if not used for other purposes.
 					foreach (var v in m.TestInternal) sb.AppendLine($"[assembly: System.Runtime.CompilerServices.IgnoresAccessChecksTo(\"{v}\")]");
-					//						sb.Append(@"
+					//sb.Append(@"
 					//namespace System.Runtime.CompilerServices {
 					//[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
 					//public class IgnoresAccessChecksToAttribute : Attribute {
@@ -382,7 +383,9 @@ namespace Au.Compiler
 
 				string code = sb.ToString(); //print.it(code);
 				var tree = CSharpSyntaxTree.ParseText(code, new CSharpParseOptions(LanguageVersion.Preview)) as CSharpSyntaxTree;
-				compilation = compilation.AddSyntaxTrees(tree);
+				//insert as first, else user's module initializers would run before. Same speed.
+				//compilation = compilation.AddSyntaxTrees(tree);
+				compilation = compilation.RemoveAllSyntaxTrees().AddSyntaxTrees(compilation.SyntaxTrees.Insert(0, tree));
 			}
 		}
 

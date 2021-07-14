@@ -53,14 +53,9 @@ static class CodeInfo
 		Task.Run(() => {
 			//var p1 = perf.local();
 			try {
-				var code = @"//.
-using Au; using Au.Types; using System; using System.Collections.Generic;
-class Script { static void Main(string[] a) => new Script(a); Script(string[] args) {
-print.it(""t"" + 'c' + 1);
-}}";
+				var code = @"using Au; print.it(""t"" + 'c' + 1);";
 
 				var refs = new MetaReferences().Refs;
-				int position = code.IndexOf('}');
 				ProjectId projectId = ProjectId.CreateNewId();
 				DocumentId documentId = DocumentId.CreateNewId(projectId);
 				using var ws = new AdhocWorkspace();
@@ -505,7 +500,7 @@ print.it(""t"" + 'c' + 1);
 
 	static void _CreateSolution(FileNode f) {
 		_diag.ClearMetaErrors();
-		Au.Compiler.InternalsVisible.Clear();
+		InternalsVisible.Clear();
 		CurrentWorkspace = new AdhocWorkspace();
 		_solution = CurrentWorkspace.CurrentSolution;
 		_projectId = _AddProject(f, true);
@@ -517,7 +512,7 @@ print.it(""t"" + 'c' + 1);
 			var m = new MetaComments();
 			m.Parse(f, projFolder, EMPFlags.ForCodeInfo);
 			if (isMain) _meta = m;
-			if (m.TestInternal is string[] testInternal) Au.Compiler.InternalsVisible.Add(f.Name, testInternal);
+			if (m.TestInternal is string[] testInternal) InternalsVisible.Add(f.Name, testInternal);
 
 			var projectId = ProjectId.CreateNewId();
 			var adi = new List<DocumentInfo>();

@@ -523,7 +523,7 @@ partial class SciCode : KScintilla
 	#region script header
 
 	//const string c_usings = "using Au; using Au.Types; using System; using System.Collections.Generic; using System.IO; using System.Linq;";
-	//const string c_scriptMain = "class Script ... //;;;";
+	//const string c_scriptMain = "class A ... //;;";
 
 	//static regexp _RxScriptHeader => s_rxScript ??= new regexp(@"(?sm)//\.(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q[\w ]*" + c_scriptMain + @"\E$");
 	//static regexp s_rxScript;

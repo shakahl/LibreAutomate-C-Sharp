@@ -201,13 +201,13 @@ namespace Au.Compiler
 					if (miniFlags != default) b.Append("|f").Append((int)miniFlags);
 					if (m.Bit32) b.Append("|b");
 
-					int nAll = m.CodeFiles.Count, nNoC = nAll - m.CountC;
-					if (nNoC > 1) { //add MD5 hash of project files, except main
-						Hash.MD5Context md = default;
-						for (int i = 1; i < nNoC; i++) md.Add(m.CodeFiles[i].f.Id);
-						b.Append("|p").Append(md.Hash.ToString());
+					Hash.MD5Context md = default;
+					foreach(var v in m.CodeFiles) {
+						if(v.isC) _AppendFile("|c", v.f); //ids of C# files added through meta 'c'
+						else if(!v.isMain) md.Add(v.f.Id); //MD5 hash of project files, except main
 					}
-					for (int i = nNoC; i < nAll; i++) _AppendFile("|c", m.CodeFiles[i].f); //ids of C# files added through meta 'c'
+					if(!md.IsEmpty) b.Append("|p").Append(md.Hash.ToString());
+
 					if (m.ProjectReferences != null) foreach (var v in m.ProjectReferences) _AppendFile("|l", v); //ids of meta 'pr' files
 					if (m.Resources != null) foreach (var v in m.Resources) _AppendFile("|x", v.f); //ids of meta 'resource' files
 					_AppendFile("|k", m.IconFile);

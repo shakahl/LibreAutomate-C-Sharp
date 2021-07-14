@@ -58,70 +58,75 @@ static unsafe class Test
 	//	}
 	//}
 
-	static void ModelFind() {
-		print.clear();
-		//var names = new string[] { "using.cs", "Class2.cs", "email.ico" };
-		var names = Panels.Editor.ZActiveDoc.zText.Lines();
-		var kind = FNFind.Any;
-		foreach (var name in names) {
-			if (name.NE()) break;
-			if (name.Starts('*')) {
-				kind = Enum.Parse<FNFind>(name[1..]);
-				continue;
-			}
-			if (name.Starts('/')) continue;
-			var p1 = perf.local();
-			var v1 = App.Model.Find(name, kind);
-			p1.Next();
-			//p1.Write();
-			print.it(name, v1?.ItemPath);
-		}
+	//static void ModelFind() {
+	//	print.clear();
+	//	//var names = new string[] { "using.cs", "Class2.cs", "email.ico" };
+	//	var names = Panels.Editor.ZActiveDoc.zText.Lines();
+	//	var kind = FNFind.Any;
+	//	foreach (var name in names) {
+	//		if (name.NE()) break;
+	//		if (name.Starts('*')) {
+	//			kind = Enum.Parse<FNFind>(name[1..]);
+	//			continue;
+	//		}
+	//		if (name.Starts('/')) continue;
+	//		var p1 = perf.local();
+	//		var v1 = App.Model.Find(name, kind);
+	//		p1.Next();
+	//		//p1.Write();
+	//		print.it(name, v1?.ItemPath);
+	//	}
 
-		//FileNode.test = keys.isScrollLock;
-		//string path = @"\Classes\global.cs", name = "global.cs";
-		//string path = @"\old\Class@.cs", name = "Class@.cs";
-		//FNFind kind = FNFind.Class;
-		//kind = FNFind.Any;
+	//	//FileNode.test = keys.isScrollLock;
+	//	//string path = @"\Classes\global.cs", name = "global.cs";
+	//	//string path = @"\old\Class@.cs", name = "Class@.cs";
+	//	//FNFind kind = FNFind.Class;
+	//	//kind = FNFind.Any;
 
-		//var v1 = App.Model.Find(path, kind);
-		//var v2 = App.Model.Find(name, kind);
-		//print.it(v1, v2);
+	//	//var v1 = App.Model.Find(path, kind);
+	//	//var v2 = App.Model.Find(name, kind);
+	//	//print.it(v1, v2);
 
-		//perf.cpu();
-		//for (int i1 = 0; i1 < 7; i1++) {
-		//	int n2 = 1000;
-		//	perf.first();
-		//	for (int i2 = 0; i2 < n2; i2++) { App.Model.Find(path, kind); }
-		//	perf.next();
-		//	for (int i2 = 0; i2 < n2; i2++) { App.Model.Find(name, kind); }
-		//	perf.next();
-		//	for (int i2 = 0; i2 < n2; i2++) { }
-		//	perf.next();
-		//	for (int i2 = 0; i2 < n2; i2++) { }
-		//	perf.nw();
-		//	//100.ms();
-		//}
+	//	//perf.cpu();
+	//	//for (int i1 = 0; i1 < 7; i1++) {
+	//	//	int n2 = 1000;
+	//	//	perf.first();
+	//	//	for (int i2 = 0; i2 < n2; i2++) { App.Model.Find(path, kind); }
+	//	//	perf.next();
+	//	//	for (int i2 = 0; i2 < n2; i2++) { App.Model.Find(name, kind); }
+	//	//	perf.next();
+	//	//	for (int i2 = 0; i2 < n2; i2++) { }
+	//	//	perf.next();
+	//	//	for (int i2 = 0; i2 < n2; i2++) { }
+	//	//	perf.nw();
+	//	//	//100.ms();
+	//	//}
 
-		//Debug_.MemorySetAnchor_();
-		//for(int i2 = 0; i2 < 1000; i2++) {App.Model.Find(path, kind); }
-		//Debug_.MemoryPrint_();
-		//Debug_.MemorySetAnchor_();
-		//for(int i2 = 0; i2 < 1000; i2++) {App.Model.Find(name, kind); }
-		//Debug_.MemoryPrint_();
-	}
+	//	//Debug_.MemorySetAnchor_();
+	//	//for(int i2 = 0; i2 < 1000; i2++) {App.Model.Find(path, kind); }
+	//	//Debug_.MemoryPrint_();
+	//	//Debug_.MemorySetAnchor_();
+	//	//for(int i2 = 0; i2 < 1000; i2++) {App.Model.Find(name, kind); }
+	//	//Debug_.MemoryPrint_();
+	//}
 
-	static void CompressBrotli() {
-		var dir = @"Q:\Test\bmp";
-		var dir2 = dir + "2";
-		filesystem.createDirectory(dir2);
-		foreach (var f in Directory.GetFiles(dir, "*.bmp")) {
-			var b = Image.FromFile(f) as Bitmap;
-			var a = ColorQuantizer.Quantize(b, 16);
-			File.WriteAllBytes(dir2 + "\\" + pathname.getName(f), a);
-		}
-	}
+	//static void CompressBrotli() {
+	//	var dir = @"Q:\Test\bmp";
+	//	var dir2 = dir + "2";
+	//	filesystem.createDirectory(dir2);
+	//	foreach (var f in Directory.GetFiles(dir, "*.bmp")) {
+	//		var b = Image.FromFile(f) as Bitmap;
+	//		var a = ColorQuantizer.Quantize(b, 16);
+	//		File.WriteAllBytes(dir2 + "\\" + pathname.getName(f), a);
+	//	}
+	//}
 
 	public static void FromMenubar() {
+		//byte[] a=new byte[1]
+		//print.it()
+		//List<>
+
+
 		//_ColorQuantizer();
 		//ModelFind();
 		//CompressBrotli();

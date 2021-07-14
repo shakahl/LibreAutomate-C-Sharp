@@ -401,6 +401,7 @@ static class CiUtil
 			WellKnownTags.Method => CiItemKind.Method,
 			WellKnownTags.ExtensionMethod => CiItemKind.ExtensionMethod,
 			WellKnownTags.Property => CiItemKind.Property,
+			WellKnownTags.Operator => CiItemKind.Operator,
 			WellKnownTags.Event => CiItemKind.Event,
 			WellKnownTags.Field => CiItemKind.Field,
 			WellKnownTags.Local => CiItemKind.LocalVariable,
@@ -425,7 +426,8 @@ static class CiUtil
 		}
 	}
 
-	public static string[] ItemKindNames { get; } = new string[] { "Class", "Structure", "Enum", "Delegate", "Interface", "Method", "ExtensionMethod", "Property", "Event", "Field", "LocalVariable", "Constant", "EnumMember", "Namespace", "Keyword", "Label", "Snippet", "TypeParameter" }; //must match enum CiItemKind
+	//don't reorder! Must match CiItemKind.
+	public static string[] ItemKindNames { get; } = new string[] { "Class", "Structure", "Enum", "Delegate", "Interface", "Method", "ExtensionMethod", "Property", "Operator", "Event", "Field", "LocalVariable", "Constant", "EnumMember", "Namespace", "Keyword", "Label", "Snippet", "TypeParameter" }; //must match enum CiItemKind
 
 #if DEBUG
 	//unfinished. Just prints what we can get from CSharpSyntaxContext.

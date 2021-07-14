@@ -19,7 +19,7 @@ using Microsoft.CodeAnalysis.CSharp.QuickInfo;
 using System.Windows.Documents;
 using Microsoft.CodeAnalysis;
 
-//TODO: displayed parameter types are with undeclared namespace. Remove namespace if it is in favorites. Maybe always.
+//SHOULDDO: displayed parameter types are with undeclared namespace. Remove namespace if it is in favorites. Maybe always.
 
 class CiQuickInfo
 {
