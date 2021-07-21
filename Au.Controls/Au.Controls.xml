@@ -1079,6 +1079,17 @@
             Calls SCI_ENDUNDOACTION and clears this variable.
             </summary>
         </member>
+        <member name="M:Au.Controls.KScintilla.zSetStyled">
+            <summary>
+            Sets scintilla's "end-styled position" = int.MaxValue, to avoid SCN_STYLENEEDED notifications.
+            Fast, just sets a field in scintilla.
+            </summary>
+            <remarks>
+            Scintilla sends SCN_STYLENEEDED even if lexer type is SCLEX_NULL. In some cases 1 or several, in some cases many, in some cases every 500 ms.
+            Old documentation and behavior: sends notifications when SCLEX_CONTAINER. No styling and notifications if SCLEX_NULL.
+            New documentation does not mention SCLEX_CONTAINER, SCLEX_NULL and even SCI_SETLEXER (replaced by SCI_SETILEXER?). But they are defined and used in scintilla.
+            </remarks>
+        </member>
         <member name="T:Au.Controls.KSciCodeBox">
             <summary>
             Scintilla-based control that shows colored C# code.
@@ -1114,9 +1125,9 @@
             Uses <b>ToolTip</b> property; don't overwrite it.
             </summary>
         </member>
-        <member name="M:Au.Controls.Sci.Sci_GetStylingInfo(System.IntPtr,System.Int32,Au.Controls.Sci.Sci_StylingInfo@)">
+        <member name="M:Au.Controls.Sci.Sci_GetVisibleRange(System.IntPtr,Au.Controls.Sci.Sci_VisibleRange@)">
             <summary>
-            flags: 1 endStyled, 2 endStyledLine, endStyledLineStart, 4 visibleFrom, visibleFromLine, 8 visibleTo, visibleToLine
+            flags: 1 need pos
             </summary>
         </member>
         <member name="P:Au.Controls.Sci.SCNotification.Text">

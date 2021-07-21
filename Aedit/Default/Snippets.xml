@@ -635,15 +635,15 @@ internal record MySettings : JSettings {
 	<!-- end of Namespace|Type|Line -->
 
 
-	<group context="Parameters">
-		<!-- snippets that are valid in MethodDeclaration(parameters) -->
+	<group context="Attributes">
+		<!-- snippets that are valid in [attributes] -->
 
 		<snippet name="marshalAsSnippet" info="Adds MarshalAs attribute." more="Then press dot and select from list.">
-			<![CDATA[[MarshalAs(UnmanagedType$end$)]]]>
+			<![CDATA[MarshalAs(UnmanagedType$end$)]]>
 		</snippet>
 
 	</group>
-	<!-- end of Parameters -->
+	<!-- end of Attributes -->
 
 
 	<group context="Any|Line">
@@ -665,9 +665,9 @@ internal record MySettings : JSettings {
 				<![CDATA[#region $end$name$end$
 #endregion]]>
 			</list>
-			<list item="//. and //;">
+			<list item="//. and //..">
 				<![CDATA[//.$end$
-//;]]>
+//..]]>
 			</list>
 		</snippet>
 

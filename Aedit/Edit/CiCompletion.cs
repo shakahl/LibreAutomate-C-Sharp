@@ -151,7 +151,7 @@ partial class CiCompletion
 		//CodeInfo.HideTextPopupAndTempWindows(); //no
 		CodeInfo.HideTextPopup();
 
-		//using var nogcr = keys.isScrollLock ? new NoGcRegion(50_000_000) : default;
+		//using var nogcr = keys.isScrollLock ? new Debug_.NoGcRegion(50_000_000) : default;
 
 		if (!cd.GetDocument()) return; //returns false if fails (unlikely)
 		Document document = cd.document;
@@ -189,8 +189,8 @@ partial class CiCompletion
 				model = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false); //speed: does not make slower, because GetCompletionsAsync calls it too
 				root = model.Root as CompilationUnitSyntax;
 				var node = root.FindToken(position).Parent;
-				var wspace = document.Project.Solution.Workspace;
-				syncon = CSharpSyntaxContext.CreateContext(wspace, model, position, cancelToken);
+				var workspace = document.Project.Solution.Workspace;
+				syncon = CSharpSyntaxContext.CreateContext(workspace, model, position, cancelToken);
 				p1.Next('s');
 
 				//never mind: To make faster in some cases, could now return if in comments or non-regex etc string.
@@ -209,7 +209,7 @@ partial class CiCompletion
 				//print.it(syncon.IsGlobalStatementContext);
 
 				var trigger = ch == default ? default : CompletionTrigger.CreateInsertionTrigger(ch);
-				var r1 = await completionService.GetCompletionsAsync(document, position, trigger, null, _Options(wspace), cancelToken).ConfigureAwait(false);
+				var r1 = await completionService.GetCompletionsAsync(document, position, trigger, null, _Options(workspace), cancelToken).ConfigureAwait(false);
 				p1.Next('C');
 				if (r1 != null) {
 					canGroup = true;
@@ -217,6 +217,7 @@ partial class CiCompletion
 					if (node is InitializerExpressionSyntax) {
 						//if only properties, group by inheritance. Else group by namespace; it's a collection initializer list and contains everything.
 						isDot = !r1.Items.Any(o => o.Symbols?[0] is not IPropertySymbol);
+						if (!isDot && ch == '{') return null; //eg 'new int[] {'
 					} else {
 #if true
 						isDot = syncon.IsRightOfNameSeparator;
@@ -475,7 +476,7 @@ partial class CiCompletion
 					break;
 				case CiItemKind.Keyword when syncon.IsGlobalStatementContext:
 					if (ci.DisplayText == "from") v.ci = ci.WithDisplayText("return").WithFilterText("return").WithSortText("return"); //Roslyn bug: no 'return', but is 'from' (why?)
-					//print.it(ci.DisplayText);
+																																	   //print.it(ci.DisplayText);
 					break;
 				}
 
@@ -618,8 +619,8 @@ partial class CiCompletion
 					g = gs.Select(o => (o.Key.Name, o.Value)).ToList(); //list<(itype, list)> -> list<typeName, list>
 				} else {
 					g = groups.Select(o => (o.Key.QualifiedName(), o.Value)).ToList(); //dictionary<inamespace, list> -> list<namespaceName, list>
-					//print.it("----");
-					//foreach(var v in g) print.it(v.Item1, v.Item2.Count);
+																					   //print.it("----");
+																					   //foreach(var v in g) print.it(v.Item1, v.Item2.Count);
 					g.Sort((e1, e2) => string.Compare(e1.Item1, e2.Item1, StringComparison.OrdinalIgnoreCase));
 				}
 				if (keywordsGroup != null) g.Add(("keywords", keywordsGroup));
@@ -1084,6 +1085,10 @@ partial class CiCompletion
 			//Disable option TriggerInArgumentLists (show completions when typed '(' or '[' or space in argument list). Then eg typing a number selects something containing it in the list (it seems in VS not).
 			s_options = s_options.WithChangedOption(new OptionKey(CompletionOptions.TriggerInArgumentLists, "C#"), false);
 
+			//print.it(s_options.GetOption(new OptionKey(CompletionOptions.BlockForCompletionItems2, "C#")));
+			//s_options = s_options.WithChangedOption(new OptionKey(CompletionOptions.BlockForCompletionItems, "C#"), false); //?
+			//s_options = s_options.WithChangedOption(new OptionKey(CompletionOptions.BlockForCompletionItems2, "C#"), false); //?
+
 			//s_options = s_options.WithChangedOption(new OptionKey(CompletionOptions.ShowItemsFromUnimportedNamespaces, "C#"), true); //does not work automatically
 
 			//foreach(var v in CompletionOptions.GetDev15CompletionOptions()) {
@@ -1094,36 +1099,8 @@ partial class CiCompletion
 	}
 }
 
-#if PREMATURE_OPTIMIZATION
-//Can be used to prevent GC while getting completions. Reduces the time eg from 70 to 60 ms.
+//Debug_.NoGcRegion can be used to prevent GC while getting completions. Reduces the time eg from 70 to 60 ms. Tested with some old Roslyn version.
 //It seems Roslyn uses weak references for expensive objects, eg syntax trees and semantic model.
 //Usually GC starts in the middle, and Roslyn has to rebuild them anyway.
 //But Roslyn is slow in other places too, eg syntax highlighting. Need to test everything. Maybe disable GC on every added char for eg 500 ms.
-struct NoGcRegion : IDisposable
-{
-	bool _restore;
-
-	public NoGcRegion(long memSize)
-	{
-		_restore = false;
-		if(osVersion.is32BitProcess) return;
-		Debug_.MemorySetAnchor_();
-		//print.it(System.Runtime.GCSettings.LatencyMode);
-		try { _restore = GC.TryStartNoGCRegion(memSize); }
-		catch(InvalidOperationException ex) { Debug_.Print(ex.Message); }
-	}
-
-	public void Dispose()
-	{
-		if(_restore) {
-			_restore = false;
-			//print.it(System.Runtime.GCSettings.LatencyMode == System.Runtime.GCLatencyMode.NoGCRegion);
-			//if(System.Runtime.GCSettings.LatencyMode == System.Runtime.GCLatencyMode.NoGCRegion) GC.EndNoGCRegion();
-			try { GC.EndNoGCRegion(); } //note: need to call even if not in nogc region (then exception); else TryStartNoGCRegion will throw exception.
-			catch(InvalidOperationException ex) { Debug_.Print(ex.Message); }
-			Debug_.MemoryPrint_();
-			ThreadPool.QueueUserWorkItem(_ => GC.Collect());
-		}
-	}
-}
-#endif
+//SHOULDDO: try to keep syntax and semantic trees in CodeInfo.Context.

@@ -247,7 +247,6 @@ static class InsertCode
 		return s;
 	}
 
-	//TODO: now optional parameters enclosed in [], like public override void Return(T[] array, [bool clearArray = false])
 	public static void ImplementInterfaceOrAbstractClass(bool explicitly, int position = -1) {
 		if (!CodeInfo.GetContextAndDocument(out var cd, position)) return;
 		var semo = cd.document.GetSemanticModelAsync().Result;
@@ -279,7 +278,7 @@ static class InsertCode
 		}
 
 		var b = new StringBuilder();
-		var format = CiText.s_symbolFullFormat;
+		var format = CiText.s_symbolFullFormat.WithParameterOptions(CiText.s_symbolFullFormat.ParameterOptions & ~SymbolDisplayParameterOptions.IncludeOptionalBrackets);
 		var formatExp = format.WithMemberOptions(SymbolDisplayMemberOptions.IncludeContainingType | SymbolDisplayMemberOptions.IncludeType | SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeRef);
 
 		b.Append("\r\n#region ").Append(baseType.ToMinimalDisplayString(semo, position, CiText.s_symbolFullFormat));
@@ -372,11 +371,13 @@ static class InsertCode
 	}
 
 	public static void AddClassProgram() {
-		var a = new string[] {
-			"class Program { static void Main(string[] a) => new Program(a); Program(string[] args) { //;;",
-			"class Program { static void Main(string[] args) { //;;",
-		};
-		int pm = popupMenu.showSimple(a) - 1; if (pm < 0) return;
+		//rejected: menu. Then need to think what to select.
+		//	Maybe in the future show input box with string remembered from previous time. Or let specify string in Options.
+		//var a = new string[] {
+		//	"class Program { static void Main(string[] a) => new Program(a); Program(string[] args) { //...",
+		//	"class Program { static void Main(string[] args) { //...",
+		//};
+		//int pm = popupMenu.showSimple(a) - 1; if (pm < 0) return;
 
 		if (!CodeInfo.GetContextAndDocument(out var cd) /*|| !cd.sciDoc.ZFile.IsScript*/) return;
 		var cu = cd.document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
@@ -414,6 +415,9 @@ static class InsertCode
 
 		using var undo = new KScintilla.UndoAction(cd.sciDoc);
 		cd.sciDoc.zInsertText(true, end, "\r\n}\r\n}\r\n");
-		cd.sciDoc.zInsertText(true, start, a[pm] + "\r\n");
+		//cd.sciDoc.zInsertText(true, start, a[pm] + "\r\n");
+		string s = "class Program { static void Main(string[] a) => new Program(a); Program(string[] args) { //...\r\n";
+		cd.sciDoc.zInsertText(true, start, s);
+		if (s.RegexMatch(@" =>.+args\)", 0, out RXGroup g)) cd.sciDoc.zSelect(true, start + g.Start, start + g.End); //then can simply press Delete to make it classic
 	}
 }

@@ -509,6 +509,7 @@ bool SCI_METHOD Document::Sci_SetFoldLevels(int line, int lineTo, int len, int* 
 	int levelCurrent = line == 0 ? SC_FOLDLEVELBASE : levels->GetLevel((Sci::Line)line - 1) >> 16;
 	int levelNext = levelCurrent;
 	int nLines = (int)LinesTotal();
+	if(lineTo < 0) lineTo = nLines;
 	for(int i = 0; line < lineTo; line++) {
 		int eol = (int)this->LineStart((Sci::Line)line + 1);
 		if(a != nullptr) for(; i < len && (a[i] & 0x7fffffff) < eol; i++) levelNext += (a[i] & 0x80000000) ? -1 : 1;

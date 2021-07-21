@@ -39,16 +39,16 @@ namespace Au.Controls
 		[DllImport("SciLexer")]
 		public static extern void Sci_SetFoldLevels(nint sci, int line, int lastLine, int len, int* a);
 
-		public struct Sci_StylingInfo
+		public record struct Sci_VisibleRange
 		{
-			public int endStyled, endStyledLine, endStyledLineStart, visibleFrom, visibleFromLine, visibleTo, visibleToLine;
+			public int dlineFrom, dlineTo, vlineFrom, vlineTo, posFrom, posTo;
 		}
 
 		/// <summary>
-		/// flags: 1 endStyled, 2 endStyledLine, endStyledLineStart, 4 visibleFrom, visibleFromLine, 8 visibleTo, visibleToLine
+		/// flags: 1 need pos
 		/// </summary>
 		[DllImport("SciLexer")]
-		public static extern void Sci_GetStylingInfo(nint sci, int flags, out Sci_StylingInfo r);
+		public static extern void Sci_GetVisibleRange(nint sci, out Sci_VisibleRange r);
 
 #pragma warning disable 649
 		public unsafe struct Sci_AnnotationDrawCallbackData

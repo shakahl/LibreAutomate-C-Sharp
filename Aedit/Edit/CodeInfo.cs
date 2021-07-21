@@ -24,7 +24,7 @@ using Microsoft.CodeAnalysis.Text;
 using System.Windows.Input;
 
 //TODO: support <inheritdoc>. VS supports it partially (shows only summary, no parameters/remarks/exceptions).
-//TODO: don't show black/unfolded text before Roslyn is ready. Then user can't work anyway, and waits until colored/folded, and the black text is annoying.
+//SHOULDDO: don't show black/unfolded text before Roslyn is ready. Then user can't work anyway, and waits until colored/folded, and the black text is annoying.
 
 static class CodeInfo
 {
@@ -384,7 +384,7 @@ static class CodeInfo
 			document = _document = _solution.GetDocument(_documentId);
 			if (document == null) return false;
 
-			_ModifySource();
+			//_ModifySource();
 
 			return true;
 		}
@@ -403,58 +403,26 @@ static class CodeInfo
 		//	return true;
 		//}
 
-		//TODO
-		void _ModifySource() {
-			//var r = document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
+		//this was a failed attempt to modify code of top-level-statements (TLS) script to avoid code info problems.
+		//	I see 2 ways:
+		//		1. The best would be to surround TLS with {  }.
+		//		2. Surround with semicolons. But it solves only some problems. Also then no error if real semicolon is missing.
+		//	Problem: can only replace code but not insert. Then all reported positions (styling, errors, etc) don't match positions in code editor. Would be too complex to make it work.
+		//		For this reason cannot surround TLS with {  } if TLS starts at very start of code.
+		//	Hope Roslyn in the future will support TLS better.
+		//	FUTURE: try to work with this again if Roslyn still lazy. Eg if default template starts with comments, can surround with { }, and never mind if TLS stars from very start.
+		//void _ModifySource() {
+		//	var cu = document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
+		//	//print.it("Externs:", r.Externs);
+		//	//print.it("Usings:", r.Usings);
+		//	//print.it("AttributeLists:", r.AttributeLists);
+		//	//print.it("Members:", r.Members);
+		//	if (cu.Members.FirstOrDefault() is not GlobalStatementSyntax) return;
+		//	var ms = cu.Members.Span; CiUtil.HiliteRange(ms);
+		//	//document.
 
-			//print.it("Externs:", r.Externs);
-			//print.it("Usings:", r.Usings);
-			//print.it("Members:", r.Members);
-			//print.it("AttributeLists:", r.AttributeLists);
-
-			//var st = SyntaxFactory.ParseCompilationUnit("using Microsoft.Win32;\n");
-			//root = root.AddUsings(st.ChildNodes().Cast<UsingDirectiveSyntax>().ToArray());
-			//_document = document = document.WithSyntaxRoot(root);
-
-			//return;
-
-			//SyntaxNode lastUsing = null;
-
-			//foreach (var v in root.ChildNodes()) {
-			//	switch (v) {
-			//	case ExternAliasDirectiveSyntax ea:
-			//		lastUsing = ea;
-			//		break;
-			//	case UsingDirectiveSyntax u:
-			//		lastUsing = u;
-			//		if(u.Alias == null && u.StaticKeyword.RawKind == 0) {
-			//			var span = u.Name.Span;
-			//			var s = code[span.Start..span.End];
-			//			//print.it(s);
-
-			//		}
-			//		//perf.first();
-			//		//perf.next();
-			//		//perf.nw();
-			//		break;
-			//	//case AttributeListSyntax als when als.Target.Identifier.Text is "module" or "assembly":
-			//	//	break;
-			//	//case GlobalStatementSyntax:
-			//	//	if (start < 0) start = v.FullSpan.Start;
-			//	//	break;
-			//	default:
-			//		//CiUtil.PrintNode(v);
-			//		//end = v.FullSpan.Start;
-			//		goto g1;
-			//	}
-			//}
-			//g1:;
-			//if (lastUsing != null) {
-			//	var st = SyntaxFactory.ParseCompilationUnit("using Microsoft.Win32;\n");
-			//	root = root.InsertNodesAfter(lastUsing, st.ChildNodes());
-			//	_document = document = document.WithSyntaxRoot(root);
-			//}
-		}
+		//	//	document = _document = document.With...;
+		//}
 	}
 
 	/// <summary>

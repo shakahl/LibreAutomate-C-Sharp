@@ -419,7 +419,7 @@ namespace Au.Compiler
 				} else if (!model.NoGlobalCs_) {
 					model.NoGlobalCs_ = true;
 					Panels.Output.ZOutput.ZTags.AddLinkTag("+restoreGlobal", _ => App.Model.AddMissingDefaultFiles(globalCs: true));
-					print.warning("Class file \"global.cs\" not found. <+restoreGlobal>Restore<>.", -1, "<>");
+					print.warning("Missing class file \"global.cs\". <+restoreGlobal>Restore<>.", -1, "<>");
 				}
 			}
 

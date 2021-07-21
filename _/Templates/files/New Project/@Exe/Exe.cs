@@ -13,9 +13,9 @@ using System.Reflection;
 //[assembly: AssemblyCopyright("Copyright © 2020")]
 //[assembly: AssemblyTrademark("Legal trademarks")]
 
-class Program { static void Main(string[] a) => new Program(a); Program(string[] args) { //;;
+class Program { static void Main(string[] a) => new Program(a); Program(string[] args) { //...
 script.setup(trayIcon: true);
-//;
+//..
 
 /*
 To create .exe program from a script: in Properties select role exeProgram. This script is an example.

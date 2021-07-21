@@ -266,13 +266,9 @@ partial class SciCode : KScintilla
 				}
 			}
 			break;
-		case NOTIF.SCN_STYLENEEDED when _fn.IsOtherFileType:
-			//scintilla repeatedly sends SCN_STYLENEEDED even if lexer type is SCLEX_NULL.
-			//	Old documentation and behavior: sends notifications when SCLEX_CONTAINER. No styling and notifications if SCLEX_NULL.
-			//	New documentation does not mention SCLEX_CONTAINER, SCLEX_NULL and even SCI_SETLEXER (replaced by SCI_SETILEXER?). But they are defined and used in scintilla.
-			//	Let's set styling to stop these notifications.
-			Call(SCI_STARTSTYLING);
-			Call(SCI_SETSTYLING, n.position, STYLE_DEFAULT);
+		case NOTIF.SCN_STYLENEEDED:
+			//print.it("SCN_STYLENEEDED");
+			zSetStyled();
 			break;
 			//case NOTIF.SCN_PAINTED:
 			//	_Paint(true);
@@ -337,8 +333,10 @@ partial class SciCode : KScintilla
 				case c_marginLineNumbers or c_marginMarkers or c_marginImages or c_marginChanges:
 					ZCommentLines(null, notSlashStar: true);
 					break;
-					//case c_marginFold:
-					//	break;
+				case c_marginFold:
+					int fold = popupMenu.showSimple("Folding: hide all|Folding: show all", owner: Hwnd) - 1; //note: no "toggle", it's not useful
+					if (fold >= 0) Call(SCI_FOLDALL, fold);
+					break;
 				}
 				return true;
 			}
@@ -517,72 +515,6 @@ partial class SciCode : KScintilla
 			Call(SCI_PASTE); //not zReplaceSel, because can be SCI_SETMULTIPASTE etc
 		}
 	}
-
-	#endregion
-
-	#region script header
-
-	//const string c_usings = "using Au; using Au.Types; using System; using System.Collections.Generic; using System.IO; using System.Linq;";
-	//const string c_scriptMain = "class A ... //;;";
-
-	//static regexp _RxScriptHeader => s_rxScript ??= new regexp(@"(?sm)//\.(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q[\w ]*" + c_scriptMain + @"\E$");
-	//static regexp s_rxScript;
-
-	//currently not used and does not work
-	///// <summary>
-	///// Finds script header "//. ... //;;;\r\n" using regular expression.
-	///// </summary>
-	///// <param name="s">Script text.</param>
-	///// <param name="m">
-	///// Group 1 is "" or text between //. and c_usings. Includes the starting newline but not the ending newline.
-	///// Group 2 is "" or text between c_usings and c_scriptMain. Includes the starting newline but not the ending newline.
-	///// </param>
-	//public static bool ZFindScriptHeader(string s, out RXMatch m) => _RxScriptHeader.Match(s, out m);
-
-	/// <summary>
-	/// Finds script header "//.\r\nusing Au; ... //;;;\r\n".
-	/// The results are UTF-8.
-	/// Does not get whole text; instead uses SCI_FINDTEXT.
-	/// Returns false if not script or not found.
-	/// </summary>
-	public bool ZFindScriptHeader8(out (int start, int end, int startLine, int endLine) found) {
-		//never mind: can be text between "//.\r\n" and "using Au;". Could use regex, but then need to get UTF-16 text; better avoid it.
-		found = default;
-		if (!_fn.IsScript) return false;
-		const string s1 = "//.\r\nusing Au;", s2 = "//;;;\r\n";
-		int start = zFindText(false, s1); if (start < 0) return false;
-		int end = zFindText(false, s2, start); if (end < 0) return false;
-		end += s2.Length;
-		found = (start, end, zLineFromPos(false, start), zLineFromPos(false, end));
-		return true;
-	}  //TODO
-
-	/// <summary>
-	/// Folds script header "//.\r\nusing Au; ... //;;;\r\n" if found.
-	/// Does not get whole text; instead uses SCI_FINDTEXT.
-	/// </summary>
-	/// <param name="setCaret">Set caret position below header.</param>
-	public unsafe void ZFoldScriptHeader(bool setCaret = false) {
-		if (!ZFindScriptHeader8(out var k)) return;
-		var a = stackalloc int[2] { k.start, (k.end - 2) | unchecked((int)0x80000000) };
-		Sci_SetFoldLevels(ZSciPtr, 0, k.endLine, 2, a);
-		Call(SCI_FOLDCHILDREN, k.startLine);
-
-		if (setCaret) {
-			int i = k.end;
-			if ((char)Call(SCI_GETCHARAT, i + 1) == '\n') i += 2;
-			zCurrentPos16 = i;
-		}
-	}
-
-	//bool _IsScriptHeaderFolded()
-	//{
-	//	if(!ZFile.IsScript) return false;
-	//	string s = Text;
-	//	if(!_RxScriptHeader.Match(s, out var m)) return false;
-	//	int line = LineIndexFromPos(m.Start, utf16: true);
-	//	return 0 == Call(SCI_GETFOLDEXPANDED, line);
-	//}
 
 	#endregion
 

@@ -551,7 +551,7 @@ namespace Au.Types
 		/// <param name="t"></param>
 		/// <param name="predicate"></param>
 		public static void RemoveWhere<TKey, TValue>(this Dictionary<TKey, TValue> t, Func<KeyValuePair<TKey, TValue>, bool> predicate) {
-			foreach (var k in t.Where(predicate).Select(kv => kv.Key).ToList()) { t.Remove(k); }
+			foreach (var k in t.Where(predicate).Select(kv => kv.Key).ToArray()) { t.Remove(k); }
 		}
 
 		/// <summary>

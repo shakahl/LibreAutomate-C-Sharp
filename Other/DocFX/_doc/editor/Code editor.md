@@ -4,7 +4,7 @@ uid: code_editor
 
 # Code editor
 
-In the code editor you edit automation scripts and other C# code. It is a text editor with various features for easier C# code editing: lists of symbols, autocompletion, brace completion, statement completion, auto indentation, parameter info, quick info, XML documentation comments, go to documentation, go to definition/source, error info, code coloring, text folding, separators between functions/types, images in code, snippets, comment/uncomment/indent/unindent lines, drop files, find/replace text, find namespace, find Windows API, code creation tools.
+In the code editor you edit automation scripts and other C# code. It is a text editor with various features for easier C# code editing: lists of symbols, autocompletion, brace completion, statement completion, auto indentation, parameter info, quick info, XML documentation comments, go to documentation, go to definition/source, error info, code coloring, text folding, separators between functions, images in code, snippets, comment/uncomment/indent/unindent lines, drag/drop files, find/replace text, find namespace, find Windows API, insert keys/regex/etc, capture UI elements.
 
 C# code may look like this:
 ```csharp
@@ -43,10 +43,8 @@ When you press Enter inside a function argument list before the last `)`, editor
 
 Ctrl+Enter and Ctrl+; will complete statement when the text cursor is anywhere in it, for example in a string.
 
-#### Auto indentation and multiline strings
+#### Auto indentation
 When you press Enter, editor adds new line with correct number of tabs (indentation). The same with Ctrl+Enter.
-
-When you press Enter in a non-verbatim string, editor splits it into 2 lines like `"line1\r\n" + ""`.
 
 #### Parameter info
 When you type a function name and `(`, editor shows a tooltip-like window with info about the function and current parameter. To show the window from anywhere in an argument list, press Ctrl+Shift+Space. You can select oveloads with arrow keys or the mouse.
@@ -76,13 +74,13 @@ Errors are detected in editor, as well as when compiling the code. Code parts wi
 Different kinds of code parts have different colors. Comments, strings, keywords, types, functions, etc.
 
 #### Text folding
-You can hide and show code regions like in a tree view control: click the minus (-) or plus (+) in the left margin. Folding is available for function and type definitions, multiline comments, disabled code (`#if`), `#region` ... `#endregion` and `//.` ... `//;`.
+You can hide and show code regions like in a tree view control: click the minus (-) or plus (+) in the left margin. Folding is available for functions, types, multiline comments, disabled code (`#if`), `#region` ... `#endregion` and `//.` ... `//..`.
 
 #### Separators between functions/types
 Editor draws horizontal lines at the end of each function and type definition.
 
 #### Images in code
-Whenever code contains a string or comment that looks like an image file path or image embedded in code, editor draws the image below. Image file paths are strings like `@"C:\a\b.png"` (or bmp, jpg, gif). Images embedded in code are strings that start with `"image:"`, created by the "Find image" tool dialog.
+Whenever code contains a string or comment that looks like an image file path or image embedded in code (`image:...`), editor draws the image at the left. This feature can be enabled/disabled with the toolbar button.
 
 #### Snippets
 Autocompletion lists also contain snippets. For example the outSnippet inserts code `print.it();` when you type `out` and space or Tab or Enter or click it.
@@ -98,8 +96,8 @@ You can drag and drop files from File Explorer etc to the code editor. It insert
 #### Find and replace
 Use the Find panel to find and replace text in editor. It marks all matches in editor with yellow. Also can find files by name and files containing text.
 
-#### Code creation tools
-There are several code creation tools in menu Code. Some tools create code to find the captured window, control, UI element or image. Other tools help to insert parts of regular expression or keys string.
+#### Code tools
+The Code menu contains dialogs and simple commands for creating code to find a window, UI element or image, for inserting parts of regular expression or keys string, and more.
 
 #### Focus
 To focus the code editor control without changing selection: middle-click.

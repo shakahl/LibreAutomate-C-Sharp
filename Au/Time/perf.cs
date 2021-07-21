@@ -166,6 +166,8 @@ namespace Au
 			/// </summary>
 			/// <remarks>
 			/// Don't need to dispose variables of this type. This function just allows to use the 'using' pattern instead of <b>NW</b>. See example.
+			/// 
+			/// If <see cref="Incremental"/>, calls just <see cref="Write"/>.
 			/// </remarks>
 			/// <example>
 			/// <code><![CDATA[
@@ -176,7 +178,11 @@ namespace Au
 			/// } //p1.NW();
 			/// ]]></code>
 			/// </example>
-			public void Dispose() => NW();
+			public void Dispose() {
+				if (!_incremental) Next();
+				Write();
+			}
+			//public void Dispose() => NW();
 
 			/// <summary>
 			/// Formats a string from time values collected by calling <see cref="First"/> and <see cref="Next"/>, and shows it in the output.

@@ -14,6 +14,8 @@ using System.Reflection;
 using System.Linq;
 using System.Text.RegularExpressions; //for XML doc links
 
+//TODO: try to use ReadOnlySpan<char> with regexp instance functions. At least add 1 such function.
+
 namespace Au
 {
 	/// <summary>

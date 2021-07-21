@@ -6863,28 +6863,55 @@
             Returns true if using Debug configuration of Au.dll.
             </summary>
         </member>
+        <member name="M:Au.More.Debug_.GetComObjRefCount_(System.IntPtr)">
+            <summary>
+            Calls Marshal.AddRef(obj), then calls/returns Marshal.Release(obj).
+            Available if TRACE defined.
+            </summary>
+        </member>
         <member name="M:Au.More.Debug_.MemoryGet_(System.Boolean)">
             <summary>
             Returns managed memory size as formatted string. Uses GC.GetTotalMemory.
-            Works in Release too.
+            Available if TRACE defined.
             </summary>
             <param name="fromAnchor">Get the difference from previous call to <b>MemorySetAnchor_</b>.</param>
         </member>
         <member name="M:Au.More.Debug_.MemoryPrint_(System.Boolean)">
             <summary>
             Prints managed memory size. Uses GC.GetTotalMemory.
-            Works in Release too.
+            Available if TRACE defined.
             </summary>
             <param name="fromAnchor">Get the difference from previous call to <b>MemorySetAnchor_</b>.</param>
         </member>
         <member name="M:Au.More.Debug_.MemorySetAnchor_">
             <summary>
             Memorizes current managed memory size, so that next call to another <b>MemoryX</b> function with fromAnchor=true (default) will get memory size difference from current memory size.
+            Available if TRACE defined.
+            </summary>
+        </member>
+        <member name="T:Au.More.Debug_.NoGcRegion">
+            <summary>
+            Temporarily suspends GC collections if possible. Restores in <b>Dispose</b>.
+            Available if TRACE defined.
+            </summary>
+        </member>
+        <member name="M:Au.More.Debug_.NoGcRegion.#ctor(System.Int64,System.Boolean)">
+            <summary>
+            Suspends GC collections if possible.
+            Does nothing in 32-bit process.
+            </summary>
+            <param name="memSize">Recommended 100_000_000. Still works if 200_000_000, but fails if 300_000_000. Not tested in 32-bit process.</param>
+            <param name="print">Let <b>Dispose</b> print size of managed memory added since ctor.</param>
+        </member>
+        <member name="M:Au.More.Debug_.NoGcRegion.Dispose">
+            <summary>
+            Restores suspended GC collections.
             </summary>
         </member>
         <member name="M:Au.More.Debug_.PrintLoadedAssemblies(System.Boolean,System.Boolean,System.Boolean)">
             <summary>
             Prints assemblies already loaded or/and loaded in the future.
+            Works in Release too, if TRACE defined.
             </summary>
         </member>
         <member name="T:Au.More.GC_">
@@ -12255,6 +12282,18 @@
             <exception cref="T:Au.Types.SLException">Failed.</exception>
             <exception cref="T:System.NotSupportedException">sql contains more than single SQL statement.</exception>
         </member>
+        <member name="M:Au.sqlite.Execute(System.String,System.Action{Au.sqliteStatement})">
+            <summary>
+            Executes single SQL statement that does not return data. To bind values calls callback function.
+            </summary>
+            <param name="sql">Single SQL statement.</param>
+            <param name="bind">
+            Callback function that should bind (<see cref="M:Au.sqliteStatement.Bind(Au.Types.SLIndexOrName,System.Int32)"/>) values to <c>?</c> characters in sql.
+            Read about SQL parameters in SQLite website.
+            </param>
+            <exception cref="T:Au.Types.SLException">Failed.</exception>
+            <exception cref="T:System.NotSupportedException">sql contains more than single SQL statement.</exception>
+        </member>
         <member name="M:Au.sqlite.Statement(System.String)">
             <summary>
             Returns <c>new Statement(this, sql)</c>.
@@ -12458,7 +12497,11 @@
             <summary>Calls sqlite3_bind_blob64. Returns this.</summary>
             <exception cref="T:Au.Types.SLException">Failed.</exception>
         </member>
-        <member name="M:Au.sqliteStatement.Bind(Au.Types.SLIndexOrName,System.ReadOnlySpan{System.Byte})">
+        <member name="M:Au.sqliteStatement.Bind``1(Au.Types.SLIndexOrName,System.ReadOnlySpan{``0})">
+            <summary>Calls sqlite3_bind_blob64. Returns this.</summary>
+            <exception cref="T:Au.Types.SLException">Failed.</exception>
+        </member>
+        <member name="M:Au.sqliteStatement.Bind``1(Au.Types.SLIndexOrName,System.Span{``0})">
             <summary>Calls sqlite3_bind_blob64. Returns this.</summary>
             <exception cref="T:Au.Types.SLException">Failed.</exception>
         </member>
@@ -12501,7 +12544,7 @@
             - string - calls sqlite3_bind_text16.
             - decimal - calls sqlite3_bind_blob64.
             - Guid - calls sqlite3_bind_blob64.
-            - byte[] - calls sqlite3_bind_blob64.
+            - Array - calls sqlite3_bind_blob64.
             - An enum type - calls sqlite3_bind_int or sqlite3_bind_int64.
             </param>
             <exception cref="T:System.NotSupportedException">A value is of an unsupported type.</exception>
@@ -19371,7 +19414,7 @@
             </summary>
             <param name="t">This string.</param>
             <param name="index">Offset in this string. If invalid, returns false.</param>
-            <param name="c">The character.</param>
+            <param name="c">Character.</param>
         </member>
         <member name="M:Au.ExtString.Eqi(System.String,System.String)">
             <summary>
@@ -19413,7 +19456,7 @@
             Returns true if this string ends with the specified character.
             </summary>
             <param name="t">This string.</param>
-            <param name="c">The character.</param>
+            <param name="c">Character.</param>
         </member>
         <member name="M:Au.ExtString.Starts(System.String,System.String,System.Boolean)">
             <summary>
@@ -19445,7 +19488,7 @@
             Returns true if this string starts with the specified character.
             </summary>
             <param name="t">This string.</param>
-            <param name="c">The character.</param>
+            <param name="c">Character.</param>
         </member>
         <member name="M:Au.ExtString.Find(System.String,System.String,System.Boolean)">
             <summary>
@@ -19973,13 +20016,72 @@
         </member>
         <member name="M:Au.ExtString.Eq(System.ReadOnlySpan{System.Char},System.String)">
             <summary>
-            Returns true if equals to <i>s</i>, case-sensitive.
+            Returns true if equals to string <i>s</i>, case-sensitive.
             </summary>
+            <param name="t">This span.</param>
+            <param name="s">Other string. Can be null.</param>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+        </member>
+        <member name="M:Au.ExtString.Eq(System.ReadOnlySpan{System.Char},System.Int32,System.String,System.Boolean)">
+            <summary>
+            Compares part of this span with string. Returns true if equal.
+            </summary>
+            <param name="t">This span.</param>
+            <param name="startIndex">Offset in this span. If invalid, returns false.</param>
+            <param name="s">Other string.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+        </member>
+        <member name="M:Au.ExtString.Eq(System.ReadOnlySpan{System.Char},System.Int32,System.Char)">
+            <summary>
+            Returns true if the specified character is at the specified position in this span.
+            </summary>
+            <param name="t">This span.</param>
+            <param name="index">Offset in this span. If invalid, returns false.</param>
+            <param name="c">Character.</param>
         </member>
         <member name="M:Au.ExtString.Eqi(System.ReadOnlySpan{System.Char},System.String)">
             <summary>
-            Returns true if equals to <i>s</i>, case-insensitive.
+            Returns true if equals to string <i>s</i>, case-insensitive.
             </summary>
+            <param name="t">This span.</param>
+            <param name="s">Other string. Can be null.</param>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+        </member>
+        <member name="M:Au.ExtString.IndexOf(System.ReadOnlySpan{System.Char},System.Int32,System.Char)">
+            <summary>
+            Finds character <i>c</i> in this span, starting from <i>index</i>.
+            Returns its index in this span, or -1 if not found.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+        </member>
+        <member name="M:Au.ExtString.IndexOf(System.ReadOnlySpan{System.Char},System.Range,System.Char)">
+            <summary>
+            Finds character <i>c</i> in <i>range</i> of this span.
+            Returns its index in this span, or -1 if not found.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+        </member>
+        <member name="M:Au.ExtString.IndexOf(System.ReadOnlySpan{System.Char},System.Int32,System.ReadOnlySpan{System.Char},System.Boolean)">
+            <summary>
+            Finds string <i>s</i> in this span, starting from <i>index</i>.
+            Returns its index in this span, or -1 if not found.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+        </member>
+        <member name="M:Au.ExtString.IndexOf(System.ReadOnlySpan{System.Char},System.Range,System.ReadOnlySpan{System.Char},System.Boolean)">
+            <summary>
+            Finds string <i>s</i> in <i>range</i> of this span.
+            Returns its index in this span, or -1 if not found.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
         <member name="M:Au.ExtString.RegexIsMatch(System.String,System.String,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
@@ -21944,6 +22046,8 @@
             </summary>
             <remarks>
             Don't need to dispose variables of this type. This function just allows to use the 'using' pattern instead of <b>NW</b>. See example.
+            
+            If <see cref="P:Au.perf.Instance.Incremental"/>, calls just <see cref="M:Au.perf.Instance.Write"/>.
             </remarks>
             <example>
             <code><![CDATA[

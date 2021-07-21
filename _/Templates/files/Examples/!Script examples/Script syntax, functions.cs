@@ -5,7 +5,7 @@ using Au;
 using System.Text;
 script.single();
 script.setup(trayIcon: true);
-//;
+//..
 
 /*
 The programming language is C#.
@@ -25,7 +25,7 @@ This syntax is known as "C# top-level statements". It is simple and concise,
 but has some limitations. You can instead use a class with Main function. Try
 menu Code -> Convert to script class.
 
-The //. and //; are used to fold (hide) code. Click the small [+] box at
+The //. and //.. are used to fold (hide) code. Click the small [+] box at
 the top-left to see and edit that code when need. 
 
 Script properties are saved in /*/ /*/ comments at the start of script.
@@ -77,14 +77,20 @@ for (int i = 0; i < s.Length; i++) {
 System.Windows.Forms.MessageBox.Show(b.ToString());
 
 
-//Example of your function. It is a local function and can use variables defined before it.
+//Examples of functions defined in script.
 
-int variable = 1;
+//function
+void FunctionExample(string s) {
+	print.it(s);
+}
 
 FunctionExample("Function example"); //calls the function
-print.it(variable);
 
-void FunctionExample(string s) { //a function
-	print.it(s, variable);
-	variable++;
+//another example
+int variable = 5;
+print.it(AddMultiply(2, 3));
+
+int AddMultiply(int x, int y) {
+	print.it(x, y, variable);
+	return (x + y) * variable;
 }

@@ -726,7 +726,7 @@ namespace Au.Types
 		static extern SLError sqlite3_bind_blob64(IntPtr stmt, int index, void* value, long nSize, nint nTransient);
 
 		internal static SLError sqlite3_bind_blob64(IntPtr stmt, int index, void* value, long nSize)
-			=> sqlite3_bind_blob64(stmt, index, value, nSize, -1); //SQLITE_TRANSIENT
+			=> sqlite3_bind_blob64(stmt, index, value, nSize, -1); //SQLITE_TRANSIENT //FUTURE: somehow avoid copying if large data. Eg if array or List, can use callback and GCHandle.
 
 		[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SLError sqlite3_bind_double(IntPtr stmt, int index, double value);

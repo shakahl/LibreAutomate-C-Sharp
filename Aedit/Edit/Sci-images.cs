@@ -46,7 +46,7 @@ partial class SciCode
 	_Images _im;
 
 	//Called by CiStyling._StylingAndFolding.
-	internal void _ImagesGet(CodeInfo.Context cd, IEnumerable<ClassifiedSpan> list) {
+	internal void _ImagesGet(CodeInfo.Context cd, IEnumerable<ClassifiedSpan> list, in Sci_VisibleRange vr) {
 		if (App.Settings.edit_noImages) return;
 		//using var p1 = perf.local(); //fast when bitmaps loaded/cached
 
@@ -58,7 +58,6 @@ partial class SciCode
 		string code = cd.code;
 		int maxWidth = 0;
 		int nextLineStart = 0;
-		int topVisibleLine = Call(SCI_GETFIRSTVISIBLELINE), lastVisibleLine = topVisibleLine + Call(SCI_LINESONSCREEN);
 
 		for (int i = 0; i < a.Length; i++) {
 			if (a[i].TextSpan.Start < nextLineStart) continue; //max 1 image/line
@@ -103,7 +102,7 @@ partial class SciCode
 
 			int start = a[i].TextSpan.Start;
 			int line = zLineFromPos(true, start), vi = Call(SCI_VISIBLEFROMDOCLINE, line);
-			if (vi >= topVisibleLine && vi <= lastVisibleLine && 0 != Call(SCI_GETLINEVISIBLE, line)) maxWidth = Math.Max(maxWidth, b.Width);
+			if (vi >= vr.vlineFrom && vi < vr.vlineTo && 0 != Call(SCI_GETLINEVISIBLE, line)) maxWidth = Math.Max(maxWidth, b.Width);
 
 			if (_im.a == null) {
 				_im.a = new();

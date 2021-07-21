@@ -161,6 +161,22 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Executes single SQL statement that does not return data. To bind values calls callback function.
+		/// </summary>
+		/// <param name="sql">Single SQL statement.</param>
+		/// <param name="bind">
+		/// Callback function that should bind (<see cref="sqliteStatement.Bind"/>) values to <c>?</c> characters in sql.
+		/// Read about SQL parameters in SQLite website.
+		/// </param>
+		/// <exception cref="SLException">Failed.</exception>
+		/// <exception cref="NotSupportedException">sql contains more than single SQL statement.</exception>
+		public void Execute(string sql, Action<sqliteStatement> bind) {
+			using var p = Statement(sql);
+			bind(p);
+			p.Step();
+		}
+
+		/// <summary>
 		/// Returns <c>new Statement(this, sql)</c>.
 		/// </summary>
 		/// <param name="sql">Single SQL statement. This function does not execute it.</param>
@@ -500,22 +516,29 @@ namespace Au
 		public sqliteStatement Bind(SLIndexOrName sqlParam, void* blob, long nBytes)
 			=> _Err(SLApi.sqlite3_bind_blob64(_st, _B(sqlParam), blob, nBytes), "sqlite3_bind_blob64");
 
-		/// <summary>Calls sqlite3_bind_blob64. Returns this.</summary>
-		/// <exception cref="SLException">Failed.</exception>
-		public sqliteStatement Bind(SLIndexOrName sqlParam, ReadOnlySpan<byte> blob) {
+		sqliteStatement _Bind(SLIndexOrName sqlParam, ReadOnlySpan<byte> blob) {
 			fixed (byte* p = blob) return Bind(sqlParam, p, blob.Length);
 		}
 
 		/// <summary>Calls sqlite3_bind_blob64. Returns this.</summary>
 		/// <exception cref="SLException">Failed.</exception>
-		public sqliteStatement Bind<T>(SLIndexOrName sqlParam, T[] array) where T : unmanaged {
-			fixed (T* p = array) return Bind(sqlParam, p, (array?.LongLength ?? 0) * sizeof(T));
-		}
+		public sqliteStatement Bind<T>(SLIndexOrName sqlParam, ReadOnlySpan<T> blob) where T : unmanaged
+			=> _Bind(sqlParam, MemoryMarshal.AsBytes(blob));
+
+		/// <summary>Calls sqlite3_bind_blob64. Returns this.</summary>
+		/// <exception cref="SLException">Failed.</exception>
+		public sqliteStatement Bind<T>(SLIndexOrName sqlParam, Span<T> blob) where T : unmanaged
+			=> _Bind(sqlParam, MemoryMarshal.AsBytes(blob));
+
+		/// <summary>Calls sqlite3_bind_blob64. Returns this.</summary>
+		/// <exception cref="SLException">Failed.</exception>
+		public sqliteStatement Bind<T>(SLIndexOrName sqlParam, T[] array) where T : unmanaged
+			=> Bind(sqlParam, array.AsSpan());
 
 		/// <summary>Calls sqlite3_bind_blob64. Returns this.</summary>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind<T>(SLIndexOrName sqlParam, List<T> list) where T : unmanaged
-			=> Bind(sqlParam, list?.ToArray());
+			=> Bind(sqlParam, CollectionsMarshal.AsSpan(list));
 
 		/// <summary>Binds a value as blob. Calls sqlite3_bind_blob64. Returns this.</summary>
 		/// <exception cref="SLException">Failed.</exception>
@@ -568,15 +591,23 @@ namespace Au
 				default: k = Convert.ToInt32(v); goto gi;
 				}
 				break;
-			case byte[] x:
-				Bind(i, x);
+			case Array a:
+				//never mind: should throw if managed type. Same for List.
+				//	It seems .NET does not have a function to check it.
+				//	Slow workarounds: https://stackoverflow.com/questions/53968920/how-do-i-check-if-a-type-fits-the-unmanaged-constraint-in-c
+				fixed (byte* p = Unsafe.As<byte[]>(a)) Bind(i, p, Buffer.ByteLength(a));
 				break;
-			//case Array a:
+			//case System.Collections.IList a:
+			//	//Can get data pointer and number of elements:
+			//	//	var span = CollectionsMarshal.AsSpan(Unsafe.As<List<byte>>(a)).
+			//	//But how to get element type size in a safe/fast/clean way?
+			//	//	This works, but unsafe etc: Marshal.SizeOf(a.GetType().GetGenericArguments()[0])
+			//	//	This does not work: MemoryMarshal.AsBytes(span).
+			//	//Or can get array through reflection, but slow and unsafe: var v=a.GetType().GetField("_items", BindingFlags.NonPublic|BindingFlags.Instance).GetValue(i) as Array;
+			//	//Or can convert to List<T> with 'dynamic', but first time it adds 72 ms delay (hot CPU).
 			//	break;
 			default:
 				//never mind: this func does not support other types supported by other BindX functions. Quite difficult.
-				//	To get address: GCHandle.AddrOfPinnedObject.
-				//	To get type size, probably need Unsafe dll.
 				var t = v.GetType();
 				throw new NotSupportedException(t.Name);
 				//case DateTime x: Bind(i, x); break;
@@ -600,7 +631,7 @@ namespace Au
 		/// - string - calls sqlite3_bind_text16.
 		/// - decimal - calls sqlite3_bind_blob64.
 		/// - Guid - calls sqlite3_bind_blob64.
-		/// - byte[] - calls sqlite3_bind_blob64.
+		/// - Array - calls sqlite3_bind_blob64.
 		/// - An enum type - calls sqlite3_bind_int or sqlite3_bind_int64.
 		/// </param>
 		/// <exception cref="NotSupportedException">A value is of an unsupported type.</exception>

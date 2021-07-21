@@ -164,8 +164,7 @@ class DOptions : KDialogWindow
 
 			//font
 
-			var fontsMono = new List<string>();
-			var fontsVar = new List<string>();
+			List<string> fonts = new(), fontsMono = new(), fontsVar = new();
 			using (var dc = new ScreenDC_()) {
 				unsafe {
 					api.EnumFontFamiliesEx(dc, default, (lf, tm, fontType, lParam) => {
@@ -179,12 +178,11 @@ class DOptions : KDialogWindow
 			}
 			fontsMono.Sort();
 			fontsVar.Sort();
-			var fonts = new List<string>();
 			fonts.Add("[ Fixed-width fonts ]");
 			fonts.AddRange(fontsMono);
 			fonts.Add("");
 			fonts.Add("[ Variable-width fonts ]");
-			fonts.AddRange(fontsVar.ToArray());
+			fonts.AddRange(fontsVar);
 			fontName.ItemsSource = fonts;
 			var selFont = styles.FontName;
 			fontName.SelectedItem = selFont; if (fontName.SelectedItem == null) fontName.Text = selFont;

@@ -1,7 +1,7 @@
 //.
 script.single();
 script.setup(trayIcon: true);
-//;
+//..
 
 //Click the ► button on the toolbar to run the script.
 

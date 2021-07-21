@@ -633,7 +633,7 @@ namespace Au.Compiler
 			asmStream.Position = 0;
 			using var pr = new PEReader(asmStream, PEStreamOptions.LeaveOpen);
 			var mr = pr.GetMetadataReader();
-			var usedRefs = mr.AssemblyReferences.Select(handle => mr.GetString(mr.GetAssemblyReference(handle).Name)).ToList();
+			var usedRefs = mr.AssemblyReferences.Select(handle => mr.GetString(mr.GetAssemblyReference(handle).Name)).ToArray();
 			//print.it(usedRefs); print.it("---");
 
 			bool _CopyRefIfNeed(string sFrom, string sTo) {

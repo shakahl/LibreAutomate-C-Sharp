@@ -33,7 +33,7 @@ using System.IO;
 //		Maybe should also add these, but works without:
 //			System.Composition.Convention.dll
 //			CSharpSyntaxGenerator.dll
-//In Roslyn artifacts folder find xml doc files and copy to _.
+//In Roslyn artifacts folder find xml doc files and copy to CompilerDlls (for VS) and _ (for script editor).
 
 namespace CompilerDlls
 {

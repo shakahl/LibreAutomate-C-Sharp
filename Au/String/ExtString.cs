@@ -129,7 +129,7 @@ namespace Au
 		/// </summary>
 		/// <param name="t">This string.</param>
 		/// <param name="index">Offset in this string. If invalid, returns false.</param>
-		/// <param name="c">The character.</param>
+		/// <param name="c">Character.</param>
 		public static bool Eq(this string t, int index, char c) {
 			if ((uint)index >= t.Length) return false;
 			return t[index] == c;
@@ -187,7 +187,7 @@ namespace Au
 		/// Returns true if this string ends with the specified character.
 		/// </summary>
 		/// <param name="t">This string.</param>
-		/// <param name="c">The character.</param>
+		/// <param name="c">Character.</param>
 		public static bool Ends(this string t, char c) {
 			int i = t.Length - 1;
 			return i >= 0 && t[i] == c;
@@ -232,7 +232,7 @@ namespace Au
 		/// Returns true if this string starts with the specified character.
 		/// </summary>
 		/// <param name="t">This string.</param>
-		/// <param name="c">The character.</param>
+		/// <param name="c">Character.</param>
 		public static bool Starts(this string t, char c) {
 			return t.Length > 0 && t[0] == c;
 		}
@@ -1408,14 +1408,99 @@ namespace Au
 		//}
 
 		/// <summary>
-		/// Returns true if equals to <i>s</i>, case-sensitive.
+		/// Returns true if equals to string <i>s</i>, case-sensitive.
 		/// </summary>
+		/// <param name="t">This span.</param>
+		/// <param name="s">Other string. Can be null.</param>
+		/// <remarks>
+		/// Uses ordinal comparison (does not depend on current culture/locale).
+		/// </remarks>
 		public static bool Eq(this ReadOnlySpan<char> t, string s) => t.Equals(s, StringComparison.Ordinal);
 
 		/// <summary>
-		/// Returns true if equals to <i>s</i>, case-insensitive.
+		/// Compares part of this span with string. Returns true if equal.
 		/// </summary>
+		/// <param name="t">This span.</param>
+		/// <param name="startIndex">Offset in this span. If invalid, returns false.</param>
+		/// <param name="s">Other string.</param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <remarks>
+		/// Uses ordinal comparison (does not depend on current culture/locale).
+		/// </remarks>
+		public static bool Eq(this ReadOnlySpan<char> t, int startIndex, string s, bool ignoreCase = false) {
+			int n = s?.Length ?? throw new ArgumentNullException();
+			int to = startIndex + n, tlen = t.Length;
+			if(to > tlen || (uint)startIndex > tlen) return false;
+			t = t[startIndex..to];
+			if (!ignoreCase) return t.SequenceEqual(s);
+			return t.Equals(s, StringComparison.OrdinalIgnoreCase);
+		}
+
+		/// <summary>
+		/// Returns true if the specified character is at the specified position in this span.
+		/// </summary>
+		/// <param name="t">This span.</param>
+		/// <param name="index">Offset in this span. If invalid, returns false.</param>
+		/// <param name="c">Character.</param>
+		public static bool Eq(this ReadOnlySpan<char> t, int index, char c) {
+			if ((uint)index >= t.Length) return false;
+			return t[index] == c;
+		}
+
+		/// <summary>
+		/// Returns true if equals to string <i>s</i>, case-insensitive.
+		/// </summary>
+		/// <param name="t">This span.</param>
+		/// <param name="s">Other string. Can be null.</param>
+		/// <remarks>
+		/// Uses ordinal comparison (does not depend on current culture/locale).
+		/// </remarks>
 		public static bool Eqi(this ReadOnlySpan<char> t, string s) => t.Equals(s, StringComparison.OrdinalIgnoreCase);
+
+		/// <summary>
+		/// Finds character <i>c</i> in this span, starting from <i>index</i>.
+		/// Returns its index in this span, or -1 if not found.
+		/// </summary>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public static int IndexOf(this ReadOnlySpan<char> t, int index, char c) {
+			int i = t[index..].IndexOf(c);
+			return i < 0 ? i : i + index;
+		}
+
+		/// <summary>
+		/// Finds character <i>c</i> in <i>range</i> of this span.
+		/// Returns its index in this span, or -1 if not found.
+		/// </summary>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public static int IndexOf(this ReadOnlySpan<char> t, Range range, char c) {
+			int i = t[range].IndexOf(c);
+			if (i < 0) return i;
+			int start = range.Start.Value; if (range.Start.IsFromEnd) start = t.Length - start;
+			return i + start;
+		}
+
+		/// <summary>
+		/// Finds string <i>s</i> in this span, starting from <i>index</i>.
+		/// Returns its index in this span, or -1 if not found.
+		/// </summary>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public static int IndexOf(this ReadOnlySpan<char> t, int index, ReadOnlySpan<char> s, bool ignoreCase = false) {
+			int i = t[index..].IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+			return i < 0 ? i : i + index;
+		}
+
+		/// <summary>
+		/// Finds string <i>s</i> in <i>range</i> of this span.
+		/// Returns its index in this span, or -1 if not found.
+		/// </summary>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public static int IndexOf(this ReadOnlySpan<char> t, Range range, ReadOnlySpan<char> s, bool ignoreCase = false) {
+			int i = t[range].IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+			if (i < 0) return i;
+			int start = range.Start.Value; if (range.Start.IsFromEnd) start = t.Length - start;
+			return i + start;
+		}
 
 		internal static void CopyTo_(this string t, char* p) => t.AsSpan().CopyTo(new Span<char>(p, t.Length));
 	}

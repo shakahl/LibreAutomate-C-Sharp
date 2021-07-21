@@ -1443,6 +1443,17 @@ namespace Au.Controls
 				}
 			}
 		}
+
+		/// <summary>
+		/// Sets scintilla's "end-styled position" = int.MaxValue, to avoid SCN_STYLENEEDED notifications.
+		/// Fast, just sets a field in scintilla.
+		/// </summary>
+		/// <remarks>
+		/// Scintilla sends SCN_STYLENEEDED even if lexer type is SCLEX_NULL. In some cases 1 or several, in some cases many, in some cases every 500 ms.
+		/// Old documentation and behavior: sends notifications when SCLEX_CONTAINER. No styling and notifications if SCLEX_NULL.
+		/// New documentation does not mention SCLEX_CONTAINER, SCLEX_NULL and even SCI_SETLEXER (replaced by SCI_SETILEXER?). But they are defined and used in scintilla.
+		/// </remarks>
+		public void zSetStyled() => Call(SCI_STARTSTYLING, int.MaxValue);
 	}
 
 	/// <summary>

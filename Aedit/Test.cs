@@ -49,6 +49,26 @@ using System.Drawing;
 
 #pragma warning disable 169
 
+class Cty
+{
+	int i;
+	int i3;
+
+	void Vo() {
+
+	}
+
+	int i2;
+	int i4;
+
+	void Vo2() { }
+	int i5;
+
+	void Vo3() { }
+	void Vo4() { }
+
+}
+
 static unsafe class Test
 {
 	//static void _ColorQuantizer() {
@@ -121,6 +141,33 @@ static unsafe class Test
 	//	}
 	//}
 
+	//static void _SpeedIEnumerableToListVsToArray() {
+	//	using var pi = perf.local();
+	//	var e = App.Model.Root.Descendants();
+
+	//	perf.cpu();
+	//	//Debug_.MemorySetAnchor_();
+	//	long n = 0;
+	//	using var nogc = new Debug_.NoGcRegion(100_000_000);
+	//	for (int i1 = 0; i1 < 7; i1++) {
+	//		int n2 = 10;
+	//		perf.first();
+	//		for (int i2 = 0; i2 < n2; i2++) { var a = e.ToList(); n += a.Count; } //ToList 2.217. ToArray 1.877. ToList.ToArray 2.958.
+	//		perf.next();
+	//		//for (int i2 = 0; i2 < n2; i2++) { var a = e.ToArray(); n += a.Length; } //ToList 2.217. ToArray 1.877. ToList.ToArray 2.958.
+	//		//perf.next();
+	//		//for (int i2 = 0; i2 < n2; i2++) { n += e.Count(); }
+	//		//perf.next();
+	//		for (int i2 = 0; i2 < n2; i2++) { }
+	//		perf.next();
+	//		for (int i2 = 0; i2 < n2; i2++) { }
+	//		perf.nw();
+	//		//100.ms();
+	//	}
+	//	//Debug_.MemoryPrint_();
+	//	print.it(n);
+	//}
+
 	public static void FromMenubar() {
 		//byte[] a=new byte[1]
 		//print.it()
@@ -130,17 +177,19 @@ static unsafe class Test
 		//_ColorQuantizer();
 		//ModelFind();
 		//CompressBrotli();
+		//_SpeedIEnumerableToListVsToArray();
+		//return;
 
 		//MetaReferences.DebugPrintCachedRefs();
 
 		var doc = Panels.Editor.ZActiveDoc;
 		//doc.test_ = true;
-		//print.it(doc.zCurrentPos8);
+		print.it(doc.zCurrentPos16);
 		//doc.TestHidden();
 		//doc.TestIndicators();
 		//doc.Call(SCI_SETSCROLLWIDTH, 1);
 
-		//Sci_GetStylingInfo(doc.ZSciPtr, 15, out var si); //fast
+		//Sci_GetVisibleRange(doc.ZSciPtr, 1, out var si); //fast
 		//print.it($"pos={doc.zCurrentPos8}, endStyled={si.endStyled}, endStyledLineStart={si.endStyledLineStart}, endStyledLine={si.endStyledLine+1}, visibleFrom={si.visibleFrom}, visibleFromLine={si.visibleFromLine+1}, visibleTo={si.visibleTo}, visibleToLine={si.visibleToLine+1}");
 
 		//Cpp.Cpp_Test();

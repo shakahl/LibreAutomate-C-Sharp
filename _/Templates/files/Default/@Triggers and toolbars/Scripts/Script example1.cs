@@ -1,6 +1,6 @@
 /*/ c ..\Functions\Class1.cs; /*/ //.
 script.setup(trayIcon: true);
-//;
+//..
 
 //This is an example script used in script.run examples somewhere in this project folder.
 //It runs in separate process. You can edit and run it without restarting the main script process (triggers and toolbars).

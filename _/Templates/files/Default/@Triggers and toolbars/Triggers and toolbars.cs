@@ -1,9 +1,9 @@
 //.
 using Au.Triggers;
 using System.Reflection;
-partial class Program { static void Main(string[] a) => new Program(a); Program(string[] args) { //;;
+partial class Program { static void Main(string[] a) => new Program(a); Program(string[] args) { //...
 script.setup();
-//;
+//..
 
 //Here you can add code that runs at startup. Set variables, etc.
 //Add triggers and toolbars in other files of this project. More info in "Readme.txt".
@@ -71,4 +71,4 @@ void RunTriggersAndToolbars() {
 
 }
 
-//;
+//..

@@ -162,13 +162,6 @@ namespace Au.More
 			throw new ArgumentException(s.ToString());
 		}
 
-#if DEBUG
-		internal static int GetComObjRefCount_(IntPtr obj) {
-			Marshal.AddRef(obj);
-			return Marshal.Release(obj);
-		}
-#endif
-
 		/// <summary>
 		/// Returns true if using Debug configuration of Au.dll.
 		/// </summary>
@@ -184,9 +177,19 @@ namespace Au.More
 
 		//CONSIDER: move the MemoryX functions to perf as public.
 
+#if TRACE
+		/// <summary>
+		/// Calls Marshal.AddRef(obj), then calls/returns Marshal.Release(obj).
+		/// Available if TRACE defined.
+		/// </summary>
+		internal static int GetComObjRefCount_(IntPtr obj) {
+			Marshal.AddRef(obj);
+			return Marshal.Release(obj);
+		}
+
 		/// <summary>
 		/// Returns managed memory size as formatted string. Uses GC.GetTotalMemory.
-		/// Works in Release too.
+		/// Available if TRACE defined.
 		/// </summary>
 		/// <param name="fromAnchor">Get the difference from previous call to <b>MemorySetAnchor_</b>.</param>
 		internal static string MemoryGet_(bool fromAnchor = true) {
@@ -199,18 +202,60 @@ namespace Au.More
 
 		/// <summary>
 		/// Prints managed memory size. Uses GC.GetTotalMemory.
-		/// Works in Release too.
+		/// Available if TRACE defined.
 		/// </summary>
 		/// <param name="fromAnchor">Get the difference from previous call to <b>MemorySetAnchor_</b>.</param>
 		internal static void MemoryPrint_(bool fromAnchor = true) => _Print2(MemoryGet_(fromAnchor));
 
 		/// <summary>
 		/// Memorizes current managed memory size, so that next call to another <b>MemoryX</b> function with fromAnchor=true (default) will get memory size difference from current memory size.
+		/// Available if TRACE defined.
 		/// </summary>
 		internal static void MemorySetAnchor_() { s_mem0 = GC.GetTotalMemory(false); }
 
 		/// <summary>
+		/// Temporarily suspends GC collections if possible. Restores in <b>Dispose</b>.
+		/// Available if TRACE defined.
+		/// </summary>
+		internal struct NoGcRegion : IDisposable
+		{
+			bool _restore, _print;
+
+			/// <summary>
+			/// Suspends GC collections if possible.
+			/// Does nothing in 32-bit process.
+			/// </summary>
+			/// <param name="memSize">Recommended 100_000_000. Still works if 200_000_000, but fails if 300_000_000. Not tested in 32-bit process.</param>
+			/// <param name="print">Let <b>Dispose</b> print size of managed memory added since ctor.</param>
+			public NoGcRegion(long memSize, bool print = true) {
+				_restore = false;
+				_print = print;
+				if (osVersion.is32BitProcess) return;
+				if(_print) Debug_.MemorySetAnchor_();
+				//print.it(System.Runtime.GCSettings.LatencyMode);
+				try { _restore = GC.TryStartNoGCRegion(memSize); }
+				catch (InvalidOperationException ex) { Debug_.Print(ex.Message); }
+			}
+
+			/// <summary>
+			/// Restores suspended GC collections.
+			/// </summary>
+			public void Dispose() {
+				if (_restore) {
+					_restore = false;
+					//print.it(System.Runtime.GCSettings.LatencyMode == System.Runtime.GCLatencyMode.NoGCRegion);
+					//if(System.Runtime.GCSettings.LatencyMode == System.Runtime.GCLatencyMode.NoGCRegion) GC.EndNoGCRegion();
+					try { GC.EndNoGCRegion(); } //note: need to call even if not in nogc region (then exception); else TryStartNoGCRegion will throw exception.
+					catch (InvalidOperationException ex) { Debug_.Print(ex.Message); }
+					if(_print) Debug_.MemoryPrint_();
+					ThreadPool.QueueUserWorkItem(_ => GC.Collect());
+				}
+			}
+		}
+
+		/// <summary>
 		/// Prints assemblies already loaded or/and loaded in the future.
+		/// Works in Release too, if TRACE defined.
 		/// </summary>
 		internal static void PrintLoadedAssemblies(bool now, bool future, bool stackTrace = false) {
 			if (now) {
@@ -228,5 +273,6 @@ namespace Au.More
 				//var stack = new Stack<string>();
 			}
 		}
+#endif
 	}
 }

@@ -349,6 +349,32 @@ static class CiUtil
 		return b.ToString();
 	}
 
+	/// <summary>
+	/// Finds child trivia of this token. Returns default if <i>position</i> is not in child trivia of this token. Does not descend into structured trivia.
+	/// The code is from Roslyn source function FindTriviaByOffset. Roslyn has function to find trivia in SyntaxNode (recursive), but not in SyntaxToken.
+	/// </summary>
+	/// <param name="t"></param>
+	/// <param name="position">Position in whole code.</param>
+	public static SyntaxTrivia FindTrivia(in this SyntaxToken t, int position) {
+		int textOffset = position - t.Position;
+		if (textOffset >= 0) {
+			var leading = t.LeadingWidth;
+			if (textOffset < leading) {
+				foreach (var trivia in t.LeadingTrivia) {
+					if (textOffset < trivia.FullWidth) return trivia;
+					textOffset -= trivia.FullWidth;
+				}
+			} else if (textOffset >= leading + t.Width) {
+				textOffset -= leading + t.Width;
+				foreach (var trivia in t.TrailingTrivia) {
+					if (textOffset < trivia.FullWidth) return trivia;
+					textOffset -= trivia.FullWidth;
+				}
+			}
+		}
+		return default;
+	}
+
 	public static string FormatSignatureXmlDoc(BaseMethodDeclarationSyntax m, string code) {
 		var b = new StringBuilder();
 		foreach (var p in m.ParameterList.Parameters) {

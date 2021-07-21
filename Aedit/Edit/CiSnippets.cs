@@ -23,8 +23,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 
-//TODO: remove parameter scope. Add attribute scope - inside [].
-
 static class CiSnippets
 {
 	class _CiComplItemSnippet : CiComplItem
@@ -50,7 +48,7 @@ static class CiSnippets
 		Type = 2, //class{ }, struct{ }, interface{ }
 		Function = 4, //method{ }, lambda{ }
 		Arrow = 8, //lambda=>, function=>
-		Parameters = 16, //funcDef(parameters) //eg Marshal attributes
+		Attributes = 16, //[Attributes]
 		Unknown = 32,
 		Any = 0xffff,
 		Line = 0x10000, //at start of line
@@ -61,7 +59,7 @@ static class CiSnippets
 	//static int s_test;
 	public static void AddSnippets(List<CiComplItem> items, TextSpan span, CompilationUnitSyntax root, string code, CSharpSyntaxContext syncon) {
 		//CSharpSyntaxContext was discovered later and therefore almost not used here.
-		if (syncon.IsObjectCreationTypeContext || syncon.IsAttributeNameContext) return;
+		if (syncon.IsObjectCreationTypeContext) return;
 		//CiUtil.GetContextType(syncon);
 
 		//print.clear(); print.it(++s_test);
@@ -116,8 +114,8 @@ static class CiSnippets
 		case ArrowExpressionClauseSyntax: //like void F() =>here
 			context = _Context.Arrow;
 			break;
-		case ParameterListSyntax:
-			context = _Context.Parameters;
+		case AttributeListSyntax:
+			context = _Context.Attributes;
 			break;
 		default:
 			if (span.IsEmpty) { //if '=> here;' or '=> here)' etc, use =>
@@ -154,7 +152,7 @@ static class CiSnippets
 								case "Type": con |= _Context.Type; break;
 								case "Namespace": con |= _Context.Namespace; break;
 								case "Arrow": con |= _Context.Arrow; break;
-								case "Parameters": con |= _Context.Parameters; break;
+								case "Attributes": con |= _Context.Attributes; break;
 								case "Any": con |= _Context.Any; break;
 								case "Line": con |= _Context.Line; break;
 								}
