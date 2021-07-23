@@ -14,8 +14,6 @@ using System.Reflection;
 using System.Linq;
 using System.Text.RegularExpressions; //for XML doc links
 
-//TODO: try to use ReadOnlySpan<char> with regexp instance functions. At least add 1 such function.
-
 namespace Au
 {
 	/// <summary>
@@ -284,12 +282,49 @@ namespace Au
 		/// </example>
 		public bool IsMatch(string s, Range? range = null, RXMatchFlags matchFlags = 0) {
 			if (!_GetStartEnd(s, range, out int start, out int end)) return false;
-			int rc = Cpp.Cpp_RegexMatch(_CodeHR, s, end, start, _GetMatchFlags(matchFlags), _pcreCallout, null, out BSTR errStr);
+			int rc = Cpp.Cpp_RegexMatch(_CodeHR, s.AsSpan(0, end), start, _GetMatchFlags(matchFlags), _pcreCallout, out _, out BSTR errStr, dontNeedM: true);
 			//print.it(rc);
 			//info: 0 is partial match, -1 is no match, <-1 is error
 			if (rc < -1) throw new AuException(errStr.ToStringAndDispose());
 			return rc >= 0;
 		}
+
+#if false
+		/// <summary>
+		/// Returns true if string <i>s</i> matches this regular expression.
+		/// </summary>
+		/// <param name="s">
+		/// Subject string.
+		/// If null, always returns false, even if the regular expression matches empty string.
+		/// </param>
+		/// <param name="start">
+		/// Start offset in the subject string.
+		/// The subject part before the start index is not ignored if regular expression starts with a lookbehind assertion or anchor, eg <c>^</c> or <c>\b</c> or <c>(?&lt;=...)</c>. Instead of <c>^</c> you can use <c>\G</c>. More info in PCRE documentation topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>, chapter "The string to be matched by pcre2_match()".
+		/// </param>
+		/// <param name="matchFlags">Options.
+		/// The same options also can be set in <b>regexp</b> constructor's <i>flags</i>. Constructor's flags and <i>matchFlags</i> are added, which means that <i>matchFlags</i> cannot unset flags set by constructor.
+		/// </param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>start</i>.</exception>
+		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+		/// <remarks>
+		/// If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag.
+		/// 
+		/// This function is similar to <see cref="Regex.IsMatch(string)"/>.
+		/// </remarks>
+		public bool IsMatch(ReadOnlySpan<char> s, int start = 0, RXMatchFlags matchFlags = 0) {
+			if (!_IsGoodSpan(s, start)) return false;
+			int rc = Cpp.Cpp_RegexMatch(_CodeHR, s, start, _GetMatchFlags(matchFlags), _pcreCallout, out _, out BSTR errStr, dontNeedM: true);
+			if (rc < -1) throw new AuException(errStr.ToStringAndDispose());
+			return rc >= 0;
+		}
+
+		//If start invalid, throws ArgumentOutOfRangeException.
+		//If s (subject) pointer is null, returns false.
+		static bool _IsGoodSpan(ReadOnlySpan<char> s, int start) {
+			if ((uint)start > s.Length) throw new ArgumentOutOfRangeException("start");
+			return s != default;
+		}
+#endif
 
 		/// <summary>
 		/// Returns true if string <i>s</i> matches this regular expression.
@@ -429,7 +464,7 @@ namespace Au
 		//group - 0 or group number. Used only to throw if invalid.
 		int _Match(string s, int group, Range? range, RXMatchFlags matchFlags, out Cpp.RegexMatch m) {
 			if (!_GetStartEnd(s, range, out int start, out int end)) { m = default; return -1; }
-			int rc = Cpp.Cpp_RegexMatch(_CodeHR, s, end, start, _GetMatchFlags(matchFlags), _pcreCallout, out m, out BSTR errStr);
+			int rc = Cpp.Cpp_RegexMatch(_CodeHR, s.AsSpan(0, end), start, _GetMatchFlags(matchFlags), _pcreCallout, out m, out BSTR errStr);
 			//print.it(rc);
 			//info: 0 is partial match, -1 is no match, <-1 is error
 			if (rc < -1) throw new AuException(errStr.ToStringAndDispose());
@@ -462,7 +497,7 @@ namespace Au
 			//To get results, use properties Match or GroupX. Don't call Next or any other match function before it.
 			public bool Next() {
 				if (foundCount >= (uint)_maxCount) return false;
-				_rc = Cpp.Cpp_RegexMatch(_rx._CodeHR, _subject, _to, _from, _matchFlags, _rx._pcreCallout, out _m, out BSTR errStr);
+				_rc = Cpp.Cpp_RegexMatch(_rx._CodeHR, _subject.AsSpan(0, _to), _from, _matchFlags, _rx._pcreCallout, out _m, out BSTR errStr);
 				//print.it(_rc);
 				//info: 0 cannot be (partial match), -1 is no match, <-1 is error
 				if (_rc < 0) {
@@ -1139,7 +1174,7 @@ namespace Au
 		}
 	}
 
-	#region static
+#region static
 
 	public static partial class ExtString
 	{
@@ -1504,5 +1539,5 @@ namespace Au
 		}
 	}
 
-	#endregion
+#endregion
 }

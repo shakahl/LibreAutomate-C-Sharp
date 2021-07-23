@@ -840,8 +840,13 @@ partial class CiCompletion
 			var change = _data.completionService.GetChangeAsync(_data.document, ci).Result;
 			//note: don't use the commitCharacter parameter. Some providers, eg XML doc, always set IncludesCommitCharacter=true, even when commitCharacter==null, but may include or not, and may include inside text or at the end.
 
-			s = change.TextChange.NewText;
-			var span = change.TextChange.Span;
+			//s = change.TextChange.NewText;
+			//var span = change.TextChange.Span;
+			var changes = change.TextChanges;
+			Debug_.PrintIf(changes.Length != 1 && item.Provider != CiComplProvider.Override, changes); //eg the override provider also may add 'using'
+			var lastChange = changes.Last();
+			s = lastChange.NewText;
+			var span = lastChange.Span;
 			i = span.Start;
 			len = span.Length + codeLenDiff;
 			isComplex = change.NewPosition.HasValue;
@@ -853,21 +858,29 @@ partial class CiCompletion
 				int newPos = change.NewPosition.Value;
 				switch (item.Provider) {
 				case CiComplProvider.Override:
-					newPos = -1; //difficult to calculate and not useful
-
+					newPos = -1;
 					//Replace 4 spaces with tab. Make { in same line.
 					s = s.Replace("    ", "\t").RegexReplace(@"\R\t*\{", " {", 1);
 					//Correct indentation. 
-					int indent = 0, indent2 = doc.zLineIndentationFromPos(true, _data.tempRange.CurrentFrom);
-					for (int j = s.IndexOf('\t'); (uint)j < s.Length && s[j] == '\t'; j++) indent++;
+					int indent = s.FindNot("\t"), indent2 = doc.zLineIndentationFromPos(true, _data.tempRange.CurrentFrom);
 					if (indent > indent2) s = s.RegexReplace("(?m)^" + new string('\t', indent - indent2), "");
 					break;
-				case CiComplProvider.XmlDoc when !s.Ends('>') && s.RegexMatch(@"^<?(\w+)", 1, out string tag):
-					if (s == tag || (ci.Properties.TryGetValue("AfterCaretText", out var s1) && s1.NE())) newPos++;
-					s += "></" + tag + ">";
+				case CiComplProvider.XmlDoc:
+					if (!s.Ends('>') && s.RegexMatch(@"^<?(\w+)($| )", 1, out string tag)) {
+						string lt = s.Starts('<') || doc.zText.Eq(span.Start - 1, '<') ? "" : "<";
+						if (s == tag || (ci.Properties.TryGetValue("AfterCaretText", out var s1) && s1.NE())) newPos += 1 + lt.Length;
+						s = $"{lt}{s}></{tag}>";
+					}
 					break;
 				}
-				doc.zReplaceRange(true, i, i + len, s);
+				using var undo = new KScintilla.UndoAction(doc);
+				bool last = true;
+				for (int j = changes.Length; --j >= 0; last = false) {
+					var v = changes[j];
+					doc.zReplaceRange(true, v.Span.Start, v.Span.End + (last ? codeLenDiff : 0), last ? s : v.NewText);
+					//if(last && newPos<0) newPos = span.Start - doc.zLen16; //from end //currently don't need because Scintilla automatically does it (read zReplaceRange doc)
+				}
+				//if (newPos < 0) newPos += doc.zLen16;
 				if (newPos >= 0) doc.zSelect(true, newPos, newPos, makeVisible: true);
 				return CiComplResult.Complex;
 			}

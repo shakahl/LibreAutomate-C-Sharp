@@ -276,7 +276,7 @@ static class CiSnippets
 			j = s.Find("$end$", i);
 			if (j >= i) { s = s.Remove(j, 5); selectLength = j - i; }
 
-			showSignature = s.RegexIsMatch(@"\w[([][^)\]]*""?$", range: 0..i);
+			showSignature = s.RegexIsMatch(@"\w[([][^)\]]*""?$", range: ..i);
 			if (selectLength == 0) {
 				if (s.Eq(i - 1, "()") || s.Eq(i - 1, "[]") || s.Eq(i - 1, "\"\"")) tempRange = (i, i);
 				else if (s.Eq(i - 2, "{  }")) tempRange = (i - 1, i + 1);

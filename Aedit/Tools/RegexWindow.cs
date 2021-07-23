@@ -53,8 +53,13 @@ namespace Au.Tools
 			set {
 				if (value == _topic) return;
 				_topic = value;
-				var s = _GetContentText();
-				if (!s.RegexMatch($@"(?ms)^-- {_topic} --\R\R(.+?)\R-- ", 1, out s)) s = "";
+				string s;
+				if(value.Starts("Note:")) {
+					s = value;
+				} else {
+					s = _GetContentText();
+					if (!s.RegexMatch($@"(?ms)^-- {_topic} --\R\R(.+?)\R-- ", 1, out s)) s = "";
+				}
 				this.Text2 = s;
 			}
 		}

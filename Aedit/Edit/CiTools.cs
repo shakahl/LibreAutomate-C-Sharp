@@ -45,12 +45,12 @@ class CiTools
 	public void RegexWindowShow(SciCode doc, string code, int pos16, TextSpan stringSpan, bool replace, wnd dontCover = default) {
 		int j = stringSpan.Start, vi = _StringPrefixLength(code, j);
 
-		if (!replace && (vi == 0 || !(code[j] == '@' || code[j + 1] == '@')))
-			dialog.showInfo(null, "Regular expression string should be like @\"text\", not like \"text\". The Regex tool will not escape \\ when inserting text.");
-
 		_regexWindow ??= new RegexWindow();
-
 		_ShowWindow(_regexWindow, doc, pos16, dontCover);
+
+		if (!replace && (vi == 0 || !(code[j] == '@' || code[j + 1] == '@')))
+			_regexWindow.CurrentTopic = "Note: The string should be like @\"text\", not like \"text\". This tool does not escape \\ characters.";
+
 		var s = _regexWindow.CurrentTopic;
 		if (s == "replace") {
 			if (!replace) _regexWindow.CurrentTopic = _regexTopic;

@@ -15,7 +15,7 @@ using Au;
 using Au.Types;
 using Au.Compiler;
 
-//TODO: if was multiline, format multiline. At least if first meta was in new line.
+//SHOULDDO: preserve order.
 
 class MetaCommentsParser
 {
@@ -31,6 +31,8 @@ class MetaCommentsParser
 	public List<string> resource => _resource ??= new List<string>();
 	public List<string> com => _com ??= new List<string>();
 
+	bool _multiline;
+
 	public MetaCommentsParser(FileNode f) : this(f.GetText()) { _fn = f; }
 
 	public MetaCommentsParser(string code) {
@@ -38,6 +40,7 @@ class MetaCommentsParser
 		if (meta.end == 0) return;
 		MetaRange = meta;
 		foreach (var t in MetaComments.EnumOptions(code, meta)) _ParseOption(t.Name(), t.Value());
+		_multiline = code[meta.start..meta.end].Contains('\n');
 	}
 
 	public (int start, int end) MetaRange { get; private set; }
@@ -83,7 +86,7 @@ class MetaCommentsParser
 			if (i > 1) dir = dir.Remove(i); else dir = null;
 		}
 
-		var b = new StringBuilder("/*/ ");
+		var b = new StringBuilder(_multiline ? "/*/\r\n" : "/*/ ");
 		_Append("role", role);
 
 		_Append("ifRunning", ifRunning);
@@ -112,7 +115,7 @@ class MetaCommentsParser
 		_AppendList("c", _c, true);
 		_AppendList("resource", _resource, true);
 
-		if (b.Length == 4) return "";
+		if (b.Length <= 5) return "";
 		b.Append("/*/");
 		if (append != null) b.Append(append);
 		return b.ToString();
@@ -120,7 +123,7 @@ class MetaCommentsParser
 		void _Append(string name, string value, bool relativePath = false) {
 			if (value != null) {
 				if (relativePath && dir != null && value.Starts(dir, true)) value = value[dir.Length..];
-				b.Append(name).Append(' ').Append(value).Append("; ");
+				b.Append(name).Append(' ').Append(value).Append(_multiline ? ";\r\n" : "; ");
 			}
 		}
 

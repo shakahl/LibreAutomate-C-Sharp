@@ -223,7 +223,7 @@ class CiSignature
 			argNode = root.FindToken(cd.pos16).Parent;
 			var stringFormat = CiUtil.GetParameterStringFormat(argNode, semo, false);
 			//print.it(stringFormat);
-			if (stringFormat != default) CodeInfo._tools.ShowForStringParameter(stringFormat, cd, argNode.Span, _textPopup.PopupWindow.Hwnd);
+			if (stringFormat != 0) CodeInfo._tools.ShowForStringParameter(stringFormat, cd, argNode.Span, _textPopup.PopupWindow.Hwnd);
 		}
 	}
 #else //old

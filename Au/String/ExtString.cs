@@ -237,6 +237,43 @@ namespace Au
 			return t.Length > 0 && t[0] == c;
 		}
 
+		//Speed test results with text of length 5_260_070 and 'find' text "inheritdoc":
+		//IndexOf(Ordinal)							6 ms (depends on 'find' text; can be much faster if starts with a rare character)
+		//IndexOf(OrdinalIgnoreCase)				32 ms
+		//FindStringOrdinal()						8 ms
+		//FindStringOrdinal(true)					32 ms
+		//Like("*" + x + "*")						10 ms
+		//Like("*" + x + "*", true)					12 ms
+		//RegexIsMatch(LITERAL)						13 ms
+		//RegexIsMatch(LITERAL|CASELESS)			19 ms
+		//Regex.Match(CultureInvariant)				4 ms (when no regex-special characters or if escaped)
+		//Regex.Match(CultureInvariant|IgnoreCase)	9 ms
+		//Find2(true)								10 ms
+
+		//Could optimize the case-insensitive Find.
+		//	Either use table (like Like), or for very long strings use Regex.
+		//	But maybe then result would be different in some cases, not sure.
+		//	How if contains Unicode surrogates?
+		//	Bad: slower startup, because need to create table or JIT Regex.
+		//	Never mind.
+
+		//public static int Find2(this string t, string s, bool ignoreCase = false) {
+		//	if (!ignoreCase) return t.IndexOf(s, StringComparison.Ordinal);
+		//	int n = t.Length - s.Length;
+		//	if (n >= 0) {
+		//		if (s.Length == 0) return 0;
+		//		var m = Tables_.LowerCase;
+		//		char first = m[s[0]];
+		//		for (int i = 0; i <= n; i++) {
+		//			if (m[t[i]] == first) {
+		//				int j = 1; while (j < s.Length && m[t[i + j]] == m[s[j]]) j++;
+		//				if (j == s.Length) return i;
+		//			}
+		//		}
+		//	}
+		//	return -1;
+		//}
+
 		/// <summary>
 		/// Finds substring in this string. Returns its 0-based index, or -1 if not found.
 		/// </summary>
@@ -250,7 +287,6 @@ namespace Au
 		public static int Find(this string t, string s, bool ignoreCase = false) {
 			return t.IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
-		//FUTURE: if ignoreCase, maybe use our case table for Find, Eq, etc. Because now 12 times slower. But Find(ignoreCase: true) where speed is very important are rare.
 
 		/// <summary>
 		/// Finds substring in part of this string. Returns its 0-based index, or -1 if not found.
@@ -1431,7 +1467,7 @@ namespace Au
 		public static bool Eq(this ReadOnlySpan<char> t, int startIndex, string s, bool ignoreCase = false) {
 			int n = s?.Length ?? throw new ArgumentNullException();
 			int to = startIndex + n, tlen = t.Length;
-			if(to > tlen || (uint)startIndex > tlen) return false;
+			if (to > tlen || (uint)startIndex > tlen) return false;
 			t = t[startIndex..to];
 			if (!ignoreCase) return t.SequenceEqual(s);
 			return t.Equals(s, StringComparison.OrdinalIgnoreCase);
@@ -1500,6 +1536,15 @@ namespace Au
 			if (i < 0) return i;
 			int start = range.Start.Value; if (range.Start.IsFromEnd) start = t.Length - start;
 			return i + start;
+		}
+
+		/// <summary>
+		/// Creates read-only span from range of this string.
+		/// </summary>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public static ReadOnlySpan<char> AsSpan(this string t, Range r) {
+			var (i, len) = r.GetOffsetAndLength(t.Length);
+			return t.AsSpan(i, len);
 		}
 
 		internal static void CopyTo_(this string t, char* p) => t.AsSpan().CopyTo(new Span<char>(p, t.Length));

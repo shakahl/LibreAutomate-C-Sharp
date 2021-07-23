@@ -307,7 +307,7 @@
         <member name="T:Au.Types.Cpp.RegexMatch">
             <summary>This and related API are documented in the C++ dll project.</summary>
         </member>
-        <member name="M:Au.Types.Cpp.Cpp_RegexMatch(System.Runtime.InteropServices.HandleRef,System.String,System.IntPtr,System.IntPtr,Au.Types.RXMatchFlags,Au.Types.Cpp.PcreCalloutT,Au.Types.Cpp.RegexMatch@,Au.Types.BSTR@)">
+        <member name="M:Au.Types.Cpp.Cpp_RegexMatch(System.Runtime.InteropServices.HandleRef,System.Char*,System.IntPtr,System.IntPtr,Au.Types.RXMatchFlags,Au.Types.Cpp.PcreCalloutT,Au.Types.Cpp.RegexMatch@,System.Boolean,Au.Types.BSTR@)">
             <summary>This and related API are documented in the C++ dll project.</summary>
         </member>
         <member name="T:Au.Types.ExtMisc">
@@ -7098,14 +7098,6 @@
             Gets the length of the instructions and operands.
             </summary>
             <value>The length.</value>
-        </member>
-        <member name="M:Au.More.ILInstruction.ToString">
-            <summary>
-            Returns a <see cref="T:System.String"/> that represents this instance.
-            </summary>
-            <returns>
-            A <see cref="T:System.String"/> that represents this instance.
-            </returns>
         </member>
         <member name="T:Au.More.ILReader">
             <summary>
@@ -20083,6 +20075,12 @@
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
+        <member name="M:Au.ExtString.AsSpan(System.String,System.Range)">
+            <summary>
+            Creates read-only span from range of this string.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+        </member>
         <member name="M:Au.ExtString.RegexIsMatch(System.String,System.String,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Returns true if this string matches PCRE regular expression <i>rx</i>.
@@ -20333,6 +20331,7 @@
             <param name="t">This string. If null, returns false. If "", returns true if pattern is "" or "*".</param>
             <param name="pattern">String that possibly contains wildcard characters. Cannot be null. If "", returns true if this string is "". If "*", always returns true except when this string is null.</param>
             <param name="ignoreCase">Case-insensitive.</param>
+            <exception cref="T:System.ArgumentNullException"><i>pattern</i> is null.</exception>
             <remarks>
             Wildcard characters:
             
@@ -20344,8 +20343,6 @@
             There are no escape sequences for * and ? characters.
             
             Uses ordinal comparison, ie does not depend on current culture.
-            
-            Much faster than regular expression.
             
             See also: [](xref:wildcard_expression).
             </remarks>
@@ -20361,6 +20358,10 @@
             ]]></code>
             </example>
             <seealso cref="T:Au.wildex"/>
+            <seealso cref="M:Au.ExtString.Like(System.ReadOnlySpan{System.Char},System.String,System.Boolean)"/>
+        </member>
+        <member name="M:Au.ExtString.Like(System.ReadOnlySpan{System.Char},System.String,System.Boolean)">
+            <inheritdoc cref="M:Au.ExtString.Like(System.String,System.String,System.Boolean)"/>
         </member>
         <member name="M:Au.ExtString.Like(System.String,System.Boolean,System.String[])">
             <summary>
@@ -20370,6 +20371,7 @@
             <param name="t"></param>
             <param name="ignoreCase">Case-insensitive.</param>
             <param name="patterns">One or more wildcard strings. The array and strings cannot be null.</param>
+            <exception cref="T:System.ArgumentNullException">A string in <i>patterns</i> is null.</exception>
         </member>
         <member name="T:Au.regexp">
             <summary>
@@ -20591,6 +20593,21 @@
             print.it(x.IsMatch(s));
             ]]></code>
             </example>
+        </member>
+        <member name="M:Au.regexp.IsMatch(System.ReadOnlySpan{System.Char},System.Int32,Au.Types.RXMatchFlags)">
+            <summary>
+            Returns true if string <i>s</i> matches this regular expression.
+            </summary>
+            <param name="start">
+            Start offset in the subject string.
+            The subject part before the start index is not ignored if regular expression starts with a lookbehind assertion or anchor, eg <c>^</c> or <c>\b</c> or <c>(?&lt;=...)</c>. Instead of <c>^</c> you can use <c>\G</c>. More info in PCRE documentation topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>, chapter "The string to be matched by pcre2_match()".
+            </param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>start</i>.</exception>
+            <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+            <remarks>
+            If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag.
+            </remarks>
+            <inheritdoc cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>
         </member>
         <member name="M:Au.regexp.Match(System.String,Au.Types.RXMatch@,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>

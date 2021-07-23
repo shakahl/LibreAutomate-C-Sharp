@@ -302,6 +302,8 @@ namespace Au.Types
 			}
 		}
 
+		//TODO: public ReadOnlySpan<char> Span.
+
 		internal string Subject_ => _subject;
 
 		/// <summary>
@@ -597,14 +599,16 @@ namespace Au.Types
 
 		/// <summary>This and related API are documented in the C++ dll project.</summary>
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int Cpp_RegexMatch(HandleRef code, string s, nint len, nint start, RXMatchFlags flags,
-			PcreCalloutT callout, out RegexMatch m, out BSTR errStr);
+		static extern int Cpp_RegexMatch(HandleRef code, char* s, nint len, nint start, RXMatchFlags flags,
+			PcreCalloutT callout, out RegexMatch m, bool dontNeedM, out BSTR errStr);
 		//note: don't use [MarshalAs(UnmanagedType.BStr)] out string errStr, it makes much slower.
 
-		//This overload allows to pass m null. Using 2 overloads makes programming simpler.
-		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int Cpp_RegexMatch(HandleRef code, string s, nint len, nint start, RXMatchFlags flags,
-			PcreCalloutT callout, RegexMatch* m, out BSTR errStr);
+		internal static int Cpp_RegexMatch(HandleRef code, ReadOnlySpan<char> s, nint start, RXMatchFlags flags, PcreCalloutT callout, out RegexMatch m, out BSTR errStr, bool dontNeedM = false) {
+			fixed (char* p = s) {
+				if (p == null) { m = default; errStr = default; return -1; }
+				return Cpp_RegexMatch(code, p, s.Length, start, flags, callout, out m, dontNeedM, out errStr);
+			}
+		}
 
 		//rejected
 		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]

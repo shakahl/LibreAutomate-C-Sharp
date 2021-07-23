@@ -298,7 +298,7 @@ struct RegexMatch
 //errStr, if not null, receives error text when fails, except when no match or partial match. Caller then must SysFreeString it.
 //This version is called from C#. In this dll you can use Free; use this func when need match data (ovector etc).
 EXPORT int Cpp_RegexMatch(pcre2_code_16* code, STR s, size_t len, size_t start = 0, UINT flags = 0,
-	int(*callout)(pcre2_callout_block*, void*) = null, ref RegexMatch * m = null, out BSTR * errStr = null)
+	int(*callout)(pcre2_callout_block*, void*) = null, ref RegexMatch * m = null, bool dontNeedM = false, out BSTR * errStr = null)
 {
 	pcre2_match_data_16* md;
 #ifdef STACK_MD
@@ -314,7 +314,7 @@ EXPORT int Cpp_RegexMatch(pcre2_code_16* code, STR s, size_t len, size_t start =
 	assert(R != 0); //this could be if md contains too small ovector
 	if(R == PCRE2_ERROR_PARTIAL) R = 0;
 
-	if(m != null) {
+	if(!dontNeedM) {
 		//info: read PCRE API doc, section "HOW PCRE2_MATCH() RETURNS A STRING AND CAPTURED SUBSTRINGS"
 		int n = R > 0 ? pcre2_get_ovector_count_16(md) : (R == 0 ? 1 : 0);
 		//Printf(L"R=%i, n=%i", R, n);

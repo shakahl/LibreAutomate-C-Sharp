@@ -23,7 +23,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System.Windows.Input;
 
-//TODO: support <inheritdoc>. VS supports it partially (shows only summary, no parameters/remarks/exceptions).
 //SHOULDDO: don't show black/unfolded text before Roslyn is ready. Then user can't work anyway, and waits until colored/folded, and the black text is annoying.
 
 static class CodeInfo

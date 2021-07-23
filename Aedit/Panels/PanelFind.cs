@@ -15,7 +15,8 @@ using System.Media;
 //CONSIDER: right-click "Find" - search backward. The same for "Replace" (reject "find next"). Rarely used.
 //CONSIDER: option to replace and don't find next until next click. Eg Eclipse has buttons "Replace" and "Replace/Find". Or maybe delay to preview.
 
-//TODO: remove "Name" checkbox. Instead add textbox at the bottom of Files panel. Use wildex.
+//CONSIDER: remove "Name" checkbox. Instead add textbox at the bottom of Files panel. Use wildex (now can use Wildex, Word, Regex; it's easier).
+//	Now in "Name" mode all the push buttons are not used. If clicked, they uncheck "Name". And the Replace textbox not used.
 
 class PanelFind : UserControl
 {
@@ -33,9 +34,9 @@ class PanelFind : UserControl
 		b.Row((-1, 22..)).Add(out _tFind).Margin(-1, 0, -1, 2).Multiline(wrap: TextWrapping.Wrap).Tooltip("Text to find");
 		b.Row((-1, 22..)).Add(out _tReplace).Margin(-1, 0, -1, 2).Multiline(wrap: TextWrapping.Wrap).Tooltip("Replacement text");
 		b.R.StartGrid().Columns((-1, ..80), (-1, ..80), (-1, ..80), 0);
-		b.R.AddButton("Find", _bFind_Click).Tooltip("Find next match in editor");
-		b.AddButton("Replace", _bReplace_Click).Tooltip("Replace single match in editor.\nRight click - find next match.");
-		b.AddButton("Repl. all", _bReplaceAll_Click).Tooltip("Replace all matches in editor");
+		b.R.AddButton("Find", _bFind_Click).Tooltip("Find next in editor");
+		b.AddButton("Replace", _bReplace_Click).Tooltip("Replace current found text in editor and find next.\nRight click - find next.");
+		b.AddButton("Repl. all", _bReplaceAll_Click).Tooltip("Replace all in editor");
 
 		b.R.AddButton("In files", _bFindIF_Click).Tooltip("Find text in files");
 		b.StartStack();
@@ -45,7 +46,7 @@ class PanelFind : UserControl
 		b.Last.Style = bstyle;
 		b.End();
 
-		b.Add(out _cName, "Name").Tooltip("Search in filenames");
+		b.Add(out _cName, "Name").Tooltip("Search in filenames, not in text");
 
 		b.R.Add(out _cCase, "Case").Tooltip("Match case")
 			.And(0).Add(out _cWildex, "Wildex").Hidden().Tooltip("Wildcard expression.\nExamples: start*.cs, *end.cs, *middle*.cs, **m green.cs||blue.cs.\nF1 - Wildex help.");
@@ -400,7 +401,7 @@ class PanelFind : UserControl
 			from = 0; retryFromStart = true; replace = false;
 			goto g1;
 		}
-		if (retryFromStart) TUtil.InfoTooltip(ref _ttNext, _tFind, "Info: this match is before last position");
+		if (retryFromStart) TUtil.InfoTooltip(ref _ttNext, _tFind, "Info: searching from start.");
 		int to = doc.zPos8(i + len);
 		i = doc.zPos8(i);
 		if (replace && i == from8 && to == doc.zSelectionEnd8) {

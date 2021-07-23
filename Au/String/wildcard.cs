@@ -27,6 +27,7 @@ namespace Au
 		/// <param name="t">This string. If null, returns false. If "", returns true if pattern is "" or "*".</param>
 		/// <param name="pattern">String that possibly contains wildcard characters. Cannot be null. If "", returns true if this string is "". If "*", always returns true except when this string is null.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
+		/// <exception cref="ArgumentNullException"><i>pattern</i> is null.</exception>
 		/// <remarks>
 		/// Wildcard characters:
 		/// 
@@ -38,8 +39,6 @@ namespace Au
 		/// There are no escape sequences for * and ? characters.
 		/// 
 		/// Uses ordinal comparison, ie does not depend on current culture.
-		/// 
-		/// Much faster than regular expression.
 		/// 
 		/// See also: [](xref:wildcard_expression).
 		/// </remarks>
@@ -55,6 +54,7 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		/// <seealso cref="wildex"/>
+		/// <seealso cref="Like(ReadOnlySpan{char}, string, bool)"/>
 #if false //somehow speed depends on dll version. With some versions same as C# code, with some slower. Also depends on string. With shortest strings 50% slower.
 		public static bool Like(this string t, string pattern, bool ignoreCase = false)
 		{
@@ -64,13 +64,28 @@ namespace Au
 		}
 #else
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static bool Like(this string t, string pattern, bool ignoreCase = false)
-		{
-			if(t == null) return false;
-			int patLen = pattern.Length;
-			if(patLen == 0) return t.Length == 0;
-			if(patLen == 1 && pattern[0] == '*') return true;
-			if(t.Length == 0) return false;
+		public static bool Like(this string t, string pattern, bool ignoreCase = false) {
+			int patLen = pattern?.Length ?? throw new ArgumentNullException();
+			if (t == null) return false;
+			if (patLen == 0) return t.Length == 0;
+			if (patLen == 1 && pattern[0] == '*') return true;
+			if (t.Length == 0) return false;
+
+			fixed (char* str = t, pat = pattern) {
+				return _WildcardCmp(str, pat, t.Length, patLen, ignoreCase ? Tables_.LowerCase : null);
+			}
+
+			//Microsoft.VisualBasic.CompilerServices.Operators.LikeString() supports more wildcard characters etc. Depends on current culture, has bugs, slower 6-250 times.
+			//System.IO.Enumeration.FileSystemName.MatchesSimpleExpression supports \escaping. Slower 2 - 100 times.
+		}
+
+		/// <inheritdoc cref="Like(string, string, bool)"/>
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		public static bool Like(this ReadOnlySpan<char> t, string pattern, bool ignoreCase = false) {
+			int patLen = pattern?.Length ?? throw new ArgumentNullException();
+			if (patLen == 0) return t.Length == 0;
+			if (patLen == 1 && pattern[0] == '*') return true;
+			if (t.Length == 0) return false;
 
 			fixed (char* str = t, pat = pattern) {
 				return _WildcardCmp(str, pat, t.Length, patLen, ignoreCase ? Tables_.LowerCase : null);
@@ -81,27 +96,26 @@ namespace Au
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		static bool _WildcardCmp(char* s, char* w, int lenS, int lenW, char* table)
-		{
+		static bool _WildcardCmp(char* s, char* w, int lenS, int lenW, char* table) {
 			char* se = s + lenS, we = w + lenW;
 
 			//find '*' from start. Makes faster in some cases.
-			for(; (w < we && s < se); w++, s++) {
+			for (; w < we && s < se; w++, s++) {
 				char cS = s[0], cW = w[0];
-				if(cW == '*') goto g1;
-				if(cW == cS || cW == '?') continue;
-				if((table == null) || (table[cW] != table[cS])) return false;
+				if (cW == '*') goto g1;
+				if (cW == cS || cW == '?') continue;
+				if ((table == null) || (table[cW] != table[cS])) return false;
 			}
-			if(w == we) return s == se; //w ended?
+			if (w == we) return s == se; //w ended?
 			goto gr; //s ended
 			g1:
 
 			//find '*' from end. Makes "*text" much faster.
-			for(; (we > w && se > s); we--, se--) {
+			for (; we > w && se > s; we--, se--) {
 				char cS = se[-1], cW = we[-1];
-				if(cW == '*') break;
-				if(cW == cS || cW == '?') continue;
-				if((table == null) || (table[cW] != table[cS])) return false;
+				if (cW == '*') break;
+				if (cW == cS || cW == '?') continue;
+				if ((table == null) || (table[cW] != table[cS])) return false;
 			}
 
 			//Algorithm by Alessandro Felice Cantatore, http://xoomer.virgilio.it/acantato/dev/wildcard/wildmatch.html
@@ -110,20 +124,20 @@ namespace Au
 			int i = 0;
 			gStar: //info: goto used because C# compiler makes the loop faster when it contains less code
 			w += i + 1;
-			if(w == we) return true;
+			if (w == we) return true;
 			s += i;
 
-			for(i = 0; s + i < se; i++) {
+			for (i = 0; s + i < se; i++) {
 				char sW = w[i];
-				if(sW == '*') goto gStar;
-				if(sW == s[i] || sW == '?') continue;
-				if((table != null) && (table[sW] == table[s[i]])) continue;
+				if (sW == '*') goto gStar;
+				if (sW == s[i] || sW == '?') continue;
+				if ((table != null) && (table[sW] == table[s[i]])) continue;
 				s++; i = -1;
 			}
 
 			w += i;
 			gr:
-			while(w < we && *w == '*') w++;
+			while (w < we && *w == '*') w++;
 			return w == we;
 
 			//info: Could implement escape sequence ** for * and maybe *? for ?.
@@ -149,9 +163,9 @@ namespace Au
 		/// <param name="t"></param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <param name="patterns">One or more wildcard strings. The array and strings cannot be null.</param>
-		public static int Like(this string t, bool ignoreCase = false, params string[] patterns)
-		{
-			for(int i = 0; i < patterns.Length; i++) if(t.Like(patterns[i], ignoreCase)) return i + 1;
+		/// <exception cref="ArgumentNullException">A string in <i>patterns</i> is null.</exception>
+		public static int Like(this string t, bool ignoreCase = false, params string[] patterns) {
+			for (int i = 0; i < patterns.Length; i++) if (t.Like(patterns[i], ignoreCase)) return i + 1;
 			return 0;
 		}
 
@@ -203,17 +217,16 @@ namespace Au
 		/// <param name="matchCase">Case-sensitive even if there is no **c.</param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentException">Invalid <c>"**options "</c> or regular expression.</exception>
-		public wildex([ParamString(PSFormat.wildex)] string wildcardExpression, bool matchCase = false)
-		{
+		public wildex([ParamString(PSFormat.wildex)] string wildcardExpression, bool matchCase = false) {
 			var w = wildcardExpression;
-			if(w == null) throw new ArgumentNullException();
+			if (w == null) throw new ArgumentNullException();
 			_type = WXType.Wildcard;
 			_ignoreCase = !matchCase;
 			string[] split = null;
 
-			if(w.Length >= 3 && w[0] == '*' && w[1] == '*') {
-				for(int i = 2, j; i < w.Length; i++) {
-					switch(w[i]) {
+			if (w.Length >= 3 && w[0] == '*' && w[1] == '*') {
+				for (int i = 2, j; i < w.Length; i++) {
+					switch (w[i]) {
 					case 't': _type = WXType.Text; break;
 					case 'r': _type = WXType.RegexPcre; break;
 					case 'R': _type = WXType.RegexNet; break;
@@ -222,9 +235,9 @@ namespace Au
 					case 'n': _not = true; break;
 					case ' ': w = w[(i + 1)..]; goto g1;
 					case '(':
-						if(w[i - 1] != 'm') goto ge;
-						for(j = ++i; j < w.Length; j++) if(w[j] == ')') break;
-						if(j >= w.Length || j == i) goto ge;
+						if (w[i - 1] != 'm') goto ge;
+						for (j = ++i; j < w.Length; j++) if (w[j] == ')') break;
+						if (j >= w.Length || j == i) goto ge;
 						split = new string[] { w.Substring(i, j - i) };
 						i = j;
 						break;
@@ -234,7 +247,7 @@ namespace Au
 				ge:
 				throw new ArgumentException("Invalid \"**options \" in wildcard expression.");
 				g1:
-				switch(_type) {
+				switch (_type) {
 				case WXType.RegexNet:
 					var ro = _ignoreCase ? (RegexOptions.IgnoreCase | RegexOptions.CultureInvariant) : RegexOptions.CultureInvariant;
 					_o = new Regex(w, ro);
@@ -245,13 +258,13 @@ namespace Au
 				case WXType.Multi:
 					var a = w.Split(split ?? _splitMulti, StringSplitOptions.None);
 					var multi = new wildex[a.Length];
-					for(int i = 0; i < a.Length; i++) multi[i] = new wildex(a[i]);
+					for (int i = 0; i < a.Length; i++) multi[i] = new wildex(a[i]);
 					_o = multi;
 					return;
 				}
 			}
 
-			if(_type == WXType.Wildcard && !hasWildcardChars(w)) _type = WXType.Text;
+			if (_type == WXType.Wildcard && !hasWildcardChars(w)) _type = WXType.Text;
 			_o = w;
 		}
 		static readonly string[] _splitMulti = { "||" };
@@ -262,9 +275,8 @@ namespace Au
 		/// </summary>
 		/// <param name="wildcardExpression">[Wildcard expression](xref:wildcard_expression). </param>
 		/// <exception cref="ArgumentException">Invalid <c>"**options "</c> or regular expression.</exception>
-		public static implicit operator wildex([ParamString(PSFormat.wildex)] string wildcardExpression)
-		{
-			if(wildcardExpression == null) return null;
+		public static implicit operator wildex([ParamString(PSFormat.wildex)] string wildcardExpression) {
+			if (wildcardExpression == null) return null;
 
 			//rejected. It's job for code tools. This would be used mostly for 'name' parameter of wnd.find and wnd.Child, where 'match any' is rare; but 'match any' is very often used for 'cn' and 'program' parameters, where "" causes exception, so they will quickly learn.
 			///// If the string is "", calls <see cref="print.warning"/>. To match "", use "**empty" instead.
@@ -278,12 +290,11 @@ namespace Au
 		/// Returns true if they match.
 		/// </summary>
 		/// <param name="s">String. If null, returns false. If "", returns true if it was "" or "*" or a regular expression that matches "".</param>
-		public bool Match(string s)
-		{
-			if(s == null) return false;
+		public bool Match(string s) {
+			if (s == null) return false;
 
 			bool R = false;
-			switch(_type) {
+			switch (_type) {
 			case WXType.Wildcard:
 				R = s.Like(_o as string, _ignoreCase);
 				break;
@@ -301,19 +312,19 @@ namespace Au
 				var multi = _o as wildex[];
 				//[n] parts: all must match (with their option n applied)
 				int nNot = 0;
-				for(int i = 0; i < multi.Length; i++) {
+				for (int i = 0; i < multi.Length; i++) {
 					var v = multi[i];
-					if(v.Not) {
-						if(!v.Match(s)) return _not; //!v.Match(s) means 'matches if without option n applied'
+					if (v.Not) {
+						if (!v.Match(s)) return _not; //!v.Match(s) means 'matches if without option n applied'
 						nNot++;
 					}
 				}
-				if(nNot == multi.Length) return !_not; //there are no parts without option n
+				if (nNot == multi.Length) return !_not; //there are no parts without option n
 
 				//non-[n] parts: at least one must match
-				for(int i = 0; i < multi.Length; i++) {
+				for (int i = 0; i < multi.Length; i++) {
 					var v = multi[i];
-					if(!v.Not && v.Match(s)) return !_not;
+					if (!v.Not && v.Match(s)) return !_not;
 				}
 				break;
 			}
@@ -360,8 +371,7 @@ namespace Au
 		public bool Not => _not;
 
 		///
-		public override string ToString()
-		{
+		public override string ToString() {
 			return _o.ToString();
 		}
 
@@ -369,12 +379,11 @@ namespace Au
 		/// Returns true if string contains wildcard characters: '*', '?'.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		public static bool hasWildcardChars(string s)
-		{
-			if(s == null) return false;
-			for(int i = 0; i < s.Length; i++) {
+		public static bool hasWildcardChars(string s) {
+			if (s == null) return false;
+			for (int i = 0; i < s.Length; i++) {
 				var c = s[i];
-				if(c == '*' || c == '?') goto yes;
+				if (c == '*' || c == '?') goto yes;
 			}
 			return false; yes: return true;
 		}

@@ -54,6 +54,7 @@ class Cty
 	int i;
 	int i3;
 
+	/// <summary></summary>
 	void Vo() {
 
 	}
