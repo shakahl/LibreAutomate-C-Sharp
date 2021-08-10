@@ -3827,7 +3827,7 @@
             <summary>
             Disables one or more run-time warnings.
             </summary>
-            <param name="warningsWild">One or more warnings as case-insensitive wildcard strings. See <see cref="M:Au.ExtString.Like(System.String,System.String,System.Boolean)"/>.</param>
+            <param name="warningsWild">One or more warnings as case-insensitive wildcard strings. See <see cref="M:Au.Types.ExtString.Like(System.String,System.String,System.Boolean)"/>.</param>
             <remarks>
             Adds the strings to an internal list. When <see cref="M:Au.print.warning(System.String,System.Int32,System.String)"/> is called, it looks in the list. If finds the warning in the list, does not show the warning.
             It's easy to auto-restore warnings with 'using', like in the second example. Restoring is optional.
@@ -4833,9 +4833,1072 @@
             Converts to string and disposes.
             </summary>
         </member>
+        <member name="T:Au.Types.ExtString">
+            <summary>
+            Adds extension methods for <see cref="T:System.String"/>.
+            </summary>
+            <remarks>
+            Some .NET <see cref="T:System.String"/> methods use <see cref="F:System.StringComparison.CurrentCulture"/> by default, while others use ordinal or invariant comparison. It is confusing (difficult to remember), dangerous (easy to make bugs), slower and rarely useful.
+            Microsoft recommends to specify <b>StringComparison.Ordinal[IgnoreCase]</b> explicitly. See https://msdn.microsoft.com/en-us/library/ms973919.aspx.
+            This class adds ordinal comparison versions of these methods. Same or similar name, for example <b>Ends</b> for <b>EndsWith</b>.
+            See also <see cref="P:Au.process.thisProcessCultureIsInvariant"/>.
+            
+            This class also adds more methods.
+            You also can find string functions in other classes of this library, including <see cref="T:Au.More.StringUtil"/>, <see cref="T:Au.regexp"/>, <see cref="T:Au.pathname"/>, <see cref="T:Au.csvTable"/>, <see cref="T:Au.keys.more"/>, <see cref="T:Au.More.Convert2"/>, <see cref="T:Au.More.Hash"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.Eq(System.String,System.String,System.Boolean)">
+            <summary>
+            Compares this and other string. Returns true if equal.
+            </summary>
+            <param name="t">This string. Can be null.</param>
+            <param name="s">Other string. Can be null.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+            <seealso cref="M:Au.Types.ExtString.Eq(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char})"/>
+            <seealso cref="M:Au.Types.ExtString.Eqi(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char})"/>
+            <seealso cref="M:System.String.Compare(System.String,System.Int32,System.String,System.Int32,System.Int32)"/>
+            <seealso cref="M:System.String.CompareOrdinal(System.String,System.Int32,System.String,System.Int32,System.Int32)"/>
+        </member>
+        <member name="M:Au.Types.ExtString.Eq(System.String,System.Boolean,System.String[])">
+            <summary>
+            Compares this strings with multiple strings.
+            Returns 1-based index of matching string, or 0 if none.
+            </summary>
+            <param name="t">This string. Can be null.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <param name="strings">Other strings. Strings can be null.</param>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.Eq(System.String,System.Int32,System.ReadOnlySpan{System.Char},System.Boolean)">
+            <summary>
+            Compares part of this string with other string. Returns true if equal.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="startIndex">Offset in this string. If invalid, returns false.</param>
+            <param name="s">Other string.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+            <seealso cref="M:Au.Types.ExtString.Eq(System.ReadOnlySpan{System.Char},System.Int32,System.ReadOnlySpan{System.Char},System.Boolean)"/>
+            <seealso cref="M:System.String.Compare(System.String,System.Int32,System.String,System.Int32,System.Int32)"/>
+            <seealso cref="M:System.String.CompareOrdinal(System.String,System.Int32,System.String,System.Int32,System.Int32)"/>
+        </member>
+        <member name="M:Au.Types.ExtString.Eq(System.String,System.Int32,System.Boolean,System.String[])">
+            <summary>
+            Compares part of this string with multiple strings.
+            Returns 1-based index of matching string, or 0 if none.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="startIndex">Offset in this string. If invalid, returns false.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <param name="strings">Other strings.</param>
+            <exception cref="T:System.ArgumentNullException">A string in <i>strings</i> is null.</exception>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.Eq(System.String,System.Range,System.ReadOnlySpan{System.Char},System.Boolean)">
+            <summary>
+            Compares part of this string with other string. Returns true if equal.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="range">Range of this string. Can return true only if its length == s.Length. If invalid, returns false.</param>
+            <param name="s">Other string.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+            <seealso cref="M:Au.Types.ExtString.Eq(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char})"/>
+            <seealso cref="M:Au.Types.ExtString.Eqi(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char})"/>
+            <seealso cref="M:System.String.Compare(System.String,System.Int32,System.String,System.Int32,System.Int32)"/>
+            <seealso cref="M:System.String.CompareOrdinal(System.String,System.Int32,System.String,System.Int32,System.Int32)"/>
+        </member>
+        <member name="M:Au.Types.ExtString.Eq(System.String,System.Int32,System.Char)">
+            <summary>
+            Returns true if the specified character is at the specified position in this string.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="index">Offset in this string. If invalid, returns false.</param>
+            <param name="c">Character.</param>
+        </member>
+        <member name="M:Au.Types.ExtString.Eqi(System.String,System.String)">
+            <summary>
+            Compares this and other string ignoring case (case-insensitive). Returns true if equal.
+            </summary>
+            <param name="t">This string. Can be null.</param>
+            <param name="s">Other string. Can be null.</param>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.Ends(System.String,System.ReadOnlySpan{System.Char},System.Boolean)">
+            <summary>
+            Compares end of this string with other string. Returns true if equal.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="s">Other string.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.Ends(System.String,System.Boolean,System.String[])">
+            <summary>
+            Compares end of this string with multiple strings.
+            Returns 1-based index of matching string, or 0 if none.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <param name="strings">Other strings.</param>
+            <exception cref="T:System.ArgumentNullException">A string in <i>strings</i> is null.</exception>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.Ends(System.String,System.Char)">
+            <summary>
+            Returns true if this string ends with the specified character.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="c">Character.</param>
+        </member>
+        <member name="M:Au.Types.ExtString.Starts(System.String,System.ReadOnlySpan{System.Char},System.Boolean)">
+            <summary>
+            Compares beginning of this string with other string. Returns true if equal.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="s">Other string.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.Starts(System.String,System.Boolean,System.String[])">
+            <summary>
+            Compares beginning of this string with multiple strings.
+            Returns 1-based index of matching string, or 0 if none.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <param name="strings">Other strings.</param>
+            <exception cref="T:System.ArgumentNullException">A string in <i>strings</i> is null.</exception>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.Starts(System.String,System.Char)">
+            <summary>
+            Returns true if this string starts with the specified character.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="c">Character.</param>
+        </member>
+        <member name="M:Au.Types.ExtString.Find(System.String,System.String,System.Boolean)">
+            <summary>
+            Finds substring in this string. Returns its 0-based index, or -1 if not found.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="s">Subtring to find.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.Find(System.String,System.String,System.Int32,System.Boolean)">
+            <summary>
+            Finds substring in part of this string. Returns its 0-based index, or -1 if not found.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="s">Subtring to find.</param>
+            <param name="startIndex">The search start index.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.Find(System.String,System.String,System.Range,System.Boolean)">
+            <summary>
+            Finds substring in part of this string. Returns its 0-based index, or -1 if not found.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="s">Subtring to find.</param>
+            <param name="range">The search range.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.FindAny(System.String,System.String,System.Int32,System.Int32)">
+            <summary>
+            Finds the first character specified in <i>chars</i>. Returns its index, or -1 if not found.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="chars">Characters.</param>
+            <param name="startOfRange">The start index of the search range. Default 0.</param>
+            <param name="endOfRange">The end index of the search range. If -1 (default), the length of this string.</param>
+            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startOfRange</i> or <i>endOfRange</i>.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.FindNot(System.String,System.String,System.Int32,System.Int32)">
+            <summary>
+            Finds the first character not specified in <i>chars</i>. Returns its index, or -1 if not found.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="chars">Characters.</param>
+            <param name="startOfRange">The start index of the search range. Default 0.</param>
+            <param name="endOfRange">The end index of the search range. If -1 (default), the length of this string.</param>
+            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startOfRange</i> or <i>endOfRange</i>.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.IndexOfNot(System.ReadOnlySpan{System.Char},System.String)">
+            <summary>
+            Finds the first character not specified in <i>chars</i>. Returns its index, or -1 if not found.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="chars">Characters.</param>
+            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.LastIndexOfNot(System.ReadOnlySpan{System.Char},System.String)">
+            <summary>
+            Finds the last character not specified in <i>chars</i>. Returns its index, or -1 if not found.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="chars">Characters.</param>
+            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.FindLastAny(System.String,System.String,System.Int32,System.Int32)">
+            <summary>
+            Finds the last character specified in <i>chars</i> (searches right to left). Returns its index, or -1 if not found.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="chars">Characters.</param>
+            <param name="startOfRange">The start index of the search range. Default 0.</param>
+            <param name="endOfRange">The end index of the search range. If -1 (default), the length of this string.</param>
+            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startOfRange</i> or <i>endOfRange</i>.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.FindLastNot(System.String,System.String,System.Int32,System.Int32)">
+            <summary>
+            Finds the last character not specified in <i>chars</i> (searches right to left). Returns its index, or -1 if not found.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="chars">Characters.</param>
+            <param name="startOfRange">The start index of the search range. Default 0.</param>
+            <param name="endOfRange">The end index of the search range. If -1 (default), the length of this string.</param>
+            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startOfRange</i> or <i>endOfRange</i>.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.Trim(System.String,System.String)">
+            <summary>
+            Removes specified characters from the start and end of this string.
+            Returns the result string.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="chars">Characters to remove.</param>
+            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.TrimStart(System.String,System.String)">
+            <summary>
+            Removes specified characters from the start of this string.
+            Returns the result string.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="chars">Characters to remove.</param>
+            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.TrimEnd(System.String,System.String)">
+            <summary>
+            Removes specified characters from the end of this string.
+            Returns the result string.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="chars">Characters to remove.</param>
+            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.FindWord(System.String,System.String,System.Nullable{System.Range},System.Boolean,System.String)">
+            <summary>
+            Finds whole word. Returns its 0-based index, or -1 if not found.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="s">Subtring to find.</param>
+            <param name="range">The search range.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <param name="otherWordChars">Additional word characters, for which <see cref="M:System.Char.IsLetterOrDigit(System.Char)"/> returns false. For example "_".</param>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <remarks>
+            If <i>s</i> starts with a word character finds substring that is not preceded by a word character.
+            If <i>s</i> ends with a word character, finds substring that is not followed by a word character.
+            Word characters are those for which <see cref="M:System.Char.IsLetterOrDigit(System.Char)"/> returns true plus those specified in <i>otherWordChars</i>.
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.Lenn(System.String)">
+            <summary>
+            Returns <see cref="P:System.String.Length"/>. Returns 0 if this string is null.
+            </summary>
+            <param name="t">This string.</param>
+        </member>
+        <member name="M:Au.Types.ExtString.NE(System.String)">
+            <summary>
+            Returns true if this string is null or empty ("").
+            </summary>
+            <param name="t">This string.</param>
+        </member>
+        <member name="M:Au.Types.ExtString.NullIfEmpty_(System.String)">
+            <summary>
+            Returns this string, or null if it is "" or null.
+            </summary>
+            <param name="t">This string.</param>
+        </member>
+        <member name="M:Au.Types.ExtString.Segments(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})">
+            <summary>
+            This function can be used with foreach to split this string into substrings as start/end offsets.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="separators">Characters that delimit the substrings. Or one of <see cref="T:Au.Types.SegSep"/> constants.</param>
+            <param name="flags"></param>
+            <param name="range">Part of this string to split.</param>
+            <example>
+            <code><![CDATA[
+            string s = "one * two three ";
+            foreach(var t in s.Segments(" ")) print.it(s[t.start..t.end]);
+            foreach(var t in s.Segments(SegSep.Word, SegFlags.NoEmpty)) print.it(s[t.start..t.end]);
+            ]]></code>
+            </example>
+            <seealso cref="M:Au.Types.ExtString.Lines(System.String,System.Boolean)"/>
+        </member>
+        <member name="M:Au.Types.ExtString.Lines(System.String,System.Boolean)">
+            <summary>
+            Splits this string using newline separators "\r\n", "\n", "\r".
+            </summary>
+            <param name="t">This string.</param>
+            <param name="noEmpty">Don't need empty lines.</param>
+            <seealso cref="M:Au.Types.ExtString.Segments(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})"/>
+            <seealso cref="F:Au.Types.SegSep.Line"/>
+        </member>
+        <member name="M:Au.Types.ExtString.Lines(System.String,System.Int32,System.StringSplitOptions)">
+            <summary>
+            Splits this string into lines using separators "\r\n", "\n", "\r".
+            </summary>
+            <param name="t">This string.</param>
+            <param name="maxCount">The maximal number of substrings to get.</param>
+            <param name="options"></param>
+            <seealso cref="M:Au.Types.ExtString.Segments(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})"/>
+            <seealso cref="F:Au.Types.SegSep.Line"/>
+        </member>
+        <member name="M:Au.Types.ExtString.LineCount(System.String,System.Boolean,System.Nullable{System.Range})">
+            <summary>
+            Returns the number of lines.
+            Counts line separators "\r\n", "\n", "\r".
+            </summary>
+            <param name="t">This string.</param>
+            <param name="preferMore">Add 1 if the string ends with a line separator or its length is 0.</param>
+            <param name="range">Part of this string or null (default).</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+            <seealso cref="M:Au.More.StringUtil.LineAndColumn(System.String,System.Int32,System.Int32@,System.Int32@)"/>
+        </member>
+        <member name="M:Au.Types.ExtString.Lower(System.String)">
+            <summary>
+            Converts this string to lower case.
+            Returns the result string.
+            </summary>
+            <param name="t">This string.</param>
+            <remarks>
+            Calls <see cref="M:System.String.ToLowerInvariant"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.Upper(System.String)">
+            <summary>
+            Converts this string to upper case.
+            Returns the result string.
+            </summary>
+            <param name="t">This string.</param>
+            <remarks>
+            Calls <see cref="M:System.String.ToUpperInvariant"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.Upper(System.String,Au.Types.SUpper,System.Globalization.CultureInfo)">
+            <summary>
+            Converts this string or only the first character to upper case or all words to title case.
+            Returns the result string.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="how"></param>
+            <param name="culture">Culture, for example <c>CultureInfo.CurrentCulture</c>. If null (default) uses invariant culture.</param>
+        </member>
+        <member name="M:Au.Types.ExtString.ToInt(System.String,System.Int32,System.Int32@,Au.Types.STIFlags)">
+            <summary>
+            Converts part of this string to int number and gets the number end index.
+            Returns the number, or 0 if fails to convert.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="startIndex">Offset in this string where to start parsing.</param>
+            <param name="numberEndIndex">Receives offset in this string where the number part ends. If fails to convert, receives 0.</param>
+            <param name="flags"></param>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+            <remarks>
+            Fails to convert when string is null, "", does not begin with a number or the number is too big.
+            
+            Unlike <b>int.Parse</b> and <b>Convert.ToInt32</b>:
+            	The number in string can be followed by more text, like <c>"123text"</c>.
+            	Has <i>startIndex</i> parameter that allows to get number from middle, like <c>"text123text"</c>.
+            	Gets the end of the number part.
+            	No exception when cannot convert.
+            	The number can be decimal (like <c>"123"</c>) or hexadecimal (like <c>"0x1A"</c>); don't need separate flags for each style.
+            	Does not depend on current culture. As minus sign recognizes '-' and '−'.
+            	Faster.
+            
+            The number in string can start with ASCII whitespace (spaces, newlines, etc), like <c>" 5"</c>.
+            The number in string can be with <c>"-"</c> or <c>"+"</c>, like <c>"-5"</c>, but not like <c>"- 5"</c>.
+            Fails if the number is greater than +- <b>uint.MaxValue</b> (0xffffffff).
+            The return value becomes negative if the number is greater than <b>int.MaxValue</b>, for example <c>"0xffffffff"</c> is -1, but it becomes correct if assigned to uint (need cast).
+            Does not support non-integer numbers; for example, for <c>"3.5E4"</c> returns 3 and sets <c>numberEndIndex=startIndex+1</c>.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.ToInt(System.String,System.Int32,Au.Types.STIFlags)">
+            <summary>
+            Converts part of this string to int number.
+            Returns the number, or 0 if fails to convert.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.ToInt(System.String,System.Int32@,System.Int32,System.Int32@,Au.Types.STIFlags)">
+            <summary>
+            Converts part of this string to int number and gets the number end index.
+            Returns false if fails.
+            </summary>
+            <param name="t">This string. Can be null.</param>
+            <param name="result">Receives the result number.</param>
+            <param name="startIndex">Offset in this string where to start parsing.</param>
+            <param name="numberEndIndex">Receives offset in this string where the number part ends. If fails to convert, receives 0.</param>
+            <param name="flags"></param>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.ToInt(System.String,System.Int32@,System.Int32,Au.Types.STIFlags)">
+            <summary>
+            Converts part of this string to int number.
+            Returns false if fails.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.ToInt(System.String,System.UInt32@,System.Int32,System.Int32@,Au.Types.STIFlags)">
+            <summary>
+            Converts part of this string to uint number and gets the number end index.
+            Returns false if fails.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.ToInt(System.String,System.UInt32@,System.Int32,Au.Types.STIFlags)">
+            <summary>
+            Converts part of this string to uint number.
+            Returns false if fails.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.ToInt(System.String,System.Int64@,System.Int32,System.Int32@,Au.Types.STIFlags)">
+            <summary>
+            Converts part of this string to long number and gets the number end index.
+            Returns false if fails.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.ToInt(System.String,System.Int64@,System.Int32,Au.Types.STIFlags)">
+            <summary>
+            Converts part of this string to long number.
+            Returns false if fails.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.ToInt(System.String,System.UInt64@,System.Int32,System.Int32@,Au.Types.STIFlags)">
+            <summary>
+            Converts part of this string to ulong number and gets the number end index.
+            Returns false if fails.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.ToInt(System.String,System.UInt64@,System.Int32,Au.Types.STIFlags)">
+            <summary>
+            Converts part of this string to ulong number.
+            Returns false if fails.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.ToNumber(System.String,System.Nullable{System.Range},System.Globalization.NumberStyles)">
+            <summary>
+            Converts this string or its part to double number.
+            Returns the number, or 0 if fails to convert.
+            </summary>
+            <param name="t">This string. Can be null.</param>
+            <param name="range">Part of this string or null (default).</param>
+            <param name="style">The permitted number format in the string.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid <i>style</i>.</exception>
+            <remarks>
+            Calls <see cref="M:System.Double.TryParse(System.ReadOnlySpan{System.Char},System.Globalization.NumberStyles,System.IFormatProvider,System.Double@)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b>.
+            Fails if the string is null or "" or isn't a valid floating-point number.
+            Examples of valid numbers: "12", " -12.3 ", ".12", "12.", "12E3", "12.3e-45", "1,234.5" (with style <c>NumberStyles.Float | NumberStyles.AllowThousands</c>). String like "2text" is invalid, unless range is <c>0..1</c>.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.ToNumber(System.String,System.Double@,System.Nullable{System.Range},System.Globalization.NumberStyles)">
+            <summary>
+            Converts this string or its part to double number.
+            Returns false if fails.
+            </summary>
+            <param name="t">This string. Can be null.</param>
+            <param name="result">Receives the result number.</param>
+            <param name="range">Part of this string or null (default).</param>
+            <param name="style">The permitted number format in the string.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid <i>style</i>.</exception>
+            <remarks>
+            Calls <see cref="M:System.Double.TryParse(System.ReadOnlySpan{System.Char},System.Globalization.NumberStyles,System.IFormatProvider,System.Double@)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b>.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.ToNumber(System.String,System.Single@,System.Nullable{System.Range},System.Globalization.NumberStyles)">
+            <summary>
+            Converts this string or its part to float number.
+            Returns false if fails.
+            </summary>
+            <param name="t">This string. Can be null.</param>
+            <param name="result">Receives the result number.</param>
+            <param name="range">Part of this string or null (default).</param>
+            <param name="style">The permitted number format in the string.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid <i>style</i>.</exception>
+            <remarks>
+            Calls <see cref="M:System.Single.TryParse(System.ReadOnlySpan{System.Char},System.Globalization.NumberStyles,System.IFormatProvider,System.Single@)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b>.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.ToNumber(System.String,System.Int32@,System.Nullable{System.Range},System.Globalization.NumberStyles)">
+            <summary>
+            Converts this string or its part to int number.
+            Returns false if fails.
+            </summary>
+            <param name="t">This string. Can be null.</param>
+            <param name="result">Receives the result number.</param>
+            <param name="range">Part of this string or null (default).</param>
+            <param name="style">The permitted number format in the string.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid <i>style</i>.</exception>
+            <remarks>
+            Calls <see cref="M:System.Int32.TryParse(System.ReadOnlySpan{System.Char},System.Globalization.NumberStyles,System.IFormatProvider,System.Int32@)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b>.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.ToNumber(System.String,System.UInt32@,System.Nullable{System.Range},System.Globalization.NumberStyles)">
+            <summary>
+            Converts this string or its part to uint number.
+            Returns false if fails.
+            </summary>
+            <param name="t">This string. Can be null.</param>
+            <param name="result">Receives the result number.</param>
+            <param name="range">Part of this string or null (default).</param>
+            <param name="style">The permitted number format in the string.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid <i>style</i>.</exception>
+            <remarks>
+            Calls <see cref="M:System.UInt32.TryParse(System.ReadOnlySpan{System.Char},System.Globalization.NumberStyles,System.IFormatProvider,System.UInt32@)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b>.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.ToNumber(System.String,System.Int64@,System.Nullable{System.Range},System.Globalization.NumberStyles)">
+            <summary>
+            Converts this string or its part to long number.
+            Returns false if fails.
+            </summary>
+            <param name="t">This string. Can be null.</param>
+            <param name="result">Receives the result number.</param>
+            <param name="range">Part of this string or null (default).</param>
+            <param name="style">The permitted number format in the string.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid <i>style</i>.</exception>
+            <remarks>
+            Calls <see cref="M:System.Int64.TryParse(System.ReadOnlySpan{System.Char},System.Globalization.NumberStyles,System.IFormatProvider,System.Int64@)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b>.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.ToNumber(System.String,System.UInt64@,System.Nullable{System.Range},System.Globalization.NumberStyles)">
+            <summary>
+            Converts this string or its part to ulong number.
+            Returns false if fails.
+            </summary>
+            <param name="t">This string. Can be null.</param>
+            <param name="result">Receives the result number.</param>
+            <param name="range">Part of this string or null (default).</param>
+            <param name="style">The permitted number format in the string.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid <i>style</i>.</exception>
+            <remarks>
+            Calls <see cref="M:System.UInt64.TryParse(System.ReadOnlySpan{System.Char},System.Globalization.NumberStyles,System.IFormatProvider,System.UInt64@)"/>. Uses <see cref="P:System.Globalization.CultureInfo.InvariantCulture"/> if the string range contains only ASCII characters, else uses current culture.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.ReplaceAt(System.String,System.Int32,System.Int32,System.String)">
+            <summary>
+            Replaces part of this string with other string.
+            Returns the result string.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="startIndex">Offset in this string.</param>
+            <param name="count">Count of characters to replace.</param>
+            <param name="s">The replacement string.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startIndex</i> or <i>count</i>.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.RemoveSuffix(System.String,System.String,System.Boolean)">
+            <summary>
+            Removes <i>suffix</i> string from the end.
+            Returns the result string. Returns this string if does not end with <i>suffix</i>.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="suffix">Substring to remove.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <exception cref="T:System.ArgumentNullException"><i>suffix</i> is null.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.RemoveSuffix(System.String,System.Char)">
+            <summary>
+            Removes <i>suffix</i> character from the end.
+            Returns the result string. Returns this string if does not end with <i>suffix</i>.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="suffix">Character to remove.</param>
+            <exception cref="T:System.ArgumentNullException"><i>suffix</i> is null.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.Limit(System.String,System.Int32,System.Boolean)">
+            <summary>
+            If this string is longer than <i>limit</i>, returns its substring 0 to <i>limit</i>-1 with appended '…' character.
+            Else returns this string.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="limit">Maximal length of the result string. If less than 1, is used 1.</param>
+            <param name="middle">Let "…" be in middle. For example it is useful when the string is a path, to avoid removing filename.</param>
+        </member>
+        <member name="M:Au.Types.ExtString.Escape(System.String,System.Int32,System.Boolean)">
+            <summary>
+            Replaces unsafe characters with C# escape sequences.
+            If the string contains these characters, replaces and returns new string. Else returns this string.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="limit">If the final string is longer than <i>limit</i>, get its substring 0 to <i>limit</i>-1 with appended '…' character. The enclosing "" are not counted.</param>
+            <param name="quote">Enclose in "".</param>
+            <remarks>
+            Replaces these characters: <c>'\\'</c>, <c>'\"'</c>, <c>'\t'</c>, <c>'\n'</c>, <c>'\r'</c> and all in range 0-31.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.Unescape(System.String,System.String@)">
+            <summary>
+            Replaces C# escape sequences to characters in this string.
+            Returns true if successful. Returns false if the string contains an invalid or unsupported escape sequence.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="result">Receives the result string. It is this string if there are no escape sequences or if fails.</param>
+            <remarks>
+            Supports all escape sequences of <see cref="M:Au.Types.ExtString.Escape(System.String,System.Int32,System.Boolean)"/>: \\ \" \t \n \r \0 \uXXXX.
+            Does not support \a \b \f \v \' \xXXXX \UXXXXXXXX.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.ReverseString(System.String,System.Boolean)">
+            <summary>
+            Reverses this string, like "Abc" -> "cbA".
+            Returns the result string.
+            </summary>
+            <param name="t"></param>
+            <param name="raw">Ignore char sequences such as Unicode surrogates and grapheme clusters. Faster, but if the string contains these sequences, the result string is incorrect.</param>
+        </member>
+        <member name="M:Au.Types.ExtString.IsAscii(System.String)">
+            <summary>
+            Returns true if does not contain non-ASCII characters.
+            </summary>
+            <seealso cref="M:Au.Types.ExtString.IsAscii(System.ReadOnlySpan{System.Char})"/>
+        </member>
+        <member name="M:Au.Types.ExtString.IsAscii(System.ReadOnlySpan{System.Char})">
+            <summary>
+            Returns true if does not contain non-ASCII characters.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtString.Eq(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char})">
+            <summary>
+            Returns true if equals to string <i>s</i>, case-sensitive.
+            </summary>
+            <param name="t">This span.</param>
+            <param name="s">Other string. Can be null.</param>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.Eqi(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char})">
+            <summary>
+            Returns true if equals to string <i>s</i>, case-insensitive.
+            </summary>
+            <param name="t">This span.</param>
+            <param name="s">Other string. Can be null.</param>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.Eq(System.ReadOnlySpan{System.Char},System.Int32,System.ReadOnlySpan{System.Char},System.Boolean)">
+            <summary>
+            Compares part of this span with string <i>s</i>. Returns true if equal.
+            </summary>
+            <param name="t">This span.</param>
+            <param name="startIndex">Offset in this span. If invalid, returns false.</param>
+            <param name="s">Other string.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.Eq(System.ReadOnlySpan{System.Char},System.Int32,System.Char)">
+            <summary>
+            Returns true if the specified character is at the specified position in this span.
+            </summary>
+            <param name="t">This span.</param>
+            <param name="index">Offset in this span. If invalid, returns false.</param>
+            <param name="c">Character.</param>
+        </member>
+        <member name="M:Au.Types.ExtString.IndexOf(System.ReadOnlySpan{System.Char},System.Int32,System.Char)">
+            <summary>
+            Finds character <i>c</i> in this span, starting from <i>index</i>.
+            Returns its index in this span, or -1 if not found.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+        </member>
+        <member name="M:Au.Types.ExtString.IndexOf(System.ReadOnlySpan{System.Char},System.Range,System.Char)">
+            <summary>
+            Finds character <i>c</i> in <i>range</i> of this span.
+            Returns its index in this span, or -1 if not found.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+        </member>
+        <member name="M:Au.Types.ExtString.IndexOf(System.ReadOnlySpan{System.Char},System.Int32,System.ReadOnlySpan{System.Char},System.Boolean)">
+            <summary>
+            Finds string <i>s</i> in this span, starting from <i>index</i>.
+            Returns its index in this span, or -1 if not found.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.IndexOf(System.ReadOnlySpan{System.Char},System.Range,System.ReadOnlySpan{System.Char},System.Boolean)">
+            <summary>
+            Finds string <i>s</i> in <i>range</i> of this span.
+            Returns its index in this span, or -1 if not found.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.AsSpan(System.String,System.Range)">
+            <summary>
+            Creates read-only span from range of this string.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+        </member>
+        <member name="M:Au.Types.ExtString.RIsMatch(System.String,System.String,Au.Types.RXFlags,System.Nullable{System.Range})">
+            <summary>
+            Returns true if this string matches PCRE regular expression <i>rx</i>.
+            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
+            Examples in <see cref="T:Au.regexp"/> class help.
+            </summary>
+            <param name="t">This string. If null, returns false.</param>
+            <param name="rx">Regular expression.</param>
+            <param name="flags"></param>
+            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
+            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.RMatch(System.String,System.String,Au.Types.RXMatch@,Au.Types.RXFlags,System.Nullable{System.Range})">
+            <summary>
+            Returns true if this string matches PCRE regular expression <i>rx</i>.
+            Gets match info as <see cref="T:Au.Types.RXMatch"/>.
+            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.Match(System.String,Au.Types.RXMatch@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
+            Examples in <see cref="T:Au.regexp"/> class help.
+            </summary>
+            <param name="t">This string. If null, returns false.</param>
+            <param name="rx">Regular expression.</param>
+            <param name="result">Receives match info.</param>
+            <param name="flags"></param>
+            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
+            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.RMatch(System.String,System.String,System.Int32,System.String@,Au.Types.RXFlags,System.Nullable{System.Range})">
+            <summary>
+            Returns true if this string matches PCRE regular expression <i>rx</i>.
+            Gets whole match or some group, as string.
+            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.Match(System.String,System.Int32,System.String@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
+            Examples in <see cref="T:Au.regexp"/> class help.
+            </summary>
+            <param name="t">This string. If null, returns false.</param>
+            <param name="rx">Regular expression.</param>
+            <param name="group">Group number (1-based index) of result. If 0 (default) - whole match.</param>
+            <param name="result">Receives the match value.</param>
+            <param name="flags"></param>
+            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
+            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.RMatch(System.String,System.String,System.Int32,Au.Types.RXGroup@,Au.Types.RXFlags,System.Nullable{System.Range})">
+            <summary>
+            Returns true if this string matches PCRE regular expression <i>rx</i>.
+            Gets whole match or some group, as index and length.
+            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.Match(System.String,System.Int32,Au.Types.RXGroup@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
+            Examples in <see cref="T:Au.regexp"/> class help.
+            </summary>
+            <param name="t">This string. If null, returns false.</param>
+            <param name="rx">Regular expression.</param>
+            <param name="group">Group number (1-based index) of result. If 0 (default) - whole match.</param>
+            <param name="result">Receives match info.</param>
+            <param name="flags"></param>
+            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
+            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.RFindAll(System.String,System.String,Au.Types.RXFlags,System.Nullable{System.Range})">
+            <summary>
+            Finds all match instances of PCRE regular expression <i>rx</i>.
+            Returns a lazy IEnumerable&lt;<see cref="T:Au.Types.RXMatch"/>&gt; object that can be used with foreach.
+            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.FindAll(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
+            Examples in <see cref="T:Au.regexp"/> class help.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="rx">Regular expression.</param>
+            <param name="flags"></param>
+            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
+            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.RFindAll(System.String,System.String,Au.Types.RXMatch[]@,Au.Types.RXFlags,System.Nullable{System.Range})">
+            <summary>
+            Finds all match instances of PCRE regular expression <i>rx</i>. Gets array of <see cref="T:Au.Types.RXMatch"/>.
+            Returns true if found 1 or more matches.
+            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.FindAll(System.String,Au.Types.RXMatch[]@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
+            Examples in <see cref="T:Au.regexp"/> class help.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="rx">Regular expression.</param>
+            <param name="result">Receives all found matches.</param>
+            <param name="flags"></param>
+            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
+            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.RFindAll(System.String,System.String,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
+            <summary>
+            Finds all match instances of PCRE regular expression <i>rx</i>.
+            Returns a lazy IEnumerable&lt;<see cref="T:Au.Types.RXGroup"/>&gt; object that can be used with foreach.
+            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.FindAll(System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
+            Examples in <see cref="T:Au.regexp"/> class help.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="rx">Regular expression.</param>
+            <param name="group">Group number (1-based index) of results. If 0 (default) - whole match.</param>
+            <param name="flags"></param>
+            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
+            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.RFindAll(System.String,System.String,System.Int32,System.String[]@,Au.Types.RXFlags,System.Nullable{System.Range})">
+            <summary>
+            Finds all match instances of PCRE regular expression <i>rx</i>. Gets array of strings.
+            Returns true if found 1 or more matches.
+            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.FindAll(System.String,System.Int32,System.String[]@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
+            Examples in <see cref="T:Au.regexp"/> class help.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="rx">Regular expression.</param>
+            <param name="group">Group number (1-based index) of results. If 0 (default) - whole match.</param>
+            <param name="result">Receives all found matches.</param>
+            <param name="flags"></param>
+            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
+            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.RReplace(System.String,System.String,System.String,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
+            <summary>
+            Finds and replaces all match instances of PCRE regular expression <i>rx</i>.
+            Returns the result string.
+            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.Replace(System.String,System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
+            Examples in <see cref="T:Au.regexp"/> class help.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="rx">Regular expression.</param>
+            <param name="repl">Replacement pattern.</param>
+            <param name="maxCount">Maximal count of replacements to make. If -1 (default), replaces all.</param>
+            <param name="flags"></param>
+            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">
+            - Invalid regular expression.
+            - Invalid $replacement.
+            - Used a PARTIAL_ flag.
+            - The regular expression contains <c>(?=...\K)</c>.
+            </exception>
+            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.RReplace(System.String,System.String,System.String,System.String@,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
+            <summary>
+            Finds and replaces all match instances of PCRE regular expression <i>rx</i>.
+            Returns the number of replacements made.
+            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.Replace(System.String,System.String,System.String@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
+            Examples in <see cref="T:Au.regexp"/> class help.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="rx">Regular expression.</param>
+            <param name="repl">Replacement pattern.</param>
+            <param name="result">The result string.</param>
+            <param name="maxCount">Maximal count of replacements to make. If -1 (default), replaces all.</param>
+            <param name="flags"></param>
+            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">
+            - Invalid regular expression.
+            - Invalid $replacement.
+            - Used a PARTIAL_ flag.
+            - The regular expression contains <c>(?=...\K)</c>.
+            </exception>
+            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.RReplace(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
+            <summary>
+            Finds and replaces all match instances of PCRE regular expression <i>rx</i>. Uses a callback function.
+            Returns the result string.
+            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.Replace(System.String,System.Func{Au.Types.RXMatch,System.String},System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
+            Examples in <see cref="T:Au.regexp"/> class help.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="rx">Regular expression.</param>
+            <param name="replFunc">Callback function that receives found matches and returns replacements.</param>
+            <param name="maxCount">Maximal count of replacements to make. If -1 (default), replaces all.</param>
+            <param name="flags"></param>
+            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">
+            - Invalid regular expression.
+            - Invalid $replacement.
+            - Used a PARTIAL_ flag.
+            - The regular expression contains <c>(?=...\K)</c>.
+            </exception>
+            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.RReplace(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.String@,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
+            <summary>
+            Finds and replaces all match instances of PCRE regular expression <i>rx</i>. Uses a callback function.
+            Returns the number of replacements made.
+            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.Replace(System.String,System.Func{Au.Types.RXMatch,System.String},System.String@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
+            Examples in <see cref="T:Au.regexp"/> class help.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="rx">Regular expression.</param>
+            <param name="replFunc">Callback function that receives found matches and returns replacements.</param>
+            <param name="result">The result string.</param>
+            <param name="maxCount">Maximal count of replacements to make. If -1 (default), replaces all.</param>
+            <param name="flags"></param>
+            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">
+            - Invalid regular expression.
+            - Invalid $replacement.
+            - Used a PARTIAL_ flag.
+            - The regular expression contains <c>(?=...\K)</c>.
+            </exception>
+            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.RSplit(System.String,System.String,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
+            <summary>
+            Returns array of substrings delimited by PCRE regular expression <i>rx</i> matches.
+            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.Split(System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
+            Examples in <see cref="T:Au.regexp"/> class help.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="rx">Regular expression.</param>
+            <param name="maxCount">Maximal count of substrings to get. The last substring contains the unsplit remainder of the subject string. If 0 (default) or negative, gets all.</param>
+            <param name="flags"></param>
+            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
+            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
+        </member>
+        <member name="M:Au.Types.ExtString._RegexCache.AddOrGet(System.String,Au.Types.RXFlags)">
+            <summary>
+            If rx/flags is in the cache, returns the cached code.
+            Else compiles rx/flags, adds to the cache and returns the code.
+            </summary>
+            <param name="rx"></param>
+            <param name="flags"></param>
+            <exception cref="T:System.ArgumentException">Invalid regular expression. Or failed to compile it for some other reason.</exception>
+        </member>
+        <member name="M:Au.Types.ExtString.Like(System.String,System.String,System.Boolean)">
+            <summary>
+            Compares this string with a string that possibly contains wildcard characters.
+            Returns true if the strings match.
+            </summary>
+            <param name="t">This string. If null, returns false. If "", returns true if pattern is "" or "*".</param>
+            <param name="pattern">String that possibly contains wildcard characters. Cannot be null. If "", returns true if this string is "". If "*", always returns true except when this string is null.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <exception cref="T:System.ArgumentNullException"><i>pattern</i> is null.</exception>
+            <remarks>
+            Wildcard characters:
+            
+            Character | Will match | Examples
+            | - | - | - |
+            | * | Zero or more of any characters. | <c>"start*"</c>, <c>"*end"</c>, <c>"*middle*"</c>
+            | ? | Any single character. | <c>"date ????-??-??"</c>
+            
+            There are no escape sequences for * and ? characters.
+            
+            Uses ordinal comparison, ie does not depend on current culture.
+            
+            See also: [](xref:wildcard_expression).
+            </remarks>
+            <example>
+            <code><![CDATA[
+            string s = @"C:\abc\mno.xyz";
+            if(s.Like(@"C:\abc\mno.xyz")) print.it("matches whole text (no wildcard characters)");
+            if(s.Like(@"C:\abc\*")) print.it("starts with");
+            if(s.Like(@"*.xyz")) print.it("ends with");
+            if(s.Like(@"*mno*")) print.it("contains");
+            if(s.Like(@"C:\*.xyz")) print.it("starts and ends with");
+            if(s.Like(@"?:*")) print.it("any character, : and possibly more text");
+            ]]></code>
+            </example>
+            <seealso cref="T:Au.wildex"/>
+            <seealso cref="M:Au.Types.ExtString.Like(System.ReadOnlySpan{System.Char},System.String,System.Boolean)"/>
+        </member>
+        <member name="M:Au.Types.ExtString.Like(System.ReadOnlySpan{System.Char},System.String,System.Boolean)">
+            <inheritdoc cref="M:Au.Types.ExtString.Like(System.String,System.String,System.Boolean)"/>
+        </member>
+        <member name="M:Au.Types.ExtString.Like(System.String,System.Boolean,System.String[])">
+            <summary>
+            Calls <see cref="M:Au.Types.ExtString.Like(System.String,System.String,System.Boolean)"/> for each wildcard pattern specified in the argument list until it returns true.
+            Returns 1-based index of matching pattern, or 0 if none.
+            </summary>
+            <param name="t"></param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <param name="patterns">One or more wildcard strings. The array and strings cannot be null.</param>
+            <exception cref="T:System.ArgumentNullException">A string in <i>patterns</i> is null.</exception>
+        </member>
         <member name="T:Au.Types.STIFlags">
             <summary>
-            Flags for <see cref="M:Au.ExtString.ToInt(System.String,System.Int32,System.Int32@,Au.Types.STIFlags)"/> and similar functions.
+            Flags for <see cref="M:Au.Types.ExtString.ToInt(System.String,System.Int32,System.Int32@,Au.Types.STIFlags)"/> and similar functions.
             </summary>
         </member>
         <member name="F:Au.Types.STIFlags.NoHex">
@@ -4855,7 +5918,7 @@
         </member>
         <member name="T:Au.Types.SUpper">
             <summary>
-            Used with <see cref="M:Au.ExtString.Upper(System.String,Au.Types.SUpper,System.Globalization.CultureInfo)"/>
+            Used with <see cref="M:Au.Types.ExtString.Upper(System.String,Au.Types.SUpper,System.Globalization.CultureInfo)"/>
             </summary>
         </member>
         <member name="F:Au.Types.SUpper.AllChars">
@@ -4877,7 +5940,7 @@
         <member name="T:Au.Types.RXMatch">
             <summary>
             Regular expression match info.
-            Used with <see cref="T:Au.regexp"/> class functions and String extension methods like <see cref="M:Au.ExtString.RMatch(System.String,System.String,Au.Types.RXMatch@,Au.Types.RXFlags,System.Nullable{System.Range})"/>.
+            Used with <see cref="T:Au.regexp"/> class functions and String extension methods like <see cref="M:Au.Types.ExtString.RMatch(System.String,System.String,Au.Types.RXMatch@,Au.Types.RXFlags,System.Nullable{System.Range})"/>.
             </summary>
             <remarks>
             Contains info about a regular expression match found in the subject string: index, length, substring, etc.
@@ -5314,7 +6377,7 @@
         </member>
         <member name="T:Au.Types.SegFlags">
             <summary>
-            Flags for <see cref="M:Au.ExtString.Segments(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})"/> and some other functions.
+            Flags for <see cref="M:Au.Types.ExtString.Segments(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})"/> and some other functions.
             </summary>
         </member>
         <member name="F:Au.Types.SegFlags.NoEmpty">
@@ -5369,7 +6432,7 @@
         <member name="F:Au.Types.WXType.Wildcard">
             <summary>
             Wildcard (has *? characters and no t r R options).
-            <b>Match</b> calls <see cref="M:Au.ExtString.Like(System.String,System.String,System.Boolean)"/>.
+            <b>Match</b> calls <see cref="M:Au.Types.ExtString.Like(System.String,System.String,System.Boolean)"/>.
             </summary>
         </member>
         <member name="F:Au.Types.WXType.RegexPcre">
@@ -9736,7 +10799,7 @@
             Splits a string into substrings as start/end offsets or strings.
             </summary>
             <remarks>
-            Can be used with foreach. Normally you don't create <b>SegParser</b> instances explicitly; instead use <see cref="M:Au.ExtString.Segments(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})"/> with foreach.
+            Can be used with foreach. Normally you don't create <b>SegParser</b> instances explicitly; instead use <see cref="M:Au.Types.ExtString.Segments(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})"/> with foreach.
             </remarks>
         </member>
         <member name="M:Au.More.SegParser.#ctor(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})">
@@ -9807,7 +10870,7 @@
             <summary>
             If string contains a number at startIndex, gets that number as int, also gets the string part that follows it, and returns true.
             For example, for string "25text" or "25 text" gets num = 25, tail = "text".
-            Everything else is the same as with <see cref="M:Au.ExtString.ToInt(System.String,System.Int32,System.Int32@,Au.Types.STIFlags)"/>.
+            Everything else is the same as with <see cref="M:Au.Types.ExtString.ToInt(System.String,System.Int32,System.Int32@,Au.Types.STIFlags)"/>.
             </summary>
             <param name="s"></param>
             <param name="num">Receives the number. Receives 0 if no number.</param>
@@ -14012,6 +15075,35 @@
             This property is applied to items added afterwards; submenus inherit it.
             </summary>
         </member>
+        <member name="M:Au.popupMenu.showSimple(Au.Types.DStringList,Au.Types.MSFlags,System.Nullable{Au.Types.POINT},System.Nullable{Au.Types.RECT},Au.Types.AnyWnd)">
+            <summary>
+            Creates and shows simple popup menu. Without images, actions, submenus.
+            Returns selected item id, or 0 if cancelled.
+            </summary>
+            <param name="items">
+            Menu items. Can be string[], List&lt;string&gt; or string like "One|Two|Three".
+            Item id can be optionally specified like "1 One|2 Two|3 Three". If missing, uses id of previous non-separator item + 1. Example: "One|Two|100 Three Four" //1|2|100|101.
+            For separators use null or empty strings: "One|Two||Three|Four".
+            </param>
+            <param name="flags"></param>
+            <param name="xy">Menu position in screen. If null (default), uses mouse position by default. It depends on flags.</param>
+            <param name="excludeRect">The menu should not overlap this rectangle in screen.</param>
+            <param name="owner">Owner window. The menu will be automatically closed when destroying its owner window.</param>
+            <remarks>
+            The function adds menu items and calls <see cref="M:Au.popupMenu.Show(Au.Types.MSFlags,System.Nullable{Au.Types.POINT},System.Nullable{Au.Types.RECT},Au.Types.AnyWnd)"/>. Returns when menu closed. All parameters except <i>items</i> are same as of <b>Show</b>.
+            </remarks>
+            <seealso cref="M:Au.dialog.showList(Au.Types.DStringList,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>
+        </member>
+        <member name="P:Au.popupMenu.KeyboardHook">
+            <summary>
+            Gets or sets callback function that decides how to respond to pressed keys (default, close, ignore, block).
+            </summary>
+            <remarks>
+            The function is called on each key down event while the menu is open. Only if current thread is not in the foreground.
+            To block a key, call <see cref="M:Au.Types.HookData.Keyboard.BlockEvent"/>.
+            The function must be as fast as possible.
+            </remarks>
+        </member>
         <member name="M:Au.popupMenu.Show(Au.Types.MSFlags,System.Nullable{Au.Types.POINT},System.Nullable{Au.Types.RECT},Au.Types.AnyWnd)">
             <summary>
             Shows the menu and waits until closed.
@@ -14032,25 +15124,6 @@
             <summary>
             After closing the menu gets the selected item, or null if cancelled.
             </summary>
-        </member>
-        <member name="M:Au.popupMenu.showSimple(Au.Types.DStringList,Au.Types.MSFlags,System.Nullable{Au.Types.POINT},System.Nullable{Au.Types.RECT},Au.Types.AnyWnd)">
-            <summary>
-            Creates and shows simple popup menu. Without images, actions, submenus.
-            Returns selected item id, or 0 if cancelled.
-            </summary>
-            <param name="items">
-            Menu items. Can be string[], List&lt;string&gt; or string like "One|Two|Three".
-            Item id can be optionally specified like "1 One|2 Two|3 Three". If missing, uses id of previous non-separator item + 1. Example: "One|Two|100 Three Four" //1|2|100|101.
-            For separators use null or empty strings: "One|Two||Three|Four".
-            </param>
-            <param name="flags"></param>
-            <param name="xy">Menu position in screen. If null (default), uses mouse position by default. It depends on flags.</param>
-            <param name="excludeRect">The menu should not overlap this rectangle in screen.</param>
-            <param name="owner">Owner window. The menu will be automatically closed when destroying its owner window.</param>
-            <remarks>
-            The function adds menu items and calls <see cref="M:Au.popupMenu.Show(Au.Types.MSFlags,System.Nullable{Au.Types.POINT},System.Nullable{Au.Types.RECT},Au.Types.AnyWnd)"/>. Returns when menu closed. All parameters except <i>items</i> are same as of <b>Show</b>.
-            </remarks>
-            <seealso cref="M:Au.dialog.showList(Au.Types.DStringList,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>
         </member>
         <member name="M:Au.popupMenu.Close(System.Boolean)">
             <summary>
@@ -14075,16 +15148,6 @@
             <remarks>
             The focused item visually shows the menu item that would be executed if clicked or pressed Enter, Tab or Space key. It changes when the user moves the mouse or presses navigation keys (arrows, End, Home, PageDown, PageUp).
             This property can be set before showing the menu or when it is open.
-            </remarks>
-        </member>
-        <member name="P:Au.popupMenu.KeyboardHook">
-            <summary>
-            Gets or sets callback function that decides how to respond to pressed keys (default, close, ignore, block).
-            </summary>
-            <remarks>
-            The function is called on each key down event while the menu is open. Only if current thread is not in the foreground.
-            To block a key, call <see cref="M:Au.Types.HookData.Keyboard.BlockEvent"/>.
-            The function must be as fast as possible.
             </remarks>
         </member>
         <member name="T:Au.toolbar">
@@ -19299,1069 +20362,6 @@
             <param name="row"><see cref="P:Au.csvTable.Item(System.Int32,System.Int32)"/></param>
             <param name="column"><see cref="P:Au.csvTable.Item(System.Int32,System.Int32)"/></param>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
-        </member>
-        <member name="T:Au.ExtString">
-            <summary>
-            Adds extension methods for <see cref="T:System.String"/>.
-            </summary>
-            <remarks>
-            Some .NET <see cref="T:System.String"/> methods use <see cref="F:System.StringComparison.CurrentCulture"/> by default, while others use ordinal or invariant comparison. It is confusing (difficult to remember), dangerous (easy to make bugs), slower and rarely useful.
-            Microsoft recommends to specify <b>StringComparison.Ordinal[IgnoreCase]</b> explicitly. See https://msdn.microsoft.com/en-us/library/ms973919.aspx.
-            This class adds ordinal comparison versions of these methods. Same or similar name, for example <b>Ends</b> for <b>EndsWith</b>.
-            See also <see cref="P:Au.process.thisProcessCultureIsInvariant"/>.
-            
-            This class also adds more methods.
-            You also can find string functions in other classes of this library, including <see cref="T:Au.More.StringUtil"/>, <see cref="T:Au.regexp"/>, <see cref="T:Au.pathname"/>, <see cref="T:Au.csvTable"/>, <see cref="T:Au.keys.more"/>, <see cref="T:Au.More.Convert2"/>, <see cref="T:Au.More.Hash"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.Eq(System.String,System.String,System.Boolean)">
-            <summary>
-            Compares this and other string. Returns true if equal.
-            </summary>
-            <param name="t">This string. Can be null.</param>
-            <param name="s">Other string. Can be null.</param>
-            <param name="ignoreCase">Case-insensitive.</param>
-            <remarks>
-            Uses ordinal comparison (does not depend on current culture/locale).
-            </remarks>
-            <seealso cref="M:Au.ExtString.Eq(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char})"/>
-            <seealso cref="M:Au.ExtString.Eqi(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char})"/>
-            <seealso cref="M:System.String.Compare(System.String,System.Int32,System.String,System.Int32,System.Int32)"/>
-            <seealso cref="M:System.String.CompareOrdinal(System.String,System.Int32,System.String,System.Int32,System.Int32)"/>
-        </member>
-        <member name="M:Au.ExtString.Eq(System.String,System.Boolean,System.String[])">
-            <summary>
-            Compares this strings with multiple strings.
-            Returns 1-based index of matching string, or 0 if none.
-            </summary>
-            <param name="t">This string. Can be null.</param>
-            <param name="ignoreCase">Case-insensitive.</param>
-            <param name="strings">Other strings. Strings can be null.</param>
-            <remarks>
-            Uses ordinal comparison (does not depend on current culture/locale).
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.Eq(System.String,System.Int32,System.ReadOnlySpan{System.Char},System.Boolean)">
-            <summary>
-            Compares part of this string with other string. Returns true if equal.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="startIndex">Offset in this string. If invalid, returns false.</param>
-            <param name="s">Other string.</param>
-            <param name="ignoreCase">Case-insensitive.</param>
-            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <remarks>
-            Uses ordinal comparison (does not depend on current culture/locale).
-            </remarks>
-            <seealso cref="M:Au.ExtString.Eq(System.ReadOnlySpan{System.Char},System.Int32,System.ReadOnlySpan{System.Char},System.Boolean)"/>
-            <seealso cref="M:System.String.Compare(System.String,System.Int32,System.String,System.Int32,System.Int32)"/>
-            <seealso cref="M:System.String.CompareOrdinal(System.String,System.Int32,System.String,System.Int32,System.Int32)"/>
-        </member>
-        <member name="M:Au.ExtString.Eq(System.String,System.Int32,System.Boolean,System.String[])">
-            <summary>
-            Compares part of this string with multiple strings.
-            Returns 1-based index of matching string, or 0 if none.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="startIndex">Offset in this string. If invalid, returns false.</param>
-            <param name="ignoreCase">Case-insensitive.</param>
-            <param name="strings">Other strings.</param>
-            <exception cref="T:System.ArgumentNullException">A string in <i>strings</i> is null.</exception>
-            <remarks>
-            Uses ordinal comparison (does not depend on current culture/locale).
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.Eq(System.String,System.Range,System.ReadOnlySpan{System.Char},System.Boolean)">
-            <summary>
-            Compares part of this string with other string. Returns true if equal.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="range">Range of this string. Can return true only if its length == s.Length. If invalid, returns false.</param>
-            <param name="s">Other string.</param>
-            <param name="ignoreCase">Case-insensitive.</param>
-            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <remarks>
-            Uses ordinal comparison (does not depend on current culture/locale).
-            </remarks>
-            <seealso cref="M:Au.ExtString.Eq(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char})"/>
-            <seealso cref="M:Au.ExtString.Eqi(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char})"/>
-            <seealso cref="M:System.String.Compare(System.String,System.Int32,System.String,System.Int32,System.Int32)"/>
-            <seealso cref="M:System.String.CompareOrdinal(System.String,System.Int32,System.String,System.Int32,System.Int32)"/>
-        </member>
-        <member name="M:Au.ExtString.Eq(System.String,System.Int32,System.Char)">
-            <summary>
-            Returns true if the specified character is at the specified position in this string.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="index">Offset in this string. If invalid, returns false.</param>
-            <param name="c">Character.</param>
-        </member>
-        <member name="M:Au.ExtString.Eqi(System.String,System.String)">
-            <summary>
-            Compares this and other string ignoring case (case-insensitive). Returns true if equal.
-            </summary>
-            <param name="t">This string. Can be null.</param>
-            <param name="s">Other string. Can be null.</param>
-            <remarks>
-            Uses ordinal comparison (does not depend on current culture/locale).
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.Ends(System.String,System.ReadOnlySpan{System.Char},System.Boolean)">
-            <summary>
-            Compares end of this string with other string. Returns true if equal.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="s">Other string.</param>
-            <param name="ignoreCase">Case-insensitive.</param>
-            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <remarks>
-            Uses ordinal comparison (does not depend on current culture/locale).
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.Ends(System.String,System.Boolean,System.String[])">
-            <summary>
-            Compares end of this string with multiple strings.
-            Returns 1-based index of matching string, or 0 if none.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="ignoreCase">Case-insensitive.</param>
-            <param name="strings">Other strings.</param>
-            <exception cref="T:System.ArgumentNullException">A string in <i>strings</i> is null.</exception>
-            <remarks>
-            Uses ordinal comparison (does not depend on current culture/locale).
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.Ends(System.String,System.Char)">
-            <summary>
-            Returns true if this string ends with the specified character.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="c">Character.</param>
-        </member>
-        <member name="M:Au.ExtString.Starts(System.String,System.ReadOnlySpan{System.Char},System.Boolean)">
-            <summary>
-            Compares beginning of this string with other string. Returns true if equal.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="s">Other string.</param>
-            <param name="ignoreCase">Case-insensitive.</param>
-            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <remarks>
-            Uses ordinal comparison (does not depend on current culture/locale).
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.Starts(System.String,System.Boolean,System.String[])">
-            <summary>
-            Compares beginning of this string with multiple strings.
-            Returns 1-based index of matching string, or 0 if none.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="ignoreCase">Case-insensitive.</param>
-            <param name="strings">Other strings.</param>
-            <exception cref="T:System.ArgumentNullException">A string in <i>strings</i> is null.</exception>
-            <remarks>
-            Uses ordinal comparison (does not depend on current culture/locale).
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.Starts(System.String,System.Char)">
-            <summary>
-            Returns true if this string starts with the specified character.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="c">Character.</param>
-        </member>
-        <member name="M:Au.ExtString.Find(System.String,System.String,System.Boolean)">
-            <summary>
-            Finds substring in this string. Returns its 0-based index, or -1 if not found.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="s">Subtring to find.</param>
-            <param name="ignoreCase">Case-insensitive.</param>
-            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <remarks>
-            Uses ordinal comparison (does not depend on current culture/locale).
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.Find(System.String,System.String,System.Int32,System.Boolean)">
-            <summary>
-            Finds substring in part of this string. Returns its 0-based index, or -1 if not found.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="s">Subtring to find.</param>
-            <param name="startIndex">The search start index.</param>
-            <param name="ignoreCase">Case-insensitive.</param>
-            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
-            <remarks>
-            Uses ordinal comparison (does not depend on current culture/locale).
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.Find(System.String,System.String,System.Range,System.Boolean)">
-            <summary>
-            Finds substring in part of this string. Returns its 0-based index, or -1 if not found.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="s">Subtring to find.</param>
-            <param name="range">The search range.</param>
-            <param name="ignoreCase">Case-insensitive.</param>
-            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-            <remarks>
-            Uses ordinal comparison (does not depend on current culture/locale).
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.FindAny(System.String,System.String,System.Int32,System.Int32)">
-            <summary>
-            Finds the first character specified in <i>chars</i>. Returns its index, or -1 if not found.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="chars">Characters.</param>
-            <param name="startOfRange">The start index of the search range. Default 0.</param>
-            <param name="endOfRange">The end index of the search range. If -1 (default), the length of this string.</param>
-            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startOfRange</i> or <i>endOfRange</i>.</exception>
-        </member>
-        <member name="M:Au.ExtString.FindNot(System.String,System.String,System.Int32,System.Int32)">
-            <summary>
-            Finds the first character not specified in <i>chars</i>. Returns its index, or -1 if not found.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="chars">Characters.</param>
-            <param name="startOfRange">The start index of the search range. Default 0.</param>
-            <param name="endOfRange">The end index of the search range. If -1 (default), the length of this string.</param>
-            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startOfRange</i> or <i>endOfRange</i>.</exception>
-        </member>
-        <member name="M:Au.ExtString.IndexOfNot(System.ReadOnlySpan{System.Char},System.String)">
-            <summary>
-            Finds the first character not specified in <i>chars</i>. Returns its index, or -1 if not found.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="chars">Characters.</param>
-            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
-        </member>
-        <member name="M:Au.ExtString.LastIndexOfNot(System.ReadOnlySpan{System.Char},System.String)">
-            <summary>
-            Finds the last character not specified in <i>chars</i>. Returns its index, or -1 if not found.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="chars">Characters.</param>
-            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
-        </member>
-        <member name="M:Au.ExtString.FindLastAny(System.String,System.String,System.Int32,System.Int32)">
-            <summary>
-            Finds the last character specified in <i>chars</i> (searches right to left). Returns its index, or -1 if not found.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="chars">Characters.</param>
-            <param name="startOfRange">The start index of the search range. Default 0.</param>
-            <param name="endOfRange">The end index of the search range. If -1 (default), the length of this string.</param>
-            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startOfRange</i> or <i>endOfRange</i>.</exception>
-        </member>
-        <member name="M:Au.ExtString.FindLastNot(System.String,System.String,System.Int32,System.Int32)">
-            <summary>
-            Finds the last character not specified in <i>chars</i> (searches right to left). Returns its index, or -1 if not found.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="chars">Characters.</param>
-            <param name="startOfRange">The start index of the search range. Default 0.</param>
-            <param name="endOfRange">The end index of the search range. If -1 (default), the length of this string.</param>
-            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startOfRange</i> or <i>endOfRange</i>.</exception>
-        </member>
-        <member name="M:Au.ExtString.Trim(System.String,System.String)">
-            <summary>
-            Removes specified characters from the start and end of this string.
-            Returns the result string.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="chars">Characters to remove.</param>
-            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
-        </member>
-        <member name="M:Au.ExtString.TrimStart(System.String,System.String)">
-            <summary>
-            Removes specified characters from the start of this string.
-            Returns the result string.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="chars">Characters to remove.</param>
-            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
-        </member>
-        <member name="M:Au.ExtString.TrimEnd(System.String,System.String)">
-            <summary>
-            Removes specified characters from the end of this string.
-            Returns the result string.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="chars">Characters to remove.</param>
-            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
-        </member>
-        <member name="M:Au.ExtString.FindWord(System.String,System.String,System.Nullable{System.Range},System.Boolean,System.String)">
-            <summary>
-            Finds whole word. Returns its 0-based index, or -1 if not found.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="s">Subtring to find.</param>
-            <param name="range">The search range.</param>
-            <param name="ignoreCase">Case-insensitive.</param>
-            <param name="otherWordChars">Additional word characters, for which <see cref="M:System.Char.IsLetterOrDigit(System.Char)"/> returns false. For example "_".</param>
-            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-            <remarks>
-            If <i>s</i> starts with a word character finds substring that is not preceded by a word character.
-            If <i>s</i> ends with a word character, finds substring that is not followed by a word character.
-            Word characters are those for which <see cref="M:System.Char.IsLetterOrDigit(System.Char)"/> returns true plus those specified in <i>otherWordChars</i>.
-            Uses ordinal comparison (does not depend on current culture/locale).
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.Lenn(System.String)">
-            <summary>
-            Returns <see cref="P:System.String.Length"/>. Returns 0 if this string is null.
-            </summary>
-            <param name="t">This string.</param>
-        </member>
-        <member name="M:Au.ExtString.NE(System.String)">
-            <summary>
-            Returns true if this string is null or empty ("").
-            </summary>
-            <param name="t">This string.</param>
-        </member>
-        <member name="M:Au.ExtString.NullIfEmpty_(System.String)">
-            <summary>
-            Returns this string, or null if it is "" or null.
-            </summary>
-            <param name="t">This string.</param>
-        </member>
-        <member name="M:Au.ExtString.Segments(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})">
-            <summary>
-            This function can be used with foreach to split this string into substrings as start/end offsets.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="separators">Characters that delimit the substrings. Or one of <see cref="T:Au.Types.SegSep"/> constants.</param>
-            <param name="flags"></param>
-            <param name="range">Part of this string to split.</param>
-            <example>
-            <code><![CDATA[
-            string s = "one * two three ";
-            foreach(var t in s.Segments(" ")) print.it(s[t.start..t.end]);
-            foreach(var t in s.Segments(SegSep.Word, SegFlags.NoEmpty)) print.it(s[t.start..t.end]);
-            ]]></code>
-            </example>
-            <seealso cref="M:Au.ExtString.Lines(System.String,System.Boolean)"/>
-        </member>
-        <member name="M:Au.ExtString.Lines(System.String,System.Boolean)">
-            <summary>
-            Splits this string using newline separators "\r\n", "\n", "\r".
-            </summary>
-            <param name="t">This string.</param>
-            <param name="noEmpty">Don't need empty lines.</param>
-            <seealso cref="M:Au.ExtString.Segments(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})"/>
-            <seealso cref="F:Au.Types.SegSep.Line"/>
-        </member>
-        <member name="M:Au.ExtString.Lines(System.String,System.Int32,System.StringSplitOptions)">
-            <summary>
-            Splits this string into lines using separators "\r\n", "\n", "\r".
-            </summary>
-            <param name="t">This string.</param>
-            <param name="maxCount">The maximal number of substrings to get.</param>
-            <param name="options"></param>
-            <seealso cref="M:Au.ExtString.Segments(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})"/>
-            <seealso cref="F:Au.Types.SegSep.Line"/>
-        </member>
-        <member name="M:Au.ExtString.LineCount(System.String,System.Boolean,System.Nullable{System.Range})">
-            <summary>
-            Returns the number of lines.
-            Counts line separators "\r\n", "\n", "\r".
-            </summary>
-            <param name="t">This string.</param>
-            <param name="preferMore">Add 1 if the string ends with a line separator or its length is 0.</param>
-            <param name="range">Part of this string or null (default).</param>
-            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
-            <seealso cref="M:Au.More.StringUtil.LineAndColumn(System.String,System.Int32,System.Int32@,System.Int32@)"/>
-        </member>
-        <member name="M:Au.ExtString.Lower(System.String)">
-            <summary>
-            Converts this string to lower case.
-            Returns the result string.
-            </summary>
-            <param name="t">This string.</param>
-            <remarks>
-            Calls <see cref="M:System.String.ToLowerInvariant"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.Upper(System.String)">
-            <summary>
-            Converts this string to upper case.
-            Returns the result string.
-            </summary>
-            <param name="t">This string.</param>
-            <remarks>
-            Calls <see cref="M:System.String.ToUpperInvariant"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.Upper(System.String,Au.Types.SUpper,System.Globalization.CultureInfo)">
-            <summary>
-            Converts this string or only the first character to upper case or all words to title case.
-            Returns the result string.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="how"></param>
-            <param name="culture">Culture, for example <c>CultureInfo.CurrentCulture</c>. If null (default) uses invariant culture.</param>
-        </member>
-        <member name="M:Au.ExtString.ToInt(System.String,System.Int32,System.Int32@,Au.Types.STIFlags)">
-            <summary>
-            Converts part of this string to int number and gets the number end index.
-            Returns the number, or 0 if fails to convert.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="startIndex">Offset in this string where to start parsing.</param>
-            <param name="numberEndIndex">Receives offset in this string where the number part ends. If fails to convert, receives 0.</param>
-            <param name="flags"></param>
-            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
-            <remarks>
-            Fails to convert when string is null, "", does not begin with a number or the number is too big.
-            
-            Unlike <b>int.Parse</b> and <b>Convert.ToInt32</b>:
-            	The number in string can be followed by more text, like <c>"123text"</c>.
-            	Has <i>startIndex</i> parameter that allows to get number from middle, like <c>"text123text"</c>.
-            	Gets the end of the number part.
-            	No exception when cannot convert.
-            	The number can be decimal (like <c>"123"</c>) or hexadecimal (like <c>"0x1A"</c>); don't need separate flags for each style.
-            	Does not depend on current culture. As minus sign recognizes '-' and '−'.
-            	Faster.
-            
-            The number in string can start with ASCII whitespace (spaces, newlines, etc), like <c>" 5"</c>.
-            The number in string can be with <c>"-"</c> or <c>"+"</c>, like <c>"-5"</c>, but not like <c>"- 5"</c>.
-            Fails if the number is greater than +- <b>uint.MaxValue</b> (0xffffffff).
-            The return value becomes negative if the number is greater than <b>int.MaxValue</b>, for example <c>"0xffffffff"</c> is -1, but it becomes correct if assigned to uint (need cast).
-            Does not support non-integer numbers; for example, for <c>"3.5E4"</c> returns 3 and sets <c>numberEndIndex=startIndex+1</c>.
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.ToInt(System.String,System.Int32,Au.Types.STIFlags)">
-            <summary>
-            Converts part of this string to int number.
-            Returns the number, or 0 if fails to convert.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
-        </member>
-        <member name="M:Au.ExtString.ToInt(System.String,System.Int32@,System.Int32,System.Int32@,Au.Types.STIFlags)">
-            <summary>
-            Converts part of this string to int number and gets the number end index.
-            Returns false if fails.
-            </summary>
-            <param name="t">This string. Can be null.</param>
-            <param name="result">Receives the result number.</param>
-            <param name="startIndex">Offset in this string where to start parsing.</param>
-            <param name="numberEndIndex">Receives offset in this string where the number part ends. If fails to convert, receives 0.</param>
-            <param name="flags"></param>
-            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
-        </member>
-        <member name="M:Au.ExtString.ToInt(System.String,System.Int32@,System.Int32,Au.Types.STIFlags)">
-            <summary>
-            Converts part of this string to int number.
-            Returns false if fails.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
-        </member>
-        <member name="M:Au.ExtString.ToInt(System.String,System.UInt32@,System.Int32,System.Int32@,Au.Types.STIFlags)">
-            <summary>
-            Converts part of this string to uint number and gets the number end index.
-            Returns false if fails.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
-        </member>
-        <member name="M:Au.ExtString.ToInt(System.String,System.UInt32@,System.Int32,Au.Types.STIFlags)">
-            <summary>
-            Converts part of this string to uint number.
-            Returns false if fails.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
-        </member>
-        <member name="M:Au.ExtString.ToInt(System.String,System.Int64@,System.Int32,System.Int32@,Au.Types.STIFlags)">
-            <summary>
-            Converts part of this string to long number and gets the number end index.
-            Returns false if fails.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
-        </member>
-        <member name="M:Au.ExtString.ToInt(System.String,System.Int64@,System.Int32,Au.Types.STIFlags)">
-            <summary>
-            Converts part of this string to long number.
-            Returns false if fails.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
-        </member>
-        <member name="M:Au.ExtString.ToInt(System.String,System.UInt64@,System.Int32,System.Int32@,Au.Types.STIFlags)">
-            <summary>
-            Converts part of this string to ulong number and gets the number end index.
-            Returns false if fails.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
-        </member>
-        <member name="M:Au.ExtString.ToInt(System.String,System.UInt64@,System.Int32,Au.Types.STIFlags)">
-            <summary>
-            Converts part of this string to ulong number.
-            Returns false if fails.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
-        </member>
-        <member name="M:Au.ExtString.ToNumber(System.String,System.Nullable{System.Range},System.Globalization.NumberStyles)">
-            <summary>
-            Converts this string or its part to double number.
-            Returns the number, or 0 if fails to convert.
-            </summary>
-            <param name="t">This string. Can be null.</param>
-            <param name="range">Part of this string or null (default).</param>
-            <param name="style">The permitted number format in the string.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">Invalid <i>style</i>.</exception>
-            <remarks>
-            Calls <see cref="M:System.Double.TryParse(System.ReadOnlySpan{System.Char},System.Globalization.NumberStyles,System.IFormatProvider,System.Double@)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b>.
-            Fails if the string is null or "" or isn't a valid floating-point number.
-            Examples of valid numbers: "12", " -12.3 ", ".12", "12.", "12E3", "12.3e-45", "1,234.5" (with style <c>NumberStyles.Float | NumberStyles.AllowThousands</c>). String like "2text" is invalid, unless range is <c>0..1</c>.
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.ToNumber(System.String,System.Double@,System.Nullable{System.Range},System.Globalization.NumberStyles)">
-            <summary>
-            Converts this string or its part to double number.
-            Returns false if fails.
-            </summary>
-            <param name="t">This string. Can be null.</param>
-            <param name="result">Receives the result number.</param>
-            <param name="range">Part of this string or null (default).</param>
-            <param name="style">The permitted number format in the string.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">Invalid <i>style</i>.</exception>
-            <remarks>
-            Calls <see cref="M:System.Double.TryParse(System.ReadOnlySpan{System.Char},System.Globalization.NumberStyles,System.IFormatProvider,System.Double@)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b>.
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.ToNumber(System.String,System.Single@,System.Nullable{System.Range},System.Globalization.NumberStyles)">
-            <summary>
-            Converts this string or its part to float number.
-            Returns false if fails.
-            </summary>
-            <param name="t">This string. Can be null.</param>
-            <param name="result">Receives the result number.</param>
-            <param name="range">Part of this string or null (default).</param>
-            <param name="style">The permitted number format in the string.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">Invalid <i>style</i>.</exception>
-            <remarks>
-            Calls <see cref="M:System.Single.TryParse(System.ReadOnlySpan{System.Char},System.Globalization.NumberStyles,System.IFormatProvider,System.Single@)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b>.
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.ToNumber(System.String,System.Int32@,System.Nullable{System.Range},System.Globalization.NumberStyles)">
-            <summary>
-            Converts this string or its part to int number.
-            Returns false if fails.
-            </summary>
-            <param name="t">This string. Can be null.</param>
-            <param name="result">Receives the result number.</param>
-            <param name="range">Part of this string or null (default).</param>
-            <param name="style">The permitted number format in the string.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">Invalid <i>style</i>.</exception>
-            <remarks>
-            Calls <see cref="M:System.Int32.TryParse(System.ReadOnlySpan{System.Char},System.Globalization.NumberStyles,System.IFormatProvider,System.Int32@)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b>.
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.ToNumber(System.String,System.UInt32@,System.Nullable{System.Range},System.Globalization.NumberStyles)">
-            <summary>
-            Converts this string or its part to uint number.
-            Returns false if fails.
-            </summary>
-            <param name="t">This string. Can be null.</param>
-            <param name="result">Receives the result number.</param>
-            <param name="range">Part of this string or null (default).</param>
-            <param name="style">The permitted number format in the string.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">Invalid <i>style</i>.</exception>
-            <remarks>
-            Calls <see cref="M:System.UInt32.TryParse(System.ReadOnlySpan{System.Char},System.Globalization.NumberStyles,System.IFormatProvider,System.UInt32@)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b>.
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.ToNumber(System.String,System.Int64@,System.Nullable{System.Range},System.Globalization.NumberStyles)">
-            <summary>
-            Converts this string or its part to long number.
-            Returns false if fails.
-            </summary>
-            <param name="t">This string. Can be null.</param>
-            <param name="result">Receives the result number.</param>
-            <param name="range">Part of this string or null (default).</param>
-            <param name="style">The permitted number format in the string.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">Invalid <i>style</i>.</exception>
-            <remarks>
-            Calls <see cref="M:System.Int64.TryParse(System.ReadOnlySpan{System.Char},System.Globalization.NumberStyles,System.IFormatProvider,System.Int64@)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b>.
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.ToNumber(System.String,System.UInt64@,System.Nullable{System.Range},System.Globalization.NumberStyles)">
-            <summary>
-            Converts this string or its part to ulong number.
-            Returns false if fails.
-            </summary>
-            <param name="t">This string. Can be null.</param>
-            <param name="result">Receives the result number.</param>
-            <param name="range">Part of this string or null (default).</param>
-            <param name="style">The permitted number format in the string.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">Invalid <i>style</i>.</exception>
-            <remarks>
-            Calls <see cref="M:System.UInt64.TryParse(System.ReadOnlySpan{System.Char},System.Globalization.NumberStyles,System.IFormatProvider,System.UInt64@)"/>. Uses <see cref="P:System.Globalization.CultureInfo.InvariantCulture"/> if the string range contains only ASCII characters, else uses current culture.
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.ReplaceAt(System.String,System.Int32,System.Int32,System.String)">
-            <summary>
-            Replaces part of this string with other string.
-            Returns the result string.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="startIndex">Offset in this string.</param>
-            <param name="count">Count of characters to replace.</param>
-            <param name="s">The replacement string.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startIndex</i> or <i>count</i>.</exception>
-        </member>
-        <member name="M:Au.ExtString.RemoveSuffix(System.String,System.String,System.Boolean)">
-            <summary>
-            Removes <i>suffix</i> string from the end.
-            Returns the result string. Returns this string if does not end with <i>suffix</i>.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="suffix">Substring to remove.</param>
-            <param name="ignoreCase">Case-insensitive.</param>
-            <exception cref="T:System.ArgumentNullException"><i>suffix</i> is null.</exception>
-        </member>
-        <member name="M:Au.ExtString.RemoveSuffix(System.String,System.Char)">
-            <summary>
-            Removes <i>suffix</i> character from the end.
-            Returns the result string. Returns this string if does not end with <i>suffix</i>.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="suffix">Character to remove.</param>
-            <exception cref="T:System.ArgumentNullException"><i>suffix</i> is null.</exception>
-        </member>
-        <member name="M:Au.ExtString.Limit(System.String,System.Int32,System.Boolean)">
-            <summary>
-            If this string is longer than <i>limit</i>, returns its substring 0 to <i>limit</i>-1 with appended '…' character.
-            Else returns this string.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="limit">Maximal length of the result string. If less than 1, is used 1.</param>
-            <param name="middle">Let "…" be in middle. For example it is useful when the string is a path, to avoid removing filename.</param>
-        </member>
-        <member name="M:Au.ExtString.Escape(System.String,System.Int32,System.Boolean)">
-            <summary>
-            Replaces unsafe characters with C# escape sequences.
-            If the string contains these characters, replaces and returns new string. Else returns this string.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="limit">If the final string is longer than <i>limit</i>, get its substring 0 to <i>limit</i>-1 with appended '…' character. The enclosing "" are not counted.</param>
-            <param name="quote">Enclose in "".</param>
-            <remarks>
-            Replaces these characters: <c>'\\'</c>, <c>'\"'</c>, <c>'\t'</c>, <c>'\n'</c>, <c>'\r'</c> and all in range 0-31.
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.Unescape(System.String,System.String@)">
-            <summary>
-            Replaces C# escape sequences to characters in this string.
-            Returns true if successful. Returns false if the string contains an invalid or unsupported escape sequence.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="result">Receives the result string. It is this string if there are no escape sequences or if fails.</param>
-            <remarks>
-            Supports all escape sequences of <see cref="M:Au.ExtString.Escape(System.String,System.Int32,System.Boolean)"/>: \\ \" \t \n \r \0 \uXXXX.
-            Does not support \a \b \f \v \' \xXXXX \UXXXXXXXX.
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.ReverseString(System.String,System.Boolean)">
-            <summary>
-            Reverses this string, like "Abc" -> "cbA".
-            Returns the result string.
-            </summary>
-            <param name="t"></param>
-            <param name="raw">Ignore char sequences such as Unicode surrogates and grapheme clusters. Faster, but if the string contains these sequences, the result string is incorrect.</param>
-        </member>
-        <member name="M:Au.ExtString.IsAscii(System.String)">
-            <summary>
-            Returns true if does not contain non-ASCII characters.
-            </summary>
-            <seealso cref="M:Au.ExtString.IsAscii(System.ReadOnlySpan{System.Char})"/>
-        </member>
-        <member name="M:Au.ExtString.IsAscii(System.ReadOnlySpan{System.Char})">
-            <summary>
-            Returns true if does not contain non-ASCII characters.
-            </summary>
-        </member>
-        <member name="M:Au.ExtString.Eq(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char})">
-            <summary>
-            Returns true if equals to string <i>s</i>, case-sensitive.
-            </summary>
-            <param name="t">This span.</param>
-            <param name="s">Other string. Can be null.</param>
-            <remarks>
-            Uses ordinal comparison (does not depend on current culture/locale).
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.Eqi(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char})">
-            <summary>
-            Returns true if equals to string <i>s</i>, case-insensitive.
-            </summary>
-            <param name="t">This span.</param>
-            <param name="s">Other string. Can be null.</param>
-            <remarks>
-            Uses ordinal comparison (does not depend on current culture/locale).
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.Eq(System.ReadOnlySpan{System.Char},System.Int32,System.ReadOnlySpan{System.Char},System.Boolean)">
-            <summary>
-            Compares part of this span with string <i>s</i>. Returns true if equal.
-            </summary>
-            <param name="t">This span.</param>
-            <param name="startIndex">Offset in this span. If invalid, returns false.</param>
-            <param name="s">Other string.</param>
-            <param name="ignoreCase">Case-insensitive.</param>
-            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <remarks>
-            Uses ordinal comparison (does not depend on current culture/locale).
-            </remarks>
-        </member>
-        <member name="M:Au.ExtString.Eq(System.ReadOnlySpan{System.Char},System.Int32,System.Char)">
-            <summary>
-            Returns true if the specified character is at the specified position in this span.
-            </summary>
-            <param name="t">This span.</param>
-            <param name="index">Offset in this span. If invalid, returns false.</param>
-            <param name="c">Character.</param>
-        </member>
-        <member name="M:Au.ExtString.IndexOf(System.ReadOnlySpan{System.Char},System.Int32,System.Char)">
-            <summary>
-            Finds character <i>c</i> in this span, starting from <i>index</i>.
-            Returns its index in this span, or -1 if not found.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
-        </member>
-        <member name="M:Au.ExtString.IndexOf(System.ReadOnlySpan{System.Char},System.Range,System.Char)">
-            <summary>
-            Finds character <i>c</i> in <i>range</i> of this span.
-            Returns its index in this span, or -1 if not found.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
-        </member>
-        <member name="M:Au.ExtString.IndexOf(System.ReadOnlySpan{System.Char},System.Int32,System.ReadOnlySpan{System.Char},System.Boolean)">
-            <summary>
-            Finds string <i>s</i> in this span, starting from <i>index</i>.
-            Returns its index in this span, or -1 if not found.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
-            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-        </member>
-        <member name="M:Au.ExtString.IndexOf(System.ReadOnlySpan{System.Char},System.Range,System.ReadOnlySpan{System.Char},System.Boolean)">
-            <summary>
-            Finds string <i>s</i> in <i>range</i> of this span.
-            Returns its index in this span, or -1 if not found.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
-            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-        </member>
-        <member name="M:Au.ExtString.AsSpan(System.String,System.Range)">
-            <summary>
-            Creates read-only span from range of this string.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-        </member>
-        <member name="M:Au.ExtString.RIsMatch(System.String,System.String,Au.Types.RXFlags,System.Nullable{System.Range})">
-            <summary>
-            Returns true if this string matches PCRE regular expression <i>rx</i>.
-            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
-            Examples in <see cref="T:Au.regexp"/> class help.
-            </summary>
-            <param name="t">This string. If null, returns false.</param>
-            <param name="rx">Regular expression.</param>
-            <param name="flags"></param>
-            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
-            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
-        </member>
-        <member name="M:Au.ExtString.RMatch(System.String,System.String,Au.Types.RXMatch@,Au.Types.RXFlags,System.Nullable{System.Range})">
-            <summary>
-            Returns true if this string matches PCRE regular expression <i>rx</i>.
-            Gets match info as <see cref="T:Au.Types.RXMatch"/>.
-            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.Match(System.String,Au.Types.RXMatch@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
-            Examples in <see cref="T:Au.regexp"/> class help.
-            </summary>
-            <param name="t">This string. If null, returns false.</param>
-            <param name="rx">Regular expression.</param>
-            <param name="result">Receives match info.</param>
-            <param name="flags"></param>
-            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
-            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
-        </member>
-        <member name="M:Au.ExtString.RMatch(System.String,System.String,System.Int32,System.String@,Au.Types.RXFlags,System.Nullable{System.Range})">
-            <summary>
-            Returns true if this string matches PCRE regular expression <i>rx</i>.
-            Gets whole match or some group, as string.
-            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.Match(System.String,System.Int32,System.String@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
-            Examples in <see cref="T:Au.regexp"/> class help.
-            </summary>
-            <param name="t">This string. If null, returns false.</param>
-            <param name="rx">Regular expression.</param>
-            <param name="group">Group number (1-based index) of result. If 0 (default) - whole match.</param>
-            <param name="result">Receives the match value.</param>
-            <param name="flags"></param>
-            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
-            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
-        </member>
-        <member name="M:Au.ExtString.RMatch(System.String,System.String,System.Int32,Au.Types.RXGroup@,Au.Types.RXFlags,System.Nullable{System.Range})">
-            <summary>
-            Returns true if this string matches PCRE regular expression <i>rx</i>.
-            Gets whole match or some group, as index and length.
-            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.Match(System.String,System.Int32,Au.Types.RXGroup@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
-            Examples in <see cref="T:Au.regexp"/> class help.
-            </summary>
-            <param name="t">This string. If null, returns false.</param>
-            <param name="rx">Regular expression.</param>
-            <param name="group">Group number (1-based index) of result. If 0 (default) - whole match.</param>
-            <param name="result">Receives match info.</param>
-            <param name="flags"></param>
-            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
-            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
-        </member>
-        <member name="M:Au.ExtString.RFindAll(System.String,System.String,Au.Types.RXFlags,System.Nullable{System.Range})">
-            <summary>
-            Finds all match instances of PCRE regular expression <i>rx</i>.
-            Returns a lazy IEnumerable&lt;<see cref="T:Au.Types.RXMatch"/>&gt; object that can be used with foreach.
-            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.FindAll(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
-            Examples in <see cref="T:Au.regexp"/> class help.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="rx">Regular expression.</param>
-            <param name="flags"></param>
-            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
-            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
-        </member>
-        <member name="M:Au.ExtString.RFindAll(System.String,System.String,Au.Types.RXMatch[]@,Au.Types.RXFlags,System.Nullable{System.Range})">
-            <summary>
-            Finds all match instances of PCRE regular expression <i>rx</i>. Gets array of <see cref="T:Au.Types.RXMatch"/>.
-            Returns true if found 1 or more matches.
-            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.FindAll(System.String,Au.Types.RXMatch[]@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
-            Examples in <see cref="T:Au.regexp"/> class help.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="rx">Regular expression.</param>
-            <param name="result">Receives all found matches.</param>
-            <param name="flags"></param>
-            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
-            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
-        </member>
-        <member name="M:Au.ExtString.RFindAll(System.String,System.String,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
-            <summary>
-            Finds all match instances of PCRE regular expression <i>rx</i>.
-            Returns a lazy IEnumerable&lt;<see cref="T:Au.Types.RXGroup"/>&gt; object that can be used with foreach.
-            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.FindAll(System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
-            Examples in <see cref="T:Au.regexp"/> class help.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="rx">Regular expression.</param>
-            <param name="group">Group number (1-based index) of results. If 0 (default) - whole match.</param>
-            <param name="flags"></param>
-            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
-            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
-        </member>
-        <member name="M:Au.ExtString.RFindAll(System.String,System.String,System.Int32,System.String[]@,Au.Types.RXFlags,System.Nullable{System.Range})">
-            <summary>
-            Finds all match instances of PCRE regular expression <i>rx</i>. Gets array of strings.
-            Returns true if found 1 or more matches.
-            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.FindAll(System.String,System.Int32,System.String[]@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
-            Examples in <see cref="T:Au.regexp"/> class help.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="rx">Regular expression.</param>
-            <param name="group">Group number (1-based index) of results. If 0 (default) - whole match.</param>
-            <param name="result">Receives all found matches.</param>
-            <param name="flags"></param>
-            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
-            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
-        </member>
-        <member name="M:Au.ExtString.RReplace(System.String,System.String,System.String,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
-            <summary>
-            Finds and replaces all match instances of PCRE regular expression <i>rx</i>.
-            Returns the result string.
-            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.Replace(System.String,System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
-            Examples in <see cref="T:Au.regexp"/> class help.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="rx">Regular expression.</param>
-            <param name="repl">Replacement pattern.</param>
-            <param name="maxCount">Maximal count of replacements to make. If -1 (default), replaces all.</param>
-            <param name="flags"></param>
-            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">
-            - Invalid regular expression.
-            - Invalid $replacement.
-            - Used a PARTIAL_ flag.
-            - The regular expression contains <c>(?=...\K)</c>.
-            </exception>
-            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
-        </member>
-        <member name="M:Au.ExtString.RReplace(System.String,System.String,System.String,System.String@,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
-            <summary>
-            Finds and replaces all match instances of PCRE regular expression <i>rx</i>.
-            Returns the number of replacements made.
-            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.Replace(System.String,System.String,System.String@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
-            Examples in <see cref="T:Au.regexp"/> class help.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="rx">Regular expression.</param>
-            <param name="repl">Replacement pattern.</param>
-            <param name="result">The result string.</param>
-            <param name="maxCount">Maximal count of replacements to make. If -1 (default), replaces all.</param>
-            <param name="flags"></param>
-            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">
-            - Invalid regular expression.
-            - Invalid $replacement.
-            - Used a PARTIAL_ flag.
-            - The regular expression contains <c>(?=...\K)</c>.
-            </exception>
-            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
-        </member>
-        <member name="M:Au.ExtString.RReplace(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
-            <summary>
-            Finds and replaces all match instances of PCRE regular expression <i>rx</i>. Uses a callback function.
-            Returns the result string.
-            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.Replace(System.String,System.Func{Au.Types.RXMatch,System.String},System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
-            Examples in <see cref="T:Au.regexp"/> class help.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="rx">Regular expression.</param>
-            <param name="replFunc">Callback function that receives found matches and returns replacements.</param>
-            <param name="maxCount">Maximal count of replacements to make. If -1 (default), replaces all.</param>
-            <param name="flags"></param>
-            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">
-            - Invalid regular expression.
-            - Invalid $replacement.
-            - Used a PARTIAL_ flag.
-            - The regular expression contains <c>(?=...\K)</c>.
-            </exception>
-            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
-        </member>
-        <member name="M:Au.ExtString.RReplace(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.String@,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
-            <summary>
-            Finds and replaces all match instances of PCRE regular expression <i>rx</i>. Uses a callback function.
-            Returns the number of replacements made.
-            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.Replace(System.String,System.Func{Au.Types.RXMatch,System.String},System.String@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
-            Examples in <see cref="T:Au.regexp"/> class help.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="rx">Regular expression.</param>
-            <param name="replFunc">Callback function that receives found matches and returns replacements.</param>
-            <param name="result">The result string.</param>
-            <param name="maxCount">Maximal count of replacements to make. If -1 (default), replaces all.</param>
-            <param name="flags"></param>
-            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">
-            - Invalid regular expression.
-            - Invalid $replacement.
-            - Used a PARTIAL_ flag.
-            - The regular expression contains <c>(?=...\K)</c>.
-            </exception>
-            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
-        </member>
-        <member name="M:Au.ExtString.RSplit(System.String,System.String,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
-            <summary>
-            Returns array of substrings delimited by PCRE regular expression <i>rx</i> matches.
-            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.Split(System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
-            Examples in <see cref="T:Au.regexp"/> class help.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="rx">Regular expression.</param>
-            <param name="maxCount">Maximal count of substrings to get. The last substring contains the unsplit remainder of the subject string. If 0 (default) or negative, gets all.</param>
-            <param name="flags"></param>
-            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
-            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
-        </member>
-        <member name="M:Au.ExtString._RegexCache.AddOrGet(System.String,Au.Types.RXFlags)">
-            <summary>
-            If rx/flags is in the cache, returns the cached code.
-            Else compiles rx/flags, adds to the cache and returns the code.
-            </summary>
-            <param name="rx"></param>
-            <param name="flags"></param>
-            <exception cref="T:System.ArgumentException">Invalid regular expression. Or failed to compile it for some other reason.</exception>
-        </member>
-        <member name="M:Au.ExtString.Like(System.String,System.String,System.Boolean)">
-            <summary>
-            Compares this string with a string that possibly contains wildcard characters.
-            Returns true if the strings match.
-            </summary>
-            <param name="t">This string. If null, returns false. If "", returns true if pattern is "" or "*".</param>
-            <param name="pattern">String that possibly contains wildcard characters. Cannot be null. If "", returns true if this string is "". If "*", always returns true except when this string is null.</param>
-            <param name="ignoreCase">Case-insensitive.</param>
-            <exception cref="T:System.ArgumentNullException"><i>pattern</i> is null.</exception>
-            <remarks>
-            Wildcard characters:
-            
-            Character | Will match | Examples
-            | - | - | - |
-            | * | Zero or more of any characters. | <c>"start*"</c>, <c>"*end"</c>, <c>"*middle*"</c>
-            | ? | Any single character. | <c>"date ????-??-??"</c>
-            
-            There are no escape sequences for * and ? characters.
-            
-            Uses ordinal comparison, ie does not depend on current culture.
-            
-            See also: [](xref:wildcard_expression).
-            </remarks>
-            <example>
-            <code><![CDATA[
-            string s = @"C:\abc\mno.xyz";
-            if(s.Like(@"C:\abc\mno.xyz")) print.it("matches whole text (no wildcard characters)");
-            if(s.Like(@"C:\abc\*")) print.it("starts with");
-            if(s.Like(@"*.xyz")) print.it("ends with");
-            if(s.Like(@"*mno*")) print.it("contains");
-            if(s.Like(@"C:\*.xyz")) print.it("starts and ends with");
-            if(s.Like(@"?:*")) print.it("any character, : and possibly more text");
-            ]]></code>
-            </example>
-            <seealso cref="T:Au.wildex"/>
-            <seealso cref="M:Au.ExtString.Like(System.ReadOnlySpan{System.Char},System.String,System.Boolean)"/>
-        </member>
-        <member name="M:Au.ExtString.Like(System.ReadOnlySpan{System.Char},System.String,System.Boolean)">
-            <inheritdoc cref="M:Au.ExtString.Like(System.String,System.String,System.Boolean)"/>
-        </member>
-        <member name="M:Au.ExtString.Like(System.String,System.Boolean,System.String[])">
-            <summary>
-            Calls <see cref="M:Au.ExtString.Like(System.String,System.String,System.Boolean)"/> for each wildcard pattern specified in the argument list until it returns true.
-            Returns 1-based index of matching pattern, or 0 if none.
-            </summary>
-            <param name="t"></param>
-            <param name="ignoreCase">Case-insensitive.</param>
-            <param name="patterns">One or more wildcard strings. The array and strings cannot be null.</param>
-            <exception cref="T:System.ArgumentNullException">A string in <i>patterns</i> is null.</exception>
         </member>
         <member name="T:Au.regexp">
             <summary>
@@ -27128,7 +27128,7 @@
             Returns true if the class name of this window matches cn. Else returns false.
             Also returns false when fails (probably window closed or 0 handle). Supports <see cref="T:Au.lastError"/>.
             </summary>
-            <param name="cn">Class name. Case-insensitive wildcard. See <see cref="M:Au.ExtString.Like(System.String,System.String,System.Boolean)"/>. Cannot be null.</param>
+            <param name="cn">Class name. Case-insensitive wildcard. See <see cref="M:Au.Types.ExtString.Like(System.String,System.String,System.Boolean)"/>. Cannot be null.</param>
             <seealso cref="M:Au.wnd.IsMatch(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.wnd,System.Boolean},Au.Types.WContains)"/>
         </member>
         <member name="M:Au.wnd.ClassNameIs(System.String[])">
@@ -27136,7 +27136,7 @@
             If window class name matches one of strings in <i>classNames</i>, returns 1-based string index. Else returns 0.
             Also returns 0 if fails to get class name (probably window closed or 0 handle). Supports <see cref="T:Au.lastError"/>.
             </summary>
-            <param name="classNames">Class names. Case-insensitive wildcard. See <see cref="M:Au.ExtString.Like(System.String,System.String,System.Boolean)"/>. The array and strings cannot be null.</param>
+            <param name="classNames">Class names. Case-insensitive wildcard. See <see cref="M:Au.Types.ExtString.Like(System.String,System.String,System.Boolean)"/>. The array and strings cannot be null.</param>
         </member>
         <member name="P:Au.wnd.Name">
             <summary>
@@ -27159,7 +27159,7 @@
             If window name matches one of strings in <i>names</i>, returns 1-based string index. Else returns 0.
             Also returns 0 if fails to get name (probably window closed or 0 handle). Supports <see cref="T:Au.lastError"/>.
             </summary>
-            <param name="names">Window names. Case-insensitive wildcard. See <see cref="M:Au.ExtString.Like(System.String,System.String,System.Boolean)"/>. The array and strings cannot be null.</param>
+            <param name="names">Window names. Case-insensitive wildcard. See <see cref="M:Au.Types.ExtString.Like(System.String,System.String,System.Boolean)"/>. The array and strings cannot be null.</param>
         </member>
         <member name="P:Au.wnd.NameTL_">
             <summary>
@@ -27268,7 +27268,7 @@
             If window program name matches one of strings in <i>programNames</i>, returns 1-based string index. Else returns 0.
             Also returns 0 if fails to get program name (probably window closed or 0 handle). Supports <see cref="T:Au.lastError"/>.
             </summary>
-            <param name="programNames">Program names, like "notepad.exe". Case-insensitive wildcard. See <see cref="M:Au.ExtString.Like(System.String,System.String,System.Boolean)"/>. The array and strings cannot be null.</param>
+            <param name="programNames">Program names, like "notepad.exe". Case-insensitive wildcard. See <see cref="M:Au.Types.ExtString.Like(System.String,System.String,System.Boolean)"/>. The array and strings cannot be null.</param>
         </member>
         <member name="P:Au.wnd.ProgramPath">
             <summary>

@@ -1,3 +1,19 @@
+using Au;
+using Au.Types;
+using Au.More;
+using System;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Text;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Reflection;
+using System.Globalization;
+
 
 namespace Au
 {
@@ -184,7 +200,7 @@ namespace Au
 		/// <param name="disable">Disabled state.</param>
 		/// <param name="l_">[](xref:caller_info)</param>
 		public MenuItem Add(int id, string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0)
-			=> _Add(new(this, disable) { Id = _lastId = id }, text, image, l_);
+			=> _Add(new MenuItem(this, disable) { Id = _lastId = id }, text, image, l_);
 
 		/// <summary>
 		/// Adds menu item with auto-generated id.
@@ -197,7 +213,7 @@ namespace Au
 		/// Assigns id = the last specified or auto-generated id + 1. If not using explicitly specified ids, auto-generated ids are 1, 2, 3... Submenu-items, separators and items with action don't auto-generate ids.
 		/// </remarks>
 		public MenuItem Add(string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0)
-			=> _Add(new(this, disable) { Id = ++_lastId }, text, image, l_);
+			=> _Add(new MenuItem(this, disable) { Id = ++_lastId }, text, image, l_);
 
 		/// <summary>
 		/// Adds menu item with action (callback function) that is executed on click.
@@ -211,7 +227,7 @@ namespace Au
 		/// This function is the same as the indexer. The difference is, <b>Add</b> returns <b>MenuItem</b> object of the added item. When using the indexer, to access the item use <see cref="Last"/>. These codes are the same: <c>var v=m.Add("text", o=>{});"</c> and <c>m["text"]=o=>{}; var v=m.Last;</c>.
 		/// </remarks>
 		public MenuItem Add(string text, Action<MenuItem> click, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0)
-			=> _Add(new(this, disable), text, image, l_, click);
+			=> _Add(new MenuItem(this, disable), text, image, l_, click);
 
 		/// <summary>
 		/// Adds menu item with action (callback function) that is executed on click.
@@ -241,7 +257,7 @@ namespace Au
 		/// When clicked, <see cref="MenuItem.IsChecked"/> state is changed.
 		/// </remarks>
 		public MenuItem AddCheck(string text, bool check = false, Action<MenuItem> click = null, bool disable = false, MTImage image = default, [CallerLineNumber] int l_ = 0)
-			=> _Add(new(this, disable, check) { checkType = 1 }, text, image, l_, click);
+			=> _Add(new MenuItem(this, disable, check) { checkType = 1 }, text, image, l_, click);
 
 		/// <summary>
 		/// Adds menu item to be used as a radio button in a group of such items.
@@ -256,7 +272,7 @@ namespace Au
 		/// When clicked an unchecked radio item, its <see cref="MenuItem.IsChecked"/> state becomes true; <b>IsChecked</b> of other group items become false.
 		/// </remarks>
 		public MenuItem AddRadio(string text, bool check = false, Action<MenuItem> click = null, bool disable = false, MTImage image = default, [CallerLineNumber] int l_ = 0)
-			=> _Add(new(this, disable, check) { checkType = 2 }, text, image, l_, click);
+			=> _Add(new MenuItem(this, disable, check) { checkType = 2 }, text, image, l_, click);
 
 		/// <summary>
 		/// Adds menu item that opens a submenu.
@@ -297,7 +313,7 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		public MenuItem Submenu(string text, Action<popupMenu> opening, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0)
-			=> _Add(new(this, disable) { IsSubmenu = true }, text, image, l_, opening);
+			=> _Add(new MenuItem(this, disable) { IsSubmenu = true }, text, image, l_, opening);
 
 		/// <summary>
 		/// Adds menu item that opens a reusable submenu.
@@ -318,13 +334,13 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		public MenuItem Submenu(string text, Func<popupMenu> opening, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0)
-			=> _Add(new(this, disable) { IsSubmenu = true }, text, image, l_, opening);
+			=> _Add(new MenuItem(this, disable) { IsSubmenu = true }, text, image, l_, opening);
 
 		/// <summary>
 		/// Adds separator.
 		/// </summary>
 		public void Separator()
-			=> _Add(new(this, isDisabled: true) { IsSeparator = true }, null, default, 0);
+			=> _Add(new MenuItem(this, isDisabled: true) { IsSeparator = true }, null, default, 0);
 
 		/// <summary>
 		/// Gets the last added menu item.
@@ -357,6 +373,54 @@ namespace Au
 		#endregion
 
 		#region show, close
+
+		/// <summary>
+		/// Creates and shows simple popup menu. Without images, actions, submenus.
+		/// Returns selected item id, or 0 if cancelled.
+		/// </summary>
+		/// <param name="items">
+		/// Menu items. Can be string[], List&lt;string&gt; or string like "One|Two|Three".
+		/// Item id can be optionally specified like "1 One|2 Two|3 Three". If missing, uses id of previous non-separator item + 1. Example: "One|Two|100 Three Four" //1|2|100|101.
+		/// For separators use null or empty strings: "One|Two||Three|Four".
+		/// </param>
+		/// <param name="flags"></param>
+		/// <param name="xy">Menu position in screen. If null (default), uses mouse position by default. It depends on flags.</param>
+		/// <param name="excludeRect">The menu should not overlap this rectangle in screen.</param>
+		/// <param name="owner">Owner window. The menu will be automatically closed when destroying its owner window.</param>
+		/// <remarks>
+		/// The function adds menu items and calls <see cref="Show"/>. Returns when menu closed. All parameters except <i>items</i> are same as of <b>Show</b>.
+		/// </remarks>
+		/// <seealso cref="dialog.showList"/>
+		public static int showSimple(DStringList items, MSFlags flags = 0, POINT? xy = null, RECT? excludeRect = null, AnyWnd owner = default) {
+			var a = items.ToArray();
+			var m = new popupMenu();
+			foreach (var v in a) {
+				var s = v;
+				if (s.NE()) {
+					m.Separator();
+				} else {
+					if (s.ToInt(out int id, 0, out int end)) {
+						if (s.Eq(end, ' ')) end++;
+						s = s[end..];
+						m.Add(id, s);
+					} else {
+						m.Add(s);
+					}
+				}
+			}
+			return m.Show(flags, xy, excludeRect, owner);
+		}
+		//these 2 have been moved to the top because of problems with DocFX
+
+		/// <summary>
+		/// Gets or sets callback function that decides how to respond to pressed keys (default, close, ignore, block).
+		/// </summary>
+		/// <remarks>
+		/// The function is called on each key down event while the menu is open. Only if current thread is not in the foreground.
+		/// To block a key, call <see cref="HookData.Keyboard.BlockEvent"/>.
+		/// The function must be as fast as possible.
+		/// </remarks>
+		public Func<popupMenu, HookData.Keyboard, MKHook> KeyboardHook { get; set; }
 
 		/// <summary>
 		/// Shows the menu and waits until closed.
@@ -606,43 +670,6 @@ namespace Au
 			_w.ShowL(true);
 
 			_mouse.p = _w.MouseClientXY;
-		}
-
-		/// <summary>
-		/// Creates and shows simple popup menu. Without images, actions, submenus.
-		/// Returns selected item id, or 0 if cancelled.
-		/// </summary>
-		/// <param name="items">
-		/// Menu items. Can be string[], List&lt;string&gt; or string like "One|Two|Three".
-		/// Item id can be optionally specified like "1 One|2 Two|3 Three". If missing, uses id of previous non-separator item + 1. Example: "One|Two|100 Three Four" //1|2|100|101.
-		/// For separators use null or empty strings: "One|Two||Three|Four".
-		/// </param>
-		/// <param name="flags"></param>
-		/// <param name="xy">Menu position in screen. If null (default), uses mouse position by default. It depends on flags.</param>
-		/// <param name="excludeRect">The menu should not overlap this rectangle in screen.</param>
-		/// <param name="owner">Owner window. The menu will be automatically closed when destroying its owner window.</param>
-		/// <remarks>
-		/// The function adds menu items and calls <see cref="Show"/>. Returns when menu closed. All parameters except <i>items</i> are same as of <b>Show</b>.
-		/// </remarks>
-		/// <seealso cref="dialog.showList"/>
-		public static int showSimple(DStringList items, MSFlags flags = 0, POINT? xy = null, RECT? excludeRect = null, AnyWnd owner = default) {
-			var a = items.ToArray();
-			var m = new popupMenu();
-			foreach (var v in a) {
-				var s = v;
-				if (s.NE()) {
-					m.Separator();
-				} else {
-					if (s.ToInt(out int id, 0, out int end)) {
-						if (s.Eq(end, ' ')) end++;
-						s = s[end..];
-						m.Add(id, s);
-					} else {
-						m.Add(s);
-					}
-				}
-			}
-			return m.Show(flags, xy, excludeRect, owner);
 		}
 
 		/// <summary>
@@ -1015,16 +1042,6 @@ namespace Au
 			=> k is KKey.Ctrl or KKey.Shift or KKey.CapsLock or KKey.NumLock or KKey.ScrollLock
 			or KKey.PrintScreen or KKey.Pause or KKey.Insert
 			or (>= KKey.F1 and <= KKey.F24) || keys.isMod(KMod.Ctrl | KMod.Alt | KMod.Win);
-
-		/// <summary>
-		/// Gets or sets callback function that decides how to respond to pressed keys (default, close, ignore, block).
-		/// </summary>
-		/// <remarks>
-		/// The function is called on each key down event while the menu is open. Only if current thread is not in the foreground.
-		/// To block a key, call <see cref="HookData.Keyboard.BlockEvent"/>.
-		/// The function must be as fast as possible.
-		/// </remarks>
-		public Func<popupMenu, HookData.Keyboard, MKHook> KeyboardHook { get; set; }
 	}
 }
 

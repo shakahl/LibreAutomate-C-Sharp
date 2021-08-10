@@ -31,6 +31,10 @@ using Renci.SshNet;
 
 //note: uses msbuild from VS2019, not from VS2019 preview. It must be up to date.
 
+//note: using an older DocFX 2 version.
+//	It does not support C# 9. If can't resolve some links, in the tartget file replace all new() with new Type().
+//	Version 2.58 supports C# 9, but crashes. Version 3 not tested.
+
 unsafe class Program
 {
 	static void Main(string[] args) {

@@ -1,4 +1,20 @@
-﻿//#define USE_WTS
+﻿using Au;
+using Au.Types;
+using Au.More;
+using System;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Text;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Reflection;
+using System.Globalization;
+
+//#define USE_WTS
 
 namespace Au
 {
@@ -104,7 +120,7 @@ namespace Au
 			for (; ; b.More()) {
 				int n = b.n;
 				if (Api.QueryFullProcessImageName(hProcess, getFilename, b.p, ref n)) {
-					s = getFilename ? _GetFileName(b.p, n) : new(b.p, 0, n);
+					s = getFilename ? _GetFileName(b.p, n) : new string(b.p, 0, n);
 					return true;
 				}
 				if (lastError.code != Api.ERROR_INSUFFICIENT_BUFFER) return false;

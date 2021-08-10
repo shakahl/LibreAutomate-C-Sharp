@@ -1,4 +1,5 @@
-﻿global using Au;
+﻿#if !NO_GLOBAL //DocFX does not support 'global using'
+global using Au;
 global using Au.Types;
 global using Au.More;
 global using System;
@@ -23,6 +24,8 @@ global using CancelEventHandler = System.ComponentModel.CancelEventHandler;
 global using CancelEventArgs = System.ComponentModel.CancelEventArgs;
 global using IEnumerable = System.Collections.IEnumerable;
 global using IEnumerator = System.Collections.IEnumerator;
-
+#else
+using System.Runtime.InteropServices;
+#endif
 
 [module: DefaultCharSet(CharSet.Unicode)]

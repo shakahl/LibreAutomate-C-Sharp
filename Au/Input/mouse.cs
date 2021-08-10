@@ -1,4 +1,20 @@
-﻿//SHOULDDO: test how mouse moves through non-screen area between screens A and C when screen B is in between.
+﻿using Au;
+using Au.Types;
+using Au.More;
+using System;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Text;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Reflection;
+using System.Globalization;
+
+//SHOULDDO: test how mouse moves through non-screen area between screens A and C when screen B is in between.
 //	QM2 has problems crossing non-screen corners at default speed. Au works well.
 
 namespace Au

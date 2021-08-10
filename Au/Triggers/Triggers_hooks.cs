@@ -1,3 +1,19 @@
+using Au;
+using Au.Types;
+using Au.More;
+using System;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Text;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Reflection;
+using System.Globalization;
+
 //Key/mouse/autotext triggers use low-level keyboard and mouse hooks. The hooks are in a separate thread, because:
 //	1. Safer when user code is slow or incorrect.
 //	2. Works well with COM. In LL hook procedure some COM functions fail, eg elm.find with some windows.

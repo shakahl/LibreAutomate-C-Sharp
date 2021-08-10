@@ -1,5 +1,23 @@
-﻿
-namespace Au
+﻿using Au;
+using Au.Types;
+using Au.More;
+using System;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Text;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Reflection;
+using System.Globalization;
+using System.ComponentModel;
+using RStr = System.ReadOnlySpan<char>;
+
+
+namespace Au.Types
 {
 	/// <summary>
 	/// Adds extension methods for <see cref="String"/>.
@@ -13,7 +31,6 @@ namespace Au
 	/// This class also adds more methods.
 	/// You also can find string functions in other classes of this library, including <see cref="StringUtil"/>, <see cref="regexp"/>, <see cref="pathname"/>, <see cref="csvTable"/>, <see cref="keys.more"/>, <see cref="Convert2"/>, <see cref="Hash"/>.
 	/// </remarks>
-	[EditorBrowsable(EditorBrowsableState.Never)]
 	public static unsafe partial class ExtString
 	{
 		/// <summary>
@@ -1547,10 +1564,7 @@ namespace Au
 
 		internal static void CopyTo_(this string t, char* p) => t.AsSpan().CopyTo(new Span<char>(p, t.Length));
 	}
-}
 
-namespace Au.Types
-{
 	/// <summary>
 	/// Flags for <see cref="ExtString.ToInt"/> and similar functions.
 	/// </summary>

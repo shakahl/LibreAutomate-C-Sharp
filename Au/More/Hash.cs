@@ -1,4 +1,21 @@
-﻿using System.Security.Cryptography;
+﻿using Au;
+using Au.Types;
+using Au.More;
+using System;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Text;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Reflection;
+using System.Globalization;
+using RStr = System.ReadOnlySpan<char>;
+
+using System.Security.Cryptography;
 
 namespace Au.More
 {
@@ -241,7 +258,7 @@ namespace Au.More
 		/// <summary>
 		/// Result of <see cref="MD5Context.Hash"/>.
 		/// It is 16 bytes stored in 2 long fields r1 and r2.
-		/// If need, can be converted to byte[] with <see cref="ToArray"/> or to hex string with <see cref="ToString"/>.
+		/// If need, can be converted to byte[] with <see cref="MD5Result.ToArray"/> or to hex string with <see cref="MD5Result.ToString"/>.
 		/// </summary>
 		public record struct MD5Result
 		{

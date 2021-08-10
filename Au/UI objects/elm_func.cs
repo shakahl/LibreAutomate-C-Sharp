@@ -1,3 +1,19 @@
+using Au;
+using Au.Types;
+using Au.More;
+using System;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Text;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Reflection;
+using System.Globalization;
+
 
 namespace Au
 {
@@ -787,8 +803,8 @@ namespace Au
 			for (int i = 0; i < len; i++) {
 				var c = p[i];
 				if (c == '\0' && iv > ik) {
-					string sk = new (p, ik, iv - ik - 1);
-					string sv = new (p, iv, i - iv);
+					string sk = new string(p, ik, iv - ik - 1);
+					string sv = new string(p, iv, i - iv);
 					d[sk] = sv;
 					ik = i + 1;
 				} else if (c == '=' && iv <= ik) {

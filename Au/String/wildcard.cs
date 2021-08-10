@@ -1,163 +1,24 @@
-﻿using System.Text.RegularExpressions;
+﻿using Au;
+using Au.Types;
+using Au.More;
+using System;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Text;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Reflection;
+using System.Globalization;
+using RStr = System.ReadOnlySpan<char>;
+
+using System.Text.RegularExpressions;
 
 namespace Au
 {
-	public static unsafe partial class ExtString
-	{
-		#region Like
-
-		/// <summary>
-		/// Compares this string with a string that possibly contains wildcard characters.
-		/// Returns true if the strings match.
-		/// </summary>
-		/// <param name="t">This string. If null, returns false. If "", returns true if pattern is "" or "*".</param>
-		/// <param name="pattern">String that possibly contains wildcard characters. Cannot be null. If "", returns true if this string is "". If "*", always returns true except when this string is null.</param>
-		/// <param name="ignoreCase">Case-insensitive.</param>
-		/// <exception cref="ArgumentNullException"><i>pattern</i> is null.</exception>
-		/// <remarks>
-		/// Wildcard characters:
-		/// 
-		/// Character | Will match | Examples
-		/// | - | - | - |
-		/// | * | Zero or more of any characters. | <c>"start*"</c>, <c>"*end"</c>, <c>"*middle*"</c>
-		/// | ? | Any single character. | <c>"date ????-??-??"</c>
-		/// 
-		/// There are no escape sequences for * and ? characters.
-		/// 
-		/// Uses ordinal comparison, ie does not depend on current culture.
-		/// 
-		/// See also: [](xref:wildcard_expression).
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// string s = @"C:\abc\mno.xyz";
-		/// if(s.Like(@"C:\abc\mno.xyz")) print.it("matches whole text (no wildcard characters)");
-		/// if(s.Like(@"C:\abc\*")) print.it("starts with");
-		/// if(s.Like(@"*.xyz")) print.it("ends with");
-		/// if(s.Like(@"*mno*")) print.it("contains");
-		/// if(s.Like(@"C:\*.xyz")) print.it("starts and ends with");
-		/// if(s.Like(@"?:*")) print.it("any character, : and possibly more text");
-		/// ]]></code>
-		/// </example>
-		/// <seealso cref="wildex"/>
-		/// <seealso cref="Like(RStr, string, bool)"/>
-#if false //somehow speed depends on dll version. With some versions same as C# code, with some slower. Also depends on string. With shortest strings 50% slower.
-		public static bool Like(this string t, string pattern, bool ignoreCase = false)
-		{
-			if(t == null) return false;
-			fixed (char* pt = t, pw = pattern)
-				return Cpp.Cpp_StringLike(pt, t.Length, pw, pattern.Length, ignoreCase);
-		}
-#else
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static bool Like(this string t, string pattern, bool ignoreCase = false) {
-			int patLen = pattern?.Length ?? throw new ArgumentNullException();
-			if (t == null) return false;
-			if (patLen == 0) return t.Length == 0;
-			if (patLen == 1 && pattern[0] == '*') return true;
-			if (t.Length == 0) return false;
-
-			fixed (char* str = t, pat = pattern) {
-				return _WildcardCmp(str, pat, t.Length, patLen, ignoreCase ? Tables_.LowerCase : null);
-			}
-
-			//Microsoft.VisualBasic.CompilerServices.Operators.LikeString() supports more wildcard characters etc. Depends on current culture, has bugs, slower 6-250 times.
-			//System.IO.Enumeration.FileSystemName.MatchesSimpleExpression supports \escaping. Slower 2 - 100 times.
-		}
-
-		/// <inheritdoc cref="Like(string, string, bool)"/>
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static bool Like(this RStr t, string pattern, bool ignoreCase = false) {
-			int patLen = pattern?.Length ?? throw new ArgumentNullException();
-			if (patLen == 0) return t.Length == 0;
-			if (patLen == 1 && pattern[0] == '*') return true;
-			if (t.Length == 0) return false;
-
-			fixed (char* str = t, pat = pattern) {
-				return _WildcardCmp(str, pat, t.Length, patLen, ignoreCase ? Tables_.LowerCase : null);
-			}
-
-			//Microsoft.VisualBasic.CompilerServices.Operators.LikeString() supports more wildcard characters etc. Depends on current culture, has bugs, slower 6-250 times.
-			//System.IO.Enumeration.FileSystemName.MatchesSimpleExpression supports \escaping. Slower 2 - 100 times.
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		static bool _WildcardCmp(char* s, char* w, int lenS, int lenW, char* table) {
-			char* se = s + lenS, we = w + lenW;
-
-			//find '*' from start. Makes faster in some cases.
-			for (; w < we && s < se; w++, s++) {
-				char cS = s[0], cW = w[0];
-				if (cW == '*') goto g1;
-				if (cW == cS || cW == '?') continue;
-				if ((table == null) || (table[cW] != table[cS])) return false;
-			}
-			if (w == we) return s == se; //w ended?
-			goto gr; //s ended
-			g1:
-
-			//find '*' from end. Makes "*text" much faster.
-			for (; we > w && se > s; we--, se--) {
-				char cS = se[-1], cW = we[-1];
-				if (cW == '*') break;
-				if (cW == cS || cW == '?') continue;
-				if ((table == null) || (table[cW] != table[cS])) return false;
-			}
-
-			//Algorithm by Alessandro Felice Cantatore, http://xoomer.virgilio.it/acantato/dev/wildcard/wildmatch.html
-			//Changes: supports '\0' in string; case-sensitive or not; restructured, in many cases faster.
-
-			int i = 0;
-			gStar: //info: goto used because C# compiler makes the loop faster when it contains less code
-			w += i + 1;
-			if (w == we) return true;
-			s += i;
-
-			for (i = 0; s + i < se; i++) {
-				char sW = w[i];
-				if (sW == '*') goto gStar;
-				if (sW == s[i] || sW == '?') continue;
-				if ((table != null) && (table[sW] == table[s[i]])) continue;
-				s++; i = -1;
-			}
-
-			w += i;
-			gr:
-			while (w < we && *w == '*') w++;
-			return w == we;
-
-			//info: Could implement escape sequence ** for * and maybe *? for ?.
-			//	But it makes code slower etc.
-			//	Not so important.
-			//	Most users would not know about it.
-			//	Usually can use ? for literal * and ?.
-			//	Usually can use regular expression if need such precision.
-			//	Then cannot use "**options " for wildcard expressions.
-			//	Could use other escape sequences, eg [*], [?] and [[], but it makes slower and is more harmful than useful.
-
-			//The first two loops are fast, but Eq much faster when !ignoreCase. We cannot use such optimizations that it can.
-			//The slowest case is "*substring*", because then the first two loops don't help.
-			//	Then similar speed as string.IndexOf(ordinal) and API <msdn>FindStringOrdinal</msdn>.
-			//	Possible optimization, but need to add much code, and makes not much faster, and makes other cases slower, difficult to avoid it.
-		}
-#endif
-
-		/// <summary>
-		/// Calls <see cref="Like(string, string, bool)"/> for each wildcard pattern specified in the argument list until it returns true.
-		/// Returns 1-based index of matching pattern, or 0 if none.
-		/// </summary>
-		/// <param name="t"></param>
-		/// <param name="ignoreCase">Case-insensitive.</param>
-		/// <param name="patterns">One or more wildcard strings. The array and strings cannot be null.</param>
-		/// <exception cref="ArgumentNullException">A string in <i>patterns</i> is null.</exception>
-		public static int Like(this string t, bool ignoreCase = false, params string[] patterns) {
-			for (int i = 0; i < patterns.Length; i++) if (t.Like(patterns[i], ignoreCase)) return i + 1;
-			return 0;
-		}
-
-		#endregion Like
-	}
-
 	/// <summary>
 	/// Parses and compares [](xref:wildcard_expression).
 	/// </summary>
@@ -376,6 +237,162 @@ namespace Au
 
 namespace Au.Types
 {
+	public static unsafe partial class ExtString
+	{
+		#region Like
+
+		/// <summary>
+		/// Compares this string with a string that possibly contains wildcard characters.
+		/// Returns true if the strings match.
+		/// </summary>
+		/// <param name="t">This string. If null, returns false. If "", returns true if pattern is "" or "*".</param>
+		/// <param name="pattern">String that possibly contains wildcard characters. Cannot be null. If "", returns true if this string is "". If "*", always returns true except when this string is null.</param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
+		/// <exception cref="ArgumentNullException"><i>pattern</i> is null.</exception>
+		/// <remarks>
+		/// Wildcard characters:
+		/// 
+		/// Character | Will match | Examples
+		/// | - | - | - |
+		/// | * | Zero or more of any characters. | <c>"start*"</c>, <c>"*end"</c>, <c>"*middle*"</c>
+		/// | ? | Any single character. | <c>"date ????-??-??"</c>
+		/// 
+		/// There are no escape sequences for * and ? characters.
+		/// 
+		/// Uses ordinal comparison, ie does not depend on current culture.
+		/// 
+		/// See also: [](xref:wildcard_expression).
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// string s = @"C:\abc\mno.xyz";
+		/// if(s.Like(@"C:\abc\mno.xyz")) print.it("matches whole text (no wildcard characters)");
+		/// if(s.Like(@"C:\abc\*")) print.it("starts with");
+		/// if(s.Like(@"*.xyz")) print.it("ends with");
+		/// if(s.Like(@"*mno*")) print.it("contains");
+		/// if(s.Like(@"C:\*.xyz")) print.it("starts and ends with");
+		/// if(s.Like(@"?:*")) print.it("any character, : and possibly more text");
+		/// ]]></code>
+		/// </example>
+		/// <seealso cref="wildex"/>
+		/// <seealso cref="Like(RStr, string, bool)"/>
+#if false //somehow speed depends on dll version. With some versions same as C# code, with some slower. Also depends on string. With shortest strings 50% slower.
+		public static bool Like(this string t, string pattern, bool ignoreCase = false)
+		{
+			if(t == null) return false;
+			fixed (char* pt = t, pw = pattern)
+				return Cpp.Cpp_StringLike(pt, t.Length, pw, pattern.Length, ignoreCase);
+		}
+#else
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		public static bool Like(this string t, string pattern, bool ignoreCase = false) {
+			int patLen = pattern?.Length ?? throw new ArgumentNullException();
+			if (t == null) return false;
+			if (patLen == 0) return t.Length == 0;
+			if (patLen == 1 && pattern[0] == '*') return true;
+			if (t.Length == 0) return false;
+
+			fixed (char* str = t, pat = pattern) {
+				return _WildcardCmp(str, pat, t.Length, patLen, ignoreCase ? Tables_.LowerCase : null);
+			}
+
+			//Microsoft.VisualBasic.CompilerServices.Operators.LikeString() supports more wildcard characters etc. Depends on current culture, has bugs, slower 6-250 times.
+			//System.IO.Enumeration.FileSystemName.MatchesSimpleExpression supports \escaping. Slower 2 - 100 times.
+		}
+
+		/// <inheritdoc cref="Like(string, string, bool)"/>
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		public static bool Like(this RStr t, string pattern, bool ignoreCase = false) {
+			int patLen = pattern?.Length ?? throw new ArgumentNullException();
+			if (patLen == 0) return t.Length == 0;
+			if (patLen == 1 && pattern[0] == '*') return true;
+			if (t.Length == 0) return false;
+
+			fixed (char* str = t, pat = pattern) {
+				return _WildcardCmp(str, pat, t.Length, patLen, ignoreCase ? Tables_.LowerCase : null);
+			}
+
+			//Microsoft.VisualBasic.CompilerServices.Operators.LikeString() supports more wildcard characters etc. Depends on current culture, has bugs, slower 6-250 times.
+			//System.IO.Enumeration.FileSystemName.MatchesSimpleExpression supports \escaping. Slower 2 - 100 times.
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		static bool _WildcardCmp(char* s, char* w, int lenS, int lenW, char* table) {
+			char* se = s + lenS, we = w + lenW;
+
+			//find '*' from start. Makes faster in some cases.
+			for (; w < we && s < se; w++, s++) {
+				char cS = s[0], cW = w[0];
+				if (cW == '*') goto g1;
+				if (cW == cS || cW == '?') continue;
+				if ((table == null) || (table[cW] != table[cS])) return false;
+			}
+			if (w == we) return s == se; //w ended?
+			goto gr; //s ended
+			g1:
+
+			//find '*' from end. Makes "*text" much faster.
+			for (; we > w && se > s; we--, se--) {
+				char cS = se[-1], cW = we[-1];
+				if (cW == '*') break;
+				if (cW == cS || cW == '?') continue;
+				if ((table == null) || (table[cW] != table[cS])) return false;
+			}
+
+			//Algorithm by Alessandro Felice Cantatore, http://xoomer.virgilio.it/acantato/dev/wildcard/wildmatch.html
+			//Changes: supports '\0' in string; case-sensitive or not; restructured, in many cases faster.
+
+			int i = 0;
+			gStar: //info: goto used because C# compiler makes the loop faster when it contains less code
+			w += i + 1;
+			if (w == we) return true;
+			s += i;
+
+			for (i = 0; s + i < se; i++) {
+				char sW = w[i];
+				if (sW == '*') goto gStar;
+				if (sW == s[i] || sW == '?') continue;
+				if ((table != null) && (table[sW] == table[s[i]])) continue;
+				s++; i = -1;
+			}
+
+			w += i;
+			gr:
+			while (w < we && *w == '*') w++;
+			return w == we;
+
+			//info: Could implement escape sequence ** for * and maybe *? for ?.
+			//	But it makes code slower etc.
+			//	Not so important.
+			//	Most users would not know about it.
+			//	Usually can use ? for literal * and ?.
+			//	Usually can use regular expression if need such precision.
+			//	Then cannot use "**options " for wildcard expressions.
+			//	Could use other escape sequences, eg [*], [?] and [[], but it makes slower and is more harmful than useful.
+
+			//The first two loops are fast, but Eq much faster when !ignoreCase. We cannot use such optimizations that it can.
+			//The slowest case is "*substring*", because then the first two loops don't help.
+			//	Then similar speed as string.IndexOf(ordinal) and API <msdn>FindStringOrdinal</msdn>.
+			//	Possible optimization, but need to add much code, and makes not much faster, and makes other cases slower, difficult to avoid it.
+		}
+#endif
+
+		/// <summary>
+		/// Calls <see cref="Like(string, string, bool)"/> for each wildcard pattern specified in the argument list until it returns true.
+		/// Returns 1-based index of matching pattern, or 0 if none.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
+		/// <param name="patterns">One or more wildcard strings. The array and strings cannot be null.</param>
+		/// <exception cref="ArgumentNullException">A string in <i>patterns</i> is null.</exception>
+		public static int Like(this string t, bool ignoreCase = false, params string[] patterns) {
+			for (int i = 0; i < patterns.Length; i++) if (t.Like(patterns[i], ignoreCase)) return i + 1;
+			return 0;
+		}
+
+		#endregion Like
+	}
+
 	//rejected: struct WildexStruct - struct version of wildex class. Moved to the Unused project.
 	//	Does not make faster, although in most cases creates less garbage.
 
