@@ -2,10 +2,10 @@
 uid: index
 ---
 
-# Au automation library and editor
+# Derobotizer automation library and editor
 
 #### Library
-Au library contains functions to automate various tasks on Windows computers.
+The library contains functions to automate various tasks on Windows computers.
 
 Some features: Send keys and text to the active window. Find and click buttons, links, images and other UI objects. Launch programs and auto-close windows. Process text and other data. Auto-replace text when typing. Hotkeys and other triggers.
 
@@ -14,11 +14,11 @@ Written mostly in C#, it is a .NET library.
 Free, open-source, MIT license.
 
 #### Editor
-The editor program is an integrated scripting environment for creating and executing automation scripts that use the Au automation library which is installed together.
+The editor program is an integrated scripting environment for creating and executing automation scripts that use the library.
 
 The programming language for writing scripts is C#. To use the library with VB.NET and other .NET languages you need Visual Studio.
 
-Can be used to create C# scripts, programs (.exe) and libraries (.dll) for any purpose, with or without the Au library. Like a mini Visual Studio.
+Can be used to create C# scripts, programs (.exe) and libraries (.dll) for any purpose, with or without the automation library. Like a mini Visual Studio.
 
 Free, open-source.
 
@@ -30,11 +30,9 @@ Also need .NET 5 Runtime. Download x64. It is a collection of libraries from Mic
 #### Unfinished
 Currently both editor and library are unfinished. The most important parts are finished and can be used, but some classes/functions/etc will be changed in the future, which can break your scripts, clear settings, etc.
 
-Currently the editor program still does not have a real name and can be called "QM3" (version 3 of Quick Macros).
-
 #### Links
-- [Download](https://www.quickmacros.com/au/qm3setup.exe)
+- [Download](https://www.quickmacros.com/au/DerobotizerSetup.exe)
 - [.NET 5 Runtime](https://dotnet.microsoft.com/download)
-- [Source code](https://github.com/qmgindi/Au)
+- [Source code](https://github.com/qmgindi/Derobotizer)
 - [Forum](https://www.quickmacros.com/forum/forumdisplay.php?fid=19)
 - [Email](mailto:support@quickmacros.com)

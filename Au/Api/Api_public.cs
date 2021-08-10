@@ -1,9 +1,4 @@
-﻿using Au.More;
-using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-
-#pragma warning disable 649, 169 //field never assigned/used
+﻿#pragma warning disable 649, 169 //field never assigned/used
 #pragma warning disable 1591 //missing XML documentation
 
 namespace Au.Types
@@ -142,15 +137,15 @@ namespace Au.Types
 		public char* lpszClass;
 		public WSE dwExStyle;
 
-		public ReadOnlySpan<char> Name => lpszName == default ? default
-			: new ReadOnlySpan<char>(lpszName, More.CharPtr_.Length(lpszName));
+		public RStr Name => lpszName == default ? default
+			: new RStr(lpszName, CharPtr_.Length(lpszName));
 		//public string Name => lpszName == default ? null : new string(lpszName);
 
 		/// <summary>
 		/// If lpszClass is atom, returns string with # prefix and atom value, like "#32770".
 		/// </summary>
-		public ReadOnlySpan<char> ClassName => (nuint)lpszClass < 0x10000 ? "#" + ((int)lpszClass).ToS()
-			: new ReadOnlySpan<char>(lpszClass, More.CharPtr_.Length(lpszClass));
+		public RStr ClassName => (nuint)lpszClass < 0x10000 ? "#" + ((int)lpszClass).ToS()
+			: new RStr(lpszClass, CharPtr_.Length(lpszClass));
 		//public string ClassName => (nuint)lpszClass < 0x10000 ? "#" + ((int)lpszClass).ToS() : new string(lpszClass);
 
 		//tested and documented: CBT hook can change only x y cx cy.

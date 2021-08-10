@@ -12,9 +12,10 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>Au.xml</DocumentationFile>
     <Deterministic>false</Deterministic>
-    <NoWarn>1701;1702;3001,3002,3003,3009,419,660</NoWarn>
+    <NoWarn>1701;1702;3001,3002,3003,3009,419,660,105</NoWarn>
 	<LangVersion>preview</LangVersion>
 	<ApplicationManifest>Resources\Au.manifest</ApplicationManifest>
+	<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -22,19 +23,19 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants></DefineConstants>
   </PropertyGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="&quot;$(SolutionDir)Other\Programs\nircmd.exe&quot; win close etitle Aedit&#xD;&#xA;&quot;$(SolutionDir)Other\Programs\nircmd.exe&quot; win close etitle QM3" />
+    <Exec Command="&quot;$(SolutionDir)Other\Programs\nircmd.exe&quot; win close class Au.Editor.TrayNotify" />
   </Target>
 
   <ItemGroup>
-    <None Remove="Resources\red_cross_cursor.cur" />
+    <None Remove="resources\red_cross_cursor.cur" />
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Resources\red_cross_cursor.cur" />
+    <Resource Include="resources\red_cross_cursor.cur" />
   </ItemGroup>
 
   <ItemGroup>

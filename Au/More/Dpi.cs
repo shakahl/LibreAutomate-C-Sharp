@@ -1,18 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
-
-using Au.Types;
-
+﻿
 namespace Au.More
 {
 	/// <summary>
@@ -343,8 +329,6 @@ namespace Au.More
 
 namespace Au.Types
 {
-	using Au.More;
-
 	/// <summary>
 	/// Used for <i>DPI</i> parameter of functions.
 	/// Has implicit conversions from int (DPI), wnd (DPI of window), IntPtr (DPI of screen handle), POINT (DPI of screen containing point), RECT (DPI of screen containing rectangle), forms Control, WPF DependencyObject. The conversion operators set the <see cref="Dpi"/> property and the function can use it.

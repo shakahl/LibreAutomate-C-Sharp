@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Au.Types;
-
+﻿
 namespace Au.More
 {
 	/// <summary>

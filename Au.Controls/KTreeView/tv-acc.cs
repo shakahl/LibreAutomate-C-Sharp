@@ -10,9 +10,6 @@
 
 //Strange: QM2 does not find items and client unless checked +invisible, although no invisible state. Never mind.
 
-using Au.Types;
-using System;
-using System.Collections.Generic;
 using NAVDIR = Au.Types.Api.NAVDIR;
 
 namespace Au.Controls
@@ -101,7 +98,7 @@ namespace Au.Controls
 				}
 				if (flagsSelect.Has(ESelect.TAKEFOCUS)) {
 					//_tv.Focus();
-					_tv.FocusedIndex = child;
+					_tv.SetFocusedItem(child);
 				}
 			}
 

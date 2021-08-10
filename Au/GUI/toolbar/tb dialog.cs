@@ -1,11 +1,9 @@
-using System;
-using Au.Types;
 using System.Windows;
 using System.Windows.Controls;
 
 namespace Au
 {
-public partial class toolbar
+	public partial class toolbar
 {
 	/// <summary>
 	/// Creates dialog with a list of toolbars of this thread. Just creates, does not show. Can be used to find lost toolbars.

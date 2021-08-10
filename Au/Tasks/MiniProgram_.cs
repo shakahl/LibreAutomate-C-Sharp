@@ -1,15 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Reflection;
-using System.Runtime.Loader;
-
-using Au.Types;
+﻿using System.Runtime.Loader;
 
 //PROBLEM: slow startup.
 //A minimal script starts in 70-100 ms cold, 40 hot.

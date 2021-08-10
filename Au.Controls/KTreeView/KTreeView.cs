@@ -1,8 +1,3 @@
-using Au.Types;
-using System;
-using System.Collections.Generic;
-//using System.Linq;
-using Au.More;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -15,7 +10,8 @@ namespace Au.Controls
 		_VisibleItem[] _avi;
 		Dictionary<ITreeViewItem, int> _dvi; //for IndexOf
 		int _width, _height, _itemHeight, _imageSize, _imageMarginX, _marginLeft, _marginRight, _itemsWidth, _dpi;
-		int _focusedIndex, _hotIndex, _ensureVisibleIndex;
+		int _focusedIndex, _hotIndex;
+		(int indexPlus1, bool scrollTop) _ensureVisible;
 		NativeScrollbar_ _vscroll, _hscroll;
 
 		struct _VisibleItem
@@ -36,7 +32,7 @@ namespace Au.Controls
 			//UseLayoutRounding = true;
 			Focusable = true;
 			FocusVisualStyle = null;
-			_focusedIndex = _hotIndex = _ensureVisibleIndex = -1;
+			_focusedIndex = _hotIndex = -1;
 			_ScrollInit();
 		}
 
@@ -65,7 +61,8 @@ namespace Au.Controls
 
 		void _SetVisibleItems(bool init) {
 			bool wasEmpty = _avi.NE_();
-			_hotIndex = _ensureVisibleIndex = -1;
+			_hotIndex = -1;
+			_ensureVisible = default;
 
 			int n = _itemsSource == null ? 0 : _CountVisible(_itemsSource);
 			static int _CountVisible(IEnumerable<ITreeViewItem> a) {
@@ -115,6 +112,8 @@ namespace Au.Controls
 			}
 
 			if (_hasHwnd) {
+				if (init && _vscroll.Pos > 0) _vscroll.Pos = 0;
+
 				_Measure();
 				_Invalidate();
 			}
@@ -125,7 +124,7 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="items">Items at tree root. Can be null.</param>
 		/// <param name="modified">true when adding/removing one or more items in same tree/list. Preserves selection, scroll position, etc.</param>
-		public void SetItems(IEnumerable<ITreeViewItem> items, bool modified) {
+		public void SetItems(IEnumerable<ITreeViewItem> items, bool modified = false) {
 			_itemsSource = items;
 			_SetVisibleItems(!modified);
 		}
@@ -220,18 +219,22 @@ namespace Au.Controls
 			Expand(i, expand);
 		}
 
+		//internal bool test;
+
 		/// <summary>
 		/// Scrolls if need to make item actually visible.
 		/// </summary>
 		/// <exception cref="IndexOutOfRangeException"></exception>
-		public void EnsureVisible(int index) {
+		public void EnsureVisible(int index, bool scrollTop = false) {
 			if (!_IsValid(index)) throw new IndexOutOfRangeException();
-			if (!_hasHwnd || !IsVisible) { _ensureVisibleIndex = index; return; }
+			if (!_hasHwnd || !IsVisible) { _ensureVisible = (index + 1, scrollTop); return; }
 			bool retry = false;
 			g1:
-			_ensureVisibleIndex = -1;
+			_ensureVisible = default;
 			var r = GetRectPhysical(index);
-			if (r.top < 0 || r.bottom > _height) {
+			if (scrollTop) {
+				if (r.top != 0) _vscroll.Pos = index;
+			} else if (r.top < 0 || r.bottom > _height) {
 				int max = _vscroll.Max;
 				_vscroll.Pos = (r.top < 0 || _height < _itemHeight) ? index : index - _height / _itemHeight + 1;
 				if (!retry) if (retry = _vscroll.Max > max) goto g1; //added horz scrollbar and maybe it covers the item
@@ -241,7 +244,7 @@ namespace Au.Controls
 		/// <summary>
 		/// Expands descendant folders and scrolls if need to make item actually visible.
 		/// </summary>
-		public void EnsureVisible(ITreeViewItem item) {
+		public void EnsureVisible(ITreeViewItem item, bool scrollTop = false) {
 			int i = IndexOf(item);
 			if (i < 0) { //expand ancestor folders
 				if (!_Find(_itemsSource, item)) throw new ArgumentException();
@@ -259,7 +262,7 @@ namespace Au.Controls
 					return false;
 				}
 			}
-			EnsureVisible(i);
+			EnsureVisible(i, scrollTop);
 		}
 
 		#endregion
@@ -469,7 +472,7 @@ namespace Au.Controls
 					handled = true;
 					if (selIndex != _focusedIndex) {
 						if (mod == 0) SelectSingle(selIndex, andFocus: false); else _ShiftSelect(selIndex);
-						FocusedIndex = selIndex;
+						SetFocusedItem(selIndex);
 					}
 				}
 			}
@@ -506,11 +509,12 @@ namespace Au.Controls
 		/// <param name="index"></param>
 		/// <param name="select">true to select, false to unselect.</param>
 		/// <param name="unselectOther">Unselect other items. Used only if <see cref="MultiSelect"/> true, else always unselects other items.</param>
-		/// <param name="focus">Set <see cref="FocusedIndex"/>=<i>index</i>.</param>
+		/// <param name="focus">Make the item focused.</param>
+		/// <param name="scrollTop">Scroll if need so that the item would be at the top of really visible range.</param>
 		/// <exception cref="IndexOutOfRangeException"></exception>
-		public void Select(int index, bool select = true, bool unselectOther = false, bool focus = false) {
+		public void Select(int index, bool select = true, bool unselectOther = false, bool focus = false, bool scrollTop = false) {
 			if (!_IsValid(index)) throw new IndexOutOfRangeException();
-			if (focus) FocusedIndex = index;
+			if (focus) SetFocusedItem(index, scrollTop); else if (scrollTop) _vscroll.Pos = index;
 			Select(index..(index + 1), select, unselectOther);
 			if (select && unselectOther) SelectedSingle?.Invoke(this, index);
 		}
@@ -521,11 +525,12 @@ namespace Au.Controls
 		/// <param name="item"></param>
 		/// <param name="select">true to select, false to unselect.</param>
 		/// <param name="unselectOther">Unselect other items. Used only if <see cref="MultiSelect"/> true, else always unselects other items.</param>
-		/// <param name="focus">Set <see cref="FocusedIndex"/>=<i>index</i>.</param>
+		/// <param name="focus">Make the item focused.</param>
+		/// <param name="scrollTop">Scroll if need so that the item would be at the top of really visible range.</param>
 		/// <exception cref="ArgumentException"><i>item</i> is not a visible item in this control. No exception if <i>select</i> false.</exception>
-		public void Select(ITreeViewItem item, bool select = true, bool unselectOther = false, bool focus = false) {
+		public void Select(ITreeViewItem item, bool select = true, bool unselectOther = false, bool focus = false, bool scrollTop = false) {
 			if (!_IndexOfOrThrowIfImportant(select, item, out int i)) return; //ok if tries to unselect an already unselected item in a collapsed folder
-			Select(i, select, unselectOther, focus);
+			Select(i, select, unselectOther, focus, scrollTop);
 		}
 
 		/// <summary>
@@ -564,12 +569,12 @@ namespace Au.Controls
 		/// <summary>
 		/// Selects item, unselects others, optionally makes the focused.
 		/// </summary>
-		public void SelectSingle(int index, bool andFocus) => Select(index, true, true, andFocus);
+		public void SelectSingle(int index, bool andFocus, bool scrollTop = false) => Select(index, true, true, andFocus, scrollTop);
 
 		/// <summary>
 		/// Selects item, unselects others, optionally makes the focused.
 		/// </summary>
-		public void SelectSingle(ITreeViewItem item, bool andFocus) => Select(item, true, true, andFocus);
+		public void SelectSingle(ITreeViewItem item, bool andFocus, bool scrollTop = false) => Select(item, true, true, andFocus, scrollTop);
 
 		void _ShiftSelect(int last) {
 			int from; if (last >= _focusedIndex) from = Math.Max(_focusedIndex, 0); else { from = last; last = _focusedIndex; }
@@ -636,31 +641,38 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Gets or sets index of item that has logical focus within the control. Can be -1.
-		/// Used with keyboard actions (Enter-activate, arrows, page down/up) and range selection (Shift+click when <see cref="MultiSelect"/> true).
+		/// Gets index of item that has logical focus within the control. Can be -1.
 		/// </summary>
+		public int FocusedIndex => _focusedIndex;
+
+		/// <summary>
+		/// Sets item that has logical focus within the control.
+		/// </summary>
+		/// <param name="index">Can be -1.</param>
+		/// <param name="scrollTop">Scroll if need so that the item would be at the top of really visible range.</param>
 		/// <exception cref="IndexOutOfRangeException"></exception>
 		/// <remarks>
-		/// The 'set' function calls <see cref="EnsureVisible"/>.
+		/// Used with keyboard actions (Enter-activate, arrows, page down/up), range selection (Shift+click when <see cref="MultiSelect"/> true), optionally <see cref="Select"/>.
+		/// Calls <see cref="EnsureVisible"/>.
 		/// </remarks>
-		public int FocusedIndex {
-			get => _focusedIndex;
-			set {
-				if (!_IsValid(value) && value != -1) throw new IndexOutOfRangeException();
-				_focusedIndex = value;
-				if (value >= 0) EnsureVisible(value);
-			}
+		public void SetFocusedItem(int index, bool scrollTop = false) {
+			if (!_IsValid(index) && index != -1) throw new IndexOutOfRangeException();
+			_focusedIndex = index;
+			if (index >= 0) EnsureVisible(index, scrollTop);
 		}
 
 		/// <summary>
-		/// Gets or sets item that has logical focus within the control. Can be null.
-		/// Used with keyboard actions (Enter-activate, arrows, page down/up) and range selection (Shift+click when <see cref="MultiSelect"/> true).
+		/// Gets item that has logical focus within the control. Can be null.
 		/// </summary>
-		/// <exception cref="ArgumentException">Setter throws if the item is not a visible item in this control.</exception>
-		public ITreeViewItem FocusedItem {
-			get => _IndexToItem(_focusedIndex);
-			set { FocusedIndex = _IndexOfOrThrow(value, canBeNull: true); }
-		}
+		public ITreeViewItem FocusedItem => _IndexToItem(_focusedIndex);
+
+		/// <summary>
+		/// Sets item that has logical focus within the control.
+		/// </summary>
+		/// <param name="item">Can be null.</param>
+		/// <param name="scrollTop">Scroll if need so that the item would be at the top of really visible range.</param>
+		/// <exception cref="ArgumentException">The item is not a visible item in this control.</exception>
+		public void SetFocusedItem(ITreeViewItem item, bool scrollTop = false) => SetFocusedItem(_IndexOfOrThrow(item, canBeNull: true), scrollTop);
 
 		///
 		protected override void OnGotKeyboardFocus(KeyboardFocusChangedEventArgs e) {

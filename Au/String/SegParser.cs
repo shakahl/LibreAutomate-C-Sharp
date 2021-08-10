@@ -1,14 +1,8 @@
 ﻿//Modified version of Microsoft.Extensions.Primitives.StringSegment. It is from github; current .NET does not have it, need to get from NuGet.
 //Can be used instead of String.Split, especially when you want less garbage. Faster (the github version with StringTokenizer was slower).
 
-using System;
-using System.Runtime.CompilerServices;
-using System.Collections;
-using System.Collections.Generic;
-
-using Au.Types;
-
-namespace Au.More {
+namespace Au.More
+{
 	/// <summary>
 	/// Splits a string into substrings as start/end offsets or strings.
 	/// </summary>
@@ -212,7 +206,7 @@ namespace Au.Types
 	/// <summary>
 	/// struct with fields int start and int end.
 	/// </summary>
-	public struct StartEnd {
+	public record struct StartEnd {
 		///
 		public int start;
 		///
@@ -237,7 +231,7 @@ namespace Au.Types
 		/// <summary>
 		/// Gets string span.
 		/// </summary>
-		public ReadOnlySpan<char> Span(string s) => s.AsSpan(start, end - start);
+		public RStr Span(string s) => s.AsSpan(start, end - start);
 
 		///
 		public override string ToString() => $"({start}, {end})";

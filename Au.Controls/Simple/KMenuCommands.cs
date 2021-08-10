@@ -1,17 +1,10 @@
-﻿using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
+﻿using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Controls.Primitives;
 using System.Xml.Linq;
 using System.Windows.Media;
-using System.Diagnostics;
 using System.Windows.Data;
 
 //SHOULDDO: when a checkbox button command invoked with a hotkey, now does not change check state in menu and toolbar.

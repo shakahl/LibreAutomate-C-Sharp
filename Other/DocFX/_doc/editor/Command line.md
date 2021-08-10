@@ -5,10 +5,10 @@ uid: command_line
 # Command line
 
 These program files have command line parameters:
-- Aedit.exe - the automation script editor program.
+- Au.Editor.exe - the automation script editor program.
 - Au.CL.exe - the "run script using command line" program.
 
-#### Aedit.exe
+#### Au.Editor.exe
 
 | Parameter | Description |
 | - | - |

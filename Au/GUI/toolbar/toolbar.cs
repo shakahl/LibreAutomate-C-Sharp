@@ -1,11 +1,4 @@
-using Au.Types;
-using Au.More;
 using Au.Triggers;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Threading;
 
 namespace Au
 {
@@ -777,7 +770,7 @@ namespace Au
 						}
 
 						static string _EnumToString(Enum e) {
-							var s = e.ToString().RegexReplace(@"(?<=[^A-Z])[A-Z]", m => " " + m.Value.Lower());
+							var s = e.ToString().RReplace(@"(?<=[^A-Z])[A-Z]", m => " " + m.Value.Lower());
 							//s = s.Replace("Dont", "Don't");
 							return s;
 						}
@@ -981,7 +974,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 			set {
 				_ThreadTrap();
 				_preferSize = false;
-				if (value.Equals(_offsets)) return;
+				if (value == _offsets) return;
 				_sett.offsets = _offsets = value;
 				if (_followedOnce) _FollowRect();
 				//CONSIDER: add ScreenIndex property or something. Now if screen is auto-selected, this sets xy in that screen, but caller may want in primary screen.

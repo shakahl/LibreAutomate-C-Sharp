@@ -1,18 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
-
-using Au.Types;
-using Au.More;
 
 namespace Au
 {
@@ -195,7 +180,7 @@ namespace Au
 
 		static IEnumerable<RXGroup> _SplitKeysString(string keys_) =>
 			(s_rxKeys ??= new regexp(@"[A-Z]\w*|#\S|\*\s*(?:\d+|down|up)\b|[+$]\s*\(|\S"))
-			.FindAllG(keys_ ?? "");
+			.FindAllG(keys_ ?? "", 0);
 		//KeyName | #n | *r | *down | *up | +( | $( | nonspace char
 		static regexp s_rxKeys;
 		//SHOULDDO: don't use regexp.
@@ -233,7 +218,8 @@ namespace Au
 		}
 
 		static ArgumentException _ArgumentException_ErrorInKeysString(string keys_, int i, int len) {
-			return new ArgumentException($"Error in keys string: {keys_.Remove(i)}<<<{keys_.Substring(i, len)}>>>{keys_.Substring(i + len)}");
+			int end = i + len;
+			return new ArgumentException($"Error in keys string: {keys_[..i]}<<<{keys_[i..end]}>>>{keys_[end..]}");
 		}
 
 		/// <summary>

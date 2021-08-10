@@ -1,10 +1,6 @@
 ﻿<files max-i="72">
   <s n="Script.cs" i="1" />
   <c n="Class.cs" i="2" />
-  <d n="More" i="66">
-    <c n="Partial.cs" i="3" icon="*Codicons.SymbolClass #73BF00" />
-    <n n="File.txt" i="67" />
-  </d>
   <d n="New project" i="6">
     <d n="@Script" i="7">
       <s n="Script.cs" i="8" />
@@ -15,6 +11,10 @@
     <d n="@Library" i="9">
       <c n="Library.cs" i="10" />
     </d>
+  </d>
+  <d n="More" i="66">
+    <c n="Partial.cs" i="3" icon="*Codicons.SymbolClass #73BF00" />
+    <n n="File.txt" i="67" />
   </d>
   <d n="Examples" i="11">
     <d n="!Script examples" i="12">

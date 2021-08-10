@@ -1,22 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
-
-using Au.Types;
-
+﻿
 namespace Au.More
 {
 	/// <summary>
-	/// If defined DEBUG or TRACE, <see cref="Setup"/> replaces default trace listener with listener that overrides its <see cref="DefaultTraceListener.Fail(string?, string?)"/> method. On failed assertion (<see cref="Debug.Assert"/>, <see cref="Trace.Assert"/>, <see cref="Debug.Fail"/>, <see cref="Trace.Fail"/>) it shows message box with buttons Exit|Debug|Ignore, unless debugger is attached or !<b>AssertUiEnabled</b>.
+	/// Replaces default trace listener with listener that overrides its <see cref="DefaultTraceListener.Fail(string?, string?)"/> method. On failed assertion (<see cref="Debug.Assert"/>, <see cref="Trace.Assert"/>, <see cref="Debug.Fail"/>, <see cref="Trace.Fail"/>) it shows message box with buttons Exit|Debug|Ignore, unless debugger is attached or !<b>AssertUiEnabled</b>.
 	/// </summary>
 	public class DebugTraceListener : DefaultTraceListener
 	{
@@ -43,7 +29,7 @@ namespace Au.More
 			if (!s.NE()) s += "\r\n";
 
 			string st = new StackTrace(2, true).ToString(), st1 = null;
-			if (st.RegexMatch(@"(?m)^\s+at (?!System\.Diagnostics\.)", 0, out RXGroup g)) {
+			if (st.RMatch(@"(?m)^\s+at (?!System\.Diagnostics\.)", 0, out RXGroup g)) {
 				st = st[g.Start..];
 				st1 = st.Lines(true)[0];
 			}

@@ -1,16 +1,3 @@
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
 
 namespace Au.Types
 {
@@ -25,7 +12,7 @@ namespace Au.Types
 	/// 
 	/// Used for parameters of functions that allow to specify a range (part) of a string, array or other collection. Callers can specify a range or just start index. Or callers can omit the optional parameter to use whole collection. The called function retrieves real start/end indexes with <see cref="GetRealRange"/>.
 	/// </remarks>
-	public struct RANGE : IEquatable<RANGE>
+	public record struct RANGE
 	{
 		int _start;
 		int _endPlus1;
@@ -96,15 +83,6 @@ namespace Au.Types
 			string num2 = _endPlus1 == 0 ? null : (_endPlus1 > 0 ? end : ~end).ToString();
 			return op1 + num1 + ".." + op2 + num2;
 		}
-
-		///
-		public override bool Equals(object value) => value is RANGE r && Equals(r);
-
-		///
-		public bool Equals(RANGE other) => other._start == _start && other._endPlus1 == _endPlus1;
-
-		///
-		public override int GetHashCode() => HashCode.Combine(_start.GetHashCode(), _endPlus1.GetHashCode());
 	}
 #endif
 
@@ -116,7 +94,7 @@ namespace Au.Types
 	/// To specify a normal coordinate, assign an <b>int</b> value (implicit conversion from <b>int</b> to <b>Coord</b>). Else use static functions such as <b>Reverse</b>, <b>Fraction</b> (or assign float), <b>Center</b>, <b>Max</b>, <b>MaxInside</b>.
 	/// Also there are functions to convert <b>Coord</b> to normal coodinates.
 	/// </remarks>
-	public struct Coord : IEquatable<Coord>
+	public record struct Coord
 	{
 		//Use single long field that packs int and CoordType.
 		//If 2 fields (int and CoordType), 64-bit compiler creates huge calling code.
@@ -310,15 +288,6 @@ namespace Au.Types
 			default: return "default";
 			}
 		}
-
-		///
-		public bool Equals(Coord other) => other._v == _v; //IEquatable
-		///
-		public static bool operator ==(Coord a, Coord b) => a._v == b._v;
-		///
-		public static bool operator !=(Coord a, Coord b) => a._v != b._v;
-		///
-		public override int GetHashCode() => _v.GetHashCode();
 	}
 
 	/// <summary>

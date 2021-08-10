@@ -1,18 +1,4 @@
-﻿using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
-
+﻿
 namespace Au
 {
 	public unsafe partial struct wnd
@@ -580,7 +566,7 @@ namespace Au.Types
 			switch (s[0]) {
 			case 'e': //"e 'role' name" or just "name"
 			case 'c': //"c 'class' text"
-				if (s.RegexMatch(@"^. ?'(.+?)?' ?((?s).+)?$", out var m)) {
+				if (s.RMatch(@"^. ?'(.+?)?' ?((?s).+)?$", out var m)) {
 					role = m[1].Value; name = m[2].Value;
 					if (s[0] == 'c') return new wndChildFinder(name, role);
 				}

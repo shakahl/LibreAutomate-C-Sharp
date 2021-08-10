@@ -1193,11 +1193,11 @@ struct Sci_DragDropData
 	int len;
 	int copy; //bool
 };
-#define SCI_DRAGDROP 9507 //used by QM3
+#define SCI_DRAGDROP 9507
 
 #define SCI_DOCUMENT_USERDATA_OFFSET 9509 //used by QM2
 
-#define MK_SCI_NOFOCUS 0x10000 //used by QM3
+#define MK_SCI_NOFOCUS 0x10000
 
 //----------------------
 

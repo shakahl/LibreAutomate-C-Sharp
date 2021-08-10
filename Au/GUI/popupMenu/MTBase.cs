@@ -1,13 +1,4 @@
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.ComponentModel;
-using System.Threading.Tasks;
-using System.Threading;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace Au
 {

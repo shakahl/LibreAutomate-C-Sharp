@@ -1,21 +1,6 @@
-﻿using Au.Types;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-using System.Windows;
-using System.Windows.Controls;
+﻿using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Input;
-using Au.More;
-//using System.Linq;
 
 namespace Au.Controls
 {
@@ -38,8 +23,8 @@ namespace Au.Controls
 		Sci_NotifyCallback _notifyCallback;
 		internal int _dpi;
 
-#if DEBUG //we use many scintilla controls, but often want to test something on one of them. Then set test_ = true...
-		internal bool test_;
+#if DEBUG
+		internal bool test_; //we use many scintilla controls, but often want to test something on one of them. Then set test_ = true...
 #endif
 
 		static KScintilla() {
@@ -49,10 +34,8 @@ namespace Au.Controls
 
 		public nint ZSciPtr => _sciPtr;
 
-		[Browsable(false)]
 		public SciImages ZImages { get; private set; }
 
-		[Browsable(false)]
 		public SciTags ZTags { get; private set; }
 
 		#region HwndHost
@@ -365,6 +348,8 @@ namespace Au.Controls
 			//note: auto-creating handle is not good:
 			//	1. May create parked control. Not good for performance.
 			//	2. Can be dangerous, eg if passing a reusable buffer that also is used when creating handle.
+
+			Debug_.PrintIf(process.thisThreadId != _w.ThreadId, "wrong thread");
 
 			return Sci_Call(_sciPtr, sciMessage, wParam, lParam);
 		}

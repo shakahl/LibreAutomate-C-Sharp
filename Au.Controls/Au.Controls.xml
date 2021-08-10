@@ -10,7 +10,7 @@
             Multiple docked movable/sizable/tabable/floatable/hidable/savable panels/toolbars/documents with splitters.
             </summary>
             <remarks>
-            Layout is defined in default XML file, then saved in other XML file. See Layout.xml in Aedit project.
+            Layout is defined in default XML file, then saved in other XML file. See Layout.xml in Au.Editor project.
             If new app version adds/removes/renames panels etc, this class automatically updates the saved layout.
             
             Let your window's ctor:
@@ -1259,7 +1259,7 @@
             Also you can register custom link tags that call your callback functions.
             See <see cref="M:Au.Controls.SciTags.AddLinkTag(System.String,System.Action{System.String})"/>, <see cref="M:Au.Controls.SciTags.AddCommonLinkTag(System.String,System.Action{System.String})"/>.
             
-            Tags are supported by some existing controls based on <see cref="T:Au.Controls.KScintilla"/>. In the Au editor it is the output (use <see cref="M:Au.print.it(System.String)"/>, like in the example below). In this library - the <see cref="T:Au.Controls.KSciInfoBox"/> control. To enable tags in other <see cref="T:Au.Controls.KScintilla"/> controls, use <see cref="P:Au.Controls.KScintilla.ZInitTagsStyle"/> and optionally <see cref="P:Au.Controls.KScintilla.ZInitImages"/>.
+            Tags are supported by some existing controls based on <see cref="T:Au.Controls.KScintilla"/>. In editor it is the output (use <see cref="M:Au.print.it(System.String)"/>, like in the example below). In this library - the <see cref="T:Au.Controls.KSciInfoBox"/> control. To enable tags in other <see cref="T:Au.Controls.KScintilla"/> controls, use <see cref="P:Au.Controls.KScintilla.ZInitTagsStyle"/> and optionally <see cref="P:Au.Controls.KScintilla.ZInitImages"/>.
             </remarks>
             <example>
             <code><![CDATA[
@@ -1424,13 +1424,13 @@
             <exception cref="T:System.InvalidOperationException">Not folder. Or control not created.</exception>
             <exception cref="T:System.ArgumentException"><i>item</i> is not a visible item in this control. No exception if <i>expand</i> == false.</exception>
         </member>
-        <member name="M:Au.Controls.KTreeView.EnsureVisible(System.Int32)">
+        <member name="M:Au.Controls.KTreeView.EnsureVisible(System.Int32,System.Boolean)">
             <summary>
             Scrolls if need to make item actually visible.
             </summary>
             <exception cref="T:System.IndexOutOfRangeException"></exception>
         </member>
-        <member name="M:Au.Controls.KTreeView.EnsureVisible(Au.Controls.ITreeViewItem)">
+        <member name="M:Au.Controls.KTreeView.EnsureVisible(Au.Controls.ITreeViewItem,System.Boolean)">
             <summary>
             Expands descendant folders and scrolls if need to make item actually visible.
             </summary>
@@ -1500,24 +1500,26 @@
             Whether can select multiple items, for example with Ctrl or Shift key.
             </summary>
         </member>
-        <member name="M:Au.Controls.KTreeView.Select(System.Int32,System.Boolean,System.Boolean,System.Boolean)">
+        <member name="M:Au.Controls.KTreeView.Select(System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
             <summary>
             Selects or unselects item.
             </summary>
             <param name="index"></param>
             <param name="select">true to select, false to unselect.</param>
             <param name="unselectOther">Unselect other items. Used only if <see cref="P:Au.Controls.KTreeView.MultiSelect"/> true, else always unselects other items.</param>
-            <param name="focus">Set <see cref="P:Au.Controls.KTreeView.FocusedIndex"/>=<i>index</i>.</param>
+            <param name="focus">Make the item focused.</param>
+            <param name="scrollTop">Scroll if need so that the item would be at the top of really visible range.</param>
             <exception cref="T:System.IndexOutOfRangeException"></exception>
         </member>
-        <member name="M:Au.Controls.KTreeView.Select(Au.Controls.ITreeViewItem,System.Boolean,System.Boolean,System.Boolean)">
+        <member name="M:Au.Controls.KTreeView.Select(Au.Controls.ITreeViewItem,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
             <summary>
             Selects or unselects item.
             </summary>
             <param name="item"></param>
             <param name="select">true to select, false to unselect.</param>
             <param name="unselectOther">Unselect other items. Used only if <see cref="P:Au.Controls.KTreeView.MultiSelect"/> true, else always unselects other items.</param>
-            <param name="focus">Set <see cref="P:Au.Controls.KTreeView.FocusedIndex"/>=<i>index</i>.</param>
+            <param name="focus">Make the item focused.</param>
+            <param name="scrollTop">Scroll if need so that the item would be at the top of really visible range.</param>
             <exception cref="T:System.ArgumentException"><i>item</i> is not a visible item in this control. No exception if <i>select</i> false.</exception>
         </member>
         <member name="M:Au.Controls.KTreeView.Select(System.Range,System.Boolean,System.Boolean)">
@@ -1533,12 +1535,12 @@
             Unselects all.
             </summary>
         </member>
-        <member name="M:Au.Controls.KTreeView.SelectSingle(System.Int32,System.Boolean)">
+        <member name="M:Au.Controls.KTreeView.SelectSingle(System.Int32,System.Boolean,System.Boolean)">
             <summary>
             Selects item, unselects others, optionally makes the focused.
             </summary>
         </member>
-        <member name="M:Au.Controls.KTreeView.SelectSingle(Au.Controls.ITreeViewItem,System.Boolean)">
+        <member name="M:Au.Controls.KTreeView.SelectSingle(Au.Controls.ITreeViewItem,System.Boolean,System.Boolean)">
             <summary>
             Selects item, unselects others, optionally makes the focused.
             </summary>
@@ -1580,20 +1582,33 @@
         </member>
         <member name="P:Au.Controls.KTreeView.FocusedIndex">
             <summary>
-            Gets or sets index of item that has logical focus within the control. Can be -1.
-            Used with keyboard actions (Enter-activate, arrows, page down/up) and range selection (Shift+click when <see cref="P:Au.Controls.KTreeView.MultiSelect"/> true).
+            Gets index of item that has logical focus within the control. Can be -1.
             </summary>
+        </member>
+        <member name="M:Au.Controls.KTreeView.SetFocusedItem(System.Int32,System.Boolean)">
+            <summary>
+            Sets item that has logical focus within the control.
+            </summary>
+            <param name="index">Can be -1.</param>
+            <param name="scrollTop">Scroll if need so that the item would be at the top of really visible range.</param>
             <exception cref="T:System.IndexOutOfRangeException"></exception>
             <remarks>
-            The 'set' function calls <see cref="M:Au.Controls.KTreeView.EnsureVisible(System.Int32)"/>.
+            Used with keyboard actions (Enter-activate, arrows, page down/up), range selection (Shift+click when <see cref="P:Au.Controls.KTreeView.MultiSelect"/> true), optionally <see cref="M:Au.Controls.KTreeView.Select(System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean)"/>.
+            Calls <see cref="M:Au.Controls.KTreeView.EnsureVisible(System.Int32,System.Boolean)"/>.
             </remarks>
         </member>
         <member name="P:Au.Controls.KTreeView.FocusedItem">
             <summary>
-            Gets or sets item that has logical focus within the control. Can be null.
-            Used with keyboard actions (Enter-activate, arrows, page down/up) and range selection (Shift+click when <see cref="P:Au.Controls.KTreeView.MultiSelect"/> true).
+            Gets item that has logical focus within the control. Can be null.
             </summary>
-            <exception cref="T:System.ArgumentException">Setter throws if the item is not a visible item in this control.</exception>
+        </member>
+        <member name="M:Au.Controls.KTreeView.SetFocusedItem(Au.Controls.ITreeViewItem,System.Boolean)">
+            <summary>
+            Sets item that has logical focus within the control.
+            </summary>
+            <param name="item">Can be null.</param>
+            <param name="scrollTop">Scroll if need so that the item would be at the top of really visible range.</param>
+            <exception cref="T:System.ArgumentException">The item is not a visible item in this control.</exception>
         </member>
         <member name="M:Au.Controls.KTreeView.OnGotKeyboardFocus(System.Windows.Input.KeyboardFocusChangedEventArgs)">
             
@@ -1859,6 +1874,7 @@
         <member name="P:Au.Controls.ITreeViewItem.Color">
             <summary>
             Background color in 0xBBGGRR format. If -1 (default), uses default colors, depending on state (normal, selected, hot).
+            If alpha is 1 - 3: if contains flag 1, draws selection color when selected; if 2, draws hot color when hot.
             </summary>
         </member>
         <member name="P:Au.Controls.ITreeViewItem.TextColor">
@@ -1869,6 +1885,7 @@
         <member name="P:Au.Controls.ITreeViewItem.BorderColor">
             <summary>
             Border color in 0xBBGGRR format. No border if -1 (default).
+            If alpha is 1, draws left edge between text and icon.
             </summary>
         </member>
         <member name="T:Au.Controls.TVCheck">

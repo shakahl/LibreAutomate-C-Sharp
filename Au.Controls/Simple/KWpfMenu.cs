@@ -1,19 +1,9 @@
-﻿using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.IO;
-//using System.Linq;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Markup;
 using System.Windows.Threading;
 using System.Windows.Input;
-using System.Threading.Tasks;
 using System.Windows.Interop;
-using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Windows.Media.Imaging;
 
 namespace Au.Controls

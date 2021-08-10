@@ -1,17 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
 using System.Linq;
-
-using Au.Types;
 
 namespace Au
 {
@@ -67,7 +54,7 @@ namespace Au
 				if(!PathIsExtension(path)) {
 					int i = path.IndexOf(':');
 					if(i > 1) {
-						path = path.Remove(i); //protocol
+						path = path[..i]; //protocol
 						if(path == "shell") return null; //eg "shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"
 						isProtocol = true;
 					} else {
@@ -85,13 +72,12 @@ namespace Au
 			/// </summary>
 			/// <param name="path">Full path. Supports environment variables (see <see cref="pathname.expand"/>).</param>
 			/// <param name="fileId"></param>
-			public static unsafe bool getFileId(string path, out FileId fileId)
-			{
+			public static unsafe bool getFileId(string path, out FileId fileId) {
 				path = pathname.NormalizeMinimally_(path, false);
 				fileId = new FileId();
 				using var h = Api.CreateFile(path, Api.FILE_READ_ATTRIBUTES, Api.FILE_SHARE_ALL, default, Api.OPEN_EXISTING, Api.FILE_FLAG_BACKUP_SEMANTICS);
-				if(h.Is0) return false;
-				if(!Api.GetFileInformationByHandle(h, out var k)) return false;
+				if (h.Is0) return false;
+				if (!Api.GetFileInformationByHandle(h, out var k)) return false;
 				fileId.VolumeSerialNumber = (int)k.dwVolumeSerialNumber;
 				fileId.FileIndex = k.FileIndex;
 				return true;
@@ -103,8 +89,7 @@ namespace Au
 			/// </summary>
 			/// <param name="path1"></param>
 			/// <param name="path2"></param>
-			internal static bool IsSameFile_(string path1, string path2)
-			{
+			internal static bool IsSameFile_(string path1, string path2) {
 				//try to optimize. No, unreliable.
 				//int i1 = path1.FindLastAny("\\/~"), i2 = path2.FindLastAny("\\/~");
 				//if(i1 >= 0 && i2 >= 0 && path1[i1] != '~' && path2[i2] != '~') {
@@ -114,7 +99,7 @@ namespace Au
 
 				var ok1 = getFileId(path1, out var fid1);
 				var ok2 = getFileId(path2, out var fid2);
-				if(ok1 && ok2) return fid1 == fid2;
+				if (ok1 && ok2) return fid1 == fid2;
 				print.warning("GetFileId() failed"); //CONSIDER: throw
 				return false;
 			}
@@ -269,8 +254,7 @@ namespace Au
 			/// This function is slow if the directory is large.
 			/// Don't use this function for files (throws exception) and drives (instead use <see cref="DriveInfo"/>, it's fast and includes sizes of Recycle Bin and other protected hidden system directories).
 			/// </remarks>
-			public static long calculateDirectorySize(string path, FEFlags flags = FEFlags.AndSubdirectories | FEFlags.IgnoreInaccessible)
-			{
+			public static long calculateDirectorySize(string path, FEFlags flags = FEFlags.AndSubdirectories | FEFlags.IgnoreInaccessible) {
 				return enumerate(path, flags).Sum(f => f.Size);
 			}
 
@@ -319,14 +303,13 @@ namespace Au
 			/// - subfolder "64" or "32" of folder specified in environment variable "Au.Path". For example the dll is unavailable if used in an assembly (managed dll) loaded in a nonstandard environment, eg VS forms designer or VS C# Interactive (then folders.ThisApp is "C:\Program Files (x86)\Microsoft Visual Studio\..."). Workaround: set %Au.Path% = the main Au directory and restart Windows.
 			/// - subfolder "64" or "32" of <see cref="folders.ThisAppTemp"/>. For example the dll may be extracted there from resources.
 			/// </remarks>
-			public static void loadDll64or32Bit(string fileName)
-			{
+			public static void loadDll64or32Bit(string fileName) {
 				//Debug.Assert(default == Api.GetModuleHandle(fileName)); //no, asserts if cpp dll is injected by acc
 
 				string s = (osVersion.is32BitProcess ? @"32\" : @"64\") + fileName;
-				if(default != Api.LoadLibrary(folders.ThisAppBS + s)) return; //normal
-				var p = Environment.GetEnvironmentVariable("Au.Path"); if(p != null && default != Api.LoadLibrary(pathname.combine(p, s))) return; //%Au.Path%
-				if(default != Api.LoadLibrary(folders.ThisAppTemp + s)) return; //extracted from resources
+				if (default != Api.LoadLibrary(folders.ThisAppBS + s)) return; //normal
+				var p = Environment.GetEnvironmentVariable("Au.Path"); if (p != null && default != Api.LoadLibrary(pathname.combine(p, s))) return; //%Au.Path%
+				if (default != Api.LoadLibrary(folders.ThisAppTemp + s)) return; //extracted from resources
 
 				//if(default != Api.LoadLibrary(fileName)) return; //exe directory, system 32 or 64 bit directory, %PATH%, current directory
 
@@ -336,34 +319,17 @@ namespace Au
 			}
 		}
 	}
-}
 
-namespace Au.Types
-{
-	/// <summary>
-	/// Contains file properties that can be used to uniquely identify the file on a single computer.
-	/// </summary>
-	/// <remarks>
-	/// Can be used with files and directories.
-	/// To get it, use <see cref="filesystem.more.getFileId"/>.
-	/// There are many different ways to specify path to the same file or directory. To determine whether two paths represent the same file, get and compare their <b>FileId</b>.
-	/// </remarks>
-	public struct FileId :IEquatable<FileId>
+	namespace Types
 	{
-		/// <summary>The serial number of the volume (aka disk drive) that contains the file.</summary>
-		public int VolumeSerialNumber;
-		/// <summary>An identifier that is associated with the file. It is unique in that volume.</summary>
-		public long FileIndex;
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-		public static bool operator ==(FileId a, FileId b)
-			=> a.FileIndex == b.FileIndex && a.VolumeSerialNumber == b.VolumeSerialNumber;
-
-		public static bool operator !=(FileId a, FileId b) { return !(a == b); }
-
-		public override int GetHashCode() => HashCode.Combine(VolumeSerialNumber, FileIndex);
-
-		public bool Equals(FileId other) => other == this;
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning disable CS1574 //VS bug: after converting this struct to simple record struct does not recognize getFileId
+		/// <summary>
+		/// Contains file properties that can be used to uniquely identify the file on a single computer. See <see cref="filesystem.more.getFileId"/>.
+		/// </summary>
+		/// <remarks>
+		/// Can be used with files and directories.
+		/// There are many different ways to specify path to the same file or directory. To determine whether two paths represent the same file, get and compare their <b>FileId</b>.
+		/// </remarks>
+		public record struct FileId(int VolumeSerialNumber, long FileIndex);
 	}
 }

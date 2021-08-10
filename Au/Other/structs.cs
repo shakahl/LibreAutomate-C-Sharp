@@ -1,26 +1,12 @@
-﻿using System;
-using Au.More;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Text.Json.Serialization;
-//using System.Linq;
-
 
 namespace Au.Types
 {
 	/// <summary>
 	/// Point coordinates x y.
 	/// </summary>
-	public struct POINT : IEquatable<POINT>
+	public record struct POINT
 	{
 #pragma warning disable 1591, 3008 //XML doc, CLS-compliant
 		[JsonInclude]
@@ -70,13 +56,6 @@ namespace Au.Types
 		//public static POINT NormalizeIn(RECT r, Coord x = default, Coord y = default)
 		//	=> Coord.NormalizeInRect(x, y, r, centerIfEmpty: true);
 
-		public static bool operator ==(POINT p1, POINT p2) => p1.x == p2.x && p1.y == p2.y;
-		public static bool operator !=(POINT p1, POINT p2) => !(p1 == p2);
-
-		public override int GetHashCode() => HashCode.Combine(x, y);
-
-		public bool Equals(POINT other) => this == other; //IEquatable
-
 		/// <summary>Adds x and y to this.x and this.y.</summary>
 		public void Offset(int x, int y) { this.x += x; this.y += y; }
 
@@ -92,7 +71,7 @@ namespace Au.Types
 	/// <summary>
 	/// Width and height.
 	/// </summary>
-	public struct SIZE : IEquatable<SIZE>
+	public record struct SIZE
 	{
 #pragma warning disable 1591, 3008 //XML doc, CLS-compliant
 		[JsonInclude]
@@ -122,13 +101,6 @@ namespace Au.Types
 		public static SIZE From(System.Windows.Size z, bool round)
 			=> new(round ? z.Width.ToInt() : checked((int)z.Width), round ? z.Height.ToInt() : checked((int)z.Height));
 
-		public static bool operator ==(SIZE s1, SIZE s2) => s1.width == s2.width && s1.height == s2.height;
-		public static bool operator !=(SIZE s1, SIZE s2) => !(s1 == s2);
-
-		public override int GetHashCode() => HashCode.Combine(width, height);
-
-		public bool Equals(SIZE other) => this == other; //IEquatable
-
 		/// <summary>Returns <c>new SIZE(z.width + d.x, z.height + d.y)</c>.</summary>
 		public static SIZE operator +(SIZE z, (int x, int y) d) => new(z.width + d.x, z.height + d.y);
 
@@ -145,7 +117,7 @@ namespace Au.Types
 	/// This type can be used with Windows API functions. The .NET <b>Rectangle</b> etc can't, because their fields are different.
 	/// Has conversions from/to <b>Rectangle</b>.
 	/// </remarks>
-	public struct RECT : IEquatable<RECT>
+	public record struct RECT
 	{
 #pragma warning disable 1591, 3008 //XML doc, CLS-compliant
 		[JsonInclude]
@@ -202,13 +174,6 @@ namespace Au.Types
 			if (round) return new(r.Left.ToInt(), r.Top.ToInt(), r.Width.ToInt(), r.Height.ToInt());
 			checked { return new((int)r.Left, (int)r.Top, (int)r.Width, (int)r.Height); }
 		}
-
-		public static bool operator ==(RECT r1, RECT r2) => r1.left == r2.left && r1.right == r2.right && r1.top == r2.top && r1.bottom == r2.bottom;
-		public static bool operator !=(RECT r1, RECT r2) => !(r1 == r2);
-
-		public override int GetHashCode() => HashCode.Combine(left, top, right, bottom);
-
-		public bool Equals(RECT other) => this == other; //IEquatable
 
 		//rejected. Rare.
 		///// <summary>

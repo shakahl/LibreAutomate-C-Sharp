@@ -1,18 +1,4 @@
-﻿using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
-
+﻿
 namespace Au
 {
 	public unsafe partial struct wnd
@@ -60,8 +46,7 @@ namespace Au
 		public wnd Child(
 			[ParamString(PSFormat.wildex)] string name = null,
 			[ParamString(PSFormat.wildex)] string cn = null,
-			WCFlags flags = 0, Func<wnd, bool> also = null, int skip = 0)
-		{
+			WCFlags flags = 0, Func<wnd, bool> also = null, int skip = 0) {
 			//ThrowIfInvalid(); //will be called later
 			var f = new wndChildFinder(name, cn, flags, also, skip);
 			f.Find(this);
@@ -89,8 +74,7 @@ namespace Au
 		public bool HasChild(
 			[ParamString(PSFormat.wildex)] string name = null,
 			[ParamString(PSFormat.wildex)] string cn = null,
-			WCFlags flags = 0, Func<wnd, bool> also = null, int skip = 0)
-		{
+			WCFlags flags = 0, Func<wnd, bool> also = null, int skip = 0) {
 			return default != Child(name, cn, flags, also, skip);
 		}
 
@@ -108,8 +92,7 @@ namespace Au
 		/// print.it(f.Result);
 		/// ]]></code>
 		/// </example>
-		public bool HasChild(wndChildFinder f)
-		{
+		public bool HasChild(wndChildFinder f) {
 			return f.Find(this);
 		}
 
@@ -127,8 +110,7 @@ namespace Au
 		/// print.it(f.Result);
 		/// ]]></code>
 		/// </example>
-		public bool HasElm(elmFinder f)
-		{
+		public bool HasElm(elmFinder f) {
 			return f.Find(this);
 		}
 
@@ -144,19 +126,18 @@ namespace Au
 		/// Not all controls have a useful id. If control id is not unique or is different in each window instance, this function is not useful.
 		/// </remarks>
 		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
-		public wnd ChildById(int id, WCFlags flags = 0)
-		{
+		public wnd ChildById(int id, WCFlags flags = 0) {
 			ThrowIfInvalid();
-			if(flags.Has(WCFlags.DirectChild | WCFlags.HiddenToo)) return Api.GetDlgItem(this, id); //fast
+			if (flags.Has(WCFlags.DirectChild | WCFlags.HiddenToo)) return Api.GetDlgItem(this, id); //fast
 
 			var d = new _KidEnumData() { wThis = this, id = id }; //info: to avoid garbage delegates, we use _KidEnumData instead of captured variables
 			var wParent = this;
 			Api.EnumChildWindows(this, (c, p) => {
 				ref var x = ref *(_KidEnumData*)p;
-				if(c.ControlId == x.id) {
-					if(x.flags.Has(WCFlags.DirectChild) && c.ParentGWL_ != x.wThis) return 1;
-					if(c.IsVisibleIn_(wParent)) { x.cVisible = c; return 0; }
-					if(x.flags.Has(WCFlags.HiddenToo) && x.cHidden.Is0) x.cHidden = c;
+				if (c.ControlId == x.id) {
+					if (x.flags.Has(WCFlags.DirectChild) && c.ParentGWL_ != x.wThis) return 1;
+					if (c.IsVisibleIn_(wParent)) { x.cVisible = c; return 0; }
+					if (x.flags.Has(WCFlags.HiddenToo) && x.cHidden.Is0) x.cHidden = c;
 				}
 				return 1;
 			}, &d);
@@ -184,8 +165,7 @@ namespace Au
 		public wnd[] ChildAll(
 			[ParamString(PSFormat.wildex)] string name = null,
 			[ParamString(PSFormat.wildex)] string cn = null,
-			WCFlags flags = 0, Func<wnd, bool> also = null)
-		{
+			WCFlags flags = 0, Func<wnd, bool> also = null) {
 			//ThrowIfInvalid(); //will be called later
 			var f = new wndChildFinder(name, cn, flags, also);
 			return f.FindAll(this);
@@ -213,10 +193,9 @@ namespace Au
 		/// Can be used only when you know full name and/or class name.
 		/// Finds hidden controls too.
 		/// </remarks>
-		public wnd ChildFast(string name, string cn, wnd wAfter = default)
-		{
+		public wnd ChildFast(string name, string cn, wnd wAfter = default) {
 			//ThrowIfInvalid(); //no, it can be HWND_MESSAGE
-			if(Is0) {
+			if (Is0) {
 				Api.SetLastError(Api.ERROR_INVALID_WINDOW_HANDLE);
 				return default;
 			}
@@ -237,8 +216,7 @@ namespace Au
 			/// Calls API <msdn>EnumChildWindows</msdn>.
 			/// </remarks>
 			/// <seealso cref="ChildAll"/>
-			public wnd[] Children(bool onlyVisible = false, bool sortFirstVisible = false, bool directChild = false)
-			{
+			public wnd[] Children(bool onlyVisible = false, bool sortFirstVisible = false, bool directChild = false) {
 				_w.ThrowIfInvalid();
 				return Internal_.EnumWindows(Internal_.EnumAPI.EnumChildWindows, onlyVisible, sortFirstVisible, _w, directChild);
 			}
@@ -254,8 +232,7 @@ namespace Au
 			/// <remarks>
 			/// Use this overload to avoid much garbage when calling frequently with the same List variable. Other overload always allocates new array. This overload in most cases reuses memory allocated for the list variable.
 			/// </remarks>
-			public void Children(ref List<wnd> a, bool onlyVisible = false, bool sortFirstVisible = false, bool directChild = false)
-			{
+			public void Children(ref List<wnd> a, bool onlyVisible = false, bool sortFirstVisible = false, bool directChild = false) {
 				_w.ThrowIfInvalid();
 				Internal_.EnumWindows2(Internal_.EnumAPI.EnumChildWindows, onlyVisible, sortFirstVisible, _w, directChild, list: a ??= new List<wnd>());
 			}
@@ -296,10 +273,9 @@ namespace Au
 		/// wnd.find("Options").ButtonClick(2);
 		/// ]]></code>
 		/// </example>
-		public void ButtonClick(int buttonId, bool useElm = false)
-		{
+		public void ButtonClick(int buttonId, bool useElm = false) {
 			var c = ChildById(buttonId);
-			if(c.Is0) throw new NotFoundException();
+			if (c.Is0) throw new NotFoundException();
 			c.AsButton.Click(useElm);
 		}
 
@@ -320,10 +296,9 @@ namespace Au
 		public void ButtonClick(
 			[ParamString(PSFormat.wildex)] string buttonName,
 			[ParamString(PSFormat.wildex)] string cn = null,
-			bool useElm = false)
-		{
+			bool useElm = false) {
 			var c = Child(buttonName, cn);
-			if(c.Is0) throw new NotFoundException(); //CONSIDER: try to find UI element. Eg toolbar button.
+			if (c.Is0) throw new NotFoundException(); //CONSIDER: try to find UI element. Eg toolbar button.
 			c.AsButton.Click(useElm);
 		}
 
@@ -339,12 +314,11 @@ namespace Au
 		/// Does not use the menu itself. Just posts WM_COMMAND or WM_SYSCOMMAND message. Even if a menu item with this id does not exist.
 		/// This variable is the window that contains the menu bar or system menu. Or the drop-down menu window (class "#32768") that contains the menu item.
 		/// </remarks>
-		public void MenuClick(int itemId, bool systemMenu = false)
-		{
-			if((uint)(itemId - 1) >= 0xffff) throw new ArgumentOutOfRangeException();
+		public void MenuClick(int itemId, bool systemMenu = false) {
+			if ((uint)(itemId - 1) >= 0xffff) throw new ArgumentOutOfRangeException();
 			ThrowIfInvalid();
 			var w = this;
-			if(ClassNameIs("#32768") && miscInfo.getGUIThreadInfo(out var g, ThreadId) && !g.hwndMenuOwner.Is0) w = g.hwndMenuOwner;
+			if (ClassNameIs("#32768") && miscInfo.getGUIThreadInfo(out var g, ThreadId) && !g.hwndMenuOwner.Is0) w = g.hwndMenuOwner;
 			w.Post(systemMenu ? Api.WM_SYSCOMMAND : Api.WM_COMMAND, itemId);
 			w.MinimalSleepIfOtherThread_();
 		}
@@ -492,19 +466,19 @@ namespace Au.Types
 				if (useElm) e.DoAction(); else _PostBmClick();
 				bool clickAgain = false;
 				switch (state) {
-					case 0:
-						if (k == 1) {
-							W.MinimalSleepIfOtherThread_();
-							if (GetCheckState(true) == 2) clickAgain = true;
-							else return;
-						}
-						break;
-					case 1:
-						if (k == 2) clickAgain = true;
-						break;
-					case 2:
-						if (k == 0) clickAgain = true;
-						break;
+				case 0:
+					if (k == 1) {
+						W.MinimalSleepIfOtherThread_();
+						if (GetCheckState(true) == 2) clickAgain = true;
+						else return;
+					}
+					break;
+				case 1:
+					if (k == 2) clickAgain = true;
+					break;
+				case 2:
+					if (k == 0) clickAgain = true;
+					break;
 				}
 				if (clickAgain) {
 					if (useElm) e.DoAction(); else _PostBmClick();
@@ -554,13 +528,13 @@ namespace Au.Types
 
 		bool _IsCheckbox() {
 			switch ((uint)W.Style & 15) {
-				case BS_CHECKBOX:
-				case BS_AUTOCHECKBOX:
-				case BS_RADIOBUTTON:
-				case BS_3STATE:
-				case BS_AUTO3STATE:
-				case BS_AUTORADIOBUTTON:
-					return true;
+			case BS_CHECKBOX:
+			case BS_AUTOCHECKBOX:
+			case BS_RADIOBUTTON:
+			case BS_3STATE:
+			case BS_AUTO3STATE:
+			case BS_AUTORADIOBUTTON:
+				return true;
 			}
 			return false;
 		}

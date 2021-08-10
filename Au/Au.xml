@@ -1193,19 +1193,21 @@
         </member>
         <member name="T:Au.Types.FileId">
             <summary>
-            Contains file properties that can be used to uniquely identify the file on a single computer.
+            Contains file properties that can be used to uniquely identify the file on a single computer. See <see cref="!:filesystem.more.getFileId"/>.
             </summary>
             <remarks>
             Can be used with files and directories.
-            To get it, use <see cref="M:Au.filesystem.more.getFileId(System.String,Au.Types.FileId@)"/>.
             There are many different ways to specify path to the same file or directory. To determine whether two paths represent the same file, get and compare their <b>FileId</b>.
             </remarks>
         </member>
-        <member name="F:Au.Types.FileId.VolumeSerialNumber">
-            <summary>The serial number of the volume (aka disk drive) that contains the file.</summary>
-        </member>
-        <member name="F:Au.Types.FileId.FileIndex">
-            <summary>An identifier that is associated with the file. It is unique in that volume.</summary>
+        <member name="M:Au.Types.FileId.#ctor(System.Int32,System.Int64)">
+            <summary>
+            Contains file properties that can be used to uniquely identify the file on a single computer. See <see cref="!:filesystem.more.getFileId"/>.
+            </summary>
+            <remarks>
+            Can be used with files and directories.
+            There are many different ways to specify path to the same file or directory. To determine whether two paths represent the same file, get and compare their <b>FileId</b>.
+            </remarks>
         </member>
         <member name="T:Au.Types.FolderPath">
             <summary>
@@ -2268,12 +2270,6 @@
             Sets all properties.
             </summary>
         </member>
-        <member name="M:Au.Types.TBOffsets.Equals(Au.Types.TBOffsets)">
-            
-        </member>
-        <member name="M:Au.Types.TBOffsets.ToString">
-            
-        </member>
         <member name="T:Au.Types.TBHide">
             <summary>
             Reasons to hide a toolbar. Used with <see cref="M:Au.toolbar.Hide(System.Boolean,Au.Types.TBHide)"/>.
@@ -2929,22 +2925,6 @@
             Extension methods for types of this library.
             </summary>
         </member>
-        <member name="M:Au.Types.ExtAu.MouseMove(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)">
-            <summary>
-            Moves the cursor (mouse pointer) to the position x y relative to this window.
-            Calls <see cref="M:Au.mouse.move(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
-            </summary>
-            <exception cref="T:Au.Types.NotFoundException">Window not found (this variable is 0).</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.mouse.move(Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
-        </member>
-        <member name="M:Au.Types.ExtAu.MouseClick(Au.wnd,Au.Types.Coord,Au.Types.Coord,Au.Types.MButton,System.Boolean)">
-            <summary>
-            Clicks, double-clicks, presses or releases a mouse button at position x y relative to this window.
-            Calls <see cref="M:Au.mouse.clickEx(Au.Types.MButton,Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
-            </summary>
-            <exception cref="T:Au.Types.NotFoundException">Window not found (this variable is 0).</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.mouse.clickEx(Au.Types.MButton,Au.wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
-        </member>
         <member name="M:Au.Types.ExtAu.MouseMove(Au.elm,Au.Types.Coord,Au.Types.Coord)">
             <summary>
             Moves the cursor (mouse pointer) to this UI element.
@@ -3537,6 +3517,9 @@
         </member>
         <member name="M:Au.Types.ColorInt.op_Explicit(Au.Types.ColorInt)~System.Windows.Media.Color">
             <summary>Converts to <see cref="T:System.Windows.Media.Color"/>.</summary>
+        </member>
+        <member name="M:Au.Types.ColorInt.ToString">
+            
         </member>
         <member name="M:Au.Types.ColorInt.SwapRB(System.Int32)">
             <summary>
@@ -4347,18 +4330,6 @@
         <member name="M:Au.Types.Coord.ToString">
             
         </member>
-        <member name="M:Au.Types.Coord.Equals(Au.Types.Coord)">
-            
-        </member>
-        <member name="M:Au.Types.Coord.op_Equality(Au.Types.Coord,Au.Types.Coord)">
-            
-        </member>
-        <member name="M:Au.Types.Coord.op_Inequality(Au.Types.Coord,Au.Types.Coord)">
-            
-        </member>
-        <member name="M:Au.Types.Coord.GetHashCode">
-            
-        </member>
         <member name="T:Au.Types.CoordType">
             <summary>
             <see cref="T:Au.Types.Coord"/> variable value type.
@@ -4906,7 +4877,7 @@
         <member name="T:Au.Types.RXMatch">
             <summary>
             Regular expression match info.
-            Used with <see cref="T:Au.regexp"/> class functions and String extension methods like <see cref="M:Au.ExtString.RegexMatch(System.String,System.String,Au.Types.RXMatch@,Au.Types.RXFlags,System.Nullable{System.Range})"/>.
+            Used with <see cref="T:Au.regexp"/> class functions and String extension methods like <see cref="M:Au.ExtString.RMatch(System.String,System.String,Au.Types.RXMatch@,Au.Types.RXFlags,System.Nullable{System.Range})"/>.
             </summary>
             <remarks>
             Contains info about a regular expression match found in the subject string: index, length, substring, etc.
@@ -4916,7 +4887,7 @@
             <example>
             <code><![CDATA[
             var s = "ab cd-45-ef gh";
-            if(s.RegexMatch(@"\b([a-z]+)-(\d+)\b", out RXMatch m))
+            if(s.RMatch(@"\b([a-z]+)-(\d+)\b", out RXMatch m))
             	print.it(
             		m.GroupCountPlusOne, //3 (whole match and 2 groups)
             		m.Start, //3, same as m[0].Index
@@ -4930,7 +4901,7 @@
             A group in the subject string may not exist even if whole match found. Then its Exists property is false, Index -1, Length 0, Value null.
             <code><![CDATA[
             var s = "ab cd--ef gh";
-            if(s.RegexMatch(@"\b([a-z]+)-(\d+)?-([a-z]+)\b", out RXMatch m))
+            if(s.RMatch(@"\b([a-z]+)-(\d+)?-([a-z]+)\b", out RXMatch m))
             	print.it(
             		m.GroupCountPlusOne, //4 (whole match and 3 groups)
             		m[2].Exists, //false
@@ -4941,60 +4912,90 @@
             ]]></code>
             </example>
         </member>
+        <member name="P:Au.Types.RXMatch.Subject">
+            <summary>
+            Gets the subject string in which this match was found.
+            </summary>
+        </member>
         <member name="P:Au.Types.RXMatch.GroupCountPlusOne">
             <summary>
-            The number of groups in the regular expression, + 1 for the whole match.
+            Gets the number of groups in the regular expression, + 1 for the whole match.
             </summary>
         </member>
         <member name="P:Au.Types.RXMatch.Start">
             <summary>
-            Start offset of the match in the subject string. The same as that of group 0.
-            </summary>
-        </member>
-        <member name="P:Au.Types.RXMatch.End">
-            <summary>
-            <see cref="P:Au.Types.RXMatch.Start"/> + <see cref="P:Au.Types.RXMatch.Length"/>. The same as that of group 0.
+            Gets start offset of the match in the subject string. The same as that of group 0 (<see cref="P:Au.Types.RXGroup.Start"/>).
             </summary>
         </member>
         <member name="P:Au.Types.RXMatch.Length">
             <summary>
-            Length of the match in the subject string. The same as that of group 0.
+            Gets length of the match in the subject string. The same as that of group 0 (<see cref="P:Au.Types.RXGroup.Length"/>).
+            </summary>
+        </member>
+        <member name="P:Au.Types.RXMatch.End">
+            <summary>
+            Gets end offset of the match in the subject string (<see cref="P:Au.Types.RXMatch.Start"/> + <see cref="P:Au.Types.RXMatch.Length"/>). The same as that of group 0 (<see cref="P:Au.Types.RXGroup.End"/>).
             </summary>
         </member>
         <member name="P:Au.Types.RXMatch.Value">
             <summary>
-            The match (substring) in the subject string. The same as that of group 0.
+            Gets substring of the subject string from <see cref="P:Au.Types.RXMatch.Start"/> to <see cref="P:Au.Types.RXMatch.End"/>. The same as that of group 0 (<see cref="P:Au.Types.RXGroup.Value"/>).
             </summary>
         </member>
-        <member name="P:Au.Types.RXMatch.Subject">
+        <member name="P:Au.Types.RXMatch.Span">
             <summary>
-            The subject string in which this match was found.
+            Gets span of the subject string from <see cref="P:Au.Types.RXMatch.Start"/> to <see cref="P:Au.Types.RXMatch.End"/>. The same as that of group 0 (<see cref="P:Au.Types.RXGroup.Span"/>).
             </summary>
+            <remarks>
+            Unlike <see cref="P:Au.Types.RXMatch.Value"/>, does not create new string.
+            </remarks>
         </member>
         <member name="M:Au.Types.RXMatch.ToString">
             <summary>
-            Returns <see cref="P:Au.Types.RXMatch.Value"/>.
+            Returns <see cref="M:Au.Types.RXGroup.ToString"/> of group 0.
             </summary>
+        </member>
+        <member name="M:Au.Types.RXMatch.GetValue_(System.ReadOnlySpan{System.Char})">
+            <summary>
+            Gets substring of the subject string from <see cref="P:Au.Types.RXMatch.Start"/> to <see cref="P:Au.Types.RXMatch.End"/>. The same as that of group 0 (<see cref="M:Au.Types.RXGroup.GetValue_(System.ReadOnlySpan{System.Char})"/>).
+            </summary>
+            <remarks>
+            Use this function instead of <see cref="P:Au.Types.RXMatch.Value"/> with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>.
+            </remarks>
+            <param name="subject">Must be the same subject string as passed to the <b>regexp</b> function that returned this result.</param>
+        </member>
+        <member name="M:Au.Types.RXMatch.GetSpan_(System.ReadOnlySpan{System.Char})">
+            <summary>
+            Gets span of the subject string from <see cref="P:Au.Types.RXMatch.Start"/> to <see cref="P:Au.Types.RXMatch.End"/>. The same as that of group 0 (<see cref="M:Au.Types.RXGroup.GetSpan_(System.ReadOnlySpan{System.Char})"/>).
+            </summary>
+            <remarks>
+            Use this function instead of <see cref="P:Au.Types.RXMatch.Span"/> with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>.
+            </remarks>
+            <param name="subject">Must be the same subject string as passed to the <b>regexp</b> function that returned this result.</param>
         </member>
         <member name="P:Au.Types.RXMatch.StartNoK">
             <summary>
-            Start offset of whole match regardless of \K.
+            Gets start offset of whole match regardless of \K.
             When the regular expression contains \K, this is less than <see cref="P:Au.Types.RXMatch.Start"/>.
             </summary>
         </member>
         <member name="P:Au.Types.RXMatch.Mark">
             <summary>
-            The name of a found mark, or null.
-            Marks can be inserted in regular expression pattern like (*MARK:name) or (*:name).
-            After a full successful match, it is the last mark encountered on the matching path through the pattern. After a "no match" or a partial match, it is the last encountered mark. For example, consider this pattern: "^(*MARK:A)((*MARK:B)a|b)c". When it matches "bc", the mark is A. The B mark is "seen" in the first branch of the group, but it is not on the matching path. On the other hand, when this pattern fails to match "bx", the mark is B.
+            Gets the name of a found mark, or null.
             </summary>
+            <remarks>
+            Marks can be inserted in regular expression pattern like <c>(*MARK:name)</c> or <c>(*:name)</c>.
+            After a full successful match, it is the last mark encountered on the matching path through the pattern. After a "no match" or a partial match, it is the last encountered mark. For example, consider this pattern: "^(*MARK:A)((*MARK:B)a|b)c". When it matches "bc", the mark is A. The B mark is "seen" in the first branch of the group, but it is not on the matching path. On the other hand, when this pattern fails to match "bx", the mark is B.
+            </remarks>
         </member>
         <member name="P:Au.Types.RXMatch.Exists">
             <summary>
             Gets the return value of the <see cref="M:Au.regexp.Match(System.String,Au.Types.RXMatch@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/> call.
-            Can be false only when the function returned false but a mark is available (see <see cref="P:Au.Types.RXMatch.Mark"/>). Otherwise, when the function returns flase, it returns null instead of a RXMatch object.
-            When false, all properties except Exists and Mark have undefined values or throw exception.
             </summary>
+            <remarks>
+            Can be false only when the function returned false but a mark is available (see <see cref="P:Au.Types.RXMatch.Mark"/>). Otherwise, when the function returns flase, it returns null instead of a <b>RXMatch</b> object.
+            When false, all properties except Exists and Mark have undefined values or throw exception.
+            </remarks>
         </member>
         <member name="P:Au.Types.RXMatch.IsPartial">
             <summary>
@@ -5007,7 +5008,7 @@
             Gets group info. Index 0 is whole match. Index 1 is the first group.
             </summary>
             <param name="group">1-based group index, or 0 for whole match.</param>
-            <exception cref="T:System.IndexOutOfRangeException">The group index is &lt; 0 or &gt;= <see cref="P:Au.Types.RXMatch.GroupCountPlusOne"/>.</exception>
+            <exception cref="T:System.IndexOutOfRangeException">Invalid <i>group</i>. Max valid value is <see cref="P:Au.Types.RXMatch.GroupCountPlusOne"/>.</exception>
         </member>
         <member name="P:Au.Types.RXMatch.Item(System.String)">
             <summary>
@@ -5089,22 +5090,17 @@
         </member>
         <member name="P:Au.Types.RXGroup.Start">
             <summary>
-            Start offset of the group match in the subject string.
-            </summary>
-        </member>
-        <member name="P:Au.Types.RXGroup.End">
-            <summary>
-            <see cref="P:Au.Types.RXGroup.Start"/> + <see cref="P:Au.Types.RXGroup.Length"/>.
+            Gets start offset of the group match in the subject string.
             </summary>
         </member>
         <member name="P:Au.Types.RXGroup.Length">
             <summary>
-            Length of the group match in the subject string.
+            Gets length of the group match in the subject string.
             </summary>
         </member>
-        <member name="P:Au.Types.RXGroup.Value">
+        <member name="P:Au.Types.RXGroup.End">
             <summary>
-            String value of the group match in the subject string.
+            Gets end offset of the group match in the subject string (<see cref="P:Au.Types.RXGroup.Start"/> + <see cref="P:Au.Types.RXGroup.Length"/>).
             </summary>
         </member>
         <member name="P:Au.Types.RXGroup.Exists">
@@ -5116,10 +5112,48 @@
             Other ways to detect it: if a group does not exist, its Index is -1 and Value is null.
             </remarks>
         </member>
+        <member name="P:Au.Types.RXGroup.Span">
+            <summary>
+            Gets span of the subject string from <see cref="P:Au.Types.RXGroup.Start"/> to <see cref="P:Au.Types.RXGroup.End"/>.
+            Returns <c>default</c> if the group does not exist in the subject string (see <see cref="P:Au.Types.RXGroup.Exists"/>).
+            </summary>
+            <remarks>
+            Unlike <see cref="P:Au.Types.RXGroup.Value"/>, does not create new string.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.RXGroup.Value">
+            <summary>
+            Gets substring of the subject string from <see cref="P:Au.Types.RXGroup.Start"/> to <see cref="P:Au.Types.RXGroup.End"/>.
+            Returns null if the group does not exist in the subject string (see <see cref="P:Au.Types.RXGroup.Exists"/>).
+            </summary>
+            <remarks>
+            Creates new string each time. See also <see cref="P:Au.Types.RXGroup.Span"/>.
+            </remarks>
+        </member>
         <member name="M:Au.Types.RXGroup.ToString">
             <summary>
             Returns <see cref="P:Au.Types.RXGroup.Value"/>.
             </summary>
+        </member>
+        <member name="M:Au.Types.RXGroup.GetValue_(System.ReadOnlySpan{System.Char})">
+            <summary>
+            Gets substring of the subject string from <see cref="P:Au.Types.RXGroup.Start"/> to <see cref="P:Au.Types.RXGroup.End"/>.
+            Returns null if the group does not exist in the subject string (see <see cref="P:Au.Types.RXGroup.Exists"/>).
+            </summary>
+            <remarks>
+            Use this function instead of <see cref="P:Au.Types.RXGroup.Value"/> with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>.
+            </remarks>
+            <param name="subject">Must be the same subject string as passed to the <b>regexp</b> function that returned this result.</param>
+        </member>
+        <member name="M:Au.Types.RXGroup.GetSpan_(System.ReadOnlySpan{System.Char})">
+            <summary>
+            Gets span of the subject string from <see cref="P:Au.Types.RXGroup.Start"/> to <see cref="P:Au.Types.RXGroup.End"/>.
+            Returns null if the group does not exist in the subject string (see <see cref="P:Au.Types.RXGroup.Exists"/>).
+            </summary>
+            <remarks>
+            Use this function instead of <see cref="P:Au.Types.RXGroup.Span"/> with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>.
+            </remarks>
+            <param name="subject">Must be the same subject string as passed to the <b>regexp</b> function that returned this result.</param>
         </member>
         <member name="T:Au.Types.RXCalloutData">
             <summary>
@@ -5251,7 +5285,7 @@
         </member>
         <member name="T:Au.Types.RXMatchFlags">
             <summary>
-            Flags for <see cref="M:Au.regexp.Match(System.String,Au.Types.RXMatch@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/> and other <see cref="T:Au.regexp"/> class functions.
+            Flags for <see cref="T:Au.regexp"/> class functions.
             Documented in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>.
             </summary>
             <remarks>
@@ -6863,57 +6897,6 @@
             Returns true if using Debug configuration of Au.dll.
             </summary>
         </member>
-        <member name="M:Au.More.Debug_.GetComObjRefCount_(System.IntPtr)">
-            <summary>
-            Calls Marshal.AddRef(obj), then calls/returns Marshal.Release(obj).
-            Available if TRACE defined.
-            </summary>
-        </member>
-        <member name="M:Au.More.Debug_.MemoryGet_(System.Boolean)">
-            <summary>
-            Returns managed memory size as formatted string. Uses GC.GetTotalMemory.
-            Available if TRACE defined.
-            </summary>
-            <param name="fromAnchor">Get the difference from previous call to <b>MemorySetAnchor_</b>.</param>
-        </member>
-        <member name="M:Au.More.Debug_.MemoryPrint_(System.Boolean)">
-            <summary>
-            Prints managed memory size. Uses GC.GetTotalMemory.
-            Available if TRACE defined.
-            </summary>
-            <param name="fromAnchor">Get the difference from previous call to <b>MemorySetAnchor_</b>.</param>
-        </member>
-        <member name="M:Au.More.Debug_.MemorySetAnchor_">
-            <summary>
-            Memorizes current managed memory size, so that next call to another <b>MemoryX</b> function with fromAnchor=true (default) will get memory size difference from current memory size.
-            Available if TRACE defined.
-            </summary>
-        </member>
-        <member name="T:Au.More.Debug_.NoGcRegion">
-            <summary>
-            Temporarily suspends GC collections if possible. Restores in <b>Dispose</b>.
-            Available if TRACE defined.
-            </summary>
-        </member>
-        <member name="M:Au.More.Debug_.NoGcRegion.#ctor(System.Int64,System.Boolean)">
-            <summary>
-            Suspends GC collections if possible.
-            Does nothing in 32-bit process.
-            </summary>
-            <param name="memSize">Recommended 100_000_000. Still works if 200_000_000, but fails if 300_000_000. Not tested in 32-bit process.</param>
-            <param name="print">Let <b>Dispose</b> print size of managed memory added since ctor.</param>
-        </member>
-        <member name="M:Au.More.Debug_.NoGcRegion.Dispose">
-            <summary>
-            Restores suspended GC collections.
-            </summary>
-        </member>
-        <member name="M:Au.More.Debug_.PrintLoadedAssemblies(System.Boolean,System.Boolean,System.Boolean)">
-            <summary>
-            Prints assemblies already loaded or/and loaded in the future.
-            Works in Release too, if TRACE defined.
-            </summary>
-        </member>
         <member name="T:Au.More.GC_">
             <summary>
             <see cref="T:System.GC"/> extensions.
@@ -7648,7 +7631,7 @@
         </member>
         <member name="T:Au.More.DebugTraceListener">
             <summary>
-            If defined DEBUG or TRACE, <see cref="M:Au.More.DebugTraceListener.Setup(System.Boolean)"/> replaces default trace listener with listener that overrides its <see cref="M:System.Diagnostics.DefaultTraceListener.Fail(System.String,System.String)"/> method. On failed assertion (<see cref="M:System.Diagnostics.Debug.Assert(System.Boolean)"/>, <see cref="M:System.Diagnostics.Trace.Assert(System.Boolean)"/>, <see cref="M:System.Diagnostics.Debug.Fail(System.String)"/>, <see cref="M:System.Diagnostics.Trace.Fail(System.String)"/>) it shows message box with buttons Exit|Debug|Ignore, unless debugger is attached or !<b>AssertUiEnabled</b>.
+            Replaces default trace listener with listener that overrides its <see cref="M:System.Diagnostics.DefaultTraceListener.Fail(System.String,System.String)"/> method. On failed assertion (<see cref="M:System.Diagnostics.Debug.Assert(System.Boolean)"/>, <see cref="M:System.Diagnostics.Trace.Assert(System.Boolean)"/>, <see cref="M:System.Diagnostics.Debug.Fail(System.String)"/>, <see cref="M:System.Diagnostics.Trace.Fail(System.String)"/>) it shows message box with buttons Exit|Debug|Ignore, unless debugger is attached or !<b>AssertUiEnabled</b>.
             </summary>
         </member>
         <member name="M:Au.More.DebugTraceListener.Setup(System.Boolean)">
@@ -8096,7 +8079,7 @@
         </member>
         <member name="M:Au.More.Hash.MD5Result.ToString">
             <summary>
-            Converts this to hex string of Length = 32.
+            Converts this to hex string.
             </summary>
         </member>
         <member name="M:Au.More.Hash.MD5Result.ToArray">
@@ -14930,7 +14913,7 @@
         </member>
         <member name="M:Au.wpfBuilder.#ctor(System.String,Au.Types.WBPanelType)">
             <summary>
-            This constructor creates <see cref="P:Au.wpfBuilder.Window"/> object with panel of specified type (default is <see cref="T:System.Windows.Controls.Grid"/>).
+            This constructor creates <see cref="T:System.Windows.Window"/> object with panel of specified type (default is <see cref="T:System.Windows.Controls.Grid"/>).
             </summary>
             <param name="windowTitle">Window title bar text.</param>
             <param name="panelType">Panel type. Default is <see cref="T:System.Windows.Controls.Grid"/>. Later you also can add nested panels of various types with <b>StartX</b> functions.</param>
@@ -14941,7 +14924,7 @@
             </summary>
             <param name="container">
             Window or some other element that will contain the panel. Should be empty, unless the type supports multiple direct child elements. Can be null.
-            If the type (or base type) is <see cref="T:System.Windows.Controls.ContentControl"/> (<see cref="P:Au.wpfBuilder.Window"/>, <see cref="T:System.Windows.Controls.TabItem"/>, ToolTip, etc), <see cref="T:System.Windows.Controls.Primitives.Popup"/> or <see cref="T:System.Windows.Controls.Decorator"/> (eg <b>Border</b>), this function adds the panel to it. If <i>container</i> is null or an element of some other type, need to explicitly add the panel to it, like <c>.Also(b => container.Child = b.Panel)</c> or <c>.Also(b => container.Children.Add(b.Panel))</c> or <c>.Tooltip(btt.Panel)</c> or <c>hwndSource.RootVisual = btt.Panel</c> (the code depends on container type).
+            If the type (or base type) is <see cref="T:System.Windows.Controls.ContentControl"/> (<see cref="T:System.Windows.Window"/>, <see cref="T:System.Windows.Controls.TabItem"/>, ToolTip, etc), <see cref="T:System.Windows.Controls.Primitives.Popup"/> or <see cref="T:System.Windows.Controls.Decorator"/> (eg <b>Border</b>), this function adds the panel to it. If <i>container</i> is null or an element of some other type, need to explicitly add the panel to it, like <c>.Also(b => container.Child = b.Panel)</c> or <c>.Also(b => container.Children.Add(b.Panel))</c> or <c>.Tooltip(btt.Panel)</c> or <c>hwndSource.RootVisual = btt.Panel</c> (the code depends on container type).
             </param>
             <param name="panelType">Panel type. Default is <see cref="T:System.Windows.Controls.Grid"/>. Later you also can add nested panels of various types with <b>StartX</b> functions.</param>
             <param name="setProperties">
@@ -19341,6 +19324,8 @@
             <remarks>
             Uses ordinal comparison (does not depend on current culture/locale).
             </remarks>
+            <seealso cref="M:Au.ExtString.Eq(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char})"/>
+            <seealso cref="M:Au.ExtString.Eqi(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char})"/>
             <seealso cref="M:System.String.Compare(System.String,System.Int32,System.String,System.Int32,System.Int32)"/>
             <seealso cref="M:System.String.CompareOrdinal(System.String,System.Int32,System.String,System.Int32,System.Int32)"/>
         </member>
@@ -19356,7 +19341,7 @@
             Uses ordinal comparison (does not depend on current culture/locale).
             </remarks>
         </member>
-        <member name="M:Au.ExtString.Eq(System.String,System.Int32,System.String,System.Boolean)">
+        <member name="M:Au.ExtString.Eq(System.String,System.Int32,System.ReadOnlySpan{System.Char},System.Boolean)">
             <summary>
             Compares part of this string with other string. Returns true if equal.
             </summary>
@@ -19368,6 +19353,7 @@
             <remarks>
             Uses ordinal comparison (does not depend on current culture/locale).
             </remarks>
+            <seealso cref="M:Au.ExtString.Eq(System.ReadOnlySpan{System.Char},System.Int32,System.ReadOnlySpan{System.Char},System.Boolean)"/>
             <seealso cref="M:System.String.Compare(System.String,System.Int32,System.String,System.Int32,System.Int32)"/>
             <seealso cref="M:System.String.CompareOrdinal(System.String,System.Int32,System.String,System.Int32,System.Int32)"/>
         </member>
@@ -19385,7 +19371,7 @@
             Uses ordinal comparison (does not depend on current culture/locale).
             </remarks>
         </member>
-        <member name="M:Au.ExtString.Eq(System.String,System.Range,System.String,System.Boolean)">
+        <member name="M:Au.ExtString.Eq(System.String,System.Range,System.ReadOnlySpan{System.Char},System.Boolean)">
             <summary>
             Compares part of this string with other string. Returns true if equal.
             </summary>
@@ -19397,6 +19383,8 @@
             <remarks>
             Uses ordinal comparison (does not depend on current culture/locale).
             </remarks>
+            <seealso cref="M:Au.ExtString.Eq(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char})"/>
+            <seealso cref="M:Au.ExtString.Eqi(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char})"/>
             <seealso cref="M:System.String.Compare(System.String,System.Int32,System.String,System.Int32,System.Int32)"/>
             <seealso cref="M:System.String.CompareOrdinal(System.String,System.Int32,System.String,System.Int32,System.Int32)"/>
         </member>
@@ -19418,9 +19406,9 @@
             Uses ordinal comparison (does not depend on current culture/locale).
             </remarks>
         </member>
-        <member name="M:Au.ExtString.Ends(System.String,System.String,System.Boolean)">
+        <member name="M:Au.ExtString.Ends(System.String,System.ReadOnlySpan{System.Char},System.Boolean)">
             <summary>
-            Compares the end of this string with other string. Returns true if equal.
+            Compares end of this string with other string. Returns true if equal.
             </summary>
             <param name="t">This string.</param>
             <param name="s">Other string.</param>
@@ -19432,7 +19420,7 @@
         </member>
         <member name="M:Au.ExtString.Ends(System.String,System.Boolean,System.String[])">
             <summary>
-            Compares the end of this string with multiple strings.
+            Compares end of this string with multiple strings.
             Returns 1-based index of matching string, or 0 if none.
             </summary>
             <param name="t">This string.</param>
@@ -19450,9 +19438,9 @@
             <param name="t">This string.</param>
             <param name="c">Character.</param>
         </member>
-        <member name="M:Au.ExtString.Starts(System.String,System.String,System.Boolean)">
+        <member name="M:Au.ExtString.Starts(System.String,System.ReadOnlySpan{System.Char},System.Boolean)">
             <summary>
-            Compares the beginning of this string with other string. Returns true if equal.
+            Compares beginning of this string with other string. Returns true if equal.
             </summary>
             <param name="t">This string.</param>
             <param name="s">Other string.</param>
@@ -19464,7 +19452,7 @@
         </member>
         <member name="M:Au.ExtString.Starts(System.String,System.Boolean,System.String[])">
             <summary>
-            Compares the beginning of this string with multiple strings.
+            Compares beginning of this string with multiple strings.
             Returns 1-based index of matching string, or 0 if none.
             </summary>
             <param name="t">This string.</param>
@@ -20006,7 +19994,7 @@
             Returns true if does not contain non-ASCII characters.
             </summary>
         </member>
-        <member name="M:Au.ExtString.Eq(System.ReadOnlySpan{System.Char},System.String)">
+        <member name="M:Au.ExtString.Eq(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char})">
             <summary>
             Returns true if equals to string <i>s</i>, case-sensitive.
             </summary>
@@ -20016,9 +20004,19 @@
             Uses ordinal comparison (does not depend on current culture/locale).
             </remarks>
         </member>
-        <member name="M:Au.ExtString.Eq(System.ReadOnlySpan{System.Char},System.Int32,System.String,System.Boolean)">
+        <member name="M:Au.ExtString.Eqi(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char})">
             <summary>
-            Compares part of this span with string. Returns true if equal.
+            Returns true if equals to string <i>s</i>, case-insensitive.
+            </summary>
+            <param name="t">This span.</param>
+            <param name="s">Other string. Can be null.</param>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+        </member>
+        <member name="M:Au.ExtString.Eq(System.ReadOnlySpan{System.Char},System.Int32,System.ReadOnlySpan{System.Char},System.Boolean)">
+            <summary>
+            Compares part of this span with string <i>s</i>. Returns true if equal.
             </summary>
             <param name="t">This span.</param>
             <param name="startIndex">Offset in this span. If invalid, returns false.</param>
@@ -20036,16 +20034,6 @@
             <param name="t">This span.</param>
             <param name="index">Offset in this span. If invalid, returns false.</param>
             <param name="c">Character.</param>
-        </member>
-        <member name="M:Au.ExtString.Eqi(System.ReadOnlySpan{System.Char},System.String)">
-            <summary>
-            Returns true if equals to string <i>s</i>, case-insensitive.
-            </summary>
-            <param name="t">This span.</param>
-            <param name="s">Other string. Can be null.</param>
-            <remarks>
-            Uses ordinal comparison (does not depend on current culture/locale).
-            </remarks>
         </member>
         <member name="M:Au.ExtString.IndexOf(System.ReadOnlySpan{System.Char},System.Int32,System.Char)">
             <summary>
@@ -20067,6 +20055,7 @@
             Returns its index in this span, or -1 if not found.
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
         </member>
         <member name="M:Au.ExtString.IndexOf(System.ReadOnlySpan{System.Char},System.Range,System.ReadOnlySpan{System.Char},System.Boolean)">
             <summary>
@@ -20074,6 +20063,7 @@
             Returns its index in this span, or -1 if not found.
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
         </member>
         <member name="M:Au.ExtString.AsSpan(System.String,System.Range)">
             <summary>
@@ -20081,7 +20071,7 @@
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException"/>
         </member>
-        <member name="M:Au.ExtString.RegexIsMatch(System.String,System.String,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.ExtString.RIsMatch(System.String,System.String,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Returns true if this string matches PCRE regular expression <i>rx</i>.
             Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
@@ -20095,7 +20085,7 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.ExtString.RegexMatch(System.String,System.String,Au.Types.RXMatch@,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.ExtString.RMatch(System.String,System.String,Au.Types.RXMatch@,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Returns true if this string matches PCRE regular expression <i>rx</i>.
             Gets match info as <see cref="T:Au.Types.RXMatch"/>.
@@ -20111,11 +20101,11 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.ExtString.RegexMatch(System.String,System.String,System.Int32,System.String@,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.ExtString.RMatch(System.String,System.String,System.Int32,System.String@,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Returns true if this string matches PCRE regular expression <i>rx</i>.
             Gets whole match or some group, as string.
-            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.MatchS(System.String,System.String@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
+            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.Match(System.String,System.Int32,System.String@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             Examples in <see cref="T:Au.regexp"/> class help.
             </summary>
             <param name="t">This string. If null, returns false.</param>
@@ -20128,11 +20118,11 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.ExtString.RegexMatch(System.String,System.String,System.Int32,Au.Types.RXGroup@,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.ExtString.RMatch(System.String,System.String,System.Int32,Au.Types.RXGroup@,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Returns true if this string matches PCRE regular expression <i>rx</i>.
             Gets whole match or some group, as index and length.
-            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.MatchG(System.String,Au.Types.RXGroup@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
+            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.Match(System.String,System.Int32,Au.Types.RXGroup@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             Examples in <see cref="T:Au.regexp"/> class help.
             </summary>
             <param name="t">This string. If null, returns false.</param>
@@ -20145,7 +20135,7 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.ExtString.RegexFindAll(System.String,System.String,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.ExtString.RFindAll(System.String,System.String,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds all match instances of PCRE regular expression <i>rx</i>.
             Returns a lazy IEnumerable&lt;<see cref="T:Au.Types.RXMatch"/>&gt; object that can be used with foreach.
@@ -20160,7 +20150,7 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.ExtString.RegexFindAll(System.String,System.String,Au.Types.RXMatch[]@,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.ExtString.RFindAll(System.String,System.String,Au.Types.RXMatch[]@,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds all match instances of PCRE regular expression <i>rx</i>. Gets array of <see cref="T:Au.Types.RXMatch"/>.
             Returns true if found 1 or more matches.
@@ -20176,11 +20166,11 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.ExtString.RegexFindAll(System.String,System.String,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.ExtString.RFindAll(System.String,System.String,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds all match instances of PCRE regular expression <i>rx</i>.
             Returns a lazy IEnumerable&lt;<see cref="T:Au.Types.RXGroup"/>&gt; object that can be used with foreach.
-            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.FindAllS(System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
+            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.FindAll(System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             Examples in <see cref="T:Au.regexp"/> class help.
             </summary>
             <param name="t">This string.</param>
@@ -20192,11 +20182,11 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.ExtString.RegexFindAll(System.String,System.String,System.Int32,System.String[]@,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.ExtString.RFindAll(System.String,System.String,System.Int32,System.String[]@,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds all match instances of PCRE regular expression <i>rx</i>. Gets array of strings.
             Returns true if found 1 or more matches.
-            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.FindAllS(System.String,System.String[]@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
+            Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.FindAll(System.String,System.Int32,System.String[]@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             Examples in <see cref="T:Au.regexp"/> class help.
             </summary>
             <param name="t">This string.</param>
@@ -20209,7 +20199,7 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.ExtString.RegexReplace(System.String,System.String,System.String,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.ExtString.RReplace(System.String,System.String,System.String,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds and replaces all match instances of PCRE regular expression <i>rx</i>.
             Returns the result string.
@@ -20231,7 +20221,7 @@
             </exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.ExtString.RegexReplace(System.String,System.String,System.String,System.String@,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.ExtString.RReplace(System.String,System.String,System.String,System.String@,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds and replaces all match instances of PCRE regular expression <i>rx</i>.
             Returns the number of replacements made.
@@ -20254,7 +20244,7 @@
             </exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.ExtString.RegexReplace(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.ExtString.RReplace(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds and replaces all match instances of PCRE regular expression <i>rx</i>. Uses a callback function.
             Returns the result string.
@@ -20276,7 +20266,7 @@
             </exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.ExtString.RegexReplace(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.String@,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.ExtString.RReplace(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.String@,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds and replaces all match instances of PCRE regular expression <i>rx</i>. Uses a callback function.
             Returns the number of replacements made.
@@ -20299,7 +20289,7 @@
             </exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.ExtString.RegexSplit(System.String,System.String,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.ExtString.RSplit(System.String,System.String,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Returns array of substrings delimited by PCRE regular expression <i>rx</i> matches.
             Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.Split(System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
@@ -20410,8 +20400,8 @@
              
              print.it("//FindAll with foreach:");
             foreach(var v in x.FindAll(s)) print.it(v.Value, v[1].Value, v[2].Value);
-             print.it("//FindAllS, get only strings of group 2:");
-            print.it(x.FindAllS(s, 2));
+             print.it("//FindAll, get only strings of group 2:");
+            print.it(x.FindAll(s, 2));
              
              print.it("//Replace:");
             print.it(x.Replace(s, "'$2$1'"));
@@ -20428,49 +20418,49 @@
             var s = "one two22, three333,four"; //subject string
             var rx = @"\b(\w+?)(\d+)\b"; //regular expression
              
-             print.it("//RegexIsMatch:");
-            print.it(s.RegexIsMatch(rx));
+             print.it("//RIsMatch:");
+            print.it(s.RIsMatch(rx));
              
-             print.it("//RegexMatch:");
-            if(s.RegexMatch(rx, out var m)) print.it(m.Value, m[1].Value, m[2].Value);
+             print.it("//RMatch:");
+            if(s.RMatch(rx, out var m)) print.it(m.Value, m[1].Value, m[2].Value);
              
-             print.it("//RegexMatch, get only string:");
-            if(s.RegexMatch(rx, 0, out var s0)) print.it(s0);
-             print.it("//RegexMatch, get only string of group 1:");
-            if(s.RegexMatch(rx, 1, out var s1)) print.it(s1);
+             print.it("//RMatch, get only string:");
+            if(s.RMatch(rx, 0, out var s0)) print.it(s0);
+             print.it("//RMatch, get only string of group 1:");
+            if(s.RMatch(rx, 1, out var s1)) print.it(s1);
              
-             print.it("//RegexFindAll with foreach:");
-            foreach(var v in s.RegexFindAll(rx)) print.it(v.Value, v[1].Value, v[2].Value);
+             print.it("//RFindAll with foreach:");
+            foreach(var v in s.RFindAll(rx)) print.it(v.Value, v[1].Value, v[2].Value);
              
-             print.it("//RegexFindAll with foreach, get only strings:");
-            foreach(var v in s.RegexFindAll(rx, 0)) print.it(v);
-             print.it("//RegexFindAll with foreach, get only strings of group 2:");
-            foreach(var v in s.RegexFindAll(rx, 2)) print.it(v);
+             print.it("//RFindAll with foreach, get only strings:");
+            foreach(var v in s.RFindAll(rx, 0)) print.it(v);
+             print.it("//RFindAll with foreach, get only strings of group 2:");
+            foreach(var v in s.RFindAll(rx, 2)) print.it(v);
              
-             print.it("//RegexFindAll, get array:");
-            if(s.RegexFindAll(rx, out var am)) foreach(var k in am) print.it(k.Value, k[1].Value, k[2].Value);
+             print.it("//RFindAll, get array:");
+            if(s.RFindAll(rx, out var am)) foreach(var k in am) print.it(k.Value, k[1].Value, k[2].Value);
              
-             print.it("//RegexFindAll, get array of strings:");
-            if(s.RegexFindAll(rx, 0, out var av)) print.it(av);
-             print.it("//RegexFindAll, get array of group 2 strings:");
-            if(s.RegexFindAll(rx, 2, out var ag)) print.it(ag);
+             print.it("//RFindAll, get array of strings:");
+            if(s.RFindAll(rx, 0, out var av)) print.it(av);
+             print.it("//RFindAll, get array of group 2 strings:");
+            if(s.RFindAll(rx, 2, out var ag)) print.it(ag);
              
-             print.it("//RegexReplace:");
-            print.it(s.RegexReplace(rx, "'$2$1'"));
+             print.it("//RReplace:");
+            print.it(s.RReplace(rx, "'$2$1'"));
              
-             print.it("//RegexReplace with callback:");
-            print.it(s.RegexReplace(rx, o => o.Value.Upper()));
-             print.it("//RegexReplace with callback and ExpandReplacement:");
-            print.it(s.RegexReplace(rx, o => { if(o.Length > 5) return o.ExpandReplacement("'$2$1'"); else return o[1].Value; }));
+             print.it("//RReplace with callback:");
+            print.it(s.RReplace(rx, o => o.Value.Upper()));
+             print.it("//RReplace with callback and ExpandReplacement:");
+            print.it(s.RReplace(rx, o => { if(o.Length > 5) return o.ExpandReplacement("'$2$1'"); else return o[1].Value; }));
              
-             print.it("//RegexReplace, get replacement count:");
-            if(0 != s.RegexReplace(rx, "'$2$1'", out var s2)) print.it(s2);
+             print.it("//RReplace, get replacement count:");
+            if(0 != s.RReplace(rx, "'$2$1'", out var s2)) print.it(s2);
              
-             print.it("//RegexReplace with callback, get replacement count:");
-            if(0 != s.RegexReplace(rx, o => o.Value.Upper(), out var s3)) print.it(s3);
+             print.it("//RReplace with callback, get replacement count:");
+            if(0 != s.RReplace(rx, o => o.Value.Upper(), out var s3)) print.it(s3);
              
-             print.it("//RegexSplit:");
-            print.it(s.RegexSplit(@" *, *"));
+             print.it("//RSplit:");
+            print.it(s.RSplit(@" *, *"));
             ]]></code></example>
         </member>
         <member name="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)">
@@ -20502,7 +20492,7 @@
             <value>Callback delegate (eg lambda) or null.</value>
             <remarks>
             Callouts can be used to: 1. Track the matching progress. 2. Get all instances of a group that can match multiple times. 3. Evaluate and reject some matches or match parts. 4. Etc.
-            The callback function is called by <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>, <see cref="M:Au.regexp.Match(System.String,Au.Types.RXMatch@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>, <see cref="M:Au.regexp.FindAll(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>, <see cref="M:Au.regexp.Replace(System.String,System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>, <see cref="M:Au.regexp.Split(System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/> and similar functions, when they reach callout points in regular expression. To insert callout points use (?C), (?C1), (?C2), (?C'name') etc or pass flag AUTO_CALLOUT to the constructor.
+            The callback function is called by <b>IsMatch</b>, <b>Match</b>, <b>FindAll</b>, <b>Replace</b>, <b>Split</b> and similar functions, when they reach callout points in regular expression. To insert callout points use (?C), (?C1), (?C2), (?C'name') etc or pass flag AUTO_CALLOUT to the constructor.
             More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
             See also: <see href="https://www.rexegg.com/pcre-callouts.html"/>
             </remarks>
@@ -20512,7 +20502,7 @@
             var s = "text <a href='url'>link</a> text";
             var rx = @"(?C1)<a (?C2)href='.+?'>(?C3)[^<]*(?C4)</a>";
             var x = new regexp(rx);
-            x.Callout = o => { print.it(o.callout_number, o.current_position, s.Substring(o.start_match, o.current_position), rx.Substring(o.pattern_position, o.next_item_length)); };
+            x.Callout = o => { print.it(o.callout_number, o.start_match, o.current_position, s[o.start_match..o.current_position], rx.Substring(o.pattern_position, o.next_item_length)); };
             print.it(x.IsMatch(s));
             ]]></code>
             Track the matching progress with flag AUTO_CALLOUT.
@@ -20539,7 +20529,7 @@
             var s = "one 123-5 two 12-456 three 1-34 four";
             var x = new regexp(@"\b\d+-\d+\b(?C1)");
             x.Callout = o => { int len = o.current_position - o.start_match; /*print.it(len);*/ if(len > 5) o.Result = 1; };
-            print.it(x.FindAllS(s));
+            print.it(x.FindAll(s, 0));
             ]]></code>
             </example>
         </member>
@@ -20568,12 +20558,12 @@
             </summary>
             <param name="s">
             Subject string.
-            If null, always returns false, even if the regular expression matches empty string.
+            If null, returns false, even if the regular expression matches empty string.
             </param>
             <param name="range">
             Start and end offsets in the subject string. If null (default), uses whole string.
             Examples: <c>i..j</c> (from i to j), <c>i..</c> (from i to the end), <c>..j</c> (from 0 to j).
-            The subject part before the start index is not ignored if regular expression starts with a lookbehind assertion or anchor, eg <c>^</c> or <c>\b</c> or <c>(?&lt;=...)</c>. Instead of <c>^</c> you can use <c>\G</c>. More info in PCRE documentation topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>, chapter "The string to be matched by pcre2_match()".
+            The subject part before the start index is not ignored if regular expression starts with a lookbehind assertion or anchor, eg <c>^</c> or <c>\b</c> or <c>(?&lt;=...)</c>. Instead of <c>^</c> you can use <c>\G</c> or flag <b>RXFlags.ANCHORED</b>. More info in PCRE documentation topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>, chapter "The string to be matched by pcre2_match()".
             The subject part after the end index is always ignored.
             </param>
             <param name="matchFlags">Options.
@@ -20582,7 +20572,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
             <remarks>
-            If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag.
+            If partial match, returns true. Partial match is possible if used a PARTIAL_ flag.
             
             This function is similar to <see cref="M:System.Text.RegularExpressions.Regex.IsMatch(System.String)"/>.
             </remarks>
@@ -20594,19 +20584,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.regexp.IsMatch(System.ReadOnlySpan{System.Char},System.Int32,Au.Types.RXMatchFlags)">
-            <summary>
-            Returns true if string <i>s</i> matches this regular expression.
-            </summary>
-            <param name="start">
-            Start offset in the subject string.
-            The subject part before the start index is not ignored if regular expression starts with a lookbehind assertion or anchor, eg <c>^</c> or <c>\b</c> or <c>(?&lt;=...)</c>. Instead of <c>^</c> you can use <c>\G</c>. More info in PCRE documentation topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>, chapter "The string to be matched by pcre2_match()".
-            </param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>start</i>.</exception>
-            <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
-            <remarks>
-            If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag.
-            </remarks>
+        <member name="M:Au.regexp.IsMatch_(System.ReadOnlySpan{System.Char},System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <inheritdoc cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>
         </member>
         <member name="M:Au.regexp.Match(System.String,Au.Types.RXMatch@,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
@@ -20616,7 +20594,7 @@
             </summary>
             <param name="s">
             Subject string.
-            If null, always returns false, even if the regular expression matches empty string.
+            If null, returns false, even if the regular expression matches empty string.
             </param>
             <param name="result">Receives match info. Read more in Remarks.</param>
             <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
@@ -20638,20 +20616,20 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.regexp.MatchG(System.String,Au.Types.RXGroup@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
+        <member name="M:Au.regexp.Match(System.String,System.Int32,Au.Types.RXGroup@,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>
             Returns true if string <i>s</i> matches this regular expression.
             Gets whole match or some group, as <see cref="T:Au.Types.RXGroup"/> (index, length, value).
             </summary>
             <param name="s">
             Subject string.
-            If null, always returns false, even if the regular expression matches empty string.
+            If null, returns false, even if the regular expression matches empty string.
             </param>
-            <param name="result">Receives match info.</param>
             <param name="group">
-            Group number (1-based index) of result. If 0 (default) - whole match.
+            Group number (1-based index) of result. If 0 - whole match.
             See also <see cref="M:Au.regexp.GetGroupNumberOf(System.String)"/>.
             </param>
+            <param name="result">Receives match info.</param>
             <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
             <param name="matchFlags">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
@@ -20659,25 +20637,25 @@
             <remarks>
             This function is a simplified version of <see cref="M:Au.regexp.Match(System.String,Au.Types.RXMatch@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             If full match, returns true, and <i>result</i> contains the match or the specifed group.
-            If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag. Then cannot get groups, therefore <i>group</i> should be 0.
+            If partial match, returns true. Partial match is possible if used a PARTIAL_ flag. Then cannot get groups, therefore <i>group</i> should be 0.
             If no match, returns false, and <i>result</i> is empty.
             </remarks>
             <example>
             <code><![CDATA[
             var s = "one two22 three333 four";
             var x = new regexp(@"\b(\w+?)(\d+)\b");
-            if(x.MatchG(s, out var g)) print.it(g.Value, g.Start);
+            if(x.Match(s, 0, out RXGroup g)) print.it(g.Value, g.Start);
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.regexp.MatchS(System.String,System.String@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
+        <member name="M:Au.regexp.Match(System.String,System.Int32,System.String@,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>
             Returns true if string <i>s</i> matches this regular expression.
             Gets whole match or some group, as string.
             </summary>
             <param name="s">
             Subject string.
-            If null, always returns false, even if the regular expression matches empty string.
+            If null, returns false, even if the regular expression matches empty string.
             </param>
             <param name="result">Receives the match value.</param>
             <param name="group">
@@ -20689,18 +20667,29 @@
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
             <remarks>
-            This function is a simplified version of <see cref="M:Au.regexp.Match(System.String,Au.Types.RXMatch@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/> and <see cref="M:Au.regexp.MatchG(System.String,Au.Types.RXGroup@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
+            This function is a simplified version of <see cref="M:Au.regexp.Match(System.String,Au.Types.RXMatch@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             If full match, returns true, and <i>result</i> contains the value of the match or of the specifed group.
-            If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag. Then cannot get groups, therefore <i>group</i> should be 0.
+            If partial match, returns true. Partial match is possible if used a PARTIAL_ flag. Then cannot get groups, therefore <i>group</i> should be 0.
             If no match, returns false, and <i>result</i> is null.
             </remarks>
             <example>
             <code><![CDATA[
             var s = "one two22 three333 four";
             var x = new regexp(@"\b(\w+?)(\d+)\b");
-            if(x.MatchS(s, out var v)) print.it(v);
+            if(x.Match(s, 0, out string v)) print.it(v);
             ]]></code>
             </example>
+        </member>
+        <member name="M:Au.regexp.Match_(System.ReadOnlySpan{System.Char},Au.Types.RXMatch@,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
+            <summary>
+            Returns true if string <i>s</i> matches this regular expression.
+            </summary>
+            <param name="s">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <param name="result">Receives match info, like with <see cref="M:Au.regexp.Match(System.String,Au.Types.RXMatch@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>. However you cannot use <b>Subject</b>, <b>Span</b>, <b>Value</b>, <b>ToString</b>; instead use <b>GetValue</b> or <b>GetSpan</b>.</param>
+            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <param name="matchFlags">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>start</i>.</exception>
+            <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
         </member>
         <member name="M:Au.regexp.FindAll(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>
@@ -20750,57 +20739,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.regexp.FindAllG(System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
-            <summary>
-            Finds all match instances of the regular expression.
-            Returns a lazy IEnumerable&lt;<see cref="T:Au.Types.RXGroup"/>&gt; object that can be used with foreach.
-            </summary>
-            <param name="s">Subject string. Cannot be null.</param>
-            <param name="group">
-            Group number (1-based index) of results. If 0 (default) - whole match.
-            See also <see cref="M:Au.regexp.GetGroupNumberOf(System.String)"/>.
-            </param>
-            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
-            <param name="matchFlags">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
-            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
-            <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
-            <example>
-            <code><![CDATA[
-            var s = "one two three";
-            var x = new regexp(@"\b\w+\b");
-            foreach(var g in x.FindAllG(s)) print.it(g.Start, g.Value);
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.regexp.FindAllG(System.String,Au.Types.RXGroup[]@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
-            <summary>
-            Finds all match instances of the regular expression. Gets array of <see cref="T:Au.Types.RXGroup"/> (index, length, value).
-            Returns true if found 1 or more matches.
-            </summary>
-            <param name="s">Subject string. Cannot be null.</param>
-            <param name="result">Receives all found matches.</param>
-            <param name="group">
-            Group number (1-based index) of results. If 0 (default) - whole match.
-            See also <see cref="M:Au.regexp.GetGroupNumberOf(System.String)"/>.
-            </param>
-            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
-            <param name="matchFlags">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
-            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
-            <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
-            <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
-            <example>
-            <code><![CDATA[
-            var s = "one two three";
-            var x = new regexp(@"\b\w+\b");
-            if(!x.FindAllG(s, out var a)) { print.it("not found"); return; }
-            foreach(var g in a) print.it(g.Start, g.Value);
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.regexp.FindAllS(System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
+        <member name="M:Au.regexp.FindAll(System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>
             Finds all match instances of the regular expression.
             Returns a lazy IEnumerable&lt;string&gt; object that can be used with foreach.
@@ -20820,11 +20759,11 @@
             <code><![CDATA[
             var s = "one two three";
             var x = new regexp(@"\b\w+\b");
-            foreach(var v in x.FindAllS(s)) print.it(v);
+            foreach(var v in x.FindAll(s, 0)) print.it(v);
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.regexp.FindAllS(System.String,System.String[]@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
+        <member name="M:Au.regexp.FindAll(System.String,System.Int32,System.String[]@,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>
             Finds all match instances of the regular expression. Gets array of strings.
             Returns true if found 1 or more matches.
@@ -20845,8 +20784,58 @@
             <code><![CDATA[
             var s = "one two three";
             var x = new regexp(@"\b\w+\b");
-            if(!x.FindAllS(s, out var a)) { print.it("not found"); return; }
+            if(!x.FindAll(s, 0, out var a)) { print.it("not found"); return; }
             foreach(var v in a) print.it(v);
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.regexp.FindAllG(System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
+            <summary>
+            Finds all match instances of the regular expression.
+            Returns a lazy IEnumerable&lt;<see cref="T:Au.Types.RXGroup"/>&gt; object that can be used with foreach.
+            </summary>
+            <param name="s">Subject string. Cannot be null.</param>
+            <param name="group">
+            Group number (1-based index) of results. If 0 (default) - whole match.
+            See also <see cref="M:Au.regexp.GetGroupNumberOf(System.String)"/>.
+            </param>
+            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <param name="matchFlags">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
+            <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+            <example>
+            <code><![CDATA[
+            var s = "one two three";
+            var x = new regexp(@"\b\w+\b");
+            foreach(var g in x.FindAllG(s, 0)) print.it(g.Start, g.Value);
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.regexp.FindAllG(System.String,System.Int32,Au.Types.RXGroup[]@,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
+            <summary>
+            Finds all match instances of the regular expression. Gets array of <see cref="T:Au.Types.RXGroup"/> (index, length, value).
+            Returns true if found 1 or more matches.
+            </summary>
+            <param name="s">Subject string. Cannot be null.</param>
+            <param name="result">Receives all found matches.</param>
+            <param name="group">
+            Group number (1-based index) of results. If 0 (default) - whole match.
+            See also <see cref="M:Au.regexp.GetGroupNumberOf(System.String)"/>.
+            </param>
+            <param name="range">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <param name="matchFlags">See <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
+            <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+            <example>
+            <code><![CDATA[
+            var s = "one two three";
+            var x = new regexp(@"\b\w+\b");
+            if(!x.FindAllG(s, 0, out var a)) { print.it("not found"); return; }
+            foreach(var g in a) print.it(g.Start, g.Value);
             ]]></code>
             </example>
         </member>
@@ -21180,7 +21169,7 @@
         <member name="M:Au.wildex.ToString">
             
         </member>
-        <member name="M:Au.wildex.hasWildcardChars(System.String)">
+        <member name="M:Au.wildex.hasWildcardChars(System.ReadOnlySpan{System.Char})">
             <summary>
             Returns true if string contains wildcard characters: '*', '?'.
             </summary>
@@ -24596,14 +24585,6 @@
              </td>
             </tr>
             <tr>
-             <td>LibreOffice.</td>
-             <td>
-              <ol>
-               <li>UI elements are unavailable unless this process is 32-bit (when LibreOffice is 64-bit). Also need flag <see cref="F:Au.Types.EFFlags.NotInProc"/>.</li>
-              </ol>
-             </td>
-            </tr>
-            <tr>
              <td>Some controls.</td>
              <td>
               <ol>
@@ -25949,7 +25930,6 @@
         <member name="M:Au.wnd.Equals(Au.wnd)">
             <summary>
             Returns true if other == this.
-            Implements IEquatable. It prevents boxing when used as a key of a collection.
             </summary>
         </member>
         <member name="M:Au.wnd.CompareTo(Au.wnd)">

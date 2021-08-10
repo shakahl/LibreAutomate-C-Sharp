@@ -30,23 +30,6 @@ How local output server/client is implemented:
 
 */
 
-
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
-using System.Collections.Concurrent;
-
 namespace Au
 {
 	public static partial class print

@@ -1,11 +1,4 @@
-﻿using Au.More;
-using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-
-[module: DefaultCharSet(CharSet.Unicode)] //change default DllImport CharSet from ANSI to Unicode
-
-//[assembly: DefaultDllImportSearchPaths(DllImportSearchPath.System32|DllImportSearchPath.UserDirectories)]
+﻿//[assembly: DefaultDllImportSearchPaths(DllImportSearchPath.System32|DllImportSearchPath.UserDirectories)]
 
 #pragma warning disable 649, 169 //field never assigned/used
 

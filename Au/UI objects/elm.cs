@@ -1,17 +1,3 @@
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
 
 namespace Au
 {
@@ -90,14 +76,6 @@ namespace Au
 	///  <td>
 	///   <ol>
 	///    <li>Often crashes after using UI elements, usually when closing. Noticed in OpenOffice 4.1.4; may be fixed in newer versions.</li>
-	///   </ol>
-	///  </td>
-	/// </tr>
-	/// <tr>
-	///  <td>LibreOffice.</td>
-	///  <td>
-	///   <ol>
-	///    <li>UI elements are unavailable unless this process is 32-bit (when LibreOffice is 64-bit). Also need flag <see cref="EFFlags.NotInProc"/>.</li>
 	///   </ol>
 	///  </td>
 	/// </tr>

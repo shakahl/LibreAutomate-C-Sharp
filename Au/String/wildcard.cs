@@ -1,18 +1,4 @@
-﻿using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace Au
 {
@@ -54,7 +40,7 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		/// <seealso cref="wildex"/>
-		/// <seealso cref="Like(ReadOnlySpan{char}, string, bool)"/>
+		/// <seealso cref="Like(RStr, string, bool)"/>
 #if false //somehow speed depends on dll version. With some versions same as C# code, with some slower. Also depends on string. With shortest strings 50% slower.
 		public static bool Like(this string t, string pattern, bool ignoreCase = false)
 		{
@@ -81,7 +67,7 @@ namespace Au
 
 		/// <inheritdoc cref="Like(string, string, bool)"/>
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static bool Like(this ReadOnlySpan<char> t, string pattern, bool ignoreCase = false) {
+		public static bool Like(this RStr t, string pattern, bool ignoreCase = false) {
 			int patLen = pattern?.Length ?? throw new ArgumentNullException();
 			if (patLen == 0) return t.Length == 0;
 			if (patLen == 1 && pattern[0] == '*') return true;
@@ -238,7 +224,7 @@ namespace Au
 						if (w[i - 1] != 'm') goto ge;
 						for (j = ++i; j < w.Length; j++) if (w[j] == ')') break;
 						if (j >= w.Length || j == i) goto ge;
-						split = new string[] { w.Substring(i, j - i) };
+						split = new string[] { w[i..j] };
 						i = j;
 						break;
 					default: goto ge;
@@ -284,6 +270,8 @@ namespace Au
 
 			return new wildex(wildcardExpression);
 		}
+
+		//rejected: ReadOnlySpan<char>. Then cannot use eg .NET Regex.
 
 		/// <summary>
 		/// Compares a string with the [](xref:wildcard_expression) used to create this <see cref="wildex"/>.
@@ -379,13 +367,9 @@ namespace Au
 		/// Returns true if string contains wildcard characters: '*', '?'.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		public static bool hasWildcardChars(string s) {
-			if (s == null) return false;
-			for (int i = 0; i < s.Length; i++) {
-				var c = s[i];
-				if (c == '*' || c == '?') goto yes;
-			}
-			return false; yes: return true;
+		public static bool hasWildcardChars(RStr s) {
+			foreach(var c in s) if (c is '*' or '?') return true;
+			return false;
 		}
 	}
 }

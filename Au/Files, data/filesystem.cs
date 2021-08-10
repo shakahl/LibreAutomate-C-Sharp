@@ -1,18 +1,5 @@
 ﻿//#define TEST_FINDFIRSTFILEEX
 
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
 using System.Linq;
 using Microsoft.Win32;
 
@@ -390,7 +377,7 @@ namespace Au
 					}
 
 					var fullPath = path + @"\" + name;
-					if (0 != (flags & FEFlags.NeedRelativePaths)) name = fullPath.Substring(basePathLength);
+					if (0 != (flags & FEFlags.NeedRelativePaths)) name = fullPath[basePathLength..];
 
 					//prepend @"\\?\" etc if need. Don't change fullPath length, because then would be difficult to get relative path.
 					var fp2 = pathname.prefixLongPathIfNeed(fullPath);
@@ -611,7 +598,7 @@ namespace Au
 				if (path.Length > pathname.maxDirectoryPathLength - 10) path = pathname.prefixLongPath(path);
 				string tempPath = null;
 				int iFN = _FindFilename(path);
-				string s1 = path.Remove(iFN) + "old", s2 = " " + path.Substring(iFN);
+				string s1 = path[..iFN] + "old", s2 = " " + path[iFN..];
 				for (int i = 1; ; i++) {
 					tempPath = s1 + i + s2;
 					if (!exists(tempPath, true)) break;
@@ -1007,7 +994,7 @@ namespace Au
 		/// <exception cref="ArgumentException"><c>'\\'</c> not found or is at the end. If noException, instead returns null.</exception>
 		static string _RemoveFilename(string path, bool noException = false) {
 			int i = _FindFilename(path, noException); if (i < 0) return null;
-			return path.Remove(i - 1);
+			return path[..--i];
 		}
 
 		/// <summary>
@@ -1016,7 +1003,7 @@ namespace Au
 		/// <exception cref="ArgumentException"><c>'\\'</c> not found or is at the end. If noException, instead returns null.</exception>
 		static string _GetFilename(string path, bool noException = false) {
 			int i = _FindFilename(path, noException); if (i < 0) return null;
-			return path.Substring(i);
+			return path[i..];
 		}
 
 		/// <summary>

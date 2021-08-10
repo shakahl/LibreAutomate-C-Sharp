@@ -1,16 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-using System.Linq;
-using System.Globalization;
+﻿using System.Linq;
 
 //note: be careful when adding functions to this class. Eg something may load winforms dlls although it seems not used.
 
@@ -140,6 +128,7 @@ namespace Au.Types
 		/// <param name="t"></param>
 		/// <param name="length"></param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static (int start, int end) GetStartEnd(this Range t, int length) {
 			var v = t.GetOffsetAndLength(length);
 			return (v.Offset, v.Offset + v.Length);
@@ -151,6 +140,7 @@ namespace Au.Types
 		/// <param name="t"></param>
 		/// <param name="length"></param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static (int start, int end) GetStartEnd(this Range? t, int length)
 			=> t?.GetStartEnd(length) ?? (0, length);
 
@@ -160,6 +150,7 @@ namespace Au.Types
 		/// <param name="t"></param>
 		/// <param name="length"></param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static (int Offset, int Length) GetOffsetAndLength(this Range? t, int length)
 			=> t?.GetOffsetAndLength(length) ?? (0, length);
 

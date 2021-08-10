@@ -1,26 +1,11 @@
-using Au.Types;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
-using System.Windows.Media.Imaging;
 using System.Windows.Media;
-using System.Xml.Linq;
 using System.Windows.Data;
 using System.Windows.Input;
-using Au.More;
 
 //Problem: Roslyn/VS on exception in a chained method gives line number of the chain start, not of the method.
 
@@ -129,7 +114,7 @@ namespace Au
 
 			public virtual void BeforeAdd(WBAdd flags = 0) {
 				if (ended) throw new InvalidOperationException("Cannot add after End()");
-				if (flags.Has(WBAdd.ChildOfLast) && (object)lastAdded == panel) throw new ArgumentException("Last element is panel.", "flag ChildOfLast");
+				if (flags.Has(WBAdd.ChildOfLast) && lastAdded == panel) throw new ArgumentException("Last element is panel.", "flag ChildOfLast");
 			}
 
 			public virtual void Add(FrameworkElement c) {
@@ -140,9 +125,13 @@ namespace Au
 
 			public FrameworkElement LastDirect {
 				get {
+					if (lastAdded == panel) {
+						Debug_.Print("lastAdded == panel");
+						return null;
+					}
 					for (var c = lastAdded; ;) {
 						var pa = c.Parent as FrameworkElement;
-						if ((object)pa == panel) return c;
+						if (pa == panel) return c;
 						c = pa;
 					}
 				}
@@ -225,7 +214,7 @@ namespace Au
 			}
 
 			public void And(double width) {
-				if (_col == 0 || _andWidth != null) throw new InvalidOperationException("And()");
+				if (_col == 0 || _andWidth != null || lastAdded == panel) throw new InvalidOperationException("And()");
 				var c = LastDirect;
 				if (width < 0) {
 					c.Width = -width;
@@ -253,7 +242,7 @@ namespace Au
 
 			//If not all row cells filled, let the last control span all remaining cells, unless its span specified explicitly.
 			void _SetLastSpan() {
-				if (!_isSpan && _row >= 0) {
+				if (!_isSpan && _row >= 0 && _col > 0) {
 					int n = _grid.ColumnDefinitions.Count - _col;
 					if (n > 0) Grid.SetColumnSpan(LastDirect, n + 1);
 				}
@@ -356,7 +345,7 @@ namespace Au
 		//which is better? Both fast.
 
 		/// <summary>
-		/// This constructor creates <see cref="Window"/> object with panel of specified type (default is <see cref="Grid"/>).
+		/// This constructor creates <see cref="System.Windows.Window"/> object with panel of specified type (default is <see cref="Grid"/>).
 		/// </summary>
 		/// <param name="windowTitle">Window title bar text.</param>
 		/// <param name="panelType">Panel type. Default is <see cref="Grid"/>. Later you also can add nested panels of various types with <b>StartX</b> functions.</param>
@@ -371,7 +360,7 @@ namespace Au
 		/// </summary>
 		/// <param name="container">
 		/// Window or some other element that will contain the panel. Should be empty, unless the type supports multiple direct child elements. Can be null.
-		/// If the type (or base type) is <see cref="ContentControl"/> (<see cref="Window"/>, <see cref="TabItem"/>, ToolTip, etc), <see cref="Popup"/> or <see cref="Decorator"/> (eg <b>Border</b>), this function adds the panel to it. If <i>container</i> is null or an element of some other type, need to explicitly add the panel to it, like <c>.Also(b => container.Child = b.Panel)</c> or <c>.Also(b => container.Children.Add(b.Panel))</c> or <c>.Tooltip(btt.Panel)</c> or <c>hwndSource.RootVisual = btt.Panel</c> (the code depends on container type).
+		/// If the type (or base type) is <see cref="ContentControl"/> (<see cref="System.Windows.Window"/>, <see cref="TabItem"/>, ToolTip, etc), <see cref="Popup"/> or <see cref="Decorator"/> (eg <b>Border</b>), this function adds the panel to it. If <i>container</i> is null or an element of some other type, need to explicitly add the panel to it, like <c>.Also(b => container.Child = b.Panel)</c> or <c>.Also(b => container.Children.Add(b.Panel))</c> or <c>.Tooltip(btt.Panel)</c> or <c>hwndSource.RootVisual = btt.Panel</c> (the code depends on container type).
 		/// </param>
 		/// <param name="panelType">Panel type. Default is <see cref="Grid"/>. Later you also can add nested panels of various types with <b>StartX</b> functions.</param>
 		/// <param name="setProperties">

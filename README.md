@@ -1,8 +1,10 @@
-# Au automation library and editor
+# Derobotize Me C#
 
-Au library contains functions to automate various tasks on Windows computers. Written mostly in C#, it is a .NET library. Some features: Send keys and text to the active window. Find and click buttons, links, images and other UI objects. Launch programs and auto-close windows. Process text and other data. Auto-replace text when typing. Hotkeys and other triggers.
+Derobotize Me C# is a free automation library and advanced C# script editor/manager/compiler/launcher (ISE). In scripts you can use keys, mouse, window/webpage elements, files, internet, text processing, dialog windows, floating toolbars, hotkey/autotext/etc triggers, Windows API, .NET and zillion of programming libraries, as well as code examples and info from the internet. Can create programs and libraries, and not just for automation. You'll gradually learn main automation functions and C#, one of top 5 programming languages. Then creating automations with this code editor is faster than with no-code RPA apps, and less limitations.
 
-Au editor program is an integrated scripting environment for creating and executing automation scripts using the Au library and C#.
+The library contains functions to automate various tasks on Windows computers. Written mostly in C#, it is a .NET library. Some features: Send keys and text to the active window. Find and click buttons, links, images and other UI objects. Launch programs and auto-close windows. Process text and other data. Auto-replace text when typing. Hotkeys and other triggers.
+
+The editor program is an integrated scripting environment for creating and executing automation scripts using the library and C#.
 
 More info and download the setup file: https://www.quickmacros.com/au/help/
 
@@ -16,4 +18,4 @@ Need Visual Studio 2019 with C#, C++, .NET 5.0 SDK and Windows 10 SDK.
 1. Open Au.sln in Visual Studio. Ignore "failed to load project" errors.
 2. Build solution (not just the startup project).
 3. Switch to platform x86, build solution, switch back to AnyCPU.
-4. Run Aedit project. It should open the editor window.
+4. Run Au.Editor project. It should open the editor window.

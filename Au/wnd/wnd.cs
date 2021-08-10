@@ -1,19 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
-
-using Au.Types;
-using Au.More;
-
+﻿
 namespace Au
 {
 	/// <summary>
@@ -128,7 +113,6 @@ namespace Au
 
 		/// <summary>
 		/// Returns true if other == this.
-		/// Implements IEquatable. It prevents boxing when used as a key of a collection.
 		/// </summary>
 		public bool Equals(wnd other) => other == this; //IEquatable<wnd>.Equals, to avoid boxing with eg Dictionary<wnd, T2>
 

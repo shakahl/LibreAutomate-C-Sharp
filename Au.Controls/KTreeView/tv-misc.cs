@@ -1,7 +1,3 @@
-using Au.Types;
-using System;
-using System.Collections.Generic;
-using Au.More;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;

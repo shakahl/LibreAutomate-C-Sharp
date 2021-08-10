@@ -1,20 +1,6 @@
 //#define SUPPORT_RAW_HANDLE
 
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
 using System.Drawing;
-//using System.Linq;
 
 namespace Au
 {
@@ -280,7 +266,7 @@ namespace Au
 			var b = new StringBuilder(c_headerTemplate);
 			//find "<body>...</body>" and "<!--StartFragment-->...<!--EndFragment-->" in it
 			int isb = -1, ieb = -1, isf = -1, ief = -1; //start/end of inner body and fragment
-			if (html.RegexMatch(@"<body\b.*?>", 0, out RXGroup body) && (ieb = html.Find("</body>", body.End)) >= 0) {
+			if (html.RMatch(@"<body\b.*?>", 0, out RXGroup body) && (ieb = html.Find("</body>", body.End)) >= 0) {
 				isb = body.End;
 				isf = html.Find(c_startFragment, isb..ieb, true);
 				if (isf >= 0) {
@@ -508,10 +494,10 @@ EndFragment:0000000000
 			//print.it(ish, ieh, isf, ief);
 
 			int isu = s.Find("SourceURL:", true), ieu;
-			if (isu >= 0 && (ieu = s.FindAny("\r\n", isu += 10)) >= 0) sourceURL = s.Substring(isu, ieu - isu);
+			if (isu >= 0 && (ieu = s.FindAny("\r\n", isu += 10)) >= 0) sourceURL = s[isu..ieu];
 
 			fragmentStart = isf - ish; fragmentLength = ief - isf;
-			return s.Substring(ish, ieh - ish);
+			return s[ish..ieh];
 
 			void _CorrectOffset(ref int i) {
 				i = Encoding.UTF8.GetCharCount(b, 0, i);

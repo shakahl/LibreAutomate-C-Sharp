@@ -1,19 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
-
-using Au.Types;
-using Au.More;
-
 //FUTURE: support mutiline images like @"image:line1 line2" and like "image:line1" + "line2";
 
 namespace Au.Controls

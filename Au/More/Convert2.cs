@@ -1,19 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
-//using System.Buffers;
 using System.IO.Compression;
-
-using Au.Types;
 
 namespace Au.More
 {
@@ -89,7 +74,7 @@ namespace Au.More
 		/// The number of hex digit characters should be divisible by 2, else the last character is ignored.
 		/// </remarks>
 		[SkipLocalsInit]
-		public static byte[] HexDecode(ReadOnlySpan<char> encoded) {
+		public static byte[] HexDecode(RStr encoded) {
 			using FastBuffer<byte> b = new(encoded.Length / 2);
 			int n = HexDecode(encoded, b.p, b.n);
 			var r = new byte[n];
@@ -108,7 +93,7 @@ namespace Au.More
 		/// Skips spaces and other non-hex-digit characters. Example: "01 23 46 67" is the same as "01234667".
 		/// The number of hex digit characters should be divisible by 2, else the last character is ignored.
 		/// </remarks>
-		public static int HexDecode(ReadOnlySpan<char> encoded, void* decoded, int bufferSize) {
+		public static int HexDecode(RStr encoded, void* decoded, int bufferSize) {
 			if (encoded.Length == 0) return 0;
 			var t = Tables_.Hex;
 			byte* r = (byte*)decoded, rTo = r + bufferSize;
@@ -136,7 +121,7 @@ namespace Au.More
 		/// </summary>
 		/// <param name="encoded">String or char[] or span of string/array/memory containing hex encoded data.</param>
 		/// <param name="decoded">The result variable.</param>
-		public static bool HexDecode<T>(ReadOnlySpan<char> encoded, out T decoded) where T : unmanaged {
+		public static bool HexDecode<T>(RStr encoded, out T decoded) where T : unmanaged {
 			T t;
 			if (HexDecode(encoded, &t, sizeof(T)) != sizeof(T)) { decoded = default; return false; }
 			decoded = t;
@@ -157,7 +142,7 @@ namespace Au.More
 		///// Gets decoded data length from Base64 encoded string length, assuming there are no newlines and other whitespace characters.
 		///// It is <c>(int)(len * 3L / 4)</c> minus the number of padding '=' characters (max 2).
 		///// </summary>
-		//public static int Base64DecodeLength(ReadOnlySpan<char> encoded) {
+		//public static int Base64DecodeLength(RStr encoded) {
 		//	int len = encoded.Length;
 		//	if (len == 0) return 0;
 		//	int r = (int)(len * 3L / 4);
@@ -180,7 +165,7 @@ namespace Au.More
 		///// <remarks>
 		///// Uses <see cref="Convert.TryFromBase64Chars"/>.
 		///// </remarks>
-		//public static bool TryBase64Decode(ReadOnlySpan<char> encoded, out byte[] result) {
+		//public static bool TryBase64Decode(RStr encoded, out byte[] result) {
 		//	result = null;
 		//	encoded = encoded.Trim();
 		//	//todo: calc length: skip whitespace. Maybe bool parameter. Or use FastBuffer and copy, like in HexDecode.
@@ -235,7 +220,7 @@ namespace Au.More
 		//	return Base64UrlEncode(&x, sizeof(T));
 		//}
 
-		//static void _Base64_Replace(ReadOnlySpan<char> encoded, char[] a) {
+		//static void _Base64_Replace(RStr encoded, char[] a) {
 		//	for (int i = 0; i < encoded.Length; i++) {
 		//		char c = encoded[i];
 		//		a[i] = c switch { '_' => '/', '-' => '+', _ => c, };
@@ -248,7 +233,7 @@ namespace Au.More
 		///// <param name="encoded">String or char[] or span of string/array/memory containing Base64 encoded data.</param>
 		///// <remarks>Like <see cref="Convert.FromBase64String(string)"/>, but the string can contain '_' and '-' instead of '/' and '+'.</remarks>
 		///// <exception cref="Exception">Exceptions of <see cref="Convert.FromBase64CharArray"/>.</exception>
-		//public static byte[] Base64UrlDecode(ReadOnlySpan<char> encoded) {
+		//public static byte[] Base64UrlDecode(RStr encoded) {
 		//	char[] a = ArrayPool<char>.Shared.Rent(encoded.Length);
 		//	try {
 		//		_Base64_Replace(encoded, a);
@@ -268,11 +253,11 @@ namespace Au.More
 		///// <param name="decoded">Memory buffer for the result.</param>
 		///// <param name="decodedLength"></param>
 		///// <remarks>The string can contain '_' and '-' instead of '/' and '+'.</remarks>
-		//public static bool Base64UrlDecode(ReadOnlySpan<char> encoded, Span<byte> decoded, out int decodedLength) {
+		//public static bool Base64UrlDecode(RStr encoded, Span<byte> decoded, out int decodedLength) {
 		//	char[] a = ArrayPool<char>.Shared.Rent(encoded.Length);
 		//	try {
 		//		_Base64_Replace(encoded, a);
-		//		return Convert.TryFromBase64Chars(new ReadOnlySpan<char>(a, 0, encoded.Length), decoded, out decodedLength);
+		//		return Convert.TryFromBase64Chars(new RStr(a, 0, encoded.Length), decoded, out decodedLength);
 		//	}
 		//	finally { ArrayPool<char>.Shared.Return(a); }
 		//}
@@ -286,7 +271,7 @@ namespace Au.More
 		///// <param name="bufferSize">The max number of bytes that can be written to the <i>decoded</i> memory buffer.</param>
 		///// <param name="decodedLength">Receives the number of bytes written to the <i>decoded</i> memory buffer.</param>
 		///// <remarks>The string can contain '_' and '-' instead of '/' and '+'.</remarks>
-		//public static bool Base64UrlDecode(ReadOnlySpan<char> encoded, void* decoded, int bufferSize, out int decodedLength) {
+		//public static bool Base64UrlDecode(RStr encoded, void* decoded, int bufferSize, out int decodedLength) {
 		//	return Base64UrlDecode(encoded, new Span<byte>(decoded, bufferSize), out decodedLength);
 		//}
 
@@ -297,7 +282,7 @@ namespace Au.More
 		///// <param name="encoded">String or char[] or span of string/array/memory containing Base64 encoded data.</param>
 		///// <param name="decoded">The result variable.</param>
 		///// <remarks>The string can contain '_' and '-' instead of '/' and '+'.</remarks>
-		//public static bool Base64UrlDecode<T>(ReadOnlySpan<char> encoded, out T decoded) where T : unmanaged {
+		//public static bool Base64UrlDecode<T>(RStr encoded, out T decoded) where T : unmanaged {
 		//	T t;
 		//	if (!Base64UrlDecode(encoded, &t, sizeof(T), out int n) || n != sizeof(T)) { decoded = default; return false; }
 		//	decoded = t;
@@ -400,7 +385,7 @@ namespace Au.More
 		/// <param name="chars">String or char[] or span of string/array/memory.</param>
 		/// <param name="append">A string to append, or null. For example "\0" (default) or "\r\n". Must contain only ASCII characters.</param>
 		/// <exception cref="ArgumentException"><i>append</i> contains non-ASCII characters.</exception>
-		public static byte[] Utf8Encode(ReadOnlySpan<char> chars, string append = "\0") {
+		public static byte[] Utf8Encode(RStr chars, string append = "\0") {
 			int n = Encoding.UTF8.GetByteCount(chars);
 			int nAppend = append.Lenn();
 			var r = new byte[n + nAppend];

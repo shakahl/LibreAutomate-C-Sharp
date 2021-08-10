@@ -71,7 +71,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="qm3setup.iss" />
+    <None Include="DerobotizerSetup.iss" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

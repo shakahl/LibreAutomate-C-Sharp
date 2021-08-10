@@ -1,23 +1,10 @@
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
 using System.Text.RegularExpressions; //for XML doc links
 
 namespace Au.Types
 {
 	/// <summary>
 	/// Regular expression match info.
-	/// Used with <see cref="regexp"/> class functions and String extension methods like <see cref="ExtString.RegexMatch"/>.
+	/// Used with <see cref="regexp"/> class functions and String extension methods like <see cref="ExtString.RMatch"/>.
 	/// </summary>
 	/// <remarks>
 	/// Contains info about a regular expression match found in the subject string: index, length, substring, etc.
@@ -27,7 +14,7 @@ namespace Au.Types
 	/// <example>
 	/// <code><![CDATA[
 	/// var s = "ab cd-45-ef gh";
-	/// if(s.RegexMatch(@"\b([a-z]+)-(\d+)\b", out RXMatch m))
+	/// if(s.RMatch(@"\b([a-z]+)-(\d+)\b", out RXMatch m))
 	/// 	print.it(
 	/// 		m.GroupCountPlusOne, //3 (whole match and 2 groups)
 	/// 		m.Start, //3, same as m[0].Index
@@ -41,7 +28,7 @@ namespace Au.Types
 	/// A group in the subject string may not exist even if whole match found. Then its Exists property is false, Index -1, Length 0, Value null.
 	/// <code><![CDATA[
 	/// var s = "ab cd--ef gh";
-	/// if(s.RegexMatch(@"\b([a-z]+)-(\d+)?-([a-z]+)\b", out RXMatch m))
+	/// if(s.RMatch(@"\b([a-z]+)-(\d+)?-([a-z]+)\b", out RXMatch m))
 	/// 	print.it(
 	/// 		m.GroupCountPlusOne, //4 (whole match and 3 groups)
 	/// 		m[2].Exists, //false
@@ -54,7 +41,7 @@ namespace Au.Types
 	public unsafe class RXMatch
 	{
 		internal RXMatch(regexp rx, string subject, int rc, in Cpp.RegexMatch k) {
-			if (k.mark != null) Mark = new string(k.mark, 0, k.mark[-1]);
+			Mark = k.Mark;
 			if (rc < 0) return;
 			Exists = true;
 			IsPartial = rc == 0;
@@ -69,63 +56,93 @@ namespace Au.Types
 			}
 		}
 
-		regexp _rx;
-		//string _subject;
-		RXGroup[] _groups;
+		//string readonly _subject;
+		readonly regexp _rx;
+		readonly RXGroup[] _groups;
 
 		/// <summary>
-		/// The number of groups in the regular expression, + 1 for the whole match.
-		/// </summary>
-		public int GroupCountPlusOne => _groups.Length;
-
-		/// <summary>
-		/// Start offset of the match in the subject string. The same as that of group 0.
-		/// </summary>
-		public int Start => _groups[0].Start;
-
-		/// <summary>
-		/// <see cref="Start"/> + <see cref="Length"/>. The same as that of group 0.
-		/// </summary>
-		public int End => _groups[0].End;
-
-		/// <summary>
-		/// Length of the match in the subject string. The same as that of group 0.
-		/// </summary>
-		public int Length => _groups[0].Length;
-
-		/// <summary>
-		/// The match (substring) in the subject string. The same as that of group 0.
-		/// </summary>
-		public string Value => _groups[0].Value;
-
-		/// <summary>
-		/// The subject string in which this match was found.
+		/// Gets the subject string in which this match was found.
 		/// </summary>
 		public string Subject => _groups[0].Subject_;
 
 		/// <summary>
-		/// Returns <see cref="Value"/>.
+		/// Gets the number of groups in the regular expression, + 1 for the whole match.
 		/// </summary>
-		public override string ToString() => Value;
+		public int GroupCountPlusOne => _groups.Length;
 
 		/// <summary>
-		/// Start offset of whole match regardless of \K.
+		/// Gets start offset of the match in the subject string. The same as that of group 0 (<see cref="RXGroup.Start"/>).
+		/// </summary>
+		public int Start => _groups[0].Start;
+
+		/// <summary>
+		/// Gets length of the match in the subject string. The same as that of group 0 (<see cref="RXGroup.Length"/>).
+		/// </summary>
+		public int Length => _groups[0].Length;
+
+		/// <summary>
+		/// Gets end offset of the match in the subject string (<see cref="Start"/> + <see cref="Length"/>). The same as that of group 0 (<see cref="RXGroup.End"/>).
+		/// </summary>
+		public int End => _groups[0].End;
+
+		/// <summary>
+		/// Gets substring of the subject string from <see cref="Start"/> to <see cref="End"/>. The same as that of group 0 (<see cref="RXGroup.Value"/>).
+		/// </summary>
+		public string Value => _groups[0].Value;
+
+		/// <summary>
+		/// Gets span of the subject string from <see cref="Start"/> to <see cref="End"/>. The same as that of group 0 (<see cref="RXGroup.Span"/>).
+		/// </summary>
+		/// <remarks>
+		/// Unlike <see cref="Value"/>, does not create new string.
+		/// </remarks>
+		public RStr Span => _groups[0].Span;
+
+		/// <summary>
+		/// Returns <see cref="RXGroup.ToString"/> of group 0.
+		/// </summary>
+		public override string ToString() => _groups[0].ToString();
+
+		/// <summary>
+		/// Gets substring of the subject string from <see cref="Start"/> to <see cref="End"/>. The same as that of group 0 (<see cref="RXGroup.GetValue_"/>).
+		/// </summary>
+		/// <remarks>
+		/// Use this function instead of <see cref="Value"/> with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>.
+		/// </remarks>
+		/// <param name="subject">Must be the same subject string as passed to the <b>regexp</b> function that returned this result.</param>
+		internal string GetValue_(RStr subject) => _groups[0].GetValue_(subject);
+
+		/// <summary>
+		/// Gets span of the subject string from <see cref="Start"/> to <see cref="End"/>. The same as that of group 0 (<see cref="RXGroup.GetSpan_"/>).
+		/// </summary>
+		/// <remarks>
+		/// Use this function instead of <see cref="Span"/> with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>.
+		/// </remarks>
+		/// <param name="subject">Must be the same subject string as passed to the <b>regexp</b> function that returned this result.</param>
+		internal RStr GetSpan_(RStr subject) => _groups[0].GetSpan_(subject);
+
+		/// <summary>
+		/// Gets start offset of whole match regardless of \K.
 		/// When the regular expression contains \K, this is less than <see cref="Start"/>.
 		/// </summary>
 		public int StartNoK { get; private set; }
 
 		/// <summary>
-		/// The name of a found mark, or null.
-		/// Marks can be inserted in regular expression pattern like (*MARK:name) or (*:name).
-		/// After a full successful match, it is the last mark encountered on the matching path through the pattern. After a "no match" or a partial match, it is the last encountered mark. For example, consider this pattern: "^(*MARK:A)((*MARK:B)a|b)c". When it matches "bc", the mark is A. The B mark is "seen" in the first branch of the group, but it is not on the matching path. On the other hand, when this pattern fails to match "bx", the mark is B.
+		/// Gets the name of a found mark, or null.
 		/// </summary>
+		/// <remarks>
+		/// Marks can be inserted in regular expression pattern like <c>(*MARK:name)</c> or <c>(*:name)</c>.
+		/// After a full successful match, it is the last mark encountered on the matching path through the pattern. After a "no match" or a partial match, it is the last encountered mark. For example, consider this pattern: "^(*MARK:A)((*MARK:B)a|b)c". When it matches "bc", the mark is A. The B mark is "seen" in the first branch of the group, but it is not on the matching path. On the other hand, when this pattern fails to match "bx", the mark is B.
+		/// </remarks>
 		public string Mark { get; private set; }
 
 		/// <summary>
-		/// Gets the return value of the <see cref="regexp.Match"/> call.
-		/// Can be false only when the function returned false but a mark is available (see <see cref="Mark"/>). Otherwise, when the function returns flase, it returns null instead of a RXMatch object.
-		/// When false, all properties except Exists and Mark have undefined values or throw exception.
+		/// Gets the return value of the <see cref="regexp.Match(string, out RXMatch, Range?, RXMatchFlags)"/> call.
 		/// </summary>
+		/// <remarks>
+		/// Can be false only when the function returned false but a mark is available (see <see cref="Mark"/>). Otherwise, when the function returns flase, it returns null instead of a <b>RXMatch</b> object.
+		/// When false, all properties except Exists and Mark have undefined values or throw exception.
+		/// </remarks>
 		public bool Exists { get; private set; }
 
 		/// <summary>
@@ -138,7 +155,7 @@ namespace Au.Types
 		/// Gets group info. Index 0 is whole match. Index 1 is the first group.
 		/// </summary>
 		/// <param name="group">1-based group index, or 0 for whole match.</param>
-		/// <exception cref="IndexOutOfRangeException">The group index is &lt; 0 or &gt;= <see cref="GroupCountPlusOne"/>.</exception>
+		/// <exception cref="IndexOutOfRangeException">Invalid <i>group</i>. Max valid value is <see cref="GroupCountPlusOne"/>.</exception>
 		public ref RXGroup this[int group] => ref _groups[group];
 
 		/// <summary>
@@ -263,7 +280,7 @@ namespace Au.Types
 	{
 		readonly string _subject;
 		readonly int _index; //offset in _subject, or -1 if this group does not exist
-		readonly int _len; //length, or 0 if this group does not exist
+		readonly int _len; //length, or 0 if this group match does not exist
 
 		internal RXGroup(string subject, int start, int end) {
 			_subject = subject;
@@ -271,40 +288,28 @@ namespace Au.Types
 			_len = end - start; //note: can be <0 if (?=...\K). It's OK.
 		}
 
-		internal RXGroup(string subject, POINT p) {
+		internal RXGroup(string subject, StartEnd r) {
 			_subject = subject;
-			_index = p.x;
-			_len = p.y - p.x; //note: can be <0 if (?=...\K). It's OK.
+			_index = r.start;
+			_len = r.Length; //note: can be <0 if (?=...\K). It's OK.
 		}
 
+		internal string Subject_ => _subject;
+
 		/// <summary>
-		/// Start offset of the group match in the subject string.
+		/// Gets start offset of the group match in the subject string.
 		/// </summary>
 		public int Start => _index;
 
 		/// <summary>
-		/// <see cref="Start"/> + <see cref="Length"/>.
-		/// </summary>
-		public int End => _index + _len;
-
-		/// <summary>
-		/// Length of the group match in the subject string.
+		/// Gets length of the group match in the subject string.
 		/// </summary>
 		public int Length => _len;
 
 		/// <summary>
-		/// String value of the group match in the subject string.
+		/// Gets end offset of the group match in the subject string (<see cref="Start"/> + <see cref="Length"/>).
 		/// </summary>
-		public string Value {
-			get {
-				if (_len > 0) return _subject.Substring(_index, _len);
-				return _index < 0 ? null : "";
-			}
-		}
-
-		//TODO: public ReadOnlySpan<char> Span.
-
-		internal string Subject_ => _subject;
+		public int End => _index + _len;
 
 		/// <summary>
 		/// Returns true if the group exists in the subject string, false if does not exist.
@@ -315,18 +320,228 @@ namespace Au.Types
 		/// </remarks>
 		public bool Exists => _index >= 0;
 
-#if true
+		/// <summary>
+		/// Gets span of the subject string from <see cref="Start"/> to <see cref="End"/>.
+		/// Returns <c>default</c> if the group does not exist in the subject string (see <see cref="Exists"/>).
+		/// </summary>
+		/// <remarks>
+		/// Unlike <see cref="Value"/>, does not create new string.
+		/// </remarks>
+		public RStr Span => _len > 0 ? _subject.AsSpan(_index, _len) : (_index < 0 ? default : ""); //_len can be < 0
+		///// 
+		///// This function cannot be used with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>. Then use <see cref="GetSpan_"/>.
+
+		/// <summary>
+		/// Gets substring of the subject string from <see cref="Start"/> to <see cref="End"/>.
+		/// Returns null if the group does not exist in the subject string (see <see cref="Exists"/>).
+		/// </summary>
+		/// <remarks>
+		/// Creates new string each time. See also <see cref="Span"/>.
+		/// </remarks>
+		public string Value => _len > 0 ? _subject[_index..End] : (_index < 0 ? null : ""); //_len can be < 0
+		///// 
+		///// This function cannot be used with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>. Then use <see cref="GetValue_"/>.
+
 		/// <summary>
 		/// Returns <see cref="Value"/>.
 		/// </summary>
 		public override string ToString() => Value;
-#else //this would be better for debug, but now cannot change without breaking some code that uses it probably implicitly and therefore difficult to find.
+		//public override string ToString() => _subject != null ? Value : $"{_index}..{End}";
+
 		/// <summary>
-		/// Returns string containing index, end index and value.
+		/// Gets substring of the subject string from <see cref="Start"/> to <see cref="End"/>.
+		/// Returns null if the group does not exist in the subject string (see <see cref="Exists"/>).
 		/// </summary>
-		public override string ToString() => $"[{Index}, {EndIndex}) = '{Value}'";
-#endif
+		/// <remarks>
+		/// Use this function instead of <see cref="Value"/> with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>.
+		/// </remarks>
+		/// <param name="subject">Must be the same subject string as passed to the <b>regexp</b> function that returned this result.</param>
+		internal string GetValue_(RStr subject) => _len > 0 ? subject[_index..End].ToString() : (_index < 0 ? null : "");
+
+		/// <summary>
+		/// Gets span of the subject string from <see cref="Start"/> to <see cref="End"/>.
+		/// Returns null if the group does not exist in the subject string (see <see cref="Exists"/>).
+		/// </summary>
+		/// <remarks>
+		/// Use this function instead of <see cref="Span"/> with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>.
+		/// </remarks>
+		/// <param name="subject">Must be the same subject string as passed to the <b>regexp</b> function that returned this result.</param>
+		internal RStr GetSpan_(RStr subject) => _len > 0 ? subject.Slice(_index, _len) : (_index < 0 ? default : "");
 	}
+
+
+	//This was an attempt to use subject type ReadOnlySpan<char>, at least for some overloads of some functions.
+	//The problem is C# limitations. Cannot use ReadOnlySpan<char> in classes, non-ref structs, arrays, other spans, as generic type argument. Can use only in ref struct, but it is too limited.
+
+	//public unsafe ref struct RXMatch2
+	//{
+	//	readonly RStr _subject;
+	//	readonly StartEnd[] _groups;
+	//	readonly regexp _rx;
+
+	//	internal RXMatch2(regexp rx, RStr subject, int rc, in Cpp.RegexMatch k) : this() {
+	//		Mark = k.Mark;
+	//		if (rc < 0) return;
+	//		Exists = true;
+	//		IsPartial = rc == 0;
+	//		StartNoK = k.indexNoK;
+	//		_rx = rx;
+	//		_subject = subject;
+	//		_groups = new ReadOnlySpan<StartEnd>(k.vec, k.vecCount).ToArray();
+	//	}
+
+	//	/// <summary>
+	//	/// Gets the subject string in which this match was found.
+	//	/// </summary>
+	//	public RStr Subject => _subject;
+
+	//	/// <summary>
+	//	/// Gets the number of groups in the regular expression, + 1 for the whole match.
+	//	/// </summary>
+	//	public int GroupCountPlusOne => _groups.Length;
+
+	//	/// <summary>
+	//	/// Gets start offset of the match in the subject string. The same as that of group 0.
+	//	/// </summary>
+	//	public int Start => _groups[0].start;
+
+	//	/// <summary>
+	//	/// Gets end offset of the match in the subject string (<see cref="Start"/> + <see cref="Length"/>). The same as that of group 0.
+	//	/// </summary>
+	//	public int End => _groups[0].end;
+
+	//	/// <summary>
+	//	/// Gets length of the match in the subject string. The same as that of group 0.
+	//	/// </summary>
+	//	public int Length => _groups[0].Length;
+
+	//	/// <summary>
+	//	/// Gets substring of the subject string from <see cref="Start"/> to <see cref="End"/>. The same as that of group 0.
+	//	/// </summary>
+	//	public string Value => this[0].Value;
+
+	//	/// <summary>
+	//	/// Gets span of the subject string from <see cref="Start"/> to <see cref="End"/>. The same as that of group 0.
+	//	/// </summary>
+	//	/// <remarks>
+	//	/// Unlike <see cref="Value"/>, does not create new string.
+	//	/// </remarks>
+	//	public RStr Span => this[0].Span;
+
+	//	/// <summary>
+	//	/// Returns <see cref="Value"/>.
+	//	/// </summary>
+	//	public override string ToString() => Value;
+
+	//	/// <summary>
+	//	/// Gets start offset of whole match regardless of \K.
+	//	/// When the regular expression contains \K, this is less than <see cref="Start"/>.
+	//	/// </summary>
+	//	public int StartNoK { get; private set; }
+
+	//	/// <summary>
+	//	/// Gets the name of a found mark, or null.
+	//	/// </summary>
+	//	/// <remarks>
+	//	/// Marks can be inserted in regular expression pattern like <c>(*MARK:name)</c> or <c>(*:name)</c>.
+	//	/// After a full successful match, it is the last mark encountered on the matching path through the pattern. After a "no match" or a partial match, it is the last encountered mark. For example, consider this pattern: "^(*MARK:A)((*MARK:B)a|b)c". When it matches "bc", the mark is A. The B mark is "seen" in the first branch of the group, but it is not on the matching path. On the other hand, when this pattern fails to match "bx", the mark is B.
+	//	/// </remarks>
+	//	public string Mark { get; private set; }
+
+	//	/// <summary>
+	//	/// Gets the return value of the <see cref="regexp.Match(string, out RXMatch, Range?, RXMatchFlags)"/> call.
+	//	/// </summary>
+	//	/// <remarks>
+	//	/// Can be false only when the function returned false but a mark is available (see <see cref="Mark"/>). Otherwise, when the function returns flase, it returns null instead of a <b>RXMatch</b> object.
+	//	/// When false, all properties except Exists and Mark have undefined values or throw exception.
+	//	/// </remarks>
+	//	public bool Exists { get; private set; }
+
+	//	/// <summary>
+	//	/// Returns true if this match is partial.
+	//	/// Partial match is possible if used a PARTIAL_ flag.
+	//	/// </summary>
+	//	public bool IsPartial { get; private set; }
+
+	//	/// <summary>
+	//	/// Gets group info. Index 0 is whole match. Index 1 is the first group.
+	//	/// </summary>
+	//	/// <param name="group">1-based group index, or 0 for whole match.</param>
+	//	/// <exception cref="IndexOutOfRangeException">Invalid <i>group</i>. Max valid value is <see cref="GroupCountPlusOne"/>.</exception>
+	//	public RXGroup2 this[int group] => new(_subject, _groups[group]);
+	//}
+
+	///// <summary>
+	///// Regular expression group match info.
+	///// Used with <see cref="RXMatch2"/>.
+	///// </summary>
+	//public ref struct RXGroup2
+	//{
+	//	readonly RStr _span;
+	//	readonly int _index; //offset in _subject, or -1 if this group does not exist
+
+	//	//internal RXGroup2(RStr span, int start) {
+	//	//	//_span = start < 0 ? default : span;
+	//	//	Debug.Assert(start >= 0 || span == default);
+	//	//	_span = span;
+	//	//	_index = start;
+	//	//	//_len = end - start; //note: can be <0 if (?=...\K). It's OK. //todo
+	//	//}
+
+	//	internal RXGroup2(RStr subject, StartEnd r) {
+	//		_index = r.start;
+	//		_span = _index < 0 ? default : subject.Slice(_index, r.Length);
+	//		//_len = r.Length; //note: can be <0 if (?=...\K). It's OK. //todo
+	//	}
+
+	//	/// <summary>
+	//	/// Gets start offset of the group match in the subject string.
+	//	/// </summary>
+	//	public int Start => _index;
+
+	//	/// <summary>
+	//	/// Gets length of the group match in the subject string.
+	//	/// </summary>
+	//	public int Length => _span.Length;
+
+	//	/// <summary>
+	//	/// Gets end offset of the group match in the subject string (<see cref="Start"/> + <see cref="Length"/>).
+	//	/// </summary>
+	//	public int End => _index + _span.Length;
+
+	//	/// <summary>
+	//	/// Returns true if the group exists in the subject string, false if does not exist.
+	//	/// More info in <see cref="RXGroup"/> topic. Example in <see cref="RXMatch"/> topic.
+	//	/// </summary>
+	//	/// <remarks>
+	//	/// Other ways to detect it: if a group does not exist, its Index is -1 and Value is null.
+	//	/// </remarks>
+	//	public bool Exists => _index >= 0;
+
+	//	/// <summary>
+	//	/// Gets span of the subject string from <see cref="Start"/> to <see cref="End"/>.
+	//	/// Returns <c>default</c> if the group does not exist in the subject string (see <see cref="Exists"/>).
+	//	/// </summary>
+	//	/// <remarks>
+	//	/// Unlike <see cref="Value"/>, does not create new string.
+	//	/// </remarks>
+	//	public RStr Span => _span;
+
+	//	/// <summary>
+	//	/// Gets substring of the subject string from <see cref="Start"/> to <see cref="End"/>.
+	//	/// Returns null if the group does not exist in the subject string (see <see cref="Exists"/>).
+	//	/// </summary>
+	//	/// <remarks>
+	//	/// Creates new string each time. See also <see cref="Span"/>.
+	//	/// </remarks>
+	//	public string Value => _index < 0 ? null : _span.ToString();
+
+	//	/// <summary>
+	//	/// Returns <see cref="Value"/>.
+	//	/// </summary>
+	//	public override string ToString() => Value;
+	//}
+
 
 	#region callout
 
@@ -551,7 +766,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Flags for <see cref="regexp.Match"/> and other <see cref="regexp"/> class functions.
+	/// Flags for <see cref="regexp"/> class functions.
 	/// Documented in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>.
 	/// </summary>
 	/// <remarks>
@@ -589,26 +804,21 @@ namespace Au.Types
 		/// <summary>This and related API are documented in the C++ dll project.</summary>
 		internal struct RegexMatch //note: 'ref struct' crashes VS
 		{
-			public POINT* vec;
+			public StartEnd* vec;
 			public int vecCount;
 			public int indexNoK;
 			public char* mark;
+
+			public string Mark => mark == null ? null : new(mark, 0, mark[-1]);
 		}
 
 		internal unsafe delegate int PcreCalloutT(void* calloutBlock, void* param);
 
 		/// <summary>This and related API are documented in the C++ dll project.</summary>
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int Cpp_RegexMatch(HandleRef code, char* s, nint len, nint start, RXMatchFlags flags,
-			PcreCalloutT callout, out RegexMatch m, bool dontNeedM, out BSTR errStr);
+		internal static extern int Cpp_RegexMatch(HandleRef code, char* s, nint len, nint start, RXMatchFlags flags,
+			PcreCalloutT callout, out RegexMatch m, bool needM, out BSTR errStr);
 		//note: don't use [MarshalAs(UnmanagedType.BStr)] out string errStr, it makes much slower.
-
-		internal static int Cpp_RegexMatch(HandleRef code, ReadOnlySpan<char> s, nint start, RXMatchFlags flags, PcreCalloutT callout, out RegexMatch m, out BSTR errStr, bool dontNeedM = false) {
-			fixed (char* p = s) {
-				if (p == null) { m = default; errStr = default; return -1; }
-				return Cpp_RegexMatch(code, p, s.Length, start, flags, callout, out m, dontNeedM, out errStr);
-			}
-		}
 
 		//rejected
 		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]

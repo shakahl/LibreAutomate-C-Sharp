@@ -1,11 +1,5 @@
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
-using System.Diagnostics;
 
 namespace Au.Controls
 {
@@ -60,7 +54,8 @@ namespace Au.Controls
 				using (var bp = new BufferedPaint(w, true)) _Render(bp.DC, bp.UpdateRect);
 				return default;
 			case Api.WM_SHOWWINDOW when wParam == 1:
-				if (_ensureVisibleIndex > 0) EnsureVisible(_ensureVisibleIndex);
+				int iev = _ensureVisible.indexPlus1 - 1;
+				if (iev > 0) EnsureVisible(iev, _ensureVisible.scrollTop);
 				break;
 			case Api.WM_SIZE:
 				_width = Math2.LoWord(lParam);

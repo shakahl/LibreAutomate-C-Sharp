@@ -1,16 +1,3 @@
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
 using System.Linq;
 using System.Text.RegularExpressions; //for XML doc links
 
@@ -52,8 +39,8 @@ namespace Au
 	///  
 	///  print.it("//FindAll with foreach:");
 	/// foreach(var v in x.FindAll(s)) print.it(v.Value, v[1].Value, v[2].Value);
-	///  print.it("//FindAllS, get only strings of group 2:");
-	/// print.it(x.FindAllS(s, 2));
+	///  print.it("//FindAll, get only strings of group 2:");
+	/// print.it(x.FindAll(s, 2));
 	///  
 	///  print.it("//Replace:");
 	/// print.it(x.Replace(s, "'$2$1'"));
@@ -70,55 +57,55 @@ namespace Au
 	/// var s = "one two22, three333,four"; //subject string
 	/// var rx = @"\b(\w+?)(\d+)\b"; //regular expression
 	///  
-	///  print.it("//RegexIsMatch:");
-	/// print.it(s.RegexIsMatch(rx));
+	///  print.it("//RIsMatch:");
+	/// print.it(s.RIsMatch(rx));
 	///  
-	///  print.it("//RegexMatch:");
-	/// if(s.RegexMatch(rx, out var m)) print.it(m.Value, m[1].Value, m[2].Value);
+	///  print.it("//RMatch:");
+	/// if(s.RMatch(rx, out var m)) print.it(m.Value, m[1].Value, m[2].Value);
 	///  
-	///  print.it("//RegexMatch, get only string:");
-	/// if(s.RegexMatch(rx, 0, out var s0)) print.it(s0);
-	///  print.it("//RegexMatch, get only string of group 1:");
-	/// if(s.RegexMatch(rx, 1, out var s1)) print.it(s1);
+	///  print.it("//RMatch, get only string:");
+	/// if(s.RMatch(rx, 0, out var s0)) print.it(s0);
+	///  print.it("//RMatch, get only string of group 1:");
+	/// if(s.RMatch(rx, 1, out var s1)) print.it(s1);
 	///  
-	///  print.it("//RegexFindAll with foreach:");
-	/// foreach(var v in s.RegexFindAll(rx)) print.it(v.Value, v[1].Value, v[2].Value);
+	///  print.it("//RFindAll with foreach:");
+	/// foreach(var v in s.RFindAll(rx)) print.it(v.Value, v[1].Value, v[2].Value);
 	///  
-	///  print.it("//RegexFindAll with foreach, get only strings:");
-	/// foreach(var v in s.RegexFindAll(rx, 0)) print.it(v);
-	///  print.it("//RegexFindAll with foreach, get only strings of group 2:");
-	/// foreach(var v in s.RegexFindAll(rx, 2)) print.it(v);
+	///  print.it("//RFindAll with foreach, get only strings:");
+	/// foreach(var v in s.RFindAll(rx, 0)) print.it(v);
+	///  print.it("//RFindAll with foreach, get only strings of group 2:");
+	/// foreach(var v in s.RFindAll(rx, 2)) print.it(v);
 	///  
-	///  print.it("//RegexFindAll, get array:");
-	/// if(s.RegexFindAll(rx, out var am)) foreach(var k in am) print.it(k.Value, k[1].Value, k[2].Value);
+	///  print.it("//RFindAll, get array:");
+	/// if(s.RFindAll(rx, out var am)) foreach(var k in am) print.it(k.Value, k[1].Value, k[2].Value);
 	///  
-	///  print.it("//RegexFindAll, get array of strings:");
-	/// if(s.RegexFindAll(rx, 0, out var av)) print.it(av);
-	///  print.it("//RegexFindAll, get array of group 2 strings:");
-	/// if(s.RegexFindAll(rx, 2, out var ag)) print.it(ag);
+	///  print.it("//RFindAll, get array of strings:");
+	/// if(s.RFindAll(rx, 0, out var av)) print.it(av);
+	///  print.it("//RFindAll, get array of group 2 strings:");
+	/// if(s.RFindAll(rx, 2, out var ag)) print.it(ag);
 	///  
-	///  print.it("//RegexReplace:");
-	/// print.it(s.RegexReplace(rx, "'$2$1'"));
+	///  print.it("//RReplace:");
+	/// print.it(s.RReplace(rx, "'$2$1'"));
 	///  
-	///  print.it("//RegexReplace with callback:");
-	/// print.it(s.RegexReplace(rx, o => o.Value.Upper()));
-	///  print.it("//RegexReplace with callback and ExpandReplacement:");
-	/// print.it(s.RegexReplace(rx, o => { if(o.Length > 5) return o.ExpandReplacement("'$2$1'"); else return o[1].Value; }));
+	///  print.it("//RReplace with callback:");
+	/// print.it(s.RReplace(rx, o => o.Value.Upper()));
+	///  print.it("//RReplace with callback and ExpandReplacement:");
+	/// print.it(s.RReplace(rx, o => { if(o.Length > 5) return o.ExpandReplacement("'$2$1'"); else return o[1].Value; }));
 	///  
-	///  print.it("//RegexReplace, get replacement count:");
-	/// if(0 != s.RegexReplace(rx, "'$2$1'", out var s2)) print.it(s2);
+	///  print.it("//RReplace, get replacement count:");
+	/// if(0 != s.RReplace(rx, "'$2$1'", out var s2)) print.it(s2);
 	///  
-	///  print.it("//RegexReplace with callback, get replacement count:");
-	/// if(0 != s.RegexReplace(rx, o => o.Value.Upper(), out var s3)) print.it(s3);
+	///  print.it("//RReplace with callback, get replacement count:");
+	/// if(0 != s.RReplace(rx, o => o.Value.Upper(), out var s3)) print.it(s3);
 	///  
-	///  print.it("//RegexSplit:");
-	/// print.it(s.RegexSplit(@" *, *"));
+	///  print.it("//RSplit:");
+	/// print.it(s.RSplit(@" *, *"));
 	/// ]]></code></example>
 	public unsafe class regexp
 	{
-		IntPtr _codeUnsafe; //pcre2_code_16*. Don't pass to PCRE API directly, because then GC can collect this object
+		readonly IntPtr _codeUnsafe; //pcre2_code_16*. Don't pass to PCRE API directly, because then GC can collect this object
 		Cpp.PcreCalloutT _pcreCallout; //our callout that calls the user's callout. This field protects the delegates from GC.
-		byte _matchFlags; //RXMatchFlags specified in hi byte of ctor flags
+		readonly byte _matchFlags; //RXMatchFlags specified in hi byte of ctor flags
 
 		internal HandleRef _CodeHR => new HandleRef(this, _codeUnsafe); //pass this to PCRE API
 
@@ -161,7 +148,7 @@ namespace Au
 		/// <value>Callback delegate (eg lambda) or null.</value>
 		/// <remarks>
 		/// Callouts can be used to: 1. Track the matching progress. 2. Get all instances of a group that can match multiple times. 3. Evaluate and reject some matches or match parts. 4. Etc.
-		/// The callback function is called by <see cref="IsMatch"/>, <see cref="Match"/>, <see cref="FindAll"/>, <see cref="Replace"/>, <see cref="Split"/> and similar functions, when they reach callout points in regular expression. To insert callout points use (?C), (?C1), (?C2), (?C'name') etc or pass flag AUTO_CALLOUT to the constructor.
+		/// The callback function is called by <b>IsMatch</b>, <b>Match</b>, <b>FindAll</b>, <b>Replace</b>, <b>Split</b> and similar functions, when they reach callout points in regular expression. To insert callout points use (?C), (?C1), (?C2), (?C'name') etc or pass flag AUTO_CALLOUT to the constructor.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// See also: <see href="https://www.rexegg.com/pcre-callouts.html"/>
 		/// </remarks>
@@ -171,7 +158,7 @@ namespace Au
 		/// var s = "text <a href='url'>link</a> text";
 		/// var rx = @"(?C1)<a (?C2)href='.+?'>(?C3)[^<]*(?C4)</a>";
 		/// var x = new regexp(rx);
-		/// x.Callout = o => { print.it(o.callout_number, o.current_position, s.Substring(o.start_match, o.current_position), rx.Substring(o.pattern_position, o.next_item_length)); };
+		/// x.Callout = o => { print.it(o.callout_number, o.start_match, o.current_position, s[o.start_match..o.current_position], rx.Substring(o.pattern_position, o.next_item_length)); };
 		/// print.it(x.IsMatch(s));
 		/// ]]></code>
 		/// Track the matching progress with flag AUTO_CALLOUT.
@@ -198,7 +185,7 @@ namespace Au
 		/// var s = "one 123-5 two 12-456 three 1-34 four";
 		/// var x = new regexp(@"\b\d+-\d+\b(?C1)");
 		/// x.Callout = o => { int len = o.current_position - o.start_match; /*print.it(len);*/ if(len > 5) o.Result = 1; };
-		/// print.it(x.FindAllS(s));
+		/// print.it(x.FindAll(s, 0));
 		/// ]]></code>
 		/// </example>
 		public Action<RXCalloutData> Callout {
@@ -240,7 +227,7 @@ namespace Au
 				return R;
 			}
 		}
-		
+
 		/// <summary>
 		/// Returns the highest capture group number in the regular expression. If <c>(?|</c> not used, this is also the total count of capture groups.
 		/// </summary>
@@ -250,17 +237,65 @@ namespace Au
 			return R;
 		}
 
+		//Calls Cpp_RegexMatch and returns its results.
+		//Throws if it returns less than -1.
+		//m.vec array is thread_local. Next call reallocates/overwrites it, except when called by a callout of the same call.
+		//m.mark is set even if no match, if available.
+		//s - subject. If null, returns -1.
+		//rawFlags - pass flags as is. If false, calls _GetMatchFlags. If true, flags must be result of _GetMatchFlags.
+		//group - 0 or group number. Used only to throw if invalid.
+		int _PcreMatch(RStr s, int start, RXMatchFlags flags, bool rawFlags, out Cpp.RegexMatch m, bool needM, int group = 0) {
+			fixed (char* p = s) {
+				if (p == null) { m = default; return -1; }
+				if (!rawFlags) flags = _GetMatchFlags(flags);
+				int rc = Cpp.Cpp_RegexMatch(_CodeHR, p, s.Length, start, flags, _pcreCallout, out m, needM, out BSTR errStr);
+				if (rc < -1) throw new AuException(errStr.ToStringAndDispose());
+				if (group != 0 && rc >= 0 && (uint)group >= m.vecCount) throw new ArgumentOutOfRangeException(nameof(group));
+				return rc;
+				//print.it(rc);
+				//info: 0 is partial match, -1 is no match, <-1 is error
+			}
+		}
+
+		//Gets span and returns start.
+		//If range is null, sets span = s and returns 0.
+		//Else if range is invalid, throws ArgumentOutOfRangeException.
+		//Else sets span.Length = range and returns 0. In any case span.Start is 0.
+		static int _GetSpan(string s, Range? range, out RStr span) {
+			span = s;
+			if (!range.HasValue) return 0;
+			var (i, end) = range.GetStartEnd(span.Length);
+			if (end != span.Length) span = span[..end];
+			return i;
+		}
+
+		static int _GetSpan(ref RStr span, Range? range) {
+			if (!range.HasValue) return 0;
+			var (i, end) = range.GetStartEnd(span.Length);
+			if (end != span.Length) span = span[..end];
+			return i;
+		}
+
+		RXMatchFlags _GetMatchFlags(RXMatchFlags matchFlags, bool throwIfPartial = false) {
+			var f = (RXMatchFlags)_matchFlags | matchFlags;
+			if (throwIfPartial) {
+				if (0 != (f & (RXMatchFlags.PARTIAL_SOFT | RXMatchFlags.PARTIAL_HARD)))
+					throw new ArgumentException("This function does not support PARTIAL_ flags.", nameof(matchFlags));
+			}
+			return f;
+		}
+
 		/// <summary>
 		/// Returns true if string <i>s</i> matches this regular expression.
 		/// </summary>
 		/// <param name="s">
 		/// Subject string.
-		/// If null, always returns false, even if the regular expression matches empty string.
+		/// If null, returns false, even if the regular expression matches empty string.
 		/// </param>
 		/// <param name="range">
 		/// Start and end offsets in the subject string. If null (default), uses whole string.
 		/// Examples: <c>i..j</c> (from i to j), <c>i..</c> (from i to the end), <c>..j</c> (from 0 to j).
-		/// The subject part before the start index is not ignored if regular expression starts with a lookbehind assertion or anchor, eg <c>^</c> or <c>\b</c> or <c>(?&lt;=...)</c>. Instead of <c>^</c> you can use <c>\G</c>. More info in PCRE documentation topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>, chapter "The string to be matched by pcre2_match()".
+		/// The subject part before the start index is not ignored if regular expression starts with a lookbehind assertion or anchor, eg <c>^</c> or <c>\b</c> or <c>(?&lt;=...)</c>. Instead of <c>^</c> you can use <c>\G</c> or flag <b>RXFlags.ANCHORED</b>. More info in PCRE documentation topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>, chapter "The string to be matched by pcre2_match()".
 		/// The subject part after the end index is always ignored.
 		/// </param>
 		/// <param name="matchFlags">Options.
@@ -269,7 +304,7 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
-		/// If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag.
+		/// If partial match, returns true. Partial match is possible if used a PARTIAL_ flag.
 		/// 
 		/// This function is similar to <see cref="Regex.IsMatch(string)"/>.
 		/// </remarks>
@@ -281,50 +316,16 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		public bool IsMatch(string s, Range? range = null, RXMatchFlags matchFlags = 0) {
-			if (!_GetStartEnd(s, range, out int start, out int end)) return false;
-			int rc = Cpp.Cpp_RegexMatch(_CodeHR, s.AsSpan(0, end), start, _GetMatchFlags(matchFlags), _pcreCallout, out _, out BSTR errStr, dontNeedM: true);
-			//print.it(rc);
-			//info: 0 is partial match, -1 is no match, <-1 is error
-			if (rc < -1) throw new AuException(errStr.ToStringAndDispose());
-			return rc >= 0;
+			int start = _GetSpan(s, range, out var span);
+			return _PcreMatch(span, start, matchFlags, rawFlags: false, out _, needM: false) >= 0;
 		}
 
-#if false
-		/// <summary>
-		/// Returns true if string <i>s</i> matches this regular expression.
-		/// </summary>
-		/// <param name="s">
-		/// Subject string.
-		/// If null, always returns false, even if the regular expression matches empty string.
-		/// </param>
-		/// <param name="start">
-		/// Start offset in the subject string.
-		/// The subject part before the start index is not ignored if regular expression starts with a lookbehind assertion or anchor, eg <c>^</c> or <c>\b</c> or <c>(?&lt;=...)</c>. Instead of <c>^</c> you can use <c>\G</c>. More info in PCRE documentation topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>, chapter "The string to be matched by pcre2_match()".
-		/// </param>
-		/// <param name="matchFlags">Options.
-		/// The same options also can be set in <b>regexp</b> constructor's <i>flags</i>. Constructor's flags and <i>matchFlags</i> are added, which means that <i>matchFlags</i> cannot unset flags set by constructor.
-		/// </param>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>start</i>.</exception>
-		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
-		/// <remarks>
-		/// If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag.
-		/// 
-		/// This function is similar to <see cref="Regex.IsMatch(string)"/>.
-		/// </remarks>
-		public bool IsMatch(ReadOnlySpan<char> s, int start = 0, RXMatchFlags matchFlags = 0) {
-			if (!_IsGoodSpan(s, start)) return false;
-			int rc = Cpp.Cpp_RegexMatch(_CodeHR, s, start, _GetMatchFlags(matchFlags), _pcreCallout, out _, out BSTR errStr, dontNeedM: true);
-			if (rc < -1) throw new AuException(errStr.ToStringAndDispose());
-			return rc >= 0;
+		/// <inheritdoc cref="IsMatch(string, Range?, RXMatchFlags)"/>
+		internal bool IsMatch_(RStr s, Range? range = null, RXMatchFlags matchFlags = 0) {
+			int start = _GetSpan(ref s, range);
+			return _PcreMatch(s, start, matchFlags, rawFlags: false, out _, needM: false) >= 0;
 		}
-
-		//If start invalid, throws ArgumentOutOfRangeException.
-		//If s (subject) pointer is null, returns false.
-		static bool _IsGoodSpan(ReadOnlySpan<char> s, int start) {
-			if ((uint)start > s.Length) throw new ArgumentOutOfRangeException("start");
-			return s != default;
-		}
-#endif
+		//Note: cannot use subject type ReadOnlySpan<char> with most functions, because need to store subject in RXGroup or RXMatch, which is not ref struct. And cannot use ReadOnlyMemory<char>.
 
 		/// <summary>
 		/// Returns true if string <i>s</i> matches this regular expression.
@@ -332,7 +333,7 @@ namespace Au
 		/// </summary>
 		/// <param name="s">
 		/// Subject string.
-		/// If null, always returns false, even if the regular expression matches empty string.
+		/// If null, returns false, even if the regular expression matches empty string.
 		/// </param>
 		/// <param name="result">Receives match info. Read more in Remarks.</param>
 		/// <param name="range">See <see cref="IsMatch"/>.</param>
@@ -355,7 +356,8 @@ namespace Au
 		/// </example>
 		public bool Match(string s, out RXMatch result, Range? range = null, RXMatchFlags matchFlags = 0) {
 			result = null;
-			int rc = _Match(s, 0, range, matchFlags, out var m);
+			int start = _GetSpan(s, range, out var span);
+			int rc = _PcreMatch(span, start, matchFlags, rawFlags: false, out var m, needM: true);
 			if (rc >= 0 || m.mark != null) {
 				result = new RXMatch(this, s, rc, in m);
 			}
@@ -368,32 +370,33 @@ namespace Au
 		/// </summary>
 		/// <param name="s">
 		/// Subject string.
-		/// If null, always returns false, even if the regular expression matches empty string.
+		/// If null, returns false, even if the regular expression matches empty string.
 		/// </param>
-		/// <param name="result">Receives match info.</param>
 		/// <param name="group">
-		/// Group number (1-based index) of result. If 0 (default) - whole match.
+		/// Group number (1-based index) of result. If 0 - whole match.
 		/// See also <see cref="GetGroupNumberOf"/>.
 		/// </param>
+		/// <param name="result">Receives match info.</param>
 		/// <param name="range">See <see cref="IsMatch"/>.</param>
 		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
-		/// This function is a simplified version of <see cref="Match"/>.
+		/// This function is a simplified version of <see cref="Match(string, out RXMatch, Range?, RXMatchFlags)"/>.
 		/// If full match, returns true, and <i>result</i> contains the match or the specifed group.
-		/// If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag. Then cannot get groups, therefore <i>group</i> should be 0.
+		/// If partial match, returns true. Partial match is possible if used a PARTIAL_ flag. Then cannot get groups, therefore <i>group</i> should be 0.
 		/// If no match, returns false, and <i>result</i> is empty.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// var s = "one two22 three333 four";
 		/// var x = new regexp(@"\b(\w+?)(\d+)\b");
-		/// if(x.MatchG(s, out var g)) print.it(g.Value, g.Start);
+		/// if(x.Match(s, 0, out RXGroup g)) print.it(g.Value, g.Start);
 		/// ]]></code>
 		/// </example>
-		public bool MatchG(string s, out RXGroup result, int group = 0, Range? range = null, RXMatchFlags matchFlags = 0) {
-			int rc = _Match(s, group, range, matchFlags, out var m);
+		public bool Match(string s, int group, out RXGroup result, Range? range = null, RXMatchFlags matchFlags = 0) {
+			int start = _GetSpan(s, range, out var span);
+			int rc = _PcreMatch(span, start, matchFlags, rawFlags: false, out var m, needM: true, group);
 			if (rc < 0) {
 				result = default;
 				return false;
@@ -408,7 +411,7 @@ namespace Au
 		/// </summary>
 		/// <param name="s">
 		/// Subject string.
-		/// If null, always returns false, even if the regular expression matches empty string.
+		/// If null, returns false, even if the regular expression matches empty string.
 		/// </param>
 		/// <param name="result">Receives the match value.</param>
 		/// <param name="group">
@@ -420,56 +423,43 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
-		/// This function is a simplified version of <see cref="Match"/> and <see cref="MatchG"/>.
+		/// This function is a simplified version of <see cref="Match(string, out RXMatch, Range?, RXMatchFlags)"/>.
 		/// If full match, returns true, and <i>result</i> contains the value of the match or of the specifed group.
-		/// If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag. Then cannot get groups, therefore <i>group</i> should be 0.
+		/// If partial match, returns true. Partial match is possible if used a PARTIAL_ flag. Then cannot get groups, therefore <i>group</i> should be 0.
 		/// If no match, returns false, and <i>result</i> is null.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// var s = "one two22 three333 four";
 		/// var x = new regexp(@"\b(\w+?)(\d+)\b");
-		/// if(x.MatchS(s, out var v)) print.it(v);
+		/// if(x.Match(s, 0, out string v)) print.it(v);
 		/// ]]></code>
 		/// </example>
-		public bool MatchS(string s, out string result, int group = 0, Range? range = null, RXMatchFlags matchFlags = 0) {
+		public bool Match(string s, int group, out string result, Range? range = null, RXMatchFlags matchFlags = 0) {
 			result = null;
-			if (!MatchG(s, out var g, group, range, matchFlags)) return false;
+			if (!Match(s, group, out RXGroup g, range, matchFlags)) return false;
 			result = g.Value;
 			return true;
 		}
 
-		//If s (subject) is null, returns false.
-		//Else gets real range in s. Throws ArgumentOutOfRangeException if invalid.
-		static bool _GetStartEnd(string s, Range? range, out int start, out int end) {
-			if (s == null) { start = end = 0; return false; }
-			(start, end) = range.GetStartEnd(s.Length);
-			return true;
-		}
-
-		RXMatchFlags _GetMatchFlags(RXMatchFlags matchFlags, bool throwIfPartial = false) {
-			var f = (RXMatchFlags)_matchFlags | matchFlags;
-			if (throwIfPartial) {
-				if (0 != (f & (RXMatchFlags.PARTIAL_SOFT | RXMatchFlags.PARTIAL_HARD)))
-					throw new ArgumentException("This function does not support PARTIAL_ flags.", nameof(matchFlags));
+		/// <summary>
+		/// Returns true if string <i>s</i> matches this regular expression.
+		/// </summary>
+		/// <param name="s">See <see cref="IsMatch"/>.</param>
+		/// <param name="result">Receives match info, like with <see cref="Match(string, out RXMatch, Range?, RXMatchFlags)"/>. However you cannot use <b>Subject</b>, <b>Span</b>, <b>Value</b>, <b>ToString</b>; instead use <b>GetValue</b> or <b>GetSpan</b>.</param>
+		/// <param name="range">See <see cref="IsMatch"/>.</param>
+		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>start</i>.</exception>
+		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+		internal bool Match_(RStr s, out RXMatch result, Range? range = null, RXMatchFlags matchFlags = 0) {
+			//note: instead of 'Range? range = null' could be 'int start = 0', but then this overload (if public Match) could be easily confused with the string subject overload.
+			result = null;
+			int start = _GetSpan(ref s, range);
+			int rc = _PcreMatch(s, start, matchFlags, rawFlags: false, out var m, needM: true);
+			if (rc >= 0 || m.mark != null) {
+				result = new RXMatch(this, null, rc, in m);
 			}
-			return f;
-		}
-
-		//Calls Cpp_RegexMatch and returns its results.
-		//Throws if it returns less than -1. Throws if invalid start/end/group.
-		//m.vec array is thread_local. Next call reallocates/overwrites it, except when called by a callout of the same call.
-		//m.mark is set even if no match, if available.
-		//s - subject. If null, returns rc -1.
-		//group - 0 or group number. Used only to throw if invalid.
-		int _Match(string s, int group, Range? range, RXMatchFlags matchFlags, out Cpp.RegexMatch m) {
-			if (!_GetStartEnd(s, range, out int start, out int end)) { m = default; return -1; }
-			int rc = Cpp.Cpp_RegexMatch(_CodeHR, s.AsSpan(0, end), start, _GetMatchFlags(matchFlags), _pcreCallout, out m, out BSTR errStr);
-			//print.it(rc);
-			//info: 0 is partial match, -1 is no match, <-1 is error
-			if (rc < -1) throw new AuException(errStr.ToStringAndDispose());
-			if (group != 0 && rc >= 0 && (uint)group >= m.vecCount) throw new ArgumentOutOfRangeException(nameof(group));
-			return rc;
+			return rc >= 0;
 		}
 
 		//Used by FindAllX and ReplaceAllX to easily find matches in loop.
@@ -482,10 +472,13 @@ namespace Au
 			int _group, _from, _to, _maxCount, _rc;
 			public int foundCount;
 
-			//Calls _GetFromTo and inits fields. Throws if s is null or if invalid start/end or used 'partial' flags.
+			//Throws if s is null or if invalid start/end or used 'partial' flags.
 			public _MatchEnum(regexp rx, string s, int group, Range? range, RXMatchFlags matchFlags, int maxCount = -1) {
-				_rx = rx; _subject = s; _group = group;
-				if (!_GetStartEnd(s, range, out _from, out _to)) throw new ArgumentNullException(nameof(s));
+				if (s == null) throw new ArgumentNullException(nameof(s));
+				(_from, _to) = range.GetStartEnd(s.Length);
+				_rx = rx;
+				_subject = s;
+				_group = group;
 				_matchFlags = rx._GetMatchFlags(matchFlags, throwIfPartial: true);
 				_maxCount = maxCount;
 				foundCount = _rc = 0;
@@ -497,14 +490,8 @@ namespace Au
 			//To get results, use properties Match or GroupX. Don't call Next or any other match function before it.
 			public bool Next() {
 				if (foundCount >= (uint)_maxCount) return false;
-				_rc = Cpp.Cpp_RegexMatch(_rx._CodeHR, _subject.AsSpan(0, _to), _from, _matchFlags, _rx._pcreCallout, out _m, out BSTR errStr);
-				//print.it(_rc);
-				//info: 0 cannot be (partial match), -1 is no match, <-1 is error
-				if (_rc < 0) {
-					if (_rc < -1) throw new AuException(errStr.ToStringAndDispose());
-					return false;
-				}
-				if (_group != 0 && (uint)_group >= _m.vecCount) throw new ArgumentOutOfRangeException("group");
+				_rc = _rx._PcreMatch(_subject.AsSpan(0, _to), _from, _matchFlags, rawFlags: true, out _m, needM: true, _group);
+				if (_rc < 0) return false;
 				_SetNextFrom();
 				_matchFlags |= RXMatchFlags.NO_UTF_CHECK;
 				foundCount++;
@@ -513,10 +500,10 @@ namespace Au
 
 			void _SetNextFrom() {
 				var p = _m.vec[0]; //x=start, y=end
-				_from = p.y;
+				_from = p.end;
 				//empty match?
-				if (_from <= p.x) {
-					if (_from < p.x) throw new ArgumentException(@"This function does not support (?=...\K).");
+				if (_from <= p.start) {
+					if (_from < p.start) throw new ArgumentException(@"This function does not support (?=...\K).");
 					if (++_from < _to) {
 						var c = _subject[_from];
 						if (c == '\n') { //skip \n if inside \r\n
@@ -531,11 +518,11 @@ namespace Au
 
 			public RXMatch Match => new RXMatch(_rx, _subject, _rc, in _m);
 
-			public POINT GroupP => _m.vec[_group];
+			public StartEnd GroupR => _m.vec[_group];
 
-			public RXGroup GroupG => new RXGroup(_subject, GroupP);
+			public RXGroup GroupG => new(_subject, GroupR);
 
-			public string GroupS { get { var p = GroupP; return p.x < 0 ? null : _subject.Substring(p.x, p.y - p.x); } }
+			public string GroupS { get { var r = GroupR; return r.start < 0 ? null : _subject[r.start..r.end]; } }
 		}
 
 		/// <summary>
@@ -594,62 +581,6 @@ namespace Au
 
 		/// <summary>
 		/// Finds all match instances of the regular expression.
-		/// Returns a lazy IEnumerable&lt;<see cref="RXGroup"/>&gt; object that can be used with foreach.
-		/// </summary>
-		/// <param name="s">Subject string. Cannot be null.</param>
-		/// <param name="group">
-		/// Group number (1-based index) of results. If 0 (default) - whole match.
-		/// See also <see cref="GetGroupNumberOf"/>.
-		/// </param>
-		/// <param name="range">See <see cref="IsMatch"/>.</param>
-		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
-		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
-		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
-		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
-		/// <example>
-		/// <code><![CDATA[
-		/// var s = "one two three";
-		/// var x = new regexp(@"\b\w+\b");
-		/// foreach(var g in x.FindAllG(s)) print.it(g.Start, g.Value);
-		/// ]]></code>
-		/// </example>
-		public IEnumerable<RXGroup> FindAllG(string s, int group = 0, Range? range = null, RXMatchFlags matchFlags = 0) {
-			var e = new _MatchEnum(this, s, group, range, matchFlags);
-			while (e.Next()) yield return e.GroupG;
-		}
-
-		/// <summary>
-		/// Finds all match instances of the regular expression. Gets array of <see cref="RXGroup"/> (index, length, value).
-		/// Returns true if found 1 or more matches.
-		/// </summary>
-		/// <param name="s">Subject string. Cannot be null.</param>
-		/// <param name="result">Receives all found matches.</param>
-		/// <param name="group">
-		/// Group number (1-based index) of results. If 0 (default) - whole match.
-		/// See also <see cref="GetGroupNumberOf"/>.
-		/// </param>
-		/// <param name="range">See <see cref="IsMatch"/>.</param>
-		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
-		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
-		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
-		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
-		/// <example>
-		/// <code><![CDATA[
-		/// var s = "one two three";
-		/// var x = new regexp(@"\b\w+\b");
-		/// if(!x.FindAllG(s, out var a)) { print.it("not found"); return; }
-		/// foreach(var g in a) print.it(g.Start, g.Value);
-		/// ]]></code>
-		/// </example>
-		public bool FindAllG(string s, out RXGroup[] result, int group = 0, Range? range = null, RXMatchFlags matchFlags = 0) {
-			result = FindAllG(s, group, range, matchFlags).ToArray();
-			return result.Length != 0;
-		}
-
-		/// <summary>
-		/// Finds all match instances of the regular expression.
 		/// Returns a lazy IEnumerable&lt;string&gt; object that can be used with foreach.
 		/// </summary>
 		/// <param name="s">Subject string. Cannot be null.</param>
@@ -667,10 +598,10 @@ namespace Au
 		/// <code><![CDATA[
 		/// var s = "one two three";
 		/// var x = new regexp(@"\b\w+\b");
-		/// foreach(var v in x.FindAllS(s)) print.it(v);
+		/// foreach(var v in x.FindAll(s, 0)) print.it(v);
 		/// ]]></code>
 		/// </example>
-		public IEnumerable<string> FindAllS(string s, int group = 0, Range? range = null, RXMatchFlags matchFlags = 0) {
+		public IEnumerable<string> FindAll(string s, int group, Range? range = null, RXMatchFlags matchFlags = 0) {
 			var e = new _MatchEnum(this, s, group, range, matchFlags);
 			while (e.Next()) yield return e.GroupS;
 		}
@@ -695,12 +626,68 @@ namespace Au
 		/// <code><![CDATA[
 		/// var s = "one two three";
 		/// var x = new regexp(@"\b\w+\b");
-		/// if(!x.FindAllS(s, out var a)) { print.it("not found"); return; }
+		/// if(!x.FindAll(s, 0, out var a)) { print.it("not found"); return; }
 		/// foreach(var v in a) print.it(v);
 		/// ]]></code>
 		/// </example>
-		public bool FindAllS(string s, out string[] result, int group = 0, Range? range = null, RXMatchFlags matchFlags = 0) {
-			result = FindAllS(s, group, range, matchFlags).ToArray();
+		public bool FindAll(string s, int group, out string[] result, Range? range = null, RXMatchFlags matchFlags = 0) {
+			result = FindAll(s, group, range, matchFlags).ToArray();
+			return result.Length != 0;
+		}
+
+		/// <summary>
+		/// Finds all match instances of the regular expression.
+		/// Returns a lazy IEnumerable&lt;<see cref="RXGroup"/>&gt; object that can be used with foreach.
+		/// </summary>
+		/// <param name="s">Subject string. Cannot be null.</param>
+		/// <param name="group">
+		/// Group number (1-based index) of results. If 0 (default) - whole match.
+		/// See also <see cref="GetGroupNumberOf"/>.
+		/// </param>
+		/// <param name="range">See <see cref="IsMatch"/>.</param>
+		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
+		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
+		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+		/// <example>
+		/// <code><![CDATA[
+		/// var s = "one two three";
+		/// var x = new regexp(@"\b\w+\b");
+		/// foreach(var g in x.FindAllG(s, 0)) print.it(g.Start, g.Value);
+		/// ]]></code>
+		/// </example>
+		public IEnumerable<RXGroup> FindAllG(string s, int group, Range? range = null, RXMatchFlags matchFlags = 0) {
+			var e = new _MatchEnum(this, s, group, range, matchFlags);
+			while (e.Next()) yield return e.GroupG;
+		}
+
+		/// <summary>
+		/// Finds all match instances of the regular expression. Gets array of <see cref="RXGroup"/> (index, length, value).
+		/// Returns true if found 1 or more matches.
+		/// </summary>
+		/// <param name="s">Subject string. Cannot be null.</param>
+		/// <param name="result">Receives all found matches.</param>
+		/// <param name="group">
+		/// Group number (1-based index) of results. If 0 (default) - whole match.
+		/// See also <see cref="GetGroupNumberOf"/>.
+		/// </param>
+		/// <param name="range">See <see cref="IsMatch"/>.</param>
+		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
+		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
+		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+		/// <example>
+		/// <code><![CDATA[
+		/// var s = "one two three";
+		/// var x = new regexp(@"\b\w+\b");
+		/// if(!x.FindAllG(s, 0, out var a)) { print.it("not found"); return; }
+		/// foreach(var g in a) print.it(g.Start, g.Value);
+		/// ]]></code>
+		/// </example>
+		public bool FindAllG(string s, int group, out RXGroup[] result, Range? range = null, RXMatchFlags matchFlags = 0) {
+			result = FindAllG(s, group, range, matchFlags).ToArray();
 			return result.Length != 0;
 		}
 
@@ -718,10 +705,10 @@ namespace Au
 					if (replFunc != null) replType = 3; else if (!repl.NE()) replType = repl.IndexOf('$') < 0 ? 1 : 2;
 				}
 				//append s part before this match
-				var p = e.GroupP; //x=start, y=end
-				int nBefore = p.x - prevEnd;
+				var p = e.GroupR; //x=start, y=end
+				int nBefore = p.start - prevEnd;
 				if (nBefore != 0) b.Append(s, prevEnd, nBefore);
-				prevEnd = p.y;
+				prevEnd = p.end;
 				//append replacement
 				string re = null;
 				if (replType >= 2) {
@@ -1059,12 +1046,12 @@ namespace Au
 				int prevEnd = 0;
 				var e = new _MatchEnum(this, s, 0, range, matchFlags, maxCount - 1);
 				while (e.Next()) {
-					var p = e.GroupP;
-					a.Add(s.Substring(prevEnd, p.x - prevEnd));
-					prevEnd = p.y;
+					var p = e.GroupR;
+					a.Add(s[prevEnd..p.start]);
+					prevEnd = p.end;
 				}
 				if (e.foundCount > 0) {
-					a.Add(s.Substring(prevEnd));
+					a.Add(s[prevEnd..]);
 					return a.ToArray();
 				}
 			}
@@ -1102,9 +1089,9 @@ namespace Au
 				int prevEnd = 0;
 				var e = new _MatchEnum(this, s, 0, range, matchFlags, maxCount - 1);
 				while (e.Next()) {
-					var p = e.GroupP;
-					a.Add(new RXGroup(s, prevEnd, p.x));
-					prevEnd = p.y;
+					var p = e.GroupR;
+					a.Add(new RXGroup(s, prevEnd, p.start));
+					prevEnd = p.end;
 				}
 				if (e.foundCount > 0) {
 					a.Add(new RXGroup(s, prevEnd, s.Length));
@@ -1123,8 +1110,8 @@ namespace Au
 		//		var e = new _MatchEnum(this, s, 0, range, matchFlags, maxCount - 1);
 		//		while(e.Next()) {
 		//			var p = e.GroupP;
-		//			yield return new RXGroup(s, prevEnd, p.x);
-		//			prevEnd = p.y;
+		//			yield return new RXGroup(s, prevEnd, p.start);
+		//			prevEnd = p.end;
 		//		}
 		//		if(e.foundCount > 0) {
 		//			yield return new RXGroup(s, prevEnd, s.Length);
@@ -1174,7 +1161,7 @@ namespace Au
 		}
 	}
 
-#region static
+	#region static
 
 	public static partial class ExtString
 	{
@@ -1190,7 +1177,7 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexIsMatch(this string t,
+		public static bool RIsMatch(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			RXFlags flags = 0, Range? range = null) {
 			var x = _cache.AddOrGet(rx, flags);
@@ -1200,7 +1187,7 @@ namespace Au
 		/// <summary>
 		/// Returns true if this string matches PCRE regular expression <i>rx</i>.
 		/// Gets match info as <see cref="RXMatch"/>.
-		/// Parameters etc are of <see cref="regexp(string, RXFlags)"/> and <see cref="regexp.Match"/>.
+		/// Parameters etc are of <see cref="regexp(string, RXFlags)"/> and <see cref="regexp.Match(string, out RXMatch, Range?, RXMatchFlags)"/>.
 		/// Examples in <see cref="regexp"/> class help.
 		/// </summary>
 		/// <param name="t">This string. If null, returns false.</param>
@@ -1211,7 +1198,7 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexMatch(this string t,
+		public static bool RMatch(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			out RXMatch result, RXFlags flags = 0, Range? range = null) {
 			var x = _cache.AddOrGet(rx, flags);
@@ -1221,7 +1208,7 @@ namespace Au
 		/// <summary>
 		/// Returns true if this string matches PCRE regular expression <i>rx</i>.
 		/// Gets whole match or some group, as string.
-		/// Parameters etc are of <see cref="regexp(string, RXFlags)"/> and <see cref="regexp.MatchS"/>.
+		/// Parameters etc are of <see cref="regexp(string, RXFlags)"/> and <see cref="regexp.Match(string, int, out string, Range?, RXMatchFlags)"/>.
 		/// Examples in <see cref="regexp"/> class help.
 		/// </summary>
 		/// <param name="t">This string. If null, returns false.</param>
@@ -1233,17 +1220,17 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexMatch(this string t,
+		public static bool RMatch(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			int group, out string result, RXFlags flags = 0, Range? range = null) {
 			var x = _cache.AddOrGet(rx, flags);
-			return x.MatchS(t, out result, group, range);
+			return x.Match(t, group, out result, range);
 		}
 
 		/// <summary>
 		/// Returns true if this string matches PCRE regular expression <i>rx</i>.
 		/// Gets whole match or some group, as index and length.
-		/// Parameters etc are of <see cref="regexp(string, RXFlags)"/> and <see cref="regexp.MatchG"/>.
+		/// Parameters etc are of <see cref="regexp(string, RXFlags)"/> and <see cref="regexp.Match(string, int, out RXGroup, Range?, RXMatchFlags)"/>.
 		/// Examples in <see cref="regexp"/> class help.
 		/// </summary>
 		/// <param name="t">This string. If null, returns false.</param>
@@ -1255,11 +1242,11 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexMatch(this string t,
+		public static bool RMatch(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			int group, out RXGroup result, RXFlags flags = 0, Range? range = null) {
 			var x = _cache.AddOrGet(rx, flags);
-			return x.MatchG(t, out result, group, range);
+			return x.Match(t, group, out result, range);
 		}
 
 		/// <summary>
@@ -1275,7 +1262,7 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static IEnumerable<RXMatch> RegexFindAll(this string t,
+		public static IEnumerable<RXMatch> RFindAll(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
@@ -1297,7 +1284,7 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexFindAll(this string t,
+		public static bool RFindAll(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			out RXMatch[] result, RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
@@ -1308,7 +1295,7 @@ namespace Au
 		/// <summary>
 		/// Finds all match instances of PCRE regular expression <i>rx</i>.
 		/// Returns a lazy IEnumerable&lt;<see cref="RXGroup"/>&gt; object that can be used with foreach.
-		/// Parameters etc are of <see cref="regexp(string, RXFlags)"/> and <see cref="regexp.FindAllS(string, int, Range?, RXMatchFlags)"/>.
+		/// Parameters etc are of <see cref="regexp(string, RXFlags)"/> and <see cref="regexp.FindAll(string, int, Range?, RXMatchFlags)"/>.
 		/// Examples in <see cref="regexp"/> class help.
 		/// </summary>
 		/// <param name="t">This string.</param>
@@ -1319,18 +1306,18 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static IEnumerable<string> RegexFindAll(this string t,
+		public static IEnumerable<string> RFindAll(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			int group, RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
-			return x.FindAllS(t, group, range);
+			return x.FindAll(t, group, range);
 		}
 
 		/// <summary>
 		/// Finds all match instances of PCRE regular expression <i>rx</i>. Gets array of strings.
 		/// Returns true if found 1 or more matches.
-		/// Parameters etc are of <see cref="regexp(string, RXFlags)"/> and <see cref="regexp.FindAllS(string, out string[], int, Range?, RXMatchFlags)"/>.
+		/// Parameters etc are of <see cref="regexp(string, RXFlags)"/> and <see cref="regexp.FindAll(string, int, out string[], Range?, RXMatchFlags)"/>.
 		/// Examples in <see cref="regexp"/> class help.
 		/// </summary>
 		/// <param name="t">This string.</param>
@@ -1342,13 +1329,37 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexFindAll(this string t,
+		public static bool RFindAll(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			int group, out string[] result, RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
-			return x.FindAllS(t, out result, group, range);
+			return x.FindAll(t, group, out result, range);
 		}
+
+		//rejected. Rarely used.
+		///// <summary>
+		///// Finds all match instances of PCRE regular expression <i>rx</i>. Gets array of <see cref="RXGroup"/>.
+		///// Returns true if found 1 or more matches.
+		///// Parameters etc are of <see cref="regexp(string, RXFlags)"/> and <see cref="regexp.FindAllG(string, int, out RXGroup[], Range?, RXMatchFlags)"/>.
+		///// Examples in <see cref="regexp"/> class help.
+		///// </summary>
+		///// <param name="t">This string.</param>
+		///// <param name="rx">Regular expression.</param>
+		///// <param name="group">Group number (1-based index) of results. If 0 (default) - whole match.</param>
+		///// <param name="result">Receives all found matches.</param>
+		///// <param name="flags"></param>
+		///// <param name="range">See <see cref="regexp.IsMatch"/>.</param>
+		///// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
+		///// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
+		///// <exception cref="AuException">Failed (unlikely).</exception>
+		//public static bool RFindAll(this string t,
+		//	[ParamString(PSFormat.regexp)] string rx,
+		//	int group, out RXGroup[] result, RXFlags flags = 0, Range? range = null) {
+		//	if (t == null) throw new NullReferenceException();
+		//	var x = _cache.AddOrGet(rx, flags);
+		//	return x.FindAllG(t, group, out result, range);
+		//}
 
 		/// <summary>
 		/// Finds and replaces all match instances of PCRE regular expression <i>rx</i>.
@@ -1370,7 +1381,7 @@ namespace Au
 		/// - The regular expression contains <c>(?=...\K)</c>.
 		/// </exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static string RegexReplace(this string t,
+		public static string RReplace(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			[ParamString(PSFormat.regexpReplacement)] string repl,
 			int maxCount = -1, RXFlags flags = 0, Range? range = null) {
@@ -1400,7 +1411,7 @@ namespace Au
 		/// - The regular expression contains <c>(?=...\K)</c>.
 		/// </exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static int RegexReplace(this string t,
+		public static int RReplace(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			[ParamString(PSFormat.regexpReplacement)] string repl,
 			out string result, int maxCount = -1, RXFlags flags = 0, Range? range = null) {
@@ -1429,7 +1440,7 @@ namespace Au
 		/// - The regular expression contains <c>(?=...\K)</c>.
 		/// </exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static string RegexReplace(this string t,
+		public static string RReplace(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			Func<RXMatch, string> replFunc, int maxCount = -1, RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
@@ -1458,7 +1469,7 @@ namespace Au
 		/// - The regular expression contains <c>(?=...\K)</c>.
 		/// </exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static int RegexReplace(this string t,
+		public static int RReplace(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			Func<RXMatch, string> replFunc, out string result, int maxCount = -1, RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
@@ -1479,7 +1490,7 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static string[] RegexSplit(this string t,
+		public static string[] RSplit(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			int maxCount = 0, RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
@@ -1539,5 +1550,5 @@ namespace Au
 		}
 	}
 
-#endregion
+	#endregion
 }

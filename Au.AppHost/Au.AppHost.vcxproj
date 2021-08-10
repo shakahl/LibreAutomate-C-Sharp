@@ -82,7 +82,7 @@
     </Link>
     <PostBuildEvent>
       <Command>xcopy $(TargetPath) $(SolutionDir)_\32\ /Y
-"$(SolutionDir)Other\Programs\nircmd.exe" win close etitle Aedit
+"$(SolutionDir)Other\Programs\nircmd.exe" win close class Au.Editor.TrayNotify
 cd $(SolutionDir)_
 "$(SolutionDir)Other\Programs\ResourceHacker.exe" -script "$(ProjectDir)hacker32.txt"
 </Command>
@@ -116,10 +116,10 @@ cd $(SolutionDir)_
     </Link>
     <PostBuildEvent>
       <Command>xcopy $(TargetPath) $(SolutionDir)_\64\ /Y
-"$(SolutionDir)Other\Programs\nircmd.exe" win close etitle Aedit
+"$(SolutionDir)Other\Programs\nircmd.exe" win close class Au.Editor.TrayNotify
 cd $(SolutionDir)_
-if EXIST Aedit.dll ( del Aedit.dll )
-if EXIST Aedit.exe ( del Aedit.exe )
+if EXIST Au.Editor.dll ( del Au.Editor.dll )
+if EXIST Au.Editor.exe ( del Au.Editor.exe )
 "$(SolutionDir)Other\Programs\ResourceHacker.exe" -script "$(ProjectDir)hacker.txt"
 </Command>
     </PostBuildEvent>
@@ -135,7 +135,7 @@ if EXIST Aedit.exe ( del Aedit.exe )
     <Text Include="hacker32.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="CsScript.ico" />
+    <Image Include="Script.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

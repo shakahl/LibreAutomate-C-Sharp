@@ -1,17 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
-using System.Runtime.Serialization;
-
+﻿
 namespace Au.Types
 {
 	/// <summary>
@@ -62,12 +49,9 @@ namespace Au.Types
 			var m = base.Message;
 
 			if (!m.NE()) {
-				if (m[0] == '*') m = "Failed to " + m.Substring(1);
-				if (!commonPostfix.NE()) {
-					int k = m.Length - 1;
-					if (m[k] == '*') m = m.Substring(0, k) + commonPostfix;
-				}
-				if (!m.Ends('.')) m = m + ".";
+				if (m[0] == '*') m = "Failed to " + m[1..];
+				if (!commonPostfix.NE() && m[^1] == '*') m = m[..^1] + commonPostfix;
+				if (!m.Ends('.')) m += ".";
 			}
 
 			if (appendMessage == null && NativeErrorCode != 0) appendMessage = lastError.messageFor(NativeErrorCode);

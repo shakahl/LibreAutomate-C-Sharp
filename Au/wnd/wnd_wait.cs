@@ -1,18 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
-
-using Au.Types;
-using Au.More;
 
 namespace Au
 {
@@ -58,14 +43,14 @@ namespace Au
 		{
 			var f = new wndFinder(name, cn, of, flags, also, contains);
 			var to = new wait.Loop(secondsTimeout);
-			for(; ; ) {
-				if(active) {
+			for (; ; ) {
+				if (active) {
 					wnd w = wnd.active;
-					if(f.IsMatch(w) && !w.IsMinimized) return w;
+					if (f.IsMatch(w) && !w.IsMinimized) return w;
 				} else {
-					if(f.Find()) return f.Result;
+					if (f.Find()) return f.Result;
 				}
-				if(!to.Sleep()) return default;
+				if (!to.Sleep()) return default;
 			}
 		}
 		//SHOULDDO: if wait for active, also wait until released mouse buttons.
@@ -87,26 +72,25 @@ namespace Au
 		/// print.it(i, w);
 		/// ]]></code>
 		/// </example>
-		public static (int index, wnd w) waitAny(double secondsTimeout, bool active, params wndFinder[] windows)
-		{
-			foreach(var f in windows) f.Result = default;
+		public static (int index, wnd w) waitAny(double secondsTimeout, bool active, params wndFinder[] windows) {
+			foreach (var f in windows) f.Result = default;
 			WFCache cache = active && windows.Length > 1 ? new WFCache() : null;
 			var to = new wait.Loop(secondsTimeout);
-			for(; ; ) {
-				if(active) {
+			for (; ; ) {
+				if (active) {
 					wnd w = wnd.active;
-					for(int i = 0; i < windows.Length; i++) {
-						if(windows[i].IsMatch(w, cache) && !w.IsMinimized) return (i + 1, w);
+					for (int i = 0; i < windows.Length; i++) {
+						if (windows[i].IsMatch(w, cache) && !w.IsMinimized) return (i + 1, w);
 					}
 				} else {
-					for(int i = 0; i < windows.Length; i++) {
+					for (int i = 0; i < windows.Length; i++) {
 						var f = windows[i];
-						if(f.Find()) return (i + 1, f.Result);
+						if (f.Find()) return (i + 1, f.Result);
 					}
 					//FUTURE: optimization: get list of windows once (Lib.EnumWindows2).
 					//	Problem: list filtering depends on wndFinder flags. Even if all finders have same flags, its easy to make bugs.
 				}
-				if(!to.Sleep()) return default;
+				if (!to.Sleep()) return default;
 			}
 		}
 
@@ -206,18 +190,17 @@ namespace Au
 		/// print.it("control focused");
 		/// ]]></code>
 		/// </example>
-		public bool WaitForCondition(double secondsTimeout, Func<wnd, bool> condition, bool dontThrowIfClosed = false)
-		{
+		public bool WaitForCondition(double secondsTimeout, Func<wnd, bool> condition, bool dontThrowIfClosed = false) {
 			bool wasInvalid = false;
 			var to = new wait.Loop(secondsTimeout);
-			for(; ; ) {
-				if(!dontThrowIfClosed) ThrowIfInvalid();
-				if(condition(this)) return true;
-				if(dontThrowIfClosed) {
-					if(wasInvalid) ThrowIfInvalid();
+			for (; ; ) {
+				if (!dontThrowIfClosed) ThrowIfInvalid();
+				if (condition(this)) return true;
+				if (dontThrowIfClosed) {
+					if (wasInvalid) ThrowIfInvalid();
 					wasInvalid = !IsAlive;
 				}
-				if(!to.Sleep()) return false;
+				if (!to.Sleep()) return false;
 			}
 		}
 
@@ -233,8 +216,7 @@ namespace Au
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuWndException">The window handle is invalid or the window was closed while waiting.</exception>
 		/// <exception cref="ArgumentException">Invalid wildcard expression.</exception>
-		public bool WaitForName(double secondsTimeout, [ParamString(PSFormat.wildex)] string name)
-		{
+		public bool WaitForName(double secondsTimeout, [ParamString(PSFormat.wildex)] string name) {
 			wildex x = name; //ArgumentNullException
 			return WaitForCondition(secondsTimeout, t => x.Match(t.Name));
 		}
@@ -250,17 +232,16 @@ namespace Au
 		/// <remarks>
 		/// If the window is already closed, immediately returns true.
 		/// </remarks>
-		public bool WaitForClosed(double secondsTimeout, bool waitUntilProcessEnds = false)
-		{
-			if(!waitUntilProcessEnds) return WaitForCondition(secondsTimeout, t => !t.IsAlive, true);
+		public bool WaitForClosed(double secondsTimeout, bool waitUntilProcessEnds = false) {
+			if (!waitUntilProcessEnds) return WaitForCondition(secondsTimeout, t => !t.IsAlive, true);
 
 			//SHOULDDO: if window of this thread or process...
 
-			if(!IsAlive) return true;
+			if (!IsAlive) return true;
 			using var ph = Handle_.OpenProcess(this, Api.SYNCHRONIZE);
-			if(ph.Is0) {
+			if (ph.Is0) {
 				var e = new AuException(0, "*open process handle"); //info: with SYNCHRONIZE can open process of higher IL
-				if(!IsAlive) return true;
+				if (!IsAlive) return true;
 				throw e;
 			}
 			return 0 != Au.wait.forHandle(secondsTimeout, opt.wait.DoEvents ? WHFlags.DoEvents : 0, ph);

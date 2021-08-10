@@ -15,6 +15,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWin32Manifest>true</NoWin32Manifest>
 	<LangVersion>preview</LangVersion>
+	<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -27,7 +28,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Page Remove="Resources\Property_16x.xaml" />
+    <Page Remove="resources\Property_16x.xaml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -40,7 +41,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Resources\Property_16x.xaml" />
+    <Resource Include="resources\Property_16x.xaml" />
   </ItemGroup>
 
   <ItemGroup>

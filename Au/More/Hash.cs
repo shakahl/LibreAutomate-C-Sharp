@@ -1,17 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-using System.Security.Cryptography;
-
-using Au.Types;
+﻿using System.Security.Cryptography;
 
 namespace Au.More
 {
@@ -256,26 +243,17 @@ namespace Au.More
 		/// It is 16 bytes stored in 2 long fields r1 and r2.
 		/// If need, can be converted to byte[] with <see cref="ToArray"/> or to hex string with <see cref="ToString"/>.
 		/// </summary>
-		public struct MD5Result : IEquatable<MD5Result>
+		public record struct MD5Result
 		{
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-			public long r1, r2;
-
-			public bool Equals(MD5Result other) => this == other;
-
-			public static bool operator ==(MD5Result h1, MD5Result h2) => h1.r1 == h2.r1 && h1.r2 == h2.r2;
-			public static bool operator !=(MD5Result h1, MD5Result h2) => !(h1 == h2);
+			public readonly long r1, r2;
 
 			//rejected. Not much shorter than hex.
 			//public string ToBase64() => Convert.ToBase64String(ToArray());
-
-			public override int GetHashCode() => r1.GetHashCode() ^ r2.GetHashCode();
-
-			public override bool Equals(object obj) => obj is MD5Result result && result == this;
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
 			/// <summary>
-			/// Converts this to hex string of Length = 32.
+			/// Converts this to hex string.
 			/// </summary>
 			public override string ToString() => Convert2.HexEncode(this);
 
@@ -295,7 +273,7 @@ namespace Au.More
 			/// Creates <b>MD5Result</b> from hex string returned by <see cref="ToString"/>.
 			/// Returns false if <i>encoded</i> is invalid.
 			/// </summary>
-			public static bool FromString(ReadOnlySpan<char> encoded, out MD5Result r) => Convert2.HexDecode(encoded, out r);
+			public static bool FromString(RStr encoded, out MD5Result r) => Convert2.HexDecode(encoded, out r);
 		}
 
 		/// <summary>

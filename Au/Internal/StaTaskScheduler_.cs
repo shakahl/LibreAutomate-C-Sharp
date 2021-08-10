@@ -3,12 +3,6 @@
 // Licensed under the MIT license. See LICENSE.md file in the project root for full license information.
 //
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-
 namespace Au.More
 {
 	/// <summary>Provides a scheduler that uses STA threads.</summary>

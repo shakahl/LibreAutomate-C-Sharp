@@ -1,7 +1,3 @@
-using Au.Types;
-using System;
-using System.Collections.Generic;
-using Au.More;
 using System.Windows.Input;
 
 
@@ -91,6 +87,7 @@ namespace Au.Controls
 
 		/// <summary>
 		/// Background color in 0xBBGGRR format. If -1 (default), uses default colors, depending on state (normal, selected, hot).
+		/// If alpha is 1 - 3: if contains flag 1, draws selection color when selected; if 2, draws hot color when hot.
 		/// </summary>
 		int Color => -1;
 
@@ -101,6 +98,7 @@ namespace Au.Controls
 
 		/// <summary>
 		/// Border color in 0xBBGGRR format. No border if -1 (default).
+		/// If alpha is 1, draws left edge between text and icon.
 		/// </summary>
 		int BorderColor => -1;
 	}

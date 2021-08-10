@@ -1,19 +1,4 @@
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
 using System.Linq;
-using System.Globalization;
-using System.Collections;
 
 namespace Au.Triggers
 {
@@ -161,7 +146,7 @@ namespace Au.Triggers
 			set {
 				_triggers.ThrowIfRunning_();
 				int len = text.Lenn(); if (len < 1 || len > 100) throw new ArgumentException("Text length must be 1 - 100.");
-				if (text.Contains('\n')) { text = text.RegexReplace(@"\r?\n", "\r"); len = text.Length; }
+				if (text.Contains('\n')) { text = text.RReplace(@"\r?\n", "\r"); len = text.Length; }
 				TAFlags fl = flags ?? DefaultFlags;
 				bool matchCase = 0 != (fl & TAFlags.MatchCase);
 				if (!matchCase) text = text.Lower();

@@ -10,7 +10,7 @@ using System.Reflection;
 //[assembly: AssemblyCompany("Company name")]
 //[assembly: AssemblyProduct("Product name")]
 //[assembly: AssemblyInformationalVersion("1.0.0.0")] //product version
-//[assembly: AssemblyCopyright("Copyright © 2020")]
+//[assembly: AssemblyCopyright("Copyright © 2021")]
 //[assembly: AssemblyTrademark("Legal trademarks")]
 
 /*

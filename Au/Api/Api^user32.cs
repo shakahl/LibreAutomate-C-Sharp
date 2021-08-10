@@ -1,7 +1,3 @@
-using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
 namespace Au.Types

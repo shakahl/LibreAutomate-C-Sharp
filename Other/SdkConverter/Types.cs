@@ -885,11 +885,11 @@ namespace SdkConverter
 					string s = v.Key.ToString();
 
 					//Replace all found TYPE* and ref TYPE to IntPtr.
-					//Call RegexReplace 2 times because regex (a|b) is very slow.
+					//Call RReplace 2 times because regex (a|b) is very slow.
 					string repl = "IntPtr";
 					int n;
-					if (ts != null && ts.isInterface) n = R.RegexReplace($@"\b{s}\b", repl, out R); //decremented pointer level. 0 in SDK
-					else n = R.RegexReplace($@"\b{s}\*", repl, out R) + R.RegexReplace($@"\bref {s}\b", repl, out R);
+					if (ts != null && ts.isInterface) n = R.RReplace($@"\b{s}\b", repl, out R); //decremented pointer level. 0 in SDK
+					else n = R.RReplace($@"\b{s}\*", repl, out R) + R.RReplace($@"\bref {s}\b", repl, out R);
 					if (n != 0) {
 						//print.it($"<><c 0xff0000>{n}  {s}* = IntPtr</c>");
 						continue;
@@ -910,7 +910,7 @@ namespace SdkConverter
 					string s = v.Key.ToString();
 					//if(_FindIdentifierInString(R, s) >= 0) { //makes slower
 					//if(ts!=null) _FormatStruct(ts); else _FormatEnum(te);
-					if (0 != R.RegexReplace($@"\b{s}\b", t.csTypename, out R)) {
+					if (0 != R.RReplace($@"\b{s}\b", t.csTypename, out R)) {
 						//print.it($"<><c 0xff0000>{s} = {t.csTypename}    {t}</c>"); //all struct (0 enum) in SDK
 						continue;
 					}
@@ -943,18 +943,18 @@ namespace SdkConverter
 			//perf.nw(); //800 1000 ms
 
 			//remove other known A and old versions
-			R.RegexReplace(@"(?ms)^internal struct PROPSHEETPAGE(?!W_V4\b).+?^\}\r\n", "", out R);
-			R.RegexReplace(@"(?ms)^internal struct PROPSHEETHEADER(?!W_V2\b).+?^\}\r\n", "", out R);
-			R.RegexReplace(@"\bPROPSHEETPAGEW_V4\b", "PROPSHEETPAGE", out R);
-			R.RegexReplace(@"\bPROPSHEETHEADERW_V2\b", "PROPSHEETHEADER", out R);
-			R.RegexReplace(@"(?ms)^internal struct OPENFILENAME_NT4\b.+?^\}\r\n", "", out R, 1);
+			R.RReplace(@"(?ms)^internal struct PROPSHEETPAGE(?!W_V4\b).+?^\}\r\n", "", out R);
+			R.RReplace(@"(?ms)^internal struct PROPSHEETHEADER(?!W_V2\b).+?^\}\r\n", "", out R);
+			R.RReplace(@"\bPROPSHEETPAGEW_V4\b", "PROPSHEETPAGE", out R);
+			R.RReplace(@"\bPROPSHEETHEADERW_V2\b", "PROPSHEETHEADER", out R);
+			R.RReplace(@"(?ms)^internal struct OPENFILENAME_NT4\b.+?^\}\r\n", "", out R, 1);
 
 			//replace some types
-			R = R.RegexReplace(@"\bLPARAM\b", "nint");
-			R = R.RegexReplace(@"(?<!\bstruct )\bU?LARGE_INTEGER\b", "long");
+			R = R.RReplace(@"\bLPARAM\b", "nint");
+			R = R.RReplace(@"(?<!\bstruct )\bU?LARGE_INTEGER\b", "long");
 
 			//in VARIANT, PROPVARIANT, _wireVARIANT members replace non-blittable types with IntPtr. Also replace some other types.
-			R = R.RegexReplace(@"(?ms)^internal struct (?:PROP|_wire)?VARIANT \{\R\K.+?\R\}", __VariantMembers);
+			R = R.RReplace(@"(?ms)^internal struct (?:PROP|_wire)?VARIANT \{\R\K.+?\R\}", __VariantMembers);
 
 			return R;
 
@@ -964,7 +964,7 @@ namespace SdkConverter
 				if ((what & 0x10000) != 0) { sW = "_W"; sA = "_A"; }
 				what &= 0xff;
 
-				if (0 != R.RegexReplace($@"\b{name}{sW}\b", name, out R)) {
+				if (0 != R.RReplace($@"\b{name}{sW}\b", name, out R)) {
 					//print.it($"<><c 0xff0000>{name}</c>");
 
 					//remove STRUCTA
@@ -976,7 +976,7 @@ namespace SdkConverter
 					case 1: rx = $@"(?ms)^internal interface {name}{sA} .+?^\}}\r\n\r\n"; break;
 					case 2: rx = $@"(?m)^internal delegate \w+\** {name}{sA}\(.+\r\n\r\n"; break;
 					}
-					if (R.RegexMatch(rx, out var m)) {
+					if (R.RMatch(rx, out var m)) {
 						//find attributes (regex with attributes would be very slow)
 						int i = m.Start - 3;
 						while (0 == string.Compare(R, i, "]\r\n", 0, 3)) {
@@ -1003,11 +1003,11 @@ namespace SdkConverter
 			static string __VariantMembers(RXMatch m) {
 				var s = m.Value;
 				//print.it(s);
-				s = s.RegexReplace(@"\[MarshalAs.+?\] ", "");
-				s = s.RegexReplace(@"\b(string|object|I[A-Z]\w+)\b", "IntPtr");
-				s = s.RegexReplace(@"\bDateTime\b", "double");
-				s = s.RegexReplace(@"\b(CY|FILETIME)\b", "long");
-				s = s.RegexReplace(@"\bVERSIONEDSTREAM\*", "IntPtr");
+				s = s.RReplace(@"\[MarshalAs.+?\] ", "");
+				s = s.RReplace(@"\b(string|object|I[A-Z]\w+)\b", "IntPtr");
+				s = s.RReplace(@"\bDateTime\b", "double");
+				s = s.RReplace(@"\b(CY|FILETIME)\b", "long");
+				s = s.RReplace(@"\bVERSIONEDSTREAM\*", "IntPtr");
 				//print.it(s);
 				return s;
 			}

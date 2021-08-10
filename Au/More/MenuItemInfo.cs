@@ -1,18 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
-
-using Au.Types;
-
+﻿
 namespace Au.More
 {
 	/// <summary>
@@ -108,7 +94,7 @@ namespace Au.More
 			mi.dwTypeData = b.p;
 			if (!Api.GetMenuItemInfo(menuHandle, id, byIndex, ref mi)) return null;
 			var s = b.GetStringFindLength();
-			if (removeHotkey) { int i = s.IndexOf('\t'); if (i >= 0) s = s.Remove(i); }
+			if (removeHotkey) { int i = s.IndexOf('\t'); if (i >= 0) s = s[..i]; }
 			if (removeAmp) s = StringUtil.RemoveUnderlineChar(s);
 			return s;
 		}

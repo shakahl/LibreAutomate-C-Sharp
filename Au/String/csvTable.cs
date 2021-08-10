@@ -1,18 +1,4 @@
-﻿using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
-
+﻿
 namespace Au
 {
 	/// <summary>
@@ -78,9 +64,8 @@ namespace Au
 		/// <param name="trimSpaces">Ignore ASCII space and tab characters surrounding fields in CSV text. Default true.</param>
 		/// <exception cref="FormatException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static unsafe csvTable parse(string csv, char separator = ',', char quote = '"', bool trimSpaces = true)
-		{
-			if(csv.NE()) return new csvTable();
+		public static unsafe csvTable parse(string csv, char separator = ',', char quote = '"', bool trimSpaces = true) {
+			if (csv.NE()) return new csvTable();
 
 			var a = new List<string[]>();
 			var tempRow = new List<string>(8);
@@ -90,43 +75,43 @@ namespace Au
 				char* s = s0, se = s0 + csv.Length;
 				int nCol = 0;
 
-				for(; s < se; s++) {
+				for (; s < se; s++) {
 					//Read a field.
 					string field = "";
-					if(trimSpaces) { //ltrim
-						while(*s == ' ' || *s == '\t') if(++s == se) goto g1;
+					if (trimSpaces) { //ltrim
+						while (*s == ' ' || *s == '\t') if (++s == se) goto g1;
 					}
 					char* f, e; //field beginning and end, not including spaces
 					bool hasEscapedQuote = false;
-					if(*s == quote) {
+					if (*s == quote) {
 						f = ++s;
 						bool hasClosingQuote = false;
-						while(s < se) {
-							if(*s++ == quote) {
-								if(s < se && *s == quote) { s++; hasEscapedQuote = true; } //escaped quote
+						while (s < se) {
+							if (*s++ == quote) {
+								if (s < se && *s == quote) { s++; hasEscapedQuote = true; } //escaped quote
 								else { hasClosingQuote = true; break; }
 							}
 						}
-						if(!hasClosingQuote) throw new FormatException($"Invalid CSV format. Cells that start with {quote} must end with {quote}.");
+						if (!hasClosingQuote) throw new FormatException($"Invalid CSV format. Cells that start with {quote} must end with {quote}.");
 						e = s - 1; //before quote
-						if(trimSpaces) { //rtrim
-							while(s < se && (*s == ' ' || *s == '\t')) s++;
+						if (trimSpaces) { //rtrim
+							while (s < se && (*s == ' ' || *s == '\t')) s++;
 						}
-						if(s < se && !(*s == separator || *s == '\n')) {
-							if(*s == '\r' && s < se + 1 && s[1] == '\n') s++;
+						if (s < se && !(*s == separator || *s == '\n')) {
+							if (*s == '\r' && s < se + 1 && s[1] == '\n') s++;
 							else throw new FormatException($"Invalid CSV format. For {quote} in enclosed cells use {quote}{quote}.");
 						}
 					} else {
 						f = s; //field start
-						while(s < se && *s != separator && *s != '\n') s++; //skip field, space and \r
-						e = s; if(e > f && *e == '\n' && e[-1] == '\r') e--;
-						if(trimSpaces) { //rtrim
-							while(e > f && (e[-1] == ' ' || e[-1] == '\t')) e--;
+						while (s < se && *s != separator && *s != '\n') s++; //skip field, space and \r
+						e = s; if (e > f && *e == '\n' && e[-1] == '\r') e--;
+						if (trimSpaces) { //rtrim
+							while (e > f && (e[-1] == ' ' || e[-1] == '\t')) e--;
 						}
 					}
 					field = new string(f, 0, (int)(e - f)); //field to string
-					if(hasEscapedQuote) {
-						if(sQuote1 == null) { sQuote1 = new string(quote, 1); sQuote2 = new string(quote, 2); }
+					if (hasEscapedQuote) {
+						if (sQuote1 == null) { sQuote1 = new string(quote, 1); sQuote2 = new string(quote, 2); }
 						field = field.Replace(sQuote2, sQuote1);
 					}
 					g1:
@@ -134,19 +119,19 @@ namespace Au
 					//print.it(field);
 
 					tempRow.Add(field);
-					if(s >= se || *s == '\n') {
+					if (s >= se || *s == '\n') {
 						//print.it(a.Count);
 						//print.it(tempRow);
 
 						a.Add(tempRow.ToArray());
-						if(tempRow.Count > nCol) nCol = tempRow.Count;
+						if (tempRow.Count > nCol) nCol = tempRow.Count;
 						tempRow.Clear();
 					}
 				}
 
 				var R = new csvTable(a, 0);
 				R.ColumnCount = nCol; //make all rows of equal length and set _columnCount
-				//print.it(R.RowCount, R.ColumnCount);
+									  //print.it(R.RowCount, R.ColumnCount);
 				return R;
 			} //fixed
 		}
@@ -157,28 +142,27 @@ namespace Au
 		/// <remarks>
 		/// Depends on these properties: <see cref="Separator"/> (initially ','), <see cref="Quote"/> (initially '"').
 		/// </remarks>
-		public override string ToString()
-		{
-			if(RowCount == 0 || ColumnCount == 0) return "";
+		public override string ToString() {
+			if (RowCount == 0 || ColumnCount == 0) return "";
 
-			using(new StringBuilder_(out var b)) {
+			using (new StringBuilder_(out var b)) {
 				char quote = Quote;
 				string sQuote1 = null, sQuote2 = null;
 
-				for(int r = 0; r < _a.Count; r++) {
-					for(int c = 0; c < _columnCount; c++) {
+				for (int r = 0; r < _a.Count; r++) {
+					for (int c = 0; c < _columnCount; c++) {
 						var field = _a[r][c];
-						if(!field.NE()) {
+						if (!field.NE()) {
 							bool hasQuote = field.Contains(quote);
-							if(hasQuote || field.Contains(Separator) || field[0] == ' ' || field[^1] == ' ') {
-								if(hasQuote) {
-									if(sQuote1 == null) { sQuote1 = new string(quote, 1); sQuote2 = new string(quote, 2); }
+							if (hasQuote || field.Contains(Separator) || field[0] == ' ' || field[^1] == ' ') {
+								if (hasQuote) {
+									if (sQuote1 == null) { sQuote1 = new string(quote, 1); sQuote2 = new string(quote, 2); }
 									field = field.Replace(sQuote1, sQuote2);
 								}
 								b.Append(quote).Append(field).Append(quote);
 							} else b.Append(field);
 						}
-						if(c < _columnCount - 1) b.Append(Separator);
+						if (c < _columnCount - 1) b.Append(Separator);
 					}
 					b.AppendLine();
 				}
@@ -191,16 +175,13 @@ namespace Au
 		/// The 'get' function returns the <b>Count</b> property of the internal <b>List</b> of string arrays.
 		/// The 'set' function can add new rows or remove rows at the end.
 		/// </summary>
-		public int RowCount
-		{
+		public int RowCount {
 			get => _a.Count;
-			set
-			{
-				if(value > _a.Count) {
-					string[] row = _columnCount > 0 ? new string[_columnCount] : null;
+			set {
+				if (value > _a.Count) {
 					_a.Capacity = value;
-					while(_a.Count < value) _a.Add(row);
-				} else if(value < _a.Count) {
+					while (_a.Count < value) _a.Add(_columnCount > 0 ? new string[_columnCount] : null);
+				} else if (value < _a.Count) {
 					_a.RemoveRange(value, _a.Count - value);
 				}
 			}
@@ -211,21 +192,19 @@ namespace Au
 		/// The 'get' function returns the length of all string arrays in the internal <b>List</b>.
 		/// The 'set' function can add new columns or remove columns at the right.
 		/// </summary>
-		public int ColumnCount
-		{
+		public int ColumnCount {
 			get => _columnCount;
-			set
-			{
-				if(value <= 0) throw new ArgumentOutOfRangeException();
+			set {
+				if (value <= 0) throw new ArgumentOutOfRangeException();
 				//if(value == _columnCount) return;
-				for(int r = 0; r < _a.Count; r++) {
+				for (int r = 0; r < _a.Count; r++) {
 					var o = _a[r];
-					if(o == null) _a[r] = new string[value];
-					else if(o.Length != value) {
+					if (o == null) _a[r] = new string[value];
+					else if (o.Length != value) {
 						var t = new string[value];
-						if(value > _columnCount) o.CopyTo(t, 0);
+						if (value > _columnCount) o.CopyTo(t, 0);
 						else {
-							for(int c = 0; c < value; c++) t[c] = o[c];
+							for (int c = 0; c < value; c++) t[c] = o[c];
 						}
 						_a[r] = t;
 					}
@@ -242,27 +221,24 @@ namespace Au
 		/// <param name="row">0-based row index. With the 'set' function it can be negative or equal to <see cref="RowCount"/>; then adds new row.</param>
 		/// <param name="column">0-based column index. With the 'set' function it can be &gt;= <see cref="ColumnCount"/> and &lt; 1000; then sets <c>ColumnCount = column + 1</c>.</param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public string this[int row, int column]
-		{
-			get
-			{
-				if((uint)column >= _columnCount) throw new ArgumentOutOfRangeException("column");
-				if((uint)row >= RowCount) throw new ArgumentOutOfRangeException("row");
+		public string this[int row, int column] {
+			get {
+				if ((uint)column >= _columnCount) throw new ArgumentOutOfRangeException("column");
+				if ((uint)row >= RowCount) throw new ArgumentOutOfRangeException("row");
 
 				return _a[row][column];
 			}
-			set
-			{
+			set {
 				//Auto-add columns.
-				if(column < 0) column = int.MaxValue;
-				if(column >= _columnCount) {
-					if(column >= 1000) throw new ArgumentOutOfRangeException("column");
+				if (column < 0) column = int.MaxValue;
+				if (column >= _columnCount) {
+					if (column >= 1000) throw new ArgumentOutOfRangeException("column");
 					ColumnCount = column + 1;
 				}
 				//Auto-add row.
-				if(row < 0) row = RowCount;
-				if(row >= RowCount) {
-					if(row > RowCount) throw new ArgumentOutOfRangeException("row");
+				if (row < 0) row = RowCount;
+				if (row >= RowCount) {
+					if (row > RowCount) throw new ArgumentOutOfRangeException("row");
 					_a.Add(new string[_columnCount]);
 				}
 
@@ -279,29 +255,26 @@ namespace Au
 		/// The 'get' function gets the row array. It's not a copy; changing its elements will change content of this <see cref="csvTable"/> variable.
 		/// The 'set' function sets the row array. Does not copy the array, unless its <b>Length</b> is less than <see cref="ColumnCount"/>.
 		/// </remarks>
-		public string[] this[int row]
-		{
-			get
-			{
-				if((uint)row >= RowCount) throw new ArgumentOutOfRangeException();
+		public string[] this[int row] {
+			get {
+				if ((uint)row >= RowCount) throw new ArgumentOutOfRangeException();
 
 				return _a[row];
 			}
-			set
-			{
+			set {
 				//Auto-add row.
-				if(row < 0) row = RowCount;
-				if(row >= RowCount) {
-					if(row > RowCount) throw new ArgumentOutOfRangeException();
+				if (row < 0) row = RowCount;
+				if (row >= RowCount) {
+					if (row > RowCount) throw new ArgumentOutOfRangeException();
 					_a.Add(null);
 				}
 
 				var t = value;
-				if(value == null || value.Length < _columnCount) {
+				if (value == null || value.Length < _columnCount) {
 					//make row length = _columnCount
 					t = new string[_columnCount];
-					if(value != null) value.CopyTo(t, 0);
-				} else if(value.Length > _columnCount) {
+					if (value != null) value.CopyTo(t, 0);
+				} else if (value.Length > _columnCount) {
 					//auto-add columns
 					ColumnCount = value.Length;
 				}
@@ -323,9 +296,8 @@ namespace Au
 		/// <param name="index">0-based row index. If negative or equal to <see cref="RowCount"/>, adds to the end.</param>
 		/// <param name="fields">Row fields. Can be a string array or multiple string arguments. Does not copy the array, unless its <b>Length</b> is less than <see cref="ColumnCount"/>. Adds new columns if array <b>Length</b> (or the number of string arguments) is greater than ColumnCount.</param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public void InsertRow(int index, params string[] fields)
-		{
-			if(index < 0) index = RowCount;
+		public void InsertRow(int index, params string[] fields) {
+			if (index < 0) index = RowCount;
 			_a.Insert(index, null);
 			this[index] = fields;
 		}
@@ -335,8 +307,7 @@ namespace Au
 		/// </summary>
 		/// <param name="index">0-based row index. If negative or equal to <see cref="RowCount"/>, adds to the end.</param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public void InsertRow(int index)
-		{
+		public void InsertRow(int index) {
 			InsertRow(index, null);
 		}
 
@@ -347,8 +318,7 @@ namespace Au
 		/// <param name="count">How many rows to remove, default 1.</param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <exception cref="ArgumentException"></exception>
-		public void RemoveRow(int index, int count = 1)
-		{
+		public void RemoveRow(int index, int count = 1) {
 			_a.RemoveRange(index, count);
 		}
 
@@ -382,8 +352,7 @@ namespace Au
 		/// <remarks>
 		/// Calls <see cref="File.ReadAllText(string)"/> and <see cref="parse"/>. Also uses <see cref="filesystem.waitIfLocked"/>.
 		/// </remarks>
-		public static csvTable load(string file, char separator = ',', char quote = '"', bool trimSpaces = true)
-		{
+		public static csvTable load(string file, char separator = ',', char quote = '"', bool trimSpaces = true) {
 			var csv = filesystem.loadText(file);
 			return parse(csv, separator, quote, trimSpaces);
 		}
@@ -398,8 +367,7 @@ namespace Au
 		/// <remarks>
 		/// Calls <see cref="ToString"/> and <see cref="File.WriteAllText(string, string)"/>. Also uses <see cref="filesystem.save"/>.
 		/// </remarks>
-		public void Save(string file, bool backup = false)
-		{
+		public void Save(string file, bool backup = false) {
 			var csv = ToString();
 			filesystem.saveText(file, csv, backup);
 		}
@@ -409,11 +377,10 @@ namespace Au
 		/// </summary>
 		/// <param name="d"></param>
 		/// <exception cref="ArgumentNullException"></exception>
-		public static csvTable fromDictionary(Dictionary<string, string> d)
-		{
-			if(d == null) throw new ArgumentNullException();
+		public static csvTable fromDictionary(Dictionary<string, string> d) {
+			if (d == null) throw new ArgumentNullException();
 			var a = new List<string[]>(d.Count);
-			foreach(var v in d) a.Add(new string[] { v.Key, v.Value });
+			foreach (var v in d) a.Add(new string[] { v.Key, v.Value });
 			return new csvTable(a, 2);
 		}
 
@@ -423,11 +390,10 @@ namespace Au
 		/// <param name="d"></param>
 		/// <param name="valueToString">Callback function that converts value of type T to string.</param>
 		/// <exception cref="ArgumentNullException"></exception>
-		public static csvTable fromDictionary<T>(Dictionary<string, T> d, Func<T, string> valueToString)
-		{
-			if(d == null || valueToString == null) throw new ArgumentNullException();
+		public static csvTable fromDictionary<T>(Dictionary<string, T> d, Func<T, string> valueToString) {
+			if (d == null || valueToString == null) throw new ArgumentNullException();
 			var a = new List<string[]>(d.Count);
-			foreach(var v in d) {
+			foreach (var v in d) {
 				var t = valueToString(v.Value);
 				a.Add(new string[] { v.Key, t });
 			}
@@ -442,12 +408,11 @@ namespace Au
 		/// <param name="valueToCells">Callback function that converts value of type T to one or more strings and puts them in row array elements starting from index 1. At index 0 is key.</param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentOutOfRangeException">columnCount less than 2.</exception>
-		public static csvTable fromDictionary<T>(Dictionary<string, T> d, int columnCount, Action<T, string[]> valueToCells)
-		{
-			if(d == null || valueToCells == null) throw new ArgumentNullException();
-			if(columnCount < 2) throw new ArgumentOutOfRangeException();
+		public static csvTable fromDictionary<T>(Dictionary<string, T> d, int columnCount, Action<T, string[]> valueToCells) {
+			if (d == null || valueToCells == null) throw new ArgumentNullException();
+			if (columnCount < 2) throw new ArgumentOutOfRangeException();
 			var a = new List<string[]>(d.Count);
-			foreach(var v in d) {
+			foreach (var v in d) {
 				var t = new string[columnCount];
 				t[0] = v.Key;
 				valueToCells(v.Value, t);
@@ -463,12 +428,11 @@ namespace Au
 		/// <param name="ignoreDuplicates">Don't throw exception if column 0 contains duplicate strings. Replace old value with new value.</param>
 		/// <exception cref="InvalidOperationException"><b>ColumnCount</b> not 2.</exception>
 		/// <exception cref="ArgumentException">Column 0 contains duplicate strings.</exception>
-		public Dictionary<string, string> ToDictionary(bool ignoreCase, bool ignoreDuplicates)
-		{
-			if(_columnCount != 2) throw new InvalidOperationException("ColumnCount must be 2");
+		public Dictionary<string, string> ToDictionary(bool ignoreCase, bool ignoreDuplicates) {
+			if (_columnCount != 2) throw new InvalidOperationException("ColumnCount must be 2");
 			var d = new Dictionary<string, string>(ignoreCase ? StringComparer.OrdinalIgnoreCase : null);
-			foreach(var v in _a) {
-				if(ignoreDuplicates) d[v[0]] = v[1];
+			foreach (var v in _a) {
+				if (ignoreDuplicates) d[v[0]] = v[1];
 				else d.Add(v[0], v[1]);
 			}
 			return d;
@@ -483,14 +447,13 @@ namespace Au
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="InvalidOperationException"><b>ColumnCount</b> less than 2.</exception>
 		/// <exception cref="ArgumentException">Column 0 contains duplicate strings.</exception>
-		public Dictionary<string, T> ToDictionary<T>(bool ignoreCase, bool ignoreDuplicates, Func<string[], T> rowToValue)
-		{
-			if(rowToValue == null) throw new ArgumentNullException();
-			if(_columnCount < 2) throw new InvalidOperationException("ColumnCount must be >= 2");
+		public Dictionary<string, T> ToDictionary<T>(bool ignoreCase, bool ignoreDuplicates, Func<string[], T> rowToValue) {
+			if (rowToValue == null) throw new ArgumentNullException();
+			if (_columnCount < 2) throw new InvalidOperationException("ColumnCount must be >= 2");
 			var d = new Dictionary<string, T>(ignoreCase ? StringComparer.OrdinalIgnoreCase : null);
-			foreach(var v in _a) {
+			foreach (var v in _a) {
 				var t = rowToValue(v);
-				if(ignoreDuplicates) d[v[0]] = t;
+				if (ignoreDuplicates) d[v[0]] = t;
 				else d.Add(v[0], t);
 			}
 			return d;
@@ -522,8 +485,7 @@ namespace Au
 		/// <param name="value">The number.</param>
 		/// <param name="hex">Let the number be in hexadecimal format, like 0x3A.</param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public void SetInt(int row, int column, int value, bool hex = false)
-		{
+		public void SetInt(int row, int column, int value, bool hex = false) {
 			this[row, column] = hex ? "0x" + value.ToString("X") : value.ToString();
 		}
 
@@ -533,8 +495,7 @@ namespace Au
 		/// <param name="row"><see cref="this[int, int]"/></param>
 		/// <param name="column"><see cref="this[int, int]"/></param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public int GetInt(int row, int column)
-		{
+		public int GetInt(int row, int column) {
 			return this[row, column].ToInt();
 		}
 
@@ -545,8 +506,7 @@ namespace Au
 		/// <param name="column"><see cref="this[int, int]"/></param>
 		/// <param name="value">The number.</param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public void SetDouble(int row, int column, double value)
-		{
+		public void SetDouble(int row, int column, double value) {
 			this[row, column] = value.ToS();
 		}
 
@@ -556,8 +516,7 @@ namespace Au
 		/// <param name="row"><see cref="this[int, int]"/></param>
 		/// <param name="column"><see cref="this[int, int]"/></param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public double GetDouble(int row, int column)
-		{
+		public double GetDouble(int row, int column) {
 			this[row, column].ToNumber(out double R);
 			return R;
 		}

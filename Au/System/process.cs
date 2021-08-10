@@ -1,22 +1,5 @@
 ﻿//#define USE_WTS
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
-using System.Globalization;
-
-using Au.Types;
-using Au.More;
-
 namespace Au
 {
 	/// <summary>
@@ -663,31 +646,6 @@ namespace Au.Types
 	/// <summary>
 	/// Contains process name (like "notepad.exe"), id, name and user session id.
 	/// </summary>
-	public record ProcessInfo(string Name, int Id, int SessionId);
+	public record struct ProcessInfo(string Name, int Id, int SessionId);
 	//use record to auto-implement ==, eg for code like var a=process.allProcesses(); 5.s(); print.it(process.allProcesses().Except(a));
-
-	///// <summary>
-	///// Contains process id, name and session id.
-	///// </summary>
-	//public struct ProcessInfo
-	//{
-	//	/// <summary>Executable file name, like "notepad.exe".</summary>
-	//	public string Name;
-
-	//	/// <summary>Process id.</summary>
-	//	public int Id;
-
-	//	/// <summary>User session id.</summary>
-	//	public int SessionId;
-
-	//	//public IntPtr UserSid; //where is its memory?
-
-	//	///
-	//	public ProcessInfo(int session, int pid, string name) {
-	//		SessionId = session; Id = pid; Name = name;
-	//	}
-
-	//	///
-	//	public override string ToString() => Name;
-	//}
 }

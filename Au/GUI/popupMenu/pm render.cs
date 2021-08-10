@@ -1,10 +1,4 @@
-﻿using Au;
-using Au.Types;
-using System;
-using System.Collections.Generic;
-//using System.Linq;
-using Au.More;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Drawing.Drawing2D;
 
 namespace Au

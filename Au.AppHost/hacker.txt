@@ -3,5 +3,5 @@ Exe=    64\Au.AppHost.exe
 SaveAs= Au.Task.exe
 Log= CONSOLE
 [COMMANDS]
--add ..\Au.AppHost\CsScript.ico, ICONGROUP,32512,0
--addoverwrite ..\Aedit\Resources\Au.manifest, MANIFEST,1,0
+-add ..\Au.AppHost\Script.ico, ICONGROUP,32512,0
+-addoverwrite ..\Au.Editor\Resources\Au.manifest, MANIFEST,1,0

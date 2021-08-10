@@ -1,19 +1,4 @@
-﻿using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
-
-//CONSIDER: script.canPause. Let user explicitly insert this at all points where the script can be safely paused. Also option to allow to pause at every key/mouse/etc function.
+﻿//CONSIDER: script.canPause. Let user explicitly insert this at all points where the script can be safely paused. Also option to allow to pause at every key/mouse/etc function.
 
 namespace Au
 {
@@ -106,7 +91,7 @@ namespace Au
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
 		static int _Run(int mode, string script, string[] args, out string resultS, Action<string> resultA = null) {
-			var w = WndMsg_; if (w.Is0) throw new AuException("Au editor not found."); //CONSIDER: run editor program, if installed
+			var w = WndMsg_; if (w.Is0) throw new AuException("Editor process not found."); //CONSIDER: run editor program, if installed
 			bool waitMode = 0 != (mode & 1), needResult = 0 != (mode & 2); resultS = null;
 			using var tr = new _TaskResults();
 			if (needResult && !tr.Init()) throw new AuException("*get task results");
@@ -504,7 +489,7 @@ namespace Au
 		/// <summary>
 		/// Finds editor's message-only window used with WM_COPYDATA etc.
 		/// </summary>
-		internal static wnd WndMsg_ => s_wndMsg.FindFast(null, "Aedit.m3gVxcTJN02pDrHiQ00aSQ", true);
+		internal static wnd WndMsg_ => s_wndMsg.FindFast(null, "Au.Editor.m3gVxcTJN02pDrHiQ00aSQ", true);
 		static wnd.Cached_ s_wndMsg;
 
 		/// <summary>

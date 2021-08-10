@@ -1,22 +1,9 @@
-﻿using Au.Types;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-using System.Linq;
+﻿using System.Linq;
 using System.Xml.Linq;
 using System.Xml;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Au.More;
 
 namespace Au.Controls
 {
@@ -25,7 +12,7 @@ namespace Au.Controls
 	/// Multiple docked movable/sizable/tabable/floatable/hidable/savable panels/toolbars/documents with splitters.
 	/// </summary>
 	/// <remarks>
-	/// Layout is defined in default XML file, then saved in other XML file. See Layout.xml in Aedit project.
+	/// Layout is defined in default XML file, then saved in other XML file. See Layout.xml in Au.Editor project.
 	/// If new app version adds/removes/renames panels etc, this class automatically updates the saved layout.
 	/// 
 	/// Let your window's ctor:

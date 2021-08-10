@@ -5,7 +5,7 @@ using System.Linq;
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
-using MahApps.Metro.IconPacks;
+//using MahApps.Metro.IconPacks;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows;
@@ -41,7 +41,7 @@ class Program
 		//print.it(rd);
 		var template = rd["MahApps.Templates." + rn] as ControlTemplate;
 		string xaml = XamlWriter.Save(template);
-		xaml = xaml.RegexReplace(@" xmlns(?::\w+)?="".+?""", "");
+		xaml = xaml.RReplace(@" xmlns(?::\w+)?="".+?""", "");
 		var x = XElement.Parse(xaml);
 		x = x.Descendants("Path").First();
 		return x.ToString();

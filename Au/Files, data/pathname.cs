@@ -1,17 +1,3 @@
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
 
 //tested: System.IO.Path functions improved in Core.
 //	No exceptions if path contains invalid characters. Although the exceptions are still documented in MSDN.
@@ -104,7 +90,7 @@ namespace Au
 		/// 
 		/// Supports only file-system paths. Returns false if path is URL (<see cref="isUrl"/>) or starts with <c>"::"</c>.
 		/// </remarks>
-		public static bool isFullPath(ReadOnlySpan<char> path, bool orEnvVar = false) {
+		public static bool isFullPath(RStr path, bool orEnvVar = false) {
 			int len = path.Length;
 			if (len >= 2) {
 				if (path[1] == ':' && path[0].IsAsciiAlpha()) {
@@ -158,7 +144,7 @@ namespace Au
 		/// Supports prefixes <c>@"\\?\"</c> and <c>@"\\?\UNC\"</c>.
 		/// Supports separators <c>'\\'</c> and <c>'/'</c>.
 		/// </remarks>
-		public static int getRootLength(ReadOnlySpan<char> path) {
+		public static int getRootLength(RStr path) {
 			var s = path;
 			int i = 0, len = s.Length;
 			if (len >= 2) {
@@ -204,7 +190,7 @@ namespace Au
 		/// 
 		/// The protocol can be unknown. The function just checks string format, which is an ASCII alpha character followed by one or more ASCII alpha-numeric, '.', '-', '+' characters, followed by ':' character.
 		/// </remarks>
-		public static int getUrlProtocolLength(ReadOnlySpan<char> s) {
+		public static int getUrlProtocolLength(RStr s) {
 			int len = s.Length;
 			if (len > 2 && s[0].IsAsciiAlpha() && s[1] != ':') {
 				for (int i = 1; i < len; i++) {
@@ -225,7 +211,7 @@ namespace Au
 		/// <remarks>
 		/// URL examples: <c>"http:"</c>, <c>"http://www.x.com"</c>, <c>"file:///path"</c>, <c>"shell:etc"</c>.
 		/// </remarks>
-		public static bool isUrl(ReadOnlySpan<char> s) {
+		public static bool isUrl(RStr s) {
 			return 0 != getUrlProtocolLength(s);
 		}
 
@@ -298,7 +284,7 @@ namespace Au
 		/// <summary>
 		/// Returns true if ends with ':' preceded by a drive letter, like "C:" or "more\C:", but not like "moreC:".
 		/// </summary>
-		static bool _EndsWithDriveWithoutSep(ReadOnlySpan<char> s) {
+		static bool _EndsWithDriveWithoutSep(RStr s) {
 			if (s == null) return false;
 			int i = s.Length - 1;
 			if (i < 1 || s[i] != ':') return false;
@@ -452,7 +438,7 @@ namespace Au
 		/// Returns true if starts with "::".
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		internal static bool IsShellPath_(ReadOnlySpan<char> s) {
+		internal static bool IsShellPath_(RStr s) {
 			return s.Length >= 2 && s[0] == ':' && s[1] == ':';
 		}
 
@@ -460,7 +446,7 @@ namespace Au
 		/// Returns true if <c>IsShellPath_(s) || isUrl(s)</c>.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		internal static bool IsShellPathOrUrl_(ReadOnlySpan<char> s) => IsShellPath_(s) || isUrl(s);
+		internal static bool IsShellPathOrUrl_(RStr s) => IsShellPath_(s) || isUrl(s);
 
 		/// <summary>
 		/// If path is full path (see <see cref="isFullPath"/>) and does not start with <c>@"\\?\"</c>, prepends <c>@"\\?\"</c>.
@@ -507,7 +493,7 @@ namespace Au
 		public static string unprefixLongPath(string path) {
 			if (!path.NE()) {
 				switch (_GetPrefixLength(path)) {
-				case 4: return path.Substring(4);
+				case 4: return path[4..];
 				case 8: return path.Remove(2, 6);
 				}
 			}
@@ -520,7 +506,7 @@ namespace Au
 		/// Else returns 0.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		static int _GetPrefixLength(ReadOnlySpan<char> s) {
+		static int _GetPrefixLength(RStr s) {
 			int len = s.Length;
 			if (len >= 4 && s[2] == '?' && IsSepChar_(s[0]) && IsSepChar_(s[1]) && IsSepChar_(s[3])) {
 				if (len >= 8 && IsSepChar_(s[7]) && s[4..].Eqi("UNC")) return 8;
@@ -552,8 +538,8 @@ namespace Au
 		/// </remarks>
 		public static string correctName(string name, string invalidCharReplacement = "-") {
 			if (name == null || (name = name.Trim()).Length == 0) return "-";
-			name = name.RegexReplace(_rxInvalidFN1, invalidCharReplacement).Trim();
-			if (name.RegexIsMatch(_rxInvalidFN2)) name = "@" + name;
+			name = name.RReplace(_rxInvalidFN1, invalidCharReplacement).Trim();
+			if (name.RIsMatch(_rxInvalidFN2)) name = "@" + name;
 			return name;
 		}
 
@@ -567,7 +553,7 @@ namespace Au
 		/// <param name="name">Any string. Example: "name.txt". Can be null.</param>
 		public static bool isInvalidName(string name) {
 			if (name == null || (name = name.Trim()).Length == 0) return true;
-			return name.RegexIsMatch(_rxInvalidFN1) || name.RegexIsMatch(_rxInvalidFN2);
+			return name.RIsMatch(_rxInvalidFN1) || name.RIsMatch(_rxInvalidFN2);
 		}
 
 		/// <summary>
@@ -669,7 +655,7 @@ namespace Au
 		/// <remarks>
 		/// Returns -1 if <c>'.'</c> is before <c>'\\'</c> or <c>'/'</c>.
 		/// </remarks>
-		public static int findExtension(ReadOnlySpan<char> path) {
+		public static int findExtension(RStr path) {
 			int i;
 			for (i = path.Length - 1; i >= 0; i--) {
 				switch (path[i]) {
@@ -757,14 +743,14 @@ namespace Au
 
 			switch (what) {
 			case _PathPart.Ext:
-				if (iExt >= 0) return s.Substring(iExt);
+				if (iExt >= 0) return s[iExt..];
 				break;
 			case _PathPart.NameWithExt:
 				len -= ++i; if (len == 0) return "";
 				return s.Substring(i, len);
 			case _PathPart.NameWithoutExt:
 				i++;
-				return s.Substring(i, iExt - i);
+				return s[i..iExt];
 			case _PathPart.Dir:
 				//skip multiple separators
 				if (!withSeparator && i > 0) {
@@ -777,7 +763,7 @@ namespace Au
 					if (i < j) return null;
 
 					if (withSeparator || _EndsWithDriveWithoutSep(s.AsSpan(0, i))) i++;
-					return s.Remove(i);
+					return s[..i];
 				}
 				break;
 			}
@@ -788,7 +774,7 @@ namespace Au
 		/// Returns true if s is like <c>".ext"</c> and the ext part does not contain characters <c>.\\/:</c>.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		internal static bool IsExtension_(ReadOnlySpan<char> s) {
+		internal static bool IsExtension_(RStr s) {
 			if (s.Length < 2 || s[0] != '.') return false;
 			for (int i = 1; i < s.Length; i++) {
 				switch (s[i]) { case '.': case '\\': case '/': case ':': return false; }
@@ -800,7 +786,7 @@ namespace Au
 		/// Returns true if s is like "protocol:" and not like "c:" or "protocol:more".
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		internal static bool IsProtocol_(ReadOnlySpan<char> s) {
+		internal static bool IsProtocol_(RStr s) {
 			return s.Length > 2 && s[^1] == ':' && getUrlProtocolLength(s) == s.Length;
 		}
 

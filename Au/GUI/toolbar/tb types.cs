@@ -1,8 +1,3 @@
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-
 namespace Au
 {
 	public partial class toolbar
@@ -208,30 +203,20 @@ namespace Au.Types
 	}
 
 	//rejected. Instead use System.Windows.Size. It loads 1 assembly in 1.5 ms and does not add much process memory.
-	//public struct SizeD : IEquatable<SizeD> {
-	//	[JsonInclude]
+	//public record struct SizeD
+	//{
+	//	[System.Text.Json.Serialization.JsonInclude]
 	//	public double width;
-	//	[JsonInclude]
+	//	[System.Text.Json.Serialization.JsonInclude]
 	//	public double height;
-	//	
+
 	//	public SizeD(double width, double height) { this.width = width; this.height = height; }
-	//
-	//	public static bool operator ==(SizeD s1, SizeD s2) => s1.width == s2.width && s1.height == s2.height;
-	//	public static bool operator !=(SizeD s1, SizeD s2) => !(s1 == s2);
-	//
-	//	public override int GetHashCode() => HashCode.Combine(width, height);
-	//
-	//	public bool Equals(SizeD other) => this == other; //IEquatable
-	//
-	//	public void Deconstruct(out double width, out double height) { width = this.width; height = this.height; }
-	//
-	//	public override string ToString() => $"{{cx={width.ToS()} cy={height.ToS()}}}";
 	//}
 
 	/// <summary>
 	/// Used with <see cref="toolbar.Offsets"/>.
 	/// </summary>
-	public struct TBOffsets : IEquatable<TBOffsets>
+	public record struct TBOffsets
 	{
 		/// <summary>
 		/// Horizontal distance from the owner's left edge (right if <see cref="TBAnchor.OppositeEdgeX"/>) to the toolbar's left edge.
@@ -259,13 +244,6 @@ namespace Au.Types
 		public TBOffsets(double left, double top, double right, double bottom) {
 			Left = left; Top = top; Right = right; Bottom = bottom;
 		}
-
-		///
-		public bool Equals(TBOffsets other)
-			=> other.Left == this.Left && other.Top == this.Top && other.Right == this.Right && other.Bottom == this.Bottom;
-
-		///
-		public override string ToString() => $"L={Left} T={Top} R={Right} B={Bottom}";
 	}
 
 	/// <summary>

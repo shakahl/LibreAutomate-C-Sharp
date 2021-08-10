@@ -1,8 +1,3 @@
-using Au.Types;
-using System;
-using System.Collections.Generic;
-using Au.More;
-
 namespace Au.Controls
 {
 	public unsafe partial class KTreeView
@@ -164,7 +159,7 @@ namespace Au.Controls
 			//if (BackgroundColor != null) {
 
 			//} else {
-				Api.FillRect(dc, rUpdate, (IntPtr)(Api.COLOR_WINDOW + 1));
+			Api.FillRect(dc, rUpdate, (IntPtr)(Api.COLOR_WINDOW + 1));
 			//}
 			if (_avi.NE_()) return;
 
@@ -199,7 +194,7 @@ namespace Au.Controls
 						var item = v.item;
 						int y = i * _itemHeight;
 						var r = new RECT(0, y, _width, _itemHeight);
-						if(!r.IntersectsWith(rUpdate)) continue;
+						if (!r.IntersectsWith(rUpdate)) continue;
 						//print.it(i);
 						int indent = _imageSize * v.level, xLeft = indent + xLefts;
 						int xImage = indent + xImages, yImage = y + yyImages;
@@ -222,18 +217,26 @@ namespace Au.Controls
 						//background
 						if (cd == null || !cd.DrawBackground()) {
 							int color = item.Color;
-							if (color != -1 || backColor == 0xffffff) { //custom or white
-								int xBack = r.left;
-								if (color == -1) {
-									if (v.isSelected) color = isFocusedControl ? 0xffd5c4 : 0xe0e0e0;
-									else color = (HotTrack && index == _hotIndex) ? 0xfff0e8 : backColor;
-									if (color != backColor) xBack = xText - _imageMarginX / 2; //don't draw selection background under icon and checkbox
-								}
-								if (color != backColor) {
-									var brush = Api.CreateSolidBrush(color);
-									var r2 = r; r2.left = xBack;
-									Api.FillRect(dc, r2, brush);
+							if (color != -1 || backColor == 0xffffff) { //custom color, or default color is white
+								if (color != -1) { //draw custom color
+									var brush = Api.CreateSolidBrush(color & 0xffffff);
+									Api.FillRect(dc, r, brush);
 									Api.DeleteObject(brush);
+								}
+								int alpha = color >> 24;
+								if (color == -1 || alpha is >= 1 and <= 3) { //if no custom color or if custom color's alpha is 1 - 3, draw selection or hot background
+									color = -1;
+									if (v.isSelected) {
+										if (0 != (alpha & 1)) color = isFocusedControl ? 0xffd5c4 : 0xe0e0e0;
+									} else if (HotTrack && index == _hotIndex) {
+										if (0 != (alpha & 2)) color = 0xfff0e8;
+									}
+									if (color != -1) {
+										var brush = Api.CreateSolidBrush(color);
+										var r2 = r; r2.left = xText - _imageMarginX / 2; //don't draw selection background under icon and checkbox
+										Api.FillRect(dc, r2, brush);
+										Api.DeleteObject(brush);
+									}
 								}
 							} else { //probably high contrast
 								if (v.isSelected) Api.FillRect(dc, r, (IntPtr)(Api.COLOR_HIGHLIGHT + 1));
@@ -241,7 +244,9 @@ namespace Au.Controls
 
 							color = item.BorderColor;
 							if (color != -1) {
-								graphics.DrawRectangleInset(color.ToColor_(bgr: true), 1, r);
+								int alpha = color >> 24; color &= 0xffffff;
+								var r2 = r; if (alpha == 1) r2.left = xText - _imageMarginX / 2 - 1;
+								graphics.DrawRectangleInset(color.ToColor_(bgr: true), 1, r2);
 							}
 						}
 

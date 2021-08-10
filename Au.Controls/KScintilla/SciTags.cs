@@ -1,18 +1,3 @@
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
-
 /*
 Most tags are like in QM2.
 
@@ -76,7 +61,7 @@ namespace Au.Controls
 	/// Also you can register custom link tags that call your callback functions.
 	/// See <see cref="AddLinkTag"/>, <see cref="AddCommonLinkTag"/>.
 	/// 
-	/// Tags are supported by some existing controls based on <see cref="KScintilla"/>. In the Au editor it is the output (use <see cref="print.it"/>, like in the example below). In this library - the <see cref="KSciInfoBox"/> control. To enable tags in other <see cref="KScintilla"/> controls, use <see cref="KScintilla.ZInitTagsStyle"/> and optionally <see cref="KScintilla.ZInitImages"/>.
+	/// Tags are supported by some existing controls based on <see cref="KScintilla"/>. In editor it is the output (use <see cref="print.it"/>, like in the example below). In this library - the <see cref="KSciInfoBox"/> control. To enable tags in other <see cref="KScintilla"/> controls, use <see cref="KScintilla.ZInitTagsStyle"/> and optionally <see cref="KScintilla.ZInitImages"/>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -714,7 +699,7 @@ namespace Au.Controls
 				return;
 			}
 			//get tag, attribute and text
-			if (!s.RegexMatch(@"(?s)^<(\+?\w+)(?: ""([^""]*)""| ([^>]*))?>(.+)", out var m)) return;
+			if (!s.RMatch(@"(?s)^<(\+?\w+)(?: ""([^""]*)""| ([^>]*))?>(.+)", out var m)) return;
 			string tag = m[1].Value, attr = m[2].Value ?? m[3].Value ?? m[4].Value;
 			//print.it($"'{tag}'  '{attr}'  '{m[4].Value}'");
 

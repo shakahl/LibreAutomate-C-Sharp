@@ -1,18 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
-
-using Au.Types;
-
+﻿
 namespace Au.More
 {
 	/// <summary>
@@ -236,7 +222,7 @@ namespace Au.More
 
 		//rejected. Don't need too many not important overloads. Good: in most cases data size is 2 times smaller. Same: speed.
 		//[SkipLocalsInit]
-		//public static unsafe int ReturnStringUtf8_(ReadOnlySpan<char> data, nint wParam) {
+		//public static unsafe int ReturnStringUtf8_(RStr data, nint wParam) {
 		//	var e = Encoding.UTF8;
 		//	using var b = new FastBuffer<byte>(e.GetByteCount(data));
 		//	int len = e.GetBytes(data, new Span<byte>(b.p, b.n));

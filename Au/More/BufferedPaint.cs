@@ -1,6 +1,4 @@
-﻿using Au.Types;
-using System;
-
+﻿
 namespace Au.More
 {
 	/// <summary>

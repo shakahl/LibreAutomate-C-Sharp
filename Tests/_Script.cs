@@ -608,7 +608,7 @@ partial class TestScript
 ";
 
 		string html = Markdig.Markdown.ToHtml(markdown);
-		html = html.RegexReplace(@"(?m)^", "/// ");
+		html = html.RReplace(@"(?m)^", "/// ");
 		print.it(html);
 	}
 
@@ -764,15 +764,15 @@ partial class TestScript
 		print.it(folders.NetRuntime);
 	}
 
-	[StructLayout(LayoutKind.Explicit, Size = 500000)]
-	struct BIGBIG { public override string ToString() => "TEST"; }
-	void TestStringInterpolationBoxing() {
-		BIGBIG r = default;
-		Debug_.MemorySetAnchor_();
-		var s = $"a {r}?"; //result: boxes, although .ToString() causes an IDE suggestion to remove it
-		Debug_.MemoryPrint_();
-		print.it(s);
-	}
+	//[StructLayout(LayoutKind.Explicit, Size = 500000)]
+	//struct BIGBIG { public override string ToString() => "TEST"; }
+	//void TestStringInterpolationBoxing() {
+	//	BIGBIG r = default;
+	//	Debug_.MemorySetAnchor_();
+	//	var s = $"a {r}?"; //result: boxes, although .ToString() causes an IDE suggestion to remove it
+	//	Debug_.MemoryPrint_();
+	//	print.it(s);
+	//}
 
 	void TestMinusSign() {
 		print.clear();

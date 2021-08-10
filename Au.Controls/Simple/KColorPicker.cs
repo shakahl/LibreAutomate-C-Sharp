@@ -1,9 +1,4 @@
-﻿using Au.Types;
-using System;
-using System.Collections.Generic;
-using Au.More;
-using System.Windows.Interop;
-using System.Runtime.InteropServices;
+﻿using System.Windows.Interop;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;

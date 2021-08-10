@@ -1,20 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
-
-using Au.Types;
-using Au.More;
-
-//SHOULDDO: test how mouse moves through non-screen area between screens A and C when screen B is in between.
+﻿//SHOULDDO: test how mouse moves through non-screen area between screens A and C when screen B is in between.
 //	QM2 has problems crossing non-screen corners at default speed. Au works well.
 
 namespace Au
@@ -1301,27 +1285,28 @@ namespace Au.Types
 	/// </summary>
 	public static partial class ExtAu
 	{
-		#region wnd
+		//rejected. Why to have 2 functions for same thing. And not the window clicks the mouse, but the mouse clicks the window.
+		//#region wnd
 
-		/// <summary>
-		/// Moves the cursor (mouse pointer) to the position x y relative to this window.
-		/// Calls <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.
-		/// </summary>
-		/// <exception cref="NotFoundException">Window not found (this variable is 0).</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.</exception>
-		public static void MouseMove(this wnd w, Coord x = default, Coord y = default, bool nonClient = false)
-			=> mouse.move(+w, x, y, nonClient);
+		///// <summary>
+		///// Moves the cursor (mouse pointer) to the position x y relative to this window.
+		///// Calls <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.
+		///// </summary>
+		///// <exception cref="NotFoundException">Window not found (this variable is 0).</exception>
+		///// <exception cref="Exception">Exceptions of <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.</exception>
+		//public static void MouseMove(this wnd w, Coord x = default, Coord y = default, bool nonClient = false)
+		//	=> mouse.move(+w, x, y, nonClient);
 
-		/// <summary>
-		/// Clicks, double-clicks, presses or releases a mouse button at position x y relative to this window.
-		/// Calls <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.
-		/// </summary>
-		/// <exception cref="NotFoundException">Window not found (this variable is 0).</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.</exception>
-		public static MRelease MouseClick(this wnd w, Coord x = default, Coord y = default, MButton button = MButton.Left, bool nonClient = false)
-			=> mouse.clickEx(button, +w, x, y, nonClient);
+		///// <summary>
+		///// Clicks, double-clicks, presses or releases a mouse button at position x y relative to this window.
+		///// Calls <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.
+		///// </summary>
+		///// <exception cref="NotFoundException">Window not found (this variable is 0).</exception>
+		///// <exception cref="Exception">Exceptions of <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.</exception>
+		//public static MRelease MouseClick(this wnd w, Coord x = default, Coord y = default, MButton button = MButton.Left, bool nonClient = false)
+		//	=> mouse.clickEx(button, +w, x, y, nonClient);
 
-		#endregion
+		//#endregion
 
 		#region elm
 

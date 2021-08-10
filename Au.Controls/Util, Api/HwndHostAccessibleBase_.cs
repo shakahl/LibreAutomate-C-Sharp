@@ -1,13 +1,4 @@
-﻿using Au.Types;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.ComponentModel;
-using System.Reflection;
-using System.Diagnostics;
-using System.Windows;
+﻿using System.Windows;
 using IAccessible = Au.Types.Api.IAccessible;
 using VarInt = Au.Types.Api.VarInt;
 using NAVDIR = Au.Types.Api.NAVDIR;

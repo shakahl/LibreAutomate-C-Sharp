@@ -23,7 +23,7 @@ Then optionally you can define classes and other types.
 
 This syntax is known as "C# top-level statements". It is simple and concise,
 but has some limitations. You can instead use a class with Main function. Try
-menu Code -> Convert to script class.
+menu Code -> Add class Program.
 
 The //. and //.. are used to fold (hide) code. Click the small [+] box at
 the top-left to see and edit that code when need. 

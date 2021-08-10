@@ -1,7 +1,5 @@
 ﻿//Windows API constants common to multiple API functions, such as WM_, WS_, errors.
 
-using System;
-
 namespace Au.Types
 {
 	static unsafe partial class Api

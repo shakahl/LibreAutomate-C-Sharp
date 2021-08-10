@@ -1,18 +1,4 @@
-﻿using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
-
+﻿
 #pragma warning disable 1591 //missing XML documentation
 
 namespace Au
@@ -482,7 +468,7 @@ namespace Au
 		/// <summary>
 		/// Gets .NET runtime desktop folder with <c>'\\'</c> at the end, like <c>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\3.1.0\</c>.
 		/// </summary>
-		public static string NetRuntimeDesktopBS => __netRuntimeDesktopBS ??= NetRuntimeBS.RegexReplace(@"(?i)\\Microsoft\.\KNETCore(?=\.App\\[^\\]+\\$)", "WindowsDesktop", 1);
+		public static string NetRuntimeDesktopBS => __netRuntimeDesktopBS ??= NetRuntimeBS.RReplace(@"(?i)\\Microsoft\.\KNETCore(?=\.App\\[^\\]+\\$)", "WindowsDesktop", 1);
 		static string __netRuntimeDesktopBS;
 
 		/// <summary>

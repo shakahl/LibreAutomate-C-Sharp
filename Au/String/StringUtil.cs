@@ -1,16 +1,3 @@
-using Au.Types;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-//using System.Linq;
 
 namespace Au.More
 {
@@ -103,9 +90,9 @@ namespace Au.More
 					var s = v;
 					if (esc == 2) {
 						if (s.Find(@"\""") < 0) s = s.Replace(@"""", @"\""");
-						else s = s.RegexReplace(@"(\\*)""", @"$1$1\""");
+						else s = s.RReplace(@"(\\*)""", @"$1$1\""");
 					}
-					if (s.Ends('\\')) s = s.RegexReplace(@"(\\+)$", "$1$1");
+					if (s.Ends('\\')) s = s.RReplace(@"(\\+)$", "$1$1");
 					b.Append(s).Append('\"');
 				}
 			}

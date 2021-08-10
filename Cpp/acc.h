@@ -166,8 +166,7 @@ static void PrintAcc(IAccessible* acc, long elem = 0, int level = 0)
 #endif
 
 	//Temporarily sets SPI_SETSCREENREADER. Restores in dtor.
-	//It enables accessible objects and UI automation elements (AO/AE) in OpenOffice.
-	//Also enables AO in LibreOffice, but it works only with flag NotInProc AND if this process is of different bitness. Strange.
+	//It enables accessible objects and UI automation elements (AO/AE) in OpenOffice and LibreOffice. Not tested with new versions, but works.
 class TempSetScreenReader
 {
 	bool _restore;

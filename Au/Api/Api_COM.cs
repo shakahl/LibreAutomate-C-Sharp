@@ -1,8 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-
-namespace Au.Types
+﻿namespace Au.Types
 {
 	static unsafe partial class Api
 	{

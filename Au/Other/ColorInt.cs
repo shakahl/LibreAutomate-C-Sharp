@@ -1,19 +1,5 @@
-﻿using System;
-using Au.More;
-using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Text.Json.Serialization;
-//using System.Linq;
-
 
 namespace Au.Types
 {
@@ -21,7 +7,7 @@ namespace Au.Types
 	/// Color, as int in 0xAARRGGBB format.
 	/// Can convert from/to <see cref="Color"/>, <see cref="System.Windows.Media.Color"/>, int (0xAARRGGBB), Windows COLORREF (0xBBGGRR), string.
 	/// </summary>
-	public struct ColorInt : IEquatable<ColorInt>
+	public record struct ColorInt
 	{
 		/// <summary>
 		/// Color value in 0xAARRGGBB format.
@@ -135,16 +121,8 @@ namespace Au.Types
 		///// </summary>
 		//internal static ColorInt FromSysColor_(int colorIndex) => FromBGR(Api.GetSysColor(colorIndex), true);
 
-#pragma warning disable 1591 //XML doc
-		public static bool operator ==(ColorInt a, ColorInt b) => a.argb == b.argb;
-		public static bool operator !=(ColorInt a, ColorInt b) => a.argb != b.argb;
-
-		public bool Equals(ColorInt other) => other.argb == argb;
-
-		public override bool Equals(object obj) => obj is ColorInt && this == (ColorInt)obj;
-		public override int GetHashCode() => argb;
+		///
 		public override string ToString() => "#" + argb.ToString("X8");
-#pragma warning restore 1591 //XML doc
 
 		/// <summary>
 		/// Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).

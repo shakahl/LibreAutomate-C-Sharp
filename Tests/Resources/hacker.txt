@@ -3,4 +3,4 @@ Exe=    64\Au.AppHost.exe
 SaveAs= Au.Tests.exe
 Log= CONSOLE
 [COMMANDS]
--add ..\Aedit\Resources\Au.manifest, MANIFEST,1,0
+-add ..\Au.Editor\Resources\Au.manifest, MANIFEST,1,0
