@@ -3740,7 +3740,7 @@
         </member>
         <member name="T:Au.Types.JSettings">
             <summary>
-            Base of records that contain various settings as public fields. Loads and lazily auto-saves from/to a JSON file.
+            Base of record classes that contain various settings as public fields. Loads and lazily auto-saves from/to a JSON file.
             </summary>
             <remarks>
             All functions are thread-safe.
@@ -5567,6 +5567,28 @@
             <param name="t">This span.</param>
             <param name="index">Offset in this span. If invalid, returns false.</param>
             <param name="c">Character.</param>
+        </member>
+        <member name="M:Au.Types.ExtString.Starts(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char},System.Boolean)">
+            <summary>
+            Returns true if starts with string <i>s</i>.
+            </summary>
+            <param name="t">This span.</param>
+            <param name="s">Other string.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ExtString.Ends(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char},System.Boolean)">
+            <summary>
+            Returns true if starts with string <i>s</i>.
+            </summary>
+            <param name="t">This span.</param>
+            <param name="s">Other string.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
         </member>
         <member name="M:Au.Types.ExtString.IndexOf(System.ReadOnlySpan{System.Char},System.Int32,System.Char)">
             <summary>
@@ -7960,6 +7982,57 @@
             Returns true if using Debug configuration of Au.dll.
             </summary>
         </member>
+        <member name="M:Au.More.Debug_.GetComObjRefCount_(System.IntPtr)">
+            <summary>
+            Calls Marshal.AddRef(obj), then calls/returns Marshal.Release(obj).
+            Available if TRACE defined.
+            </summary>
+        </member>
+        <member name="M:Au.More.Debug_.MemoryGet_(System.Boolean)">
+            <summary>
+            Returns managed memory size as formatted string. Uses GC.GetTotalMemory.
+            Available if TRACE defined.
+            </summary>
+            <param name="fromAnchor">Get the difference from previous call to <b>MemorySetAnchor_</b>.</param>
+        </member>
+        <member name="M:Au.More.Debug_.MemoryPrint_(System.Boolean)">
+            <summary>
+            Prints managed memory size. Uses GC.GetTotalMemory.
+            Available if TRACE defined.
+            </summary>
+            <param name="fromAnchor">Get the difference from previous call to <b>MemorySetAnchor_</b>.</param>
+        </member>
+        <member name="M:Au.More.Debug_.MemorySetAnchor_">
+            <summary>
+            Memorizes current managed memory size, so that next call to another <b>MemoryX</b> function with fromAnchor=true (default) will get memory size difference from current memory size.
+            Available if TRACE defined.
+            </summary>
+        </member>
+        <member name="T:Au.More.Debug_.NoGcRegion">
+            <summary>
+            Temporarily suspends GC collections if possible. Restores in <b>Dispose</b>.
+            Available if TRACE defined.
+            </summary>
+        </member>
+        <member name="M:Au.More.Debug_.NoGcRegion.#ctor(System.Int64,System.Boolean)">
+            <summary>
+            Suspends GC collections if possible.
+            Does nothing in 32-bit process.
+            </summary>
+            <param name="memSize">Recommended 100_000_000. Still works if 200_000_000, but fails if 300_000_000. Not tested in 32-bit process.</param>
+            <param name="print">Let <b>Dispose</b> print size of managed memory added since ctor.</param>
+        </member>
+        <member name="M:Au.More.Debug_.NoGcRegion.Dispose">
+            <summary>
+            Restores suspended GC collections.
+            </summary>
+        </member>
+        <member name="M:Au.More.Debug_.PrintLoadedAssemblies(System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Prints assemblies already loaded or/and loaded in the future.
+            Works in Release too, if TRACE defined.
+            </summary>
+        </member>
         <member name="T:Au.More.GC_">
             <summary>
             <see cref="T:System.GC"/> extensions.
@@ -8144,6 +8217,14 @@
             Gets the length of the instructions and operands.
             </summary>
             <value>The length.</value>
+        </member>
+        <member name="M:Au.More.ILInstruction.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents this instance.
+            </summary>
+            <returns>
+            A <see cref="T:System.String"/> that represents this instance.
+            </returns>
         </member>
         <member name="T:Au.More.ILReader">
             <summary>

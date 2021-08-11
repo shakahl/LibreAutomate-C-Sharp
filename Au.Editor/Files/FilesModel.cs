@@ -1356,7 +1356,7 @@ partial class FilesModel
 			if (pause) _watcher.EnableRaisingEvents = false;
 			a();
 		}
-		catch (Exception ex) { print.it(ex.ToStringWithoutStack()); return false; }
+		catch (Exception ex) { print.it(ex); return false; }
 		finally { if (pause) _watcher.EnableRaisingEvents = true; } //fast
 		return true;
 	}

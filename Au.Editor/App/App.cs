@@ -1,7 +1,7 @@
 ﻿using Au.Controls;
 using System.Windows;
 
-//TODO: update window screenshot in git
+//TODO: need some learning stuff. Now users install the app, open the window first time, and don't know what to do.
 
 static class App
 {
@@ -27,7 +27,7 @@ static class App
 		perf.first();
 		timerm.after(1, _ => perf.nw());
 		print.qm2.use = true;
-		print.clear();
+		//print.clear();
 		print.redirectConsoleOutput = true;
 	}
 #endif

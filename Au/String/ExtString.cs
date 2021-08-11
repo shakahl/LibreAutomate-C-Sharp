@@ -1506,6 +1506,28 @@ namespace Au.Types
 		}
 
 		/// <summary>
+		/// Returns true if starts with string <i>s</i>.
+		/// </summary>
+		/// <param name="t">This span.</param>
+		/// <param name="s">Other string.</param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
+		/// <remarks>
+		/// Uses ordinal comparison (does not depend on current culture/locale).
+		/// </remarks>
+		public static bool Starts(this RStr t, RStr s, bool ignoreCase = false) => t.StartsWith(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+
+		/// <summary>
+		/// Returns true if starts with string <i>s</i>.
+		/// </summary>
+		/// <param name="t">This span.</param>
+		/// <param name="s">Other string.</param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
+		/// <remarks>
+		/// Uses ordinal comparison (does not depend on current culture/locale).
+		/// </remarks>
+		public static bool Ends(this RStr t, RStr s, bool ignoreCase = false) => t.EndsWith(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+
+		/// <summary>
 		/// Finds character <i>c</i> in this span, starting from <i>index</i>.
 		/// Returns its index in this span, or -1 if not found.
 		/// </summary>

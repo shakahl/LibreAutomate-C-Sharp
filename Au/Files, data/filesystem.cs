@@ -1236,17 +1236,17 @@ namespace Au
 			g2:
 			string es = null;
 			if (exists(file, true).isFile) {
-				if (!Api.ReplaceFile(file, temp, back, 6)) es = "ReplaceFile failed"; //random ERROR_UNABLE_TO_REMOVE_REPLACED; _LockedWaiter knows it
+				if (!Api.ReplaceFile(file, temp, back, 6)) es = "save"; //random ERROR_UNABLE_TO_REMOVE_REPLACED; _LockedWaiter knows it
 				else if (backup) ShellNotify_(Api.SHCNE_RENAMEITEM, temp, file); //without it Explorer shows 2 files with filename of temp
 				else if (!Api.DeleteFile(back)) Debug_.PrintNativeError_(); //maybe should wait/retry if failed, but never noticed
 			} else {
-				if (!Api.MoveFileEx(temp, file, Api.MOVEFILE_REPLACE_EXISTING)) es = "MoveFileEx failed";
+				if (!Api.MoveFileEx(temp, file, Api.MOVEFILE_REPLACE_EXISTING)) es = "create";
 			}
 			if (es != null) {
 				int ec = lastError.code;
 				if (ec == Api.ERROR_PATH_NOT_FOUND && _AutoCreateDir(file)) goto g2;
 				if (w.ExceptionFilter(ec)) { w.Sleep(); goto g2; }
-				throw new IOException(es, ec);
+				throw new IOException($"Failed to {es} file '{file}'. {lastError.messageFor(ec)}", ec);
 			}
 
 			static bool _AutoCreateDir(string filePath) {

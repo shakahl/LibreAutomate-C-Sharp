@@ -2,6 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Derobotize Me C#"
+#define MyAppNameShort "Derobotizer"
 #define MyAppVersion "2021.08.10"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.quickmacros.com/au/help/"
@@ -19,7 +20,7 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={pf}\{#MyAppName}
+DefaultDirName={pf}\{#MyAppNameShort}
 DefaultGroupName={#MyAppName}
 OutputDir=..\..\_
 OutputBaseFilename=DerobotizerSetup
@@ -31,6 +32,8 @@ ArchitecturesAllowed=x64
 MinVersion=0,6.1
 DisableProgramGroupPage=yes
 AppMutex=Au.Editor.Mutex.m3gVxcTJN02pDrHiQ00aSQ
+UsePreviousAppDir=False
+UsePreviousGroup=False
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -60,6 +63,7 @@ Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.Features.dll"; DestDir: "{app}"; Fla
 Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.FlowAnalysis.Utilities.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.Workspaces.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Microsoft.DiaSymReader.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Q:\app\Au\_\Microsoft.VisualStudio.Debugger.Contracts.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\System.Composition.AttributedModel.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\System.Composition.Hosting.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\System.Composition.Runtime.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -79,6 +83,7 @@ Source: "Q:\app\Au\_\32\sqlite3.dll"; DestDir: "{app}\32"; Flags: ignoreversion
 Source: "Q:\app\Au\Other\Data\doc.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\Other\Data\ref.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\Other\Data\winapi.db"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Q:\app\Au\_\icons.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\xrefmap.yml"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 

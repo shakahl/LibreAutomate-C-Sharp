@@ -21,7 +21,7 @@ using System.Text.Encodings.Web;
 namespace Au.Types
 {
 	/// <summary>
-	/// Base of records that contain various settings as public fields. Loads and lazily auto-saves from/to a JSON file.
+	/// Base of record classes that contain various settings as public fields. Loads and lazily auto-saves from/to a JSON file.
 	/// </summary>
 	/// <remarks>
 	/// All functions are thread-safe.

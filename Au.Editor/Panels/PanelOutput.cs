@@ -151,7 +151,7 @@ class PanelOutput : DockPanel
 				if (s.Starts("<><Z #") && s.Eq(12, ">Compilation: ")) { //compilation
 					s_rx1 ??= new regexp(@"(?m)^\[(.+?)(\((\d+),(\d+)\))?\]: ");
 					m.Text = s_rx1.Replace(s, x => {
-						var f = App.Model.FindByFilePath(x[1].Value);
+						var f = App.Model?.FindByFilePath(x[1].Value);
 						if (f == null) return x[0].Value;
 						return $"<open \"{f.IdStringWithWorkspace}|{x[3].Value}|{x[4].Value}\">{f.Name}{x[2].Value}<>: ";
 					});
@@ -177,7 +177,7 @@ class PanelOutput : DockPanel
 								continue;
 							}
 							if (!s_rx2.Match(s, 1, out RXGroup g, (k.start + 6)..k.end)) continue; //note: no "   at " if this is an inner exception marker. Also in aggregate exception stack trace.
-							var f = App.Model.FindByFilePath(g.Value); if (f == null) continue;
+							var f = App.Model?.FindByFilePath(g.Value); if (f == null) continue;
 							int i1 = g.End + 6, len1 = k.end - i1;
 							b.Append("   at ")
 							.Append("<open \"").Append(f.IdStringWithWorkspace).Append('|').Append(s, i1, len1).Append("\">")

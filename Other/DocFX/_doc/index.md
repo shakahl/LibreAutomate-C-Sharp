@@ -33,6 +33,6 @@ Currently both editor and library are unfinished. The most important parts are f
 #### Links
 - [Download](https://www.quickmacros.com/au/DerobotizerSetup.exe)
 - [.NET 5 Runtime](https://dotnet.microsoft.com/download)
-- [Source code](https://github.com/qmgindi/Derobotizer)
+- [Source code](https://github.com/qmgindi/Au)
 - [Forum](https://www.quickmacros.com/forum/forumdisplay.php?fid=19)
 - [Email](mailto:support@quickmacros.com)

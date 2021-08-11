@@ -7,8 +7,6 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using static Au.Controls.KImageUtil;
 using System.Buffers;
 
-//TODO: ignore elm prefixes like "web:"
-
 partial class SciCode
 {
 	struct _Image
@@ -93,7 +91,7 @@ partial class SciCode
 				if (descent > 0) {
 					bool caretVisible = Hwnd.ClientRect.Contains(0, Call(SCI_POINTYFROMPOSITION, 0, zCurrentPos8));
 					Call(SCI_SETEXTRADESCENT, descent); //note: later don't set = 0 when no visible images. Then bad scrolling and can start to repeat.
-					if(caretVisible) Call(SCI_SCROLLCARET);
+					if (caretVisible) Call(SCI_SCROLLCARET);
 				}
 				if (_im.callback == null) _im.callbackPtr = Marshal.GetFunctionPointerForDelegate(_im.callback = _ImagesMarginDrawCallback);
 				Call(SCI_SETMARGINDRAWCALLBACK, 1 << c_marginImages, _im.callbackPtr);
@@ -202,7 +200,10 @@ partial class SciCode
 				} else if (s[^1].IsAsciiDigit() && s.Contains(',')) { //can be like C:\x.dll,10
 					if (icon.parsePathIndex(s.ToString(), out _, out _)) return ImageType.IconLib;
 				}
-			} else if (!(pathname.isUrl(s) || s.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))) return default;
+			} else if (pathname.isUrl(s)) {
+				//display icon only if it is a known frequently used protocol that can be used with run.it(). Avoid non-protocol prefixes such as "web:LINK".
+				if (!(s.Starts("http:") || s.Starts("https:") || s.Starts("mailto:") || s.Starts("shell:"))) return default;
+			} else if (!s.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)) return default;
 
 			return ImageType.ShellIcon;
 		}

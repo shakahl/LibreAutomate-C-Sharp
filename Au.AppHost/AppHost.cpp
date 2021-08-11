@@ -12,6 +12,7 @@
 //SHOULDDO: somehow auto-update, else will forget this when updating .NET version of C# projects (<TargetFramework>...</TargetFramework>).
 #define NETVERMAJOR 5
 #define NETVERMINOR 0
+#define NETVER_SUPPORT_PREVIEW 0 //eg fails with 5.0.0 preview, MethodNotFound exception
 
 #if 0
 template<typename ... Args>
@@ -105,7 +106,8 @@ bool GetRuntimeDir(LPWSTR dotnetDir, size_t len, std::wstring& rtDir, VERSTRUCT&
 	wcscpy(dotnetDir + len, desktop ? L"\\shared\\Microsoft.WindowsDesktop.App\\*" : L"\\shared\\Microsoft.NETCore.App\\*");
 //#define TESTVERSIONS
 #ifdef TESTVERSIONS
-	LPCWSTR atest[] = { L"3.2.1", L"3.1.1", L"3.1.2-preview2", L"3.1.2-preview10", L"3.1.2"/*, L"3.1.9"*/, };
+	LPCWSTR atest[] = { L"5.2.1", /*L"5.0.1",*/ L"5.0.0-preview.2", /*L"5.0.5-preview.2",*/ L"5.1.2", L"5.2.2", };
+	//LPCWSTR atest[] = { L"3.0.1", L"5.0.0-preview.2", L"6.0.0", };
 	for(int itest = 0; itest < lenof(atest); itest++) {
 		LPWSTR s = (LPWSTR)atest[itest], s0 = s;
 #else
@@ -126,6 +128,7 @@ bool GetRuntimeDir(LPWSTR dotnetDir, size_t len, std::wstring& rtDir, VERSTRUCT&
 		v.vMinor = vMinor;
 		v.vPatch = wcstol(s, &s, 10);
 		v.preview = s[0] == '-' && s[1] == 'p';
+		if(!NETVER_SUPPORT_PREVIEW && v.preview && vMinor == NETVERMINOR && v.vPatch == 0) continue;
 		v.dirName = _wcsdup(s0);
 		//Print("%i %i %i %i", vMajor, v.vMinor, v.vPatch, v.preview);
 		a.push_back(v);
@@ -140,8 +143,9 @@ bool GetRuntimeDir(LPWSTR dotnetDir, size_t len, std::wstring& rtDir, VERSTRUCT&
 
 	//get best match
 	//	https://docs.microsoft.com/en-us/dotnet/core/versions/selection
-	//	Like documented there, we roll forward minor version and use highest patch version.
-	//	But dotnet apphost doesn't, eg fails if need 3.1 but found 3.2, and even if need 3.1.2 but found 3.1.0. Only rolls forward patch version. I guess this is configurable in json.
+	//	Like documented there, we roll forward to the nearest minor version and use highest patch version.
+	//	But dotnet apphost doesn't, eg fails if need 3.1 but found 3.2, and even if need 3.1.2 but found 3.1.0. Only rolls forward patch version.
+	//		Tested long ago. Not tested with .NET 5. Maybe this was set in json by VS.
 	int iBest = -1, bestMinor = -1, bestPatch = -1;
 	for(int i = 0; i < n; i++) {
 		int v = a[i].vMinor;
@@ -165,7 +169,10 @@ bool GetRuntimeDir(LPWSTR dotnetDir, size_t len, std::wstring& rtDir, VERSTRUCT&
 			}
 		}
 	}
-	//Print("BEST: %i %i %S", bestMinor, bestPatch, a[iBest].dirName);
+#ifdef TESTVERSIONS
+	Print("BEST: %i %i %S", bestMinor, bestPatch, a[iBest].dirName);
+	exit(0);
+#endif
 
 	_WstringFrom(rtDir, dotnetDir, wcslen(dotnetDir) - 1, a[iBest].dirName, -1);
 	ver = a[iBest];
