@@ -1,35 +1,12 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
+﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Reflection;
-using System.Globalization;
 
-// General Information about an assembly is controlled through the following 
-// set of attributes. Change these attribute values to modify the information
-// associated with an assembly.
 [assembly: AssemblyTitle("Au")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Derobotize Me C#")]
-[assembly: AssemblyCopyright("Copyright ©  2021")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
-
-// Setting ComVisible to false makes the types in this assembly not visible 
-// to COM components.  If you need to access a type in this assembly from 
-// COM, set the ComVisible attribute to true on that type.
-[assembly: ComVisible(false)]
+//more in global.cs
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("d3087fac-a12d-4365-a620-7574cd89b17f")]
@@ -45,7 +22,7 @@ using System.Globalization;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 //[assembly: AssemblyVersion("1.0.0.*")]
-[assembly: AssemblyVersion("1.0.1.0")]
+//[assembly: AssemblyVersion("1.0.1.0")] //moved to global.cs
 //rejected: auto increment.
 //	Creates more problems and work than is useful. Eg after modifying this project always need to rebuild all exe projects, else fails to load this dll.
 //	VS adds 20-300 to the revision at each build. Why not 1? Now ~ 23000. What happens when it becomes the max possible 0xffff?

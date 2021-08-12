@@ -74,49 +74,49 @@ namespace Au
 	/// var s = "one two22, three333,four"; //subject string
 	/// var rx = @"\b(\w+?)(\d+)\b"; //regular expression
 	///  
-	///  print.it("//RIsMatch:");
-	/// print.it(s.RIsMatch(rx));
+	///  print.it("//RxIsMatch:");
+	/// print.it(s.RxIsMatch(rx));
 	///  
-	///  print.it("//RMatch:");
-	/// if(s.RMatch(rx, out var m)) print.it(m.Value, m[1].Value, m[2].Value);
+	///  print.it("//RxMatch:");
+	/// if(s.RxMatch(rx, out var m)) print.it(m.Value, m[1].Value, m[2].Value);
 	///  
-	///  print.it("//RMatch, get only string:");
-	/// if(s.RMatch(rx, 0, out var s0)) print.it(s0);
-	///  print.it("//RMatch, get only string of group 1:");
-	/// if(s.RMatch(rx, 1, out var s1)) print.it(s1);
+	///  print.it("//RxMatch, get only string:");
+	/// if(s.RxMatch(rx, 0, out var s0)) print.it(s0);
+	///  print.it("//RxMatch, get only string of group 1:");
+	/// if(s.RxMatch(rx, 1, out var s1)) print.it(s1);
 	///  
-	///  print.it("//RFindAll with foreach:");
-	/// foreach(var v in s.RFindAll(rx)) print.it(v.Value, v[1].Value, v[2].Value);
+	///  print.it("//RxFindAll with foreach:");
+	/// foreach(var v in s.RxFindAll(rx)) print.it(v.Value, v[1].Value, v[2].Value);
 	///  
-	///  print.it("//RFindAll with foreach, get only strings:");
-	/// foreach(var v in s.RFindAll(rx, 0)) print.it(v);
-	///  print.it("//RFindAll with foreach, get only strings of group 2:");
-	/// foreach(var v in s.RFindAll(rx, 2)) print.it(v);
+	///  print.it("//RxFindAll with foreach, get only strings:");
+	/// foreach(var v in s.RxFindAll(rx, 0)) print.it(v);
+	///  print.it("//RxFindAll with foreach, get only strings of group 2:");
+	/// foreach(var v in s.RxFindAll(rx, 2)) print.it(v);
 	///  
-	///  print.it("//RFindAll, get array:");
-	/// if(s.RFindAll(rx, out var am)) foreach(var k in am) print.it(k.Value, k[1].Value, k[2].Value);
+	///  print.it("//RxFindAll, get array:");
+	/// if(s.RxFindAll(rx, out var am)) foreach(var k in am) print.it(k.Value, k[1].Value, k[2].Value);
 	///  
-	///  print.it("//RFindAll, get array of strings:");
-	/// if(s.RFindAll(rx, 0, out var av)) print.it(av);
-	///  print.it("//RFindAll, get array of group 2 strings:");
-	/// if(s.RFindAll(rx, 2, out var ag)) print.it(ag);
+	///  print.it("//RxFindAll, get array of strings:");
+	/// if(s.RxFindAll(rx, 0, out var av)) print.it(av);
+	///  print.it("//RxFindAll, get array of group 2 strings:");
+	/// if(s.RxFindAll(rx, 2, out var ag)) print.it(ag);
 	///  
-	///  print.it("//RReplace:");
-	/// print.it(s.RReplace(rx, "'$2$1'"));
+	///  print.it("//RxReplace:");
+	/// print.it(s.RxReplace(rx, "'$2$1'"));
 	///  
-	///  print.it("//RReplace with callback:");
-	/// print.it(s.RReplace(rx, o => o.Value.Upper()));
-	///  print.it("//RReplace with callback and ExpandReplacement:");
-	/// print.it(s.RReplace(rx, o => { if(o.Length > 5) return o.ExpandReplacement("'$2$1'"); else return o[1].Value; }));
+	///  print.it("//RxReplace with callback:");
+	/// print.it(s.RxReplace(rx, o => o.Value.Upper()));
+	///  print.it("//RxReplace with callback and ExpandReplacement:");
+	/// print.it(s.RxReplace(rx, o => { if(o.Length > 5) return o.ExpandReplacement("'$2$1'"); else return o[1].Value; }));
 	///  
-	///  print.it("//RReplace, get replacement count:");
-	/// if(0 != s.RReplace(rx, "'$2$1'", out var s2)) print.it(s2);
+	///  print.it("//RxReplace, get replacement count:");
+	/// if(0 != s.RxReplace(rx, "'$2$1'", out var s2)) print.it(s2);
 	///  
-	///  print.it("//RReplace with callback, get replacement count:");
-	/// if(0 != s.RReplace(rx, o => o.Value.Upper(), out var s3)) print.it(s3);
+	///  print.it("//RxReplace with callback, get replacement count:");
+	/// if(0 != s.RxReplace(rx, o => o.Value.Upper(), out var s3)) print.it(s3);
 	///  
-	///  print.it("//RSplit:");
-	/// print.it(s.RSplit(@" *, *"));
+	///  print.it("//RxSplit:");
+	/// print.it(s.RxSplit(@" *, *"));
 	/// ]]></code></example>
 	public unsafe class regexp
 	{
@@ -1195,7 +1195,7 @@ namespace Au.Types
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RIsMatch(this string t,
+		public static bool RxIsMatch(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			RXFlags flags = 0, Range? range = null) {
 			var x = _cache.AddOrGet(rx, flags);
@@ -1216,7 +1216,7 @@ namespace Au.Types
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RMatch(this string t,
+		public static bool RxMatch(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			out RXMatch result, RXFlags flags = 0, Range? range = null) {
 			var x = _cache.AddOrGet(rx, flags);
@@ -1238,7 +1238,7 @@ namespace Au.Types
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RMatch(this string t,
+		public static bool RxMatch(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			int group, out string result, RXFlags flags = 0, Range? range = null) {
 			var x = _cache.AddOrGet(rx, flags);
@@ -1260,7 +1260,7 @@ namespace Au.Types
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RMatch(this string t,
+		public static bool RxMatch(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			int group, out RXGroup result, RXFlags flags = 0, Range? range = null) {
 			var x = _cache.AddOrGet(rx, flags);
@@ -1280,7 +1280,7 @@ namespace Au.Types
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static IEnumerable<RXMatch> RFindAll(this string t,
+		public static IEnumerable<RXMatch> RxFindAll(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
@@ -1302,7 +1302,7 @@ namespace Au.Types
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RFindAll(this string t,
+		public static bool RxFindAll(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			out RXMatch[] result, RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
@@ -1324,7 +1324,7 @@ namespace Au.Types
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static IEnumerable<string> RFindAll(this string t,
+		public static IEnumerable<string> RxFindAll(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			int group, RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
@@ -1347,7 +1347,7 @@ namespace Au.Types
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RFindAll(this string t,
+		public static bool RxFindAll(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			int group, out string[] result, RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
@@ -1371,7 +1371,7 @@ namespace Au.Types
 		///// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 		///// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		///// <exception cref="AuException">Failed (unlikely).</exception>
-		//public static bool RFindAll(this string t,
+		//public static bool RxFindAll(this string t,
 		//	[ParamString(PSFormat.regexp)] string rx,
 		//	int group, out RXGroup[] result, RXFlags flags = 0, Range? range = null) {
 		//	if (t == null) throw new NullReferenceException();
@@ -1399,7 +1399,7 @@ namespace Au.Types
 		/// - The regular expression contains <c>(?=...\K)</c>.
 		/// </exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static string RReplace(this string t,
+		public static string RxReplace(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			[ParamString(PSFormat.regexpReplacement)] string repl,
 			int maxCount = -1, RXFlags flags = 0, Range? range = null) {
@@ -1429,7 +1429,7 @@ namespace Au.Types
 		/// - The regular expression contains <c>(?=...\K)</c>.
 		/// </exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static int RReplace(this string t,
+		public static int RxReplace(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			[ParamString(PSFormat.regexpReplacement)] string repl,
 			out string result, int maxCount = -1, RXFlags flags = 0, Range? range = null) {
@@ -1458,7 +1458,7 @@ namespace Au.Types
 		/// - The regular expression contains <c>(?=...\K)</c>.
 		/// </exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static string RReplace(this string t,
+		public static string RxReplace(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			Func<RXMatch, string> replFunc, int maxCount = -1, RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
@@ -1487,7 +1487,7 @@ namespace Au.Types
 		/// - The regular expression contains <c>(?=...\K)</c>.
 		/// </exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static int RReplace(this string t,
+		public static int RxReplace(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			Func<RXMatch, string> replFunc, out string result, int maxCount = -1, RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
@@ -1508,7 +1508,7 @@ namespace Au.Types
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static string[] RSplit(this string t,
+		public static string[] RxSplit(this string t,
 			[ParamString(PSFormat.regexp)] string rx,
 			int maxCount = 0, RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();

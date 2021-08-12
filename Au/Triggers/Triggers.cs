@@ -41,8 +41,7 @@ namespace Au.Triggers
 	/// 
 	/// Finally call <see cref="Run"/>. It runs all the time (like <b>Application.Run</b>) and launches trigger actions (functions) when need. Actions run in other thread(s) by default.
 	/// 
-	/// Recommended properties for scripts containing triggers:
-	/// - <c>ifRunning warn_restart</c> - to quickly restart the script when editing. Just click the Run button.
+	/// To quickly restart the script when editing, click the Run button.
 	/// 
 	/// Avoid multiple scripts with triggers. Each running instance uses some CPU. All triggers should be in single script, if possible. It's OK to run additional scripts temporarily, for example to test new triggers without restarting the main script. From trigger actions you can call <see cref="script.run"/> to run other scripts in new process; see example.
 	/// 
@@ -51,9 +50,10 @@ namespace Au.Triggers
 	/// <example>
 	/// This is a single script with many action triggers.
 	/// <code><![CDATA[
-	/// using Au.Triggers; //add this above or below other 'using' directives
+	/// using Au.Triggers;
 	/// 
-	/// readonly ActionTriggers Triggers = new(); //add this field in your script class
+	/// ActionTriggers Triggers = new();
+	/// //readonly ActionTriggers Triggers = new(); //or add this field in your script class
 	/// 
 	/// //you can set options for triggers added afterwards
 	/// Triggers.Options.Thread(0, 500);
@@ -117,7 +117,7 @@ namespace Au.Triggers
 	/// tt["#file"] = o => {
 	/// 	o.Replace("");
 	/// 	var fd = new OpenFileDialog();
-	/// 	if(fd.ShowDialog() == DialogResult.OK) keys.sendt(fd.FileName);
+	/// 	if(fd.ShowDialog() == true) keys.sendt(fd.FileName);
 	/// };
 	/// tt.DefaultPostfixType = default;
 	/// 

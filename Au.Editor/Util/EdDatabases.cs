@@ -80,7 +80,7 @@ static class EdDatabases
 	}
 
 	static void _CreateRefAndDoc(string dirPacks, string dirCore, string version, bool all, string dataDir) {
-		string subdirRN = @"\ref\net" + version.RReplace(@"^\d+\.\d+\K.+", @"\", 1);
+		string subdirRN = @"\ref\net" + version.RxReplace(@"^\d+\.\d+\K.+", @"\", 1);
 
 		var dir1 = dirCore + version + subdirRN;
 		if (!filesystem.exists(dir1, true).isDir) throw new DirectoryNotFoundException("Not found: " + dir1);
@@ -240,9 +240,9 @@ static class EdDatabases
 		string rxFunc = @"(?m)^(?:\[[^\r\n]+\r\n)*internal (static extern|delegate) \w+\** (\w+)\(.+;$";
 		string rxVarConst = @"(?m)^internal (const|readonly|static) \w+ (\w+) =.+;$";
 
-		foreach (var m in s.RFindAll(rxType)) _Add(m);
-		foreach (var m in s.RFindAll(rxFunc)) _Add(m);
-		foreach (var m in s.RFindAll(rxVarConst)) _Add(m);
+		foreach (var m in s.RxFindAll(rxType)) _Add(m);
+		foreach (var m in s.RxFindAll(rxFunc)) _Add(m);
+		foreach (var m in s.RxFindAll(rxVarConst)) _Add(m);
 
 		void _Add(RXMatch m) {
 			statInsert.Bind(1, m[2].Value);

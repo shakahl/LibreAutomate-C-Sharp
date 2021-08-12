@@ -384,7 +384,7 @@ namespace Au.Tools
 					if (0 != (m & 2)) b.Append(sClass);
 					if (0 != (m & 1)) {
 						if (0 != (m & 2)) b.Append(' ');
-						sName = sName.Limit(100).RReplace(@"^\*\*\*\w+ (.+)", "$1");
+						sName = sName.Limit(100).RxReplace(@"^\*\*\*\w+ (.+)", "$1");
 						b.AppendStringArg(sName, noComma: true);
 					}
 				}

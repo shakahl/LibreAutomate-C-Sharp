@@ -197,8 +197,8 @@ static class InsertCode
 			foreach (var v in cu.GetLeadingTrivia()) if (v.IsDirective) end2 = v.FullSpan.End; //skip directives
 			if (end2 < 0) {
 				end2 = k.meta.end; //skip meta
-				if (end2 == 0) if (k.code.RMatch(@"(\s*///.*\R)+", 0, out RXGroup g1, RXFlags.ANCHORED, end2..)) end2 = g1.End; //skip ///comments
-				if (k.code.RMatch(@"\s*//.+\R", 0, out RXGroup g2, RXFlags.ANCHORED, end2..)) end2 = g2.End; //skip 1 line of //comments, because usually it is //. for folding
+				if (end2 == 0) if (k.code.RxMatch(@"(\s*///.*\R)+", 0, out RXGroup g1, RXFlags.ANCHORED, end2..)) end2 = g1.End; //skip ///comments
+				if (k.code.RxMatch(@"\s*//.+\R", 0, out RXGroup g2, RXFlags.ANCHORED, end2..)) end2 = g2.End; //skip 1 line of //comments, because usually it is //. for folding
 			}
 			end = end2;
 		}
@@ -261,7 +261,7 @@ static class InsertCode
 	/// </summary>
 	public static string IndentStringForInsert(string s, SciCode doc, int pos) {
 		int indent = doc.zLineIndentationFromPos(true, pos);
-		if (indent > 0) s = s.RReplace(@"(?<=\n)", new string('\t', indent));
+		if (indent > 0) s = s.RxReplace(@"(?<=\n)", new string('\t', indent));
 		return s;
 	}
 
@@ -369,7 +369,7 @@ static class InsertCode
 	get { return default; }
 	set {  }
 }"); //indexers
-		text = text.RReplace(@"[^\]] \{\K set; \}", @"
+		text = text.RxReplace(@"[^\]] \{\K set; \}", @"
 	set {  }
 }"); //write-only properties
 
@@ -436,6 +436,6 @@ static class InsertCode
 		//cd.sciDoc.zInsertText(true, start, a[pm] + "\r\n");
 		string s = "class Program { static void Main(string[] a) => new Program(a); Program(string[] args) { //...\r\n";
 		cd.sciDoc.zInsertText(true, start, s);
-		//if (s.RMatch(@" =>.+args\)", 0, out RXGroup g)) cd.sciDoc.zSelect(true, start + g.Start, start + g.End); //then can simply press Delete to make it classic. No, it is rather distracting.
+		//if (s.RxMatch(@" =>.+args\)", 0, out RXGroup g)) cd.sciDoc.zSelect(true, start + g.Start, start + g.End); //then can simply press Delete to make it classic. No, it is rather distracting.
 	}
 }

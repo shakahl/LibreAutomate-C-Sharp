@@ -222,7 +222,7 @@ class DProperties : KDialogWindow
 		var meta = MetaComments.FindMetaComments(code);
 		string append = null;
 		if (meta.end == 0) {
-			if(code.RMatch(@"(?s)^(\s*///\N*\R|\s*/\*.*\*/)*\s*", 0, out RXGroup g)) { meta = (g.End, g.End); }
+			if(code.RxMatch(@"(?s)^(\s*///\N*\R|\s*/\*.*\*/)*\s*", 0, out RXGroup g)) { meta = (g.End, g.End); }
 			append = (_f.IsScript && code.Eq(meta.end, "//.")) ? " " : "\r\n";
 		}
 		var s = _meta.Format(append);
@@ -431,7 +431,7 @@ class DProperties : KDialogWindow
 				void _Callback(string s) {
 					print.it(s);
 					if (s.Starts("Converted: ")) {
-						s.RMatch(@"""(.+?)"".$", 1, out s);
+						s.RxMatch(@"""(.+?)"".$", 1, out s);
 						converted.Add(s);
 					}
 				}

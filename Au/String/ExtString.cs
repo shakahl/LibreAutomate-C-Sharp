@@ -247,8 +247,8 @@ namespace Au.Types
 		//FindStringOrdinal(true)					32 ms
 		//Like("*" + x + "*")						10 ms
 		//Like("*" + x + "*", true)					12 ms
-		//RIsMatch(LITERAL)						13 ms
-		//RIsMatch(LITERAL|CASELESS)			19 ms
+		//RxIsMatch(LITERAL)						13 ms
+		//RxIsMatch(LITERAL|CASELESS)			19 ms
 		//Regex.Match(CultureInvariant)				4 ms (when no regex-special characters or if escaped)
 		//Regex.Match(CultureInvariant|IgnoreCase)	9 ms
 		//Find2(true)								10 ms

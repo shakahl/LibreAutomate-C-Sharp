@@ -19,7 +19,7 @@ namespace Au.Tools
 			if (name == null) {
 				name = doc.zSelectedText();
 				if (!name.NE()) {
-					name = name.RReplace(@"\W+", " ");
+					name = name.RxReplace(@"\W+", " ");
 				}
 			}
 
@@ -78,7 +78,7 @@ If some really useful API are missing, tell about it: https://www.quickmacros.co
 			int nWild = 0; for (int i = 0; i < name.Length; i++) { switch (name[i]) { case '*': case '?': nWild++; break; } }
 			if (name.Length > 0 && (nWild == 0 || name.Length - nWild >= 2)) {
 				string sql;
-				if (name.Contains(' ')) sql = $"in ('{string.Join("', '", name.RFindAll(@"\b[A-Za-z_]\w\w+", (RXFlags)0))}')";
+				if (name.Contains(' ')) sql = $"in ('{string.Join("', '", name.RxFindAll(@"\b[A-Za-z_]\w\w+", (RXFlags)0))}')";
 				else if (name.FindAny("*?") >= 0) sql = $"GLOB '{name}'";
 				else sql = $"= '{name}'";
 				try {

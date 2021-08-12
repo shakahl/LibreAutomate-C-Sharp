@@ -16,7 +16,7 @@ namespace Au.Tools
 			c.ZTags.AddLinkTag("+a", o => _Insert(o)); //link that inserts a key etc
 			c.ZTags.SetLinkStyle(new SciTags.UserDefinedStyle { textColor = 0x0080FF, underline = false }); //remove underline from links
 
-			var s = ResourceUtil.GetString("tools/keys.txt").RReplace(@"\{(.+?)\}(?!\})", "<+a>$1<>");
+			var s = ResourceUtil.GetString("tools/keys.txt").RxReplace(@"\{(.+?)\}(?!\})", "<+a>$1<>");
 			this.Text = s;
 
 			base.OnHandleCreated();

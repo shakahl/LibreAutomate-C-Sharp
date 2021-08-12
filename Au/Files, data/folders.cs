@@ -484,7 +484,7 @@ namespace Au
 		/// <summary>
 		/// Gets .NET runtime desktop folder with <c>'\\'</c> at the end, like <c>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\3.1.0\</c>.
 		/// </summary>
-		public static string NetRuntimeDesktopBS => __netRuntimeDesktopBS ??= NetRuntimeBS.RReplace(@"(?i)\\Microsoft\.\KNETCore(?=\.App\\[^\\]+\\$)", "WindowsDesktop", 1);
+		public static string NetRuntimeDesktopBS => __netRuntimeDesktopBS ??= NetRuntimeBS.RxReplace(@"(?i)\\Microsoft\.\KNETCore(?=\.App\\[^\\]+\\$)", "WindowsDesktop", 1);
 		static string __netRuntimeDesktopBS;
 
 		/// <summary>

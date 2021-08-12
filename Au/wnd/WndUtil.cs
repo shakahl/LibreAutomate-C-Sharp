@@ -647,7 +647,7 @@ void _WmDeclTextToCode() {
 //	var a=new List<string>();
 	var b = new StringBuilder("var s = m switch {\r\n");
 	var s1=File.ReadAllText(@"?:\?\au\other\api\api.cs");
-	foreach (var m in s1.RFindAll(@"(?m)^internal const uint (WM_\w+) = (\w+);")) {
+	foreach (var m in s1.RxFindAll(@"(?m)^internal const uint (WM_\w+) = (\w+);")) {
 		var s=m[1].Value;
 		if(s.Ends("FIRST") || s.Ends("LAST") || s.Starts("WM_PSD_") || s.Starts("WM_DDE_") || s.Starts("WM_CHOOSEFONT_") || s=="WM_WININICHANGE") {
 //			print.it(s);

@@ -3,7 +3,7 @@
 
 #define MyAppName "Derobotize Me C#"
 #define MyAppNameShort "Derobotizer"
-#define MyAppVersion "2021.08.10"
+#define MyAppVersion "0.0.1 (2021-08-12)"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.quickmacros.com/au/help/"
 #define MyAppExeName "Au.Editor.exe"
@@ -32,8 +32,8 @@ ArchitecturesAllowed=x64
 MinVersion=0,6.1
 DisableProgramGroupPage=yes
 AppMutex=Au.Editor.Mutex.m3gVxcTJN02pDrHiQ00aSQ
-UsePreviousAppDir=False
 UsePreviousGroup=False
+DisableDirPage=no
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

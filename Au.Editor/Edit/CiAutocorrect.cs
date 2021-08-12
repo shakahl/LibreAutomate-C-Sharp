@@ -573,7 +573,7 @@ class CiAutocorrect
 			while (to < code.Length && _IsSpace(code[to])) to++;
 			int replaceFrom = from, replaceTo = to;
 
-			if (canExitBlock && (canExitBlock = code.RMatch(@"(?m)^[\t \r\n]*\}", 0, out RXGroup g, RXFlags.ANCHORED, from..))) replaceTo = g.End;
+			if (canExitBlock && (canExitBlock = code.RxMatch(@"(?m)^[\t \r\n]*\}", 0, out RXGroup g, RXFlags.ANCHORED, from..))) replaceTo = g.End;
 
 			if (!canExitBlock) {
 				if (node is AttributeListSyntax) { indent--; node = node.Parent; } //don't indent after [Attribute]
@@ -741,7 +741,7 @@ class CiAutocorrect
 				break;
 			case SyntaxKind.SingleLineDocumentationCommentTrivia:
 				suffix = "/// ";
-				newlineLast = cd.code.RIsMatch(@"[ \t]*///", RXFlags.ANCHORED, pos..);
+				newlineLast = cd.code.RxIsMatch(@"[ \t]*///", RXFlags.ANCHORED, pos..);
 				break;
 			default: return false;
 			}
@@ -786,7 +786,7 @@ class CiAutocorrect
 			//suffix = interpol ? "$\"" : "\"";
 			////indent more, unless line starts with "
 			//int i = cd.sciDoc.zLineStartFromPos(true, pos);
-			//if (!cd.code.RIsMatch(@"[ \t]+\$?""", RXFlags.ANCHORED, i..)) indent++;
+			//if (!cd.code.RxIsMatch(@"[ \t]+\$?""", RXFlags.ANCHORED, i..)) indent++;
 		}
 
 		var doc = cd.sciDoc;
@@ -815,7 +815,7 @@ class CiAutocorrect
 			if (i > 0 && code[i - 1] == '\n') i--;
 			if (i > 0 && code[i - 1] == '\r') i--;
 		}
-		if (!code.RMatch(@"\R\t+", 0, out RXGroup g, RXFlags.ANCHORED, i..)) return false;
+		if (!code.RxMatch(@"\R\t+", 0, out RXGroup g, RXFlags.ANCHORED, i..)) return false;
 		doc.zDeleteRange(true, g.Start, g.End);
 		return true;
 	}

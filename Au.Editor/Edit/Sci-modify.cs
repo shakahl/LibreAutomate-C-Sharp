@@ -81,7 +81,7 @@ partial class SciCode
 			if (slashStar) {
 				s = "/*" + s + "*/";
 			} else {
-				s = com ? s.RReplace(@"(?m)^", "//") : s.RReplace(@"(?m)^([ \t]*)//", "$1");
+				s = com ? s.RxReplace(@"(?m)^", "//") : s.RxReplace(@"(?m)^([ \t]*)//", "$1");
 			}
 		}
 

@@ -106,7 +106,7 @@ namespace Au.Tools
 		/// <param name="s"></param>
 		/// <returns></returns>
 		public static bool MakeVerbatim(ref string s) {
-			if (!s.Contains('\\') || s.RIsMatch(@"[\x00-\x1F\x85\x{2028}\x{2029}]")) return false;
+			if (!s.Contains('\\') || s.RxIsMatch(@"[\x00-\x1F\x85\x{2028}\x{2029}]")) return false;
 			s = "@\"" + s.Replace("\"", "\"\"") + "\"";
 			return true;
 		}
@@ -161,8 +161,8 @@ namespace Au.Tools
 		/// <param name="escapeWildex">If didn't replace, call <see cref="EscapeWildex"/>.</param>
 		public static string StripWndClassName(string s, bool escapeWildex) {
 			if (!s.NE()) {
-				int n = s.RReplace(@"^WindowsForms\d+(\..+?\.).+", "*$1*", out s);
-				if (n == 0) n = s.RReplace(@"^(HwndWrapper\[.+?;|Afx:).+", "$1*", out s);
+				int n = s.RxReplace(@"^WindowsForms\d+(\..+?\.).+", "*$1*", out s);
+				if (n == 0) n = s.RxReplace(@"^(HwndWrapper\[.+?;|Afx:).+", "$1*", out s);
 				if (escapeWildex && n == 0) s = EscapeWildex(s);
 			}
 			return s;
@@ -254,7 +254,7 @@ namespace Au.Tools
 							if (0 != (m & 2)) b.Append(sc.Limit(70));
 							if (0 != (m & 1)) {
 								if (0 != (m & 2)) b.Append(' ');
-								b.AppendStringArg(sn.Limit(100).RReplace(@"^\*\*\*\w+ (.+)", "$1"), noComma: true);
+								b.AppendStringArg(sn.Limit(100).RxReplace(@"^\*\*\*\w+ (.+)", "$1"), noComma: true);
 							}
 						}
 					}

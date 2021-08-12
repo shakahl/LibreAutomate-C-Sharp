@@ -106,9 +106,9 @@ namespace Au.More
 					var s = v;
 					if (esc == 2) {
 						if (s.Find(@"\""") < 0) s = s.Replace(@"""", @"\""");
-						else s = s.RReplace(@"(\\*)""", @"$1$1\""");
+						else s = s.RxReplace(@"(\\*)""", @"$1$1\""");
 					}
-					if (s.Ends('\\')) s = s.RReplace(@"(\\+)$", "$1$1");
+					if (s.Ends('\\')) s = s.RxReplace(@"(\\+)$", "$1$1");
 					b.Append(s).Append('\"');
 				}
 			}

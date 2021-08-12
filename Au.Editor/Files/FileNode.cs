@@ -645,7 +645,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 			int i = fromName.LastIndexOf('.');
 			if (i >= 0) { ext = fromName[i..]; fromName = fromName[..i]; }
 		}
-		fromName = fromName.RReplace(@"\d+$", "");
+		fromName = fromName.RxReplace(@"\d+$", "");
 		for (int i = 2; ; i++) {
 			var s = fromName + i + ext;
 			if (!_Exists(s)) {
@@ -893,7 +893,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 		if (path.Ends(".cs", true)) {
 			type = EFileType.Class;
 			//rejected. Unreliable and rarely useful. Does not detect scripts with top-level statements etc.
-			//try { if (filesystem.loadText(path).RIsMatch(@"\bclass Script\b")) type = EFileType.Script; }
+			//try { if (filesystem.loadText(path).RxIsMatch(@"\bclass Script\b")) type = EFileType.Script; }
 			//catch (Exception ex) { Debug_.Print(ex); }
 
 			//FUTURE: later allow to change file type script from/to class. Eg in Properties.

@@ -166,7 +166,7 @@ static class CiUtil
 			//print.it(sym, sym.Kind, sym.QualifiedName());
 			//query = "C# " + sym.ToString(); //eg "string.operator +(string, string)", and Google finds just Equality
 			//query = "C# " + sym.QualifiedName(); //eg "System.String.op_Addition", and Google finds nothing
-			query = "C# " + sym.ToString().RReplace(@"\(.+\)$", "", 1).Replace('.', ' '); //eg C# string operator +, not bad
+			query = "C# " + sym.ToString().RxReplace(@"\(.+\)$", "", 1).Replace('.', ' '); //eg C# string operator +, not bad
 		} else if (sym.IsExtern) { //[DllImport]
 			query = sym.Name + " function";
 		} else if (sym is INamedTypeSymbol ints && ints.IsComImport) { //[ComImport]

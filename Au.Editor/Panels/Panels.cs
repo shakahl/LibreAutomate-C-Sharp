@@ -28,7 +28,7 @@ static class Panels
 		if (filesystem.exists(s1).isFile) {
 			var s2 = filesystem.loadText(s1);
 			//print.it(s2);
-			if (s2.RIsMatch(@"<document name=""documents"" ?/>\s*</tab>")) filesystem.delete(s1);
+			if (s2.RxIsMatch(@"<document name=""documents"" ?/>\s*</tab>")) filesystem.delete(s1);
 		}
 
 		pm.BorderBrush = SystemColors.ActiveBorderBrush;

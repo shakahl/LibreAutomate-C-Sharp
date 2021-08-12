@@ -188,7 +188,7 @@ static unsafe class Test
 
 		//EdDatabases.CreateWinapi();
 
-		//var code = App.Settings.ci_usings.RReplace(@"(?m)^.+$", "using $0;");
+		//var code = App.Settings.ci_usings.RxReplace(@"(?m)^.+$", "using $0;");
 		////var code = "using Au.Types;";
 		////print.it(code);
 

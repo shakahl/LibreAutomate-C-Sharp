@@ -21,7 +21,7 @@ namespace Au.Types
 {
 	/// <summary>
 	/// Regular expression match info.
-	/// Used with <see cref="regexp"/> class functions and String extension methods like <see cref="ExtString.RMatch"/>.
+	/// Used with <see cref="regexp"/> class functions and String extension methods like <see cref="ExtString.RxMatch"/>.
 	/// </summary>
 	/// <remarks>
 	/// Contains info about a regular expression match found in the subject string: index, length, substring, etc.
@@ -31,7 +31,7 @@ namespace Au.Types
 	/// <example>
 	/// <code><![CDATA[
 	/// var s = "ab cd-45-ef gh";
-	/// if(s.RMatch(@"\b([a-z]+)-(\d+)\b", out RXMatch m))
+	/// if(s.RxMatch(@"\b([a-z]+)-(\d+)\b", out RXMatch m))
 	/// 	print.it(
 	/// 		m.GroupCountPlusOne, //3 (whole match and 2 groups)
 	/// 		m.Start, //3, same as m[0].Index
@@ -45,7 +45,7 @@ namespace Au.Types
 	/// A group in the subject string may not exist even if whole match found. Then its Exists property is false, Index -1, Length 0, Value null.
 	/// <code><![CDATA[
 	/// var s = "ab cd--ef gh";
-	/// if(s.RMatch(@"\b([a-z]+)-(\d+)?-([a-z]+)\b", out RXMatch m))
+	/// if(s.RxMatch(@"\b([a-z]+)-(\d+)?-([a-z]+)\b", out RXMatch m))
 	/// 	print.it(
 	/// 		m.GroupCountPlusOne, //4 (whole match and 3 groups)
 	/// 		m[2].Exists, //false

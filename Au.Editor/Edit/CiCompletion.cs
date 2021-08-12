@@ -310,7 +310,7 @@ partial class CiCompletion
 						stringSpan = node.Span;
 						stringFormat = CiUtil.GetParameterStringFormat(node, model, true);
 						if (stringFormat == PSFormat.wildex) { //is regex in wildex?
-							if (code.RMatch(@"[\$@]*""(?:\*\*\*\w+ )?\*\*c?rc? ", 0, out RXGroup rg, RXFlags.ANCHORED, stringSpan.Start..stringSpan.End)
+							if (code.RxMatch(@"[\$@]*""(?:\*\*\*\w+ )?\*\*c?rc? ", 0, out RXGroup rg, RXFlags.ANCHORED, stringSpan.Start..stringSpan.End)
 								&& position >= stringSpan.Start + rg.Length) stringFormat = PSFormat.regexp;
 						} else if (stringFormat == PSFormat.None) stringFormat = (PSFormat)100;
 					}
@@ -474,6 +474,7 @@ partial class CiCompletion
 				static bool _IsOurScriptClass(INamedTypeSymbol t) => t.Name is "Program" or "Script";
 
 				if (sym != null && v.kind is not (CiItemKind.LocalVariable or CiItemKind.Namespace or CiItemKind.TypeParameter)) {
+					//TODO: whey don't use IsObsolete ext method?
 					bool isObsolete = ci.Symbols.All(sy => sy.GetAttributes().Any(o => o.AttributeClass.Name == "ObsoleteAttribute")); //can be several overloads, some obsolete but others not
 					if (isObsolete) v.moveDown = CiComplItemMoveDownBy.Obsolete;
 				}
@@ -589,7 +590,7 @@ partial class CiCompletion
 						for (int i = 1; i < gs.Count; i++) {
 							if (d.items[gs[i].Value[0]].kind != CiItemKind.ExtensionMethod) continue;
 							var ns = gs[i].Key.ContainingNamespace;
-							if (ns.Name == "Au") {
+							if (ns.Name == "Types" && ns.ContainingNamespace.Name == "Au") {
 								gs[0].Value.AddRange(gs[i].Value);
 								gs.RemoveAt(i);
 								break;
@@ -923,13 +924,13 @@ partial class CiCompletion
 				case CiComplProvider.Override:
 					newPos = -1;
 					//Replace 4 spaces with tab. Make { in same line.
-					s = s.Replace("    ", "\t").RReplace(@"\R\t*\{", " {", 1);
+					s = s.Replace("    ", "\t").RxReplace(@"\R\t*\{", " {", 1);
 					//Correct indentation. 
 					int indent = s.FindNot("\t"), indent2 = doc.zLineIndentationFromPos(true, _data.tempRange.CurrentFrom);
-					if (indent > indent2) s = s.RReplace("(?m)^" + new string('\t', indent - indent2), "");
+					if (indent > indent2) s = s.RxReplace("(?m)^" + new string('\t', indent - indent2), "");
 					break;
 				case CiComplProvider.XmlDoc:
-					if (!s.Ends('>') && s.RMatch(@"^<?(\w+)($| )", 1, out string tag)) {
+					if (!s.Ends('>') && s.RxMatch(@"^<?(\w+)($| )", 1, out string tag)) {
 						string lt = s.Starts('<') || doc.zText.Eq(span.Start - 1, '<') ? "" : "<";
 						if (s == tag || (ci.Properties.TryGetValue("AfterCaretText", out var s1) && s1.NE())) newPos += 1 + lt.Length;
 						s = $"{lt}{s}></{tag}>";

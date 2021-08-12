@@ -136,16 +136,16 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 			Func<_Item, bool> f = null;
 			bool select = false;
 			if (!name.NE()) {
-				if (select = name.RMatch(@"^\*(\w+)\.(\w+) #(\w+)$", out var m)) { //full name with * and #color
+				if (select = name.RxMatch(@"^\*(\w+)\.(\w+) #(\w+)$", out var m)) { //full name with * and #color
 					table = m[1].Value;
 					name = m[2].Value;
 					f = o => o._name == name && o._table == table;
 					colors.Color = m[3].Value.ToInt(0, STIFlags.IsHexWithout0x);
 				} else {
-					if (name.RMatch(@"^(\w+)\.(.+)", out m)) { table = m[1].Value; name = m[2].Value; }
+					if (name.RxMatch(@"^(\w+)\.(.+)", out m)) { table = m[1].Value; name = m[2].Value; }
 					wildex wild = null;
 					StringComparison comp = StringComparison.OrdinalIgnoreCase;
-					bool matchCase = name.RIsMatch("[A-Z]");
+					bool matchCase = name.RxIsMatch("[A-Z]");
 					if (wildex.hasWildcardChars(name)) {
 						try { wild = new wildex(name, matchCase && !name.Starts("**")); }
 						catch { name = null; }
@@ -191,7 +191,7 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 			if (what == 3) {
 				code = _ColorName(k);
 			} else if (GetIconFromBigDB(k._table, k._name, _ItemColor(k), out var xaml)) {
-				xaml = xaml.Replace('\"', '\'').RReplace(@"\R\s*", "");
+				xaml = xaml.Replace('\"', '\'').RxReplace(@"\R\s*", "");
 				switch (what) {
 				case 0: code = $"string icon{k._name} = \"{xaml}\";"; break;
 				case 1: code = $"public const string {k._name} = \"{xaml}\";"; break;
@@ -235,7 +235,7 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 			//		v._color = ColorInt.FromHLS(_random.Next(0, 240), L, S, false);
 			//	}
 			//} else {
-			int iFrom = 0, iTo = 100; if (randFromTo.Text.RMatch(@"^(\d+) *- *(\d+)", out var m)) { iFrom = m[1].Value.ToInt(); iTo = m[2].Value.ToInt(); }
+			int iFrom = 0, iTo = 100; if (randFromTo.Text.RxMatch(@"^(\d+) *- *(\d+)", out var m)) { iFrom = m[1].Value.ToInt(); iTo = m[2].Value.ToInt(); }
 			float briFrom = Math.Clamp(iFrom / 100f, 0f, 0.9f), briTo = Math.Clamp(iTo / 100f, briFrom + 0.05f, 1f);
 			int middleL = ((briTo + briFrom) * 120f).ToInt();
 			foreach (var v in _a) {
@@ -321,7 +321,7 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 		int i = templ.Find(" Data=\"{x:Null}\""); if (i < 0) return false;
 		templ = templ.ReplaceAt(i + 7, 8, data);
 
-		if (0 == templ.RReplace(@"(?:Fill|Stroke)=""\K[^""]+", color, out templ)) return false;
+		if (0 == templ.RxReplace(@"(?:Fill|Stroke)=""\K[^""]+", color, out templ)) return false;
 
 		if (templ.Contains("\"{")) return false;
 		//print.it(templ);

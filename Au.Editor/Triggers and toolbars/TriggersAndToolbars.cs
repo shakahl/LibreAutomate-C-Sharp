@@ -44,7 +44,7 @@ static class TriggersAndToolbars
 				try {
 					var x = csvTable.parse(ss);
 					var rx = @"(?i)^(?://)?(?:\\@Triggers and toolbars\\)?Triggers and toolbars(?:\.cs)?$"; //path or name; with or without .cs; can be //disabled
-					startupFound = x.Rows.Exists(a => a[0].RIsMatch(rx));
+					startupFound = x.Rows.Exists(a => a[0].RxIsMatch(rx));
 					if (!startupFound) {
 						x.AddRow(c_script);
 						ss = x.ToString();

@@ -786,7 +786,7 @@ namespace Au
 						}
 
 						static string _EnumToString(Enum e) {
-							var s = e.ToString().RReplace(@"(?<=[^A-Z])[A-Z]", m => " " + m.Value.Lower());
+							var s = e.ToString().RxReplace(@"(?<=[^A-Z])[A-Z]", m => " " + m.Value.Lower());
 							//s = s.Replace("Dont", "Don't");
 							return s;
 						}

@@ -45,7 +45,7 @@ namespace Au.More
 			if (!s.NE()) s += "\r\n";
 
 			string st = new StackTrace(2, true).ToString(), st1 = null;
-			if (st.RMatch(@"(?m)^\s+at (?!System\.Diagnostics\.)", 0, out RXGroup g)) {
+			if (st.RxMatch(@"(?m)^\s+at (?!System\.Diagnostics\.)", 0, out RXGroup g)) {
 				st = st[g.Start..];
 				st1 = st.Lines(true)[0];
 			}

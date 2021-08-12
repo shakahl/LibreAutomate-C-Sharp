@@ -21,8 +21,8 @@ namespace Au.Controls
 			if (!w.Is0) {
 				if (_userModified && w == _wnd) {
 					sCode = zRangeText(false, 0, _ReadonlyStartUtf8);
-					if (sCode.RMatch(@"(?s)^(?:var|wnd) (\w+)", out var mw)) { //window
-						bool isConCode = sCode.RMatch(@"(?s)\R(?:var|wnd) (\w+)", out var mc, 0, mw.End..); //control
+					if (sCode.RxMatch(@"(?s)^(?:var|wnd) (\w+)", out var mw)) { //window
+						bool isConCode = sCode.RxMatch(@"(?s)\R(?:var|wnd) (\w+)", out var mc, 0, mw.End..); //control
 						//print.it(isConCode);
 						if (con == _con && !con.Is0 == isConCode) {
 							//print.it(isConCode ? "same control" : "no control");

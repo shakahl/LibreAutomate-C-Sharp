@@ -282,7 +282,7 @@ namespace Au
 			var b = new StringBuilder(c_headerTemplate);
 			//find "<body>...</body>" and "<!--StartFragment-->...<!--EndFragment-->" in it
 			int isb = -1, ieb = -1, isf = -1, ief = -1; //start/end of inner body and fragment
-			if (html.RMatch(@"<body\b.*?>", 0, out RXGroup body) && (ieb = html.Find("</body>", body.End)) >= 0) {
+			if (html.RxMatch(@"<body\b.*?>", 0, out RXGroup body) && (ieb = html.Find("</body>", body.End)) >= 0) {
 				isb = body.End;
 				isf = html.Find(c_startFragment, isb..ieb, true);
 				if (isf >= 0) {

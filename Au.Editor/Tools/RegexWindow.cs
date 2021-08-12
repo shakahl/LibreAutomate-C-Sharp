@@ -53,7 +53,7 @@ namespace Au.Tools
 					s = value;
 				} else {
 					s = _GetContentText();
-					if (!s.RMatch($@"(?ms)^-- {_topic} --\R\R(.+?)\R-- ", 1, out s)) s = "";
+					if (!s.RxMatch($@"(?ms)^-- {_topic} --\R\R(.+?)\R-- ", 1, out s)) s = "";
 				}
 				this.Text2 = s;
 			}

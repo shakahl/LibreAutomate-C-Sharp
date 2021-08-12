@@ -88,7 +88,8 @@ class CiTools
 		var pos16 = cd.pos16;
 		if (!CiUtil.IsInString(ref node, pos16)) {
 			//if(isRegex || retry) {
-			dialog.showInfo("The text cursor must be in a string.");
+			var s2 = isRegex ? null : "The fastest way to insert 'send keys' code: type kk and press Enter (or Tab, Space, double-click). It shows completion list and selects kkKeysSendSnippet.";
+			dialog.showInfo("The text cursor must be in a string.", s2);
 			return;
 			//}
 			//InsertCode.Statements("keys.send(\"%\");", goToPercent: true); //rejected. Eg could be keys.send("", here).

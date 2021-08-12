@@ -608,7 +608,7 @@ partial class TestScript
 ";
 
 		string html = Markdig.Markdown.ToHtml(markdown);
-		html = html.RReplace(@"(?m)^", "/// ");
+		html = html.RxReplace(@"(?m)^", "/// ");
 		print.it(html);
 	}
 

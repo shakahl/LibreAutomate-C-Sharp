@@ -229,7 +229,7 @@ namespace Au.Compiler
 		/// <param name="errorMessage">"Metadata file '....dll' could not be opened ..."</param>
 		public static void RemoveBadReference(string errorMessage)
 		{
-			if(errorMessage.RMatch(@"'(.+?)'", 1, out string path))
+			if(errorMessage.RxMatch(@"'(.+?)'", 1, out string path))
 				lock(s_cache) { s_cache.RemoveAll(v => v.path.Eqi(path)); }
 		}
 

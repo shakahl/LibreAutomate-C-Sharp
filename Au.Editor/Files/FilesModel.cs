@@ -848,8 +848,8 @@ partial class FilesModel
 				}
 				if (!text.text.NE()) {
 					if (s.NE()) s = text.text;
-					else if (s.RMatch(@"\R\R", 0, out RXGroup g, range: me..)) s = s.Insert(g.End, text.text);
-					else if (s.RMatch(@"\R\z", 0, out g, range: me..)) s = s + "\r\n" + text.text;
+					else if (s.RxMatch(@"\R\R", 0, out RXGroup g, range: me..)) s = s.Insert(g.End, text.text);
+					else if (s.RxMatch(@"\R\z", 0, out g, range: me..)) s = s + "\r\n" + text.text;
 				}
 			}
 			Panels.Editor.ZActiveDoc.zSetText(s);
@@ -906,7 +906,7 @@ partial class FilesModel
 				text = filesystem.loadText(FileNode.Templates.DefaultDirBS + relPath);
 			} else if (FileNode.Templates.IsStandardTemplateName(relPath, out var tt)) {
 				text = FileNode.Templates.Load(tt);
-				//if (tt == FileNode.ETempl.Script) text = text.RReplace(@"\bScript\s*\{", "Script {", 1); //no. The user will see warning when compiling, and let update custom template.
+				//if (tt == FileNode.ETempl.Script) text = text.RxReplace(@"\bScript\s*\{", "Script {", 1); //no. The user will see warning when compiling, and let update custom template.
 			} else {
 				text = filesystem.loadText(FileNode.Templates.DefaultDirBS + relPath);
 				if (text.Length < 20 && text.Starts("//#")) { //load default or custom template?

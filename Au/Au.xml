@@ -5626,7 +5626,7 @@
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException"/>
         </member>
-        <member name="M:Au.Types.ExtString.RIsMatch(System.String,System.String,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.Types.ExtString.RxIsMatch(System.String,System.String,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Returns true if this string matches PCRE regular expression <i>rx</i>.
             Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
@@ -5640,7 +5640,7 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.Types.ExtString.RMatch(System.String,System.String,Au.Types.RXMatch@,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.Types.ExtString.RxMatch(System.String,System.String,Au.Types.RXMatch@,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Returns true if this string matches PCRE regular expression <i>rx</i>.
             Gets match info as <see cref="T:Au.Types.RXMatch"/>.
@@ -5656,7 +5656,7 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.Types.ExtString.RMatch(System.String,System.String,System.Int32,System.String@,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.Types.ExtString.RxMatch(System.String,System.String,System.Int32,System.String@,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Returns true if this string matches PCRE regular expression <i>rx</i>.
             Gets whole match or some group, as string.
@@ -5673,7 +5673,7 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.Types.ExtString.RMatch(System.String,System.String,System.Int32,Au.Types.RXGroup@,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.Types.ExtString.RxMatch(System.String,System.String,System.Int32,Au.Types.RXGroup@,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Returns true if this string matches PCRE regular expression <i>rx</i>.
             Gets whole match or some group, as index and length.
@@ -5690,7 +5690,7 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.Types.ExtString.RFindAll(System.String,System.String,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.Types.ExtString.RxFindAll(System.String,System.String,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds all match instances of PCRE regular expression <i>rx</i>.
             Returns a lazy IEnumerable&lt;<see cref="T:Au.Types.RXMatch"/>&gt; object that can be used with foreach.
@@ -5705,7 +5705,7 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.Types.ExtString.RFindAll(System.String,System.String,Au.Types.RXMatch[]@,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.Types.ExtString.RxFindAll(System.String,System.String,Au.Types.RXMatch[]@,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds all match instances of PCRE regular expression <i>rx</i>. Gets array of <see cref="T:Au.Types.RXMatch"/>.
             Returns true if found 1 or more matches.
@@ -5721,7 +5721,7 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.Types.ExtString.RFindAll(System.String,System.String,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.Types.ExtString.RxFindAll(System.String,System.String,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds all match instances of PCRE regular expression <i>rx</i>.
             Returns a lazy IEnumerable&lt;<see cref="T:Au.Types.RXGroup"/>&gt; object that can be used with foreach.
@@ -5737,7 +5737,7 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.Types.ExtString.RFindAll(System.String,System.String,System.Int32,System.String[]@,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.Types.ExtString.RxFindAll(System.String,System.String,System.Int32,System.String[]@,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds all match instances of PCRE regular expression <i>rx</i>. Gets array of strings.
             Returns true if found 1 or more matches.
@@ -5754,7 +5754,7 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.Types.ExtString.RReplace(System.String,System.String,System.String,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.Types.ExtString.RxReplace(System.String,System.String,System.String,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds and replaces all match instances of PCRE regular expression <i>rx</i>.
             Returns the result string.
@@ -5776,7 +5776,7 @@
             </exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.Types.ExtString.RReplace(System.String,System.String,System.String,System.String@,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.Types.ExtString.RxReplace(System.String,System.String,System.String,System.String@,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds and replaces all match instances of PCRE regular expression <i>rx</i>.
             Returns the number of replacements made.
@@ -5799,7 +5799,7 @@
             </exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.Types.ExtString.RReplace(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.Types.ExtString.RxReplace(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds and replaces all match instances of PCRE regular expression <i>rx</i>. Uses a callback function.
             Returns the result string.
@@ -5821,7 +5821,7 @@
             </exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.Types.ExtString.RReplace(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.String@,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.Types.ExtString.RxReplace(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.String@,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds and replaces all match instances of PCRE regular expression <i>rx</i>. Uses a callback function.
             Returns the number of replacements made.
@@ -5844,7 +5844,7 @@
             </exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.Types.ExtString.RSplit(System.String,System.String,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.Types.ExtString.RxSplit(System.String,System.String,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Returns array of substrings delimited by PCRE regular expression <i>rx</i> matches.
             Parameters etc are of <see cref="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.regexp.Split(System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
@@ -5962,7 +5962,7 @@
         <member name="T:Au.Types.RXMatch">
             <summary>
             Regular expression match info.
-            Used with <see cref="T:Au.regexp"/> class functions and String extension methods like <see cref="M:Au.Types.ExtString.RMatch(System.String,System.String,Au.Types.RXMatch@,Au.Types.RXFlags,System.Nullable{System.Range})"/>.
+            Used with <see cref="T:Au.regexp"/> class functions and String extension methods like <see cref="M:Au.Types.ExtString.RxMatch(System.String,System.String,Au.Types.RXMatch@,Au.Types.RXFlags,System.Nullable{System.Range})"/>.
             </summary>
             <remarks>
             Contains info about a regular expression match found in the subject string: index, length, substring, etc.
@@ -5972,7 +5972,7 @@
             <example>
             <code><![CDATA[
             var s = "ab cd-45-ef gh";
-            if(s.RMatch(@"\b([a-z]+)-(\d+)\b", out RXMatch m))
+            if(s.RxMatch(@"\b([a-z]+)-(\d+)\b", out RXMatch m))
             	print.it(
             		m.GroupCountPlusOne, //3 (whole match and 2 groups)
             		m.Start, //3, same as m[0].Index
@@ -5986,7 +5986,7 @@
             A group in the subject string may not exist even if whole match found. Then its Exists property is false, Index -1, Length 0, Value null.
             <code><![CDATA[
             var s = "ab cd--ef gh";
-            if(s.RMatch(@"\b([a-z]+)-(\d+)?-([a-z]+)\b", out RXMatch m))
+            if(s.RxMatch(@"\b([a-z]+)-(\d+)?-([a-z]+)\b", out RXMatch m))
             	print.it(
             		m.GroupCountPlusOne, //4 (whole match and 3 groups)
             		m[2].Exists, //false
@@ -7982,57 +7982,6 @@
             Returns true if using Debug configuration of Au.dll.
             </summary>
         </member>
-        <member name="M:Au.More.Debug_.GetComObjRefCount_(System.IntPtr)">
-            <summary>
-            Calls Marshal.AddRef(obj), then calls/returns Marshal.Release(obj).
-            Available if TRACE defined.
-            </summary>
-        </member>
-        <member name="M:Au.More.Debug_.MemoryGet_(System.Boolean)">
-            <summary>
-            Returns managed memory size as formatted string. Uses GC.GetTotalMemory.
-            Available if TRACE defined.
-            </summary>
-            <param name="fromAnchor">Get the difference from previous call to <b>MemorySetAnchor_</b>.</param>
-        </member>
-        <member name="M:Au.More.Debug_.MemoryPrint_(System.Boolean)">
-            <summary>
-            Prints managed memory size. Uses GC.GetTotalMemory.
-            Available if TRACE defined.
-            </summary>
-            <param name="fromAnchor">Get the difference from previous call to <b>MemorySetAnchor_</b>.</param>
-        </member>
-        <member name="M:Au.More.Debug_.MemorySetAnchor_">
-            <summary>
-            Memorizes current managed memory size, so that next call to another <b>MemoryX</b> function with fromAnchor=true (default) will get memory size difference from current memory size.
-            Available if TRACE defined.
-            </summary>
-        </member>
-        <member name="T:Au.More.Debug_.NoGcRegion">
-            <summary>
-            Temporarily suspends GC collections if possible. Restores in <b>Dispose</b>.
-            Available if TRACE defined.
-            </summary>
-        </member>
-        <member name="M:Au.More.Debug_.NoGcRegion.#ctor(System.Int64,System.Boolean)">
-            <summary>
-            Suspends GC collections if possible.
-            Does nothing in 32-bit process.
-            </summary>
-            <param name="memSize">Recommended 100_000_000. Still works if 200_000_000, but fails if 300_000_000. Not tested in 32-bit process.</param>
-            <param name="print">Let <b>Dispose</b> print size of managed memory added since ctor.</param>
-        </member>
-        <member name="M:Au.More.Debug_.NoGcRegion.Dispose">
-            <summary>
-            Restores suspended GC collections.
-            </summary>
-        </member>
-        <member name="M:Au.More.Debug_.PrintLoadedAssemblies(System.Boolean,System.Boolean,System.Boolean)">
-            <summary>
-            Prints assemblies already loaded or/and loaded in the future.
-            Works in Release too, if TRACE defined.
-            </summary>
-        </member>
         <member name="T:Au.More.GC_">
             <summary>
             <see cref="T:System.GC"/> extensions.
@@ -8217,14 +8166,6 @@
             Gets the length of the instructions and operands.
             </summary>
             <value>The length.</value>
-        </member>
-        <member name="M:Au.More.ILInstruction.ToString">
-            <summary>
-            Returns a <see cref="T:System.String"/> that represents this instance.
-            </summary>
-            <returns>
-            A <see cref="T:System.String"/> that represents this instance.
-            </returns>
         </member>
         <member name="T:Au.More.ILReader">
             <summary>
@@ -20499,49 +20440,49 @@
             var s = "one two22, three333,four"; //subject string
             var rx = @"\b(\w+?)(\d+)\b"; //regular expression
              
-             print.it("//RIsMatch:");
-            print.it(s.RIsMatch(rx));
+             print.it("//RxIsMatch:");
+            print.it(s.RxIsMatch(rx));
              
-             print.it("//RMatch:");
-            if(s.RMatch(rx, out var m)) print.it(m.Value, m[1].Value, m[2].Value);
+             print.it("//RxMatch:");
+            if(s.RxMatch(rx, out var m)) print.it(m.Value, m[1].Value, m[2].Value);
              
-             print.it("//RMatch, get only string:");
-            if(s.RMatch(rx, 0, out var s0)) print.it(s0);
-             print.it("//RMatch, get only string of group 1:");
-            if(s.RMatch(rx, 1, out var s1)) print.it(s1);
+             print.it("//RxMatch, get only string:");
+            if(s.RxMatch(rx, 0, out var s0)) print.it(s0);
+             print.it("//RxMatch, get only string of group 1:");
+            if(s.RxMatch(rx, 1, out var s1)) print.it(s1);
              
-             print.it("//RFindAll with foreach:");
-            foreach(var v in s.RFindAll(rx)) print.it(v.Value, v[1].Value, v[2].Value);
+             print.it("//RxFindAll with foreach:");
+            foreach(var v in s.RxFindAll(rx)) print.it(v.Value, v[1].Value, v[2].Value);
              
-             print.it("//RFindAll with foreach, get only strings:");
-            foreach(var v in s.RFindAll(rx, 0)) print.it(v);
-             print.it("//RFindAll with foreach, get only strings of group 2:");
-            foreach(var v in s.RFindAll(rx, 2)) print.it(v);
+             print.it("//RxFindAll with foreach, get only strings:");
+            foreach(var v in s.RxFindAll(rx, 0)) print.it(v);
+             print.it("//RxFindAll with foreach, get only strings of group 2:");
+            foreach(var v in s.RxFindAll(rx, 2)) print.it(v);
              
-             print.it("//RFindAll, get array:");
-            if(s.RFindAll(rx, out var am)) foreach(var k in am) print.it(k.Value, k[1].Value, k[2].Value);
+             print.it("//RxFindAll, get array:");
+            if(s.RxFindAll(rx, out var am)) foreach(var k in am) print.it(k.Value, k[1].Value, k[2].Value);
              
-             print.it("//RFindAll, get array of strings:");
-            if(s.RFindAll(rx, 0, out var av)) print.it(av);
-             print.it("//RFindAll, get array of group 2 strings:");
-            if(s.RFindAll(rx, 2, out var ag)) print.it(ag);
+             print.it("//RxFindAll, get array of strings:");
+            if(s.RxFindAll(rx, 0, out var av)) print.it(av);
+             print.it("//RxFindAll, get array of group 2 strings:");
+            if(s.RxFindAll(rx, 2, out var ag)) print.it(ag);
              
-             print.it("//RReplace:");
-            print.it(s.RReplace(rx, "'$2$1'"));
+             print.it("//RxReplace:");
+            print.it(s.RxReplace(rx, "'$2$1'"));
              
-             print.it("//RReplace with callback:");
-            print.it(s.RReplace(rx, o => o.Value.Upper()));
-             print.it("//RReplace with callback and ExpandReplacement:");
-            print.it(s.RReplace(rx, o => { if(o.Length > 5) return o.ExpandReplacement("'$2$1'"); else return o[1].Value; }));
+             print.it("//RxReplace with callback:");
+            print.it(s.RxReplace(rx, o => o.Value.Upper()));
+             print.it("//RxReplace with callback and ExpandReplacement:");
+            print.it(s.RxReplace(rx, o => { if(o.Length > 5) return o.ExpandReplacement("'$2$1'"); else return o[1].Value; }));
              
-             print.it("//RReplace, get replacement count:");
-            if(0 != s.RReplace(rx, "'$2$1'", out var s2)) print.it(s2);
+             print.it("//RxReplace, get replacement count:");
+            if(0 != s.RxReplace(rx, "'$2$1'", out var s2)) print.it(s2);
              
-             print.it("//RReplace with callback, get replacement count:");
-            if(0 != s.RReplace(rx, o => o.Value.Upper(), out var s3)) print.it(s3);
+             print.it("//RxReplace with callback, get replacement count:");
+            if(0 != s.RxReplace(rx, o => o.Value.Upper(), out var s3)) print.it(s3);
              
-             print.it("//RSplit:");
-            print.it(s.RSplit(@" *, *"));
+             print.it("//RxSplit:");
+            print.it(s.RxSplit(@" *, *"));
             ]]></code></example>
         </member>
         <member name="M:Au.regexp.#ctor(System.String,Au.Types.RXFlags)">
@@ -23142,8 +23083,7 @@
             
             Finally call <see cref="M:Au.Triggers.ActionTriggers.Run"/>. It runs all the time (like <b>Application.Run</b>) and launches trigger actions (functions) when need. Actions run in other thread(s) by default.
             
-            Recommended properties for scripts containing triggers:
-            - <c>ifRunning warn_restart</c> - to quickly restart the script when editing. Just click the Run button.
+            To quickly restart the script when editing, click the Run button.
             
             Avoid multiple scripts with triggers. Each running instance uses some CPU. All triggers should be in single script, if possible. It's OK to run additional scripts temporarily, for example to test new triggers without restarting the main script. From trigger actions you can call <see cref="M:Au.script.run(System.String,System.String[])"/> to run other scripts in new process; see example.
             
@@ -23152,9 +23092,10 @@
             <example>
             This is a single script with many action triggers.
             <code><![CDATA[
-            using Au.Triggers; //add this above or below other 'using' directives
+            using Au.Triggers;
             
-            readonly ActionTriggers Triggers = new(); //add this field in your script class
+            ActionTriggers Triggers = new();
+            //readonly ActionTriggers Triggers = new(); //or add this field in your script class
             
             //you can set options for triggers added afterwards
             Triggers.Options.Thread(0, 500);
@@ -23218,7 +23159,7 @@
             tt["#file"] = o => {
             	o.Replace("");
             	var fd = new OpenFileDialog();
-            	if(fd.ShowDialog() == DialogResult.OK) keys.sendt(fd.FileName);
+            	if(fd.ShowDialog() == true) keys.sendt(fd.FileName);
             };
             tt.DefaultPostfixType = default;
             

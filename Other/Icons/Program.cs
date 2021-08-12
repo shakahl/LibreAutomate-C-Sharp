@@ -42,7 +42,7 @@ class Program
 		//print.it(rd);
 		var template = rd["MahApps.Templates." + rn] as ControlTemplate;
 		string xaml = XamlWriter.Save(template);
-		xaml = xaml.RReplace(@" xmlns(?::\w+)?="".+?""", "");
+		xaml = xaml.RxReplace(@" xmlns(?::\w+)?="".+?""", "");
 		var x = XElement.Parse(xaml);
 		x = x.Descendants("Path").First();
 		return x.ToString();

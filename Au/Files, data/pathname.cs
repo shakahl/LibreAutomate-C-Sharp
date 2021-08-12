@@ -555,8 +555,8 @@ namespace Au
 		/// </remarks>
 		public static string correctName(string name, string invalidCharReplacement = "-") {
 			if (name == null || (name = name.Trim()).Length == 0) return "-";
-			name = name.RReplace(_rxInvalidFN1, invalidCharReplacement).Trim();
-			if (name.RIsMatch(_rxInvalidFN2)) name = "@" + name;
+			name = name.RxReplace(_rxInvalidFN1, invalidCharReplacement).Trim();
+			if (name.RxIsMatch(_rxInvalidFN2)) name = "@" + name;
 			return name;
 		}
 
@@ -570,7 +570,7 @@ namespace Au
 		/// <param name="name">Any string. Example: "name.txt". Can be null.</param>
 		public static bool isInvalidName(string name) {
 			if (name == null || (name = name.Trim()).Length == 0) return true;
-			return name.RIsMatch(_rxInvalidFN1) || name.RIsMatch(_rxInvalidFN2);
+			return name.RxIsMatch(_rxInvalidFN1) || name.RxIsMatch(_rxInvalidFN2);
 		}
 
 		/// <summary>

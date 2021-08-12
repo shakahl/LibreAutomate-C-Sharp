@@ -448,7 +448,7 @@ partial class SciCode : KScintilla
 				b.Append(zRangeText(false, i1, i2));
 			} else {
 				s = CiUtil.GetTextWithoutUnusedUsingDirectives();
-				var name = _fn.Name; if (name.RIsMatch(@"(?i)^(Script|Class)\d*\.cs")) name = null;
+				var name = _fn.Name; if (name.RxIsMatch(@"(?i)^(Script|Class)\d*\.cs")) name = null;
 				b.AppendFormat("// {0} \"{1}\"{2}{3}", isScript ? "script" : "class", name, s[0] == '/' ? " " : "\r\n", s);
 			}
 			b.AppendLine(isCS ? "[/cs]" : "[/code]");
@@ -474,7 +474,7 @@ partial class SciCode : KScintilla
 		//string s0 = s;
 		if (s.Like("[cs]*[/cs]\r\n")) s = s[4..^7];
 
-		if (s.RMatch(@"^// (script|class) ""(.*?)""( |\R)", out var m)) {
+		if (s.RxMatch(@"^// (script|class) ""(.*?)""( |\R)", out var m)) {
 			bool isClass = s[3] == 'c';
 			s = s[m.End..];
 			var name = m[2].Length > 0 ? m[2].Value : (isClass ? "Class1.cs" : "Script1.cs");

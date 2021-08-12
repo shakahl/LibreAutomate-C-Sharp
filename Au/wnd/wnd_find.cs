@@ -582,7 +582,7 @@ namespace Au.Types
 			switch (s[0]) {
 			case 'e': //"e 'role' name" or just "name"
 			case 'c': //"c 'class' text"
-				if (s.RMatch(@"^. ?'(.+?)?' ?((?s).+)?$", out var m)) {
+				if (s.RxMatch(@"^. ?'(.+?)?' ?((?s).+)?$", out var m)) {
 					role = m[1].Value; name = m[2].Value;
 					if (s[0] == 'c') return new wndChildFinder(name, role);
 				}

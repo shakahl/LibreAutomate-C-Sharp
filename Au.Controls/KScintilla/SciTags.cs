@@ -699,7 +699,7 @@ namespace Au.Controls
 				return;
 			}
 			//get tag, attribute and text
-			if (!s.RMatch(@"(?s)^<(\+?\w+)(?: ""([^""]*)""| ([^>]*))?>(.+)", out var m)) return;
+			if (!s.RxMatch(@"(?s)^<(\+?\w+)(?: ""([^""]*)""| ([^>]*))?>(.+)", out var m)) return;
 			string tag = m[1].Value, attr = m[2].Value ?? m[3].Value ?? m[4].Value;
 			//print.it($"'{tag}'  '{attr}'  '{m[4].Value}'");
 

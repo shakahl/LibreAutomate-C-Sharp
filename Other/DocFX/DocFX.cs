@@ -204,10 +204,10 @@ unsafe class Program
 		//	Markdown is not applied inside any <...>, including HTML comment. Also add <au>, else may not add <p> etc.
 		//	Will remove the enclosing later, when processing HTML.
 		//	Another way - escape markdown characters in <c>...</c> (prepend \). Problem: markdown is not applied in HTML blocks, eg HTML tables, except in certain parts.
-		if (0 != s.RReplace(@"(?s)(?<!<pre>)<code>.+?</code>", @"<au><!--$0--></au>", out s)) R |= 1;
+		if (0 != s.RxReplace(@"(?s)(?<!<pre>)<code>.+?</code>", @"<au><!--$0--></au>", out s)) R |= 1;
 
 		//Use C# colors in code blocks. Without it the javascript would guess, often incorrectly.
-		if (0 != s.RReplace(@"<pre><code>", @"<pre><code class=""cs"">", out s)) R |= 2;
+		if (0 != s.RxReplace(@"<pre><code>", @"<pre><code class=""cs"">", out s)) R |= 2;
 
 		if (R == 0) return false;
 		//if(0 != (R & 2)) print.it(s);
@@ -243,24 +243,24 @@ unsafe class Program
 
 		if (isApi) {
 			//Remove the <au><!--<code>*xml*</code>--></au> enclosing.
-			nr += s.RReplace(@"<au><!--(<code>.+?</code>)--></au>", @"$1", out s);
+			nr += s.RxReplace(@"<au><!--(<code>.+?</code>)--></au>", @"$1", out s);
 
 			//Link Method(parameters) -> Type.Method. And remove #jump. Works for properties too.
 			//Exclude those in auto-generated tables of class methods and properties.
-			nr += s.RReplace(@"(<a class=""xref"" href=""Au\.(?:Types\.|Triggers\.|More\.)?+([\w\.\-]+\.\w+)\.html)#\w+"">.+?</a>(?!\s*</td>\s*<td class=""markdown level1 summary"">)", @"$1"">$2</a>", out s);
+			nr += s.RxReplace(@"(<a class=""xref"" href=""Au\.(?:Types\.|Triggers\.|More\.)?+([\w\.\-]+\.\w+)\.html)#\w+"">.+?</a>(?!\s*</td>\s*<td class=""markdown level1 summary"">)", @"$1"">$2</a>", out s);
 			//the same for enum
-			nr += s.RReplace(@"(<a class=""xref"" href=""Au\.(?:Types\.|Triggers\.|More\.)?+(\w+)\.html)#\w+"">(\w+</a>)", @"$1"">$2.$3", out s); //note: enums must not be nested in types
+			nr += s.RxReplace(@"(<a class=""xref"" href=""Au\.(?:Types\.|Triggers\.|More\.)?+(\w+)\.html)#\w+"">(\w+</a>)", @"$1"">$2.$3", out s); //note: enums must not be nested in types
 
 			//In class member pages, in title insert a link to the type.
-			nr += s.RReplace(@"<h1\b[^>]* data-uid=""(Au\.(?:Types\.|Triggers\.|More\.)?+([\w\.`]+))\.\w+\*?""[^>]*>(?:Method|Property|Field|Event|Operator|Constructor) (?=\w)",
+			nr += s.RxReplace(@"<h1\b[^>]* data-uid=""(Au\.(?:Types\.|Triggers\.|More\.)?+([\w\.`]+))\.\w+\*?""[^>]*>(?:Method|Property|Field|Event|Operator|Constructor) (?=\w)",
 				m => m.ExpandReplacement(@"$0<a href=""$1.html"">$2</a>.").Replace("`", "-"),
 				out s);
 
 			//Remove anchor from the first hidden overload <hr>, to prevent scrolling.
-			nr += s.RReplace(@"(</h1>\s*<hr class=""overload"") id="".+?"" data-uid="".+?""", @"$1", out s);
+			nr += s.RxReplace(@"(</h1>\s*<hr class=""overload"") id="".+?"" data-uid="".+?""", @"$1", out s);
 
 			//Add "(+ n overloads)" link in h1 and "(next/top)" links in h2 if need.
-			if (s.RFindAll(@"<h2 class=""overload"" id=""(.+?)"".*?>Overload", out var a) && a.Length > 1) {
+			if (s.RxFindAll(@"<h2 class=""overload"" id=""(.+?)"".*?>Overload", out var a) && a.Length > 1) {
 				var b = new StringBuilder();
 				int jPrev = 0;
 				for (int i = 0; i < a.Length; i++) {
@@ -285,7 +285,7 @@ unsafe class Program
 			//in .md we use this for links to api: [Class]() or [Class.Func]().
 			//	DocFX converts it to <a href="">Class</a> etc without warning.
 			//	Now convert it to a working link.
-			nr += s.RReplace(@"<a href="""">(.+?)</a>", m => {
+			nr += s.RxReplace(@"<a href="""">(.+?)</a>", m => {
 				var k = m[1].Value;
 				string href = null;
 				foreach (var ns in s_ns) {
@@ -300,16 +300,16 @@ unsafe class Program
 		}
 
 		//<google>...</google> -> <a href="google search">
-		nr += s.RReplace(@"<google>(.+?)</google>", @"<a href=""https://www.google.com/search?q=$1"">$1</a>", out s);
+		nr += s.RxReplace(@"<google>(.+?)</google>", @"<a href=""https://www.google.com/search?q=$1"">$1</a>", out s);
 
 		//<msdn>...</msdn> -> <a href="google search in docs.microsoft.com">
-		nr += s.RReplace(@"<msdn>(.+?)</msdn>", @"<a href=""https://www.google.com/search?q=site:docs.microsoft.com+$1"">$1</a>", out s);
+		nr += s.RxReplace(@"<msdn>(.+?)</msdn>", @"<a href=""https://www.google.com/search?q=site:docs.microsoft.com+$1"">$1</a>", out s);
 
 		//javascript renderTables() replacement, to avoid it at run time. Also remove class table-striped.
-		nr += s.RReplace(@"(?s)<table(>.+?</table>)", @"<div class=""table-responsive""><table class=""table table-bordered table-condensed""$1</div>", out s);
+		nr += s.RxReplace(@"(?s)<table(>.+?</table>)", @"<div class=""table-responsive""><table class=""table table-bordered table-condensed""$1</div>", out s);
 
 		//the same for renderAlerts
-		nr += s.RReplace(@"<div class=""(NOTE|TIP|WARNING|IMPORTANT|CAUTION)\b",
+		nr += s.RxReplace(@"<div class=""(NOTE|TIP|WARNING|IMPORTANT|CAUTION)\b",
 			o => {
 				string k = "info"; switch (o[1].Value[0]) { case 'W': k = "warning"; break; case 'I': case 'C': k = "danger"; break; }
 				return o.Value + " alert alert-" + k;
@@ -317,17 +317,17 @@ unsafe class Program
 			out s);
 
 		//replace something in syntax code blocks
-		nr += s.RReplace(@"(?<=<div class=""codewrapper"">)\s*<pre><code.+?(?=</code></pre>)",
+		nr += s.RxReplace(@"(?<=<div class=""codewrapper"">)\s*<pre><code.+?(?=</code></pre>)",
 			m => {
 				var k = m.Value;
-				k = k.RReplace(@"\(\w+\)0", @"0");
-				k = k.RReplace(@"default\([^)?]+\? *\)", @"null");
-				k = k.RReplace(@"default\(.+?\)", @"default");
+				k = k.RxReplace(@"\(\w+\)0", @"0");
+				k = k.RxReplace(@"default\([^)?]+\? *\)", @"null");
+				k = k.RxReplace(@"default\(.+?\)", @"default");
 				return k;
 			}
 			, out s);
 
-		//nr += s.RReplace(@"", @"", out s);
+		//nr += s.RxReplace(@"", @"", out s);
 
 		return nr > 0;
 	}
@@ -339,7 +339,7 @@ unsafe class Program
 	//	var s = File.ReadAllText(file);
 
 	//	//
-	//	if(0==s.RReplace(@"", @"", out s)) throw new Exception("regex failed");
+	//	if(0==s.RxReplace(@"", @"", out s)) throw new Exception("regex failed");
 
 	//	print.it(s);
 	//	//File.WriteAllText(file, s);
@@ -368,7 +368,7 @@ unsafe class Program
 	static void XrefMap(string siteDir) {
 		var b = new StringBuilder();
 		var s = File.ReadAllText(siteDir + @"\xrefmap.yml");
-		foreach(var m in s.RFindAll(@"(?m)^- uid:.+\R.+\R  href: (?!api/).+\R", (RXFlags)0)) {
+		foreach(var m in s.RxFindAll(@"(?m)^- uid:.+\R.+\R  href: (?!api/).+\R", (RXFlags)0)) {
 			//print.it(m);
 			b.Append(m);
 		}

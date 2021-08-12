@@ -243,7 +243,7 @@ static class CiSnippets
 
 		//remove ';' if in =>
 		if (s.Ends(';') && s_context == _Context.Arrow) {
-			if (doc.zText.RIsMatch(@"\s*[;,)\]]", RXFlags.ANCHORED, endPos..)) s = s[..^1];
+			if (doc.zText.RxIsMatch(@"\s*[;,)\]]", RXFlags.ANCHORED, endPos..)) s = s[..^1];
 		}
 
 		usingDir = x.Attr("using") ?? snippet.x.Attr("using");
@@ -261,7 +261,7 @@ static class CiSnippets
 			j = s.Find("$end$", i);
 			if (j >= i) { s = s.Remove(j, 5); selectLength = j - i; }
 
-			showSignature = s.RIsMatch(@"\w[([][^)\]]*""?$", range: ..i);
+			showSignature = s.RxIsMatch(@"\w[([][^)\]]*""?$", range: ..i);
 			if (selectLength == 0) {
 				if (s.Eq(i - 1, "()") || s.Eq(i - 1, "[]") || s.Eq(i - 1, "\"\"")) tempRange = (i, i);
 				else if (s.Eq(i - 2, "{  }")) tempRange = (i - 1, i + 1);

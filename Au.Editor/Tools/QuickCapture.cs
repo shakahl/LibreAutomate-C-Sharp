@@ -57,7 +57,7 @@
 					void _Path(int what) {
 						if (path.Ends(@"\explorer.exe") && w.ClassNameIs("CabinetWClass")) { //if folder window, try to get folder path
 							var tb = w.Child("***id 1001", "ToolbarWindow32"); // @"Address: C:\Program Files (x86)\Windows Kits\10\bin\x86"
-							if (!tb.Is0 && tb.Name is string sa && sa.RMatch(@"^\S+: +(.+)", 1, out RXGroup rg) && filesystem.exists(sa = rg.Value, useRawPath: true).isDir) path = sa;
+							if (!tb.Is0 && tb.Name is string sa && sa.RxMatch(@"^\S+: +(.+)", 1, out RXGroup rg) && filesystem.exists(sa = rg.Value, useRawPath: true).isDir) path = sa;
 						}
 						var g = new TUtil.PathInfo(path);
 						int f = g.SelectFormatUI(); if (f == 0) return;
