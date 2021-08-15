@@ -169,7 +169,7 @@
 	</Target>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-		<Exec Command="cd $(TargetDir)&#xD;&#xA;del &quot;$(TargetName).exe&quot;&#xD;&#xA;&quot;$(SolutionDir)Other\Programs\ResourceHacker.exe&quot; -script &quot;$(ProjectDir)Resources\hacker.txt&quot;&#xD;&#xA;::&quot;$(SolutionDir)Other\Programs\ResourceHacker.exe&quot; -script &quot;$(ProjectDir)Resources\hacker32.txt&quot;&#xD;&#xA;del &quot;$(TargetName).*.json&quot;&#xD;&#xA;" />
+		<Exec Command="cd $(TargetDir)&#xD;&#xA;del &quot;$(TargetName).exe&quot;&#xD;&#xA;&quot;$(SolutionDir)Other\Programs\ResourceHacker.exe&quot; -script &quot;$(ProjectDir)Resources\hacker.txt&quot;&#xD;&#xA;del &quot;$(TargetName).*.json&quot;&#xD;&#xA;" />
 	</Target>
 
 	<ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>

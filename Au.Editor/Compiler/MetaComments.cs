@@ -366,7 +366,7 @@ namespace Au.Compiler
 			}
 			//if(Role == ERole.exeProgram && !Defines.Contains("EXE")) Defines.Add("EXE"); //rejected
 
-			_FinalCheckOptions(f);
+			_FinalCheckOptions();
 
 			if (Errors.ErrorCount > 0) {
 				if (flags.Has(EMPFlags.PrintErrors)) Errors.PrintAll();
@@ -705,14 +705,16 @@ namespace Au.Compiler
 			return true;
 		}
 
-		bool _FinalCheckOptions(FileNode f) {
+		bool _FinalCheckOptions() {
+			_f = MainFile;
+
 			const EMSpecified c_spec1 = EMSpecified.ifRunning | EMSpecified.uac | EMSpecified.bit32 | EMSpecified.manifest | EMSpecified.icon | EMSpecified.console;
-			const string c_spec1S = "cannot use ifRunning, uac, bit32, manifest, icon, console";
+			const string c_spec1S = "cannot use: ifRunning, uac, bit32, manifest, icon, console";
 
 			bool needOP = false;
 			switch (Role) {
 			case ERole.miniProgram:
-				if (Specified.HasAny(EMSpecified.outputPath)) return _ErrorM("with role miniProgram cannot use outputPath");
+				if (Specified.HasAny(EMSpecified.outputPath | EMSpecified.bit32)) return _ErrorM("with role miniProgram cannot use: outputPath, bit32");
 				break;
 			case ERole.exeProgram:
 				needOP = true;
@@ -728,7 +730,7 @@ namespace Au.Compiler
 				if (Specified != 0) return _ErrorM("with role classFile (default role of class files) can be used only c, r, resource, com");
 				break;
 			}
-			if (needOP) OutputPath ??= GetDefaultOutputPath(f, Role, withEnvVar: false);
+			if (needOP) OutputPath ??= GetDefaultOutputPath(_f.f, Role, withEnvVar: false);
 
 			if (IconFile?.IsFolder ?? false) if (Role != ERole.exeProgram) return _ErrorM("icon folder can be used only with role exeProgram"); //difficult to add multiple icons if miniProgram
 

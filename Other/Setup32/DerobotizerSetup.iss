@@ -3,7 +3,7 @@
 
 #define MyAppName "Derobotize Me C#"
 #define MyAppNameShort "Derobotizer"
-#define MyAppVersion "0.0.1 (2021-08-12)"
+#define MyAppVersion "0.0.1 (2021-08-15)"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.quickmacros.com/au/help/"
 #define MyAppExeName "Au.Editor.exe"
@@ -49,7 +49,6 @@ Source: "Q:\app\Au\_\Au.Editor.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Editor.dll"; DestDir: "{app}"; Flags: ignoreversion
 ;Source: "Q:\app\Au\_\Au.Editor32.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Task.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Au.Task32.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Controls.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Net45.exe"; DestDir: "{app}"; Flags: ignoreversion
@@ -89,6 +88,7 @@ Source: "Q:\app\Au\_\xrefmap.yml"; DestDir: "{app}"; Flags: ignoreversion
 [InstallDelete]
 ;Type: filesandordirs; Name: "{app}\Default"
 Type: files; Name: "{app}\Au.CL.exe"
+Type: files; Name: "{app}\Au.Task32.exe"
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

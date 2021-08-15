@@ -381,154 +381,8 @@ class RunningTasks
 		return running == null;
 	}
 
-#if false //use shared memory instead of pipe. Works, but unfinished, used only to compare speed. Same speed.
-	/// <summary>
-	/// Executes the compiled assembly in new process.
-	/// Returns: process id if started now, 0 if failed, (int)script.RunResult_.deferred if scheduled to run later.
-	/// </summary>
-	/// <param name="f"></param>
-	/// <param name="r"></param>
-	/// <param name="args"></param>
-	/// <param name="noDefer">Don't schedule to run later. If cannot run now, just return 0.</param>
-	/// <param name="wrPipeName">Pipe name for script.writeResult.</param>
-	/// <param name="ignoreLimits">Don't check whether the task can run now.</param>
-	/// <param name="runFromEditor">Starting from the Run button or menu Run command. Can restart etc.</param>
-	public unsafe int RunCompiled(FileNode f, Compiler.CompResults r, string[] args,
-		bool noDefer = false, string wrPipeName = null, bool ignoreLimits = false, bool runFromEditor = false)
-	{
-		g1:
-		if(!ignoreLimits && !_CanRunNow(f, r, out var running, runFromEditor)) {
-			var ifRunning = r.ifRunning;
-			if (!ifRunning.Has(EIfRunning._norestartFlag) && ifRunning != EIfRunning.restart) {
-				if (runFromEditor) ifRunning = EIfRunning.restart;
-				else ifRunning |= EIfRunning._norestartFlag;
-			}
-			//print.it(same, ifRunning);
-			switch(ifRunning) {
-			case EIfRunning.cancel:
-				break;
-			case EIfRunning.wait when !noDefer:
-				_q.Insert(0, new _WaitingTask(f, r, args));
-				return (int)script.RunResult_.deferred;
-			case EIfRunning.restart when _EndTask(running):
-				goto g1;
-			default: //warn
-				print.it($"<>Cannot start {f.SciLink} because it is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>ifRunning<>.");
-				break;
-			}
-			return 0;
-		}
+	//rejected: use shared memory instead of pipe. Tested, same speed.
 
-		_SpUac uac = _SpUac.normal; int preIndex = 0;
-		if(!uacInfo.isUacDisabled) {
-			//info: to completely disable UAC on Win7: gpedit.msc/Computer configuration/Windows settings/Security settings/Local policies/Security options/User Account Control:Run all administrators in Admin Approval Mode/Disabled. Reboot.
-			//note: when UAC disabled, if our uac is System, IsUacDisabled returns false (we probably run as SYSTEM user). It's OK.
-			var IL = uacInfo.ofThisProcess.IntegrityLevel;
-			if(r.uac == EUac.inherit) {
-				switch(IL) {
-				case UacIL.High: preIndex = 1; break;
-				case UacIL.UIAccess: uac = _SpUac.uiAccess; preIndex = 2; break;
-				}
-			} else {
-				switch(IL) {
-				case UacIL.Medium:
-				case UacIL.UIAccess:
-					if(r.uac == EUac.admin) uac = _SpUac.admin;
-					break;
-				case UacIL.High:
-					if(r.uac == EUac.user) uac = _SpUac.userFromAdmin;
-					break;
-				case UacIL.Low:
-				case UacIL.Untrusted:
-				case UacIL.Unknown:
-				//break;
-				case UacIL.System:
-				case UacIL.Protected:
-					print.it($"<>Cannot run {f.SciLink}. Meta comment option <c green>uac {r.uac}<> cannot be used when the UAC integrity level of this process is {IL}. Supported levels are Medium, High and uiAccess.");
-					return 0;
-					//info: cannot start Medium IL process from System process. Would need another function. Never mind.
-				}
-				if(r.uac == EUac.admin) preIndex = 1;
-			}
-		}
-
-		string exeFile, argsString;
-		_Preloaded pre = null; byte[] taskArgs = null;
-		bool bit32 = r.bit32 || osVersion.is32BitOS;
-		if(r.notInCache) { //meta role exeProgram
-			exeFile = Compiler.DllNameToAppHostExeName(r.file, bit32);
-			argsString = args == null ? null : StringUtil.CommandLineFromArray(args);
-		} else {
-			exeFile = folders.ThisAppBS + (bit32 ? "Au.Task32.exe" : "Au.Task.exe");
-
-			//int iFlags = r.hasConfig ? 1 : 0;
-			int iFlags = 0;
-			if(r.mtaThread) iFlags |= 2;
-			if(r.console) iFlags |= 4;
-			taskArgs = Serializer_.Serialize(r.name, r.file, iFlags, args, r.fullPathRefs, wrPipeName, (string)folders.Workspace);
-			wrPipeName = null;
-
-			if(bit32 && !osVersion.is32BitOS) preIndex += 3;
-			pre = _preloaded[preIndex] ??= new _Preloaded(preIndex);
-			argsString = pre.eventName;
-		}
-
-		int pid; WaitHandle hProcess = null; //bool disconnectPipe = false;
-		try {
-			var pp = pre?.hProcess;
-			if(pp != null && 0 != Api.WaitForSingleObject(pp.SafeWaitHandle.DangerousGetHandle(), 0)) { //preloaded process exists
-				hProcess = pp; pid = pre.pid;
-				pre.hProcess = null; pre.pid = 0;
-			} else {
-				if(pp != null) { pp.Dispose(); pre.hProcess = null; pre.pid = 0; } //preloaded process existed but somehow ended
-				(pid, hProcess) = _StartProcess(uac, exeFile, argsString, wrPipeName);
-			}
-			Api.AllowSetForegroundWindow(pid);
-
-			if(pre != null) {
-				if(taskArgs.Length > SharedMemory_.TasksDataSize_) throw new ArgumentException("Too long task arguments data."); //todo
-																																		 //print.it(taskArgs.Length);
-				var m = SharedMemory_.Ptr;
-				m->tasks.size = taskArgs.Length;
-				//print.it(taskArgs.Length, taskArgs);
-				fixed(byte* p = taskArgs) Buffer.MemoryCopy(p, m->tasks.data, SharedMemory_.TasksDataSize_, taskArgs.Length);
-				Api.SetEvent(pre.hEvent);
-				//500.ms();
-
-				//start preloaded process for next task. Let it wait for pipe connection.
-				if(uac != _SpUac.admin) { //we don't want second UAC consent
-					try { (pre.pid, pre.hProcess) = _StartProcess(uac, exeFile, argsString, null); }
-					catch(Exception ex) { Debug_.Print(ex); }
-				}
-			}
-		}
-		catch(Exception ex) {
-			print.it(ex);
-			//if(disconnectPipe) Api.DisconnectNamedPipe(pre.hPipe);
-			hProcess?.Dispose();
-			return 0;
-		}
-
-		var rt = new RunningTask(f, hProcess);
-		_Add(rt);
-		return pid;
-	}
-
-	class _Preloaded
-	{
-		public readonly string eventName;
-		public readonly IntPtr hEvent;
-		public WaitHandle hProcess;
-		public int pid;
-
-		public _Preloaded(int index)
-		{
-			eventName = $"Au.Task-{Api.GetCurrentProcessId()}-{index}";
-			hEvent = Api.CreateEvent2(default, false, false, eventName);
-		}
-	}
-	_Preloaded[] _preloaded = new _Preloaded[6]; //user, admin, uiAccess, user32, admin32, uiAccess32
-#else
 	/// <summary>
 	/// Executes the compiled assembly in new process.
 	/// Returns: process id if started now, 0 if failed, (int)script.RunResult_.deferred if scheduled to run later.
@@ -600,17 +454,22 @@ class RunningTasks
 
 		string exeFile, argsString;
 		_Preloaded pre = null; byte[] taskParams = null;
-		bool bit32 = r.bit32 || osVersion.is32BitOS;
+
+		//rejected: 32-bit miniProgram. The task exe has been removed because of AV false positives. And rarely used. Can use exeProgram instead.
+		//	osVersion.is32BitOS - editor does not run on 32-bit OS. And never will.
+		//bool bit32 = r.bit32 || osVersion.is32BitOS;
+
 		if (r.notInCache) { //meta role exeProgram
-			exeFile = Compiler.DllNameToAppHostExeName(r.file, bit32);
+			exeFile = Compiler.DllNameToAppHostExeName(r.file, r.bit32);
 			argsString = args == null ? null : StringUtil.CommandLineFromArray(args);
 		} else {
-			exeFile = folders.ThisAppBS + (bit32 ? "Au.Task32.exe" : "Au.Task.exe");
+			//exeFile = folders.ThisAppBS + (bit32 ? "Au.Task32.exe" : "Au.Task.exe");
+			exeFile = folders.ThisAppBS + "Au.Task.exe";
 
 			taskParams = Serializer_.SerializeWithSize(r.name, r.file, (int)r.flags, args, wrPipeName, (string)folders.Workspace, f.IdString);
 			wrPipeName = null;
 
-			if (bit32 && !osVersion.is32BitOS) preIndex += 3;
+			//if (bit32 && !osVersion.is32BitOS) preIndex += 3;
 			pre = s_preloaded[preIndex] ??= new _Preloaded(preIndex);
 			argsString = pre.pipeName;
 		}
@@ -685,8 +544,8 @@ class RunningTasks
 			overlappedEvent.Dispose();
 		}
 	}
-	_Preloaded[] s_preloaded = new _Preloaded[6]; //user, admin, uiAccess, user32, admin32, uiAccess32
-#endif
+	//_Preloaded[] s_preloaded = new _Preloaded[6]; //user, admin, uiAccess, user32, admin32, uiAccess32
+	_Preloaded[] s_preloaded = new _Preloaded[3]; //user, admin, uiAccess
 
 	/// <summary>
 	/// How _StartProcess must start process.

@@ -66,8 +66,8 @@ class DProperties : KDialogWindow
 			.Add("manifest", out manifest).Validation(o => _ValidateFile(o, "manifest", FNFind.File));
 		b.R.Add("sign", out sign).Skip().Validation(o => _ValidateFile(o, "sign", FNFind.File));
 		b.StartStack()
-			.Add(out bit32, "bit32").Align(y: "C")
-			.Add(out console, "console").Align(y: "C").Margin(15)
+			.Add(out console, "console").Align(y: "C")
+			.Add(out bit32, "bit32").Align(y: "C").Margin(15)
 			.Add(out xmlDoc, "xmlDoc").Align(y: "C").Margin(15)
 			.End();
 		b.End();
@@ -105,7 +105,6 @@ class DProperties : KDialogWindow
 		//Run
 		_InitCombo(ifRunning, "warn_restart|warn|cancel_restart|cancel|wait_restart|wait|run_restart|run|restart", _meta.ifRunning);
 		_InitCombo(uac, "inherit|user|admin", _meta.uac);
-		if (_meta.bit32 == "true") bit32.IsChecked = true;
 		//Assembly
 		outputPath.Text = _meta.outputPath;
 		void _ButtonClick_outputPath(WBButtonClickArgs e) {
@@ -123,8 +122,9 @@ class DProperties : KDialogWindow
 		icon.Text = _meta.icon;
 		manifest.Text = _meta.manifest;
 		sign.Text = _meta.sign;
-		if (_meta.xmlDoc == "true") xmlDoc.IsChecked = true;
 		if (_meta.console == "true") console.IsChecked = true;
+		if (_meta.bit32 == "true") bit32.IsChecked = true;
+		if (_meta.xmlDoc == "true") xmlDoc.IsChecked = true;
 		//Compile
 		if (_meta.optimize == "true") optimize.IsChecked = true;
 		define.Text = _meta.define;
@@ -156,9 +156,9 @@ class DProperties : KDialogWindow
 		};
 		void _ChangedRole() {
 			_ShowHide(testScript, _role is Au.Compiler.ERole.classLibrary or Au.Compiler.ERole.classFile);
-			_ShowCollapse(_role is Au.Compiler.ERole.miniProgram or Au.Compiler.ERole.exeProgram, gRun, console, icon, bit32);
+			_ShowCollapse(_role is Au.Compiler.ERole.miniProgram or Au.Compiler.ERole.exeProgram, gRun, console, icon);
 			_ShowCollapse(_role is Au.Compiler.ERole.exeProgram or Au.Compiler.ERole.classLibrary, outputPath, outputPathB, xmlDoc);
-			_ShowCollapse(_role == Au.Compiler.ERole.exeProgram, manifest);
+			_ShowCollapse(_role == Au.Compiler.ERole.exeProgram, manifest, bit32);
 			_ShowCollapse(_role != Au.Compiler.ERole.classFile, gAssembly, gCompile);
 			addProject.IsEnabled = _role != Au.Compiler.ERole.classFile;
 		}
@@ -469,7 +469,9 @@ class DProperties : KDialogWindow
 	}
 
 	static bool _IsHidden(FrameworkElement t) {
-		if (t.IsVisible) return false; //else hidden or in non-expanded Expander
+		if (t.IsVisible) return false;
+		if (t.Visibility != Visibility.Visible) return true;
+		//is in non-expanded Expander, or expander itself is hidden?
 		while ((t = t.Parent as FrameworkElement) != null) if (t is Expander e) return !e.IsVisible;
 		return true;
 	}
@@ -570,11 +572,6 @@ This option is ignored when the task runs as .exe program started not from edito
 
 This option is ignored when the task runs as .exe program started not from editor.
 ");
-		info.AddElem(bit32,
-@"<b>bit32</b> - whether the task process must be 32-bit everywhere.
- • <i>false</i> (default) - the process is 64-bit or 32-bit, the same as Windows on that computer.
- • <i>true</i> (checked in Properties) - the process is 32-bit on all computers.
-");
 		info.AddElem(outputPath,
 @"<b>outputPath</b> - directory for the output assembly file and related files (used dlls, etc).
 Full path. Can start with %environmentVariable% or %folders.SomeFolder%. Can be path relative to this file or workspace, like with other options. Default if role exeProgram: <link>%folders.Workspace%\bin\filename<>. Default if role classLibrary: <link>%folders.ThisApp%\Libraries<>. The compiler creates the folder if does not exist.
@@ -607,14 +604,19 @@ The manifest will be added as a native resource.
 @"<b>sign</b> - strong-name signing key file, to sign the output assembly.
 The file must be in this workspace. Can be path relative to this file (examples: App.snk, Folder\App.snk, ..\Folder\App.snk) or path in the workspace (examples: \App.snk, \Folder\App.snk).
 ");
+		info.AddElem(console,
+@"<b>console</b> - let the program run with console.
+");
+		info.AddElem(bit32,
+@"<b>bit32</b> - whether the exe process must be 32-bit everywhere.
+ • <i>false</i> (default) - the process is 64-bit or 32-bit, the same as Windows on that computer.
+ • <i>true</i> (checked in Properties) - the process is 32-bit on all computers.
+");
 		info.AddElem(xmlDoc,
 @"<b>xmlDoc</b> - create XML documentation file from /// XML comments of classes, functions, etc.
 Creates in the 'outputPath' folder.
 
 XML documentation files are used by code editors to display class/function/parameter info. Also can be used to create online documentation or help file, for example with <google>Sandcastle Help File Builder<> or <google>DocFX<>.
-");
-		info.AddElem(console,
-@"<b>console</b> - let the program run with console.
 ");
 		info.AddElem(optimize,
 @"<b>optimize</b> - whether to make the compiled code as fast as possible.

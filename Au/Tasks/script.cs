@@ -386,7 +386,7 @@ namespace Au
 				if (s_setupException.Has(UExcept.Dialog)) dialog.showError("Task failed", e.ToStringWithoutStack(), flags: DFlags.Wider, expandedText: e.ToString());
 				if (s_setupException.Has(UExcept.Exit)) Environment.Exit(-1);
 				//if (s_setupException.Has(UExcept.DisableWER)) Api.WerAddExcludedApplication(process.thisExePath, false);
-				//info: setup32.dll disables WER for Au.Task.exe and Au.Task32.exe.
+				//info: setup32.dll disables WER for Au.Task.exe.
 			};
 
 			if (role == SRole.ExeProgram) {
