@@ -7948,9 +7948,9 @@
             The optional argument is not used explicitly.
             </summary>
         </member>
-        <member name="M:Au.More.Debug_.PrintNativeError_(System.String,System.Int32,System.String)">
+        <member name="M:Au.More.Debug_.PrintNativeError_(System.Boolean,System.String,System.Int32,System.String)">
             <summary>
-            In DEBUG config prints lastError.message.
+            In DEBUG config prints lastError.message. Only if condition true (default).
             </summary>
         </member>
         <member name="M:Au.More.Debug_.PrintNativeError_(System.Int32,System.String,System.Int32,System.String)">
@@ -8240,6 +8240,52 @@
             <param name="type">Type containing the methods.</param>
             <param name="methods">Method names.</param>
             <exception cref="T:System.ArgumentException">Method does not exist.</exception>
+        </member>
+        <member name="T:Au.More.LineWriter_">
+            <summary>
+            <see cref="T:System.IO.TextWriter"/> optimized for writing full lines.
+            </summary>
+            <remarks>
+            Derived class must override <see cref="M:Au.More.LineWriter_.WriteLineNow(System.String)"/>. Don't need to override <b>Write</b>/<b>WriteLine</b>.
+            If <b>Write</b> called with text that does not end with '\n', just accumulates the text in this variable.
+            When called <b>WriteLine</b> or <b>Flush</b> or <b>Write</b> with text that ends with '\n', calls <see cref="M:Au.More.LineWriter_.WriteLineNow(System.String)"/> of the derived class.
+            </remarks>
+        </member>
+        <member name="P:Au.More.LineWriter_.Encoding">
+            <summary>
+            Returns <b>Encoding.Unicode</b>.
+            </summary>
+        </member>
+        <member name="M:Au.More.LineWriter_.Write(System.Char)">
+            <summary>
+            If <i>value</i> is '\n', writes accumulated text as full line and clears accumulated text, else just appends <i>value</i> to the accumulated text.
+            </summary>
+        </member>
+        <member name="M:Au.More.LineWriter_.Write(System.String)">
+            <summary>
+            If <i>value</i> ends with '\n', writes line (accumulated text + <i>value</i>) and clears accumulated text, else just appends <i>value</i> to the accumulated text.
+            </summary>
+        </member>
+        <member name="M:Au.More.LineWriter_.WriteLine">
+            <summary>
+            If this variable contains accumulated text, writes it as full line and clears it. Else writes empty line.
+            </summary>
+        </member>
+        <member name="M:Au.More.LineWriter_.WriteLine(System.String)">
+            <summary>
+            Writes line (accumulated text + <i>value</i>) and clears accumulated text.
+            </summary>
+        </member>
+        <member name="M:Au.More.LineWriter_.Flush">
+            <summary>
+            If this variable contains accumulated text, writes it as full line and clears it.
+            </summary>
+        </member>
+        <member name="M:Au.More.LineWriter_.WriteLineNow(System.String)">
+            <summary>
+            Called to write full line.
+            </summary>
+            <param name="s">Line text. Does not end with line break characters.</param>
         </member>
         <member name="T:Au.More.NativeFont_">
             <summary>
@@ -21687,18 +21733,6 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.run.console(System.Action{System.String},System.String,System.String,System.String,System.Text.Encoding)">
-            <summary>
-            Runs a console program, waits until its process ends, and gets its output text.
-            This overload uses a callback function that receives text lines in real time.
-            </summary>
-            <param name="output">A callback function that receives the output text. It receives single full line at a time, without line break characters.</param>
-            <param name="exe"></param>
-            <param name="args"></param>
-            <param name="curDir"></param>
-            <param name="encoding"></param>
-            <exception cref="T:Au.Types.AuException">Failed, for example file not found.</exception>
-        </member>
         <member name="M:Au.run.console(System.String@,System.String,System.String,System.String,System.Text.Encoding)">
             <summary>
             Runs a console program, waits until its process ends, and gets its output text when it ends.
@@ -21708,6 +21742,24 @@
             <param name="args"></param>
             <param name="curDir"></param>
             <param name="encoding"></param>
+            <exception cref="T:Au.Types.AuException">Failed, for example file not found.</exception>
+        </member>
+        <member name="M:Au.run.console(System.Action{System.String},System.String,System.String,System.String,System.Text.Encoding,System.Boolean)">
+            <summary>
+            Runs a console program, waits until its process ends, and gets its output text.
+            This overload uses a callback function that receives text lines in real time.
+            </summary>
+            <param name="output">
+            A callback function that receives the output text.
+            Unless <i>rawText</i> true:
+            - it isn't called until is retrieved full line with line break characters;
+            - it receives single full line at a time, without line break characters.
+            </param>
+            <param name="exe"></param>
+            <param name="args"></param>
+            <param name="curDir"></param>
+            <param name="encoding"></param>
+            <param name="rawText">Call the callback function whenever text is retrieved (don't wait for full line). Pass raw text, in chunks of any size.</param>
             <exception cref="T:Au.Types.AuException">Failed, for example file not found.</exception>
         </member>
         <member name="M:Au.run.selectInExplorer(System.String)">
@@ -21846,9 +21898,9 @@
             </summary>
             <returns>
             Native process id of the task process.
-            Returns 0 if task start is deferred because a task is running (see meta option ifRunning).
             Returns 0 if role editorExtension; then waits until the task ends.
-            Returns -1 if failed, for example if the script contains errors or cannot run because a task is running.
+            Returns 0 if task start is deferred because the script is running (ifRunning wait/wait_restart).
+            Returns -1 if failed, for example if the script contains errors or cannot run second task instance.
             </returns>
             <param name="script">Script name like "Script5.cs", or path like @"\Folder\Script5.cs".</param>
             <param name="args">Command line arguments. In script it will be variable <i>args</i>. Should not contain '\0' characters.</param>
@@ -21861,7 +21913,7 @@
             </summary>
             <returns>The exit code of the task process. See <see cref="P:System.Environment.ExitCode"/>.</returns>
             <exception cref="T:System.IO.FileNotFoundException">Script file not found.</exception>
-            <exception cref="T:Au.Types.AuException">Failed to start script.</exception>
+            <exception cref="T:Au.Types.AuException">Failed to start script task, for example if the script contains errors or cannot start second task instance.</exception>
         </member>
         <member name="M:Au.script.runWait(System.String@,System.String,System.String[])">
             <summary>
@@ -21871,7 +21923,7 @@
             <param name="results">Receives <see cref="M:Au.script.writeResult(System.String)"/> text.</param>
             <returns>The exit code of the task process. See <see cref="P:System.Environment.ExitCode"/>.</returns>
             <exception cref="T:System.IO.FileNotFoundException">Script file not found.</exception>
-            <exception cref="T:Au.Types.AuException">Failed to start script.</exception>
+            <exception cref="T:Au.Types.AuException">Failed to start script task, for example if the script contains errors or cannot start second task instance.</exception>
         </member>
         <member name="M:Au.script.runWait(System.Action{System.String},System.String,System.String[])">
             <summary>
@@ -21881,18 +21933,18 @@
             <param name="results">Receives <see cref="M:Au.script.writeResult(System.String)"/> output whenever the task calls it.</param>
             <returns>The exit code of the task process. See <see cref="P:System.Environment.ExitCode"/>.</returns>
             <exception cref="T:System.IO.FileNotFoundException">Script file not found.</exception>
-            <exception cref="T:Au.Types.AuException">Failed to start script.</exception>
+            <exception cref="T:Au.Types.AuException">Failed to start script task.</exception>
         </member>
         <member name="M:Au.script.writeResult(System.String)">
             <summary>
-            Writes a string result for the task that called <see cref="M:Au.script.runWait(System.String@,System.String,System.String[])"/> or <see cref="M:Au.script.runWait(System.Action{System.String},System.String,System.String[])"/> to run this task, or for the program that executed "Au.CL.exe" to run this task with command line like "Au.CL.exe **Script5.cs".
-            Returns false if this task was not started in such a way. Returns null if failed to write, except when s is null/"".
+            Writes a string result for the task that called <see cref="M:Au.script.runWait(System.String@,System.String,System.String[])"/> or <see cref="M:Au.script.runWait(System.Action{System.String},System.String,System.String[])"/> to run this task, or for the program that started this task using command line like "Au.Editor.exe *Script5.cs".
+            Returns false if this task was not started in such a way. Returns false if failed to write, except when <i>s</i> is null/"".
             </summary>
             <param name="s">A string. This function does not append newline characters.</param>
             <remarks>
-            The <b>RunWait</b>(Action) overload can read the string in real time.
-            The <b>RunWait</b>(out string) overload gets all strings joined when the task ends.
-            The program that executed "Au.CL.exe" to run this task with command line like "Au.CL.exe **Script5.cs" can read the string from the redirected standard output in real time, or the string is written to its console in real time. The string encoding is UTF8; if you use a bat file or cmd.exe and want to get correct Unicode text, execute this before, to change console code page to UTF-8: <c>chcp 65001</c>.
+            <see cref="M:Au.script.runWait(System.Action{System.String},System.String,System.String[])"/> can read the string in real time.
+            <see cref="M:Au.script.runWait(System.String@,System.String,System.String[])"/> gets all strings joined when the task ends.
+            The program that started this task using command line like "Au.Editor.exe *Script5.cs" can read the string from the redirected standard output in real time, or the string is displayed to its console in real time. The string encoding is UTF8; if you use a .bat file or cmd.exe and want to get correct Unicode text, execute this before, to change console code page to UTF-8: <c>chcp 65001</c>.
             </remarks>
         </member>
         <member name="M:Au.script.setup(System.Boolean,System.Boolean,System.Boolean,System.Boolean,Au.Types.UExcept,System.String)">
@@ -21965,6 +22017,12 @@
         <member name="P:Au.script.WndMsg_">
             <summary>
             Finds editor's message-only window used with WM_COPYDATA etc.
+            Uses <see cref="T:Au.wnd.Cached_"/>.
+            </summary>
+        </member>
+        <member name="F:Au.script.c_msgWndClassName">
+            <summary>
+            Class name of <see cref="P:Au.script.WndMsg_"/> window.
             </summary>
         </member>
         <member name="T:Au.script.editor">

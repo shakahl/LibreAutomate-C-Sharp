@@ -474,9 +474,7 @@ partial class CiCompletion
 				static bool _IsOurScriptClass(INamedTypeSymbol t) => t.Name is "Program" or "Script";
 
 				if (sym != null && v.kind is not (CiItemKind.LocalVariable or CiItemKind.Namespace or CiItemKind.TypeParameter)) {
-					//TODO: whey don't use IsObsolete ext method?
-					bool isObsolete = ci.Symbols.All(sy => sy.GetAttributes().Any(o => o.AttributeClass.Name == "ObsoleteAttribute")); //can be several overloads, some obsolete but others not
-					if (isObsolete) v.moveDown = CiComplItemMoveDownBy.Obsolete;
+					if (ci.Symbols.All(sy => sy.IsObsolete())) v.moveDown = CiComplItemMoveDownBy.Obsolete; //can be several overloads, some obsolete but others not
 				}
 
 				d.items.Add(v);

@@ -109,7 +109,7 @@ HRESULT CreateSchedulerTask(LPCWSTR dir)
 <Exec>
 <Command>)";
 	xml += dir;
-	xml += LR"(Au.CL.exe</Command>
+	xml += LR"(Au.Editor.exe</Command>
 <Arguments>/s $(Arg0)</Arguments>
 </Exec>
 </Actions>

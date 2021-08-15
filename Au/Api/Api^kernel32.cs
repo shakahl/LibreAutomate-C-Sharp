@@ -791,8 +791,8 @@ namespace Au.Types
 		{
 			public int cb;
 			public IntPtr lpReserved;
-			public IntPtr lpDesktop;
-			public IntPtr lpTitle;
+			public char* lpDesktop;
+			public char* lpTitle;
 			public int dwX;
 			public int dwY;
 			public int dwXSize;

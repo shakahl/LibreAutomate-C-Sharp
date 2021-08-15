@@ -103,6 +103,8 @@ partial class MainWindow : Window
 		//this.Activate(); //does not work with VMWare, also if user clicks a window after starting this process
 		App.Hwnd.ActivateL(); //works always, possibly with workarounds
 
+		//TODO: ActivateL calls DoEvents...
+
 		Panels.PanelManager["Output"].Visible = true;
 
 		App.Model.WorkspaceLoadedWithUI(onUiLoaded: true);
@@ -116,6 +118,8 @@ partial class MainWindow : Window
 		hs.AddHook(_WndProc);
 
 		Au.Tools.QuickCapture.RegisterHotkey(App.Hwnd);
+
+		CommandLine.UILoaded();
 	}
 
 	///// <summary>
@@ -136,7 +140,6 @@ partial class MainWindow : Window
 			switch ((ERegisteredHotkeyId)(int)wParam) {
 			case ERegisteredHotkeyId.QuickCapture: Au.Tools.QuickCapture.WmHotkey(); break;
 			}
-			
 			break;
 		}
 

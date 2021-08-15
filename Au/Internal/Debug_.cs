@@ -72,11 +72,12 @@ namespace Au.More
 			=> _Print2(m_);
 
 		/// <summary>
-		/// In DEBUG config prints lastError.message.
+		/// In DEBUG config prints lastError.message. Only if condition true (default).
 		/// </summary>
 		[Conditional("DEBUG")]
-		internal static void PrintNativeError_([CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null)
-			=> _Print(lastError.message, f_, l_, m_);
+		internal static void PrintNativeError_(bool condition = true, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null) {
+			if (condition) _Print(lastError.message, f_, l_, m_);
+		}
 
 		/// <summary>
 		/// In DEBUG config prints lastError.messageFor(code).

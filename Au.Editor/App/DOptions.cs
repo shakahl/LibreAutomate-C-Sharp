@@ -82,7 +82,7 @@ class DOptions : KDialogWindow
 				try {
 					using var rk = Registry.CurrentUser.OpenSubKey(c_rkRun, true);
 					if (init_startWithWin) rk.DeleteValue("Au.Editor");
-					else rk.SetValue("Au.Editor", "\"" + folders.ThisAppBS + "Au.CL.exe\" /e");
+					else rk.SetValue("Au.Editor", $"\"{process.thisExePath}\"");
 				}
 				catch (Exception ex) { print.it("Failed to change 'Start with Windows'. " + ex.ToStringWithoutStack()); }
 			}

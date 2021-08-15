@@ -63,9 +63,9 @@ namespace Au
 		/// </summary>
 		/// <returns>
 		/// Native process id of the task process.
-		/// Returns 0 if task start is deferred because a task is running (see meta option ifRunning).
 		/// Returns 0 if role editorExtension; then waits until the task ends.
-		/// Returns -1 if failed, for example if the script contains errors or cannot run because a task is running.
+		/// Returns 0 if task start is deferred because the script is running (ifRunning wait/wait_restart).
+		/// Returns -1 if failed, for example if the script contains errors or cannot run second task instance.
 		/// </returns>
 		/// <param name="script">Script name like "Script5.cs", or path like @"\Folder\Script5.cs".</param>
 		/// <param name="args">Command line arguments. In script it will be variable <i>args</i>. Should not contain '\0' characters.</param>
@@ -79,7 +79,7 @@ namespace Au
 		/// </summary>
 		/// <returns>The exit code of the task process. See <see cref="Environment.ExitCode"/>.</returns>
 		/// <exception cref="FileNotFoundException">Script file not found.</exception>
-		/// <exception cref="AuException">Failed to start script.</exception>
+		/// <exception cref="AuException">Failed to start script task, for example if the script contains errors or cannot start second task instance.</exception>
 		public static int runWait(string script, params string[] args)
 			=> _Run(1, script, args, out _);
 
@@ -91,7 +91,7 @@ namespace Au
 		/// <param name="results">Receives <see cref="writeResult"/> text.</param>
 		/// <returns>The exit code of the task process. See <see cref="Environment.ExitCode"/>.</returns>
 		/// <exception cref="FileNotFoundException">Script file not found.</exception>
-		/// <exception cref="AuException">Failed to start script.</exception>
+		/// <exception cref="AuException">Failed to start script task, for example if the script contains errors or cannot start second task instance.</exception>
 		public static int runWait(out string results, string script, params string[] args)
 			=> _Run(3, script, args, out results);
 
@@ -102,26 +102,33 @@ namespace Au
 		/// <param name="results">Receives <see cref="writeResult"/> output whenever the task calls it.</param>
 		/// <returns>The exit code of the task process. See <see cref="Environment.ExitCode"/>.</returns>
 		/// <exception cref="FileNotFoundException">Script file not found.</exception>
-		/// <exception cref="AuException">Failed to start script.</exception>
+		/// <exception cref="AuException">Failed to start script task.</exception>
 		public static int runWait(Action<string> results, string script, params string[] args)
 			=> _Run(3, script, args, out _, results);
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
 		static int _Run(int mode, string script, string[] args, out string resultS, Action<string> resultA = null) {
+			resultS = null;
 			var w = WndMsg_; if (w.Is0) throw new AuException("Editor process not found."); //CONSIDER: run editor program, if installed
-			bool waitMode = 0 != (mode & 1), needResult = 0 != (mode & 2); resultS = null;
+			bool wait = 0 != (mode & 1), needResult = 0 != (mode & 2);
 			using var tr = new _TaskResults();
 			if (needResult && !tr.Init()) throw new AuException("*get task results");
 
 			var data = Serializer_.Serialize(script, args, tr.pipeName);
 			int pid = (int)WndCopyData.Send<byte>(w, 100, data, mode);
+			if (pid == 0) pid--; //RunResult_.failed
+
 			switch ((RunResult_)pid) {
-			case RunResult_.failed: return !waitMode ? -1 : throw new AuException("*start task");
-			case RunResult_.notFound: throw new FileNotFoundException($"Script '{script}' not found.");
-			case RunResult_.editorThread: case RunResult_.deferred: return 0;
+			case RunResult_.failed:
+				return !wait ? -1 : throw new AuException("*start task");
+			case RunResult_.notFound:
+				throw new FileNotFoundException($"Script '{script}' not found.");
+			case RunResult_.deferred: //possible only if !wait
+			case RunResult_.editorThread: //the script ran sync and already returned
+				return 0;
 			}
 
-			if (waitMode) {
+			if (wait) {
 				using var hProcess = WaitHandle_.FromProcessId(pid, Api.SYNCHRONIZE | Api.PROCESS_QUERY_LIMITED_INFORMATION);
 				if (hProcess == null) throw new AuException("*wait for task");
 
@@ -134,12 +141,50 @@ namespace Au
 			return pid;
 		}
 
-		internal enum RunResult_ //note: sync with ERunResult in Au.CL.cpp.
+		//Called from editor's CommandLine. Almost same as _Run. Does not throw.
+		internal static int RunCL_(wnd w, int mode, string script, string[] args, Action<string> resultA) {
+			bool wait = 0 != (mode & 1), needResult = 0 != (mode & 2);
+			using var tr = new _TaskResults();
+			if (needResult && !tr.Init()) return (int)RunResult_.cannotGetResult;
+
+			var data = Serializer_.Serialize(script, args, tr.pipeName);
+			int pid = (int)WndCopyData.Send<byte>(w, 101, data, mode);
+			if (pid == 0) pid--; //RunResult_.failed
+
+			switch ((RunResult_)pid) {
+			case RunResult_.failed:
+			case RunResult_.notFound:
+				return pid;
+			case RunResult_.deferred: //possible only if !wait
+			case RunResult_.editorThread: //the script ran sync and already returned. Ignore needResult, as it it auto-detected, not explicitly specified.
+				return 0;
+			}
+
+			if (wait) {
+				using var hProcess = WaitHandle_.FromProcessId(pid, Api.SYNCHRONIZE | Api.PROCESS_QUERY_LIMITED_INFORMATION);
+				if (hProcess == null) return (int)RunResult_.cannotWait;
+
+				if (!needResult) hProcess.WaitOne(-1);
+				else if (!tr.WaitAndRead(hProcess, resultA)) return (int)RunResult_.cannotWaitGetResult;
+
+				if (!Api.GetExitCodeProcess(hProcess.SafeWaitHandle.DangerousGetHandle(), out pid)) pid = int.MinValue;
+			}
+			return pid;
+		}
+
+		internal enum RunResult_
 		{
-			failed = 0,
-			deferred = -1,
-			notFound = -2,
-			editorThread = -3,
+			//errors returned by sendmessage(wm_copydata)
+			failed = -1, //script contains errors, or cannot run because of ifRunning, or sendmessage(wm_copydata) failed
+			notFound = -2, //script not found
+			deferred = -3, //script cannot run now, but will run later if don't need to wait. If need to wait, in such case cannot be deferred (then failed).
+			editorThread = -4, //role editorExtension
+
+			//other errors
+			noEditor = -5,
+			cannotWait = -6,
+			cannotGetResult = -7,
+			cannotWaitGetResult = -8,
 		}
 
 		unsafe struct _TaskResults : IDisposable
@@ -151,7 +196,7 @@ namespace Au
 
 			public bool Init() {
 				var tid = Api.GetCurrentThreadId();
-				pipeName = @"\\.\pipe\Au.CL-" + tid.ToString();
+				pipeName = @"\\.\pipe\Au.CL-" + tid.ToString(); //will send this string to the task
 				_hPipe = Api.CreateNamedPipe(pipeName,
 					Api.PIPE_ACCESS_INBOUND | Api.FILE_FLAG_OVERLAPPED, //use async pipe because also need to wait for task process exit
 					Api.PIPE_TYPE_MESSAGE | Api.PIPE_READMODE_MESSAGE | Api.PIPE_REJECT_REMOTE_CLIENTS,
@@ -216,30 +261,57 @@ namespace Au
 		};
 
 		/// <summary>
-		/// Writes a string result for the task that called <see cref="runWait(out string, string, string[])"/> or <see cref="runWait(Action{string}, string, string[])"/> to run this task, or for the program that executed "Au.CL.exe" to run this task with command line like "Au.CL.exe **Script5.cs".
-		/// Returns false if this task was not started in such a way. Returns null if failed to write, except when s is null/"".
+		/// Writes a string result for the task that called <see cref="runWait(out string, string, string[])"/> or <see cref="runWait(Action{string}, string, string[])"/> to run this task, or for the program that started this task using command line like "Au.Editor.exe *Script5.cs".
+		/// Returns false if this task was not started in such a way. Returns false if failed to write, except when <i>s</i> is null/"".
 		/// </summary>
 		/// <param name="s">A string. This function does not append newline characters.</param>
 		/// <remarks>
-		/// The <b>RunWait</b>(Action) overload can read the string in real time.
-		/// The <b>RunWait</b>(out string) overload gets all strings joined when the task ends.
-		/// The program that executed "Au.CL.exe" to run this task with command line like "Au.CL.exe **Script5.cs" can read the string from the redirected standard output in real time, or the string is written to its console in real time. The string encoding is UTF8; if you use a bat file or cmd.exe and want to get correct Unicode text, execute this before, to change console code page to UTF-8: <c>chcp 65001</c>.
+		/// <see cref="runWait(Action{string}, string, string[])"/> can read the string in real time.
+		/// <see cref="runWait(out string, string, string[])"/> gets all strings joined when the task ends.
+		/// The program that started this task using command line like "Au.Editor.exe *Script5.cs" can read the string from the redirected standard output in real time, or the string is displayed to its console in real time. The string encoding is UTF8; if you use a .bat file or cmd.exe and want to get correct Unicode text, execute this before, to change console code page to UTF-8: <c>chcp 65001</c>.
 		/// </remarks>
+#if true
 		public static unsafe bool writeResult(string s) {
-			var pipeName = Environment.GetEnvironmentVariable("script.writeResult.pipe");
-			if (pipeName == null) return false;
-			if (!s.NE()) {
-				if (!Api.WaitNamedPipe(pipeName, 3000)) goto ge;
-				using (var pipe = Api.CreateFile(pipeName, Api.GENERIC_WRITE, 0, default, Api.OPEN_EXISTING, 0)) {
-					if (pipe.Is0) goto ge;
-					fixed (char* p = s) if (!Api.WriteFile(pipe, p, s.Length * 2, out _)) goto ge;
+			s_wrPipeName ??= Environment.GetEnvironmentVariable("script.writeResult.pipe");
+			if (s_wrPipeName == null) return false;
+			if (s.NE()) return true;
+			if (Api.WaitNamedPipe(s_wrPipeName, 3000)) { //15 mcs
+				using var pipe = Api.CreateFile(s_wrPipeName, Api.GENERIC_WRITE, 0, default, Api.OPEN_EXISTING, 0); //7 mcs
+				if (!pipe.Is0) {
+					fixed (char* p = s) if (Api.WriteFile(pipe, p, s.Length * 2, out _)) return true; //17 mcs
 				}
 			}
-			return true;
-			ge:
 			Debug_.PrintNativeError_();
 			return false;
+			//SHOULDDO: optimize. Eg the app may override TextWriter.Write(char) and call this on each char in a string etc.
+			//	Now 40 mcs. Console.Write(char) 20 mcs.
 		}
+		static string s_wrPipeName;
+#else //does not work
+		public static unsafe bool writeResult(string s) {
+			s_wrPipeName ??= Environment.GetEnvironmentVariable("script.writeResult.pipe");
+			if (s_wrPipeName == null) return false;
+			if (s.NE()) return true;
+			if (s_wrPipe.Is0) {
+				if (Api.WaitNamedPipe(s_wrPipeName, 3000)) { //15 mcs
+					lock (s_wrPipeName) {
+						if (s_wrPipe.Is0) {
+							s_wrPipe = Api.CreateFile(s_wrPipeName, Api.GENERIC_WRITE, 0, default, Api.OPEN_EXISTING, 0);
+						}
+					}
+				}
+				Debug_.PrintNativeError_(s_wrPipe.Is0);
+			}
+			if (!s_wrPipe.Is0) {
+				fixed (char* p = s)
+					if (Api.WriteFile(s_wrPipe, p, s.Length * 2, out _)) return true; //17 mcs
+					else Debug_.PrintNativeError_(); //No process is on the other end of the pipe (0xE9)
+			}
+			return false;
+		}
+		static string s_wrPipeName;
+		static Handle_ s_wrPipe;
+#endif
 
 		#endregion
 
@@ -505,9 +577,15 @@ namespace Au
 
 		/// <summary>
 		/// Finds editor's message-only window used with WM_COPYDATA etc.
+		/// Uses <see cref="wnd.Cached_"/>.
 		/// </summary>
-		internal static wnd WndMsg_ => s_wndMsg.FindFast(null, "Au.Editor.m3gVxcTJN02pDrHiQ00aSQ", true);
+		internal static wnd WndMsg_ => s_wndMsg.FindFast(null, c_msgWndClassName, true);
 		static wnd.Cached_ s_wndMsg;
+
+		/// <summary>
+		/// Class name of <see cref="WndMsg_"/> window.
+		/// </summary>
+		internal const string c_msgWndClassName = "Au.Editor.m3gVxcTJN02pDrHiQ00aSQ";
 
 		/// <summary>
 		/// Contains static functions to interact with the script editor, if available.
@@ -654,7 +732,8 @@ namespace Au.Types
 	/// The default compiler adds this attribute to the main assembly if role is miniProgram or exeProgram.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly)]
-	public sealed class PathInWorkspaceAttribute : Attribute {
+	public sealed class PathInWorkspaceAttribute : Attribute
+	{
 		/// <summary>Path of main file in workspace.</summary>
 		public readonly string Path;
 

@@ -50,7 +50,6 @@ Source: "Q:\app\Au\_\Au.Editor.dll"; DestDir: "{app}"; Flags: ignoreversion
 ;Source: "Q:\app\Au\_\Au.Editor32.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Task.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Task32.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Au.CL.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Controls.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Net45.exe"; DestDir: "{app}"; Flags: ignoreversion
@@ -87,9 +86,9 @@ Source: "Q:\app\Au\_\icons.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\xrefmap.yml"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
-;[InstallDelete]
+[InstallDelete]
 ;Type: filesandordirs; Name: "{app}\Default"
-;Type: files; Name: "{app}\Au.Editor.*"
+Type: files; Name: "{app}\Au.CL.exe"
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -98,7 +97,7 @@ Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 
 [Registry]
 ;register app path
-Root: HKLM; Subkey: Software\Microsoft\Windows\CurrentVersion\App Paths\Au.CL.exe; ValueType: string; ValueData: {app}\Au.CL.exe; Flags: uninsdeletevalue uninsdeletekeyifempty
+Root: HKLM; Subkey: Software\Microsoft\Windows\CurrentVersion\App Paths\Au.Editor.exe; ValueType: string; ValueData: {app}\Au.Editor.exe; Flags: uninsdeletevalue uninsdeletekeyifempty
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}"; Flags: nowait postinstall skipifsilent

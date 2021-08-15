@@ -296,21 +296,7 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		public static unsafe int console(string exe, string args = null, string curDir = null, Encoding encoding = null) {
-			return _RunConsole(s => print.it(s), null, exe, args, curDir, encoding);
-		}
-
-		/// <summary>
-		/// Runs a console program, waits until its process ends, and gets its output text.
-		/// This overload uses a callback function that receives text lines in real time.
-		/// </summary>
-		/// <param name="output">A callback function that receives the output text. It receives single full line at a time, without line break characters.</param>
-		/// <param name="exe"></param>
-		/// <param name="args"></param>
-		/// <param name="curDir"></param>
-		/// <param name="encoding"></param>
-		/// <exception cref="AuException">Failed, for example file not found.</exception>
-		public static unsafe int console(Action<string> output, string exe, string args = null, string curDir = null, Encoding encoding = null) {
-			return _RunConsole(output, null, exe, args, curDir, encoding);
+			return _RunConsole(s => print.it(s), null, exe, args, curDir, encoding, true);
 		}
 
 		/// <summary>
@@ -324,12 +310,32 @@ namespace Au
 		/// <exception cref="AuException">Failed, for example file not found.</exception>
 		public static unsafe int console(out string output, string exe, string args = null, string curDir = null, Encoding encoding = null) {
 			var b = new StringBuilder();
-			var r = _RunConsole(null, b, exe, args, curDir, encoding);
+			var r = _RunConsole(null, b, exe, args, curDir, encoding, false);
 			output = b.ToString();
 			return r;
 		}
 
-		static unsafe int _RunConsole(Action<string> outAction, StringBuilder outStr, string exe, string args, string curDir, Encoding encoding) {
+		/// <summary>
+		/// Runs a console program, waits until its process ends, and gets its output text.
+		/// This overload uses a callback function that receives text lines in real time.
+		/// </summary>
+		/// <param name="output">
+		/// A callback function that receives the output text.
+		/// Unless <i>rawText</i> true:
+		/// - it isn't called until is retrieved full line with line break characters;
+		/// - it receives single full line at a time, without line break characters.
+		/// </param>
+		/// <param name="exe"></param>
+		/// <param name="args"></param>
+		/// <param name="curDir"></param>
+		/// <param name="encoding"></param>
+		/// <param name="rawText">Call the callback function whenever text is retrieved (don't wait for full line). Pass raw text, in chunks of any size.</param>
+		/// <exception cref="AuException">Failed, for example file not found.</exception>
+		public static unsafe int console(Action<string> output, string exe, string args = null, string curDir = null, Encoding encoding = null, bool rawText = false) {
+			return _RunConsole(output, null, exe, args, curDir, encoding, !rawText);
+		}
+
+		static unsafe int _RunConsole(Action<string> outAction, StringBuilder outStr, string exe, string args, string curDir, Encoding encoding, bool needLines) {
 			exe = _NormalizeFile(true, exe, out _, out _);
 			//args = pathname.expand(args); //rejected
 
@@ -353,8 +359,6 @@ namespace Au
 				pi.hThread.Dispose();
 				hProcess = pi.hProcess;
 
-				//variables for 'prevent getting partial lines'
-				bool needLines = outStr == null /*&& !flags.Has(RCFlags.RawText)*/;
 				int offs = 0; bool skipN = false;
 
 				int bSize = 8000;
@@ -418,8 +422,8 @@ namespace Au
 					if (moveFrom > 0) Api.memmove(b, b + moveFrom, offs); //part of 'prevent getting partial lines' code
 
 					var s = new string(c, 0, nc);
-					if (needLines) {
-						if (s.FindAny("\r\n") < 0) outAction(s);
+					if (outAction != null) {
+						if (!needLines || s.FindAny("\r\n") < 0) outAction(s);
 						else foreach (var k in s.Segments(SegSep.Line)) outAction(s[k.Range]);
 					} else {
 						outStr.Append(s);

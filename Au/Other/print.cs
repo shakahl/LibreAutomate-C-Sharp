@@ -235,39 +235,11 @@ namespace Au
 		/// <summary>
 		/// Our default writer class for the Writer property.
 		/// </summary>
-		[DebuggerStepThrough]
-		class _OutputWriter : TextWriter
+		class _OutputWriter : LineWriter_
 		{
-			StringBuilder _b;
-
 			public override Encoding Encoding => Encoding.Unicode;
 
-			public override void WriteLine(string value) {
-				//QM2.Write("WriteLine", $"'{value}'", value.ToCharArray());
-				directly(_PrependBuilder(value));
-			}
-
-			public override void Write(string value) {
-				//QM2.Write($"'{value}'");
-				//QM2.Write("Write", $"'{value}'", value.ToCharArray());
-				if (value.NE()) return;
-				if (value.Ends('\n')) {
-					WriteLine(value[..^(value.Ends("\r\n") ? 2 : 1)]);
-				} else {
-					(_b ??= new StringBuilder()).Append(value);
-				}
-			}
-			string _PrependBuilder(string value) {
-				if (_b != null && _b.Length > 0) {
-					value = _b.ToString() + value;
-					_b.Clear();
-				}
-				return value;
-			}
-			public override void Flush() {
-				var s = _PrependBuilder(null);
-				if (!s.NE()) directly(s);
-			}
+			protected override void WriteLineNow(string s) => directly(s);
 		}
 
 		/// <summary>
@@ -276,7 +248,7 @@ namespace Au
 		[MethodImpl(MethodImplOptions.NoInlining)] //for stack trace, used in _WriteToServer
 		public static void directly(string value) {
 			value ??= "";
-			//QM2.Write($"'{value}'");
+			//qm2.write($"'{value}'");
 
 			if (logFile != null) _WriteToLogFile(value);
 			else if (isWritingToConsole) Console.WriteLine(value);

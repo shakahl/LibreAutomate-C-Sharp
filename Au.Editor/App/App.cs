@@ -25,46 +25,31 @@ static class App
 #if TRACE
 	static App() {
 		perf.first();
-		timerm.after(1, _ => perf.nw());
+		//timerm.after(1, _ => perf.nw());
 		print.qm2.use = true;
 		//print.clear();
-		print.redirectConsoleOutput = true;
+		//print.redirectConsoleOutput = true; //cannot be before the CommandLine.ProgramStarted1 call.
 	}
 #endif
 
-	[STAThread]
-	static void Main(string[] args) {
-		if (args.Length > 0) {
-			switch (args[0]) {
-			case "/dd":
-				UacDragDrop.NonAdminProcess.MainDD(args);
-				return;
-				//case "/si":
-				//	SetupHelpers.Install();
-				//	return;
-				//case "/su":
-				//	SetupHelpers.Uninstall();
-				//	return;
-			}
-		}
+	//[STAThread] //no, makes command line etc slower. Will set STA later.
+	static int Main(string[] args) {
+		if (CommandLine.ProgramStarted1(args, out int exitCode)) return exitCode;
 
 		//restart as admin if started as non-admin on admin user account
 		if (args.Length > 0 && args[0] == "/n") {
 			args = args.RemoveAt(0);
 		} else if (uacInfo.ofThisProcess.Elevation == UacElevation.Limited) {
-#if !DEBUG
-			if(_RestartAsAdmin(args)) return;
-#endif
+			if (_RestartAsAdmin(args)) return 0;
 		}
-		//speed with restarting is the same as when runs as non-admin. The fastest is when started as admin. Because faster when runs as admin.
 
 		_Main(args);
+		return 0;
 	}
 
 	static void _Main(string[] args) {
-		//#if !DEBUG
+		process.ThisThreadSetComApartment_(ApartmentState.STA);
 		process.thisProcessCultureIsInvariant = true;
-		//#endif
 		DebugTraceListener.Setup(usePrint: true);
 		folders.ThisAppDocuments = (FolderPath)(folders.Documents + AppNameShort);
 		Directory.SetCurrentDirectory(folders.ThisApp); //because it is c:\windows\system32 when restarted as admin
@@ -76,7 +61,7 @@ static class App
 		AppDomain.CurrentDomain.UnhandledException += (ad, e) => dialog.showError("Exception", e.ExceptionObject.ToString());
 #endif
 
-		if (CommandLine.OnProgramStarted(args)) return;
+		if (CommandLine.ProgramStarted2(args)) return;
 
 		PrintServer = new print.Server(true) { NoNewline = true };
 		PrintServer.Start();
@@ -95,7 +80,7 @@ static class App
 		script.editor.IconNameToXaml_ = (s, what) => DIcons.GetIconString(s, what);
 		FilesModel.LoadWorkspace(CommandLine.WorkspaceDirectory);
 		perf.next('W');
-		CommandLine.OnProgramLoaded();
+		CommandLine.ProgramLoaded();
 		perf.next('c');
 		Loaded = EProgramState.LoadedWorkspace;
 		Model.RunStartupScripts();
@@ -216,9 +201,9 @@ static class App
 			bool isAuHomePC = Api.EnvironmentVariableExists("Au.Home<PC>") && !folders.ThisAppBS.Starts(@"C:\Program Files", true);
 			//int pid = 
 			WinTaskScheduler.RunTask("Au",
-				isAuHomePC ? "_Au.Editor" : "Au.Editor", //run Q:\app\Au\_\Au.CL.exe or <installed path>\Au.CL.exe
+				isAuHomePC ? "_Au.Editor" : "Au.Editor", //in Q:\app\Au\_ or <installed path>
 				true, args);
-			//Api.AllowSetForegroundWindow(pid); //fails and has no sense, because it's Au.CL.exe running as SYSTEM
+			//Api.AllowSetForegroundWindow(pid); //fails and has no sense
 		}
 		catch (Exception ex) { //probably this program is not installed (no scheduled task)
 			print.qm2.write(ex);
@@ -274,7 +259,7 @@ static class App
 				//timerm.after(2000, _ => Update(TrayIconState.Disabled));
 				//timerm.after(3000, _ => Update(TrayIconState.Running));
 				//timerm.after(4000, _ => Update(TrayIconState.Normal));
-			} else if(!restore) { //restore when "TaskbarCreated" message received. It is also received when taskbar DPI changed.
+			} else if (!restore) { //restore when "TaskbarCreated" message received. It is also received when taskbar DPI changed.
 				Debug_.Print(lastError.message);
 			}
 		}
@@ -293,7 +278,7 @@ static class App
 			//if (msg != Api.WM_MOUSEMOVE) WndUtil.PrintMsg(default, msg, 0, 0);
 			switch (msg) {
 			case Api.WM_LBUTTONUP:
-				_ShowWindow();
+				ShowWindow_();
 				break;
 			case Api.WM_RBUTTONUP:
 				_ContextMenu();
@@ -333,11 +318,11 @@ static class App
 			m.Show(MSFlags.AlignBottom | MSFlags.AlignCenterH);
 		}
 
-		static void _ShowWindow() {
-			var w = Wmain;
+		internal static void ShowWindow_() {
+			var w = App.Wmain;
 			if (w != null) {
 				w.Show();
-				Hwnd.ActivateL();
+				try { Hwnd.Activate(); } catch { }
 			} else {
 				Api.PostMessage(default, c_msgBreakMessageLoop, 1, 0);
 			}

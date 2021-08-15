@@ -2,40 +2,31 @@
 uid: command_line
 ---
 
-# Command line
+# Command line of Au.Editor.exe
 
-These program files have command line parameters:
-- Au.Editor.exe - the automation script editor program.
-- Au.CL.exe - the "run script using command line" program.
+**/v** - show the main window when started, regarless of program settings.
 
-#### Au.Editor.exe
+**/n** - don't auto-restart as administrator when started not as administrator. See [UAC](xref:uac). Note: can auto-restart as administrator only if installed with the setup program.
 
-| Parameter | Description |
-| - | - |
-| /v or -v | Show the main window when started.<br/>When started without this, the window may be invisible, it depends on program settings; to show it, click the tray icon or run the program twice. |
-| `/n` or `-n` | Run not as administrator. See [UAC](xref:uac).<br/>When started without this as not administrator, the program restarts as administrator, unless not installed correctly. When started as administrator, the program runs as administrator. |
-| `"file or folder path"` | Import it into the current workspace. The program shows a dialog.<br/>Can be multiple files, like `"file1" "file2" "file3"`. |
-| `"workspace folder path"` | Open or import the workspace. The program shows a dialog. |
+**"full path of a file or folder"** - import it into the current workspace (shows a dialog). Can be multiple files, like `"file1" "file2" "file3"`.
 
-#### Au.CL.exe
+**"workspace folder path"** - open or import the workspace (shows a dialog).
 
-This small and fast program is used to execute scripts like command line programs. It relays the script name and parameters to the editor process, which compiles and starts the script.
+**"script name or relative path in current workspace"** - run the script. Can be followed by script's command line arguments (the *args* variable).
 
-The command line is the script name and optionally command line arguments, separated by space and optionally enclosed in "". Arguments will be in the *args* variable of the script's main function. The script must exist in current workspace.
+Multiple options not supported, except: **/n** followed by some other option except "run script".
 
-Use prefix * to wait until the script ends. Use prefix ** to wait until the script ends and capture its [script.writeResult]() text. To capture **Console.Write** text, instead compile the script to .exe and run the .exe file.
+#### About "run script"
+The started Au.Editor.exe process is an intermediate temporary process, not the regular editor process with UI. It just relays the command line to the regular process, waits if need, and exits. Also it starts the regular process if not running. The regular process compiles and starts the script.
 
-The exit code of this program when it waits is the script's exit code. To set it the script can use **Environment.ExitCode**. When does not wait, the exit code is the process id of the script. When fails to run (script not found, contains errors, etc), the exit code is < 0.
+Use prefix * to wait until the script ends. While waiting, the parent process can read script's [script.writeResult]() text from standard output of the child process. If parent process is console, it automatically displays the text. Or it can redirect standard output, like [run.console]() does.
 
-This program starts the editor process if not running. To start editor and don't execute a script, use command line `/e`. It is slightly faster way to start editor process as administrator.
+The exit code of this process when it waits is the script's exit code. The script can simply return it, like `return 1;` or call **Environment.Exit**. When does not wait, the exit code is the process id of the script. When fails to run (script not found, contains errors, etc) or wait, the exit code is < 0 (can be -1 to -7).
 
 ##### Examples
 
-- `Au.CL.exe Script5.cs`
-- `Au.CL.exe "Script name with spaces.cs"`
-- `Au.CL.exe Script5.cs /example "argument with spaces"`
-- `Au.CL.exe *Script5.cs`
-- `Au.CL.exe **Script5.cs`
-- `Au.CL.exe /e`
-
-The .cs is optional.
+- `Au.Editor.exe Script5.cs`
+- `Au.Editor.exe "Script name with spaces"`
+- `Au.Editor.exe Script5.cs /example "argument with spaces"`
+- `Au.Editor.exe *Script5.cs`
+- `Au.Editor.exe /v`

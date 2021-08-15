@@ -57,7 +57,7 @@ namespace Au
 				if(_haveElevation == 0) {
 					unsafe {
 						UacElevation elev;
-						if(!Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenElevationType, &elev, 4, out var siz)) _haveElevation = 2;
+						if(!Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenElevationType, &elev, 4, out _)) _haveElevation = 2;
 						else {
 							_haveElevation = 1;
 							_Elevation = elev;
