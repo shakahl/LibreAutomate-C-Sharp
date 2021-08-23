@@ -18,6 +18,12 @@ using Au.Compiler;
 
 //using System.Drawing;
 
+using Microsoft.CodeAnalysis.Shared.Extensions;
+using Microsoft.CodeAnalysis.Editing;
+using Microsoft.CodeAnalysis.ErrorReporting;
+using Microsoft.CodeAnalysis.Shared.Utilities;
+using Roslyn.Utilities;
+
 #if TRACE
 
 #pragma warning disable 169
@@ -152,8 +158,55 @@ static unsafe class Test
 		}
 	}
 
-	public static void FromMenubar() {
+	//struct TestParameterlessCtor
+	//{
+	//	public TestParameterlessCtor() {
+	//		print.it("ctor");
+	//	}
+	//}
 
+	//interface Iii
+	//{
+	//	static abstract void Moo();
+	//}
+
+	//static void TestCallerExpression(string s, [CallerArgumentExpression("s")] string a_ = null) {
+	//	print.it(a_);
+	//}
+
+	//static (int i, int j) TestMixTuple() => (5, 7);
+
+
+	public static void FromMenubar() {
+		//if (false) {
+		//	TestDoc.One(1);
+		//	TestDoc.One(1, "");
+		//	TestDoc.One(true, 7);
+		//	TestDoc.One("", 7);
+		//	TestDoc.One(2d, 7, "");
+		//	TestDoc.Two(1d, 7);
+		//	TestDoc.TwoNoParam(7);
+		//	TestDoc.TwoNoExcept(3d, 7);
+		//	TestDoc.TwoInheritPara(3d, 7, "");
+		//}
+
+
+
+		//TestCallerExpression("yyyy" + 5);
+
+		//int i;
+		//(i, var j) = TestMixTuple();
+		//print.it(i, j);
+
+		//var v = new TestParameterlessCtor();
+		//var a = new TestParameterlessCtor[2];
+
+
+		//var w0 = wnd.find("", "Shell_TrayWnd", "explorer.exe");
+		//var w1 = wnd.find(1, "", "Shell_TrayWnd", "explorer.exe");
+		//var w2 = wnd.wait(1, true, "", "Shell_TrayWnd", "explorer.exe");
+
+		//"".AsSpan().Like("ff", true);
 
 		//byte[] a=new byte[1]
 		//print.it()
@@ -161,7 +214,7 @@ static unsafe class Test
 		//new regexp("").Match()
 		//TestScripting();
 		//return;
-		
+
 		//_ColorQuantizer();
 		//ModelFind();
 		//CompressBrotli();
@@ -173,6 +226,19 @@ static unsafe class Test
 		var doc = Panels.Editor.ZActiveDoc;
 		//doc.test_ = true;
 		//print.it(doc.zCurrentPos16);
+
+		//var v = CiUtil.GetSymbolEtcFromPos(out var k);
+		//var semo = k.document.GetSemanticModelAsync().Result;
+		//var comp = semo.Compilation;
+		//var c = v.symbol.GetDocumentationComment(comp, expandIncludes: true, expandInheritdoc: true);
+		//var s = c.FullXmlFragment;
+		//print.it(s);
+
+
+
+
+
+
 		//doc.TestHidden();
 		//doc.TestIndicators();
 		//doc.Call(SCI_SETSCROLLWIDTH, 1);
@@ -228,8 +294,8 @@ static unsafe class Test
 
 		////	POINT p = (936, 392);
 		////	p = (1468, 1653);
-		////	var a = elm.FromXY(p);
-		////	//var a=elm.FromXY(p, EXYFlags.NotInProc);
+		////	var a = elm.fromXY(p);
+		////	//var a=elm.fromXY(p, EXYFlags.NotInProc);
 		////	//print.it(a.Role);
 		////	a.Dispose();
 		//});

@@ -116,7 +116,7 @@ namespace Au
 		[SkipLocalsInit]
 		static bool _QueryFullProcessImageName(IntPtr hProcess, bool getFilename, out string s) {
 			s = null;
-			using FastBuffer<char> b = new(null);
+			using FastBuffer<char> b = new();
 			for (; ; b.More()) {
 				int n = b.n;
 				if (Api.QueryFullProcessImageName(hProcess, getFilename, b.p, ref n)) {

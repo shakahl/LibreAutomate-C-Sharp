@@ -40,6 +40,8 @@ partial class MainWindow : Window
 		//timerm.after(100, _ => Menus.File.Workspace.New_workspace());
 		//timerm.after(100, _ => DIcons.ZShow());
 		//timerm.after(500, _ => { new Au.Tools.Dwnd(wnd.find(null, "Shell_TrayWnd")).Show(); });
+		//timerm.after(500, _ => { new Au.Tools.Delm().Show(); });
+		//timerm.after(500, _ => { new Au.Tools.Duiimage().Show(); });
 
 //		timerm.after(100, _ => {
 //#if !true
@@ -102,8 +104,6 @@ partial class MainWindow : Window
 		//	2. When starting visible, if VMWare Player is active. Same with some other programs too (WPF, appstore, some other).
 		//this.Activate(); //does not work with VMWare, also if user clicks a window after starting this process
 		App.Hwnd.ActivateL(); //works always, possibly with workarounds
-
-		//TODO: ActivateL calls DoEvents...
 
 		Panels.PanelManager["Output"].Visible = true;
 

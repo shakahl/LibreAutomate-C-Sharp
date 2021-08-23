@@ -21,8 +21,8 @@ namespace Au
 	{
 		/// <summary>
 		/// Finds a UI element in window.
-		/// Returns the found UI element. Returns null if not found.
 		/// </summary>
+		/// <returns>UI element, or null if not found. See also: <see cref="operator +(elm)"/>.</returns>
 		/// <param name="w">Window or control that contains the UI element.</param>
 		/// <param name="role">
 		/// UI element role, like <c>"LINK"</c>. Or path, like <c>"ROLE/ROLE/ROLE"</c>.
@@ -49,10 +49,11 @@ namespace Au
 		/// 0-based index of matching UI element.
 		/// For example, if 1, the function skips the first matching UI element and returns the second.
 		/// </param>
-		/// <param name="navig">If not null, the specified object is an intermediate object. After finding it, call <see cref="Navigate"/> with this string and return its result.</param>
+		/// <param name="navig">If not null, the specified UI element is an intermediate UI element. After finding it, call <see cref="Navigate"/> with this string and return its result.</param>
 		/// <param name="controls">
 		/// Defines child controls where to search.
 		/// This is an alternative for class/id in <i>prop</i>. Allows to specify more control properties. Works better/faster when the control is of a different process or thread than the parent window; else slightly slower.
+		/// Currently not supported with non-0 <i>waitS</i>.
 		/// </param>
 		/// 
 		/// <exception cref="ArgumentException">
@@ -61,6 +62,7 @@ namespace Au
 		/// - <i>prop</i> has invalid format or contains unknown property names or invalid wildcard expressions.
 		/// - <i>navig</i> string is invalid.
 		/// - <i>flags</i> has <see cref="EFFlags.UIA"/> when searching in web page (role prefix <c>"web:"</c> etc).
+		/// - non-null <i>controls</i> with non-0 <i>waitS</i>.
 		/// </exception>
 		/// <exception cref="AuWndException">Invalid window.</exception>
 		/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
@@ -73,8 +75,6 @@ namespace Au
 		/// Uses <see cref="elmFinder"/>. You can use it directly. See example.
 		/// 
 		/// In wildcard expressions supports PCRE regular expressions (prefix <c>"**r "</c>) but not .NET regular expressions (prefix <c>"**R "</c>). They are similar.
-		/// 
-		/// To find web page UI elements usually it's better to use <see cref="wait"/> instead, it's more reliable.
 		/// 
 		/// More info in <see cref="elm"/> topic.
 		/// 
@@ -94,7 +94,7 @@ namespace Au
 		/// Prefix cannot be used:
 		/// - if <i>prop</i> contains <c>"id"</c> or <c>"class"</c>;
 		/// - with flag <see cref="EFFlags.UIA"/>;
-		/// - with the non-static <b>Find</b> overload (searching in a UI element).
+		/// - with the non-static <b>Find</b> function (searching in a UI element).
 		/// 
 		/// Can be path consisting of roles separated by "/". Examples:
 		/// - <c>"web:DOCUMENT/div/LIST/LISTITEM/LINK"</c> - find LINK using its full path in web page.
@@ -131,25 +131,25 @@ namespace Au
 		/// - <c>"help"</c> - <see cref="Help"/>.
 		/// - <c>"uiaid"</c> - <see cref="UiaId"/>.
 		/// - <c>"maxcc"</c> - when searching, skip children of UI elements that have more than this number of direct children. It can make faster.
-		/// The default value is 10000. It also prevents hanging or crashing when a UI element in the object tree has large number of children. For example OpenOffice Calc TABLE has one billion children.
+		/// The default value is 10000. It also prevents hanging or crashing when a UI element in the UI element tree has large number of children. For example OpenOffice Calc TABLE has one billion children.
 		/// - <c>"notin"</c> - when searching, skip children of UI elements that have these roles. It can make faster.
 		/// Example: <c>"notin=TREE,LIST,TOOLBAR"</c>.
 		/// Roles in the list must be separated with <c>","</c> or <c>", "</c>. Case-sensitive, not wildcard. See also: <see cref="EFFlags.MenuToo"/>.
 		/// - <c>"@attr"</c> - <see cref="HtmlAttribute"/>. Here "attr" is any attribute name. Example: <c>"@id=example"</c>.
 		/// </remarks>
 		/// <example>
-		/// Find link "Example" in web page, and click. Throw <b>NotFoundException</b> if not found.
+		/// Find link "Example" in web page, and click. Wait max 5 s. Throw <b>NotFoundException</b> if not found.
 		/// <code><![CDATA[
 		/// var w = +wnd.find("* Chrome");
-		/// var e = +elm.find(w, "web:LINK", "Example");
-		/// e.DoAction();
+		/// elm.find(5, w, "web:LINK", "Example").Invoke();
 		/// ]]></code>
 		/// Try to find link "Example" in web page. Return if not found.
 		/// <code><![CDATA[
 		/// var w = +wnd.find("* Chrome");
 		/// var e = elm.find(w, "web:LINK", "Example");
+		/// //var e = elm.find(-5, w, "web:LINK", "Example"); //waits max 5 s
 		/// if(e == null) { print.it("not found"); return; }
-		/// e.DoAction();
+		/// e.Invoke();
 		/// ]]></code>
 		/// Use <see cref="elmFinder"/>.
 		/// <code><![CDATA[
@@ -157,19 +157,55 @@ namespace Au
 		/// var f = new elmFinder("BUTTON", "Example");
 		/// if(!f.Find(w)) { print.it("not found"); return; }
 		/// elm e = f.Result;
-		/// e.DoAction();
+		/// e.Invoke();
 		/// ]]></code>
 		/// </example>
-		public static elm find(wnd w, string role = null,
+		public static elm find(
+			wnd w, string role = null,
 			[ParamString(PSFormat.wildex)] string name = null,
 			string prop = null, EFFlags flags = 0,
-			Func<elm, bool> also = null, int skip = 0, string navig = null, wndChildFinder controls = null)
-		{
+			Func<elm, bool> also = null, int skip = 0, string navig = null, wndChildFinder controls = null
+			) {
 			var f = new elmFinder(role, name, prop, flags, also, skip, navig);
 			bool found = controls != null ? f.Find(w, controls) : f.Find(w);
-			if(!found) return null;
+			if (!found) return null;
 			return f.Result;
 		}
+
+		/// <summary>
+		/// Finds a UI element in window. Can wait and throw <b>NotFoundException</b>.
+		/// </summary>
+		/// <returns>UI element. If not found, throws exception or returns null (if <i>waitS</i> negative).</returns>
+		/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
+		/// <param name="w"></param>
+		/// <param name="role"></param>
+		/// <param name="name"></param>
+		/// <param name="prop"></param>
+		/// <param name="flags"></param>
+		/// <param name="also"></param>
+		/// <param name="skip"></param>
+		/// <param name="navig"></param>
+		/// <param name="controls"></param>
+		/// <exception cref="ArgumentException" />
+		/// <exception cref="AuWndException">Invalid window.</exception>
+		/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
+		/// <exception cref="NotFoundException" />
+		/// <exception cref="NotSupportedException">Used <i>controls</i> with non-0 <i>waitS</i>.</exception>
+		public static elm find(
+			double waitS,
+			wnd w, string role = null,
+			[ParamString(PSFormat.wildex)] string name = null,
+			string prop = null, EFFlags flags = 0,
+			Func<elm, bool> also = null, int skip = 0, string navig = null, wndChildFinder controls = null
+			) {
+			elm r;
+			if (waitS == 0) r = find(w, role, name, prop, flags, also, skip, navig, controls);
+			else if (controls == null) r = wait(waitS < 0 ? waitS : -waitS, w, role, name, prop, flags, also, skip, navig);
+			else throw new NotSupportedException("non-null controls with non-0 waitS"); //FUTURE?
+
+			return r != null || waitS < 0 ? r : throw new NotFoundException();
+		}
+		//rejected: same for Find(). Rarely used, has Wait(), not used in the tool dialog.
 
 		/// <summary>
 		/// Finds and returns a descendant UI element of this UI element.
@@ -184,12 +220,11 @@ namespace Au
 		public elm Find(string role = null,
 			[ParamString(PSFormat.wildex)] string name = null,
 			string prop = null, EFFlags flags = 0,
-			Func<elm, bool> also = null, int skip = 0, string navig = null)
-		{
+			Func<elm, bool> also = null, int skip = 0, string navig = null) {
 			//info: f.Find will throw if this elm is invalid etc.
 
 			var f = new elmFinder(role, name, prop, flags, also, skip, navig);
-			if(!f.Find(this)) return null;
+			if (!f.Find(this)) return null;
 			return f.Result;
 		}
 
@@ -207,10 +242,9 @@ namespace Au
 		public static elm wait(double secondsTimeout, wnd w, string role = null,
 			[ParamString(PSFormat.wildex)] string name = null,
 			string prop = null, EFFlags flags = 0,
-			Func<elm, bool> also = null, int skip = 0, string navig = null)
-		{
+			Func<elm, bool> also = null, int skip = 0, string navig = null) {
 			var f = new elmFinder(role, name, prop, flags, also, skip, navig);
-			if(!f.Wait(secondsTimeout, w)) return null;
+			if (!f.Wait(secondsTimeout, w)) return null;
 			return f.Result;
 		}
 
@@ -226,12 +260,11 @@ namespace Au
 		public elm Wait(double secondsTimeout, string role = null,
 			[ParamString(PSFormat.wildex)] string name = null,
 			string prop = null, EFFlags flags = 0,
-			Func<elm, bool> also = null, int skip = 0, string navig = null)
-		{
+			Func<elm, bool> also = null, int skip = 0, string navig = null) {
 			//info: f.Find will throw if this elm is invalid etc.
 
 			var f = new elmFinder(role, name, prop, flags, also, skip, navig);
-			if(!f.Wait(secondsTimeout, this)) return null;
+			if (!f.Wait(secondsTimeout, this)) return null;
 			return f.Result;
 		}
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
@@ -253,12 +286,10 @@ namespace Au
 		/// </example>
 		public static elm[] findAll(wnd w, string role = null,
 			[ParamString(PSFormat.wildex)] string name = null,
-			string prop = null, EFFlags flags = 0, Func<elm, bool> also = null)
-		{
+			string prop = null, EFFlags flags = 0, Func<elm, bool> also = null) {
 			var a = new List<elm>();
-			find(w, role, name, prop, flags, o =>
-			{
-				if(also == null || also(o)) a.Add(o);
+			find(w, role, name, prop, flags, o => {
+				if (also == null || also(o)) a.Add(o);
 				return false;
 			});
 			return a.ToArray();
@@ -281,12 +312,10 @@ namespace Au
 		/// </example>
 		public elm[] FindAll(string role = null,
 			[ParamString(PSFormat.wildex)] string name = null,
-			string prop = null, EFFlags flags = 0, Func<elm, bool> also = null)
-		{
+			string prop = null, EFFlags flags = 0, Func<elm, bool> also = null) {
 			var a = new List<elm>();
-			Find(role, name, prop, flags, o =>
-			{
-				if(also == null || also(o)) a.Add(o);
+			Find(role, name, prop, flags, o => {
+				if (also == null || also(o)) a.Add(o);
 				return false;
 			});
 			return a.ToArray();

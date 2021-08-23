@@ -48,7 +48,7 @@ namespace Au
 
 		/// <summary>
 		/// The requested propery of the found UI element, depending on <see cref="ResultGetProperty"/>.
-		/// null if: 1. Object not found. 2. <b>ResultGetProperty</b> not used or is '-'. 3. Failed to get the property.
+		/// null if: 1. UI element not found. 2. <b>ResultGetProperty</b> not used or is '-'. 3. Failed to get the property.
 		/// </summary>
 		/// <remarks>
 		/// The type depends on the property. Most properties are String. Others: <see cref="elm.Rect"/>, <see cref="elm.State"/>, <see cref="elm.WndContainer"/>, <see cref="elm.HtmlAttributes"/>.
@@ -56,7 +56,7 @@ namespace Au
 		public object ResultProperty { get; private set; }
 
 		/// <summary>
-		/// Set this when you need only some property of the UI element (name, etc) and not the object itself.
+		/// Set this when you need only some property of the UI element (name, etc) and not the UI element itself.
 		/// The value is a character, the same as with <see cref="elm.GetProperties"/>, for example 'n' for Name. Use '-' if you don't need any property.
 		/// </summary>
 		/// <exception cref="ArgumentException">Used parameter <i>also</i> or <i>navig</i>.</exception>
@@ -69,7 +69,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// true if used parameter <i>navig</i> and the intermediate object was found but the navigation did not find the final object.
+		/// true if used parameter <i>navig</i> and the intermediate UI element was found but the navigation did not find the final UI element.
 		/// </summary>
 		public bool NavigFailed { get; private set; }
 
@@ -272,7 +272,7 @@ namespace Au
 				default:
 					Debug.Assert(!Cpp.IsCppError((int)hr));
 					if (hr == (Cpp.EError)Api.RPC_E_SERVER_CANTMARSHAL_DATA && !_flags.Has(EFFlags.NotInProc))
-						throw new AuException((int)hr, "For this object need flag NotInProc");
+						throw new AuException((int)hr, "For this UI element need flag NotInProc");
 					throw new AuException((int)hr);
 				}
 

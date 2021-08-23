@@ -157,7 +157,7 @@ namespace Au
 		/// Finds image(s) or color(s) displayed in a window or other area.
 		/// </summary>
 		/// <returns>
-		/// Returns an <see cref="uiimage"/> object that contains the rectangle of the found image and can click it etc.
+		/// Returns a <see cref="uiimage"/> object that contains the rectangle of the found image and can click it etc.
 		/// Returns null if not found. See example.
 		/// </returns>
 		/// <param name="area">
@@ -220,6 +220,29 @@ namespace Au
 			return f.Result;
 		}
 
+		/// <summary>
+		/// Finds image(s) or color(s) displayed in a window or other area. Can wait and throw <b>NotFoundException</b>.
+		/// </summary>
+		/// <returns>
+		/// Returns a <see cref="uiimage"/> object that contains the rectangle of the found image and can click it etc.
+		/// If not found, throws exception or returns null (if <i>waitS</i> negative).
+		/// </returns>
+		/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
+		/// <param name="area"></param>
+		/// <param name="image"></param>
+		/// <param name="flags"></param>
+		/// <param name="colorDiff"></param>
+		/// <param name="also"></param>
+		/// <exception cref="NotFoundException" />
+		/// <exception cref="Exception">Exceptions of other overload.</exception>
+		/// <exception cref="AuWndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
+		public static uiimage find(double waitS, IFArea area, IFImage image, IFFlags flags = 0, int colorDiff = 0, Func<uiimage, IFAlso> also = null) {
+			var f = new uiimageFinder(image, flags, colorDiff, also);
+			bool found = waitS == 0 ? f.Find(area) : f.Wait_(Action_.Wait, waitS < 0 ? waitS : -waitS, area);
+			var r = found ? f.Result : null;
+			return found || waitS < 0 ? r : throw new NotFoundException();
+		}
+
 		internal enum Action_ { Find, Wait, WaitNot, WaitChanged }
 
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
@@ -235,6 +258,8 @@ namespace Au
 		public static uiimage wait(double secondsTimeout, IFArea area, IFImage image, IFFlags flags = 0, int colorDiff = 0, Func<uiimage, IFAlso> also = null) {
 			var f = new uiimageFinder(image, flags, colorDiff, also);
 			return f.Wait_(Action_.Wait, secondsTimeout, area) ? f.Result : null;
+			//SHOULDDO: suspend waiting while a mouse button is pressed.
+			//	Now, eg if finds while scrolling, although MouseMove waits until buttons released, but moves to the old (wrong) place.
 		}
 
 		/// <summary>

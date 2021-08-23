@@ -369,7 +369,7 @@ namespace Au
 		/// <seealso cref="IsCloaked"/>
 		/// <seealso cref="IsVisibleAndNotCloaked"/>
 		/// <seealso cref="Show"/>
-		/// <seealso cref="Activate()"/>
+		/// <seealso cref="Activate"/>
 		public bool IsVisible => Api.IsWindowVisible(this);
 
 		//rejected. Unreliable, eg then does not find Store apps in inactive desktops. Instead now Find skips all cloaked by default.
@@ -632,14 +632,11 @@ namespace Au
 
 				if (!ok) {
 					if (lastError.code == Api.ERROR_ACCESS_DENIED) {
-						//UAC blocks the API but not WM_SYSCOMMAND.
-						//However does not allow to maximize with WM_SYSCOMMAND.
-						int cmd;
-						switch (state) {
-						case Api.SW_MINIMIZE: cmd = Api.SC_MINIMIZE; break;
-						case Api.SW_SHOWMAXIMIZED: cmd = Api.SC_MAXIMIZE; break;
-						default: cmd = Api.SC_RESTORE; break;
-						}
+						var cmd = state switch {
+							Api.SW_MINIMIZE => Api.SC_MINIMIZE,
+							Api.SW_SHOWMAXIMIZED => Api.SC_MAXIMIZE,
+							_ => Api.SC_RESTORE,
+						};
 						ok = 0 != Send(Api.WM_SYSCOMMAND, cmd);
 						//if was minimized, now can be maximized, need to restore if SW_SHOWNORMAL
 						if (ok && state == Api.SW_SHOWNORMAL && IsMaximized) ok = 0 != Send(Api.WM_SYSCOMMAND, cmd);
@@ -844,19 +841,19 @@ namespace Au
 
 		/// <summary>
 		/// Activates this window (brings to the foreground).
-		/// The same as <see cref="Activate()"/>, but has some options.
+		/// The same as <see cref="Activate"/>, but has some options.
 		/// Returns false if does not activate because of flag IgnoreIfNoActivateStyleEtc.
 		/// </summary>
 		/// <exception cref="AuWndException"/>
-		internal bool Activate_(Internal_.ActivateFlags flags) {
+		internal bool Activate_(Internal_.ActivateFlags flags, double waitS = 0) {
 			if (!flags.Has(Internal_.ActivateFlags.NoThrowIfInvalid)) ThrowIfInvalid();
 			if (flags.Has(Internal_.ActivateFlags.NoGetWindow)) Debug.Assert(!IsChild);
 			else {
 				var w = Window;
-				if (w != this) {
-					return w.Activate_((flags | Internal_.ActivateFlags.NoGetWindow) & ~Internal_.ActivateFlags.NoThrowIfInvalid);
-				}
+				if (w != this) return w.Activate_((flags | Internal_.ActivateFlags.NoGetWindow) & ~Internal_.ActivateFlags.NoThrowIfInvalid, waitS);
 			}
+
+			if (waitS != 0d) WaitForCondition(-waitS, w => w.IsActiveOrNoActiveAndThisIsWndRoot_ && !w.IsMinimized && w.IsVisible);
 
 			bool R, noAct = false, isMinimized = false, ofThisThread = IsOfThisThread;
 			bool forScreenCapture = 0 != (flags & Internal_.ActivateFlags.ForScreenCapture);
@@ -956,6 +953,8 @@ namespace Au
 		/// Activates this window. Also makes it visible and not minimized.
 		/// The active window is in the foreground and receives keyboard and mouse input.
 		/// </summary>
+		/// <returns>Self.</returns>
+		/// <param name="waitS">Max time interval (seconds) to wait until the window naturally becomes active before activating it.</param>
 		/// <remarks>
 		/// Activating a window usually also uncloaks it, for example switches to its virtual desktop on Windows 10.
 		/// Fails (throws exception) if cannot activate this window, except:
@@ -963,23 +962,29 @@ namespace Au
 		/// - If this is <see cref="getwnd.root"/>. Then just deactivates the currently active window.
 		/// - When the target application instead activates another window of the same thread.
 		/// </remarks>
-		/// <exception cref="AuWndException"/>
+		/// <exception cref="AuWndException">
+		/// - failed to activate.
+		/// - closed while waiting (when <i>waitS</i> not 0).
+		/// </exception>
 		/// <seealso cref="ActivateL"/>
 		/// <seealso cref="IsActive"/>
 		/// <seealso cref="active"/>
 		/// <seealso cref="switchActiveWindow"/>
-		public void Activate() {
-			Activate_(0);
+		public wnd Activate(double waitS = 0) {
+			Activate_(0, waitS);
+			return this;
 		}
 		//CONSIDER: if fails to activate:
 		//dialog.show("Failed to activate window", w.ToString(), footer: The script will continue if you activate the window in {x} s.", timeout: 10);
 
 		/// <summary>
-		/// Lightweight version of <see cref="Activate()"/>.
+		/// Lightweight version of <see cref="Activate"/>.
+		/// </summary>
+		/// <returns>false if fails.</returns>
+		/// <remarks>
 		/// Just calls <see cref="WndUtil.EnableActivate"/>, API <msdn>SetForegroundWindow</msdn> and makes sure that it actually worked, but does not check whether it activated exactly this window.
 		/// No exceptions, does not unhide, does not restore minimized, does not check is it a top-level window or control, etc.
-		/// Returns false if fails.
-		/// </summary>
+		/// </remarks>
 		public bool ActivateL() {
 			return Internal_.ActivateL(this);
 		}
@@ -999,7 +1004,7 @@ namespace Au
 
 		/// <summary>
 		/// Sets the keyboard input focus to this control.
-		/// Also activetes its top-level parent window (see <see cref="Activate()"/>).
+		/// Also activetes its top-level parent window (see <see cref="Activate"/>).
 		/// </summary>
 		/// <remarks>
 		/// The control can belong to any process/thread. With controls of this thread you can use the more lightweight function <see cref="thisThread.focus"/>.
@@ -1566,7 +1571,7 @@ namespace Au
 		/// <summary>
 		/// Returns true if this window (its rectangle) contains the specified point.
 		/// </summary>
-		/// <param name="x">X coordinate in screen. Not used if default(Coord).</param>
+		/// <param name="x">X coordinate in screen. Not used if default(Coord). Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in screen. Not used if default(Coord).</param>
 		public bool ContainsScreenXY(Coord x, Coord y) {
 			POINT p = Coord.Normalize(x, y);
@@ -1584,7 +1589,7 @@ namespace Au
 		/// Direct or indirect parent window. The coordinates are relative to its client area.
 		/// Actually this and parent can be any windows or controls, the function does not check whether this is a child of parent.
 		/// </param>
-		/// <param name="x">X coordinate. Not used if default(Coord).</param>
+		/// <param name="x">X coordinate. Not used if default(Coord). Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate. Not used if default(Coord).</param>
 		public bool ContainsWindowXY(wnd parent, Coord x, Coord y) {
 			if (!parent.IsAlive) return false;
@@ -1676,9 +1681,26 @@ namespace Au
 		internal bool ResizeL_(SIZE z) => ResizeL(z.width, z.height);
 
 		/// <summary>
+		/// Moves.
+		/// </summary>
+		/// <param name="x">Left. If default(Coord), does not move in X axis. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="y">Top. If default(Coord), does not move in Y axis.</param>
+		/// <param name="workArea"><i>x y</i> are relative to the work area. Not used when this is a child window.</param>
+		/// <param name="screen"><i>x y</i> are relative to this screen or its work area. Default - primary. Not used when this is a child window. Example: <c>screen.index(1)</c>.</param>
+		/// <exception cref="AuWndException"/>
+		/// <remarks>
+		/// Also restores the visible top-level window if it is minimized or maximized.
+		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
+		/// With windows of current thread usually it's better to use <see cref="MoveL(int, int)"/>.
+		/// </remarks>
+		public void Move(Coord x, Coord y, bool workArea = false, screen screen = default) {
+			Move(x, y, default, default, workArea, screen);
+		}
+
+		/// <summary>
 		/// Moves and/or resizes.
 		/// </summary>
-		/// <param name="x">Left. If default(Coord), does not move in X axis.</param>
+		/// <param name="x">Left. If default(Coord), does not move in X axis. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Top. If default(Coord), does not move in Y axis.</param>
 		/// <param name="width">Width. If default(Coord), does not change width.</param>
 		/// <param name="height">Height. If default(Coord), does not change height.</param>
@@ -1724,23 +1746,6 @@ namespace Au
 			if (!MoveL(xy.x, xy.y, wh.x, wh.y, f)) ThrowUseNative("*move/resize*");
 
 			MinimalSleepIfOtherThread_();
-		}
-
-		/// <summary>
-		/// Moves.
-		/// </summary>
-		/// <param name="x">Left. If default(Coord), does not move in X axis.</param>
-		/// <param name="y">Top. If default(Coord), does not move in Y axis.</param>
-		/// <param name="workArea"><i>x y</i> are relative to the work area. Not used when this is a child window.</param>
-		/// <param name="screen"><i>x y</i> are relative to this screen or its work area. Default - primary. Not used when this is a child window. Example: <c>screen.index(1)</c>.</param>
-		/// <exception cref="AuWndException"/>
-		/// <remarks>
-		/// Also restores the visible top-level window if it is minimized or maximized.
-		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
-		/// With windows of current thread usually it's better to use <see cref="MoveL(int, int)"/>.
-		/// </remarks>
-		public void Move(Coord x, Coord y, bool workArea = false, screen screen = default) {
-			Move(x, y, default, default, workArea, screen);
 		}
 
 		/// <summary>
@@ -1852,8 +1857,8 @@ namespace Au
 		/// <summary>
 		/// Moves this window to coordinates x y in specified screen, and ensures that entire window is in screen.
 		/// </summary>
-		/// <param name="x">X coordinate in the specified screen. If default(Coord) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
-		/// <param name="y">Y coordinate in the specified screen. If default(Coord) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
+		/// <param name="x">X coordinate in the specified screen. If default(Coord) - screen center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="y">Y coordinate in the specified screen. If default(Coord) - screen center.</param>
 		/// <param name="screen">Move to this screen (see <see cref="screen"/>). If default, uses screen of this window. Example: <c>screen.index(1)</c>.</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <param name="ensureInScreen">If part of window is not in screen, move and/or resize it so that entire window would be in screen. Default true.</param>
@@ -2532,7 +2537,7 @@ namespace Au
 		[SkipLocalsInit]
 		string _GetTextFast(bool useSlowIfEmpty) {
 			if (Is0) return null;
-			using FastBuffer<char> b = new(null);
+			using FastBuffer<char> b = new();
 			for (; ; b.More()) {
 				lastError.clear();
 				int nr = Api.InternalGetWindowText(this, b.p, b.n);

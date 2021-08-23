@@ -10,8 +10,8 @@
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>..\Au.snk</AssemblyOriginatorKeyFile>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<DocumentationFile>Au.Controls.xml</DocumentationFile>
-		<NoWarn>1701;1702;1591;0419;105</NoWarn>
+		<DocumentationFile>bin\Au.Controls.xml</DocumentationFile>
+		<NoWarn>1591;419</NoWarn>
 		<LangVersion>preview</LangVersion>
 		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
 	</PropertyGroup>
@@ -27,10 +27,6 @@
 		<Compile Remove="Toolbars\**" />
 		<EmbeddedResource Remove="Toolbars\**" />
 		<None Remove="Toolbars\**" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Remove="Au.Controls.xml" />
 	</ItemGroup>
 
 	<ItemGroup>

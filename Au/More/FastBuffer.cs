@@ -81,10 +81,8 @@ namespace Au.More
 		/// <summary>
 		/// Allocates first buffer of default size. It is on stack (in this variable), and its length is StackSize/sizeof(T) elements of type T (2048 bytes or 1024 chars or 512 ints...).
 		/// </summary>
-		/// <param name="unused">Should be null. It makes the compiler to choose this overload. This function does not use this value.</param>
-		public FastBuffer(string unused) {
+		public FastBuffer() {
 			//With this overload slightly faster. Also, the int overload is confusing when need buffer of default size.
-			//note: don't use default ctor with 'using'. Very slow. It seems then [SkipLocalsInit] is ignored.
 
 			_stack = 0;
 			fixed (long* t = &_stack) { _p = (T*)t; }

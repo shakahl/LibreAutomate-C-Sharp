@@ -350,7 +350,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 		std::string appDir8, netDesktop8;
 		_ToUtf8(p.appDir, appDir8);
 		_ToUtf8(p.netDesktop, netDesktop8);
-		std::string ap(appDir8); ap += ';'; ap += appDir8; ap += "\\Libraries";
+		std::string ap(appDir8);
+		ap += ';'; ap += appDir8; ap += "\\Libraries";
+		ap += ';'; ap += appDir8; ap += "\\Roslyn";
 		std::string nd; _ToUtf8(p.netCore, nd); nd += ';'; nd += netDesktop8;
 		appDir8 += '\\';
 

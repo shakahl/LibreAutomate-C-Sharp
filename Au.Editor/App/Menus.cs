@@ -239,8 +239,8 @@ static class Menus
 		[Command(separator = true)]
 		public static void Windows_API() { new DWinapi().Show(); }
 
-		[Command(keysText = "Ctrl+Shift+Win+W")]
-		public static void Quick_capture() { print.it("Info: To quickly capture a window and insert code to find it etc, move the mouse to the window and press Ctrl+Shift+Win+W."); }
+		[Command(keysText = "Ctrl+Shift+Q")]
+		public static void Quick_capture() { print.it("Info: To quickly capture a window or UI element and insert code to find it etc, move the mouse to the window/element and press Ctrl+Shift+Q."); }
 
 		[Command(separator = true, image = "*Material.CommentEditOutline #B340FF")]
 		public static void Add_file_description() { InsertCode.AddFileDescription(); }
@@ -386,14 +386,24 @@ static class Menus
 			}
 		}
 
-		//[Command(separator = true)]
-		//public static void Forum() { }
+		[Command(separator = true)]
+		public static void Forum() { run.itSafe("https://www.quickmacros.com/forum/forumdisplay.php?fid=19"); }
 
 		[Command]
 		public static void Email() { run.itSafe("mailto:support@quickmacros.com?subject=" + App.AppNameShort); }
 
-		//[Command(separator = true)]
-		//public static void About() { }
+		[Command]
+		public static void About() {
+			print.it($@"<>---- {App.AppName} ----
+Version: {Assembly.GetExecutingAssembly().GetName().Version}
+Download: <link>https://www.quickmacros.com/au/help/<>
+Source code: <link>https://github.com/qmgindi/Au<>
+Uses libraries and algorithms: <link https://dotnet.microsoft.com/download>.NET 5<>, <link https://www.scintilla.org/>Scintilla<>, <link https://www.pcre.org/>PCRE<>, <link https://www.sqlite.org/index.html>SQLite<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, <link https://gist.github.com/bert/1192520>Wu's Color Quantizer<>, <link http://xoomer.virgilio.it/acantato/dev/wildcard/wildmatch.html>Cantatore wildcard<>, <link http://www.isthe.com/chongo/tech/comp/fnv/>FNV-1 hash<>.
+Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<>, <link {folders.ThisAppDocuments}>ThisAppDocuments<>, <link {folders.ThisAppDataLocal}>ThisAppDataLocal<>, <link {folders.ThisAppTemp}>ThisAppTemp<>.
+This program is still unfinished. It can be used, but some classes/functions/etc may be changed in the future.
+Copyright 2021 Gintaras Didžgalvis.
+--------");
+		}
 	}
 
 #if TRACE

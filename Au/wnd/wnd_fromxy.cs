@@ -39,7 +39,7 @@ namespace Au
 		/// 
 		/// Find window or control at 50 from left and 100 from bottom of the work area.
 		/// <code><![CDATA[
-		/// var w = wnd.FromXY(Coord.Normalize(50, Coord.Reverse(100), true));
+		/// var w = wnd.FromXY(Coord.Normalize(50, ^100, workArea: true));
 		/// print.it(w);
 		/// ]]></code>
 		/// </example>
@@ -79,7 +79,7 @@ namespace Au
 		/// Gets descendant control from point.
 		/// By default returns default(wnd) if the point is not in a child control; it depends on <i>flags</i>.
 		/// </summary>
-		/// <param name="x">X coordinate in client area or screen (if flag <b>ScreenXY</b>). Can be <see cref="Coord.Reverse"/> etc.</param>
+		/// <param name="x">X coordinate in client area or screen (if flag <b>ScreenXY</b>). Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>

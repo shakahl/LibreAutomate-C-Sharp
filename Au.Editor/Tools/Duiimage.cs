@@ -24,22 +24,23 @@ namespace Au.Tools
 		_PictureBox _pict;
 		KSciCodeBoxWnd _code;
 
-		KCheckBox controlC, allC, exceptionC;
+		KCheckBox controlC, allC, exceptionC, exceptionnoC;
 		KCheckTextBox rectC, diffC, skipC, waitC, waitnoC;
 		KCheckComboBox wiflagsC, mouseC;
+		ComboBox function;
 
 		public Duiimage() {
 			Title = "Find image or color in window";
 
 			_noeventValueChanged = true;
-			var b = new wpfBuilder(this).WinSize((500, 450..), (440, 350..)).Columns(180, -1);
+			var b = new wpfBuilder(this).WinSize((500, 450..), (430, 340..)).Columns(180, -1);
 			b.R.Add(out _info).Height(60);
 			b.R.StartGrid()
 				.R.AddButton("_Capture", _bCapture_Click).AddButton("_...", _bEtc_Click).Width(30).Align("L").Tooltip("File, array")
 				.R.AddButton(out _bTest, "_Test", _bTest_Click).Width(70..).Disabled().Tooltip("Executes the code now.\nShows rectangle of the found image.\nIgnores options: Find all, wait, Exception, Mouse.")
 				.Add(out _speed).Tooltip("Search time (window + image). Red if not found.")
 				.R.AddOkCancel(out _bOK, out _, out _).Align("L"); _bOK.IsEnabled = false;
-			b.Row(120).xAddInBorder(out _pict);
+			b.Row(110).xAddInBorder(out _pict);
 			b.End();
 			b.OkApply += _bOK_Click;
 
@@ -50,9 +51,14 @@ namespace Au.Tools
 			wiflagsC = b.xAddCheckCombo("Window pixels", "IFFlags.WindowDC|IFFlags.PrintWindow");
 			diffC = b.xAddCheckText("Color deviation", "10");
 			skipC = b.xAddCheckText("Skip", "1");
-			allC = b.xAddCheck("Find all");
-			waitC = b.xAddCheckText("Wait for image", "5");
-			waitnoC = b.xAddCheckText("Wait for no image", "5");
+
+			b.StartGrid().Columns(-1, 0);
+			b.xAddOther(out function).Margin(2, 4, 8, 4); b.Items("Find or wait for image|Wait until image disappears");
+			allC = b.xAddCheck("Get all", noNewRow: true);
+			b.End();
+			waitnoC = b.xAddCheckText("Timeout", "5"); waitnoC.Visible = false;
+			(exceptionnoC = b.xAddCheck("Exception on timeout")).IsChecked = true; exceptionnoC.Visibility = System.Windows.Visibility.Collapsed;
+			waitC = b.xAddCheckText("Wait", "1", check: true);
 			(exceptionC = b.xAddCheck("Exception if not found")).IsChecked = true;
 			(mouseC = b.xAddCheckCombo("Mouse", "Move|Click|Right click")).c.IsChecked = true;
 
@@ -156,13 +162,7 @@ namespace Au.Tools
 					} else if (c == skipC.c) {
 						if (on) allC.IsChecked = false;
 					} else if (c == allC) {
-						if (on) { skipC.c.IsChecked = false; waitnoC.c.IsChecked = false; }
-					} else if (c == waitC.c) {
-						if (on) waitnoC.c.IsChecked = false;
-					} else if (c == waitnoC.c) {
-						if (on) { waitC.c.IsChecked = false; allC.IsChecked = false; mouseC.c.IsChecked = false; }
-					} else if (c == mouseC.c) {
-						if (on) waitnoC.c.IsChecked = false;
+						if (on) skipC.c.IsChecked = false;
 					}
 				} else if (source is TextBox t && t.Tag is KCheckTextBox k) {
 					_noeventValueChanged = _formattedOnValueChanged = false; //allow auto-check but prevent formatting twice
@@ -172,6 +172,14 @@ namespace Au.Tools
 					_noeventValueChanged = _formattedOnValueChanged = false; //allow auto-check but prevent formatting twice
 					m.c.IsChecked = true;
 					if (_formattedOnValueChanged) return;
+				} else if (source == function) {
+					bool not = function.SelectedIndex == 1;
+					waitnoC.Visible = not;
+					exceptionnoC.Visibility = !not ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
+					waitC.Visible = !not;
+					mouseC.Visible = !not;
+					exceptionC.Visibility = not ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
+					allC.Visibility = not ? System.Windows.Visibility.Hidden : System.Windows.Visibility.Visible;
 				}
 				_noeventValueChanged = false;
 				_formattedOnValueChanged = true;
@@ -187,22 +195,24 @@ namespace Au.Tools
 
 			var b = new StringBuilder();
 
-			bool findAll = !forTest && allC.IsChecked;
-			bool orThrow = !forTest && exceptionC.IsChecked;
-			bool isMulti = !forTest && _multi != null && _multi.Count != 0;
+			string waitTime = null;
+			bool waitNot = false, wait = false, orThrow = false, notTimeout = false, findAll = false, isMulti = false;
+			if (!forTest) {
+				if (waitNot = function.SelectedIndex == 1) {
+					notTimeout = waitnoC.GetText(out waitTime, emptyToo: true);
+					orThrow = notTimeout && exceptionnoC.IsChecked;
+					if (waitTime.NE()) waitTime = "0";
+				} else {
+					wait = waitC.GetText(out waitTime, emptyToo: true);
+					orThrow = exceptionC.IsChecked;
+					findAll = allC.IsChecked;
+				}
+				isMulti = _multi != null && _multi.Count != 0;
+			}
 			bool isColor = _isColor && !isMulti;
 
-			int waitFunc = 0; string waitTime = null;
-			if (!forTest) {
-				if (waitC.GetText(out waitTime, emptyToo: true)) waitFunc = 1;
-				else if (waitnoC.GetText(out waitTime, emptyToo: true)) waitFunc = 2;
-			}
-			if (waitFunc != 0) {
-				b.Append(waitFunc == 1 ? "uiimage.wait(" : "uiimage.waitNot(").AppendWaitTime(waitTime, orThrow).Append(", ");
-			} else {
-				if (orThrow) b.Append(findAll ? "_ = +" : "+");
-				b.Append("uiimage.find(");
-			}
+			b.Append(waitNot ? "uiimage.waitNot(" : "uiimage.find(");
+			if (wait || waitNot || orThrow) b.AppendWaitTime(waitTime ?? "0", orThrow).Append(", ");
 
 			var (wndCode, wndVar) = _code.ZGetWndFindCode(_wnd, _useCon ? _con : default);
 
@@ -241,26 +251,28 @@ namespace Au.Tools
 			}
 
 			if (!forTest) {
-				mouseC.GetIndex(out int mi);
-				string mouse = mi switch {
-					0 => "im.MouseMove();",
-					1 => "im.MouseClick();",
-					2 => "im.MouseClick(button: MButton.Right);",
-					_ => null
-				};
-				if (findAll) {
-					bb.AppendLine("var all = new List<uiimage>();");
-					b.Append("\r\nforeach(var im in all) { ");
-					if (mouse != null) b.Append(mouse).Append(" 250.ms(); ");
-					b.Append('}');
-				} else if (waitFunc != 2) {
-					bb.Append("var im = ");
-					if (!orThrow || mouse != null) b.AppendLine();
-					if (!orThrow) b.Append("if(im != null) { ");
-					if (mouse != null) b.Append(mouse);
-					if (!orThrow) b.Append(" } else { print.it(\"not found\"); }");
-				} else if (!orThrow) {
-					bb.Append("bool ok = ");
+				if (waitNot) {
+					if (!orThrow && notTimeout) bb.Append("bool ok = ");
+				} else {
+					mouseC.GetIndex(out int mi);
+					string mouse = mi switch {
+						0 => "im.MouseMove();",
+						1 => "im.MouseClick();",
+						2 => "im.MouseClick(button: MButton.Right);",
+						_ => null
+					};
+					if (findAll) {
+						bb.AppendLine("var all = new List<uiimage>();");
+						b.Append("\r\nforeach(var im in all) { ");
+						if (mouse != null) b.Append(mouse).Append(" 250.ms(); ");
+						b.Append('}');
+					} else {
+						bb.Append("var im = ");
+						if (!orThrow || mouse != null) b.AppendLine();
+						if (!orThrow) b.Append("if(im != null) { ");
+						if (mouse != null) b.Append(mouse);
+						if (!orThrow) b.Append(" } else { print.it(\"not found\"); }");
+					}
 				}
 			}
 
@@ -430,12 +442,18 @@ Bigger = slower.");
 			_info.InfoCT(skipC,
 @"0-based index of matching image.
 For example, if 1, gets the second matching image.");
+			_info.Info(function, "Function", "Create code for function find() or waitNot().");
 			_info.InfoC(allC, "Find all matching images.");
-			_info.InfoCT(waitC, c_infoWait);
-			_info.InfoCT(waitnoC, c_infoWait);
+			_info.InfoCT(waitC, @"The wait timeout, seconds.
+The function waits max this time interval. On timeout throws exception if 'Exception...' checked, else returns null. If empty, uses 1e11 (3251 years).");
+			_info.InfoCT(waitnoC, @"The wait timeout, seconds.
+The function waits max this time interval. On timeout throws exception if 'Exception...' checked, else returns false. No timeout if unchecked or 0 or empty.");
 			_info.InfoC(exceptionC,
 @"Throw exception if not found.
 If unchecked, returns null.");
+			_info.InfoC(exceptionnoC,
+@"Throw exception on timeout.
+If unchecked, returns false.");
 			_info.InfoCO(mouseC, "When found, call MouseMove or MouseClick.");
 		}
 
@@ -446,8 +464,6 @@ If unchecked, returns null.");
 3. If need, check/uncheck/edit some fields; click Test.
 4. Click OK, it inserts C# code in editor. Or copy/paste.
 5. If need, edit the code in editor: rename variables, delete duplicate wnd.find lines, replace part of window name with *, etc.";
-		const string c_infoWait = @"Wait timeout, seconds.
-If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits max this time interval; on timeout returns null or throws exception, depending on the 'Exception...' checkbox.";
 
 		protected override void OnPreviewKeyDown(KeyEventArgs e) {
 			_ttInfo?.Close();

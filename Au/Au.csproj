@@ -10,12 +10,13 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\Au.snk</AssemblyOriginatorKeyFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DocumentationFile>Au.xml</DocumentationFile>
+    <DocumentationFile>bin\Au.xml</DocumentationFile>
     <Deterministic>false</Deterministic>
-    <NoWarn>1701;1702;3001,3002,3003,3009,419,660,105</NoWarn>
+    <NoWarn>419</NoWarn>
 	<LangVersion>preview</LangVersion>
 	<ApplicationManifest>Resources\Au.manifest</ApplicationManifest>
 	<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
+	<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

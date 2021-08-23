@@ -8,6 +8,7 @@ using System.Windows.Input;
 //SHOULDDO: when capturing, if fails to get element from point, try UIA. Eg now htmlhelp tree. Maybe also if gets CLIENT.
 //	Or like in QM2, option to capture smallest object at that point.
 //SHOULDDO: if checked state, activate window before test. Else different FOCUSED etc.
+//SHOULDDO: capture image to display in editor.
 
 namespace Au.Tools
 {
@@ -29,6 +30,7 @@ namespace Au.Tools
 
 		KCheckTextBox roleA, nameA, uiaidA, idA, classA, valueA, descriptionA, actionA, keyA, helpA, elemA, stateA, rectA, alsoA, skipA, navigA, waitA, notinA, maxccA, levelA;
 		KCheckBox controlC, exceptionA, hiddenTooA, reverseA, uiaA, notInprocA, clientAreaA, menuTooA;
+		ComboBox callA;
 
 		public Delm(elm e = null, POINT? p = null) {
 			if (p != null) e = elm.fromXY(p.Value, EXYFlags.NoThrow | EXYFlags.PreferLink);
@@ -38,7 +40,7 @@ namespace Au.Tools
 			var b = new wpfBuilder(this).WinSize((600, 440..), (600, 420..)).Columns(-1, 0);
 			b.R.Add(out _info).Height(60);
 			b.R.StartOkCancel()
-				.AddButton(out _bTest, "_Test", _bTest_Click).Width(70..).Disabled().Tooltip("Executes the code now.\nShows rectangle of the found UI element.\nIgnores options: wait, Exception.")
+				.AddButton(out _bTest, "_Test", _bTest_Click).Width(70..).Disabled().Tooltip("Executes the code now.\nShows rectangle of the found UI element.\nIgnores options: wait, Exception, Call.")
 				.Add(out _speed).Width(110).Tooltip("Search time (wnd.find + elm.find). Red if not found.")
 				.AddOkCancel(out _bOK, out _, out _)
 				.End().Align("L")
@@ -76,10 +78,8 @@ namespace Au.Tools
 			alsoA = b.xAddCheckText("also", "o => true");
 			skipA = b.xAddCheckText("skip", "1");
 			navigA = b.xAddCheckText("navig");
-			waitA = b.xAddCheckText("wait", "5");
-			exceptionA = b.xAddCheck("Exception if not found"); b.Checked();
+			waitA = b.xAddCheckText("wait", "1", check: true);
 			//search settings
-			//b.R.Add<Label>("Search settings").SetHeaderProp();
 			hiddenTooA = b.xAddCheck("Find hidden too");
 			reverseA = b.xAddCheck("Reverse order");
 			uiaA = b.xAddCheck("UI Automation");
@@ -90,8 +90,14 @@ namespace Au.Tools
 			maxccA = b.xAddCheckText("maxcc");
 			levelA = b.xAddCheckText("level");
 			b.End();
-
 			b.xEndPropertyGrid();
+			//separator + some more
+			b.R.AddSeparator(false).Margin("T3 B3");
+			b.R.StartStack();
+			exceptionA = b.xAddCheck("Exception if not found"); b.Margin("R30").Checked();
+			b.Add("Call", out callA).Items("|Invoke|VirtualClick|MouseClick|MouseMove|Focus|Select|ScrollTo"); b.Width(100); //CONSIDER: just checkbox with info; maybe with menu.
+			callA.SelectionChanged += (o, _) => _AnyCheckTextBoxValueChanged(o);
+			b.End();
 
 			//code
 			b.Row(64).xAddInBorder(out _code, "B");
@@ -320,22 +326,19 @@ namespace Au.Tools
 
 			var (wndCode, wndVar) = _code.ZGetWndFindCode(_wnd, _useCon ? _con : default);
 
+			bool isCall = !forTest && callA.SelectedIndex > 0;
+			bool orThrow = !forTest && (exceptionA.IsChecked || isCall);
+
 			var b = new StringBuilder();
 			b.AppendLine(wndCode);
-			if (!forTest) b.Append("var e = ");
-
-			bool orThrow = !forTest && exceptionA.IsChecked;
+			if (!(forTest | isCall)) b.Append("var e = ");
+			b.Append("elm.find(");
 
 			string waitTime = null;
 			bool isWait = !forTest && waitA.GetText(out waitTime, emptyToo: true);
-			if (isWait) {
-				b.Append("elm.wait(").AppendWaitTime(waitTime, orThrow);
-			} else {
-				if (orThrow) b.Append('+');
-				b.Append("elm.find(");
-			}
+			if (isWait) b.AppendWaitTime(waitTime, orThrow); else if (orThrow) b.Append('0');
 
-			b.AppendOtherArg(wndVar, noComma: !isWait);
+			b.AppendOtherArg(wndVar, noComma: !(isWait | orThrow));
 
 			roleA.GetText(out var role, emptyToo: true);
 			b.AppendStringArg(role);
@@ -402,7 +405,9 @@ namespace Au.Tools
 			if (skipA.GetText(out var skip)) b.AppendOtherArg(skip, "skip");
 			if (navigA.GetText(out var navig)) b.AppendStringArg(navig, "navig");
 
-			b.Append(");");
+			b.Append(')');
+			if (isCall) b.Append($".{callA.SelectedValue}()");
+			b.Append(';');
 			if (!orThrow && !forTest) b.AppendLine().Append("if(a == null) { print.it(\"not found\"); }");
 
 			var R = b.ToString();
@@ -806,8 +811,8 @@ For example, if 1, gets the second matching UI element.");
 One or several words: <u><i>parent<> <i>child<> <i>first<> <i>last<> <i>next<> <i>previous<><>. Or 2 letters, like <i>ne<>.
 Example: pa ne2 ch3. The 2 means 2 times (ne ne). The 3 means 3-rd child; -3 would be 3-rd from end.");
 			_info.InfoCT(waitA,
-@"Wait timeout, seconds.
-If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits max this time interval; on timeout returns null or throws exception, depending on the 'Exception...' checkbox.");
+@"The wait timeout, seconds.
+The function waits max this time interval. On timeout throws exception if 'Exception...' checked, else returns null. If empty, uses 1e11 (3251 years).");
 			_info.InfoCT(notinA,
 @"Don't search in UI elements that have these roles. Can make faster.
 Example: LIST,TREE,TITLEBAR,SCROLLBAR");
@@ -819,6 +824,9 @@ Relative to the window, control (if used <b>class<> or <b>id<>) or web page (rol
 			_info.InfoC(exceptionA,
 @"Throw exception if not found.
 If unchecked, returns null.");
+			_info.Info(callA, "Call",
+@"Call this single function and don't add variable.
+With variable later you can add code to call one or more functions (like e.Invoke()) and get properties (like var s = e.Name).");
 
 			_info.InfoC(hiddenTooA, "Flag <help>Au.Types.EFFlags<>.HiddenToo.");
 			_info.InfoC(reverseA, "Flag <help>Au.Types.EFFlags<>.Reverse (search bottom to top).");

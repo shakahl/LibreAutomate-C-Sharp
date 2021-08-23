@@ -25,7 +25,7 @@ namespace Au.Tools
 
 		Grid _gCon1, _gCon2;
 		KCheckTextBox nameW, classW, programW, containsW, idC, nameC, classC, alsoW, alsoC, waitW, skipC;
-		KCheckBox cHiddenTooW, cCloakedTooW, cHiddenTooC, cException;
+		KCheckBox cHiddenTooW, cCloakedTooW, cHiddenTooC, cException, cActivate;
 
 		public Dwnd(wnd w = default, bool uncheckControl = false) {
 			Title = "Find window or control";
@@ -33,7 +33,7 @@ namespace Au.Tools
 			var b = new wpfBuilder(this).WinSize((600, 440..), (600, 460..)).Columns(-1, 0);
 			b.R.Add(out _info).Height(60);
 			b.R.StartOkCancel()
-				.AddButton(out _bTest, "_Test", _bTest_Click).Width(70..).Tooltip("Executes the code now.\nShows rectangle of the found window/control.\nIgnores options: wait, Exception.")
+				.AddButton(out _bTest, "_Test", _bTest_Click).Width(70..).Tooltip("Executes the code now.\nShows rectangle of the found window/control.\nIgnores options: wait, Exception, Activate.")
 				.Add(out _speed).Width(110).Tooltip("Search time (window + control). Red if not found.")
 				.AddOkCancel(out _bOK, out _, out _)
 				.End().Align("L")
@@ -61,7 +61,7 @@ namespace Au.Tools
 			cHiddenTooW = b.xAddCheck("Find hidden too");
 			cCloakedTooW = b.xAddCheck("Find cloaked too");
 			alsoW = b.xAddCheckText("also", "o => true");
-			waitW = b.xAddCheckText("wait", "5");
+			waitW = b.xAddCheckText("wait", "1", check: true);
 			b.End();
 			//control
 			b.R.AddSeparator(false).Margin("T4 B0"); _sepControl = b.Last as Separator;
@@ -76,10 +76,13 @@ namespace Au.Tools
 			alsoC = b.xAddCheckText("also", "o => true");
 			skipC = b.xAddCheckText("skip", "1");
 			b.End();
-
-			b.R.AddSeparator(false).Margin("T3 B3");
-			cException = b.xAddCheck("Exception if not found"); b.Checked();
 			b.xEndPropertyGrid();
+			//separator + some more
+			b.R.AddSeparator(false).Margin("T3 B3");
+			b.R.StartStack();
+			cException = b.xAddCheck("Exception if not found"); b.Checked();
+			cActivate = b.xAddCheck("Activate window"); b.Margin(20);
+			b.End();
 
 			//code
 			b.Row(64).xAddInBorder(out _code, "B");
@@ -274,7 +277,6 @@ namespace Au.Tools
 			_gCon2.IsEnabled = showGrid;
 		}
 
-#if true
 		(string code, string wndVar) _FormatCode(bool forTest = false, bool newWindow = false) {
 			if (!_scroller.IsVisible) return default; //failed to get window props
 
@@ -282,6 +284,7 @@ namespace Au.Tools
 				Test = forTest,
 				NeedControl = !_con.Is0 && _cControl.IsChecked,
 				Throw = cException.IsChecked,
+				Activate = cActivate.IsChecked,
 				hiddenTooW = cHiddenTooW.IsChecked,
 				cloakedTooW = cCloakedTooW.IsChecked,
 				hiddenTooC = cHiddenTooC.IsChecked,
@@ -311,96 +314,6 @@ namespace Au.Tools
 
 			return (R, "w");
 		}
-#else
-		(string code, string wndVar) _FormatCode(bool forTest = false, bool newWindow = false) {
-			if (!_scroller.IsVisible) return default; //failed to get window props
-
-			var b = new StringBuilder();
-
-			bool isCon = !_con.Is0 && _cControl.IsChecked;
-			bool orThrow = !forTest && cException.IsChecked;
-
-			b.Append(forTest ? "wnd w;\r\n" : "var ").Append("w = ");
-
-			string waitTime = null;
-			bool isWait = !forTest && waitW.GetText(out waitTime, emptyToo: true);
-			if (isWait) {
-				b.Append("wnd.wait(").AppendWaitTime(waitTime, orThrow || isCon);
-				b.Append(", active: true");
-			} else {
-				if (orThrow || isCon) b.Append('+');
-				b.Append("wnd.find(");
-			}
-
-			int m = 0;
-			string sName, sClass, sAlso;
-			nameW.GetText(out sName, emptyToo: true); b.AppendStringArg(sName, noComma: !isWait);
-			if (classW.GetText(out sClass)) m |= 1;
-			if (programW.GetText(out var sProg)) m |= 2;
-			if (m != 0) b.AppendStringArg(sClass);
-			if (0 != (m & 2)) {
-				if (!sProg.Starts("WOwner.")) b.AppendStringArg(sProg);
-				else if (!forTest) b.AppendOtherArg(sProg);
-				else m &= ~2;
-			}
-			b.AppendFlags(m < 2 ? "flags" : null, nameof(WFlags), (cHiddenTooW, nameof(WFlags.HiddenToo)), (cCloakedTooW, nameof(WFlags.CloakedToo)));
-			if (alsoW.GetText(out sAlso)) b.AppendOtherArg(sAlso, "also");
-			if (containsW.GetText(out var sContains)) b.AppendStringArg(sContains, "contains");
-
-			if (isCon) {
-				b.AppendLine(");");
-				m = 0;
-				if (idC.GetText(out var sId)) m |= 1;
-				else if (nameC.GetText(out sName, emptyToo: true)) m |= 2;
-				if (classC.GetText(out sClass)) m |= 4;
-				if (alsoC.GetText(out sAlso)) m |= 8;
-				if (skipC.GetText(out var sSkip)) m |= 16;
-				if (!forTest) b.Append("var c = ");
-				if (orThrow) b.Append('+');
-				b.Append("w.Child");
-				if (m == 1) {
-					b.Append("ById(").Append(sId);
-					b.AppendFlags(null, nameof(WCFlags), (cHiddenTooC, nameof(WCFlags.HiddenToo)));
-				} else {
-					b.Append('(');
-					if (0 != (m & 1)) b.Append("\"***id ").Append(sId).Append('\"');
-					else b.AppendStringArg(sName, noComma: true);
-					if (0 != (m & 4)) b.AppendStringArg(sClass);
-					b.AppendFlags((0 == (m & 4)) ? "null" : null, nameof(WCFlags), (cHiddenTooC, nameof(WCFlags.HiddenToo)));
-					if (0 != (m & 8)) b.AppendOtherArg(sAlso, "also");
-					if (0 != (m & 16)) b.AppendOtherArg(sSkip, "skip");
-				}
-			}
-
-			b.Append(");");
-
-			if (!forTest && isCon && 0 == (m & 2)) { //add comments controlClass controlName
-				sName = sClass = null;
-				if (0 == (m & 2)) sName = nameC.t.Text;
-				if (0 == (m & 4)) sClass = classC.t.Text;
-				m = 0; if (!sName.NE()) m |= 1; if (!sClass.NE()) m |= 2;
-				if (m != 0) {
-					b.Append(" // ");
-					if (0 != (m & 2)) b.Append(sClass);
-					if (0 != (m & 1)) {
-						if (0 != (m & 2)) b.Append(' ');
-						sName = sName.Limit(100).RxReplace(@"^\*\*\*\w+ (.+)", "$1");
-						b.AppendStringArg(sName, noComma: true);
-					}
-				}
-			}
-
-			if (!orThrow && !forTest) b.AppendLine().Append("if(").Append(isCon ? "c" : "w").Append(".Is0) { print.it(\"not found\"); }");
-
-			var R = b.ToString();
-
-			if (!forTest) {
-				_code.ZSetText(R);
-			}
-
-			return (R, "w");
-		}
-#endif
 
 #region capture
 
@@ -742,8 +655,8 @@ Or a control in the window. Format: c 'class' text.", true, "name/class/text");
 			_info.InfoC(cHiddenTooW, "Flag <help>Au.Types.WFlags<>.HiddenToo.");
 			_info.InfoC(cCloakedTooW, "Flag <help>Au.Types.WFlags<>.CloakedToo.");
 			_info.InfoCT(waitW,
-@"Wait timeout, seconds.
-If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits max this time interval; on timeout returns default(wnd) or throws exception, depending on the 'Exception...' checkbox.");
+@"The wait timeout, seconds.
+The function waits for such window max this time interval. On timeout throws exception if 'Exception...' checked, else returns default(wnd). If empty, uses 1e11 (3251 years).");
 			_info.InfoCT(alsoW,
 @"<help>wnd.find<> " + TUtil.CommonInfos.c_alsoParameter);
 			_info.InfoC(cHiddenTooC, "Flag <help>Au.Types.WCFlags<>.HiddenToo.");
@@ -755,6 +668,8 @@ For example, if 1, gets the second matching control.");
 			_info.InfoC(cException,
 @"Throw exception if not found.
 If unchecked, returns default(wnd).");
+			_info.InfoC(cActivate,
+@"Ensure the window is active.");
 
 			_info.Info(_tree, "Tree view", "All child and descendant controls of the window.");
 

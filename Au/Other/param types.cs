@@ -107,9 +107,25 @@ namespace Au.Types
 	/// Used for parameters of functions like <see cref="mouse.move"/>, <see cref="wnd.Move"/>.
 	/// </summary>
 	/// <remarks>
-	/// To specify a normal coordinate, assign an <b>int</b> value (implicit conversion from <b>int</b> to <b>Coord</b>). Else use static functions such as <b>Reverse</b>, <b>Fraction</b> (or assign float), <b>Center</b>, <b>Max</b>, <b>MaxInside</b>.
+	/// To specify a normal coordinate (the origin is the left or top edge), assign an <b>int</b> value (implicit conversion from <b>int</b> to <b>Coord</b>).
+	/// To specify a reverse coordinate (the origin is the right or bottom edge), use <see cref="Reverse"/> or a "from end" index like <c>^1</c>. It is towards the left or top edge, unless negative. Or use <see cref="Max"/> or <see cref="MaxInside"/>.
+	/// To specify a "fraction of the rectangle" coordinate, use <see cref="Fraction"/> or a value of type float like <c>0.5f</c>. Or use <see cref="Center"/>.
+	/// The meaning of <c>default(Coord)</c> depends on function where used. Many functions interpret it as center (same as <c>Coord.Center</c> or <c>0.5f</c>).
 	/// Also there are functions to convert <b>Coord</b> to normal coodinates.
 	/// </remarks>
+	/// <example>
+	/// <code><![CDATA[
+	/// mouse.move(100, 100); //left edge + 100, top edge + 100
+	/// mouse.move(Coord.Reverse(100), 100); //right edge - 100, top edge + 100
+	/// mouse.move(100, ^100); //left edge + 100, bottom edge - 100
+	/// mouse.move(Coord.Fraction(0.33), 0.9f); //left edge + 1/3 of the screen rectangle, top edge + 9/10
+	/// mouse.move(Coord.Center, Coord.MaxInside); //x in center (left edge + 1/2), y by the bottom edge inside (Coord.Max would be outside)
+	/// mouse.move(Coord.Reverse(-100), 1.1f); //right edge + 100, bottom edge + 0.1 of the rectangle
+	/// 
+	/// var w = wnd.find(1, "Untitled - Notepad", "Notepad");
+	/// w.Move(0.5f, 100, 0.5f, ^200); //x = center, y = 100, width = half of screen, height = screen height - 200
+	/// ]]></code>
+	/// </example>
 	public record struct Coord
 	{
 		//Use single long field that packs int and CoordType.
@@ -134,7 +150,7 @@ namespace Au.Types
 		public unsafe float FractionValue { get { int i = Value; return *(float*)&i; } }
 
 		/// <summary>
-		/// Returns true if Type == None (when assigned default(Coord)).
+		/// Returns true if Type == None (no value assigned).
 		/// </summary>
 		public bool IsEmpty => Type == CoordType.None;
 
@@ -145,13 +161,19 @@ namespace Au.Types
 		/// Creates Coord of Normal type.
 		/// </summary>
 		//[MethodImpl(MethodImplOptions.NoInlining)] //makes bigger/slower
-		public static implicit operator Coord(int v) => new Coord(CoordType.Normal, v);
+		public static implicit operator Coord(int v) => new(CoordType.Normal, v);
+
+		/// <summary>
+		/// Creates Coord of Normal or Reverse type. Reverse if the index is from end, like <c>^1</c>.
+		/// </summary>
+		public static implicit operator Coord(Index v) => new(v.IsFromEnd ? CoordType.Reverse : CoordType.Normal, v.Value);
 
 		/// <summary>
 		/// Creates Coord of Fraction type.
 		/// </summary>
 		public static implicit operator Coord(float v) => Fraction(v);
 
+		//these would create Fraction
 		///
 		[Obsolete("The value must be of type int or float.", error: true), NoDoc]
 		public static implicit operator Coord(uint f) => default;
@@ -167,9 +189,7 @@ namespace Au.Types
 		/// Creates Coord of Reverse type.
 		/// Value 0 is at the right or bottom, and does not belong to the rectangle. Positive values are towards left or top.
 		/// </summary>
-		public static Coord Reverse(int v) {
-			return new Coord(CoordType.Reverse, v);
-		}
+		public static Coord Reverse(int v) => new(CoordType.Reverse, v);
 
 		/// <summary>
 		/// Creates Coord of Fraction type.
@@ -178,7 +198,7 @@ namespace Au.Types
 		/// </summary>
 		public static unsafe Coord Fraction(double v) {
 			float f = (float)v;
-			return new Coord(CoordType.Fraction, *(int*)&f);
+			return new(CoordType.Fraction, *(int*)&f);
 		}
 
 		/// <summary>

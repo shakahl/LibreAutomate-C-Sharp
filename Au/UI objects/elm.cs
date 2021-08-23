@@ -146,15 +146,15 @@ namespace Au
 	/// <code><![CDATA[
 	/// var w = +wnd.find("* Chrome");
 	/// var e = +elm.find(w, "web:LINK", "Example");
-	/// e.DoAction();
+	/// e.Invoke();
 	/// ]]></code>
 	/// Click a link, wait for new web page, click a link in it.
 	/// <code><![CDATA[
 	/// var w = +wnd.find("* Chrome");
 	/// var e = elm.wait(1, w, "web:LINK", "Link 1");
-	/// e.DoActionAndWaitForNewWebPage();
+	/// e.InvokeAndWaitForNewWebPage();
 	/// e = elm.wait(10, w, "web:LINK", "Link 2");
-	/// e.DoActionAndWaitForNewWebPage();
+	/// e.InvokeAndWaitForNewWebPage();
 	/// ]]></code>
 	/// </example>
 	[StructLayout(LayoutKind.Sequential)]
@@ -336,15 +336,15 @@ namespace Au
 		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
 		/// </remarks>
 		/// <example>
-		/// Find object at 100 200.
+		/// Get UI element at 100 200.
 		/// <code><![CDATA[
-		/// var e = elm.FromXY((100, 200));
+		/// var e = elm.fromXY((100, 200));
 		/// print.it(e);
 		/// ]]></code>
 		/// 
-		/// Find object at 50 from left and 100 from bottom of the work area.
+		/// Get UI element at 50 from left and 100 from bottom of the work area.
 		/// <code><![CDATA[
-		/// var e = elm.FromXY(Coord.Normalize(50, Coord.Reverse(100), true));
+		/// var e = elm.fromXY(Coord.Normalize(50, ^100, workArea: true));
 		/// print.it(e);
 		/// ]]></code>
 		/// </example>
@@ -404,7 +404,7 @@ namespace Au
 		/// <remarks>
 		/// The parameters are of the callback function.
 		/// Uses API <msdn>AccessibleObjectFromEvent</msdn>.
-		/// Often fails because the object already does not exist, because the callback function is called asynchronously, especially when the event is OBJECT_DESTROY, OBJECT_HIDE, SYSTEM_*END.
+		/// Often fails because the UI element already does not exist, because the callback function is called asynchronously, especially when the event is OBJECT_DESTROY, OBJECT_HIDE, SYSTEM_*END.
 		/// Returns null if failed. Always check the return value, to avoid NullReferenceException. An exception in the callback function kills this process.
 		/// </remarks>
 		public static elm fromEvent(wnd w, EObjid idObject, int idChild) {
@@ -567,7 +567,7 @@ namespace Au
 		/// Uses <see cref="ToString"/>.
 		/// Catches exceptions. On exception writes to the output: <c>$"!exception! exceptionType exceptionMessage"</c>.
 		/// Parameters are of <see cref="find"/>.
-		/// By default skips invisible objects and objects in menus. Use flags to include them.
+		/// By default skips invisible UI elements and UI elements in menus. Use flags to include them.
 		/// Chrome web page UI elements normally are disabled (missing) when it starts. Use role prefix <c>"web:"</c> or <c>"chrome:"</c> to enable. See example.
 		/// </remarks>
 		/// <example>

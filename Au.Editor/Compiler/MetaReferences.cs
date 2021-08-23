@@ -32,8 +32,7 @@ namespace Au.Compiler
 
 			const int c_timerPeriod = 30_000;
 
-			public _MR(string name, string path)
-			{
+			public _MR(string name, string path) {
 				//print.it(name);
 				this.name = name;
 				this.path = path;
@@ -41,7 +40,7 @@ namespace Au.Compiler
 
 			public PortableExecutableReference Ref {
 				get {
-					if(!_wr.TryGetTarget(out var r)) {
+					if (!_wr.TryGetTarget(out var r)) {
 						//for(int i=0;i<10;i++) //tested: process memory does not grow when loading same file several times
 						//perf.first();
 						r = MetadataReference.CreateFromFile(path, (this as _MR2)?.Prop ?? default, _DocumentationProvider.Create(path));
@@ -51,26 +50,26 @@ namespace Au.Compiler
 						//print.it("LOADED", name, this is _MR2);
 
 						//prevent GC too early, eg in the middle of compiling many files
-						if(s_timer == null) {
+						if (s_timer == null) {
 							s_timer = new Timer(_ => {
 								int nKeep = 0;
-								lock(s_cache) {
+								lock (s_cache) {
 									long timeNow = Environment.TickCount64;
-									foreach(var v in s_cache) {
-										if(v._refKeeper == null) continue;
+									foreach (var v in s_cache) {
+										if (v._refKeeper == null) continue;
 										long t = v._timeout;
-										if(timeNow >= t) v._refKeeper = null;
+										if (timeNow >= t) v._refKeeper = null;
 										else nKeep++;
 									}
 									//print.it("timer", nKeep);
 									s_isTimer = nKeep > 0 && s_timer.Change(c_timerPeriod, -1);
 								}
-								if(nKeep == 0) GC.Collect();
+								if (nKeep == 0) GC.Collect();
 							});
 						}
 					} //else print.it("cached", name, this is _MR2);
 
-					if(!s_isTimer) s_isTimer = s_timer.Change(c_timerPeriod, -1);
+					if (!s_isTimer) s_isTimer = s_timer.Change(c_timerPeriod, -1);
 					_timeout = Environment.TickCount64 + c_timerPeriod - 1000;
 					_refKeeper = r;
 					return r;
@@ -95,8 +94,7 @@ namespace Au.Compiler
 			readonly string _alias;
 			readonly bool _isCOM;
 
-			public _MR2(string name, string path, string alias, bool isCOM) : base(name, path)
-			{
+			public _MR2(string name, string path, string alias, bool isCOM) : base(name, path) {
 				_alias = alias;
 				_isCOM = isCOM;
 			}
@@ -121,8 +119,7 @@ namespace Au.Compiler
 		/// </summary>
 		public static readonly Dictionary<string, PortableExecutableReference> DefaultReferences;
 
-		static MetaReferences()
-		{
+		static MetaReferences() {
 			//var p1 = perf.local();
 			s_netDocProvider = new _NetDocumentationProvider();
 			//p1.Next('d');
@@ -131,7 +128,7 @@ namespace Au.Compiler
 
 			using var db = EdDatabases.OpenRef();
 			using var stat = db.Statement("SELECT * FROM ref");
-			while(stat.Step()) {
+			while (stat.Step()) {
 				var asmName = stat.GetText(0);
 				var doc = s_netDocProvider.HaveRef(asmName) ? s_netDocProvider : null;
 				var r = MetadataReference.CreateFromImage(stat.GetArray<byte>(1), documentation: doc, filePath: asmName);
@@ -144,11 +141,10 @@ namespace Au.Compiler
 			//p1.NW('a');
 		}
 
-		public MetaReferences()
-		{
+		public MetaReferences() {
 			var def = DefaultReferences;
 			Refs = new List<PortableExecutableReference>(def.Count + 10);
-			foreach(var v in def) Refs.Add(v.Value);
+			foreach (var v in def) Refs.Add(v.Value);
 		}
 
 		/// <summary>
@@ -161,33 +157,32 @@ namespace Au.Compiler
 		/// Can be "Alias=X.dll" - assembly reference that can be used with C# keyword 'extern alias'.
 		/// Loads the file but does not parse. If bad format, error later when compiling.
 		/// </remarks>
-		public bool Resolve(string reference, bool isCOM)
-		{
+		public bool Resolve(string reference, bool isCOM) {
 			string alias = null;
 			int i = reference.IndexOf('=');
-			if(i > 0) {
+			if (i > 0) {
 				alias = reference.Remove(i);
-				reference = reference.Substring(i + 1);
+				reference = reference[(i + 1)..];
 			}
 
 			var a = s_cache;
-			lock(a) {
-				for(i = 0; i < a.Count; i++) {
-					if(a[i].name.Eqi(reference) && _PropEq(a[i], alias, isCOM)) {
+			lock (a) {
+				for (i = 0; i < a.Count; i++) {
+					if (a[i].name.Eqi(reference) && _PropEq(a[i], alias, isCOM)) {
 						_AddRef(i);
 						return true;
 					}
 				}
 
 				var path = _ResolvePath(reference, isCOM);
-				if(path == null) return false;
+				if (path == null) return false;
 				path = pathname.Normalize_(path);
 
-				for(i = 0; i < a.Count; i++) {
-					if(a[i].path.Eqi(path) && _PropEq(a[i], alias, isCOM)) goto g1;
+				for (i = 0; i < a.Count; i++) {
+					if (a[i].path.Eqi(path) && _PropEq(a[i], alias, isCOM)) goto g1;
 				}
 				_MR k;
-				if(isCOM || alias != null) k = new _MR2(reference, path, alias, isCOM);
+				if (isCOM || alias != null) k = new _MR2(reference, path, alias, isCOM);
 				else k = new _MR(reference, path);
 				a.Add(k);
 				g1:
@@ -196,27 +191,24 @@ namespace Au.Compiler
 
 			return true;
 
-			void _AddRef(int iCache)
-			{
+			void _AddRef(int iCache) {
 				var r = s_cache[iCache];
 				Refs.Add(r.Ref);
 			}
 
-			bool _PropEq(_MR u, string alias, bool isCOM)
-			{
-				if(u is _MR2 m2) return m2.PropEq(alias, isCOM);
+			bool _PropEq(_MR u, string alias, bool isCOM) {
+				if (u is _MR2 m2) return m2.PropEq(alias, isCOM);
 				return !isCOM && alias == null;
 			}
 		}
 
-		static string _ResolvePath(string re, bool isCOM)
-		{
-			if(re.NE()) return null;
+		static string _ResolvePath(string re, bool isCOM) {
+			if (re.NE()) return null;
 			bool isFull = pathname.isFullPathExpand(ref re);
-			if(!isFull && isCOM) { isFull = true; re = folders.Workspace + @".interop\" + re; }
-			if(isFull) return filesystem.exists(re).isFile ? re : null;
+			if (!isFull && isCOM) { isFull = true; re = folders.Workspace + @".interop\" + re; }
+			if (isFull) return filesystem.exists(re).isFile ? re : null;
 
-			if(!re.Ends(".dll", true)) re += ".dll";
+			if (!re.Ends(".dll", true)) re += ".dll";
 			re = folders.ThisAppBS + re;
 			return filesystem.exists(re).isFile ? re : null;
 
@@ -227,32 +219,29 @@ namespace Au.Compiler
 		/// Extracts path from compiler error message CS0009 and removes the reference from cache.
 		/// </summary>
 		/// <param name="errorMessage">"Metadata file '....dll' could not be opened ..."</param>
-		public static void RemoveBadReference(string errorMessage)
-		{
-			if(errorMessage.RxMatch(@"'(.+?)'", 1, out string path))
-				lock(s_cache) { s_cache.RemoveAll(v => v.path.Eqi(path)); }
+		public static void RemoveBadReference(string errorMessage) {
+			if (errorMessage.RxMatch(@"'(.+?)'", 1, out string path))
+				lock (s_cache) { s_cache.RemoveAll(v => v.path.Eqi(path)); }
 		}
 
 		//public static void CompactCache() => _MR.CompactCache();
 
-		public static bool IsDotnetAssembly(string path)
-		{
+		public static bool IsDotnetAssembly(string path) {
 			using var stream = filesystem.loadStream(path);
 			using var pr = new System.Reflection.PortableExecutable.PEReader(stream);
 			return pr.HasMetadata;
 		}
 
 #if DEBUG
-		internal static void DebugPrintCachedRefs()
-		{
-			foreach(var v in s_cache) if(v.IsCached) print.it(v.name);
+		internal static void DebugPrintCachedRefs() {
+			foreach (var v in s_cache) if (v.IsCached) print.it(v.name);
 		}
 #endif
 
 		/// <summary>
 		/// Gets XML documentation for an assembly.
 		/// Uses a 2-column SQLite database auto-created from XML file by <see cref="Create"/>.
-		/// Not XML file directly because it uses much memory.
+		/// Not XML file directly because it uses much memory. Unless the file is small or DB fails.
 		/// </summary>
 		class _DocumentationProvider : DocumentationProvider
 		{
@@ -263,34 +252,33 @@ namespace Au.Compiler
 			/// Creates documentation provider for assembly <i>asmPath</i>.
 			/// Returns null if its xml file does not exist.
 			/// Returns _DocumentationProvider if xml file is big and found or successfully created and successfully loaded database for it.
-			/// Else returns XmlDocumentationProvider.
+			/// Else returns _XmlFileDocumentationProvider.
 			/// </summary>
-			public static DocumentationProvider Create(string asmPath)
-			{
-				if(s_d.TryGetValue(asmPath, out var dp)) return dp;
+			public static DocumentationProvider Create(string asmPath) {
+				if (s_d.TryGetValue(asmPath, out var dp)) return dp;
 
 				var xmlPath = Path.ChangeExtension(asmPath, "xml");
-				if(!filesystem.getProperties(xmlPath, out var px)) return null;
+				if (!filesystem.getProperties(xmlPath, out var px)) return null;
 
-				if(px.Size >= 10_000) {
+				if (px.Size >= 10_000) {
 					var md5 = new Hash.MD5Context(); md5.Add(xmlPath.Lower());
 					var dbPath = folders.ThisAppTemp + md5.Hash.ToString() + ".db";
 					try {
-						if(!filesystem.getProperties(dbPath, out var pd) || pd.LastWriteTimeUtc != px.LastWriteTimeUtc) {
+						if (!filesystem.getProperties(dbPath, out var pd) || pd.LastWriteTimeUtc != px.LastWriteTimeUtc) {
 							//Debug_.Print($"creating db: {asmPath}  ->  {dbPath}");
 							filesystem.delete(dbPath);
-							using(var d = new sqlite(dbPath)) {
+							using (var d = new sqlite(dbPath)) {
 								using var trans = d.Transaction();
 								d.Execute("CREATE TABLE doc (name TEXT PRIMARY KEY, xml TEXT)");
 								using var statInsert = d.Statement("INSERT INTO doc VALUES (?, ?)");
 
 								var xr = XmlUtil.LoadElem(xmlPath);
-								foreach(var e in xr.Descendants("member")) {
+								foreach (var e in xr.Descendants("member")) {
 									var name = e.Attr("name");
 
 									//remove <remarks> and <example>.
 									foreach(var v in e.Descendants("remarks").ToArray()) v.Remove();
-									foreach(var v in e.Descendants("example").ToArray()) v.Remove();
+									foreach (var v in e.Descendants("example").ToArray()) v.Remove();
 
 									using var reader = e.CreateReader();
 									reader.MoveToContent();
@@ -309,36 +297,39 @@ namespace Au.Compiler
 						s_d[asmPath] = dp = new _DocumentationProvider { _db = db };
 						return dp;
 					}
-					catch(Exception ex) { Debug_.Print(ex.ToStringWithoutStack()); }
+					catch (Exception ex) { Debug_.Print(ex.ToStringWithoutStack()); }
 				}
-				return XmlDocumentationProvider.CreateFromFile(xmlPath);
+				//return XmlDocumentationProvider.CreateFromFile(xmlPath); //no, need XML with root element.
+				return new _XmlFileDocumentationProvider(xmlPath);
 			}
-			static System.Collections.Concurrent.ConcurrentDictionary<string, _DocumentationProvider> s_d = new(StringComparer.OrdinalIgnoreCase);
+			static ConcurrentDictionary<string, _DocumentationProvider> s_d = new(StringComparer.OrdinalIgnoreCase);
 
-			protected internal override string GetDocumentationForSymbol(string documentationMemberID, System.Globalization.CultureInfo preferredCulture, CancellationToken cancellationToken = default)
-			{
-				if(_db != null) {
-					lock(_db) { //sometimes not in main thread
+			protected internal override string GetDocumentationForSymbol(string documentationMemberID, CultureInfo preferredCulture, CancellationToken cancellationToken = default) {
+				if (_db != null) {
+					lock (_db) { //sometimes not in main thread
 						try {
+							//print.it(documentationMemberID);
 							_stat ??= _db.Statement("SELECT xml FROM doc WHERE name=?");
-							if(_stat.Bind(1, documentationMemberID).Step()) return _stat.GetText(0);
+							//if (_stat.Bind(1, documentationMemberID).Step()) return _stat.GetText(0);
+							if (_stat.Bind(1, documentationMemberID).Step()) return "<r>" + _stat.GetText(0) + "</r>";
+							//Roslyn bug: inheritdoc does not work with XML fragment (without single root element).
+							//	Also then trows/catches exception every time.
+							//	But eg XmlDocumentationProvider.CreateFromFile provider returns fragment.
 							//Debug_.Print(documentationMemberID);
 						}
-						catch(SLException ex) { Debug_.Print(ex.Message); }
+						catch (SLException ex) { Debug_.Print(ex.Message); }
 						finally { _stat?.Reset(); }
 					}
 				}
 				return null;
 			}
 
-			public override bool Equals(object obj)
-			{
+			public override bool Equals(object obj) {
 				Debug_.PrintIf(obj != this, "Equals");
 				return obj == this;
 			}
 
-			public override int GetHashCode()
-			{
+			public override int GetHashCode() {
 				Debug_.Print("GetHashCode");
 				return 1;
 			}
@@ -353,13 +344,12 @@ namespace Au.Compiler
 		{
 			HashSet<string> _refs;
 
-			public _NetDocumentationProvider()
-			{
+			public _NetDocumentationProvider() {
 				try {
 					_db = EdDatabases.OpenDoc(); //never mind: we don't dispose it on process exit
-					if(_db.Get(out string s, "SELECT xml FROM doc WHERE name='.'")) _refs = new HashSet<string>(s.Split('\n'));
+					if (_db.Get(out string s, "SELECT xml FROM doc WHERE name='.'")) _refs = new HashSet<string>(s.Split('\n'));
 				}
-				catch(SLException ex) { Debug_.Print(ex.Message); }
+				catch (SLException ex) { Debug_.Print(ex.Message); }
 			}
 
 			/// <summary>
@@ -369,5 +359,31 @@ namespace Au.Compiler
 			public bool HaveRef(string refName) => _refs?.Contains(refName) ?? false;
 		}
 		static readonly _NetDocumentationProvider s_netDocProvider;
+
+		/// <summary>
+		/// Gets XML documentation from XML file.
+		/// </summary>
+		sealed class _XmlFileDocumentationProvider : XmlDocumentationProvider
+		{
+			private readonly string _filePath;
+
+			public _XmlFileDocumentationProvider(string filePath) {
+				_filePath = filePath;
+			}
+
+			protected override Stream GetSourceStream(CancellationToken cancellationToken)
+				=> new FileStream(_filePath, FileMode.Open, FileAccess.Read);
+
+			protected override string GetDocumentationForSymbol(string documentationMemberID, CultureInfo preferredCulture, CancellationToken cancellationToken = default) {
+				var s = base.GetDocumentationForSymbol(documentationMemberID, preferredCulture, cancellationToken);
+				//print.it(documentationMemberID, s);
+				if (!s.NE()) s = "<r>" + s + "</r>";
+				return s;
+			}
+
+			public override bool Equals(object obj) => obj == this;
+
+			public override int GetHashCode() => 1;
+		} //copied from Roslyn's private FileBasedXmlDocumentationProvider (XmlDocumentationProvider.CreateFromFile returns it) and modified
 	}
 }

@@ -3,7 +3,7 @@
 
 #define MyAppName "Derobotize Me C#"
 #define MyAppNameShort "Derobotizer"
-#define MyAppVersion "0.0.1 (2021-08-15)"
+#define MyAppVersion "0.0.2 (2021-08-15)"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.quickmacros.com/au/help/"
 #define MyAppExeName "Au.Editor.exe"
@@ -53,19 +53,7 @@ Source: "Q:\app\Au\_\Au.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Controls.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Net45.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Setup32.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.CSharp.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.CSharp.Features.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.CSharp.Workspaces.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.Features.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.FlowAnalysis.Utilities.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.Workspaces.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Microsoft.DiaSymReader.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Microsoft.VisualStudio.Debugger.Contracts.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\System.Composition.AttributedModel.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\System.Composition.Hosting.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\System.Composition.Runtime.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\System.Composition.TypedParts.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Q:\app\Au\_\Roslyn\*.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Controls.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Net45.exe.config"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.xml"; DestDir: "{app}"; Flags: ignoreversion

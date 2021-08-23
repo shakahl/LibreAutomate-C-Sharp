@@ -298,7 +298,7 @@ namespace Au
 
 		[SkipLocalsInit]
 		string _GetString(_WhatString what) {
-			using FastBuffer<char> b = new(null);
+			using FastBuffer<char> b = new();
 			for (; ; ) {
 				int hr = 1;
 				switch (what) {

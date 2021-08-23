@@ -86,7 +86,8 @@ namespace Au.Tools
 		/// Appends waitTime. If !orThrow, appends "-" if need.
 		/// </summary>
 		public static StringBuilder AppendWaitTime(this StringBuilder t, string waitTime, bool orThrow) {
-			if (waitTime.NE()) waitTime = "0"; else if (!orThrow && waitTime != "0" && !waitTime.Starts('-')) t.Append('-');
+			if (waitTime.NE()) waitTime = "1e11";
+			if (!orThrow && waitTime != "0" && !waitTime.Starts('-')) t.Append('-');
 			t.Append(waitTime);
 			return t;
 		}
@@ -137,6 +138,10 @@ namespace Au.Tools
 			if (canMakeVerbatim) MakeVerbatim(ref s);
 			return s;
 		}
+		//CONSIDER: just remove *, and at run time find window with or without *.
+		//	Now 2 problems: 1. The code looks ugly. 2. If recorded without *, at run time will not find with *.
+		//	But then problem: what if user wants to find exactly what is specified?
+		//	But maybe currently is the best. Users will learn and later will insert this regex when recorded without *.
 
 		/// <summary>
 		/// Returns true if newRawValue does not match wildex tbValue, unless contains is like $"..." or $@"...".
@@ -178,7 +183,7 @@ namespace Au.Tools
 			public bool hiddenTooW, cloakedTooW;
 			public string idC, nameC, classC, alsoC, skipC, nameC_comments, classC_comments;
 			public bool hiddenTooC;
-			public bool NeedWindow = true, NeedControl, Throw, Test;
+			public bool NeedWindow = true, NeedControl, Throw, Activate, Test;
 			public string CodeBefore, VarWindow = "w", VarControl = "c";
 
 			public string Format() {
@@ -186,25 +191,18 @@ namespace Au.Tools
 				var b = new StringBuilder(CodeBefore);
 				if (CodeBefore != null && !CodeBefore.Ends('\n')) b.AppendLine();
 
-				bool orThrow = Throw && !Test;
+				bool orThrow = Throw && !Test, activate = Activate && !Test;
 
 				if (NeedWindow) {
-					bool orThrowW = orThrow || NeedControl;
-					bool isWait = waitW != null && !Test;
-
 					b.Append(Test ? "wnd " : "var ").Append(VarWindow);
 					if (Test) b.AppendLine(";").Append(VarWindow);
-					b.Append(" = ");
+					b.Append(" = wnd.find(");
 
-					if (isWait) {
-						b.Append("wnd.wait(").AppendWaitTime(waitW, orThrowW);
-						b.Append(", active: true");
-					} else {
-						if (orThrowW) b.Append('+');
-						b.Append("wnd.find(");
-					}
+					bool orThrowW = orThrow || NeedControl || activate;
+					bool isWait = waitW != null && !Test;
 
-					b.AppendStringArg(nameW, noComma: !isWait);
+					if (isWait) b.AppendWaitTime(waitW, orThrowW); else if (orThrowW) b.Append('0');
+					b.AppendStringArg(nameW, noComma: !(isWait | orThrowW));
 					int m = 0;
 					if (classW != null) m |= 1;
 					if (programW != null) m |= 2;
@@ -218,7 +216,9 @@ namespace Au.Tools
 					if (alsoW != null) b.AppendOtherArg(alsoW, "also");
 					if (containsW != null) b.AppendStringArg(containsW, "contains");
 
-					b.Append(");");
+					b.Append(')');
+					if (activate) b.Append(isWait ? ".Activate(1)" : ".Activate()");
+					b.Append(';');
 				}
 
 				if (NeedControl) {
@@ -230,13 +230,16 @@ namespace Au.Tools
 					if (alsoC != null) m |= 8;
 					if (skipC != null) m |= 16;
 					if (!Test) b.Append("var ").Append(VarControl).Append(" = ");
-					if (orThrow) b.Append('+');
 					b.Append(VarWindow).Append(".Child");
+					if (m == 1) b.Append("ById");
+					b.Append('(');
+					if (!Test) {
+						if (waitW is not (null or "0")) b.Append(orThrow ? "1d, " : "-1d, "); else if (orThrow) b.Append("0d, ");
+					}
 					if (m == 1) {
-						b.Append("ById(").Append(idC);
+						b.Append(idC);
 						b.AppendFlags(null, nameof(WCFlags), (hiddenTooC, nameof(WCFlags.HiddenToo)));
 					} else {
-						b.Append('(');
 						if (0 != (m & 1)) b.Append("\"***id ").Append(idC).Append('\"'); else b.AppendStringArg(nameC, noComma: true);
 						if (0 != (m & 4)) b.AppendStringArg(classC);
 						b.AppendFlags((0 == (m & 4)) ? "null" : null, nameof(WCFlags), (hiddenTooC, nameof(WCFlags.HiddenToo)));
@@ -260,7 +263,8 @@ namespace Au.Tools
 					}
 				}
 
-				if (!orThrow && !Test) b.AppendLine().Append("if(").Append(NeedControl ? VarControl : VarWindow).Append(".Is0) { print.it(\"not found\"); }");
+				if (!orThrow && !Test && !(Activate && !NeedControl))
+					b.AppendLine().Append("if(").Append(NeedControl ? VarControl : VarWindow).Append(".Is0) { print.it(\"not found\"); }");
 
 				return b.ToString();
 			}

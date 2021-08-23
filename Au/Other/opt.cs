@@ -16,6 +16,13 @@ using System.Globalization;
 
 //CONSIDER: instead of static options use a settings file. Because now need to set static options for each script, and rare script uses multiple threads.
 
+//SHOULDDO: add options for wnd/elm/uiimage find functions to wait. Now converting find to wait in script is tedious.
+//	opt.wait.WndFind = 2;
+//	or
+//	opt.find.WndWait = 2;
+//	But such options must be applied only in that file.
+//	Or something in the find function. Maybe overload or last parameter. Or findW.
+
 namespace Au
 {
 	/// <summary>

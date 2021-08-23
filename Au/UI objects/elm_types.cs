@@ -31,20 +31,20 @@ namespace Au.Types
 
 		/// <summary>
 		/// The UI element can be invisible.
-		/// Without this flag skips objects that are invisible (have state INVISIBLE) or are descendants of invisible WINDOW, DOCUMENT, PROPERTYPAGE, GROUPING, ALERT, MENUPOPUP.
-		/// Regardless of this flag, always skips invisible standard objects of nonclient area: TITLEBAR, MENUBAR, SCROLLBAR, GRIP.
+		/// Without this flag skips UI elements that are invisible (have state INVISIBLE) or are descendants of invisible WINDOW, DOCUMENT, PROPERTYPAGE, GROUPING, ALERT, MENUPOPUP.
+		/// Regardless of this flag, always skips invisible standard UI elements of nonclient area: TITLEBAR, MENUBAR, SCROLLBAR, GRIP.
 		/// </summary>
 		HiddenToo = 2,
 
 		/// <summary>
 		/// Always search in MENUITEM.
-		/// Without this flag skips MENUITEM descendant objects (for speed), unless role is MENUITEM or MENUPOPUP or searching in web page.
+		/// Without this flag skips MENUITEM descendant elements (for speed), unless <i>role</i> argument is MENUITEM or MENUPOPUP or searching in web page.
 		/// </summary>
 		MenuToo = 4,
 
 		/// <summary>
 		/// Search only in the client area of the window or control.
-		/// Skips the title bar, standard menubars and scrollbars. Searches only in the client area root object (but will not find the object itself).
+		/// Skips the title bar, standard menubars and scrollbars. Searches only in the client area root UI element (but will not find the UI element itself).
 		/// When control class or id is specified in the <i>prop</i> argument, this flag is applied to these controls. Not applied to other controls.
 		/// Don't use this flag when searching in elm or web page (role prefix "web:" etc) or with flag UIA.
 		/// </summary>
@@ -62,8 +62,8 @@ namespace Au.Types
 
 		/// <summary>
 		/// Use UI Automation API.
-		/// Need this flag to find objects in windows that don't support accessible objects but support UI Automation elements. For example JavaFX applications.
-		/// Objects found with this flag never have HtmlX properties, but can have <see cref="elm.UiaId"/>.
+		/// Need this flag to find UI elements in windows that don't support accessible objects but support UI Automation elements. For example JavaFX applications.
+		/// UI elements found with this flag never have HtmlX properties, but can have <see cref="elm.UiaId"/>.
 		/// This flag can be used with most other windows too.
 		/// Don't use this flag when searching in elm (then it is inherited from the elm variable) or web page (role prefix "web:" etc).
 		/// See also: <see cref="elm.MiscFlags"/>.
@@ -122,7 +122,7 @@ namespace Au.Types
 		UIA = 1,
 
 		/// <summary>
-		/// Get the direct parent object if it's LINK or BUTTON.
+		/// Get the direct parent UI element if it's LINK or BUTTON.
 		/// Usually links have one or more children of type TEXT, STATICTEXT, IMAGE or other.
 		/// </summary>
 		PreferLink = 2,
@@ -170,7 +170,7 @@ namespace Au.Types
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
 	/// <summary>
-	/// Object ids of window parts and some special objects.
+	/// Object ids of window parts and some special UI elements.
 	/// Used with <see cref="elm.fromWindow"/>
 	/// </summary>
 	/// <remarks>
@@ -200,7 +200,7 @@ namespace Au.Types
 		//ours
 
 		/// <summary>
-		/// The root Java object. Can be used when the window's class name starts with "SunAwt".
+		/// The root Java UI element. Can be used when the window's class name starts with "SunAwt".
 		/// </summary>
 		Java = -100,
 

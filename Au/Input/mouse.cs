@@ -134,7 +134,7 @@ namespace Au
 		/// </summary>
 		/// <returns>Cursor position in primary screen coordinates.</returns>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="AuWndException">
@@ -163,7 +163,7 @@ namespace Au
 		/// Moves the cursor (mouse pointer) to the specified position in screen.
 		/// </summary>
 		/// <returns>Normalized cursor position.</returns>
-		/// <param name="x">X coordinate.</param>
+		/// <param name="x">X coordinate. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate.</param>
 		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
 		/// <exception cref="AuException">Failed to move the cursor to the specified x y.</exception>
@@ -204,7 +204,7 @@ namespace Au
 		/// ]]></code>
 		/// Use coodinates in the first non-primary screen.
 		/// <code><![CDATA[
-		/// mouse.move(Coord.Normalize(10, Coord.Reverse(10), screen: 1));
+		/// mouse.move(Coord.Normalize(10, ^10, screen: screen.index(1))); //10 from left, 10 from bottom
 		/// ]]></code>
 		/// </example>
 		public static void move(POINT p) {
@@ -468,7 +468,7 @@ namespace Au
 		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="button">Button and action.</param>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
@@ -521,7 +521,7 @@ namespace Au
 		/// </summary>
 		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="button">Button and action.</param>
-		/// <param name="x">X coordinate.</param>
+		/// <param name="x">X coordinate. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate.</param>
 		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="move(Coord, Coord)"/>.</exception>
@@ -554,7 +554,7 @@ namespace Au
 		/// 
 		/// Right-click at 50 from left and 100 from bottom of the work area.
 		/// <code><![CDATA[
-		/// mouse.clickEx(MButton.Right, Coord.Normalize(50, Coord.Reverse(100), true));
+		/// mouse.clickEx(MButton.Right, Coord.Normalize(50, ^100, workArea: true));
 		/// ]]></code>
 		/// </example>
 		public static MRelease clickEx(MButton button, POINT p) {
@@ -596,7 +596,7 @@ namespace Au
 		/// Calls <see cref="clickEx(MButton, wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(wnd, Coord, Coord, bool)"/>.</exception>
@@ -609,7 +609,7 @@ namespace Au
 		/// Left button click at position x y.
 		/// Calls <see cref="clickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
-		/// <param name="x">X coordinate in the screen.</param>
+		/// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the screen.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(Coord, Coord)"/>.</exception>
 		public static void click(Coord x, Coord y) {
@@ -632,7 +632,7 @@ namespace Au
 		/// Calls <see cref="clickEx(MButton, wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(wnd, Coord, Coord, bool)"/>.</exception>
@@ -645,7 +645,7 @@ namespace Au
 		/// Right button click at position x y.
 		/// Calls <see cref="clickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
-		/// <param name="x">X coordinate in the screen.</param>
+		/// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the screen.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(Coord, Coord)"/>.</exception>
 		public static void rightClick(Coord x, Coord y) {
@@ -666,7 +666,7 @@ namespace Au
 		/// Calls <see cref="clickEx(MButton, wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(wnd, Coord, Coord, bool)"/>.</exception>
@@ -679,7 +679,7 @@ namespace Au
 		/// Left button double click at position x y.
 		/// Calls <see cref="clickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
-		/// <param name="x">X coordinate in the screen.</param>
+		/// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the screen.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(Coord, Coord)"/>.</exception>
 		public static void doubleClick(Coord x, Coord y) {
@@ -701,7 +701,7 @@ namespace Au
 		/// </summary>
 		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(wnd, Coord, Coord, bool)"/>.</exception>
@@ -715,7 +715,7 @@ namespace Au
 		/// Calls <see cref="clickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
 		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
-		/// <param name="x">X coordinate in the screen.</param>
+		/// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the screen.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(Coord, Coord)"/>.</exception>
 		public static MRelease leftDown(Coord x, Coord y) {
@@ -737,7 +737,7 @@ namespace Au
 		/// Calls <see cref="clickEx(MButton, wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(wnd, Coord, Coord, bool)"/>.</exception>
@@ -749,7 +749,7 @@ namespace Au
 		/// Left button up (release pressed button) at position x y.
 		/// Calls <see cref="clickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
-		/// <param name="x">X coordinate in the screen.</param>
+		/// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the screen.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(Coord, Coord)"/>.</exception>
 		public static void leftUp(Coord x, Coord y) {
@@ -771,7 +771,7 @@ namespace Au
 		/// </summary>
 		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(wnd, Coord, Coord, bool)"/>.</exception>
@@ -785,7 +785,7 @@ namespace Au
 		/// Calls <see cref="clickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
 		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
-		/// <param name="x">X coordinate in the screen.</param>
+		/// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the screen.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(Coord, Coord)"/>.</exception>
 		public static MRelease rightDown(Coord x, Coord y) {
@@ -807,7 +807,7 @@ namespace Au
 		/// Calls <see cref="clickEx(MButton, wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(wnd, Coord, Coord, bool)"/>.</exception>
@@ -819,7 +819,7 @@ namespace Au
 		/// Right button up (release pressed button) at position x y.
 		/// Calls <see cref="clickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
-		/// <param name="x">X coordinate in the screen.</param>
+		/// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the screen.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(Coord, Coord)"/>.</exception>
 		public static void rightUp(Coord x, Coord y) {
@@ -1331,10 +1331,10 @@ namespace Au.Types
 		/// Calls <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.
 		/// </summary>
 		/// <param name="t"></param>
-		/// <param name="x">X coordinate in the bounding rectangle of this object. Default - center.</param>
-		/// <param name="y">Y coordinate in the bounding rectangle of this object. Default - center.</param>
+		/// <param name="x">X coordinate in the bounding rectangle of this UI element. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="y">Y coordinate in the bounding rectangle of this UI element. Default - center.</param>
 		/// <exception cref="NotFoundException">UI element not found (this variable is null).</exception>
-		/// <exception cref="AuException">Failed to get object rectangle (<see cref="elm.GetRect(out RECT, wnd)"/>) or container window (<see cref="elm.WndContainer"/>).</exception>
+		/// <exception cref="AuException">Failed to get UI element rectangle (<see cref="elm.GetRect(out RECT, wnd)"/>) or container window (<see cref="elm.WndContainer"/>).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.</exception>
 		public static void MouseMove(this elm t, Coord x = default, Coord y = default)
 			=> _ElmMouseAction(+t, false, x, y, default);
@@ -1344,11 +1344,11 @@ namespace Au.Types
 		/// Calls <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.
 		/// </summary>
 		/// <param name="t"></param>
-		/// <param name="x">X coordinate in the bounding rectangle of this object. Default - center.</param>
-		/// <param name="y">Y coordinate in the bounding rectangle of this object. Default - center.</param>
+		/// <param name="x">X coordinate in the bounding rectangle of this UI element. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="y">Y coordinate in the bounding rectangle of this UI element. Default - center.</param>
 		/// <param name="button">Which button and how to use it.</param>
 		/// <exception cref="NotFoundException">UI element not found (this variable is null).</exception>
-		/// <exception cref="AuException">Failed to get object rectangle (<see cref="elm.GetRect(out RECT, wnd)"/>) or container window (<see cref="elm.WndContainer"/>).</exception>
+		/// <exception cref="AuException">Failed to get UI element rectangle (<see cref="elm.GetRect(out RECT, wnd)"/>) or container window (<see cref="elm.WndContainer"/>).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.</exception>
 		public static MRelease MouseClick(this elm t, Coord x = default, Coord y = default, MButton button = MButton.Left) {
 			_ElmMouseAction(+t, true, x, y, button);
@@ -1380,7 +1380,7 @@ namespace Au.Types
 		/// Calls <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.
 		/// </summary>
 		/// <param name="t"></param>
-		/// <param name="x">X coordinate in the found image. Default - center.</param>
+		/// <param name="x">X coordinate in the found image. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the found image. Default - center.</param>
 		/// <exception cref="NotFoundException">Image not found (this variable is null).</exception>
 		/// <exception cref="InvalidOperationException">area is Bitmap.</exception>
@@ -1393,7 +1393,7 @@ namespace Au.Types
 		/// Calls <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.
 		/// </summary>
 		/// <param name="t"></param>
-		/// <param name="x">X coordinate in the found image. Default - center.</param>
+		/// <param name="x">X coordinate in the found image. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the found image. Default - center.</param>
 		/// <param name="button">Which button and how to use it.</param>
 		/// <exception cref="NotFoundException">Image not found (this variable is null).</exception>

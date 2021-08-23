@@ -14,26 +14,28 @@ using System.IO;
 //	In folder Features: Microsoft.CodeAnalysis.CSharp.Features, Microsoft.CodeAnalysis.Features.
 //	In folder Workspaces: Microsoft.CodeAnalysis.CSharp.Workspaces, Microsoft.CodeAnalysis.Workspaces.
 //	Several other.
-//From Microsoft.CodeAnalysis.Features dependencies remove Scripting. Unload Scripting project. Because it does not compile, and not useful.
+//(skip this if can compile) From Microsoft.CodeAnalysis.Features dependencies remove Scripting. Unload Scripting project. Because it does not compile, and not useful.
 //Edit as described in the '#if false' block at the bottom of this file.
 //Run this project. It modifies Roslyn solution project files.
-//In Roslyn solution compile Microsoft.CodeAnalysis.CSharp.Features. It also compiles all dependency projects. Copies 7 dlls to Q:\app\Au\Other\CompilerDlls.
-//In editor project: Add references to the 6 dlls from folder Q:\app\Au\Other\CompilerDlls (listed above). On build will copy to _.
+//In Roslyn solution compile Microsoft.CodeAnalysis.CSharp.Features. It also compiles all dependency projects. Copies 7 or 8 dlls to Q:\app\Au\Other\CompilerDlls.
+//In editor project do this once:
+//	Add references to the 6 dlls from folder Q:\app\Au\Other\CompilerDlls (listed above).
+//	Add this in editor project for each Roslyn reference: <DestinationSubDirectory>Roslyn\</DestinationSubDirectory>
+//	On build VS will copy the dlls to _\Roslyn.
 //	VS will detect when the dlls modified when building Roslyn.
+//	Edit AppHost.cpp, let it add subfolder Roslyn like it does for subfolder Libraries.
 //To get other dlls:
 //	Install or update Microsoft.CodeAnalysis.CSharp.Features from NuGet in this project.
-//	Compile. Copy these dlls from the bin folder to _:
-//		Microsoft.CodeAnalysis.FlowAnalysis.Utilities.dll
+//	Compile. Copy these dlls from the bin folder to _\Roslyn:
 //		Microsoft.DiaSymReader.dll
 //		System.Composition.AttributedModel.dll
 //		System.Composition.Hosting.dll
 //		System.Composition.Runtime.dll
 //		System.Composition.TypedParts.dll
 //		Microsoft.VisualStudio.Debugger.Contracts.dll
-//		Maybe should also add these, but works without:
-//			System.Composition.Convention.dll
-//			CSharpSyntaxGenerator.dll
-//In Roslyn artifacts folder find xml doc files and copy to CompilerDlls (for VS) and _ (for script editor).
+//		Also copy all other Roslyn dlls from there, although it seems works without.
+//		In the past also needed Microsoft.CodeAnalysis.FlowAnalysis.Utilities.dll, but now it is removed, and works without it.
+//In Roslyn artifacts folder find xml doc files and copy to CompilerDlls. VS will copy it to _\Roslyn when building editor.
 
 namespace CompilerDlls
 {
@@ -65,6 +67,7 @@ namespace CompilerDlls
 			_Mod(@"Workspaces\CSharp\Portable\Microsoft.CodeAnalysis.CSharp.Workspaces.csproj", (project, copy, -1));
 			_Mod(@"Workspaces\Core\Portable\Microsoft.CodeAnalysis.Workspaces.csproj", (project, copy, -1));
 			_Mod(@"Tools\Source\CompilerGeneratorTools\Source\CSharpSyntaxGenerator\CSharpSyntaxGenerator.csproj", (project, copy, -1));
+			_Mod(@"Scripting\Core\Microsoft.CodeAnalysis.Scripting.csproj", (project, copy, -1));
 
 			//how: 0 replace, 1 insert after, -1 insert before
 			void _Mod(string file, params (string find, string add, int how)[] p)
@@ -119,6 +122,17 @@ namespace CompilerDlls
 //Edit these manually, because either difficult to automate or Roslyn source in new version is very likely changed in that place.
 //Add only internal members. If public, need to declare it in PublicApi.Shipped.txt. Roslyn's internals are visible to the editor project.
 
+// - In all 6 projects (not in all projects!) .csproj replace <TargetFrameworks>netcoreapp3.1;netstandard2.0</TargetFrameworks> with <TargetFramework>netcoreapp3.1</TargetFramework>
+
+// - Set Release config. Try to compile.
+
+//(skip this if can compile) - Remove code that uses Scripting project:
+//1. In Features\Core\Portable\Completion\Providers\Scripting\AbstractDirectivePathCompletionProvider.cs remove 2 Scripting usings and 1 code block that uses it.
+//2. In Features\Core\Portable\Completion\Providers\Scripting\AbstractReferenceDirectiveCompletionProvider.cs remove 1 Scripting using and remove entire body of ProvideCompletionsAsync.
+//3. Remove entire Features\Core\Portable\Completion\Providers\Scripting\GlobalAssemblyCacheCompletionHelper.cs.
+
+// - In all 6 projects add link to Au.InternalsVisible.cs. It is in this project.
+
 // - Add Symbols property to the CompletionItem class:
 //1. Open Features\Core\Portable\Completion\CompletionItem.cs in project Microsoft.CodeAnalysis.Features.
 //2. Find method private CompletionItem With(...). In it find: return new CompletionItem...{
@@ -135,10 +149,6 @@ namespace CompilerDlls
 
 // - Let it don't try to load VB assemblies, because then exception when debugging:
 //In MefHostServices.cs, in s_defaultAssemblyNames init list, remove the 2 VB assemblies.
-
-// - In all 6 projects add link to Au.InternalsVisible.cs. It is in this project.
-
-// - In all 6 projects .csproj replace <TargetFrameworks>netcoreapp3.1;netstandard2.0</TargetFrameworks> with <TargetFramework>netcoreapp3.1</TargetFramework>
 
 // - In project Microsoft.CodeAnalysis, in MetadataReader\PEAssembly.cs, replace GetInternalsVisibleToPublicKeys with:
 
@@ -197,9 +207,4 @@ namespace CompilerDlls
 
         //    return (result != null) ? result.Keys : SpecializedCollections.EmptyEnumerable<ImmutableArray<byte>>();
         //}
-
-// - Remove code that uses Scripting project:
-//1. In Features\Core\Portable\Completion\Providers\Scripting\AbstractDirectivePathCompletionProvider.cs remove 2 Scripting usings and 1 code block that uses it.
-//2. In Features\Core\Portable\Completion\Providers\Scripting\AbstractReferenceDirectiveCompletionProvider.cs remove 1 Scripting using and remove entire body of ProvideCompletionsAsync.
-//3. Remove entire Features\Core\Portable\Completion\Providers\Scripting\GlobalAssemblyCacheCompletionHelper.cs.
 #endif

@@ -141,12 +141,22 @@ namespace Au
 
 		/// <summary>
 		/// Finds the specified window, like <see cref="wnd.find"/>.
-		/// Returns true if found.
-		/// The <see cref="Result"/> property will be the window.
+		/// If found, sets <see cref="Result"/> and returns true.
 		/// </summary>
 		public bool Find() {
 			using var k = new WndList_(_AllWindows());
 			return _FindOrMatch(k) >= 0;
+		}
+
+		/// <summary>
+		/// Finds the specified window, like <see cref="wnd.find"/>. Can wait and throw <b>NotFoundException</b>.
+		/// </summary>
+		/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>waitS</i> negative).</returns>
+		/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
+		/// <exception cref="NotFoundException" />
+		public bool Find(double waitS) {
+			var r = waitS == 0d ? Find() : wait.forCondition(waitS < 0 ? waitS : -waitS, () => Find());
+			return r || waitS < 0 ? r : throw new NotFoundException();
 		}
 
 		ArrayBuilder_<wnd> _AllWindows() {

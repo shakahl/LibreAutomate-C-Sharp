@@ -82,14 +82,26 @@ namespace Au
 
 		/// <summary>
 		/// Finds the specified child control, like <see cref="wnd.Child"/>.
-		/// Returns true if found.
-		/// The <see cref="Result"/> property will be the control.
 		/// </summary>
+		/// <returns>If found, sets <see cref="Result"/> and returns true. Else returns false.</returns>
 		/// <param name="wParent">Direct or indirect parent window. Can be top-level window or control.</param>
-		/// <exception cref="AuWndException">Invalid wParent.</exception>
+		/// <exception cref="AuWndException">Invalid <i>wParent</i>.</exception>
 		public bool Find(wnd wParent) {
 			using var k = new WndList_(_AllChildren(wParent));
 			return _FindInList(wParent, k) >= 0;
+		}
+
+		/// <summary>
+		/// Finds the specified child control, like <see cref="wnd.Child"/>. Can wait and throw <b>NotFoundException</b>.
+		/// </summary>
+		/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>waitS</i> negative).</returns>
+		/// <param name="wParent">Direct or indirect parent window. Can be top-level window or control.</param>
+		/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
+		/// <exception cref="NotFoundException" />
+		/// <exception cref="AuWndException">Invalid <i>wParent</i>.</exception>
+		public bool Find(wnd wParent, double waitS) {
+			var r = waitS == 0d ? Find(wParent) : wait.forCondition(waitS < 0 ? waitS : -waitS, () => Find(wParent));
+			return r || waitS < 0 ? r : throw new NotFoundException();
 		}
 
 		ArrayBuilder_<wnd> _AllChildren(wnd wParent) {

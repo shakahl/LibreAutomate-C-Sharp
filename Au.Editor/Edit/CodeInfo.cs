@@ -356,7 +356,7 @@ static class CodeInfo
 
 			try {
 				if (_solution == null) {
-					_CreateSolution(sciDoc.ZFile);
+					_CreateWorkspace(sciDoc.ZFile);
 				} else {
 					_solution = _solution.WithDocumentText(_documentId, SourceText.From(code, Encoding.UTF8));
 				}
@@ -451,10 +451,15 @@ static class CodeInfo
 
 	public static MetaComments Meta => _meta;
 
-	static void _CreateSolution(FileNode f) {
+	static void _CreateWorkspace(FileNode f) {
 		_diag.ClearMetaErrors();
 		InternalsVisible.Clear();
 		CurrentWorkspace = new AdhocWorkspace();
+
+		var opt = CurrentWorkspace.Options
+			.WithChangedOption(Microsoft.CodeAnalysis.QuickInfo.QuickInfoOptions.ShowRemarksInQuickInfo, "C#", false);
+		CurrentWorkspace.SetOptions(opt);
+
 		_solution = CurrentWorkspace.CurrentSolution;
 		_projectId = _AddProject(f, true);
 

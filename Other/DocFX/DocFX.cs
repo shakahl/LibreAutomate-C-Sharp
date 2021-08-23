@@ -1,4 +1,4 @@
-﻿//#define SERVE
+﻿#define SERVE
 #define SSH
 
 using System;

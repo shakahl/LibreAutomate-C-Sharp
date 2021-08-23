@@ -6,18 +6,17 @@ using Microsoft.CodeAnalysis;
 class CiQuickInfo
 {
 	public async Task<Section> GetTextAt(int pos16) {
-		//perf.first();
+		//using var p1 = perf.local();
 		if (!CodeInfo.GetContextAndDocument(out var cd, pos16)) return null;
 
-		//perf.next();
-		var context = new QuickInfoContext(cd.document, pos16, default);
+		var service = QuickInfoService.GetService(cd.document);
 
-		//perf.next();
-		//var provider = new CSharpSemanticQuickInfoProvider(); //error in new roslyn: obsolete ctor, use MEF
-		var provider = typeof(CSharpSemanticQuickInfoProvider).GetConstructor(Type.EmptyTypes).Invoke(null) as CSharpSemanticQuickInfoProvider;
-		//var r = await provider.GetQuickInfoAsync(context); //not async
-		var r = await Task.Run(async () => await provider.GetQuickInfoAsync(context));
-		//perf.next();
+		//var o1=cd.document.Project.Solution.Options.Workspace.GetOption(QuickInfoOptions.IncludeNavigationHintsInQuickInfo); //default true. Not tested, but probably it adds "go to" info to the tagged text items; we currently don't use it.
+		//var o2=cd.document.Project.Solution.Workspace.Options.GetOption(QuickInfoOptions.ShowRemarksInQuickInfo, "C#"); //default true, but CodeInfo._CreateWorkspace sets false
+		//We don't include <remarks>. Sometimes it takes too much space. Badly formatted if eg contains markdown.
+
+		var r = await Task.Run(async () => await service.GetQuickInfoAsync(cd.document, pos16));
+		//p1.Next();
 		if (r == null) return null;
 
 		//print.it(r.Span, r.RelatedSpans);
@@ -28,6 +27,7 @@ class CiQuickInfo
 		//bool hasDocComm = false;
 		//QuickInfoSection descr = null;
 		var a = r.Sections;
+		if (a.Length == 0) return null; //when cursor is on }. //SHOULDDO: display block start code, like in VS.
 		for (int i = 0; i < a.Length; i++) {
 			var se = a[i];
 			//print.it(se.Kind, se.Text);

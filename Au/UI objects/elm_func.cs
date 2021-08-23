@@ -24,7 +24,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Returns default(wnd) if failed. Supports <see cref="lastError"/>.
-		/// All objects must support this property, but some have bugs and can fail or return a wrong window.
+		/// All UI elements must support this property, but some have bugs and can fail or return a wrong window.
 		/// Uses API <msdn>WindowFromAccessibleObject</msdn>.
 		/// </remarks>
 		public wnd WndContainer {
@@ -47,7 +47,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Returns default(wnd) if failed. Supports <see cref="lastError"/>.
-		/// All objects must support this property, but some have bugs and can return default(wnd).
+		/// All UI elements must support this property, but some have bugs and can return default(wnd).
 		/// Uses API <msdn>WindowFromAccessibleObject</msdn> and API <msdn>GetAncestor</msdn>.
 		/// </remarks>
 		public wnd WndTopLevel => WndContainer.Window;
@@ -59,17 +59,17 @@ namespace Au
 		/// <remarks>
 		/// Calls <see cref="GetRect(out RECT)"/>.
 		/// Returns empty rectangle if failed or this property is unavailable. Supports <see cref="lastError"/>.
-		/// Most but not all objects support this property.
+		/// Most but not all UI elements support this property.
 		/// </remarks>
 		public RECT Rect { get { GetRect(out var r); return r; } }
 
 		/// <summary>
 		/// Gets location of this UI element in screen.
 		/// </summary>
-		/// <param name="r">Receives object rectangle in screen coordinates.</param>
+		/// <param name="r">Receives rectangle in screen coordinates.</param>
 		/// <remarks>
 		/// Returns false if failed or this property is unavailable. Supports <see cref="lastError"/>.
-		/// Most but not all objects support this property.
+		/// Most but not all UI elements support this property.
 		/// Uses <msdn>IAccessible.accLocation</msdn>.
 		/// </remarks>
 		public bool GetRect(out RECT r) {
@@ -82,11 +82,11 @@ namespace Au
 		/// <summary>
 		/// Gets location of this UI element in the client area of window w.
 		/// </summary>
-		/// <param name="r">Receives object rectangle in w client area coordinates.</param>
+		/// <param name="r">Receives rectangle in w client area coordinates.</param>
 		/// <param name="w">Window or control.</param>
 		/// <remarks>
 		/// Returns false if failed or this property is unavailable. Supports <see cref="lastError"/>.
-		/// Most but not all objects support this property.
+		/// Most but not all UI elements support this property.
 		/// Uses <msdn>IAccessible.accLocation</msdn> and <see cref="wnd.MapScreenToClient(ref RECT)"/>.
 		/// </remarks>
 		public bool GetRect(out RECT r, wnd w) {
@@ -97,9 +97,9 @@ namespace Au
 		/// Gets standard non-string role, as enum ERole.
 		/// </summary>
 		/// <remarks>
-		/// Most objects have a standard role, as enum <see cref="ERole"/>. Some objects have a custom role, usually as string, for example in web pages in Firefox and Chrome.
+		/// Most UI elements have a standard role, as enum <see cref="ERole"/>. Some UI elements have a custom role, usually as string, for example in web pages in Firefox and Chrome.
 		/// Returns 0 if role is string or if failed. Supports <see cref="lastError"/>.
-		/// All objects must support this property. If failed, probably the object is invalid, for example its window was closed.
+		/// All UI elements must support this property. If failed, probably the elm is invalid, for example the window has been closed.
 		/// Uses <msdn>IAccessible.get_accRole</msdn>.
 		/// </remarks>
 		public ERole RoleInt {
@@ -115,10 +115,10 @@ namespace Au
 		/// Gets standard or custom role, as string.
 		/// </summary>
 		/// <remarks>
-		/// Most objects have a standard role, defined in enum <see cref="ERole"/>. Some objects have a custom role, usually as string, for example in web pages in Firefox and Chrome.
+		/// Most UI elements have a standard role, defined in enum <see cref="ERole"/>. Some UI elements have a custom role, usually as string, for example in web pages in Firefox and Chrome.
 		/// For standard roles this function returns enum <see cref="ERole"/> member name. For string roles - the string. For unknown non-string roles - the int value like "0" or "500".
 		/// Returns "" if failed. Supports <see cref="lastError"/>.
-		/// All objects must support this property. If failed, probably the object is invalid, for example its window was closed.
+		/// All UI elements must support this property. If failed, probably the elm is invalid, for example the window has been closed.
 		/// Uses <msdn>IAccessible.get_accRole</msdn>.
 		/// </remarks>
 		public string Role {
@@ -158,7 +158,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets object state (flags).
+		/// Gets UI element state (flags).
 		/// </summary>
 		/// <remarks>
 		/// Returns 0 if failed. Supports <see cref="lastError"/>.
@@ -182,7 +182,7 @@ namespace Au
 		public bool IsChecked => State.Has(EState.CHECKED);
 
 		/// <summary> Calls <see cref="State"/> and returns true if has state UNAVAILABLE. </summary>
-		/// <remarks>Does not check whether this object is in a disabled parent/ancestor object.</remarks>
+		/// <remarks>Does not check whether this UI element is in a disabled parent/ancestor UI element.</remarks>
 		public bool IsDisabled => State.Has(EState.DISABLED);
 
 		/// <summary> Calls <see cref="State"/> and returns true if has state FOCUSED. </summary>
@@ -190,8 +190,8 @@ namespace Au
 
 		/// <summary> Calls <see cref="State"/> and returns true if has state INVISIBLE and does not have state OFFSCREEN. </summary>
 		/// <remarks>
-		/// If the object has both INVISIBLE and OFFSCREEN states, it is either invisible or just offscreen, depending on application etc. Then this function works like Find and similar functions: for most objects returns false (is visible), but for objects that have these roles returns true (invisible): WINDOW, DOCUMENT, PROPERTYPAGE, GROUPING, ALERT, MENUPOPUP.
-		/// Does not check whether this object is in an invisible parent/ancestor object.
+		/// If the UI element has both INVISIBLE and OFFSCREEN states, it is either invisible or just offscreen, depending on application etc. Then this function works like Find and similar functions: for most UI elements returns false (is visible), but for UI elements that have these roles returns true (invisible): WINDOW, DOCUMENT, PROPERTYPAGE, GROUPING, ALERT, MENUPOPUP.
+		/// Does not check whether this UI element is in an invisible parent/ancestor UI element.
 		/// </remarks>
 		public bool IsInvisible => IsInvisible_(State);
 
@@ -249,7 +249,7 @@ namespace Au
 		/// Gets name.
 		/// </summary>
 		/// <remarks>
-		/// Object name usually is its read-only text (eg button text, link text), or its adjacent read-only text (eg text label by this edit box). It usually does not change, therefore can be used to find or identify the object.
+		/// UI element name usually is its read-only text (eg button text, link text), or its adjacent read-only text (eg text label by this edit box). It usually does not change, therefore can be used to find or identify the UI element.
 		/// Returns "" if name is unavailable or if failed. Supports <see cref="lastError"/>.
 		/// Uses <msdn>IAccessible.get_accName</msdn>.
 		/// </remarks>
@@ -279,9 +279,9 @@ namespace Au
 		/// </summary>
 		/// <exception cref="AuException">Failed to set value.</exception>
 		/// <remarks>
-		/// Usually it is editable text or some other value that can be changed at run time, therefore in most cases it cannot be used to find or identify the object reliably.
+		/// Usually it is editable text or some other value that can be changed at run time, therefore in most cases it cannot be used to find or identify the UI element reliably.
 		/// The 'get' function returns "" if this property is unavailable or if failed. Supports <see cref="lastError"/>.
-		/// Most objects don't support 'set'.
+		/// Most UI elements don't support 'set'.
 		/// Uses <msdn>IAccessible.get_accValue</msdn> or <msdn>IAccessible.put_accValue</msdn>.
 		/// </remarks>
 		public string Value {
@@ -319,7 +319,7 @@ namespace Au
 		/// Gets UI Automation element AutomationId property.
 		/// </summary>
 		/// <remarks>
-		/// Only objects found with flag <see cref="EFFlags.UIA"/> can have this property.
+		/// Only UI elements found with flag <see cref="EFFlags.UIA"/> can have this property.
 		/// Returns "" if this property is unavailable or if failed. Supports <see cref="lastError"/>.
 		/// </remarks>
 		public string UiaId {
@@ -339,11 +339,11 @@ namespace Au
 
 		/// <summary>
 		/// Gets default action.
-		/// See <see cref="DoAction"/>.
+		/// See <see cref="Invoke"/>.
 		/// </summary>
 		/// <remarks>
 		/// Returns "" if this property is unavailable or if failed. Supports <see cref="lastError"/>.
-		/// If this is a Java UI element, returns all actions that can be used with <see cref="DoJavaAction"/>, like "action1, action2, action3", from which the first is considered default and is used by <see cref="DoAction"/>.
+		/// If this is a Java UI element, returns all actions that can be used with <see cref="InvokeJavaAction"/>, like "action1, action2, action3", from which the first is considered default and is used by <see cref="Invoke"/>.
 		/// Uses <msdn>IAccessible.get_accDefaultAction</msdn>.
 		/// </remarks>
 		public string DefaultAction {
@@ -351,15 +351,15 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Performs the object's default action (see <see cref="DefaultAction"/>). Usually it is 'click', 'press' or similar.
+		/// Performs the UI element's default action (see <see cref="DefaultAction"/>). Usually it is 'click', 'press' or similar.
 		/// </summary>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
-		/// Fails if the object does not have a default action. Then you can use <see cref="ExtAu.MouseClick(elm, Coord, Coord, MButton)"/>, or try <see cref="VirtualClick"/>, <see cref="Select"/>, <see cref="Focus"/> and keyboard functions.
-		/// The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="DoJavaAction"/> or one of the above functions (MouseClick etc).
+		/// Fails if the UI element does not have a default action. Then you can use <see cref="ExtAu.MouseClick(elm, Coord, Coord, MButton)"/>, or try <see cref="VirtualClick"/>, <see cref="Select"/>, <see cref="Focus"/> and keyboard functions.
+		/// The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="InvokeJavaAction"/> or one of the above functions (MouseClick etc).
 		/// Uses <msdn>IAccessible.accDoDefaultAction</msdn>.
 		/// </remarks>
-		public void DoAction() { //sorry, I did not find a better name. Alternatives: DoDefaultAction, Invoke, Execute.
+		public void Invoke() { //sorry, I did not find a better name. Alternatives: DoAction (weird), DoDefaultAction (too long), Execute.
 			ThrowIfDisposed_();
 			var hr = Cpp.Cpp_AccAction(this, 'a');
 			GC.KeepAlive(this);
@@ -374,45 +374,46 @@ namespace Au
 		//}
 
 		/// <summary>
-		/// Posts mouse-left-click message to the container window, using coordinates of this object.
+		/// Posts mouse-click messages to the container window, using coordinates of this element.
 		/// </summary>
-		/// <exception cref="AuException">Failed to get rectangle, or the object is invisible/offscreen.</exception>
+		/// <param name="button">Can specify the left (default), right or middle button. Also flag for double-click, press or release.</param>
+		/// <exception cref="AuException">Failed to get rectangle, or the element is invisible/offscreen.</exception>
+		/// <exception cref="NotSupportedException">Unsupported button specified.</exception>
 		/// <remarks>
 		/// Does not move the mouse.
 		/// Does not wait until the target application finishes processing the message.
-		/// Works not with all objects.
-		/// Use (try) this function when the object does not support <see cref="DoAction"/>. When both don't work, use MouseClick.
+		/// Works not with all elements.
+		/// Try this function when <see cref="Invoke"/> does not work and you don't want to use <c>MouseClick</c>.
 		/// </remarks>
-		public void VirtualClick() {
-			_VirtualClick(false);
-		}
-
-		/// <summary>
-		/// Posts mouse-right-click message to the container window, using coordinates of this object.
-		/// </summary>
-		/// <exception cref="AuException">Failed to get rectangle, or the object is invisible/offscreen.</exception>
-		/// <remarks>
-		/// Does not move the mouse.
-		/// Does not wait until the target application finishes processing the message.
-		/// Works not with all objects. When does not work, use MouseClick.
-		/// </remarks>
-		public void VirtualRightClick() {
-			_VirtualClick(true);
-		}
-
-		void _VirtualClick(bool right) {
+		public void VirtualClick(MButton button = MButton.Left) {
 			var w = WndContainer;
 			if (!GetRect(out var r, w)) throw new AuException(0, "*get rectangle");
 			if (r.NoArea || State.HasAny(EState.INVISIBLE | EState.OFFSCREEN)) throw new AuException(0, "Invisible or offscreen");
-			//FUTURE: Chrome bug: OFFSCREEN is not updated after scrolling.
+			//FUTURE: Chrome bug: OFFSCREEN not updated after scrolling.
+
+			MButton mask = MButton.Down | MButton.Up | MButton.DoubleClick, b = button & ~mask, dud = button & mask;
+			if (b == 0) b = MButton.Left;
+			int m = b switch {
+				MButton.Left => Api.WM_LBUTTONDOWN,
+				MButton.Right => Api.WM_RBUTTONDOWN,
+				MButton.Middle => Api.WM_MBUTTONDOWN,
+				_ => throw new ArgumentException("supported buttons: left, right, middle")
+			};
+			if (dud is not (0 or MButton.Down or MButton.Up or MButton.DoubleClick)) throw new ArgumentException();
 
 			nint xy = Math2.MakeLparam(r.CenterX, r.CenterY);
-			int b = 0; if (keys.isCtrl) b |= Api.MK_CONTROL; if (keys.isShift) b |= Api.MK_SHIFT;
-			int b1 = b | (right ? Api.MK_RBUTTON : Api.MK_LBUTTON);
-			w.Post(right ? Api.WM_RBUTTONDOWN : Api.WM_LBUTTONDOWN, b1, xy);
-			w.Post(Api.WM_MOUSEMOVE, b1, xy);
-			w.Post(right ? Api.WM_RBUTTONUP : Api.WM_LBUTTONUP, b, xy);
-			//_MinimalSleep(); //don't need. DoAction does not wait too.
+			nint p = 0; if (keys.isCtrl) p |= Api.MK_CONTROL; if (keys.isShift) p |= Api.MK_SHIFT;
+			nint p1 = p; if (dud != MButton.Up) p1 |= b switch { MButton.Left => Api.MK_LBUTTON, MButton.Right => Api.MK_RBUTTON, _ => Api.MK_MBUTTON };
+			if (dud != MButton.Up) w.Post(m, p1, xy);
+			if (dud != MButton.Down) {
+				w.Post(Api.WM_MOUSEMOVE, p1, xy);
+				w.Post(m + 1, p, xy);
+			}
+			if (dud == MButton.DoubleClick) {
+				w.Post(m + 2, p1, xy);
+				w.Post(m + 1, p, xy);
+			}
+			//_MinimalSleep(); //don't need. Invoke() does not wait too.
 
 			//never mind: support nonclient (WM_NCRBUTTONDOWN etc)
 		}
@@ -422,14 +423,14 @@ namespace Au
 		/// </summary>
 		/// <param name="action">
 		/// Action name. See <see cref="DefaultAction"/>.
-		/// If null (default), performs default action (like <see cref="DoAction"/>) or posts Space key message. More info in Remarks.</param>
+		/// If null (default), performs default action (like <see cref="Invoke"/>) or posts Space key message. More info in Remarks.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// Read more about Java UI elements in <see cref="elm"/> topic.
 		/// 
-		/// Problem: if the action opens a dialog, DoAction/DoJavaAction do not return until the dialog is closed (or fail after some time). The caller then waits and cannot automate the dialog. Also then this process cannot exit until the dialog is closed. If the action parameter is null and the object is focusable, this function tries a workaround: it makes the object (button etc) focused and posts Space key message, which should press the button; then this function does not wait.
+		/// Problem: if the action opens a dialog, Invoke/InvokeJavaAction do not return until the dialog is closed (or fail after some time). The caller then waits and cannot automate the dialog. Also then this process cannot exit until the dialog is closed. If the action parameter is null and the UI element is focusable, this function tries a workaround: it makes the UI element (button etc) focused and posts Space key message, which should press the button; then this function does not wait.
 		/// </remarks>
-		public void DoJavaAction(string action = null) {
+		public void InvokeJavaAction(string action = null) {
 			//problem: if the button click action opens a modal dialog, doAccessibleActions waits until closed.
 			//	Waits 8 s and then returns true. Somehow in QM2 returns false.
 			//	During that time any JAB calls (probably from another thread) are blocked and fail. Tried various combinations.
@@ -460,23 +461,23 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="DoAction"/> or <i>action</i> and waits until window name changes and web page name changes.
+		/// Calls <see cref="Invoke"/> or <i>action</i> and waits until window name changes and web page name changes.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).
 		/// Default 60 seconds.
 		/// </param>
-		/// <param name="action">If used, calls it instead of <see cref="DoAction"/>.</param>
+		/// <param name="action">If used, calls it instead of <see cref="Invoke"/>.</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		/// <exception cref="AuException">Failed. For example, when this object is invalid, or its top-level window does not contain a web page.</exception>
+		/// <exception cref="AuException">Failed. For example, when this UI element is invalid, or its top-level window does not contain a web page.</exception>
 		/// <exception cref="AuWndException">The window was closed while waiting.</exception>
-		/// <exception cref="Exception">Exceptions thrown by <see cref="DoAction"/> or by the <i>action</i> function.</exception>
+		/// <exception cref="Exception">Exceptions thrown by <see cref="Invoke"/> or by the <i>action</i> function.</exception>
 		/// <remarks>
-		/// This function is used to click a link in a web page and wait until current web page is gone. It prevents a following 'wait for object' function from finding a matching object in the old page, which would be bad.
-		/// This function does not wait until the new page is completely loaded. There is no reliable/universal way for it. Instead, after calling it you can call a 'wait for object' function which waits for a known object that must be in the new page.
+		/// This function is used to click a link in a web page and wait until current web page is gone. It prevents a following 'wait for UI element' function from finding a matching UI element in the old page, which would be bad.
+		/// This function does not wait until the new page is completely loaded. There is no reliable/universal way for it. Instead, after calling it you can call a 'wait for UI element' function which waits for a known UI element that must be in the new page.
 		/// This function cannot be used when the new page has the same title as current page. Then it waits until <i>secondsTimeout</i> time or forever. The same if the action does not open a web page.
 		/// </remarks>
-		public bool DoActionAndWaitForNewWebPage(double secondsTimeout = 60, Action<elm> action = null) {
+		public bool InvokeAndWaitForNewWebPage(double secondsTimeout = 60, Action<elm> action = null) {
 			wnd w = WndTopLevel; if (w.Is0) throw new AuException("*get window");
 			elm doc = elm.wait(-1, w, "web:"); if (doc == null) throw new AuException("*find web page");
 
@@ -484,7 +485,7 @@ namespace Au
 			bool wndOK = false, docOK = false;
 			elmFinder f = null;
 
-			if (action == null) DoAction(); else action(this);
+			if (action == null) Invoke(); else action(this);
 
 			//wait until window name and document name both are changed. They can change in any order, especially in Chrome.
 			var to = new wait.Loop(secondsTimeout, new OWait(period: 25));
@@ -515,7 +516,7 @@ namespace Au
 		//However web browsers not always fire the event. For some pages never, or only when not cached.
 		//Also, some pages are like never finish loading (the browser waiting animation does not stop spinning). Or finish when the wanted UI element is there for long time, so why to wait. Or finish, then continue loading again...
 		//Also, this function inevitably will stop working with some new web browser version with new bugs. Too unreliable.
-		public bool DoActionAndWaitForWebPageLoaded(double secondsTimeout = 60, Action<elm> action = null, wnd w = default)
+		public bool InvokeAndWaitForWebPageLoaded(double secondsTimeout = 60, Action<elm> action = null, wnd w = default)
 		{
 			ThrowIfDisposed_();
 
@@ -550,7 +551,7 @@ namespace Au
 				if(ev == EEvent.OBJECT_CREATE && hwnd != w) return; //note: in Chrome hwnd is Chrome_RenderWidgetHostHWND
 				int di = ++debugIndex;
 				using(var a = elm.fromEvent(hwnd, idObject, idChild)) {
-					if(a == null) { /*Debug_.Print("elm.fromEvent null");*/ return; } //often IE, but these are not useful objects
+					if(a == null) { /*Debug_.Print("elm.fromEvent null");*/ return; } //often IE, but these are not useful UI elements
 					if(eventNotify == null) { /*print.it("null 2");*/ return; }
 					if(ev == EEvent.IA2_DOCUMENT_LOAD_COMPLETE) { //Chrome, Firefox
 
@@ -600,7 +601,7 @@ namespace Au
 			var hh = Api.SetWinEventHook(hookEvent, hookEvent, default, hook, 0, tid, 0); if(hh == default) throw new AuException();
 			try {
 				eventNotify = new AutoResetEvent(false);
-				if(action != null) action(this); else DoAction();
+				if(action != null) action(this); else Invoke();
 				if(eventNotify.WaitOne(timeout)) {
 					//Thread.CurrentThread.Join(2000);
 					return true;
@@ -622,8 +623,8 @@ namespace Au
 		/// <exception cref="AuWndException">Failed to activate the window (<see cref="wnd.Activate"/>) or focus the control (<see cref="wnd.Focus"/>).</exception>
 		/// <remarks>
 		/// Uses <msdn>IAccessible.accSelect</msdn>.
-		/// Not all objects support it. Most objects support not all flags. It depends on <see cref="EState"/> FOCUSABLE, SELECTABLE, MULTISELECTABLE, EXTSELECTABLE, DISABLED.
-		/// Many object have bugs, especially with flag TAKEFOCUS. More bugs when the object found with flag <see cref="EFFlags.NotInProc"/>.
+		/// Not all UI elements support it. Most UI elements support not all flags. It depends on <see cref="EState"/> FOCUSABLE, SELECTABLE, MULTISELECTABLE, EXTSELECTABLE, DISABLED.
+		/// Many UI elements have bugs, especially with flag TAKEFOCUS. More bugs when the UI element has been found with flag <see cref="EFFlags.NotInProc"/>.
 		/// </remarks>
 		public void Select(ESelect how = ESelect.TAKESELECTION) {
 			ThrowIfDisposed_();
@@ -645,8 +646,8 @@ namespace Au
 				var hr = Cpp.Cpp_AccSelect(this, how);
 				GC.KeepAlive(this);
 				if (hr == 0) break;
-				if (hr == 1) continue; //some objects return S_FALSE even if did what asked. Eg combobox (focuses the child Edit), slider. Or may need to retry, eg when trying to focus a listitem in a non-focused listbox.
-				if (hr == Api.DISP_E_MEMBERNOTFOUND) throw new AuException("This object does not support this state");
+				if (hr == 1) continue; //some UI elements return S_FALSE even if did what asked. Eg combobox (focuses the child Edit), slider. Or may need to retry, eg when trying to focus a listitem in a non-focused listbox.
+				if (hr == Api.DISP_E_MEMBERNOTFOUND) throw new AuException("This UI element does not support this state");
 				AuException.ThrowIfHresultNegative(hr);
 			}
 
@@ -662,9 +663,9 @@ namespace Au
 			//	Most Windows controls have this bug: activates the control with SetForegroundWindow, which deactivates the top-level window.
 			//		Especially if the control is already focused.
 			//		If not already focused, fails if eg listbox item. But then works well with eg buttons.
-			//		MSDN: If IAccessible::accSelect is called with the SELFLAG_TAKEFOCUS flag on a child object that has an HWND, the flag takes effect only if the object's parent has the focus.
+			//		MSDN: If IAccessible::accSelect is called with the SELFLAG_TAKEFOCUS flag on a child UI element that has an HWND, the flag takes effect only if the UI element's parent has the focus.
 			//		Tested, does not help: LockSetForegroundWindow, AttachThreadInput.
-			//		Good news: works well if the object found inproc, ie without flag NotInproc.
+			//		Good news: works well if the UI element found inproc, ie without flag NotInproc.
 			//			But then need to focus the control, else does not work.
 			//			Use the same workaround. It focuses the control.
 			//	Works well with web browsers, WinForms.
@@ -676,12 +677,12 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Makes this object focused for keyboard input.
+		/// Makes this UI element focused for keyboard input.
 		/// </summary>
 		/// <param name="andSelect">Add flag TAKESELECTION. Note: it is for selecting a list item, not for selecting text in a text box.</param>
 		/// <remarks>
 		/// Calls <see cref="Select"/> with flag TAKEFOCUS and optionally TAKESELECTION.
-		/// Not all objects support this action and not all work correctly. More info in Select documentation.
+		/// Not all UI elements support this action and not all work correctly. More info in Select documentation.
 		/// </remarks>
 		public void Focus(bool andSelect = false) {
 			var how = ESelect.TAKEFOCUS;
@@ -709,7 +710,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets the number of direct child objects.
+		/// Gets the number of direct child UI elements.
 		/// </summary>
 		/// <remarks>
 		/// Uses <msdn>IAccessible.get_accChildCount</msdn>.
@@ -751,7 +752,7 @@ namespace Au
 		/// 
 		/// Normally this function is faster than calling multiple property functions, because it makes single remote procedure call. But not if this UI element was found with flag <see cref="EFFlags.NotInProc"/> etc.
 		/// 
-		/// Returns false if fails, for example when the object's window is closed. Supports <see cref="lastError"/>.
+		/// Returns false if fails, for example when the UI element's window is closed. Supports <see cref="lastError"/>.
 		/// </remarks>
 		public bool GetProperties(string props, out EProperties result) {
 			//SHOULDDO: use cached role. Or not, because now can help to catch bugs where the cached role is incorrect.
@@ -871,7 +872,7 @@ namespace Au
 		/// <param name="outer">If true, gets outer HTML (with tag and attributes), else inner HTML.</param>
 		/// <remarks>
 		/// Returns "" if this is not a HTML element or if failed. Supports <see cref="lastError"/>.
-		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This object must be found without flag NotInProc.
+		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This UI element must be found without flag NotInProc.
 		/// If this is the root of web page (role DOCUMENT or PANE), gets web page body HTML.
 		/// </remarks>
 		public string Html(bool outer) {
@@ -887,7 +888,7 @@ namespace Au
 		/// <param name="name">Attribute name, for example <c>"href"</c>, <c>"id"</c>, <c>"class"</c>. Full, case-sensitive.</param>
 		/// <remarks>
 		/// Returns "" if this is not a HTML element or does not have the specified attribute or failed. Supports <see cref="lastError"/>.
-		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This object must be found without flag NotInProc.
+		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This UI element must be found without flag NotInProc.
 		/// </remarks>
 		/// <exception cref="ArgumentException">name is null/""/invalid.</exception>
 		public string HtmlAttribute(string name) {
@@ -903,7 +904,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Returns empty dictionary if this is not a HTML element or does not have attributes or failed. Supports <see cref="lastError"/>.
-		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This object must be found without flag NotInProc.
+		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This UI element must be found without flag NotInProc.
 		/// </remarks>
 		public Dictionary<string, string> HtmlAttributes() {
 			ThrowIfDisposed_();
@@ -917,11 +918,11 @@ namespace Au
 		/// <summary>
 		/// Scrolls this UI element into view.
 		/// </summary>
-		/// <exception cref="AuException">Failed to scroll, or the object does not support scrolling.</exception>
+		/// <exception cref="AuException">Failed to scroll, or the UI element does not support scrolling.</exception>
 		/// <remarks>
-		/// This function works with these objects:
-		/// - Web page objects in Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, Edge, web browser controls...). With Find use role prefix "web:", "firefox:" or "chrome:", and don't use flag <see cref="EFFlags.NotInProc"/>.
-		/// - Objects standard treeview and listview controls, some other. With <b>Find</b> use flag <see cref="EFFlags.UIA"/>.
+		/// This function works with these UI elements:
+		/// - Web page elements in Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, Edge, web browser controls...). With Find use role prefix "web:", "firefox:" or "chrome:", and don't use flag <see cref="EFFlags.NotInProc"/>.
+		/// - Standard treeview and listview controls, some other. With <b>Find</b> use flag <see cref="EFFlags.UIA"/>.
 		/// </remarks>
 		public void ScrollTo() {
 			ThrowIfDisposed_();

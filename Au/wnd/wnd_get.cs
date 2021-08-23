@@ -550,7 +550,7 @@ namespace Au
 		/// Returns true if activated, false if there is no such window or failed to activate.
 		/// </summary>
 		/// <remarks>
-		/// Uses <see cref="getwnd.nextMain"/>, <see cref="getwnd.LastActiveOwnedOrThis"/>, <see cref="Activate()"/>.
+		/// Uses <see cref="getwnd.nextMain"/>, <see cref="getwnd.LastActiveOwnedOrThis"/>, <see cref="Activate"/>.
 		/// An alternative way - send Alt+Tab keys, but it works not everywhere.
 		/// </remarks>
 		public static bool switchActiveWindow() {

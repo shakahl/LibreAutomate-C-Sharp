@@ -19,16 +19,17 @@ namespace Au
 {
 	public partial struct wnd
 	{
+#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		/// <summary>
 		/// Waits until window exists, is visible (optionally) and active (optionally).
-		/// Returns window handle. On timeout returns default(wnd) if <i>secondsTimeout</i> is negative; else exception.
-		/// Parameters etc are the same as <see cref="find"/>.
 		/// </summary>
+		/// <returns>Window handle. On timeout returns default(wnd) if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="active">The window must be the active window (<see cref="active"/>), and not minimized.</param>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="find"/>.</exception>
+		/// <exception cref="ArgumentException" />
 		/// <remarks>
+		/// Parameters etc are the same as <see cref="find"/>.
 		/// By default ignores invisible and cloaked windows. Use flags if need.
 		/// If you have a window's wnd variable, to wait until it is active/visible/etc use <see cref="WaitForCondition"/> instead.
 		/// </remarks>
@@ -49,13 +50,12 @@ namespace Au
 		/// f.ShowDialog();
 		/// ]]></code>
 		/// </example>
+		/// <inheritdoc cref="find"/>
 		public static wnd wait(double secondsTimeout, bool active,
-#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 			[ParamString(PSFormat.wildex)] string name = null,
 			[ParamString(PSFormat.wildex)] string cn = null,
 			[ParamString(PSFormat.wildex)] WOwner of = default,
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default)
-#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		{
 			var f = new wndFinder(name, cn, of, flags, also, contains);
 			var to = new wait.Loop(secondsTimeout);
@@ -69,15 +69,16 @@ namespace Au
 				if (!to.Sleep()) return default;
 			}
 		}
+#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		//SHOULDDO: if wait for active, also wait until released mouse buttons.
 
 		/// <summary>
 		/// Waits until any of specified windows exists, is visible (optionally) and active (optionally).
-		/// Returns 1-based index and window handle. On timeout returns <c>(0, default(wnd))</c> if <i>secondsTimeout</i> is negative; else exception.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="active">The window must be the active window (<see cref="active"/>), and not minimized.</param>
 		/// <param name="windows">One or more variables containing window properties. Can be strings, see <see cref="wndFinder.op_Implicit(string)"/>.</param>
+		/// <returns>1-based index and window handle. On timeout returns <c>(0, default(wnd))</c> if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>
 		/// By default ignores invisible and cloaked windows. Use <b>wndFinder</b> flags if need.
@@ -111,30 +112,30 @@ namespace Au
 		}
 
 		//rejected. Not useful. Use the non-static WaitForClosed.
+		//#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		//		/// <summary>
 		//		/// Waits until window does not exist.
-		//		/// Parameters etc are the same as <see cref="Find"/>.
 		//		/// </summary>
 		//		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		//		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		//		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		//		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		//		/// <remarks>
+		//		/// Parameters etc are the same as <see cref="Find"/>.
 		//		/// By default ignores invisible and cloaked windows. Use flags if need.
 		//		/// If you have a window's wnd variable, to wait until it is closed use <see cref="WaitForClosed"/> instead.
 		//		/// Examples: <see cref="Wait"/>.
 		//		/// </remarks>
 		//		public static bool waitNot(double secondsTimeout,
-		//#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		//			[ParamString(PSFormat.wildex)] string name = null,
 		//			[ParamString(PSFormat.wildex)] string cn = null,
 		//			[ParamString(PSFormat.wildex)] WOwner of = default,
 		//			WFlags flags = 0, Func<wnd, bool> also = null, WContents contains = default)
-		//#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		//		{
 		//			var f = new wndFinder(name, cn, of, flags, also, contains);
 		//			return WaitNot(secondsTimeout, out _, f);
 		//		}
+		//#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
 		//		/// <summary>
 		//		/// Waits until window does not exist.

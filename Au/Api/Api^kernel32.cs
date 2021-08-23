@@ -203,7 +203,7 @@ namespace Au.Types
 		/// </summary>
 		[SkipLocalsInit]
 		internal static bool GetFullPathName(string s, out string r) {
-			using FastBuffer<char> b = new(null);
+			using FastBuffer<char> b = new();
 			for (; ; ) if (b.GetString(_GetFullPathName(s, b.n, b.p, null), out r, 0, s)) return (object)r != s;
 		}
 
@@ -217,7 +217,7 @@ namespace Au.Types
 		/// </summary>
 		[SkipLocalsInit]
 		internal static bool GetLongPathName(string s, out string r) {
-			using FastBuffer<char> b = new(null);
+			using FastBuffer<char> b = new();
 			for (; ; ) if (b.GetString(_GetLongPathName(s, b.p, b.n), out r, 0, s)) return (object)r != s;
 		}
 
@@ -291,7 +291,7 @@ namespace Au.Types
 		/// <param name="lpExtension">null or extension like ".ext" to add if lpFileName is without extension.</param>
 		[SkipLocalsInit]
 		internal static string SearchPath(string lpPath, string lpFileName, string lpExtension = null) {
-			using FastBuffer<char> b = new(null);
+			using FastBuffer<char> b = new();
 			for (; ; ) if (b.GetString(_SearchPath(lpPath, lpFileName, lpExtension, b.n, b.p, null), out var s)) return s;
 		}
 
@@ -567,7 +567,7 @@ namespace Au.Types
 		/// <param name="name">Case-insensitive name. Without %.</param>
 		[SkipLocalsInit]
 		internal static string GetEnvironmentVariable(string name) {
-			using FastBuffer<char> b = new(null);
+			using FastBuffer<char> b = new();
 			for (; ; ) if (b.GetString(_GetEnvironmentVariable(name, b.p, b.n), out var s)) return s;
 		}
 
@@ -589,7 +589,7 @@ namespace Au.Types
 		/// </summary>
 		[SkipLocalsInit]
 		internal static bool ExpandEnvironmentStrings(string s, out string r) {
-			using FastBuffer<char> b = new(null);
+			using FastBuffer<char> b = new();
 			for (; ; ) if (b.GetString(_ExpandEnvironmentStrings(s, b.p, b.n), out r, BSFlags.ReturnsLengthWith0, s)) return (object)r != s;
 		}
 

@@ -20,7 +20,7 @@ namespace Au
 	public unsafe partial struct wnd
 	{
 		/// <summary>
-		/// Finds a child control and returns its handle as wnd.
+		/// Finds a child control and returns its handle as <see cref="wnd"/>.
 		/// </summary>
 		/// <returns>Returns <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="operator +(wnd)"/>.</returns>
 		/// <param name="name">
@@ -62,10 +62,36 @@ namespace Au
 		public wnd Child(
 			[ParamString(PSFormat.wildex)] string name = null,
 			[ParamString(PSFormat.wildex)] string cn = null,
-			WCFlags flags = 0, Func<wnd, bool> also = null, int skip = 0) {
+			WCFlags flags = 0, Func<wnd, bool> also = null, int skip = 0
+			) {
 			//ThrowIfInvalid(); //will be called later
 			var f = new wndChildFinder(name, cn, flags, also, skip);
 			f.Find(this);
+			return f.Result;
+		}
+
+		/// <summary>
+		/// Finds a child control and returns its handle as <see cref="wnd"/>. Can wait and throw <b>NotFoundException</b>.
+		/// </summary>
+		/// <returns>Child control handle. If not found, throws exception or returns <c>default(wnd)</c> (if <i>waitS</i> negative).</returns>
+		/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
+		/// <param name="name"></param>
+		/// <param name="cn"></param>
+		/// <param name="flags"></param>
+		/// <param name="also"></param>
+		/// <param name="skip"></param>
+		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc). Or closed while waiting.</exception>
+		/// <exception cref="ArgumentException" />
+		/// <exception cref="NotFoundException" />
+		public wnd Child(
+			double waitS,
+			[ParamString(PSFormat.wildex)] string name = null,
+			[ParamString(PSFormat.wildex)] string cn = null,
+			WCFlags flags = 0, Func<wnd, bool> also = null, int skip = 0
+			) {
+			//ThrowIfInvalid(); //will be called later
+			var f = new wndChildFinder(name, cn, flags, also, skip);
+			f.Find(this, waitS);
 			return f.Result;
 		}
 
@@ -131,17 +157,17 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds a child control by its id and returns its handle as wnd.
+		/// Finds a child control by its id and returns its handle as <see cref="wnd"/>.
 		/// </summary>
-		/// <returns>Returns <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="operator +(wnd)"/>.</returns>
+		/// <returns>Child control handle, or <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="operator +(wnd)"/>.</returns>
 		/// <param name="id">Control id.</param>
 		/// <param name="flags">This function supports flags DirectChild and HiddenToo. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="Child"/>.</param>
+		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 		/// <remarks>
 		/// To create code for this function, use dialog "Find window or control".
 		/// 
 		/// Not all controls have a useful id. If control id is not unique or is different in each window instance, this function is not useful.
 		/// </remarks>
-		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 		public wnd ChildById(int id, WCFlags flags = 0) {
 			ThrowIfInvalid();
 			if (flags.Has(WCFlags.DirectChild | WCFlags.HiddenToo)) return Api.GetDlgItem(this, id); //fast
@@ -160,6 +186,26 @@ namespace Au
 			return d.cVisible.Is0 ? d.cHidden : d.cVisible;
 		}
 
+		/// <summary>
+		/// Finds a child control by its id and returns its handle as <see cref="wnd"/>. Can wait and throw <b>NotFoundException</b>.
+		/// </summary>
+		/// <returns>Child control handle. If not found, throws exception or returns <c>default(wnd)</c> (if <i>waitS</i> negative).</returns>
+		/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
+		/// <param name="id"></param>
+		/// <param name="flags"></param>
+		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc). Or closed while waiting.</exception>
+		/// <exception cref="NotFoundException" />
+		public wnd ChildById(double waitS, int id, WCFlags flags = 0) {
+			wnd r;
+			if (waitS == 0) {
+				r = ChildById(id, flags);
+			} else {
+				var to = new wait.Loop(waitS < 0 ? waitS : -waitS);
+				do { r = ChildById(id, flags); if (!r.Is0) break; } while (to.Sleep());
+			}
+			return !r.Is0 || waitS < 0 ? r : throw new NotFoundException();
+		}
+
 		struct _KidEnumData
 		{
 			public wnd wThis, cVisible, cHidden;
@@ -169,9 +215,9 @@ namespace Au
 
 		/// <summary>
 		/// Finds all matching child controls.
-		/// Returns List containing 0 or more control handles as wnd.
 		/// Everything except the return type is the same as with <see cref="Child"/>.
 		/// </summary>
+		/// <returns>List containing 0 or more control handles as <see cref="wnd"/>.</returns>
 		/// <exception cref="AuWndException"/>
 		/// <exception cref="ArgumentException"/>
 		/// <remarks>
@@ -188,9 +234,9 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds a direct child control and returns its handle as wnd.
+		/// Finds a direct child control and returns its handle as <see cref="wnd"/>.
 		/// </summary>
-		/// <returns>Returns <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="operator +(wnd)"/>. Supports <see cref="lastError"/>.</returns>
+		/// <returns>Child control handle, or <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="operator +(wnd)"/>. Supports <see cref="lastError"/>.</returns>
 		/// <param name="name">
 		/// Name.
 		/// Full, case-insensitive. Wildcard etc not supported.
@@ -281,8 +327,8 @@ namespace Au
 		/// Calls <see cref="WButton.Click(bool)"/>.
 		/// </summary>
 		/// <param name="buttonId">Control id of the button. This function calls <see cref="ChildById"/> to find the button.</param>
-		/// <param name="useElm">Use <see cref="elm.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
-		/// <exception cref="NotFoundException">Button not found.</exception>
+		/// <param name="useElm">Use <see cref="elm.Invoke"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
+		/// <exception cref="NotFoundException" />
 		/// <exception cref="Exception">Exceptions of <see cref="ChildById"/> and <see cref="WButton.Click(bool)"/>.</exception>
 		/// <example>
 		/// <code><![CDATA[
@@ -301,8 +347,8 @@ namespace Au
 		/// </summary>
 		/// <param name="buttonName">Button name. This function calls <see cref="Child"/> to find the button.</param>
 		/// <param name="cn">Button class name to pass to <see cref="Child"/>.</param>
-		/// <param name="useElm">Use <see cref="elm.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
-		/// <exception cref="NotFoundException">Button not found.</exception>
+		/// <param name="useElm">Use <see cref="elm.Invoke"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
+		/// <exception cref="NotFoundException" />
 		/// <exception cref="Exception">Exceptions of <see cref="Child"/> and <see cref="WButton.Click(bool)"/>.</exception>
 		/// <example>
 		/// <code><![CDATA[
@@ -319,7 +365,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Posts a "menu item clicked" notification (<msdn>WM_COMMAND</msdn>) as if that menu item was clicked. Does not use the mouse.
+		/// Posts a "menu item clicked" notification (<msdn>WM_COMMAND</msdn>) as if that menu item has been clicked. Does not use the mouse.
 		/// </summary>
 		/// <param name="itemId">Menu item id. Must be in range 1 to 0xffff.</param>
 		/// <param name="systemMenu">The menu item is in the title bar's context menu, not in the menu bar. Posts <msdn>WM_SYSCOMMAND</msdn> instead.</param>
@@ -410,7 +456,7 @@ namespace Au.Types
 		/// <summary>
 		/// Sends a "click" message to this button control. Does not use the mouse.
 		/// </summary>
-		/// <param name="useElm">Use <see cref="elm.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
+		/// <param name="useElm">Use <see cref="elm.Invoke"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
 		/// <exception cref="AuWndException">This window is invalid.</exception>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
@@ -426,7 +472,7 @@ namespace Au.Types
 			W.ThrowIfInvalid();
 			if (useElm) {
 				using var e = elm.fromWindow(W, EObjid.CLIENT); //throws if failed
-				e.DoAction();
+				e.Invoke();
 			} else {
 				_PostBmClick(); //async if other thread, because may show a dialog.
 			}
@@ -462,7 +508,7 @@ namespace Au.Types
 		/// Sets checkbox state. Does not use the mouse.
 		/// </summary>
 		/// <param name="state">0 unchecked, 1 checked, 2 indeterminate.</param>
-		/// <param name="useElm">Use <see cref="elm.DoAction"/>. If false (default), posts <msdn>BM_SETCHECK</msdn> message and also BN_CLICKED notification to the parent window; if that is not possible, instead uses <msdn>BM_CLICK</msdn> message.</param>
+		/// <param name="useElm">Use <see cref="elm.Invoke"/>. If false (default), posts <msdn>BM_SETCHECK</msdn> message and also BN_CLICKED notification to the parent window; if that is not possible, instead uses <msdn>BM_CLICK</msdn> message.</param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid state.</exception>
 		/// <exception cref="AuWndException">This window is invalid.</exception>
 		/// <exception cref="AuException">Failed.</exception>
@@ -479,7 +525,7 @@ namespace Au.Types
 				using var e = elm.fromWindow(W, EObjid.CLIENT); //throws if failed
 				int k = _GetElmCheckState(e);
 				if (k == state) return;
-				if (useElm) e.DoAction(); else _PostBmClick();
+				if (useElm) e.Invoke(); else _PostBmClick();
 				bool clickAgain = false;
 				switch (state) {
 				case 0:
@@ -497,7 +543,7 @@ namespace Au.Types
 					break;
 				}
 				if (clickAgain) {
-					if (useElm) e.DoAction(); else _PostBmClick();
+					if (useElm) e.Invoke(); else _PostBmClick();
 				}
 			} else {
 				if (state == W.Send(BM_GETCHECK)) return;

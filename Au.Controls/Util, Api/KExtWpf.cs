@@ -187,7 +187,11 @@ namespace Au.Tools
 		/// <param name="b"></param>
 		/// <param name="name">Checkbox text.</param>
 		/// <param name="text">Textbox text.</param>
-		public static KCheckTextBox xAddCheckText(this wpfBuilder b, string name, string text = null) => new(xAddCheck(b, name), xAddText(b, text));
+		/// <param name="check">Checkbox state.</param>
+		public static KCheckTextBox xAddCheckText(this wpfBuilder b, string name, string text = null, bool check = false) {
+			var c = xAddCheck(b, name); if (check) b.Checked();
+			return new(c, xAddText(b, text));
+		}
 
 		/// <summary>
 		/// Adds KCheckBox (<see cref="xAddCheck"/>) and multiline TextBox (<see cref="xAddText"/>) in a propertygrid row.
@@ -197,8 +201,9 @@ namespace Au.Tools
 		/// <param name="b"></param>
 		/// <param name="name">Checkbox text.</param>
 		/// <param name="text">Textbox text.</param>
-		public static KCheckTextBox xAddCheckTextDropdown(this wpfBuilder b, string name, string text = null) {
-			var c = xAddCheck(b, name);
+		/// <param name="check">Checkbox state.</param>
+		public static KCheckTextBox xAddCheckTextDropdown(this wpfBuilder b, string name, string text = null, bool check = false) {
+			var c = xAddCheck(b, name); if (check) b.Checked();
 			var t = xAddText(b, text);
 			b.And(14).Add(out Button k, "▾").Padding(new Thickness(0)).Border(); //tested: ok on Win7
 			k.Width += 4;
@@ -223,9 +228,11 @@ namespace Au.Tools
 		/// <summary>
 		/// Adds any control that can be used in a propertygrid row.
 		/// </summary>
-		public static void xAddOther<T>(this wpfBuilder b, out T other, string text = null) where T : FrameworkElement, new() {
+		public static wpfBuilder xAddOther<T>(this wpfBuilder b, out T other, string text = null, string label = null) where T : FrameworkElement, new() {
+			if (label != null) b.xAddOther(out TextBlock _, label);
 			b.Add(out other, text);
 			_xSetOther(b, other);
+			return b;
 		}
 
 		static void _xSetOther(wpfBuilder b, FrameworkElement e) {

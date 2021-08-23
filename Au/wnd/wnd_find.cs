@@ -22,7 +22,7 @@ namespace Au
 		/// <summary>
 		/// Finds a top-level window and returns its handle as <b>wnd</b>.
 		/// </summary>
-		/// <returns>Returns <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="operator +(wnd)"/>.</returns>
+		/// <returns>Window handle, or <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="operator +(wnd)"/>.</returns>
 		/// <param name="name">
 		/// Window name. Usually it is the title bar text.
 		/// String format: [](xref:wildcard_expression).
@@ -54,6 +54,11 @@ namespace Au
 		/// - Child control: <see cref="wndChildFinder"/> or string like <c>"c 'cn' name"</c> or <c>"c '' name"</c> or <c>"c 'cn'"</c>.
 		/// - Image(s) or color(s): <see cref="uiimageFinder"/> or string <c>"image:..."</c> (uses <see cref="uiimage.find"/> with flag <see cref="IFFlags.WindowDC"/>).
 		/// </param>
+		/// <exception cref="ArgumentException">
+		/// - <i>cn</i> is "". To match any, use null.
+		/// - <i>of</i> is "" or 0 or contains character \ or /. To match any, use null.
+		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
+		/// </exception>
 		/// <remarks>
 		/// To create code for this function, use dialog "Find window or control".
 		/// 
@@ -63,11 +68,6 @@ namespace Au
 		/// 
 		/// To find message-only windows use <see cref="findFast"/> instead.
 		/// </remarks>
-		/// <exception cref="ArgumentException">
-		/// - <i>cn</i> is "". To match any, use null.
-		/// - <i>of</i> is "" or 0 or contains character \ or /. To match any, use null.
-		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
-		/// </exception>
 		/// <example>
 		/// Try to find Notepad window. Return if not found.
 		/// <code>
@@ -76,20 +76,62 @@ namespace Au
 		/// </code>
 		/// Try to find Notepad window. Throw NotFoundException if not found.
 		/// <code>
-		/// wnd w1 = +wnd.find("* Notepad");
+		/// wnd w1 = wnd.find(0, "* Notepad");
+		/// //wnd w1 = +wnd.find("* Notepad"); //the same
+		/// </code>
+		/// Wait for Notepad window max 3 seconds. Throw NotFoundException if not found during that time.
+		/// <code>
+		/// wnd w1 = wnd.find(3, "* Notepad");
+		/// </code>
+		/// Wait for Notepad window max 3 seconds. Return if not found during that time.
+		/// <code>
+		/// wnd w1 = wnd.find(-3, "* Notepad");
+		/// if(w.Is0) { print.it("not found"); return; }
+		/// </code>
+		/// Wait for Notepad window max 3 seconds. Throw NotFoundException if not found during that time. When found, wait max 1 s until becomes active, then activate.
+		/// <code>
+		/// wnd w1 = wnd.find(3, "* Notepad").Activate(1);
 		/// </code>
 		/// </example>
-		[MethodImpl(MethodImplOptions.NoInlining)] //inlined code makes harder to debug using disassembly
 		public static wnd find(
 			[ParamString(PSFormat.wildex)] string name = null,
 			[ParamString(PSFormat.wildex)] string cn = null,
 			[ParamString(PSFormat.wildex)] WOwner of = default,
-			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default) {
+			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default
+			) {
 			var f = new wndFinder(name, cn, of, flags, also, contains);
 			f.Find();
 			//LastFind = f;
 			return f.Result;
 		}
+
+		//note: <inheritdoc cref="find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)"/> does not work, even if specified for each parameter.
+		//	Our editor's CiSignature._FormatText extracts undocumented parameter doc from the documented overload.
+		//	In DocFX it's empty and it's good, don't need to repeat same info.
+		//	Never mind VS.
+
+#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+		/// <summary>
+		/// Finds a top-level window and returns its handle as <b>wnd</b>. Can wait and throw <b>NotFoundException</b>.
+		/// </summary>
+		/// <returns>Window handle. If not found, throws exception or returns <c>default(wnd)</c> (if <i>waitS</i> negative).</returns>
+		/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
+		/// <exception cref="NotFoundException" />
+		/// <exception cref="ArgumentException" />
+		/// <inheritdoc cref="find"/>
+		public static wnd find(
+			double waitS,
+			[ParamString(PSFormat.wildex)] string name = null,
+			[ParamString(PSFormat.wildex)] string cn = null,
+			[ParamString(PSFormat.wildex)] WOwner of = default,
+			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default
+			) {
+			var f = new wndFinder(name, cn, of, flags, also, contains);
+			f.Find(waitS);
+			//LastFind = f;
+			return f.Result;
+		}
+#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
 		//rejected: probably most users will not understand/use it. It's easy and more clear to create and use wndFinder instances.
 		///// <summary>

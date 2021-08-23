@@ -42,6 +42,7 @@ namespace Au.Controls
 
 				var f = new TUtil.WindowFindCodeFormatter {
 					Throw = true,
+					waitW = "1",
 					VarWindow = wndVar,
 					VarControl = conVar,
 				};

@@ -30,6 +30,8 @@ using System.Windows.Input;
 //	Noticed with all kinds of WPF windows and popups, not only created with wpfBuilder. Noticed in other WPF apps too, usually black parts.
 //	Maybe set timer that invalidates window.
 
+//never mind: on Win7 text of all WPF checkboxes too low by 1 pixel. Not only of wpfBuilder.
+
 namespace Au
 {
 	/// <summary>

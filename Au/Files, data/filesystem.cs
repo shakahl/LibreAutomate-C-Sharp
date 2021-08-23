@@ -1185,22 +1185,26 @@ namespace Au
 
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		/// <summary>
-		/// Writes text to a file in a safe way, using <see cref="File.WriteAllText"/>.
-		/// More info: <see cref="save"/>.
+		/// Writes text to a file in a safe way (like <see cref="save"/>), using <see cref="File.WriteAllText"/>.
 		/// </summary>
 		/// <param name="text">Text to write.</param>
 		/// <param name="encoding">Text encoding in file. Default is UTF-8 without BOM.</param>
-		/// <exception cref="Exception">Exceptions of <see cref="save"/>.</exception>
+		/// <exception cref="ArgumentException" />
+		/// <exception cref="Exception" />
+		/// <exception cref="IOException" />
+		/// <inheritdoc cref="save"/>
 		public static void saveText(string file, string text, bool backup = false, string tempDirectory = null, int lockedWaitMS = 2000, Encoding encoding = null) {
 			_Save(file, text ?? "", backup, tempDirectory, lockedWaitMS, encoding);
 		}
 
 		/// <summary>
-		/// Writes data to a file in a safe way, using <see cref="File.WriteAllBytes"/>.
-		/// More info: <see cref="save"/>.
+		/// Writes data to a file in a safe way (like <see cref="save"/>), using <see cref="File.WriteAllBytes"/>.
 		/// </summary>
 		/// <param name="bytes">Data to write.</param>
-		/// <exception cref="Exception">Exceptions of <see cref="save"/>.</exception>
+		/// <exception cref="ArgumentException" />
+		/// <exception cref="Exception" />
+		/// <exception cref="IOException" />
+		/// <inheritdoc cref="save"/>
 		public static void saveBytes(string file, byte[] bytes, bool backup = false, string tempDirectory = null, int lockedWaitMS = 2000) {
 			_Save(file, bytes ?? throw new ArgumentNullException(), backup, tempDirectory, lockedWaitMS);
 		}

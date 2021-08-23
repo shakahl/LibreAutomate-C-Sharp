@@ -61,48 +61,48 @@ namespace Au
 		/// <summary>
 		/// Starts executing a script. Does not wait.
 		/// </summary>
+		/// <param name="script">Script name like "Script5.cs", or path like @"\Folder\Script5.cs".</param>
+		/// <param name="args">Command line arguments. In script it will be variable <i>args</i>. Should not contain '\0' characters.</param>
 		/// <returns>
 		/// Native process id of the task process.
 		/// Returns 0 if role editorExtension; then waits until the task ends.
 		/// Returns 0 if task start is deferred because the script is running (ifRunning wait/wait_restart).
 		/// Returns -1 if failed, for example if the script contains errors or cannot run second task instance.
 		/// </returns>
-		/// <param name="script">Script name like "Script5.cs", or path like @"\Folder\Script5.cs".</param>
-		/// <param name="args">Command line arguments. In script it will be variable <i>args</i>. Should not contain '\0' characters.</param>
 		/// <exception cref="FileNotFoundException">Script file not found.</exception>
 		public static int run(string script, params string[] args)
 			=> _Run(0, script, args, out _);
 
 		/// <summary>
 		/// Starts executing a script and waits until the task ends.
-		/// More info: <see cref="run"/>.
 		/// </summary>
 		/// <returns>The exit code of the task process. See <see cref="Environment.ExitCode"/>.</returns>
 		/// <exception cref="FileNotFoundException">Script file not found.</exception>
 		/// <exception cref="AuException">Failed to start script task, for example if the script contains errors or cannot start second task instance.</exception>
+		/// <inheritdoc cref="run"/>
 		public static int runWait(string script, params string[] args)
 			=> _Run(1, script, args, out _);
 
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		/// <summary>
 		/// Starts executing a script, waits until the task ends and then gets <see cref="writeResult"/> text.
-		/// More info: <see cref="run"/>.
 		/// </summary>
 		/// <param name="results">Receives <see cref="writeResult"/> text.</param>
 		/// <returns>The exit code of the task process. See <see cref="Environment.ExitCode"/>.</returns>
 		/// <exception cref="FileNotFoundException">Script file not found.</exception>
 		/// <exception cref="AuException">Failed to start script task, for example if the script contains errors or cannot start second task instance.</exception>
+		/// <inheritdoc cref="run"/>
 		public static int runWait(out string results, string script, params string[] args)
 			=> _Run(3, script, args, out results);
 
 		/// <summary>
 		/// Starts executing a script, waits until the task ends and gets <see cref="writeResult"/> text in real time.
-		/// More info: <see cref="run"/>.
 		/// </summary>
 		/// <param name="results">Receives <see cref="writeResult"/> output whenever the task calls it.</param>
 		/// <returns>The exit code of the task process. See <see cref="Environment.ExitCode"/>.</returns>
 		/// <exception cref="FileNotFoundException">Script file not found.</exception>
 		/// <exception cref="AuException">Failed to start script task.</exception>
+		/// <inheritdoc cref="run"/>
 		public static int runWait(Action<string> results, string script, params string[] args)
 			=> _Run(3, script, args, out _, results);
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)

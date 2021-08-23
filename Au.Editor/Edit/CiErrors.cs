@@ -49,7 +49,7 @@ class CiErrors
 				//if (ec == ErrorCode.ERR_NamespaceUnexpected) continue;
 				if (ec == ErrorCode.ERR_NamespaceUnexpected) {
 					//If unknown name, convert to ERR_NameNotInContext. Then on mouse hover will display tooltip with links to add using directive etc.
-					var d2 = cd.document.WithText(SourceText.From(code.Insert(end, ";"), Encoding.UTF8));
+					var d2 = cd.document.WithText(SourceText.From(code.Insert(end, ";")));
 					var m2 = d2.GetSemanticModelAsync().Result;
 					//print.it(m2.GetDiagnostics(span));
 					d = m2.GetDiagnostics(span).FirstOrDefault(o => (ErrorCode)o.Code == ErrorCode.ERR_NameNotInContext);
@@ -307,7 +307,7 @@ class CiErrors
 							}
 							var its = nt as INamedTypeSymbol;
 							if (v.isGeneric && !its.IsGenericType) continue;
-							if (_AddNamespace(nt)) nTypes--;
+							if (v.found = _AddNamespace(nt)) nTypes--;
 							if (nTypes == 0) break;
 						}
 					}
@@ -320,7 +320,7 @@ class CiErrors
 									if (v.found || !v.isEM) continue;
 									if (m.Name == v.name && m.IsExtensionMethod) {
 										if (null == m.ReduceExtensionMethod(v.emReceiverType)) { /*Debug_.Print(emReceiverType);*/ continue; }
-										if (_AddNamespace(m)) nEM--;
+										if (v.found = _AddNamespace(m)) nEM--;
 									}
 									if (nEM == 0) break;
 								}

@@ -1198,12 +1198,14 @@ namespace Au.Types
 		/// Returns the result string.
 		/// </summary>
 		/// <param name="t">This string.</param>
-		/// <param name="startIndex">Offset in this string.</param>
-		/// <param name="count">Count of characters to replace.</param>
+		/// <param name="startIndex">Offset in this string. Can be from end, like <c>^1</c>.</param>
+		/// <param name="count">Count of characters to replace. If 0, just inserts <i>s</i>.</param>
 		/// <param name="s">The replacement string.</param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i> or <i>count</i>.</exception>
-		public static string ReplaceAt(this string t, int startIndex, int count, string s) {
-			return string.Concat(t.AsSpan(0, startIndex), s, t.AsSpan(startIndex + count));
+		public static string ReplaceAt(this string t, Index startIndex, int count, string s) {
+			int i = startIndex.GetOffset(t.Length);
+			if (count == 0) return t.Insert(i, s);
+			return string.Concat(t.AsSpan(0, i), s, t.AsSpan(i + count));
 		}
 
 		//rejected. Use [..^count].
@@ -1545,8 +1547,7 @@ namespace Au.Types
 		public static int IndexOf(this RStr t, Range range, char c) {
 			int i = t[range].IndexOf(c);
 			if (i < 0) return i;
-			int start = range.Start.Value; if (range.Start.IsFromEnd) start = t.Length - start;
-			return i + start;
+			return i + range.Start.GetOffset(t.Length);
 		}
 
 		/// <summary>
@@ -1571,8 +1572,7 @@ namespace Au.Types
 			if (s == default) throw new ArgumentNullException();
 			int i = t[range].IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 			if (i < 0) return i;
-			int start = range.Start.Value; if (range.Start.IsFromEnd) start = t.Length - start;
-			return i + start;
+			return i + range.Start.GetOffset(t.Length);
 		}
 
 		/// <summary>

@@ -205,6 +205,7 @@ class UacDragDrop
 			_w = WndUtil.CreateWindow("Au.Editor.DD", null, WS.POPUP | WS.DISABLED, WSE.LAYERED | WSE.NOACTIVATE | WSE.TOOLWINDOW | WSE.TOPMOST);
 			Api.SetLayeredWindowAttributes(_w, 0, 1, 2);
 
+			Thread.CurrentThread.TrySetApartmentState(ApartmentState.Unknown); //uninit MTA
 			Api.OleInitialize(default);
 			Api.RegisterDragDrop(_w, _dt = new _DropTarget());
 			_msgWnd.Send(Api.WM_USER, 10, (nint)_w);

@@ -186,8 +186,8 @@ namespace Au.Compiler
 		/// <summary>
 		/// Gets or sets default meta option 'noWarnings' value. Initially null.
 		/// </summary>
-		public static List<string> DefaultNoWarnings { get; set; } = new() { "CS1701", "CS1702" };
-		//CS1702: eg Core 3.1 System.Drawing.Common references System.Runtime version of Core 3.0; VS does not show this warning; VS adds 1701,1702 to default project properties.
+		public static List<string> DefaultNoWarnings { get; set; } //= new() { "CS1701", "CS1702" };
+		//CS1702: eg Core 3.1 System.Drawing.Common references System.Runtime version of Core 3.0; VS does not show this warning; VS used to add 1701,1702 to default project properties.
 
 		/// <summary>
 		/// Meta 'testInternal'.
@@ -775,7 +775,7 @@ namespace Au.Compiler
 			//	r = r.WithTopLevelBinderFlags(BinderFlags.IgnoreAccessibility);
 			//}
 			//But if using this code, code info has problems. Completion list contains internal/protected from all assemblies, and difficult to filter out. No signature info.
-			//We instead modify Roslyn code in 2 places. Look in project CompilerDlls here. Also add class Au.Compiler.InternalsVisible and use it in CodeInfo._CreateSolution and Compiler._Compile.
+			//We instead modify Roslyn code in 2 places. Look in project CompilerDlls here. Also add class Au.Compiler.InternalsVisible and use it in CodeInfo._CreateWorkspace and Compiler._Compile.
 
 			//When in editor, we need to add default usings for intellisense.
 			//	CSharpCompilationOptions ctor has parameter 'usings', but it is ignored if not script.

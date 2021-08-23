@@ -28,7 +28,7 @@ namespace Au
 	/// 
 	/// To create <b>screen</b> variables use static functions (like <c>screen.index(1)</c> or <c>screen.primary</c>) or constructors (like <c>new screen(()=>screen.index(1))</c>). Then call non-static functions to get screen properties.
 	/// 
-	/// A screen handle cannot be reliably used for a long time. Screen handles may change when changing the configuration of multiple screens. Consider a "lazy" variable, ie with callback function <see cref="LazyFunc"/>. Then, whenever a function needs a screen handle, it calls the callback function which returns <b>screen</b> with fresh handle.
+	/// A screen handle cannot be reliably used for a long time. Screen handles may change when changing the configuration of multiple screens. Consider a "lazy" variable, ie with callback function <see cref="LazyFunc"/>. Then, whenever a function needs a screen handle, it calls the callback function which returns a <b>screen</b> with fresh handle.
 	/// </remarks>
 	public struct screen : IEquatable<screen>
 	{
@@ -259,6 +259,8 @@ namespace Au
 		//	Then index functions are faster, but less reliable when changing display settings, because the array is updated with a delay.
 		//	Now index functions are fast enough. Faster than EnumWindows which is used much more often.
 
+		//At first there was an implicit conversion from int that called index()? I don't remember why removed, but probably for a good reason.
+
 		/// <summary>
 		/// Gets index of this screen in the <see cref="all"/> array.
 		/// </summary>
@@ -344,6 +346,9 @@ namespace Au
 
 		///
 		public override int GetHashCode() => (int)_Handle();
+
+		///
+		public override bool Equals(object obj) => obj is screen && Equals((screen)obj);
 
 		///
 		public bool Equals(screen other) => other._Handle() == _Handle();
