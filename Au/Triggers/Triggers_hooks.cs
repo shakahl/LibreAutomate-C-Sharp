@@ -1,19 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
 //Key/mouse/autotext triggers use low-level keyboard and mouse hooks. The hooks are in a separate thread, because:
 //	1. Safer when user code is slow or incorrect.
 //	2. Works well with COM. In LL hook procedure some COM functions fail, eg elm.find with some windows.
@@ -57,41 +41,38 @@ namespace Au.Triggers
 		MouseTriggers.EdgeMoveDetector_ _emDetector;
 		Handle_ _eventStartStop = Api.CreateEvent(false);
 
-		public HooksThread(UsedEvents usedEvents, wnd wMsg)
-		{
+		public HooksThread(UsedEvents usedEvents, wnd wMsg) {
 			_usedEvents = usedEvents;
 			_wMsg = wMsg;
 			run.thread(_Thread, sta: false); //important: not STA, because we use lock, which dispatches sent messages if STA
 			Api.WaitForSingleObject(_eventStartStop, -1);
 		}
 
-		public void Dispose()
-		{
+		public void Dispose() {
 			Api.PostThreadMessage(_tid, Api.WM_QUIT, 0, 0);
 			Api.WaitForSingleObject(_eventStartStop, -1);
 			_eventStartStop.Dispose();
 			_eventSendData.Dispose();
 		}
 
-		void _Thread()
-		{
+		void _Thread() {
 			_tid = Api.GetCurrentThreadId();
 
 			WindowsHook hookK = null, hookM = null;
-			if(_usedEvents.Has(UsedEvents.Keyboard)) {
+			if (_usedEvents.Has(UsedEvents.Keyboard)) {
 				hookK = WindowsHook.Keyboard(_KeyboardHookProc); //note: don't use lambda, because then very slow JIT on first hook event
 			}
-			if(_usedEvents.Has(UsedEvents.Mouse)) {
+			if (_usedEvents.Has(UsedEvents.Mouse)) {
 				hookM = WindowsHook.MouseRaw_(_MouseHookProc);
 			}
-			if(_usedEvents.Has(UsedEvents.MouseEdgeMove)) {
+			if (_usedEvents.Has(UsedEvents.MouseEdgeMove)) {
 				_emDetector = new MouseTriggers.EdgeMoveDetector_();
 			}
 			//tested: don't need JIT-compiling.
 
 			Api.SetEvent(_eventStartStop);
 
-			while(Api.GetMessage(out var m) > 0) Api.DispatchMessage(m);
+			while (Api.GetMessage(out var m) > 0) Api.DispatchMessage(m);
 
 			//print.it("hooks thread ended");
 			hookK?.Dispose();
@@ -100,26 +81,24 @@ namespace Au.Triggers
 			Api.SetEvent(_eventStartStop);
 		}
 
-		unsafe void _KeyboardHookProc(HookData.Keyboard k)
-		{
+		unsafe void _KeyboardHookProc(HookData.Keyboard k) {
 			_keyData = *k.NativeStructPtr_;
-			if(_Send(UsedEvents.Keyboard)) k.BlockEvent();
+			if (_Send(UsedEvents.Keyboard)) k.BlockEvent();
 		}
 
-		unsafe bool _MouseHookProc(nint wParam, nint lParam)
-		{
+		unsafe bool _MouseHookProc(nint wParam, nint lParam) {
 			int msg = (int)wParam;
-			if(msg == Api.WM_MOUSEMOVE) {
-				if(_usedEvents.Has(UsedEvents.MouseEdgeMove)) {
+			if (msg == Api.WM_MOUSEMOVE) {
+				if (_usedEvents.Has(UsedEvents.MouseEdgeMove)) {
 					var mll = (Api.MSLLHOOKSTRUCT*)lParam;
-					if(_emDetector.Detect(mll->pt)) {
+					if (_emDetector.Detect(mll->pt)) {
 						_emData = _emDetector.result;
 						_Send(UsedEvents.MouseEdgeMove);
 					}
 				}
 			} else {
 				bool wheel = _mouseMessage == Api.WM_MOUSEWHEEL || _mouseMessage == Api.WM_MOUSEHWHEEL;
-				if((_usedEvents.Has(UsedEvents.MouseWheel) && wheel) || (_usedEvents.Has(UsedEvents.MouseClick) && !wheel)) {
+				if ((_usedEvents.Has(UsedEvents.MouseWheel) && wheel) || (_usedEvents.Has(UsedEvents.MouseClick) && !wheel)) {
 					_mouseMessage = (int)wParam;
 					_mouseData = *(Api.MSLLHOOKSTRUCT*)lParam;
 					return _Send(wheel ? UsedEvents.MouseWheel : UsedEvents.MouseClick);
@@ -133,13 +112,12 @@ namespace Au.Triggers
 		/// Returns true to eat (block, discard) the event.
 		/// On 1100 ms timeout returns false.
 		/// </summary>
-		bool _Send(UsedEvents eventType)
-		{
+		bool _Send(UsedEvents eventType) {
 			//using var p1 = perf.local();
 			_wMsg.SendNotify(Api.WM_USER + 1, _messageId, (int)eventType);
 			bool timeout = Api.WaitForSingleObject(_eventSendData, 1100) == Api.WAIT_TIMEOUT;
-			lock(this) {
-				if(timeout) timeout = Api.WaitForSingleObject(_eventSendData, 0) == Api.WAIT_TIMEOUT; //other thread may SetEvent between WaitForSingleObject and lock
+			lock (this) {
+				if (timeout) timeout = Api.WaitForSingleObject(_eventSendData, 0) == Api.WAIT_TIMEOUT; //other thread may SetEvent between WaitForSingleObject and lock
 				_messageId++;
 				return _eat && !timeout;
 			}
@@ -159,10 +137,9 @@ namespace Au.Triggers
 		/// Called by the main thread to resume the hooks thread (_Send) and pass the return value (eat).
 		/// Returns false on timeout.
 		/// </summary>
-		public bool Return(int messageId, bool eat)
-		{
-			lock(this) {
-				if(messageId != _messageId) return false;
+		public bool Return(int messageId, bool eat) {
+			lock (this) {
+				if (messageId != _messageId) return false;
 				_eat = eat;
 				Api.SetEvent(_eventSendData);
 			}
@@ -173,8 +150,7 @@ namespace Au.Triggers
 		/// Called by the main thread to get key event data sent by _Send.
 		/// Returns false on timeout.
 		/// </summary>
-		public bool GetKeyData(int messageId, out Api.KBDLLHOOKSTRUCT data)
-		{
+		public bool GetKeyData(int messageId, out Api.KBDLLHOOKSTRUCT data) {
 			data = _keyData;
 			return messageId == _messageId;
 		}
@@ -183,8 +159,7 @@ namespace Au.Triggers
 		/// Called by the main thread to get mouse click/wheel event data sent by _Send.
 		/// Returns false on timeout.
 		/// </summary>
-		public bool GetClickWheelData(int messageId, out Api.MSLLHOOKSTRUCT data, out int message)
-		{
+		public bool GetClickWheelData(int messageId, out Api.MSLLHOOKSTRUCT data, out int message) {
 			data = _mouseData;
 			message = _mouseMessage;
 			return messageId == _messageId;
@@ -194,8 +169,7 @@ namespace Au.Triggers
 		/// Called by the main thread to get mouse edge/move event data sent by _Send.
 		/// Returns false on timeout.
 		/// </summary>
-		public bool GetEdgeMoveData(int messageId, out MouseTriggers.EdgeMoveDetector_.Result data)
-		{
+		public bool GetEdgeMoveData(int messageId, out MouseTriggers.EdgeMoveDetector_.Result data) {
 			data = _emData;
 			return messageId == _messageId;
 		}

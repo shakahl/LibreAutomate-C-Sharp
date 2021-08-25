@@ -1,22 +1,4 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-using System.Collections;
-using RStr = System.ReadOnlySpan<char>;
-
-//Modified version of Microsoft.Extensions.Primitives.StringSegment. It is from github; current .NET does not have it, need to get from NuGet.
+﻿//Modified version of Microsoft.Extensions.Primitives.StringSegment. It is from github; current .NET does not have it, need to get from NuGet.
 //Can be used instead of String.Split, especially when you want less garbage. Faster (the github version with StringTokenizer was slower).
 
 namespace Au.More
@@ -64,7 +46,7 @@ namespace Au.More
 		IEnumerator IEnumerable.GetEnumerator() => this;
 
 		[NoDoc]
-		public StartEnd Current => new (_start, _end);
+		public StartEnd Current => new(_start, _end);
 
 		object IEnumerator.Current => Current;
 
@@ -178,7 +160,8 @@ namespace Au.Types
 	/// <summary>
 	/// Contains several string constants that can be used with some 'split string' functions of this library to specify separators.
 	/// </summary>
-	public static class SegSep {
+	public static class SegSep
+	{
 		/// <summary>
 		/// Specifies that separators are spaces, tabs, newlines and other characters for which <see cref="char.IsWhiteSpace(char)"/> returns true.
 		/// </summary>
@@ -201,7 +184,8 @@ namespace Au.Types
 	/// Flags for <see cref="ExtString.Segments"/> and some other functions.
 	/// </summary>
 	[Flags]
-	public enum SegFlags : byte {
+	public enum SegFlags : byte
+	{
 		/// <summary>
 		/// Don't return empty substrings.
 		/// For example, is string is "one  two " and separators is " ", return {"one", "two"} instead of {"one", "", "two", ""}.
@@ -224,7 +208,8 @@ namespace Au.Types
 	/// <summary>
 	/// struct with fields int start and int end.
 	/// </summary>
-	public record struct StartEnd {
+	public record struct StartEnd
+	{
 		///
 		public int start;
 		///

@@ -1,20 +1,4 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-using RStr = System.ReadOnlySpan<char>;
-
+﻿
 using System.Text.RegularExpressions;
 
 namespace Au
@@ -229,7 +213,7 @@ namespace Au
 		/// </summary>
 		/// <param name="s">Can be null.</param>
 		public static bool hasWildcardChars(RStr s) {
-			foreach(var c in s) if (c is '*' or '?') return true;
+			foreach (var c in s) if (c is '*' or '?') return true;
 			return false;
 		}
 	}

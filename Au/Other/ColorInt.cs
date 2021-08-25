@@ -1,19 +1,4 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
+﻿
 using System.Drawing;
 using System.Text.Json.Serialization;
 
@@ -212,8 +197,7 @@ namespace Au.Types
 		/// Unlike <see cref="ToHLS"/> and <see cref="Color.GetBrightness"/>, this function uses different weights for red, green and blue components.
 		/// Ignores alpha.
 		/// </remarks>
-		public static float GetPerceivedBrightness(int color, bool bgr)
-		{
+		public static float GetPerceivedBrightness(int color, bool bgr) {
 			uint u = (uint)color;
 			if (bgr) u = SwapRB(u);
 			uint R = u >> 16 & 0xff, G = u >> 8 & 0xff, B = u & 0xff;

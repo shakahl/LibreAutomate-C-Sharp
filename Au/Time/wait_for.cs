@@ -1,20 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
 namespace Au
 {
 	/// <summary>
@@ -100,25 +83,24 @@ namespace Au
 			/// The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval <see cref="Sleep"/> throws <see cref="TimeoutException"/>. If &lt;0, then <see cref="Sleep"/> returns false.
 			/// </param>
 			/// <param name="options">Options. If null, uses <see cref="opt.wait"/>, else combines with it.</param>
-			public Loop(double secondsTimeout, OWait options = null)
-			{
+			public Loop(double secondsTimeout, OWait options = null) {
 				var to = opt.wait;
 				Period = to.Period;
 				_doEvents = to.DoEvents;
-				if(options != null) {
+				if (options != null) {
 					Period = Period * options.Period / 10f;
-					if(options.DoEvents) _doEvents = true;
+					if (options.DoEvents) _doEvents = true;
 				}
 				Period = Math.Max(Period, 1f);
 				MaxPeriod = Period * 50f;
 				_step = Period / 10f;
 
-				if(secondsTimeout == 0) {
+				if (secondsTimeout == 0) {
 					_hasTimeout = _throw = false;
 					_timeRemaining = _timePrev = 0;
 				} else {
 					_hasTimeout = true;
-					if(secondsTimeout > 0) _throw = true; else { _throw = false; secondsTimeout = -secondsTimeout; }
+					if (secondsTimeout > 0) _throw = true; else { _throw = false; secondsTimeout = -secondsTimeout; }
 					_timeRemaining = checked((long)(secondsTimeout * 1000d));
 					_timePrev = computer.tickCountWithoutSleep;
 				}
@@ -130,23 +112,22 @@ namespace Au
 			/// Else sleeps for <see cref="Period"/> milliseconds, increments <b>Period</b> if it is less than <see cref="MaxPeriod"/>, and returns true.
 			/// </summary>
 			/// <exception cref="TimeoutException">The <i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-			public bool Sleep()
-			{
-				if(IsTimeout()) return false;
+			public bool Sleep() {
+				if (IsTimeout()) return false;
 
-				if(Period < 9.9f && !_precisionIsSet) { //default Period is 10
+				if (Period < 9.9f && !_precisionIsSet) { //default Period is 10
 					_precisionIsSet = true;
 					SleepPrecision_.TempSet1();
 				}
 
 				int t = (int)Period;
-				if(_doEvents) {
+				if (_doEvents) {
 					SleepDoEvents_(t, noSetPrecision: true);
 				} else {
 					Thread.Sleep(t);
 				}
 
-				if(Period < MaxPeriod) Period += _step;
+				if (Period < MaxPeriod) Period += _step;
 				return true;
 			}
 
@@ -156,14 +137,13 @@ namespace Au
 			/// Else throws <see cref="TimeoutException"/>.
 			/// </summary>
 			/// <exception cref="TimeoutException">The <i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-			public bool IsTimeout()
-			{
-				if(!_hasTimeout) return false;
+			public bool IsTimeout() {
+				if (!_hasTimeout) return false;
 				var t = computer.tickCountWithoutSleep;
 				_timeRemaining -= t - _timePrev;
 				_timePrev = t;
-				if(_timeRemaining > 0) return false;
-				if(_throw) throw new TimeoutException();
+				if (_timeRemaining > 0) return false;
+				if (_throw) throw new TimeoutException();
 				return true;
 			}
 		}
@@ -178,12 +158,11 @@ namespace Au
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>More info: <see cref="wait"/>.</remarks>
 		/// <example>See <see cref="wait"/>.</example>
-		public static bool forCondition(double secondsTimeout, Func<bool> condition, OWait options = null)
-		{
+		public static bool forCondition(double secondsTimeout, Func<bool> condition, OWait options = null) {
 			var to = new Loop(secondsTimeout, options);
-			for(; ; ) {
-				if(condition()) return true;
-				if(!to.Sleep()) return false;
+			for (; ; ) {
+				if (condition()) return true;
+				if (!to.Sleep()) return false;
 			}
 		}
 
@@ -203,8 +182,7 @@ namespace Au
 		/// Uses API <msdn>WaitForMultipleObjectsEx</msdn> or <msdn>MsgWaitForMultipleObjectsEx</msdn>. Alertable.
 		/// Does not use <see cref="opt.wait"/>.
 		/// </remarks>
-		public static int forHandle(double secondsTimeout, WHFlags flags, params IntPtr[] handles)
-		{
+		public static int forHandle(double secondsTimeout, WHFlags flags, params IntPtr[] handles) {
 			return WaitS_(secondsTimeout, flags, null, null, handles);
 		}
 
@@ -216,25 +194,23 @@ namespace Au
 		//	-(1-handles.Length) if abandoned mutex,
 		//	1+handles.Length if msgCallback returned true,
 		//	2+handles.Length if stop became true.
-		internal static int WaitS_(double secondsTimeout, WHFlags flags, object msgCallback, WaitVariable_ stopVar, params IntPtr[] handles)
-		{
+		internal static int WaitS_(double secondsTimeout, WHFlags flags, object msgCallback, WaitVariable_ stopVar, params IntPtr[] handles) {
 			long timeMS = _TimeoutS2MS(secondsTimeout, out bool canThrow);
 
 			int r = Wait_(timeMS, flags, msgCallback, stopVar, handles);
-			if(r < 0) throw new AuException(0);
-			if(r == Api.WAIT_TIMEOUT) {
-				if(canThrow) throw new TimeoutException();
+			if (r < 0) throw new AuException(0);
+			if (r == Api.WAIT_TIMEOUT) {
+				if (canThrow) throw new TimeoutException();
 				return 0;
 			}
-			r++; if(r > Api.WAIT_ABANDONED_0) r = -r;
+			r++; if (r > Api.WAIT_ABANDONED_0) r = -r;
 			return r;
 		}
 
-		static long _TimeoutS2MS(double s, out bool canThrow)
-		{
+		static long _TimeoutS2MS(double s, out bool canThrow) {
 			canThrow = false;
-			if(s == 0) return -1;
-			if(s < 0) s = -s; else canThrow = true;
+			if (s == 0) return -1;
+			if (s < 0) s = -s; else canThrow = true;
 			return checked((long)(s * 1000d));
 		}
 
@@ -246,8 +222,7 @@ namespace Au
 		/// If timeMS>0, waits max timeMS and on timeout returns Api.WAIT_TIMEOUT.
 		/// If failed, returns -1. Supports <see cref="lastError"/>.
 		/// </summary>
-		internal static int Wait_(long timeMS, WHFlags flags, params IntPtr[] handles)
-		{
+		internal static int Wait_(long timeMS, WHFlags flags, params IntPtr[] handles) {
 			return Wait_(timeMS, flags, null, null, handles);
 		}
 
@@ -258,57 +233,55 @@ namespace Au
 		///		If it is Func{bool}, calls it after dispatching one or more messages.
 		/// If stopVar is not null, when it becomes true stops waiting and returns handles?.Length + 1.
 		/// </summary>
-		internal static unsafe int Wait_(long timeMS, WHFlags flags, object msgCallback, WaitVariable_ stopVar, params IntPtr[] handles)
-		{
+		internal static unsafe int Wait_(long timeMS, WHFlags flags, object msgCallback, WaitVariable_ stopVar, params IntPtr[] handles) {
 			int nHandles = handles?.Length ?? 0;
 			bool doEvents = flags.Has(WHFlags.DoEvents);
 			Debug.Assert(doEvents || (msgCallback == null && stopVar == null));
 			bool all = flags.Has(WHFlags.All) && nHandles > 1;
 
 			fixed (IntPtr* ha = handles) {
-				for(long timePrev = 0; ;) {
-					if(stopVar != null && stopVar.waitVar) return nHandles + 1;
+				for (long timePrev = 0; ;) {
+					if (stopVar != null && stopVar.waitVar) return nHandles + 1;
 
 					int timeSlice = (all && doEvents) ? 15 : 300; //previously timeout was used to support Thread.Abort. It is disabled in Core, but maybe still safer with a timeout.
-					if(timeMS > 0) {
+					if (timeMS > 0) {
 						long timeNow = computer.tickCountWithoutSleep;
-						if(timePrev > 0) timeMS -= timeNow - timePrev;
-						if(timeMS <= 0) return Api.WAIT_TIMEOUT;
-						if(timeSlice > timeMS) timeSlice = (int)timeMS;
+						if (timePrev > 0) timeMS -= timeNow - timePrev;
+						if (timeMS <= 0) return Api.WAIT_TIMEOUT;
+						if (timeSlice > timeMS) timeSlice = (int)timeMS;
 						timePrev = timeNow;
-					} else if(timeMS == 0) timeSlice = 0;
+					} else if (timeMS == 0) timeSlice = 0;
 
 					int k;
-					if(doEvents && !all) {
+					if (doEvents && !all) {
 						k = Api.MsgWaitForMultipleObjectsEx(nHandles, ha, timeSlice, Api.QS_ALLINPUT, Api.MWMO_ALERTABLE | Api.MWMO_INPUTAVAILABLE);
-						if(k == nHandles) { //message, COM (RPC uses postmessage), hook, etc
-							if(_DoEvents(msgCallback)) return nHandles;
+						if (k == nHandles) { //message, COM (RPC uses postmessage), hook, etc
+							if (_DoEvents(msgCallback)) return nHandles;
 							continue;
 						}
 					} else {
-						if(nHandles > 0) k = Api.WaitForMultipleObjectsEx(nHandles, ha, all, timeSlice, true);
-						else { k = Api.SleepEx(timeSlice, true); if(k == 0) k = Api.WAIT_TIMEOUT; }
-						if(doEvents) if(_DoEvents(msgCallback)) return nHandles;
+						if (nHandles > 0) k = Api.WaitForMultipleObjectsEx(nHandles, ha, all, timeSlice, true);
+						else { k = Api.SleepEx(timeSlice, true); if (k == 0) k = Api.WAIT_TIMEOUT; }
+						if (doEvents) if (_DoEvents(msgCallback)) return nHandles;
 					}
-					if(!(k == Api.WAIT_TIMEOUT || k == Api.WAIT_IO_COMPLETION)) return k; //signaled handle, abandoned mutex, WAIT_FAILED (-1)
+					if (!(k == Api.WAIT_TIMEOUT || k == Api.WAIT_IO_COMPLETION)) return k; //signaled handle, abandoned mutex, WAIT_FAILED (-1)
 				}
 			}
 		}
 
-		static bool _DoEvents(object msgCallback)
-		{
+		static bool _DoEvents(object msgCallback) {
 			bool R = false;
-			while(Api.PeekMessage(out var m, default, 0, 0, Api.PM_REMOVE)) {
+			while (Api.PeekMessage(out var m, default, 0, 0, Api.PM_REMOVE)) {
 				//WndUtil.PrintMsg(m);
-				if(msgCallback is WPMCallback callback1) {
-					if(callback1(ref m)) { msgCallback = null; R = true; }
-					if(m.message == 0) continue;
+				if (msgCallback is WPMCallback callback1) {
+					if (callback1(ref m)) { msgCallback = null; R = true; }
+					if (m.message == 0) continue;
 				}
-				if(m.message == Api.WM_QUIT) { Api.PostQuitMessage((int)m.wParam); return false; }
+				if (m.message == Api.WM_QUIT) { Api.PostQuitMessage((int)m.wParam); return false; }
 				Api.TranslateMessage(m);
 				Api.DispatchMessage(m);
 			}
-			if(msgCallback is Func<bool> callback2) R = callback2();
+			if (msgCallback is Func<bool> callback2) R = callback2();
 			return R;
 
 			//note: always dispatch posted messages, need it or not. Dispatching only sent messages is not useful.
@@ -337,8 +310,7 @@ namespace Au
 		/// print.it("finished");
 		/// ]]></code>
 		/// </example>
-		public static bool forPostedMessage(double secondsTimeout, WPMCallback callback)
-		{
+		public static bool forPostedMessage(double secondsTimeout, WPMCallback callback) {
 			return 1 == WaitS_(secondsTimeout, WHFlags.DoEvents, callback, null);
 		}
 
@@ -362,8 +334,7 @@ namespace Au
 		/// print.it(stop);
 		/// ]]></code>
 		/// </example>
-		public static bool forMessagesAndCondition(double secondsTimeout, Func<bool> condition)
-		{
+		public static bool forMessagesAndCondition(double secondsTimeout, Func<bool> condition) {
 			return 1 == WaitS_(secondsTimeout, WHFlags.DoEvents, condition, null);
 		}
 
@@ -386,12 +357,11 @@ namespace Au
 		/// print.it(stop);
 		/// ]]></code>
 		/// </example>
-		public static bool forVariable(double secondsTimeout, in bool variable, OWait options = null)
-		{
+		public static bool forVariable(double secondsTimeout, in bool variable, OWait options = null) {
 			var to = new Loop(secondsTimeout, options);
-			for(; ; ) {
-				if(variable) return true;
-				if(!to.Sleep()) return false;
+			for (; ; ) {
+				if (variable) return true;
+				if (!to.Sleep()) return false;
 			}
 		}
 

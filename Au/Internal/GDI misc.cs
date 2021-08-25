@@ -1,18 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
 
 using System.Drawing;
 
@@ -177,7 +162,7 @@ namespace Au.More
 		/// Don't need to select pen into DC.
 		/// </summary>
 		public POINT DrawLine(IntPtr dc, POINT start, POINT end) {
-			var old=Api.SelectObject(dc, _pen); //fast
+			var old = Api.SelectObject(dc, _pen); //fast
 			Api.MoveToEx(dc, start.x, start.y, out var p); //fast
 			Api.LineTo(dc, end.x, end.y);
 			Api.SelectObject(dc, old); //fast

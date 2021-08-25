@@ -1,21 +1,4 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
-namespace Au.More
+﻿namespace Au.More
 {
 	/// <summary>
 	/// Memory buffer on stack with ability to expand and use heap memory. Used mostly for calling Windows API.
@@ -31,7 +14,7 @@ namespace Au.More
 	/// 
 	/// 	[SkipLocalsInit]
 	/// 	internal static string GetEnvironmentVariable(string name) {
-	/// 		using FastBuffer<char> b = new(null);
+	/// 		using FastBuffer<char> b = new();
 	/// 		for (; ; ) if (b.GetString(_GetEnvironmentVariable(name, b.p, b.n), out var s)) return s;
 	/// 	}
 	/// }

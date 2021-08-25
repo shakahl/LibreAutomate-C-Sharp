@@ -1,20 +1,4 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-//Windows API constants common to multiple API functions, such as WM_, WS_, errors.
+﻿//Windows API constants common to multiple API functions, such as WM_, WS_, errors.
 
 namespace Au.Types
 {
@@ -624,7 +608,7 @@ namespace Au.Types
 		#region ENUM
 
 		[Flags]
-		internal enum VARENUM :ushort
+		internal enum VARENUM : ushort
 		{
 			VT_EMPTY,
 			VT_NULL,

@@ -1,6 +1,6 @@
 ﻿//This file is used by several projects: Au, Au.Controls, Au.Editor.
 
-#if !NO_GLOBAL //DocFX does not support 'global using'
+#if !NO_GLOBAL
 global using Au;
 global using Au.Types;
 global using Au.More;

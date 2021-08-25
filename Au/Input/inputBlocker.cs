@@ -1,20 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
 namespace Au
 {
 	/// <summary>
@@ -66,8 +49,7 @@ namespace Au
 		/// This constructor calls <see cref="Start"/>.
 		/// </summary>
 		/// <exception cref="ArgumentException"><i>what</i> is 0.</exception>
-		public inputBlocker(BIEvents what)
-		{
+		public inputBlocker(BIEvents what) {
 			Start(what);
 		}
 
@@ -76,11 +58,10 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException"><i>what</i> is 0.</exception>
 		/// <exception cref="InvalidOperationException">Already started.</exception>
-		public void Start(BIEvents what)
-		{
-			if(_disposed) throw new ObjectDisposedException(nameof(inputBlocker));
-			if(_block != 0) throw new InvalidOperationException();
-			if(!what.HasAny(BIEvents.All)) throw new ArgumentException();
+		public void Start(BIEvents what) {
+			if (_disposed) throw new ObjectDisposedException(nameof(inputBlocker));
+			if (_block != 0) throw new InvalidOperationException();
+			if (!what.HasAny(BIEvents.All)) throw new ArgumentException();
 
 			_block = what;
 			_startTime = Environment.TickCount64;
@@ -99,9 +80,8 @@ namespace Au
 		/// <summary>
 		/// Calls <see cref="Stop"/>.
 		/// </summary>
-		public void Dispose()
-		{
-			if(!_disposed) {
+		public void Dispose() {
+			if (!_disposed) {
 				_disposed = true;
 				Stop();
 				GC.SuppressFinalize(this);
@@ -111,9 +91,8 @@ namespace Au
 		///
 		~inputBlocker() => _CloseHandles();
 
-		void _CloseHandles()
-		{
-			if(!_syncEvent.Is0) {
+		void _CloseHandles() {
+			if (!_syncEvent.Is0) {
 				_syncEvent.Dispose();
 				_stopEvent.Dispose();
 				_threadHandle.Dispose();
@@ -126,9 +105,8 @@ namespace Au
 		/// Does nothing if currently is not blocking.
 		/// </summary>
 		/// <param name="discardBlockedKeys">Do not play back blocked key-down events recorded because of <see cref="ResendBlockedKeys"/>.</param>
-		public void Stop(bool discardBlockedKeys = false)
-		{
-			if(_block == 0) return;
+		public void Stop(bool discardBlockedKeys = false) {
+			if (_block == 0) return;
 			_block = 0;
 			_discardBlockedKeys = discardBlockedKeys;
 			Api.SetEvent(_stopEvent);
@@ -138,17 +116,16 @@ namespace Au
 
 		const int c_maxResendTime = 10000;
 
-		void _ThreadProc()
-		{
+		void _ThreadProc() {
 			WindowsHook hk = null, hm = null; WinEventHook hwe = null;
 			try {
 				try {
-					if(_block.Has(BIEvents.Keys))
+					if (_block.Has(BIEvents.Keys))
 						hk = WindowsHook.Keyboard(_keyHookProc ??= _KeyHookProc);
-					if(_block.HasAny(BIEvents.MouseClicks | BIEvents.MouseMoving))
+					if (_block.HasAny(BIEvents.MouseClicks | BIEvents.MouseMoving))
 						hm = WindowsHook.Mouse(_mouseHookProc ??= _MouseHookProc);
 				}
-				catch(AuException e1) { Debug_.Print(e1); _block = 0; return; } //failed to hook
+				catch (AuException e1) { Debug_.Print(e1); _block = 0; return; } //failed to hook
 
 				//This prevents occassional inserting a foreign key after the first our-script-pressed key.
 				//To reproduce, let our script send small series of chars in loop, and simultaneously a foreign script send other chars.
@@ -159,11 +136,11 @@ namespace Au
 
 				//the hook detects Ctrl+Alt+Del, Win+L, UAC consent, etc. SystemEvents.SessionSwitch only Win+L.
 				try { hwe = new WinEventHook(EEvent.SYSTEM_DESKTOPSWITCH, 0, _winEventProc ??= _WinEventProc); }
-				catch(AuException e1) { Debug_.Print(e1); } //failed to hook
+				catch (AuException e1) { Debug_.Print(e1); } //failed to hook
 
 				wait.Wait_(-1, WHFlags.DoEvents, _stopEvent, _threadHandle);
 
-				if(_blockedKeys != null) {
+				if (_blockedKeys != null) {
 					bool onlyUp = _discardBlockedKeys || Environment.TickCount64 - _startTime > c_maxResendTime;
 					_blockedKeys.SendBlocked_(onlyUp);
 				}
@@ -183,9 +160,8 @@ namespace Au
 		Action<HookData.Mouse> _mouseHookProc;
 		Action<HookData.WinEvent> _winEventProc;
 
-		void _KeyHookProc(HookData.Keyboard x)
-		{
-			if(_DontBlock(x.IsInjected, x.dwExtraInfo, x.vkCode)) {
+		void _KeyHookProc(HookData.Keyboard x) {
+			if (_DontBlock(x.IsInjected, x.dwExtraInfo, x.vkCode)) {
 				//print.it("ok", x.vkCode, !x.IsUp);
 				return;
 			}
@@ -195,7 +171,7 @@ namespace Au
 			//	//Could detect Ctrl+Alt+Del here. But SetWinEventHook(SYSTEM_DESKTOPSWITCH) is better.
 			//}
 
-			if(ResendBlockedKeys && Environment.TickCount64 - _startTime < c_maxResendTime) {
+			if (ResendBlockedKeys && Environment.TickCount64 - _startTime < c_maxResendTime) {
 				_blockedKeys ??= new keys(opt.init.key);
 				//print.it("blocked", x.vkCode, !x.IsUp);
 				_blockedKeys.AddRaw_(x.vkCode, (ushort)x.scanCode, x.SendInputFlags_);
@@ -203,26 +179,24 @@ namespace Au
 			x.BlockEvent();
 		}
 
-		void _MouseHookProc(HookData.Mouse x)
-		{
+		void _MouseHookProc(HookData.Mouse x) {
 			bool isMMove = x.Event == HookData.MouseEvent.Move;
-			switch(_block & (BIEvents.MouseClicks | BIEvents.MouseMoving)) {
+			switch (_block & (BIEvents.MouseClicks | BIEvents.MouseMoving)) {
 			case BIEvents.MouseClicks | BIEvents.MouseMoving: break;
-			case BIEvents.MouseClicks: if(isMMove) return; break;
-			case BIEvents.MouseMoving: if(!isMMove) return; break;
+			case BIEvents.MouseClicks: if (isMMove) return; break;
+			case BIEvents.MouseMoving: if (!isMMove) return; break;
 			}
-			if(!_DontBlock(x.IsInjected, x.dwExtraInfo, 0, isMMove)) x.BlockEvent();
+			if (!_DontBlock(x.IsInjected, x.dwExtraInfo, 0, isMMove)) x.BlockEvent();
 		}
 
-		bool _DontBlock(bool isInjected, nint extraInfo, KKey vk = 0, bool isMMove = false)
-		{
-			if(_pause) return true;
-			if(isInjected) {
+		bool _DontBlock(bool isInjected, nint extraInfo, KKey vk = 0, bool isMMove = false) {
+			if (_pause) return true;
+			if (isInjected) {
 				//if(DontBlockInjected || (extraInfo != default && extraInfo == DontBlockInjectedExtraInfo)) return true;
-				if(DontBlockInjected) return true;
+				if (DontBlockInjected) return true;
 			}
 			wnd w;
-			if(vk != 0) {
+			if (vk != 0) {
 				//var a = DontBlockKeys;
 				//if(a != null) foreach(var k in a) if(vk == k) return true;
 				w = wnd.active;
@@ -231,19 +205,18 @@ namespace Au
 				//note: don't use hook's pt, because of a bug in some OS versions.
 				//note: for wheel it's better to use FromMouse.
 			}
-			if(w.ThreadId == _threadId) return true;
+			if (w.ThreadId == _threadId) return true;
 			return false;
 		}
 
-		void _WinEventProc(HookData.WinEvent x)
-		{
+		void _WinEventProc(HookData.WinEvent x) {
 			//the hook is called before and after Ctrl+Alt+Del screen. Only idEventThread different.
 			//	GetForegroundWindow returns 0. WTSGetActiveConsoleSessionId returns main session.
 
 			//print.it("desktop switch"); //return;
 
 			_startTime = 0; //don't resend Ctrl+Alt+Del and other blocked keys
-			if(!ResumeAfterCtrlAltDelete)
+			if (!ResumeAfterCtrlAltDelete)
 				ThreadPool.QueueUserWorkItem(_this => (_this as inputBlocker).Stop(), this);
 		}
 

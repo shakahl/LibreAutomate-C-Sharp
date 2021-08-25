@@ -1,20 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
 namespace Au
 {
 	public partial struct wnd
@@ -55,8 +38,7 @@ namespace Au
 			[ParamString(PSFormat.wildex)] string name = null,
 			[ParamString(PSFormat.wildex)] string cn = null,
 			[ParamString(PSFormat.wildex)] WOwner of = default,
-			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default)
-		{
+			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default) {
 			var f = new wndFinder(name, cn, of, flags, also, contains);
 			var to = new wait.Loop(secondsTimeout);
 			for (; ; ) {

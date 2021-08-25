@@ -1,20 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
 namespace Au.Types
 {
 #if false //rejected. More convenient to use, but makes code less clear. With Range everything is clear: null means "all"; for just start index use 'i..'; many users know Range, and would have to learn about RANGE.
@@ -432,7 +415,7 @@ namespace Au.Types
 	/// If <b>Name</b> not set, will be used standard GUI font; then <b>Size</b> can be 0 to use size of standard GUI font.
 	/// On high-DPI screen the font size will be scaled.
 	/// </summary>
-	public record FontNSS(int Size = 0, string Name = null, bool Bold = false, bool Italic = false)
+	public record class FontNSS(int Size = 0, string Name = null, bool Bold = false, bool Italic = false)
 	{
 		/// <summary>
 		/// Creates font.

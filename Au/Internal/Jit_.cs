@@ -1,21 +1,4 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
-namespace Au.More
+﻿namespace Au.More
 {
 	/// <summary>
 	/// JIT-compiles methods.
@@ -32,10 +15,9 @@ namespace Au.More
 		/// <param name="method">Method name.</param>
 		/// <exception cref="ArgumentException">Method does not exist.</exception>
 		/// <exception cref="AmbiguousMatchException">Multiple overloads exist.</exception>
-		public static void Compile(Type type, string method)
-		{
+		public static void Compile(Type type, string method) {
 			var m = type.GetMethod(method, c_bindingFlags);
-			if(m == null) throw new ArgumentException($"Method {type.Name}.{method} does not exist.");
+			if (m == null) throw new ArgumentException($"Method {type.Name}.{method} does not exist.");
 			RuntimeHelpers.PrepareMethod(m.MethodHandle);
 			//tested: maybe MethodHandle.GetFunctionPointer can be used to detect whether the method is jited and assembly ngened.
 			//	Call GetFunctionPointer before and after PrepareMethod. If was not jited, the second call returns a different value.
@@ -68,9 +50,8 @@ namespace Au.More
 		/// <param name="type">Type containing the methods.</param>
 		/// <param name="methods">Method names.</param>
 		/// <exception cref="ArgumentException">Method does not exist.</exception>
-		public static void Compile(Type type, params string[] methods)
-		{
-			foreach(var v in methods) Compile(type, v);
+		public static void Compile(Type type, params string[] methods) {
+			foreach (var v in methods) Compile(type, v);
 		}
 	}
 }

@@ -1,19 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-using RStr = System.ReadOnlySpan<char>;
 
 using System.IO.Compression;
 
@@ -426,7 +410,7 @@ namespace Au.More
 		/// <remarks>
 		/// Finds '\0' and calls <c>Encoding.UTF8.GetString</c>. Don't use this function when UTF8 string length is known; call <c>Encoding.UTF8.GetString</c> directly.
 		/// </remarks>
-		public static string Utf8Decode(byte* utf8) => utf8 == null ? null : Encoding.UTF8.GetString(utf8, BytePtr_.Length(utf8)) ;
+		public static string Utf8Decode(byte* utf8) => utf8 == null ? null : Encoding.UTF8.GetString(utf8, BytePtr_.Length(utf8));
 
 		#endregion
 	}

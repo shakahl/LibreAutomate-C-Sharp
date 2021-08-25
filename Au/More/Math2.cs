@@ -1,21 +1,4 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
-namespace Au.More
+﻿namespace Au.More
 {
 	/// <summary>
 	/// Simple calculation functions.
@@ -33,13 +16,13 @@ namespace Au.More
 		//Why named MakeLparam, MakeWord, LoWord, HiWord:
 		//	1. Like C macros MAKELPARAM/MAKEWORD/LOWORD/HIWORD.
 		//	2. MakeLparam used mostly as lParam of sendmessage etc.
-		
+
 		/// <summary>
 		/// Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32. Returns it as nint, ready to use with Windows message API as lParam or wParam or return value.
 		/// Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
 		/// </summary>
 		public static nint MakeLparam(int loWord, int hiWord) => MakeLparam((uint)loWord, (uint)hiWord);
-		
+
 		/// <summary>
 		/// Creates uint by placing (ushort)p.x in bits 1-16 and (ushort)p.y in bits 17-32. Returns it as nint, ready to use with Windows message API as lParam or wParam or return value.
 		/// Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
@@ -51,7 +34,7 @@ namespace Au.More
 		/// Like C macro MAKEWORD.
 		/// </summary>
 		public static ushort MakeWord(uint loByte, uint hiByte) => (ushort)(((hiByte & 0xff) << 8) | (loByte & 0xff));
-		
+
 		/// <summary>
 		/// Creates ushort by placing (byte)loByte in bits 1-8 and (byte)hiByte in bits 9-16.
 		/// Like C macro MAKEWORD.
@@ -117,11 +100,10 @@ namespace Au.More
 		/// </summary>
 		/// <exception cref="OverflowException"></exception>
 		/// <exception cref="DivideByZeroException"></exception>
-		public static int MulDiv(int number, int multiply, int divide)
-		{
-			if(divide == multiply) return number;
+		public static int MulDiv(int number, int multiply, int divide) {
+			if (divide == multiply) return number;
 			long r = (long)number * multiply;
-			int d = divide / 2; if(r < 0 == divide < 0) r += d; else r -= d; //round
+			int d = divide / 2; if (r < 0 == divide < 0) r += d; else r -= d; //round
 			return checked((int)(r / divide));
 
 			//This code produces the same results as API MulDiv. Tested with millions of random and edge values. Faster.
@@ -190,8 +172,7 @@ namespace Au.More
 		/// <summary>
 		/// Swaps values of variables a and b: <c>T t = a; a = b; b = t;</c>
 		/// </summary>
-		public static void Swap<T>(ref T a, ref T b)
-		{
+		public static void Swap<T>(ref T a, ref T b) {
 			T t = a; a = b; b = t;
 		}
 
@@ -225,10 +206,9 @@ namespace Au.More
 		/// <summary>
 		/// Calculates distance between two points.
 		/// </summary>
-		public static double Distance(POINT p1, POINT p2)
-		{
-			if(p1.y == p2.y) return Math.Abs(p2.x - p1.x); //horizontal line
-			if(p1.x == p2.x) return Math.Abs(p2.y - p1.y); //vertical line
+		public static double Distance(POINT p1, POINT p2) {
+			if (p1.y == p2.y) return Math.Abs(p2.x - p1.x); //horizontal line
+			if (p1.x == p2.x) return Math.Abs(p2.y - p1.y); //vertical line
 
 			long dx = p2.x - p1.x, dy = p2.y - p1.y;
 			return Math.Sqrt(dx * dx + dy * dy);
@@ -238,10 +218,9 @@ namespace Au.More
 		/// Calculates distance between rectangle and point.
 		/// Returns 0 if point is in rectangle.
 		/// </summary>
-		public static double Distance(RECT r, POINT p)
-		{
+		public static double Distance(RECT r, POINT p) {
 			r.Normalize(swap: true);
-			if(r.Contains(p)) return 0;
+			if (r.Contains(p)) return 0;
 			int x = p.x < r.left ? r.left : (p.x > r.right ? r.right : p.x);
 			int y = p.y < r.top ? r.top : (p.y > r.bottom ? r.bottom : p.y);
 			return Distance((x, y), p);

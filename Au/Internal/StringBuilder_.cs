@@ -1,21 +1,4 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
-namespace Au.More
+﻿namespace Au.More
 {
 	/// <summary>
 	/// Provides a cached reusable instance of StringBuilder per thread. It's an optimisation that reduces the number of instances constructed and collected.
@@ -39,15 +22,14 @@ namespace Au.More
 		/// <summary>
 		/// Gets a new or cached/cleared StringBuilder of the specified capacity, min 200.
 		/// </summary>
-		public StringBuilder_(out StringBuilder sb, int capacity = 200)
-		{
-			if(capacity <= MAX_BUILDER_SIZE) {
-				if(capacity < 200) capacity = 200;
+		public StringBuilder_(out StringBuilder sb, int capacity = 200) {
+			if (capacity <= MAX_BUILDER_SIZE) {
+				if (capacity < 200) capacity = 200;
 				StringBuilder b = t_cachedInstance;
-				bool alt = b == null; if(alt) b = t_cachedInstance2;
-				if(b != null) {
-					if(capacity <= b.Capacity) {
-						if(alt) t_cachedInstance2 = null; else t_cachedInstance = null;
+				bool alt = b == null; if (alt) b = t_cachedInstance2;
+				if (b != null) {
+					if (capacity <= b.Capacity) {
+						if (alt) t_cachedInstance2 = null; else t_cachedInstance = null;
 						b.Clear();
 						//Debug_.Print("StringBuilder cached, alt=" + alt);
 						sb = _sb = b;
@@ -62,11 +44,10 @@ namespace Au.More
 		/// <summary>
 		/// Releases the StringBuilder to the cache.
 		/// </summary>
-		public void Dispose()
-		{
-			if(_sb.Capacity <= MAX_BUILDER_SIZE) {
+		public void Dispose() {
+			if (_sb.Capacity <= MAX_BUILDER_SIZE) {
 				//Debug_.Print("StringBuilder released, alt=" + (t_cachedInstance != null));
-				if(t_cachedInstance == null) t_cachedInstance = _sb; else t_cachedInstance2 = _sb;
+				if (t_cachedInstance == null) t_cachedInstance = _sb; else t_cachedInstance2 = _sb;
 			}
 			_sb = null;
 		}

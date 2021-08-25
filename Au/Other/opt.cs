@@ -1,19 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
 //CONSIDER: instead of static options use a settings file. Because now need to set static options for each script, and rare script uses multiple threads.
 
 //SHOULDDO: add options for wnd/elm/uiimage find functions to wait. Now converting find to wait in script is tedious.

@@ -1,18 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
 
 //https://stackoverflow.com/questions/14243284/how-can-i-retrieve-string-literals-using-reflection
 
@@ -126,18 +111,17 @@ namespace Au.More
 		/// <returns>
 		/// A <see cref="System.String"/> that represents this instance.
 		/// </returns>
-		public override string ToString()
-		{
+		public override string ToString() {
 			StringBuilder builder = new StringBuilder();
 			builder.AppendFormat("0x{0:x4} {1,-10}", this.Address, this.Op.Name);
 
-			if(this.Data != null) {
+			if (this.Data != null) {
 				builder.Append(this.Data.ToString());
 			}
 
-			if(this.RawData != null && this.RawData.Length > 0) {
+			if (this.RawData != null && this.RawData.Length > 0) {
 				builder.Append(" [0x");
-				for(int i = this.RawData.Length - 1; i >= 0; i--) {
+				for (int i = this.RawData.Length - 1; i >= 0; i--) {
 					builder.Append(this.RawData[i].ToString("x2", System.Globalization.CultureInfo.InvariantCulture));
 				}
 

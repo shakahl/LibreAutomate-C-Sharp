@@ -1,21 +1,4 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
-namespace Au.More
+﻿namespace Au.More
 {
 	/// <summary>
 	/// Functions for high-DPI screen support.
@@ -223,7 +206,7 @@ namespace Au.More
 		/// </remarks>
 		public static bool AdjustWindowRectEx(DpiOf dpiOf, ref RECT r, WS style, WSE exStyle, bool hasMenu = false) {
 			int dpi = dpiOf;
-			bool ok=osVersion.minWin10_1607
+			bool ok = osVersion.minWin10_1607
 				? Api.AdjustWindowRectExForDpi(ref r, style, hasMenu, exStyle, dpi)
 				: Api.AdjustWindowRectEx(ref r, style, hasMenu, exStyle);
 			if (ok) {

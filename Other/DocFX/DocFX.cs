@@ -20,8 +20,6 @@ using Renci.SshNet;
 
 [module: DefaultCharSet(CharSet.Unicode)]
 
-//TODO: no JSettings. Maybe does not support record.
-
 //note: DocFX does not replace/modify the yml files if the source code of the C# project not changed. Then ProcessYamlFile not called.
 //	To apply changes of this script, change something in C# XML comments, save, then run this script.
 
@@ -34,8 +32,8 @@ using Renci.SshNet;
 //note: uses msbuild from VS2019, not from VS2019 preview. It must be up to date.
 
 //note: using an older DocFX 2 version.
-//	It does not support C# 9. If can't resolve some links, in the tartget file replace all new() with new Type().
-//	Version 2.58 supports C# 9, but crashes. Version 3 not tested.
+//	It does not support C# 9. If can't resolve some links, in the source file replace all new() with new Type().
+//	Version 2.58 supports C# 9, but crashes. Not C# 10. Version 3 not tested.
 
 unsafe class Program
 {
@@ -66,23 +64,8 @@ unsafe class Program
 		//Upload(docDir); return;
 		//CompressAndUpload(docDir); return;
 
-		//preprocess and copy source files, because DocFX does not support latest C# features
-		var sourceDir1 = @"Q:\app\Au\Au";
-		var sourceDir2 = @"Q:\Temp\Au\DocFX\source";
-		filesystem.delete(sourceDir2);
-		filesystem.createDirectory(sourceDir2);
-		foreach(var v in Directory.EnumerateFiles(sourceDir1, "*", SearchOption.AllDirectories)) {
-			if (!(v.Ends(".cs", true) || v.Ends(".csproj", true))) continue;
-			if (0 != v.Starts(true, @"Q:\app\Au\Au\bin\", @"Q:\app\Au\Au\obj\")) continue;
-			var v2 = sourceDir2 + v[sourceDir1.Length..];
-			//print.it(v, v2);
-			if (filesystem.getProperties(v2, out var p2, FAFlags.UseRawPath | FAFlags.DontThrow)
-				&& filesystem.getProperties(v, out var p1, FAFlags.UseRawPath)
-				&& p2.LastWriteTimeUtc == p1.LastWriteTimeUtc) continue;
-			print.it(v);
-			filesystem.copy(v, v2, FIfExists.Delete);
-		}
-		return;
+		PreprocessSource();
+		//return;
 
 		foreach (var v in Process.GetProcessesByName("docfx")) v.Kill();
 		if (isConsole) {
@@ -107,10 +90,10 @@ unsafe class Program
 			bool serving = false;
 			try {
 #endif
-			int r = run.console(o => {
-				print.it(o);
-				if (o.Starts("Serving")) throw new OperationCanceledException();
-			}, docfx, $@"docfx.json --intermediateFolder ""{objDir}"""
+				int r = run.console(o => {
+					print.it(o);
+					if (o.Starts("Serving")) throw new OperationCanceledException();
+				}, docfx, $@"docfx.json --intermediateFolder ""{objDir}"""
 				//+ " --force"
 #if SERVE
 				+ " --serve"
@@ -118,11 +101,11 @@ unsafe class Program
 				);
 #if SERVE
 			}
-			catch(OperationCanceledException) {
+			catch (OperationCanceledException) {
 				serving = true;
 			}
 			//if(!serving) { dialog.show("error?"); return; } //need if this process is not hosted
-			if(!serving) return;
+			if (!serving) return;
 #else
 			//print.it(r);
 			if (r != 0) return;
@@ -144,6 +127,38 @@ unsafe class Program
 		//Delete obj folder if big. Each time it grows by 10 MB, and after a day or two can be > 1 GB. After deleting builds slower by ~50%.
 		if (filesystem.more.calculateDirectorySize(objDir) / 1024 / 1024 > 500) { print.it("Deleting obj folder."); filesystem.delete(objDir); }
 		//info: if DocFX starts throwing stack overflow exception, delete the obj folder manually. It is likely to happen after many refactorings in the project.
+	}
+
+	static void PreprocessSource() {
+		//preprocess and copy source files, because DocFX does not support latest C# features
+		var sourceDir1 = @"Q:\app\Au\Au";
+		var sourceDir2 = @"Q:\Temp\Au\DocFX\source";
+		filesystem.delete(sourceDir2);
+		filesystem.createDirectory(sourceDir2);
+
+		var usings = File.ReadAllText(sourceDir1 + @"\resources\global.cs");
+		if (0 == usings.RxReplace(@"(?s)^.*#if !NO_GLOBAL\R(.+?)#else\R.+", "$1", out usings, 1)) throw new Exception("bad regex");
+		usings = usings.RxReplace(@"(?m)^global ", "");
+
+		foreach (var v in Directory.EnumerateFiles(sourceDir1, "*", SearchOption.AllDirectories)) {
+			if (0 == v.Ends(true, ".cs", ".csproj")) continue;
+			if (0 != v.Starts(true, @"Q:\app\Au\Au\bin\", @"Q:\app\Au\Au\obj\")) continue;
+			if (v.Ends(@"\global.cs", true)) continue;
+
+			var v2 = sourceDir2 + v[sourceDir1.Length..];
+			//print.it(v, v2);
+			if (v.Ends(".cs", true)) _PreprocessFile(v, v2);
+			else filesystem.copy(v, v2);
+		}
+
+		void _PreprocessFile(string fileFrom, string fileTo) {
+			var s = File.ReadAllText(fileFrom);
+
+			s = s.RxReplace(@"\brecord (struct|class)\b", "$1");
+			s = usings + s;
+
+			filesystem.saveText(fileTo, s);
+		}
 	}
 
 	/// <summary>
@@ -388,7 +403,7 @@ unsafe class Program
 	static void XrefMap(string siteDir) {
 		var b = new StringBuilder();
 		var s = File.ReadAllText(siteDir + @"\xrefmap.yml");
-		foreach(var m in s.RxFindAll(@"(?m)^- uid:.+\R.+\R  href: (?!api/).+\R", (RXFlags)0)) {
+		foreach (var m in s.RxFindAll(@"(?m)^- uid:.+\R.+\R  href: (?!api/).+\R", (RXFlags)0)) {
 			//print.it(m);
 			b.Append(m);
 		}

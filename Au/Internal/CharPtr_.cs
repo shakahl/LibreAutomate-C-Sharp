@@ -1,20 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
 namespace Au.More
 {
 	/// <summary>
@@ -27,10 +10,9 @@ namespace Au.More
 		/// Gets the number of characters in p until '\0'.
 		/// </summary>
 		/// <param name="p">'\0'-terminated string. Can be null.</param>
-		public static int Length(char* p)
-		{
-			if(p == null) return 0;
-			for(int i = 0; ; i++) if(p[i] == '\0') return i;
+		public static int Length(char* p) {
+			if (p == null) return 0;
+			for (int i = 0; ; i++) if (p[i] == '\0') return i;
 		}
 
 		/// <summary>
@@ -38,10 +20,9 @@ namespace Au.More
 		/// </summary>
 		/// <param name="p">'\0'-terminated string. Can be null.</param>
 		/// <param name="max">Max length to scan. Returns max if does not find '\0'.</param>
-		public static int Length(char* p, int max)
-		{
-			if(p == null) return 0;
-			for(int i = 0; i < max; i++) if(p[i] == '\0') return i;
+		public static int Length(char* p, int max) {
+			if (p == null) return 0;
+			for (int i = 0; i < max; i++) if (p[i] == '\0') return i;
 			return max;
 		}
 
@@ -72,10 +53,9 @@ namespace Au.More
 		/// Gets the number of bytes in p until '\0'.
 		/// </summary>
 		/// <param name="p">'\0'-terminated string. Can be null.</param>
-		public static int Length(byte* p)
-		{
-			if(p == null) return 0;
-			for(int i = 0; ; i++) if(p[i] == 0) return i;
+		public static int Length(byte* p) {
+			if (p == null) return 0;
+			for (int i = 0; ; i++) if (p[i] == 0) return i;
 		}
 
 		/// <summary>
@@ -83,10 +63,9 @@ namespace Au.More
 		/// </summary>
 		/// <param name="p">'\0'-terminated string. Can be null.</param>
 		/// <param name="max">Max length to scan. Returns max if does not find '\0'.</param>
-		public static int Length(byte* p, int max)
-		{
-			if(p == null) return 0;
-			for(int i = 0; i < max; i++) if(p[i] == 0) return i;
+		public static int Length(byte* p, int max) {
+			if (p == null) return 0;
+			for (int i = 0; i < max; i++) if (p[i] == 0) return i;
 			return max;
 		}
 
@@ -95,12 +74,11 @@ namespace Au.More
 		/// </summary>
 		/// <param name="p">'\0'-terminated string.</param>
 		/// <param name="s">Must contain only ASCII characters.</param>
-		public static bool AsciiStarts(byte* p, string s)
-		{
+		public static bool AsciiStarts(byte* p, string s) {
 			int i, n = s.Length;
-			for(i = 0; i < n; i++) {
+			for (i = 0; i < n; i++) {
 				int b = *p++;
-				if(b != s[i] || b == 0) return false;
+				if (b != s[i] || b == 0) return false;
 			}
 			return true;
 		}
@@ -109,13 +87,12 @@ namespace Au.More
 		/// </summary>
 		/// <param name="p">'\0'-terminated string.</param>
 		/// <param name="s">Must contain only ASCII characters.</param>
-		public static bool AsciiStartsi(byte* p, string s)
-		{
+		public static bool AsciiStartsi(byte* p, string s) {
 			var t = Tables_.LowerCase;
 			int i, n = s.Length;
-			for(i = 0; i < n; i++) {
+			for (i = 0; i < n; i++) {
 				int b = *p++;
-				if(t[b] != t[s[i]] || b == 0) return false;
+				if (t[b] != t[s[i]] || b == 0) return false;
 			}
 			return true;
 		}
@@ -139,10 +116,9 @@ namespace Au.More
 		/// </summary>
 		/// <param name="p">'\0'-terminated string.</param>
 		/// <param name="s">Managed string. Must contain only ASCII characters.</param>
-		public static bool Eq(byte* p, byte[] s)
-		{
+		public static bool Eq(byte* p, byte[] s) {
 			int i;
-			for(i = 0; i < s.Length; i++) if(s[i] != p[i]) return false;
+			for (i = 0; i < s.Length; i++) if (s[i] != p[i]) return false;
 			return p[i] == 0;
 		}
 
@@ -152,9 +128,8 @@ namespace Au.More
 		/// <param name="p"></param>
 		/// <param name="len">Length of p to search in.</param>
 		/// <param name="ch">ASCII character.</param>
-		public static int AsciiFindChar(byte* p, int len, byte ch)
-		{
-			for(int i = 0; i < len; i++) if(p[i] == ch) return i;
+		public static int AsciiFindChar(byte* p, int len, byte ch) {
+			for (int i = 0; i < len; i++) if (p[i] == ch) return i;
 			return -1;
 		}
 
@@ -165,13 +140,12 @@ namespace Au.More
 		/// <param name="p"></param>
 		/// <param name="len">Length of p to search in.</param>
 		/// <param name="s">Substring to find. Must contain only ASCII characters.</param>
-		public static int AsciiFindString(byte* p, int len, string s)
-		{
+		public static int AsciiFindString(byte* p, int len, string s) {
 			int len2 = s.Length;
-			if(len2 <= len && len2 > 0) {
+			if (len2 <= len && len2 > 0) {
 				var ch = s[0];
-				for(int i = 0, n = len - len2; i <= n; i++) if(p[i] == ch) {
-						for(int j = 1; j < len2; j++) if(p[i + j] != s[j]) goto g1;
+				for (int i = 0, n = len - len2; i <= n; i++) if (p[i] == ch) {
+						for (int j = 1; j < len2; j++) if (p[i + j] != s[j]) goto g1;
 						return i;
 						g1:;
 					}

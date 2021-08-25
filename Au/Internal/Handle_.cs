@@ -1,19 +1,4 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
+﻿
 using Microsoft.Win32.SafeHandles;
 
 namespace Au.More
@@ -46,9 +31,8 @@ namespace Au.More
 		public bool Is0 => _h == default;
 
 		///
-		public void Dispose()
-		{
-			if(!Is0) { Api.CloseHandle(_h); _h = default; }
+		public void Dispose() {
+			if (!Is0) { Api.CloseHandle(_h); _h = default; }
 		}
 
 		/// <summary>
@@ -58,9 +42,8 @@ namespace Au.More
 		/// </summary>
 		/// <param name="processId">Process id.</param>
 		/// <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
-		public static Handle_ OpenProcess(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION)
-		{
-			if(processId == 0) { lastError.code = Api.ERROR_INVALID_PARAMETER; return default; }
+		public static Handle_ OpenProcess(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION) {
+			if (processId == 0) { lastError.code = Api.ERROR_INVALID_PARAMETER; return default; }
 			return _OpenProcess(processId, desiredAccess);
 		}
 
@@ -71,19 +54,17 @@ namespace Au.More
 		/// </summary>
 		/// <param name="w"></param>
 		/// <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
-		public static Handle_ OpenProcess(wnd w, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION)
-		{
-			int pid = w.ProcessId; if(pid == 0) return default;
+		public static Handle_ OpenProcess(wnd w, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION) {
+			int pid = w.ProcessId; if (pid == 0) return default;
 			return _OpenProcess(pid, desiredAccess, w);
 		}
 
-		static Handle_ _OpenProcess(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION, wnd processWindow = default)
-		{
+		static Handle_ _OpenProcess(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION, wnd processWindow = default) {
 			Handle_ R = Api.OpenProcess(desiredAccess, false, processId);
-			if(R.Is0 && !processWindow.Is0 && 0 == (desiredAccess & ~(Api.PROCESS_DUP_HANDLE | Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE | Api.SYNCHRONIZE))) {
+			if (R.Is0 && !processWindow.Is0 && 0 == (desiredAccess & ~(Api.PROCESS_DUP_HANDLE | Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE | Api.SYNCHRONIZE))) {
 				int e = lastError.code;
-				if(uacInfo.ofThisProcess.IsUIAccess) R = Api.GetProcessHandleFromHwnd(processWindow);
-				if(R.Is0) Api.SetLastError(e);
+				if (uacInfo.ofThisProcess.IsUIAccess) R = Api.GetProcessHandleFromHwnd(processWindow);
+				if (R.Is0) Api.SetLastError(e);
 			}
 			return R;
 		}
@@ -95,8 +76,7 @@ namespace Au.More
 	/// </summary>
 	internal class WaitHandle_ : WaitHandle
 	{
-		public WaitHandle_(IntPtr nativeHandle, bool ownsHandle)
-		{
+		public WaitHandle_(IntPtr nativeHandle, bool ownsHandle) {
 			base.SafeWaitHandle = new SafeWaitHandle(nativeHandle, ownsHandle);
 		}
 
@@ -106,11 +86,10 @@ namespace Au.More
 		/// </summary>
 		/// <param name="pid"></param>
 		/// <param name="desiredAccess"></param>
-		public static WaitHandle_ FromProcessId(int pid, uint desiredAccess)
-		{
+		public static WaitHandle_ FromProcessId(int pid, uint desiredAccess) {
 			WaitHandle_ wh = null;
 			try { wh = new WaitHandle_(Handle_.OpenProcess(pid, desiredAccess), true); }
-			catch(Exception ex) { Debug_.Print(ex); }
+			catch (Exception ex) { Debug_.Print(ex); }
 			return wh;
 		}
 	}

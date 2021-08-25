@@ -1,18 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
 
 using System.Linq;
 using System.Xml.Linq;
@@ -30,8 +15,7 @@ namespace Au.Types
 		/// If the attribute does not exist, returns null.
 		/// If the attribute value is empty, returns "".
 		/// </summary>
-		public static string Attr(this XElement t, XName name)
-		{
+		public static string Attr(this XElement t, XName name) {
 			return t.Attribute(name)?.Value;
 		}
 
@@ -40,8 +24,7 @@ namespace Au.Types
 		/// If the attribute does not exist, returns defaultValue.
 		/// If the attribute value is empty, returns "".
 		/// </summary>
-		public static string Attr(this XElement t, XName name, string defaultValue)
-		{
+		public static string Attr(this XElement t, XName name, string defaultValue) {
 			var x = t.Attribute(name);
 			return x != null ? x.Value : defaultValue;
 		}
@@ -50,8 +33,7 @@ namespace Au.Types
 		/// Gets XML attribute value.
 		/// If the attribute does not exist, sets value=null and returns false.
 		/// </summary>
-		public static bool Attr(this XElement t, out string value, XName name)
-		{
+		public static bool Attr(this XElement t, out string value, XName name) {
 			value = t.Attribute(name)?.Value;
 			return value != null;
 		}
@@ -61,8 +43,7 @@ namespace Au.Types
 		/// If the attribute does not exist, returns defaultValue.
 		/// If the attribute value is empty or does not begin with a valid number, returns 0.
 		/// </summary>
-		public static int Attr(this XElement t, XName name, int defaultValue)
-		{
+		public static int Attr(this XElement t, XName name, int defaultValue) {
 			var x = t.Attribute(name);
 			return x != null ? x.Value.ToInt() : defaultValue;
 		}
@@ -72,10 +53,9 @@ namespace Au.Types
 		/// If the attribute does not exist, sets value=0 and returns false.
 		/// If the attribute value is empty or does not begin with a valid number, sets value=0 and returns true.
 		/// </summary>
-		public static bool Attr(this XElement t, out int value, XName name)
-		{
+		public static bool Attr(this XElement t, out int value, XName name) {
 			var x = t.Attribute(name);
-			if(x == null) { value = 0; return false; }
+			if (x == null) { value = 0; return false; }
 			value = x.Value.ToInt();
 			return true;
 		}
@@ -85,10 +65,9 @@ namespace Au.Types
 		/// If the attribute does not exist, sets value=0 and returns false.
 		/// If the attribute value is empty or does not begin with a valid number, sets value=0 and returns true.
 		/// </summary>
-		public static bool Attr(this XElement t, out long value, XName name)
-		{
+		public static bool Attr(this XElement t, out long value, XName name) {
 			var x = t.Attribute(name);
-			if(x == null) { value = 0; return false; }
+			if (x == null) { value = 0; return false; }
 			x.Value.ToInt(out value);
 			return true;
 		}
@@ -98,10 +77,9 @@ namespace Au.Types
 		/// If the attribute does not exist, sets value=0 and returns false.
 		/// If the attribute value is empty or is not a valid number, sets value=0 and returns true.
 		/// </summary>
-		public static bool Attr(this XElement t, out double value, XName name)
-		{
+		public static bool Attr(this XElement t, out double value, XName name) {
 			var x = t.Attribute(name);
-			if(x == null) { value = 0d; return false; }
+			if (x == null) { value = 0d; return false; }
 			x.Value.ToNumber(out value);
 			return true;
 		}
@@ -111,10 +89,9 @@ namespace Au.Types
 		/// If the attribute does not exist, sets value=0 and returns false.
 		/// If the attribute value is empty or is not a valid number, sets value=0 and returns true.
 		/// </summary>
-		public static bool Attr(this XElement t, out float value, XName name)
-		{
+		public static bool Attr(this XElement t, out float value, XName name) {
 			var x = t.Attribute(name);
-			if(x == null) { value = 0f; return false; }
+			if (x == null) { value = 0f; return false; }
 			x.Value.ToNumber(out value);
 			return true;
 		}
@@ -124,10 +101,9 @@ namespace Au.Types
 		/// If the attribute does not exist, sets value=default(T) and returns false.
 		/// If the attribute value is not a valid enum member name, sets value=default(T) and returns true.
 		/// </summary>
-		public static bool Attr<T>(this XElement t, out T value, XName name) where T : unmanaged, Enum
-		{
+		public static bool Attr<T>(this XElement t, out T value, XName name) where T : unmanaged, Enum {
 			var x = t.Attribute(name);
-			if(x == null) { value = default; return false; }
+			if (x == null) { value = default; return false; }
 			Enum.TryParse(x.Value, out value);
 			return true;
 		}
@@ -135,8 +111,7 @@ namespace Au.Types
 		/// <summary>
 		/// Returns true if this element has the specified attribute.
 		/// </summary>
-		public static bool HasAttr(this XElement t, XName name)
-		{
+		public static bool HasAttr(this XElement t, XName name) {
 			return t.Attribute(name) != null;
 		}
 
@@ -144,8 +119,7 @@ namespace Au.Types
 		/// Gets the first found descendant element.
 		/// Returns null if not found.
 		/// </summary>
-		public static XElement Desc(this XElement t, XName name)
-		{
+		public static XElement Desc(this XElement t, XName name) {
 			return t.Descendants(name).FirstOrDefault();
 		}
 
@@ -158,10 +132,9 @@ namespace Au.Types
 		/// <param name="attributeName">Attribute name. If null, uses the Value property of the element.</param>
 		/// <param name="attributeValue">Attribute value (or Value). If null, can be any value.</param>
 		/// <param name="ignoreCase">Case-insensitive attributeValue.</param>
-		public static XElement Desc(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false)
-		{
-			foreach(var el in (name != null) ? t.Descendants(name) : t.Descendants()) {
-				if(_CmpAttrOrValue(el, attributeName, attributeValue, ignoreCase)) return el;
+		public static XElement Desc(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false) {
+			foreach (var el in (name != null) ? t.Descendants(name) : t.Descendants()) {
+				if (_CmpAttrOrValue(el, attributeName, attributeValue, ignoreCase)) return el;
 			}
 			return null;
 
@@ -177,10 +150,9 @@ namespace Au.Types
 		/// <param name="attributeName">Attribute name. If null, uses the Value property of the element.</param>
 		/// <param name="attributeValue">Attribute value (or Value). If null, can be any value.</param>
 		/// <param name="ignoreCase">Case-insensitive attributeValue.</param>
-		public static IEnumerable<XElement> Descs(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false)
-		{
-			foreach(var el in (name != null) ? t.Descendants(name) : t.Descendants()) {
-				if(_CmpAttrOrValue(el, attributeName, attributeValue, ignoreCase)) yield return el;
+		public static IEnumerable<XElement> Descs(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false) {
+			foreach (var el in (name != null) ? t.Descendants(name) : t.Descendants()) {
+				if (_CmpAttrOrValue(el, attributeName, attributeValue, ignoreCase)) yield return el;
 			}
 		}
 
@@ -193,10 +165,9 @@ namespace Au.Types
 		/// <param name="attributeName">Attribute name. If null, uses the Value property of the element.</param>
 		/// <param name="attributeValue">Attribute value (or Value). If null, can be any value.</param>
 		/// <param name="ignoreCase">Case-insensitive attributeValue.</param>
-		public static XElement Elem(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false)
-		{
-			foreach(var el in (name != null) ? t.Elements(name) : t.Elements()) {
-				if(_CmpAttrOrValue(el, attributeName, attributeValue, ignoreCase)) return el;
+		public static XElement Elem(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false) {
+			foreach (var el in (name != null) ? t.Elements(name) : t.Elements()) {
+				if (_CmpAttrOrValue(el, attributeName, attributeValue, ignoreCase)) return el;
 			}
 			return null;
 		}
@@ -210,20 +181,18 @@ namespace Au.Types
 		/// <param name="attributeName">Attribute name. If null, uses the Value property of the element.</param>
 		/// <param name="attributeValue">Attribute value (or Value). If null, can be any value.</param>
 		/// <param name="ignoreCase">Case-insensitive attributeValue.</param>
-		public static IEnumerable<XElement> Elems(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false)
-		{
-			foreach(var el in (name != null) ? t.Elements(name) : t.Elements()) {
-				if(_CmpAttrOrValue(el, attributeName, attributeValue, ignoreCase)) yield return el;
+		public static IEnumerable<XElement> Elems(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false) {
+			foreach (var el in (name != null) ? t.Elements(name) : t.Elements()) {
+				if (_CmpAttrOrValue(el, attributeName, attributeValue, ignoreCase)) yield return el;
 			}
 		}
 
-		static bool _CmpAttrOrValue(XElement el, XName attributeName, string attributeValue = null, bool ignoreCase = false)
-		{
-			if(attributeName != null) {
-				var a = el.Attribute(attributeName); if(a == null) return false;
-				if(attributeValue != null && !a.Value.Eq(attributeValue, ignoreCase)) return false;
+		static bool _CmpAttrOrValue(XElement el, XName attributeName, string attributeValue = null, bool ignoreCase = false) {
+			if (attributeName != null) {
+				var a = el.Attribute(attributeName); if (a == null) return false;
+				if (attributeValue != null && !a.Value.Eq(attributeValue, ignoreCase)) return false;
 			} else {
-				if(attributeValue != null && !el.Value.Eq(attributeValue, ignoreCase)) return false;
+				if (attributeValue != null && !el.Value.Eq(attributeValue, ignoreCase)) return false;
 			}
 			return true;
 		}
@@ -232,10 +201,9 @@ namespace Au.Types
 		/// Gets the first found direct child element. If not found, adds new empty child element.
 		/// Returns the found or added element.
 		/// </summary>
-		public static XElement ElemOrAdd(this XElement t, XName name)
-		{
+		public static XElement ElemOrAdd(this XElement t, XName name) {
 			var e = t.Element(name);
-			if(e == null) t.Add(e = new XElement(name));
+			if (e == null) t.Add(e = new XElement(name));
 			return e;
 		}
 
@@ -244,10 +212,9 @@ namespace Au.Types
 		/// Returns the found or added element.
 		/// More info: <see cref="Elem"/>
 		/// </summary>
-		public static XElement ElemOrAdd(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false)
-		{
+		public static XElement ElemOrAdd(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false) {
 			var e = t.Elem(name, attributeName, attributeValue, ignoreCase);
-			if(e == null) t.Add(e = new XElement(name, new XAttribute(attributeName, attributeValue)));
+			if (e == null) t.Add(e = new XElement(name, new XAttribute(attributeName, attributeValue)));
 			return e;
 		}
 
@@ -255,10 +222,9 @@ namespace Au.Types
 		/// Gets previous sibling element.
 		/// Returns null if no element.
 		/// </summary>
-		public static XElement PrevElem(this XElement t)
-		{
-			for(XNode n = t.PreviousNode; n != null; n = n.PreviousNode) {
-				if(n is XElement e) return e;
+		public static XElement PrevElem(this XElement t) {
+			for (XNode n = t.PreviousNode; n != null; n = n.PreviousNode) {
+				if (n is XElement e) return e;
 			}
 			return null;
 		}
@@ -267,10 +233,9 @@ namespace Au.Types
 		/// Gets next sibling element.
 		/// Returns null if no element.
 		/// </summary>
-		public static XElement NextElem(this XElement t)
-		{
-			for(XNode n = t.NextNode; n != null; n = n.NextNode) {
-				if(n is XElement e) return e;
+		public static XElement NextElem(this XElement t) {
+			for (XNode n = t.NextNode; n != null; n = n.NextNode) {
+				if (n is XElement e) return e;
 			}
 			return null;
 		}
@@ -280,10 +245,9 @@ namespace Au.Types
 		/// Uses <see cref="XElement.Save(string, SaveOptions)"/> and <see cref="filesystem.save"/>.
 		/// </summary>
 		/// <exception cref="Exception">Exceptions of <see cref="XElement.Save"/> and <see cref="filesystem.save"/>.</exception>
-		public static void SaveElem(this XElement t, string file, bool backup = false, SaveOptions? options = default)
-		{
+		public static void SaveElem(this XElement t, string file, bool backup = false, SaveOptions? options = default) {
 			filesystem.save(file, temp => {
-				if(options.HasValue) t.Save(temp, options.GetValueOrDefault()); else t.Save(temp);
+				if (options.HasValue) t.Save(temp, options.GetValueOrDefault()); else t.Save(temp);
 			}, backup);
 		}
 
@@ -292,10 +256,9 @@ namespace Au.Types
 		/// Uses <see cref="XDocument.Save(string)"/> and <see cref="filesystem.save"/>
 		/// </summary>
 		/// <exception cref="Exception">Exceptions of <see cref="XDocument.Save"/> and <see cref="filesystem.save"/>.</exception>
-		public static void SaveDoc(this XDocument t, string file, bool backup = false, SaveOptions? options = default)
-		{
+		public static void SaveDoc(this XDocument t, string file, bool backup = false, SaveOptions? options = default) {
 			filesystem.save(file, temp => {
-				if(options.HasValue) t.Save(temp, options.GetValueOrDefault()); else t.Save(temp);
+				if (options.HasValue) t.Save(temp, options.GetValueOrDefault()); else t.Save(temp);
 			}, backup);
 		}
 	}

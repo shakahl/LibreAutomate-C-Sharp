@@ -1,18 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
 
 using System.Drawing;
 
@@ -608,7 +593,7 @@ namespace Au
 
 			if (_iconSize != default) {
 				int x = r.left + c_iconPadding, y = r.top + c_iconPadding;
-				if(Icon is Image im) {
+				if (Icon is Image im) {
 					g.DrawImageUnscaled(im, x, y);
 				} else {
 					var hi = Icon switch { icon k => k.Handle, Icon k => k.Handle, _ => default };

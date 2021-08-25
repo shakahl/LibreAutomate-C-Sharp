@@ -1,21 +1,4 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
-namespace Au.More
+﻿namespace Au.More
 {
 	/// <summary>
 	/// Creates and manages native bitmap handle and memory DC (GDI device context).
@@ -46,10 +29,9 @@ namespace Au.More
 		/// </summary>
 		/// <exception cref="ArgumentException">width or height is less than 1.</exception>
 		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of specified size (need with*height*4 bytes).</exception>
-		public MemoryBitmap(int width, int height)
-		{
-			if(width <= 0 || height <= 0) throw new ArgumentException();
-			if(!Create(width, height)) throw new AuException("*create memory bitmap of specified size");
+		public MemoryBitmap(int width, int height) {
+			if (width <= 0 || height <= 0) throw new ArgumentException();
+			if (!Create(width, height)) throw new AuException("*create memory bitmap of specified size");
 		}
 
 		//rejected: not obvious, whether it attaches or copies. Also, attaching is rarely used.
@@ -62,9 +44,8 @@ namespace Au.More
 		//}
 
 		///
-		protected virtual void Dispose(bool disposing)
-		{
-			if(_disposed) return;
+		protected virtual void Dispose(bool disposing) {
+			if (_disposed) return;
 			_disposed = true;
 			Delete();
 		}
@@ -72,8 +53,7 @@ namespace Au.More
 		/// <summary>
 		/// Deletes the bitmap and DC.
 		/// </summary>
-		public void Dispose()
-		{
+		public void Dispose() {
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
@@ -92,10 +72,9 @@ namespace Au.More
 		/// <summary>
 		/// Deletes the bitmap and DC.
 		/// </summary>
-		public void Delete()
-		{
-			if(_dc == default) return;
-			if(_bm != default) {
+		public void Delete() {
+			if (_dc == default) return;
+			if (_bm != default) {
 				Api.SelectObject(_dc, _oldbm);
 				Api.DeleteObject(_bm);
 				_bm = default;
@@ -111,9 +90,8 @@ namespace Au.More
 		/// </summary>
 		/// <param name="width">Width, pixels. Must be &gt; 0.</param>
 		/// <param name="height">Height, pixels. Must be &gt; 0.</param>
-		public bool Create(int width, int height)
-		{
-			if(_disposed) throw new ObjectDisposedException(nameof(MemoryBitmap));
+		public bool Create(int width, int height) {
+			if (_disposed) throw new ObjectDisposedException(nameof(MemoryBitmap));
 			using var dcs = new ScreenDC_();
 			Attach(Api.CreateCompatibleBitmap(dcs, width, height));
 			return _bm != default;
@@ -125,11 +103,10 @@ namespace Au.More
 		/// Deletes previous bitmap and DC.
 		/// </summary>
 		/// <param name="hBitmap">Native bitmap handle.</param>
-		public void Attach(IntPtr hBitmap)
-		{
-			if(_disposed) throw new ObjectDisposedException(nameof(MemoryBitmap));
+		public void Attach(IntPtr hBitmap) {
+			if (_disposed) throw new ObjectDisposedException(nameof(MemoryBitmap));
 			Delete();
-			if(hBitmap != default) {
+			if (hBitmap != default) {
 				_dc = Api.CreateCompatibleDC(default);
 				_oldbm = Api.SelectObject(_dc, _bm = hBitmap);
 			}
@@ -139,10 +116,9 @@ namespace Au.More
 		/// Deletes memory DC, clears this variable and returns its bitmap (native bitmap handle).
 		/// The returned bitmap is not selected into a DC. Will need to delete it with API DeleteObject.
 		/// </summary>
-		public IntPtr Detach()
-		{
+		public IntPtr Detach() {
 			IntPtr bret = _bm;
-			if(_bm != default) {
+			if (_bm != default) {
 				Api.SelectObject(_dc, _oldbm);
 				Api.DeleteDC(_dc);
 				_dc = default; _bm = default;

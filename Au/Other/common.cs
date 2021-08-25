@@ -1,21 +1,4 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-using System.ComponentModel;
-
-namespace Au.Types
+﻿namespace Au.Types
 {
 	/// <summary>
 	/// In DocFX-generated help files removes documentation and auto-generated links in TOC and class pages.
@@ -26,7 +9,8 @@ namespace Au.Types
 	/// <summary>
 	/// If a class is derived from this class, editor adds undeclared Windows API to its completion list.
 	/// </summary>
-	public abstract class NativeApi {
+	public abstract class NativeApi
+	{
 		//For it could use an attribute. But this easily solves 2 problems:
 		//	1. In 'new' expression does not show completion list (with types from winapi DB) if the winapi class still does not have types inside. Because the completion service then returns null.
 		//	2. If class with attributes is after top-level statements, code info often does not work when typing directly above it. Works better if without attributes.

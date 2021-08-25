@@ -1,18 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
 
 using System.Xml;
 
@@ -132,7 +117,7 @@ namespace Au.More
 		public T RootAncestor {
 			get {
 				var p = this as T;
-				while(p._parent != null) p = p._parent;
+				while (p._parent != null) p = p._parent;
 				return p;
 			}
 		}
@@ -143,7 +128,7 @@ namespace Au.More
 		public int Level {
 			get {
 				int R = 0;
-				for(var p = _parent; p != null; p = p._parent) R++;
+				for (var p = _parent; p != null; p = p._parent) R++;
 				return R;
 			}
 		}
@@ -152,9 +137,8 @@ namespace Au.More
 		/// Returns true if this node is a descendant of node n.
 		/// </summary>
 		/// <param name="n">Can be null.</param>
-		public bool IsDescendantOf(T n)
-		{
-			for(var p = _parent; p != null; p = p._parent) if(p == n) return true;
+		public bool IsDescendantOf(T n) {
+			for (var p = _parent; p != null; p = p._parent) if (p == n) return true;
 			return false;
 		}
 
@@ -197,11 +181,11 @@ namespace Au.More
 		/// </remarks>
 		public T Previous {
 			get {
-				if(_parent == null) return null;
+				if (_parent == null) return null;
 				T n = _parent._lastChild._next;
 				Debug.Assert(n != null);
 				T p = null;
-				while(n != this) {
+				while (n != this) {
 					p = n;
 					n = n._next;
 				}
@@ -219,11 +203,11 @@ namespace Au.More
 		public int Index {
 			get {
 				var p = _parent;
-				if(p != null) {
+				if (p != null) {
 					var n = p._lastChild;
-					for(int i = 0; ; i++) {
+					for (int i = 0; ; i++) {
 						n = n._next;
-						if(n == this) return i;
+						if (n == this) return i;
 					}
 				}
 				return -1;
@@ -234,9 +218,8 @@ namespace Au.More
 
 		#region methods
 
-		void _AddCommon(T n)
-		{
-			if(n == null || n._parent != null || n == RootAncestor) throw new ArgumentException();
+		void _AddCommon(T n) {
+			if (n == null || n._parent != null || n == RootAncestor) throw new ArgumentException();
 			n._parent = this as T;
 		}
 
@@ -246,15 +229,14 @@ namespace Au.More
 		/// <param name="n"></param>
 		/// <param name="first">Insert n as the first child node. If false (default), appends to the end.</param>
 		/// <exception cref="ArgumentException">n is null, or has parent (need to <see cref="Remove"/> at first), or is this node, or an ancestor of this node.</exception>
-		public void AddChild(T n, bool first = false)
-		{
+		public void AddChild(T n, bool first = false) {
 			_AddCommon(n);
-			if(_lastChild == null) { //our first child!
+			if (_lastChild == null) { //our first child!
 				n._next = n; //n now is LastChild and FirstChild
 			} else {
 				n._next = _lastChild._next; //_next of _lastChild is FirstChild
 				_lastChild._next = n;
-				if(first) return;
+				if (first) return;
 			}
 			_lastChild = n;
 		}
@@ -266,22 +248,20 @@ namespace Au.More
 		/// <param name="after">Insert n after this node. If false (default), inserts before this node.</param>
 		/// <exception cref="ArgumentException">See <see cref="AddChild"/>.</exception>
 		/// <exception cref="InvalidOperationException">This node does not have parent (<see cref="Parent"/> is null).</exception>
-		public void AddSibling(T n, bool after)
-		{
-			if(_parent == null) throw new InvalidOperationException("no parent");
+		public void AddSibling(T n, bool after) {
+			if (_parent == null) throw new InvalidOperationException("no parent");
 			_parent._Insert(n, this as T, after);
 		}
 
-		void _Insert(T n, T anchor, bool after)
-		{
-			if(after && anchor == _lastChild) { //after last child
+		void _Insert(T n, T anchor, bool after) {
+			if (after && anchor == _lastChild) { //after last child
 				AddChild(n);
-			} else if(!after && anchor == _lastChild._next) { //before first child
+			} else if (!after && anchor == _lastChild._next) { //before first child
 				AddChild(n, true);
 			} else {
 				_AddCommon(n);
 				T prev, next;
-				if(after) { prev = anchor; next = anchor._next; } else { prev = anchor.Previous; next = anchor; }
+				if (after) { prev = anchor; next = anchor._next; } else { prev = anchor.Previous; next = anchor; }
 				n._next = next;
 				prev._next = n;
 			}
@@ -296,16 +276,15 @@ namespace Au.More
 		/// </remarks>
 		public void Remove() => _parent?._Remove(this as T);
 
-		void _Remove(T n)
-		{
+		void _Remove(T n) {
 			Debug.Assert(n?._parent == this);
 
 			T p = _lastChild;
-			while(p._next != n) p = p._next;
-			if(p == n) {
+			while (p._next != n) p = p._next;
+			if (p == n) {
 				_lastChild = null;
 			} else {
-				if(_lastChild == n) _lastChild = p;
+				if (_lastChild == n) _lastChild = p;
 				p._next = n._next;
 			}
 			n._parent = null;
@@ -318,11 +297,10 @@ namespace Au.More
 		/// </summary>
 		/// <param name="andSelf">Include this node.</param>
 		/// <param name="noRoot">Don't include <see cref="RootAncestor"/>.</param>
-		public IEnumerable<T> Ancestors(bool andSelf = false, bool noRoot = false)
-		{
+		public IEnumerable<T> Ancestors(bool andSelf = false, bool noRoot = false) {
 			var n = andSelf ? this as T : _parent;
-			while(n != null) {
-				if(noRoot && n._parent == null) break;
+			while (n != null) {
+				if (noRoot && n._parent == null) break;
 				yield return n;
 				n = n._parent;
 			}
@@ -333,19 +311,18 @@ namespace Au.More
 		/// </summary>
 		/// <param name="andSelf">Include this node. Default false.</param>
 		/// <param name="noRoot">Don't include <see cref="RootAncestor"/>.</param>
-		public T[] AncestorsReverse(bool andSelf = false, bool noRoot = false)
-		{
+		public T[] AncestorsReverse(bool andSelf = false, bool noRoot = false) {
 			T nFrom = andSelf ? this as T : _parent;
 			//count
 			int len = 0;
-			for(var n = nFrom; n != null; n = n._parent) {
-				if(noRoot && n._parent == null) break;
+			for (var n = nFrom; n != null; n = n._parent) {
+				if (noRoot && n._parent == null) break;
 				len++;
 			}
 			//array
-			if(len == 0) return Array.Empty<T>();
+			if (len == 0) return Array.Empty<T>();
 			var a = new T[len];
-			for(var n = nFrom; len > 0; n = n._parent) a[--len] = n;
+			for (var n = nFrom; len > 0; n = n._parent) a[--len] = n;
 			return a;
 
 			//info: can use LINQ Reverse, but this func makes less garbage.
@@ -355,15 +332,14 @@ namespace Au.More
 		/// Gets all direct child nodes.
 		/// </summary>
 		/// <param name="andSelf">Include this node. Default false.</param>
-		public IEnumerable<T> Children(bool andSelf = false)
-		{
-			if(andSelf) yield return this as T;
-			if(_lastChild != null) {
+		public IEnumerable<T> Children(bool andSelf = false) {
+			if (andSelf) yield return this as T;
+			if (_lastChild != null) {
 				var n = _lastChild;
 				do {
 					n = n._next;
 					yield return n;
-				} while(n != _lastChild);
+				} while (n != _lastChild);
 			}
 		}
 
@@ -385,17 +361,16 @@ namespace Au.More
 		/// Gets all descendant nodes (direct children, their children and so on).
 		/// </summary>
 		/// <param name="andSelf">Include this node. Default false.</param>
-		public IEnumerable<T> Descendants(bool andSelf = false)
-		{
+		public IEnumerable<T> Descendants(bool andSelf = false) {
 			var n = this as T;
-			if(andSelf) yield return n;
-			while(true) {
+			if (andSelf) yield return n;
+			while (true) {
 				T last = n._lastChild;
-				if(last != null) {
+				if (last != null) {
 					n = last._next;
 				} else {
-					while(n != null && n != this && n == n._parent._lastChild) n = n._parent;
-					if(n == null || n == this) break;
+					while (n != null && n != this && n == n._parent._lastChild) n = n._parent;
+					if (n == null || n == this) break;
 					n = n._next;
 				}
 				yield return n;
@@ -426,8 +401,7 @@ namespace Au.More
 		/// <exception cref="Exception">Exceptions of <see cref="XmlReader.Create(string)"/>.</exception>
 		/// <exception cref="XmlException">An error occurred while parsing the XML.</exception>
 		/// <example><see cref="TreeBase{T}"/></example>
-		protected static T XmlLoad(string file, XmlNodeReader nodeReader)
-		{
+		protected static T XmlLoad(string file, XmlNodeReader nodeReader) {
 			file = pathname.NormalizeForNET_(file);
 			var xs = new XmlReaderSettings() { IgnoreComments = true, IgnoreProcessingInstructions = true, IgnoreWhitespace = true };
 			using var r = filesystem.waitIfLocked(() => XmlReader.Create(file, xs));
@@ -443,21 +417,20 @@ namespace Au.More
 		/// <exception cref="XmlException">An error occurred while parsing the XML.</exception>
 		/// <remarks>More info: <see cref="XmlLoad(string, XmlNodeReader)"/>.</remarks>
 		/// <example><see cref="TreeBase{T}"/></example>
-		protected static T XmlLoad(XmlReader x, XmlNodeReader nodeReader)
-		{
-			if(x == null || nodeReader == null) throw new ArgumentNullException();
+		protected static T XmlLoad(XmlReader x, XmlNodeReader nodeReader) {
+			if (x == null || nodeReader == null) throw new ArgumentNullException();
 			T root = null, parent = null;
-			while(x.Read()) {
+			while (x.Read()) {
 				var nodeType = x.NodeType;
-				if(nodeType == XmlNodeType.Element) {
+				if (nodeType == XmlNodeType.Element) {
 					var n = nodeReader(x, parent);
-					if(root == null) root = n;
+					if (root == null) root = n;
 					else parent.AddChild(n);
 					x.MoveToElement();
-					if(!x.IsEmptyElement) parent = n;
-				} else if(nodeType == XmlNodeType.EndElement) {
-					if(parent == null) break;
-					if(parent == root) break;
+					if (!x.IsEmptyElement) parent = n;
+				} else if (nodeType == XmlNodeType.EndElement) {
+					if (parent == null) break;
+					if (parent == root) break;
 					parent = parent._parent;
 				}
 			}
@@ -477,8 +450,7 @@ namespace Au.More
 		/// Uses <see cref="filesystem.save"/>. It ensures that existing file data is not damaged on exception etc.
 		/// </remarks>
 		/// <example><see cref="TreeBase{T}"/></example>
-		protected void XmlSave(string file, XmlNodeWriter nodeWriter, XmlWriterSettings sett = null, IEnumerable<T> children = null)
-		{
+		protected void XmlSave(string file, XmlNodeWriter nodeWriter, XmlWriterSettings sett = null, IEnumerable<T> children = null) {
 			file = pathname.NormalizeForNET_(file);
 			sett ??= new XmlWriterSettings() { OmitXmlDeclaration = true, Indent = true, IndentChars = "  " };
 			filesystem.save(file, temp => {
@@ -496,29 +468,27 @@ namespace Au.More
 		/// <remarks>More info: <see cref="XmlSave(string, XmlNodeWriter, XmlWriterSettings, IEnumerable{T})"/>.</remarks>
 		/// <exception cref="Exception">Exceptions of <b>XmlWriter</b> methods.</exception>
 		/// <example><see cref="TreeBase{T}"/></example>
-		protected void XmlSave(XmlWriter x, XmlNodeWriter nodeWriter, IEnumerable<T> children = null)
-		{
-			if(x == null || nodeWriter == null) throw new ArgumentNullException();
+		protected void XmlSave(XmlWriter x, XmlNodeWriter nodeWriter, IEnumerable<T> children = null) {
+			if (x == null || nodeWriter == null) throw new ArgumentNullException();
 			x.WriteStartDocument();
-			if(children == null) {
+			if (children == null) {
 				_XmlWrite(x, nodeWriter);
 			} else {
 				nodeWriter(x, this as T);
-				foreach(var n in children) n._XmlWrite(x, nodeWriter);
+				foreach (var n in children) n._XmlWrite(x, nodeWriter);
 				x.WriteEndElement();
 			}
 			x.WriteEndDocument();
 		}
 
-		void _XmlWrite(XmlWriter x, XmlNodeWriter nodeWriter)
-		{
+		void _XmlWrite(XmlWriter x, XmlNodeWriter nodeWriter) {
 			nodeWriter(x, this as T);
-			if(_lastChild != null) {
+			if (_lastChild != null) {
 				var c = _lastChild;
 				do {
 					c = c._next;
 					c._XmlWrite(x, nodeWriter);
-				} while(c != _lastChild);
+				} while (c != _lastChild);
 			}
 			x.WriteEndElement();
 		}

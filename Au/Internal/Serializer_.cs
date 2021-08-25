@@ -1,21 +1,4 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
-namespace Au.More
+﻿namespace Au.More
 {
 	/// <summary>
 	/// Binary-serializes and deserializes multiple values of types int, string, string[], byte[] and null.
@@ -45,8 +28,8 @@ namespace Au.More
 
 			public static implicit operator int(Value a) => a.Int;
 			public static implicit operator string(Value a) => a.Obj as string;
-			public static implicit operator string[] (Value a) => a.Obj as string[];
-			public static implicit operator byte[] (Value a) => a.Obj as byte[];
+			public static implicit operator string[](Value a) => a.Obj as string[];
+			public static implicit operator byte[](Value a) => a.Obj as byte[];
 		}
 
 		public enum VType { Null, Int, String, StringArray, ByteArray }
@@ -64,18 +47,17 @@ namespace Au.More
 		/// </summary>
 		public static byte[] SerializeWithSize(params Value[] a) => _Serialize(true, a);
 
-		static byte[] _Serialize(bool withSize, Value[] a)
-		{
+		static byte[] _Serialize(bool withSize, Value[] a) {
 			int size = 4;
-			if(withSize) size += 4;
-			for(int i = 0; i < a.Length; i++) {
+			if (withSize) size += 4;
+			for (int i = 0; i < a.Length; i++) {
 				size++;
-				switch(a[i].Type) {
+				switch (a[i].Type) {
 				case VType.Int: size += 4; break;
 				case VType.String: size += 4 + (a[i].Obj as string).Length * 2; break;
 				case VType.StringArray:
 					int z = 4;
-					foreach(var v in a[i].Obj as string[]) z += 4 + v.Lenn() * 2;
+					foreach (var v in a[i].Obj as string[]) z += 4 + v.Lenn() * 2;
 					size += z;
 					break;
 				case VType.ByteArray: size += 4 + (a[i].Obj as byte[]).Length; break;
@@ -84,12 +66,12 @@ namespace Au.More
 			var ab = new byte[size];
 			fixed (byte* b0 = ab) {
 				byte* b = b0;
-				if(withSize) { *(int*)b = ab.Length - 4; b += 4; }
+				if (withSize) { *(int*)b = ab.Length - 4; b += 4; }
 				*(int*)b = a.Length; b += 4;
-				for(int i = 0; i < a.Length; i++) {
+				for (int i = 0; i < a.Length; i++) {
 					var ty = a[i].Type;
 					*b++ = (byte)ty;
-					switch(ty) {
+					switch (ty) {
 					case VType.Int:
 						*(int*)b = a[i].Int;
 						b += 4;
@@ -101,8 +83,8 @@ namespace Au.More
 					case VType.StringArray:
 						var k = a[i].Obj as string[];
 						*(int*)b = k.Length; b += 4;
-						foreach(var v in k) {
-							if(v != null) _AddString(v);
+						foreach (var v in k) {
+							if (v != null) _AddString(v);
 							else { *(int*)b = -1; b += 4; }
 						}
 						break;
@@ -116,11 +98,10 @@ namespace Au.More
 				}
 				Debug.Assert((b - b0) == size);
 
-				void _AddString(string s)
-				{
+				void _AddString(string s) {
 					*(int*)b = s.Length; b += 4;
 					var c = (char*)b;
-					for(int j = 0; j < s.Length; j++) c[j] = s[j];
+					for (int j = 0; j < s.Length; j++) c[j] = s[j];
 					b += s.Length * 2;
 				}
 			}
@@ -131,14 +112,13 @@ namespace Au.More
 		/// Deserializes values serialized by <see cref="Serialize"/>.
 		/// Returns array of values passed to <b>Serialize</b>.
 		/// </summary>
-		public static Value[] Deserialize(ReadOnlySpan<byte> serialized)
-		{
+		public static Value[] Deserialize(ReadOnlySpan<byte> serialized) {
 			fixed (byte* b0 = serialized) {
 				byte* b = b0;
 				int n = *(int*)b; b += 4;
 				var a = new Value[n];
-				for(int i = 0; i < n; i++) {
-					switch((VType)(*b++)) {
+				for (int i = 0; i < n; i++) {
+					switch ((VType)(*b++)) {
 					case VType.Null:
 						break;
 					case VType.Int:
@@ -149,7 +129,7 @@ namespace Au.More
 						break;
 					case VType.StringArray:
 						var k = new string[*(int*)b]; b += 4;
-						for(int j = 0; j < k.Length; j++) k[j] = _GetString();
+						for (int j = 0; j < k.Length; j++) k[j] = _GetString();
 						a[i] = k;
 						break;
 					case VType.ByteArray:
@@ -163,10 +143,9 @@ namespace Au.More
 				return a;
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				string _GetString()
-				{
+				string _GetString() {
 					int len = *(int*)b; b += 4;
-					if(len == -1) return null;
+					if (len == -1) return null;
 					var R = new string((char*)b, 0, len);
 					b += len * 2;
 					return R;

@@ -1,20 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
 namespace Au
 {
 	/// <summary>
@@ -26,8 +9,7 @@ namespace Au
 		~uacInfo() => _htoken.Dispose();
 
 		///
-		public void Dispose()
-		{
+		public void Dispose() {
 			_htoken.Dispose();
 			GC.SuppressFinalize(this);
 		}
@@ -54,17 +36,17 @@ namespace Au
 		/// </summary>
 		public UacElevation Elevation {
 			get {
-				if(_haveElevation == 0) {
+				if (_haveElevation == 0) {
 					unsafe {
 						UacElevation elev;
-						if(!Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenElevationType, &elev, 4, out _)) _haveElevation = 2;
+						if (!Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenElevationType, &elev, 4, out _)) _haveElevation = 2;
 						else {
 							_haveElevation = 1;
 							_Elevation = elev;
 						}
 					}
 				}
-				if(Failed = (_haveElevation == 2)) return UacElevation.Unknown;
+				if (Failed = (_haveElevation == 2)) return UacElevation.Unknown;
 				return _Elevation;
 			}
 		}
@@ -81,17 +63,17 @@ namespace Au
 		/// </remarks>
 		public bool IsUIAccess {
 			get {
-				if(_haveIsUIAccess == 0) {
+				if (_haveIsUIAccess == 0) {
 					unsafe {
 						uint uia;
-						if(!Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenUIAccess, &uia, 4, out var siz)) _haveIsUIAccess = 2;
+						if (!Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenUIAccess, &uia, 4, out var siz)) _haveIsUIAccess = 2;
 						else {
 							_haveIsUIAccess = 1;
 							_isUIAccess = uia != 0;
 						}
 					}
 				}
-				if(Failed = (_haveIsUIAccess == 2)) return false;
+				if (Failed = (_haveIsUIAccess == 2)) return false;
 				return _isUIAccess;
 			}
 		}
@@ -135,39 +117,37 @@ namespace Au
 		/// If UAC is turned off, most non-service processes on administrator account have High IL; on non-administrator - Medium.
 		/// </remarks>
 		public UacIL IntegrityLevel => _GetIntegrityLevel();
-		UacIL _GetIntegrityLevel()
-		{
-			if(_haveIntegrityLevel == 0) {
+		UacIL _GetIntegrityLevel() {
+			if (_haveIntegrityLevel == 0) {
 				unsafe {
 					Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, null, 0, out var siz);
-					if(lastError.code != Api.ERROR_INSUFFICIENT_BUFFER) _haveIntegrityLevel = 2;
+					if (lastError.code != Api.ERROR_INSUFFICIENT_BUFFER) _haveIntegrityLevel = 2;
 					else {
 						var b = stackalloc byte[(int)siz];
 						var tml = (_Api.TOKEN_MANDATORY_LABEL*)b;
-						if(!Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, tml, siz, out siz)) _haveIntegrityLevel = 2;
+						if (!Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, tml, siz, out siz)) _haveIntegrityLevel = 2;
 						uint x = *Api.GetSidSubAuthority(tml->Sid, (uint)(*Api.GetSidSubAuthorityCount(tml->Sid) - 1));
 
-						if(x < _Api.SECURITY_MANDATORY_LOW_RID) _integrityLevel = UacIL.Untrusted;
-						else if(x < _Api.SECURITY_MANDATORY_MEDIUM_RID) _integrityLevel = UacIL.Low;
-						else if(x < _Api.SECURITY_MANDATORY_HIGH_RID) _integrityLevel = UacIL.Medium;
-						else if(x < _Api.SECURITY_MANDATORY_SYSTEM_RID) {
-							if(IsUIAccess && Elevation != UacElevation.Full) _integrityLevel = UacIL.UIAccess; //fast. Note: don't use if(andUIAccess) here.
+						if (x < _Api.SECURITY_MANDATORY_LOW_RID) _integrityLevel = UacIL.Untrusted;
+						else if (x < _Api.SECURITY_MANDATORY_MEDIUM_RID) _integrityLevel = UacIL.Low;
+						else if (x < _Api.SECURITY_MANDATORY_HIGH_RID) _integrityLevel = UacIL.Medium;
+						else if (x < _Api.SECURITY_MANDATORY_SYSTEM_RID) {
+							if (IsUIAccess && Elevation != UacElevation.Full) _integrityLevel = UacIL.UIAccess; //fast. Note: don't use if(andUIAccess) here.
 							else _integrityLevel = UacIL.High;
-						} else if(x < _Api.SECURITY_MANDATORY_PROTECTED_PROCESS_RID) _integrityLevel = UacIL.System;
+						} else if (x < _Api.SECURITY_MANDATORY_PROTECTED_PROCESS_RID) _integrityLevel = UacIL.System;
 						else _integrityLevel = UacIL.Protected;
 					}
 				}
 			}
-			if(Failed = (_haveIntegrityLevel == 2)) return UacIL.Unknown;
+			if (Failed = (_haveIntegrityLevel == 2)) return UacIL.Unknown;
 			return _integrityLevel;
 		}
 		UacIL _integrityLevel; byte _haveIntegrityLevel;
 
 		uacInfo(Handle_ hToken) => _htoken = hToken;
 
-		static uacInfo _Create(IntPtr hProcess)
-		{
-			if(!Api.OpenProcessToken(hProcess, Api.TOKEN_QUERY | Api.TOKEN_QUERY_SOURCE, out Handle_ hToken)) return null;
+		static uacInfo _Create(IntPtr hProcess) {
+			if (!Api.OpenProcessToken(hProcess, Api.TOKEN_QUERY | Api.TOKEN_QUERY_SOURCE, out Handle_ hToken)) return null;
 			return new uacInfo(hToken);
 		}
 
@@ -179,11 +159,10 @@ namespace Au
 		/// <remarks>
 		/// To get <b>uacInfo</b> of this process, use <see cref="ofThisProcess"/>.
 		/// </remarks>
-		public static uacInfo ofProcess(int processId)
-		{
-			if(processId == 0) return null;
+		public static uacInfo ofProcess(int processId) {
+			if (processId == 0) return null;
 			using var hp = Handle_.OpenProcess(processId);
-			if(hp.Is0) return null;
+			if (hp.Is0) return null;
 			return _Create(hp);
 		}
 
@@ -192,7 +171,7 @@ namespace Au
 		/// </summary>
 		public static uacInfo ofThisProcess {
 			get {
-				if(s_thisProcess == null) {
+				if (s_thisProcess == null) {
 					s_thisProcess = _Create(Api.GetCurrentProcess());
 					Debug.Assert(s_thisProcess != null);
 				}
@@ -271,7 +250,7 @@ namespace Au
 		/// </summary>
 		public static bool isUacDisabled {
 			get {
-				if(!_haveIsUacDisabled) {
+				if (!_haveIsUacDisabled) {
 					_isUacDisabled = _IsUacDisabled();
 					_haveIsUacDisabled = true;
 				}
@@ -280,11 +259,10 @@ namespace Au
 		}
 
 		static bool _isUacDisabled, _haveIsUacDisabled;
-		static bool _IsUacDisabled()
-		{
+		static bool _IsUacDisabled() {
 			//if(osVersion.minWin8) return false; //UAC cannot be disabled so easily, but can
 			uacInfo x = ofThisProcess;
-			switch(x.Elevation) {
+			switch (x.Elevation) {
 			case UacElevation.Full:
 			case UacElevation.Limited:
 				return false;
@@ -293,12 +271,12 @@ namespace Au
 
 			int r = 1;
 			try {
-				if(!Api.GetDelegate(out Api.CheckElevationEnabled d, "kernel32.dll", "CheckElevationEnabled") || 0 != d(out r)) {
+				if (!Api.GetDelegate(out Api.CheckElevationEnabled d, "kernel32.dll", "CheckElevationEnabled") || 0 != d(out r)) {
 					Debug_.Print("CheckElevationEnabled");
 					r = (int)Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System", "EnableLUA", 1);
 				}
 			}
-			catch(Exception e) { Debug_.Print(e); }
+			catch (Exception e) { Debug_.Print(e); }
 			return r == 0;
 		}
 	}

@@ -1,20 +1,4 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-//SHOULDDO: test how mouse moves through non-screen area between screens A and C when screen B is in between.
+﻿//SHOULDDO: test how mouse moves through non-screen area between screens A and C when screen B is in between.
 //	QM2 has problems crossing non-screen corners at default speed. Au works well.
 
 namespace Au
@@ -86,7 +70,7 @@ namespace Au
 			if (!ok && !relaxed) {
 				var es = $"*mouse-move to this x y in screen. " + p.ToString();
 				wnd.active.UacCheckAndThrow_(es + ". The active"); //it's a mystery for users. API SendInput fails even if the point is not in the window.
-																	//rejected: wnd.getwnd.root.ActivateL()
+																   //rejected: wnd.getwnd.root.ActivateL()
 				if (!miscInfo.isInputDesktop()) es += ". Other desktop is active";
 				throw new AuException(es);
 				//known reasons:

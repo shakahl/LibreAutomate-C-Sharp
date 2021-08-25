@@ -1,19 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-using RStr = System.ReadOnlySpan<char>;
 
 using System.Text.RegularExpressions; //for XML doc links
 
@@ -345,8 +329,8 @@ namespace Au.Types
 		/// Unlike <see cref="Value"/>, does not create new string.
 		/// </remarks>
 		public RStr Span => _len > 0 ? _subject.AsSpan(_index, _len) : (_index < 0 ? default : ""); //_len can be < 0
-		///// 
-		///// This function cannot be used with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>. Then use <see cref="GetSpan_"/>.
+																									///// 
+																									///// This function cannot be used with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>. Then use <see cref="GetSpan_"/>.
 
 		/// <summary>
 		/// Gets substring of the subject string from <see cref="Start"/> to <see cref="End"/>.
@@ -356,8 +340,8 @@ namespace Au.Types
 		/// Creates new string each time. See also <see cref="Span"/>.
 		/// </remarks>
 		public string Value => _len > 0 ? _subject[_index..End] : (_index < 0 ? null : ""); //_len can be < 0
-		///// 
-		///// This function cannot be used with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>. Then use <see cref="GetValue_"/>.
+																							///// 
+																							///// This function cannot be used with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>. Then use <see cref="GetValue_"/>.
 
 		/// <summary>
 		/// Returns <see cref="Value"/>.

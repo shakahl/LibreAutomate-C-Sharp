@@ -1,21 +1,4 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
-namespace Au.More
+﻿namespace Au.More
 {
 	/// <summary>
 	/// Assembly functions.
@@ -74,16 +57,15 @@ namespace Au.More
 		/// <summary>
 		/// Returns flags for loaded assemblies: 1 System.Windows.Forms, 2 WindowsBase (WPF).
 		/// </summary>
-		internal static int IsLoadedWinformsWpf()
-		{
-			if(s_isLoadedWinformsWpf == 0) {
-				lock("zjm5R47f7UOmgyHUVZaf1w") {
-					if(s_isLoadedWinformsWpf == 0) {
+		internal static int IsLoadedWinformsWpf() {
+			if (s_isLoadedWinformsWpf == 0) {
+				lock ("zjm5R47f7UOmgyHUVZaf1w") {
+					if (s_isLoadedWinformsWpf == 0) {
 						var ad = AppDomain.CurrentDomain;
 						var a = ad.GetAssemblies();
-						foreach(var v in a) {
+						foreach (var v in a) {
 							_FlagFromName(v);
-							if(s_isLoadedWinformsWpf == 3) return 3;
+							if (s_isLoadedWinformsWpf == 3) return 3;
 						}
 						ad.AssemblyLoad += (_, x) => _FlagFromName(x.LoadedAssembly);
 						s_isLoadedWinformsWpf |= 0x100;
@@ -93,11 +75,10 @@ namespace Au.More
 
 			return s_isLoadedWinformsWpf & 3;
 
-			void _FlagFromName(Assembly a)
-			{
+			void _FlagFromName(Assembly a) {
 				string s = a.FullName; //fast, cached. GetName can be slow because not cached.
-				if(0 == (s_isLoadedWinformsWpf & 1) && s.Starts("System.Windows.Forms,")) s_isLoadedWinformsWpf |= 1;
-				else if(0 == (s_isLoadedWinformsWpf & 2) && s.Starts("WindowsBase,")) s_isLoadedWinformsWpf |= 2;
+				if (0 == (s_isLoadedWinformsWpf & 1) && s.Starts("System.Windows.Forms,")) s_isLoadedWinformsWpf |= 1;
+				else if (0 == (s_isLoadedWinformsWpf & 2) && s.Starts("WindowsBase,")) s_isLoadedWinformsWpf |= 2;
 			}
 		}
 		static volatile int s_isLoadedWinformsWpf;

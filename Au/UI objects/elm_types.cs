@@ -1,20 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
 namespace Au.Types
 {
 	/// <summary>
@@ -143,7 +126,7 @@ namespace Au.Types
 	/// Flags returned by <see cref="elm.MiscFlags"/>.
 	/// </summary>
 	[Flags]
-	public enum EMiscFlags :byte
+	public enum EMiscFlags : byte
 	{
 		/// <summary>
 		/// This UI element was retrieved by the dll loaded into its process.

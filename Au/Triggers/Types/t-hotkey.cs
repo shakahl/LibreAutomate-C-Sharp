@@ -1,22 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-using System.Collections;
-using System.ComponentModel;
-
-
 namespace Au.Triggers
 {
 	/// <summary>
@@ -66,8 +47,7 @@ namespace Au.Triggers
 		string _paramsString;
 
 		internal HotkeyTrigger(ActionTriggers triggers, Action<HotkeyTriggerArgs> action, KMod mod, KMod modAny, TKFlags flags, string paramsString, (string, int) source)
-			: base(triggers, action, true, source)
-		{
+			: base(triggers, action, true, source) {
 			const KMod csaw = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win;
 			modMask = ~modAny & csaw;
 			modMasked = mod & modMask;
@@ -100,8 +80,7 @@ namespace Au.Triggers
 		ActionTriggers _triggers;
 		Dictionary<int, ActionTrigger> _d = new Dictionary<int, ActionTrigger>();
 
-		internal HotkeyTriggers(ActionTriggers triggers)
-		{
+		internal HotkeyTriggers(ActionTriggers triggers) {
 			_triggers = triggers;
 		}
 
@@ -136,7 +115,7 @@ namespace Au.Triggers
 				////print.it(us, ui);
 				////print.it(uu);
 
-				if(!keys.more.ParseHotkeyTriggerString_(hotkey, out var mod, out var modAny, out var key, false)) throw new ArgumentException("Invalid hotkey string.");
+				if (!keys.more.ParseHotkeyTriggerString_(hotkey, out var mod, out var modAny, out var key, false)) throw new ArgumentException("Invalid hotkey string.");
 				_Add(value, key, mod, modAny, flags, hotkey, (f_, l_));
 			}
 		}
@@ -158,17 +137,16 @@ namespace Au.Triggers
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		public Action<HotkeyTriggerArgs> this[KKey key, string modKeys, TKFlags flags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 			set {
-				var ps = key.ToString(); if(ps[0].IsAsciiDigit()) ps = "VK" + ps;
-				if(!modKeys.NE()) ps = modKeys + "+" + ps;
+				var ps = key.ToString(); if (ps[0].IsAsciiDigit()) ps = "VK" + ps;
+				if (!modKeys.NE()) ps = modKeys + "+" + ps;
 
-				if(!keys.more.ParseHotkeyTriggerString_(modKeys, out var mod, out var modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
+				if (!keys.more.ParseHotkeyTriggerString_(modKeys, out var mod, out var modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
 				_Add(value, key, mod, modAny, flags, ps, (f_, l_));
 			}
 		}
 
-		void _Add(Action<HotkeyTriggerArgs> action, KKey key, KMod mod, KMod modAny, TKFlags flags, string paramsString, (string, int) source)
-		{
-			if(mod == 0 && flags.HasAny((TKFlags.LeftMod | TKFlags.RightMod))) throw new ArgumentException("Invalid flags.");
+		void _Add(Action<HotkeyTriggerArgs> action, KKey key, KMod mod, KMod modAny, TKFlags flags, string paramsString, (string, int) source) {
+			if (mod == 0 && flags.HasAny((TKFlags.LeftMod | TKFlags.RightMod))) throw new ArgumentException("Invalid flags.");
 			_triggers.ThrowIfRunning_();
 			//actually could safely add triggers while running.
 			//	Currently would need just lock(_d) in several places. Also some triggers of this type must be added before starting, else we would not have the hook etc.
@@ -188,30 +166,28 @@ namespace Au.Triggers
 
 		bool ITriggers.HasTriggers => _lastAdded != null;
 
-		void ITriggers.StartStop(bool start)
-		{
+		void ITriggers.StartStop(bool start) {
 			_UpClear();
 			_eatUp = 0;
 		}
 
-		internal bool HookProc(HookData.Keyboard k, TriggerHookContext thc)
-		{
+		internal bool HookProc(HookData.Keyboard k, TriggerHookContext thc) {
 			//print.it(k.vkCode, !k.IsUp);
 			Debug.Assert(!k.IsInjectedByAu); //server must ignore
 
 			KKey key = k.vkCode;
 			KMod mod = thc.Mod;
 			bool up = k.IsUp;
-			if(!up) _UpClear();
+			if (!up) _UpClear();
 
-			if(thc.ModThis != 0) {
-				if(_upTrigger != null && mod == 0 && _upKey == 0) _UpTriggered(thc);
-			} else if(up) {
-				if(key == _upKey) {
+			if (thc.ModThis != 0) {
+				if (_upTrigger != null && mod == 0 && _upKey == 0) _UpTriggered(thc);
+			} else if (up) {
+				if (key == _upKey) {
 					_upKey = 0;
-					if(_upTrigger != null && mod == 0) _UpTriggered(thc);
+					if (_upTrigger != null && mod == 0) _UpTriggered(thc);
 				}
-				if(key == _eatUp) {
+				if (key == _eatUp) {
 					_eatUp = 0;
 					return true;
 					//To be safer, could return false if keys.isPressed(_eatUp), but then can interfere with the trigger action.
@@ -221,26 +197,26 @@ namespace Au.Triggers
 				//if(key == _eatUp) _eatUp = 0;
 				_eatUp = 0;
 
-				if(_d.TryGetValue((int)key, out var v)) {
+				if (_d.TryGetValue((int)key, out var v)) {
 					HotkeyTriggerArgs args = null;
-					for(; v != null; v = v.next) {
+					for (; v != null; v = v.next) {
 						var x = v as HotkeyTrigger;
-						if((mod & x.modMask) != x.modMasked) continue;
+						if ((mod & x.modMask) != x.modMasked) continue;
 
-						switch(x.flags & (TKFlags.LeftMod | TKFlags.RightMod)) {
-						case TKFlags.LeftMod: if(thc.ModL != mod) continue; break;
-						case TKFlags.RightMod: if(thc.ModR != mod) continue; break;
+						switch (x.flags & (TKFlags.LeftMod | TKFlags.RightMod)) {
+						case TKFlags.LeftMod: if (thc.ModL != mod) continue; break;
+						case TKFlags.RightMod: if (thc.ModR != mod) continue; break;
 						}
 
-						if(v.DisabledThisOrAll) continue;
+						if (v.DisabledThisOrAll) continue;
 
-						if(args == null) thc.args = args = new HotkeyTriggerArgs(x, thc.Window, key, mod); //may need for scope callbacks too
+						if (args == null) thc.args = args = new HotkeyTriggerArgs(x, thc.Window, key, mod); //may need for scope callbacks too
 						else args.Trigger = x;
 
-						if(!x.MatchScopeWindowAndFunc(thc)) continue;
+						if (!x.MatchScopeWindowAndFunc(thc)) continue;
 
-						if(x.action != null) {
-							if(0 != (x.flags & TKFlags.KeyModUp)) {
+						if (x.action != null) {
+							if (0 != (x.flags & TKFlags.KeyModUp)) {
 								_upTrigger = x;
 								_upArgs = args;
 								_upKey = key;
@@ -250,16 +226,16 @@ namespace Au.Triggers
 						}
 
 						//print.it(key, mod);
-						if(0 != (x.flags & TKFlags.ShareEvent)) return false;
+						if (0 != (x.flags & TKFlags.ShareEvent)) return false;
 
-						if(thc.trigger == null) { //KeyModUp or action==null
-							if(mod == KMod.Alt || mod == KMod.Win || mod == (KMod.Alt | KMod.Win)) {
+						if (thc.trigger == null) { //KeyModUp or action==null
+							if (mod == KMod.Alt || mod == KMod.Win || mod == (KMod.Alt | KMod.Win)) {
 								//print.it("need Ctrl");
 								ThreadPool.QueueUserWorkItem(o => keys.Internal_.SendKey(KKey.Ctrl)); //disable Alt/Win menu
 							}
-						} else if(mod != 0) {
-							if(0 == (x.flags & TKFlags.NoModOff)) thc.muteMod = TriggerActionThreads.c_modRelease;
-							else if(mod == KMod.Alt || mod == KMod.Win || mod == (KMod.Alt | KMod.Win)) thc.muteMod = TriggerActionThreads.c_modCtrl;
+						} else if (mod != 0) {
+							if (0 == (x.flags & TKFlags.NoModOff)) thc.muteMod = TriggerActionThreads.c_modRelease;
+							else if (mod == KMod.Alt || mod == KMod.Win || mod == (KMod.Alt | KMod.Win)) thc.muteMod = TriggerActionThreads.c_modCtrl;
 						}
 
 						_eatUp = key;
@@ -275,15 +251,13 @@ namespace Au.Triggers
 		KKey _upKey;
 		KKey _eatUp;
 
-		void _UpTriggered(TriggerHookContext thc)
-		{
+		void _UpTriggered(TriggerHookContext thc) {
 			thc.args = _upArgs;
 			thc.trigger = _upTrigger;
 			_UpClear();
 		}
 
-		void _UpClear()
-		{
+		void _UpClear() {
 			_upTrigger = null;
 			_upArgs = null;
 			_upKey = 0;
@@ -292,18 +266,16 @@ namespace Au.Triggers
 		/// <summary>
 		/// Used by foreach to enumerate added triggers.
 		/// </summary>
-		public IEnumerator<HotkeyTrigger> GetEnumerator()
-		{
-			foreach(var kv in _d) {
-				for(var v = kv.Value; v != null; v = v.next) {
+		public IEnumerator<HotkeyTrigger> GetEnumerator() {
+			foreach (var kv in _d) {
+				for (var v = kv.Value; v != null; v = v.next) {
 					var x = v as HotkeyTrigger;
 					yield return x;
 				}
 			}
 		}
 
-		IEnumerator IEnumerable.GetEnumerator()
-		{
+		IEnumerator IEnumerable.GetEnumerator() {
 			throw new NotImplementedException();
 		}
 	}
@@ -339,8 +311,7 @@ namespace Au.Triggers
 		public KMod Mod { get; }
 
 		///
-		public HotkeyTriggerArgs(HotkeyTrigger trigger, wnd w, KKey key, KMod mod)
-		{
+		public HotkeyTriggerArgs(HotkeyTrigger trigger, wnd w, KKey key, KMod mod) {
 			Trigger = trigger;
 			Window = w; Key = key; Mod = mod;
 		}

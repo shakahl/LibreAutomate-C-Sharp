@@ -1,21 +1,4 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
-namespace Au.More
+﻿namespace Au.More
 {
 	/// <summary>
 	/// Calls API <msdn>AttachThreadInput</msdn> to attach/detach thread input.
@@ -28,8 +11,7 @@ namespace Au.More
 		/// <summary>
 		/// Attaches thread input of this thread to that of the specified thread.
 		/// </summary>
-		public AttachThreadInput_(int idThreadAttachTo, out bool succeeded)
-		{
+		public AttachThreadInput_(int idThreadAttachTo, out bool succeeded) {
 			_tidThis = Api.GetCurrentThreadId();
 			succeeded = Api.AttachThreadInput(_tidThis, idThreadAttachTo, true);
 			_tidAttach = succeeded ? idThreadAttachTo : 0;
@@ -38,9 +20,8 @@ namespace Au.More
 		/// <summary>
 		/// Detaches thread input.
 		/// </summary>
-		public void Dispose()
-		{
-			if(_tidAttach != 0) {
+		public void Dispose() {
+			if (_tidAttach != 0) {
 				Api.AttachThreadInput(_tidThis, _tidAttach, false);
 				_tidAttach = 0;
 			}

@@ -1,20 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
 namespace Au.More
 {
 	/// <summary>
@@ -234,7 +217,7 @@ namespace Au.More
 				_restore = false;
 				_print = print;
 				if (osVersion.is32BitProcess) return;
-				if(_print) Debug_.MemorySetAnchor_();
+				if (_print) Debug_.MemorySetAnchor_();
 				//print.it(System.Runtime.GCSettings.LatencyMode);
 				try { _restore = GC.TryStartNoGCRegion(memSize); }
 				catch (InvalidOperationException ex) { Debug_.Print(ex.Message); }
@@ -250,7 +233,7 @@ namespace Au.More
 					//if(System.Runtime.GCSettings.LatencyMode == System.Runtime.GCLatencyMode.NoGCRegion) GC.EndNoGCRegion();
 					try { GC.EndNoGCRegion(); } //note: need to call even if not in nogc region (then exception); else TryStartNoGCRegion will throw exception.
 					catch (InvalidOperationException ex) { Debug_.Print(ex.Message); }
-					if(_print) Debug_.MemoryPrint_();
+					if (_print) Debug_.MemoryPrint_();
 					ThreadPool.QueueUserWorkItem(_ => GC.Collect());
 				}
 			}

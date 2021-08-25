@@ -1,21 +1,4 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
-namespace Au.More
+﻿namespace Au.More
 {
 	/// <summary>
 	/// Gets programming names of .NET Windows Forms controls.
@@ -30,9 +13,8 @@ namespace Au.More
 		wnd _w;
 
 		///
-		public void Dispose()
-		{
-			if(_pm != null) { _pm.Dispose(); _pm = null; }
+		public void Dispose() {
+			if (_pm != null) { _pm.Dispose(); _pm = null; }
 			GC.SuppressFinalize(this);
 		}
 
@@ -44,8 +26,7 @@ namespace Au.More
 		/// <param name="w">Any top-level or child window of that process.</param>
 		/// <exception cref="AuWndException">w invalid.</exception>
 		/// <exception cref="AuException">Failed to allocate process memory (see <see cref="ProcessMemory"/>) needed to get control names, usually because of [](xref:uac).</exception>
-		public WinformsControlNames(wnd w)
-		{
+		public WinformsControlNames(wnd w) {
 			_pm = new ProcessMemory(w, 4096); //throws
 			_w = w;
 		}
@@ -55,13 +36,12 @@ namespace Au.More
 		/// Returns null if fails or the name is empty.
 		/// </summary>
 		/// <param name="c">The control. Can be a top-level window too. Must be of the same process as the window specified in the constructor.</param>
-		public string GetControlName(wnd c)
-		{
-			if(_pm == null) return null;
-			if(!IsWinformsControl(c)) return null;
-			if(!c.SendTimeout(5000, out var R, WM_GETCONTROLNAME, 4096, _pm.Mem) || (int)R < 1) return null;
+		public string GetControlName(wnd c) {
+			if (_pm == null) return null;
+			if (!IsWinformsControl(c)) return null;
+			if (!c.SendTimeout(5000, out var R, WM_GETCONTROLNAME, 4096, _pm.Mem) || (int)R < 1) return null;
 			int len = (int)R - 1;
-			if(len == 0) return "";
+			if (len == 0) return "";
 			return _pm.ReadUnicodeString(len);
 		}
 
@@ -70,8 +50,7 @@ namespace Au.More
 		/// Usually it means that we can get Windows Forms control name of w and its child controls.
 		/// </summary>
 		/// <param name="w">The window. Can be top-level or control.</param>
-		public static bool IsWinformsControl(wnd w)
-		{
+		public static bool IsWinformsControl(wnd w) {
 			return w.ClassNameIs("WindowsForms*");
 		}
 
@@ -81,11 +60,10 @@ namespace Au.More
 		/// </summary>
 		/// <param name="c">The control. Can be top-level window too.</param>
 		/// <remarks>This function is easy to use and does not throw excaptions. However, when you need names of multiple controls of a single window, better create a WinformsControlNames instance (once) and for each control call its GetControlNameOrText method, it will be faster.</remarks>
-		public static string GetSingleControlName(wnd c)
-		{
-			if(!IsWinformsControl(c)) return null;
+		public static string GetSingleControlName(wnd c) {
+			if (!IsWinformsControl(c)) return null;
 			try {
-				using(var x = new WinformsControlNames(c)) return x.GetControlName(c);
+				using (var x = new WinformsControlNames(c)) return x.GetControlName(c);
 			}
 			catch { }
 			return null;

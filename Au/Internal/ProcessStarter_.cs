@@ -1,19 +1,4 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
+﻿
 using Microsoft.Win32.SafeHandles;
 
 namespace Au.More
@@ -45,12 +30,11 @@ namespace Au.More
 		/// <param name="envVar">null or environment variables to pass to the new process together with variables of this process. Format: "var1=value1\0var2=value2\0". If ends with "\0\0", will pass only these variables.</param>
 		/// <param name="rawExe">Don't normalize <i>exe</i>.</param>
 		/// <param name="rawCurDir">Don't normalize <i>curDir</i>.</param>
-		public ProcessStarter_(string exe, string args = null, string curDir = null, string envVar = null, bool rawExe = false, bool rawCurDir = false) : this()
-		{
-			if(!rawExe) exe = pathname.normalize(exe, folders.ThisApp, PNFlags.DontExpandDosPath | PNFlags.DontPrefixLongPath);
+		public ProcessStarter_(string exe, string args = null, string curDir = null, string envVar = null, bool rawExe = false, bool rawCurDir = false) : this() {
+			if (!rawExe) exe = pathname.normalize(exe, folders.ThisApp, PNFlags.DontExpandDosPath | PNFlags.DontPrefixLongPath);
 			_exe = exe;
 			cl = (args == null ? ("\"" + exe + "\"" + "\0") : ("\"" + exe + "\" " + args + "\0")).ToCharArray();
-			if(curDir == null) this.curDir = Directory.GetCurrentDirectory(); //if null passed to CreateProcessWithTokenW, the new process does not inherit current directory of this process
+			if (curDir == null) this.curDir = Directory.GetCurrentDirectory(); //if null passed to CreateProcessWithTokenW, the new process does not inherit current directory of this process
 			else this.curDir = rawCurDir ? curDir : (curDir.Length == 0 ? pathname.getDirectory(exe) : pathname.expand(curDir));
 
 			si.cb = Api.SizeOf<Api.STARTUPINFO>();
@@ -58,14 +42,14 @@ namespace Au.More
 
 			flags = Api.CREATE_UNICODE_ENVIRONMENT;
 
-			if(envVar != null && !envVar.Ends("\0\0")) {
+			if (envVar != null && !envVar.Ends("\0\0")) {
 				var es = Api.GetEnvironmentStrings();
-				int len1; for(var k = es; ; k++) if(k[0] == 0 && k[1] == 0) { len1 = (int)(k - es) + 2; break; }
+				int len1; for (var k = es; ; k++) if (k[0] == 0 && k[1] == 0) { len1 = (int)(k - es) + 2; break; }
 				int len2 = envVar.Length;
 				var t = new string('\0', len1 + len2);
 				fixed (char* p = t) {
 					MemoryUtil.Copy(es, p, --len1 * 2);
-					for(int i = 0; i < envVar.Length; i++) p[len1 + i] = envVar[i];
+					for (int i = 0; i < envVar.Length; i++) p[len1 + i] = envVar[i];
 				}
 				this.envVar = t;
 				Api.FreeEnvironmentStrings(es);
@@ -78,10 +62,9 @@ namespace Au.More
 		/// <param name="pi">Receives CreateProcessX results. Will need to close handles in pi, eg pi.Dispose.</param>
 		/// <param name="inheritUiaccess">If this process has UAC integrity level uiAccess, let the new process inherit it.</param>
 		/// <param name="inheritHandles">API parameter <i>bInheritHandles</i>.</param>
-		public bool StartL(out Api.PROCESS_INFORMATION pi, bool inheritUiaccess = false, bool inheritHandles = false)
-		{
-			if(inheritUiaccess && Api.OpenProcessToken(Api.GetCurrentProcess(), Api.TOKEN_QUERY | Api.TOKEN_DUPLICATE | Api.TOKEN_ASSIGN_PRIMARY, out Handle_ hToken)) {
-				using(hToken) return Api.CreateProcessAsUser(hToken, null, cl, null, null, inheritHandles, flags, envVar, curDir, si, out pi);
+		public bool StartL(out Api.PROCESS_INFORMATION pi, bool inheritUiaccess = false, bool inheritHandles = false) {
+			if (inheritUiaccess && Api.OpenProcessToken(Api.GetCurrentProcess(), Api.TOKEN_QUERY | Api.TOKEN_DUPLICATE | Api.TOKEN_ASSIGN_PRIMARY, out Handle_ hToken)) {
+				using (hToken) return Api.CreateProcessAsUser(hToken, null, cl, null, null, inheritHandles, flags, envVar, curDir, si, out pi);
 			} else {
 				return Api.CreateProcess(null, cl, null, null, inheritHandles, flags, envVar, curDir, si, out pi);
 			}
@@ -93,13 +76,12 @@ namespace Au.More
 		/// <param name="need">Which field to set in <b>Result</b>.</param>
 		/// <param name="inheritUiaccess">If this process has UAC integrity level uiAccess, let the new process inherit it.</param>
 		/// <exception cref="AuException">Failed.</exception>
-		internal Result Start(Result.Need need = 0, bool inheritUiaccess = false)
-		{
+		internal Result Start(Result.Need need = 0, bool inheritUiaccess = false) {
 			bool suspended = need == Result.Need.NetProcess && !_NetProcessObject.IsFast, resetSuspendedFlag = false;
-			if(suspended && 0 == (flags & Api.CREATE_SUSPENDED)) { flags |= Api.CREATE_SUSPENDED; resetSuspendedFlag = true; }
+			if (suspended && 0 == (flags & Api.CREATE_SUSPENDED)) { flags |= Api.CREATE_SUSPENDED; resetSuspendedFlag = true; }
 			bool ok = StartL(out var pi, inheritUiaccess);
-			if(resetSuspendedFlag) flags &= ~Api.CREATE_SUSPENDED;
-			if(!ok) throw new AuException(0, $"*start process '{_exe}'");
+			if (resetSuspendedFlag) flags &= ~Api.CREATE_SUSPENDED;
+			if (!ok) throw new AuException(0, $"*start process '{_exe}'");
 			return new Result(pi, need, suspended);
 		}
 
@@ -113,11 +95,10 @@ namespace Au.More
 		/// Fails if there is no shell process (API GetShellWindow fails) for more than 2 s from calling this func.
 		/// Asserts and fails if this is not admin/system process. Caller should at first call <see cref="uacInfo.isAdmin"/> or <see cref="uacInfo.IntegrityLevel"/>.
 		/// </remarks>
-		internal Result StartUserIL(Result.Need need = 0)
-		{
-			if(s_userToken == null) {
+		internal Result StartUserIL(Result.Need need = 0) {
+			if (s_userToken == null) {
 				Debug.Assert(uacInfo.isAdmin); //else cannot set privilege
-				if(!SecurityUtil.SetPrivilege("SeIncreaseQuotaPrivilege", true)) goto ge;
+				if (!SecurityUtil.SetPrivilege("SeIncreaseQuotaPrivilege", true)) goto ge;
 
 				//perf.first();
 #if false //works, but slow, eg 60 ms, even if we don't create task everytime
@@ -135,15 +116,15 @@ namespace Au.More
 				bool retry = false;
 				g1:
 				var w = Api.GetShellWindow();
-				if(w.Is0) { //if Explorer process killed or crashed, wait until it restarts
-					if(!wait.forCondition(2, () => !Api.GetShellWindow().Is0)) throw new AuException($"*start process '{_exe}' as user. There is no shell process.");
+				if (w.Is0) { //if Explorer process killed or crashed, wait until it restarts
+					if (!wait.forCondition(2, () => !Api.GetShellWindow().Is0)) throw new AuException($"*start process '{_exe}' as user. There is no shell process.");
 					500.ms();
 					w = Api.GetShellWindow();
 				}
 
 				var hUserProcess = Handle_.OpenProcess(w);
-				if(hUserProcess.Is0) {
-					if(retry) goto ge;
+				if (hUserProcess.Is0) {
+					if (retry) goto ge;
 					retry = true; 500.ms(); goto g1;
 				}
 
@@ -154,23 +135,23 @@ namespace Au.More
 #endif
 				//perf.nw();
 
-				using(hUserProcess) {
-					if(Api.OpenProcessToken(hUserProcess, Api.TOKEN_DUPLICATE, out Handle_ hShellToken)) {
-						using(hShellToken) {
+				using (hUserProcess) {
+					if (Api.OpenProcessToken(hUserProcess, Api.TOKEN_DUPLICATE, out Handle_ hShellToken)) {
+						using (hShellToken) {
 							const uint access = Api.TOKEN_QUERY | Api.TOKEN_ASSIGN_PRIMARY | Api.TOKEN_DUPLICATE | Api.TOKEN_ADJUST_DEFAULT | Api.TOKEN_ADJUST_SESSIONID;
-							if(Api.DuplicateTokenEx(hShellToken, access, null, Api.SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation, Api.TOKEN_TYPE.TokenPrimary, out var userToken))
+							if (Api.DuplicateTokenEx(hShellToken, access, null, Api.SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation, Api.TOKEN_TYPE.TokenPrimary, out var userToken))
 								s_userToken = new SafeAccessTokenHandle(userToken);
 						}
 					}
 				}
-				if(s_userToken == null) goto ge;
+				if (s_userToken == null) goto ge;
 			}
 
 			bool suspended = need == Result.Need.NetProcess && !_NetProcessObject.IsFast, resetSuspendedFlag = false;
-			if(suspended && 0 == (flags & Api.CREATE_SUSPENDED)) { flags |= Api.CREATE_SUSPENDED; resetSuspendedFlag = true; }
+			if (suspended && 0 == (flags & Api.CREATE_SUSPENDED)) { flags |= Api.CREATE_SUSPENDED; resetSuspendedFlag = true; }
 			bool ok = Api.CreateProcessWithTokenW(s_userToken.DangerousGetHandle(), 0, null, cl, flags, envVar, curDir, si, out var pi);
-			if(resetSuspendedFlag) flags &= ~Api.CREATE_SUSPENDED;
-			if(!ok) goto ge;
+			if (resetSuspendedFlag) flags &= ~Api.CREATE_SUSPENDED;
+			if (!ok) goto ge;
 			return new Result(pi, need, suspended);
 
 			ge: throw new AuException(0, $"*start process '{_exe}' as user");
@@ -197,10 +178,9 @@ namespace Au.More
 			public WaitHandle waitHandle;
 			public Process netProcess;
 
-			internal Result(in Api.PROCESS_INFORMATION pi, Need need, bool suspended)
-			{
+			internal Result(in Api.PROCESS_INFORMATION pi, Need need, bool suspended) {
 				pid = pi.dwProcessId;
-				switch(need) {
+				switch (need) {
 				case Need.NetProcess:
 					netProcess = _NetProcessObject.Create(pi, suspended: suspended);
 					break;
@@ -226,12 +206,11 @@ namespace Au.More
 			/// </summary>
 			public static bool IsFast { get; } = _CanSetHandleId();
 
-			public static bool _CanSetHandleId()
-			{
+			public static bool _CanSetHandleId() {
 				const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.InvokeMethod;
 				s_mi1 = typeof(Process).GetMethod("SetProcessHandle", flags);
 				s_mi2 = typeof(Process).GetMethod("SetProcessId", flags);
-				if(s_mi1 != null && s_mi2 != null) return true;
+				if (s_mi1 != null && s_mi2 != null) return true;
 				Debug.Assert(false);
 				return false;
 			}
@@ -241,20 +220,19 @@ namespace Au.More
 			/// Creates new .NET Process object with attached handle and/or id.
 			/// Can be specified both handle and id, or one of them (then .NET will open process or get id from handle when need).
 			/// </summary>
-			public static Process Create(IntPtr handle, int id)
-			{
-				if(!IsFast) {
-					if(id == 0) id = process.processIdFromHandle(handle);
+			public static Process Create(IntPtr handle, int id) {
+				if (!IsFast) {
+					if (id == 0) id = process.processIdFromHandle(handle);
 					return Process.GetProcessById(id); //3 ms, much garbage, gets all processes, can throw
 				}
 
 				var p = new Process();
 				var o = new object[1];
-				if(handle != default) {
+				if (handle != default) {
 					o[0] = new SafeProcessHandle(handle, true);
 					s_mi1.Invoke(p, o);
 				}
-				if(id != 0) {
+				if (id != 0) {
 					o[0] = id;
 					s_mi2.Invoke(p, o);
 				}
@@ -265,13 +243,12 @@ namespace Au.More
 			/// Creates new .NET Process object with attached handle and id.
 			/// Closes thread handle. If suspended, resumes thread.
 			/// </summary>
-			public static Process Create(in Api.PROCESS_INFORMATION pi, bool suspended)
-			{
+			public static Process Create(in Api.PROCESS_INFORMATION pi, bool suspended) {
 				try {
 					return Create(pi.hProcess, pi.dwProcessId);
 				}
 				finally {
-					if(suspended) Api.ResumeThread(pi.hThread);
+					if (suspended) Api.ResumeThread(pi.hThread);
 					pi.hThread.Dispose();
 				}
 			}

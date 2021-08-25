@@ -1,21 +1,4 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
-namespace Au.More
+﻿namespace Au.More
 {
 	/// <summary>
 	/// Security-related functions, such as enabling privileges.
@@ -28,11 +11,10 @@ namespace Au.More
 		/// </summary>
 		/// <param name="privilegeName"></param>
 		/// <param name="enable"></param>
-		public static bool SetPrivilege(string privilegeName, bool enable)
-		{
+		public static bool SetPrivilege(string privilegeName, bool enable) {
 			bool ok = false;
 			var p = new Api.TOKEN_PRIVILEGES { PrivilegeCount = 1, Privileges = new Api.LUID_AND_ATTRIBUTES { Attributes = enable ? 2u : 0 } }; //SE_PRIVILEGE_ENABLED
-			if(Api.LookupPrivilegeValue(null, privilegeName, out p.Privileges.Luid)) {
+			if (Api.LookupPrivilegeValue(null, privilegeName, out p.Privileges.Luid)) {
 				Api.OpenProcessToken(Api.GetCurrentProcess(), Api.TOKEN_ADJUST_PRIVILEGES, out Handle_ hToken);
 				Api.AdjustTokenPrivileges(hToken, false, p, 0, null, default);
 				ok = 0 == lastError.code;

@@ -1,20 +1,4 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-//#define PREPAREMETHOD //now slow anyway. Does not JIT everything.
+﻿//#define PREPAREMETHOD //now slow anyway. Does not JIT everything.
 
 namespace Au
 {
@@ -28,7 +12,7 @@ namespace Au
 
 		static readonly double s_freqMCS = Api.QueryPerformanceFrequency(out long f) ? 1_000_000d / f : 0d, s_freqMS = s_freqMCS / 1000d;
 		//note: don't use static ctor. Makes some simplest functions much slower.
-		
+
 		/// <summary>
 		/// Gets the number of microseconds elapsed since Windows startup. Uses the high-resolution system timer (API <msdn>QueryPerformanceCounter</msdn>).
 		/// </summary>

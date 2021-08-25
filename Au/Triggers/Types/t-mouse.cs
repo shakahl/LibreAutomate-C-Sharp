@@ -1,22 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-using System.Collections;
-using System.ComponentModel;
-
-
 namespace Au.Triggers
 {
 	/// <summary>
@@ -235,8 +216,7 @@ namespace Au.Triggers
 			t.DictAdd(_d, _DictKey(kind, data));
 			_lastAdded = t;
 			UsedHookEvents_ |= HooksThread.UsedEvents.Mouse; //just sets the hook
-			UsedHookEvents_ |= kind switch
-			{
+			UsedHookEvents_ |= kind switch {
 				TMKind.Click => HooksThread.UsedEvents.MouseClick,
 				TMKind.Wheel => HooksThread.UsedEvents.MouseWheel,
 				_ => HooksThread.UsedEvents.MouseEdgeMove,
@@ -292,8 +272,7 @@ namespace Au.Triggers
 				if (k.Event == _eatUp) _eatUp = 0;
 
 				kind = TMKind.Click;
-				var b = k.Event switch
-				{
+				var b = k.Event switch {
 					HookData.MouseEvent.LeftButton => TMClick.Left,
 					HookData.MouseEvent.RightButton => TMClick.Right,
 					HookData.MouseEvent.MiddleButton => TMClick.Middle,
@@ -303,8 +282,7 @@ namespace Au.Triggers
 				data = (byte)b;
 			} else { //wheel
 				kind = TMKind.Wheel;
-				var b = k.Event switch
-				{
+				var b = k.Event switch {
 					HookData.MouseEvent.WheelForward => TMWheel.Forward,
 					HookData.MouseEvent.WheelBackward => TMWheel.Backward,
 					HookData.MouseEvent.WheelLeft => TMWheel.Left,

@@ -1,19 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
 //CONSIDER: System.Buffers.ArrayPool<T>.
 
 namespace Au.More
@@ -32,10 +16,9 @@ namespace Au.More
 
 		static int s_minCap;
 
-		static ArrayBuilder_()
-		{
+		static ArrayBuilder_() {
 			var r = 16384 / sizeof(T); //above 16384 the memory allocation API become >=2 times slower
-			if(r > 500) r = 500; else if(r < 8) r = 8;
+			if (r > 500) r = 500; else if (r < 8) r = 8;
 			s_minCap = r;
 
 			//info: 500 is optimal for getting all top-level windows (and invisible) as ArrayBuilder_<wnd>.
@@ -66,8 +49,8 @@ namespace Au.More
 		public int Capacity {
 			get => _cap;
 			set {
-				if(value != _cap) {
-					if(value < _len) throw new ArgumentOutOfRangeException();
+				if (value != _cap) {
+					if (value < _len) throw new ArgumentOutOfRangeException();
 					MemoryUtil.ReAlloc(ref _p, value);
 					_cap = value;
 				}
@@ -82,10 +65,9 @@ namespace Au.More
 		/// <param name="count">Element count.</param>
 		/// <param name="zeroInit">Set all bytes = 0. If false, the memory is uninitialized, ie random byte values. Default true. Slower when true.</param>
 		/// <param name="noExtra">Set Capacity = count. If false, allocates more if count is less thah the minimal capacity for this type.</param>
-		public T* Alloc(int count, bool zeroInit = true, bool noExtra = false)
-		{
-			if(_cap != 0) Free();
-			int cap = count; if(cap < s_minCap && !noExtra) cap = s_minCap;
+		public T* Alloc(int count, bool zeroInit = true, bool noExtra = false) {
+			if (_cap != 0) Free();
+			int cap = count; if (cap < s_minCap && !noExtra) cap = s_minCap;
 			_p = MemoryUtil.Alloc<T>(cap, zeroInit);
 			_cap = cap; _len = count;
 			return _p;
@@ -103,9 +85,8 @@ namespace Au.More
 		/// The new memory usually is at a new location. The preserved elements are copied there.
 		/// Sets Count=count. To allocate more memory without changing Count, change Capacity instead.
 		/// </remarks>
-		public T* ReAlloc(int count, bool zeroInit = true, bool noExtra = false)
-		{
-			int cap = count; if(cap < s_minCap && !noExtra) cap = s_minCap;
+		public T* ReAlloc(int count, bool zeroInit = true, bool noExtra = false) {
+			int cap = count; if (cap < s_minCap && !noExtra) cap = s_minCap;
 			MemoryUtil.ReAlloc(ref _p, cap, zeroInit);
 			_cap = cap; _len = count;
 			return _p;
@@ -114,9 +95,8 @@ namespace Au.More
 		/// <summary>
 		/// Frees memory. Sets Count and Capacity = 0.
 		/// </summary>
-		public void Free()
-		{
-			if(_cap == 0) return;
+		public void Free() {
+			if (_cap == 0) return;
 			_len = _cap = 0;
 			var p = _p; _p = null;
 			MemoryUtil.Free(p);
@@ -126,27 +106,24 @@ namespace Au.More
 		/// Adds one element.
 		/// The same as Add, but uses 'in'. Use to avoid copying values of big types.
 		/// </summary>
-		public void AddR(in T value)
-		{
-			if(_len == _cap) _EnsureCapacity();
+		public void AddR(in T value) {
+			if (_len == _cap) _EnsureCapacity();
 			_p[_len++] = value;
 		}
 
 		/// <summary>
 		/// Adds one element.
 		/// </summary>
-		public void Add(T value)
-		{
-			if(_len == _cap) _EnsureCapacity();
+		public void Add(T value) {
+			if (_len == _cap) _EnsureCapacity();
 			_p[_len++] = value;
 		}
 
 		/// <summary>
 		/// Adds one zero-inited element and returns its reference.
 		/// </summary>
-		public ref T Add()
-		{
-			if(_len == _cap) _EnsureCapacity();
+		public ref T Add() {
+			if (_len == _cap) _EnsureCapacity();
 			ref T r = ref _p[_len];
 			r = default;
 			_len++;
@@ -156,8 +133,7 @@ namespace Au.More
 		/// <summary>
 		/// Capacity = Math.Max(_cap * 2, s_minCap).
 		/// </summary>
-		void _EnsureCapacity()
-		{
+		void _EnsureCapacity() {
 			Capacity = Math.Max(_cap * 2, s_minCap);
 		}
 
@@ -169,25 +145,23 @@ namespace Au.More
 		public ref T this[int i] {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
-				if((uint)i >= (uint)_len) _ThrowBadIndex();
+				if ((uint)i >= (uint)_len) _ThrowBadIndex();
 				return ref _p[i];
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.NoInlining)]
-		static void _ThrowBadIndex()
-		{
+		static void _ThrowBadIndex() {
 			throw new IndexOutOfRangeException();
 		}
 
 		/// <summary>
 		/// Copies elements to a new managed array.
 		/// </summary>
-		public T[] ToArray()
-		{
-			if(_len == 0) return Array.Empty<T>();
+		public T[] ToArray() {
+			if (_len == 0) return Array.Empty<T>();
 			var r = new T[_len];
-			for(int i = 0; i < r.Length; i++) r[i] = _p[i];
+			for (int i = 0; i < r.Length; i++) r[i] = _p[i];
 			return r;
 		}
 	}

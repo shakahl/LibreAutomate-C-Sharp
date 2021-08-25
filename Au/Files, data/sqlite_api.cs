@@ -1,20 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
 //Most of these declarations are from System.Data.SQLite library. Modified.
 
 namespace Au.Types
@@ -586,8 +569,7 @@ namespace Au.Types
 	{
 		const string SQLITE_DLL = "sqlite3.dll";
 
-		static SLApi()
-		{
+		static SLApi() {
 			filesystem.more.loadDll64or32Bit(SQLITE_DLL);
 		}
 

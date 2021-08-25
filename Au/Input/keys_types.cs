@@ -1,20 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
 namespace Au.Types
 {
 #pragma warning disable 1591 //missing doc
@@ -284,12 +267,12 @@ namespace Au.Types
 		/// </summary>
 		public object Value => _o;
 
-		public static implicit operator KKeysEtc(string s) => new (s);
-		public static implicit operator KKeysEtc(clipboardData cd) => new (cd);
-		public static implicit operator KKeysEtc(KKey k) => new (k);
-		public static implicit operator KKeysEtc(KKeyScan t) => new (t);
-		public static implicit operator KKeysEtc(int ms) => new (ms);
-		public static implicit operator KKeysEtc(Action a) => new (a);
+		public static implicit operator KKeysEtc(string s) => new(s);
+		public static implicit operator KKeysEtc(clipboardData cd) => new(cd);
+		public static implicit operator KKeysEtc(KKey k) => new(k);
+		public static implicit operator KKeysEtc(KKeyScan t) => new(t);
+		public static implicit operator KKeysEtc(int ms) => new(ms);
+		public static implicit operator KKeysEtc(Action a) => new(a);
 	}
 
 #pragma warning restore 1591

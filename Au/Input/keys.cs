@@ -1,21 +1,4 @@
-﻿using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
-namespace Au
+﻿namespace Au
 {
 	/// <summary>
 	/// Keyboard functions: send virtual keystrokes and text to the active window, get key states.
@@ -112,12 +95,11 @@ namespace Au
 			internal void MakeUp() => _flags = (byte)((_flags & 9) | 2);
 
 #if DEBUG
-			public override string ToString()
-			{
-				if(IsText) { Debug.Assert(SIFlags == 0); return $"text " + data; }
-				if(IsCallback) { Debug.Assert(SIFlags == 0); return $"callback " + data; }
-				if(IsSleep) { Debug.Assert(SIFlags == 0); return "sleep " + sleep; }
-				if(IsRepeat) { Debug.Assert(SIFlags == 0); return "repeat " + repeat; }
+			public override string ToString() {
+				if (IsText) { Debug.Assert(SIFlags == 0); return $"text " + data; }
+				if (IsCallback) { Debug.Assert(SIFlags == 0); return $"callback " + data; }
+				if (IsSleep) { Debug.Assert(SIFlags == 0); return "sleep " + sleep; }
+				if (IsRepeat) { Debug.Assert(SIFlags == 0); return "repeat " + repeat; }
 				return $"{vk,-12} scan={scan,-4} flags={_flags}";
 			}
 #endif

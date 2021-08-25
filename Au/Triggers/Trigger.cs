@@ -1,20 +1,3 @@
-using Au;
-using Au.Types;
-using Au.More;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Globalization;
-
-
 namespace Au.Triggers
 {
 	/// <summary>
@@ -31,8 +14,7 @@ namespace Au.Triggers
 		internal readonly string sourceFile;
 		internal readonly int sourceLine;
 
-		internal ActionTrigger(ActionTriggers triggers, Delegate action, bool usesWindowScope, (string, int) source)
-		{
+		internal ActionTrigger(ActionTriggers triggers, Delegate action, bool usesWindowScope, (string, int) source) {
 			this.sourceFile = source.Item1 ?? throw new ArgumentNullException();
 			this.sourceLine = source.Item2;
 			this.action = action;
@@ -40,30 +22,28 @@ namespace Au.Triggers
 			var to = triggers.options_;
 			options = to.Current;
 			EnabledAlways = to.EnabledAlways;
-			if(usesWindowScope) scope = triggers.scopes_.Current;
+			if (usesWindowScope) scope = triggers.scopes_.Current;
 			var tf = triggers.funcs_;
 			_funcBefore = _Func(tf.commonBefore, tf.nextBefore); tf.nextBefore = null;
 			_funcAfter = _Func(tf.nextAfter, tf.commonAfter); tf.nextAfter = null;
 
-			TriggerFunc[] _Func(TFunc f1, TFunc f2)
-			{
-				var f3 = f1 + f2; if(f3 == null) return null;
+			TriggerFunc[] _Func(TFunc f1, TFunc f2) {
+				var f3 = f1 + f2; if (f3 == null) return null;
 				var a1 = f3.GetInvocationList();
 				var r1 = new TriggerFunc[a1.Length];
-				for(int i = 0; i < a1.Length; i++) {
+				for (int i = 0; i < a1.Length; i++) {
 					var f4 = a1[i] as TFunc;
-					if(!tf.perfDict.TryGetValue(f4, out var fs)) tf.perfDict[f4] = fs = new TriggerFunc { f = f4 };
+					if (!tf.perfDict.TryGetValue(f4, out var fs)) tf.perfDict[f4] = fs = new TriggerFunc { f = f4 };
 					r1[i] = fs;
 				}
 				return r1;
 			}
 		}
 
-		internal void DictAdd<TKey>(Dictionary<TKey, ActionTrigger> d, TKey key)
-		{
-			if(!d.TryGetValue(key, out var o)) d.Add(key, this);
+		internal void DictAdd<TKey>(Dictionary<TKey, ActionTrigger> d, TKey key) {
+			if (!d.TryGetValue(key, out var o)) d.Add(key, this);
 			else { //append to the linked list
-				while(o.next != null) o = o.next;
+				while (o.next != null) o = o.next;
 				o.next = this;
 			}
 		}
@@ -94,31 +74,30 @@ namespace Au.Triggers
 		/// </summary>
 		public override string ToString() => TypeString + " " + ParamsString;
 
-		internal bool MatchScopeWindowAndFunc(TriggerHookContext thc)
-		{
+		internal bool MatchScopeWindowAndFunc(TriggerHookContext thc) {
 			try {
-				for(int i = 0; i < 3; i++) {
-					if(i == 1) {
-						if(scope != null) {
+				for (int i = 0; i < 3; i++) {
+					if (i == 1) {
+						if (scope != null) {
 							thc.PerfStart();
 							bool ok = scope.Match(thc);
 							thc.PerfEnd(false, ref scope.perfTime);
-							if(!ok) return false;
+							if (!ok) return false;
 						}
 					} else {
 						var af = i == 0 ? _funcBefore : _funcAfter;
-						if(af != null) {
-							foreach(var v in af) {
+						if (af != null) {
+							foreach (var v in af) {
 								thc.PerfStart();
 								bool ok = v.f(thc.args);
 								thc.PerfEnd(true, ref v.perfTime);
-								if(!ok) return false;
+								if (!ok) return false;
 							}
 						}
 					}
 				}
 			}
-			catch(Exception ex) {
+			catch (Exception ex) {
 				print.it(ex);
 				return false;
 			}
@@ -128,20 +107,19 @@ namespace Au.Triggers
 			//	should compare it once, and don't call 'before' functions again if did not match. Rare.
 		}
 
-		internal bool CallFunc(TriggerArgs args)
-		{
+		internal bool CallFunc(TriggerArgs args) {
 #if true
-			if(_funcAfter != null) {
+			if (_funcAfter != null) {
 				try {
-					foreach(var v in _funcAfter) {
+					foreach (var v in _funcAfter) {
 						var t1 = perf.ms;
 						bool ok = v.f(args);
 						var td = perf.ms - t1;
-						if(td > 200) print.warning($"Too slow Triggers.FuncOf function of a window trigger. Should be < 10 ms, now {td} ms. Task name: {script.name}.", -1);
-						if(!ok) return false;
+						if (td > 200) print.warning($"Too slow Triggers.FuncOf function of a window trigger. Should be < 10 ms, now {td} ms. Task name: {script.name}.", -1);
+						if (!ok) return false;
 					}
 				}
-				catch(Exception ex) {
+				catch (Exception ex) {
 					print.it(ex);
 					return false;
 				}
@@ -196,8 +174,7 @@ namespace Au.Triggers
 		/// <remarks>
 		/// Call while <see cref="ActionTriggers.Run"/> is running, from the same thread.
 		/// </remarks>
-		public void RunAction(TriggerArgs args)
-		{
+		public void RunAction(TriggerArgs args) {
 			triggers.ThrowIfNotRunning_();
 			triggers.ThrowIfNotMainThread_();
 			triggers.RunAction_(this, args);
@@ -218,8 +195,7 @@ namespace Au.Triggers
 		/// Disables the trigger. Enables later when the toolbar is closed.
 		/// Use to implement single-instance toolbars.
 		/// </summary>
-		public void DisableTriggerUntilClosed(toolbar t)
-		{
+		public void DisableTriggerUntilClosed(toolbar t) {
 			TriggerBase.Disabled = true;
 			t.Closed += () => TriggerBase.Disabled = false;
 		}
@@ -360,17 +336,15 @@ namespace Au.Triggers
 		public TriggerScope NotWindows(params wndFinder[] any)
 			=> _Add(true, any);
 
-		TriggerScope _Add(bool not, wndFinder f)
-		{
-			if(f == null) throw new ArgumentNullException();
+		TriggerScope _Add(bool not, wndFinder f) {
+			if (f == null) throw new ArgumentNullException();
 			Used = true;
 			return Current = new TriggerScope(f, not);
 		}
 
-		TriggerScope _Add(bool not, wndFinder[] a)
-		{
-			if(a.Length == 0) return _Add(not, a[0]);
-			foreach(var v in a) if(v == null) throw new ArgumentNullException();
+		TriggerScope _Add(bool not, wndFinder[] a) {
+			if (a.Length == 0) return _Add(not, a[0]);
+			foreach (var v in a) if (v == null) throw new ArgumentNullException();
 			Used = true;
 			return Current = new TriggerScope(a, not);
 		}
@@ -388,8 +362,7 @@ namespace Au.Triggers
 		internal readonly bool not;
 		internal int perfTime;
 
-		internal TriggerScope(object o, bool not)
-		{
+		internal TriggerScope(object o, bool not) {
 			this.o = o;
 			this.not = not;
 		}
@@ -398,18 +371,17 @@ namespace Au.Triggers
 		/// Returns true if window matches.
 		/// </summary>
 		/// <param name="thc">This func uses the window handle (gets on demand) and WFCache.</param>
-		internal bool Match(TriggerHookContext thc)
-		{
+		internal bool Match(TriggerHookContext thc) {
 			bool yes = false;
 			var w = thc.Window;
-			if(!w.Is0) {
-				switch(o) {
+			if (!w.Is0) {
+				switch (o) {
 				case wndFinder f:
 					yes = f.IsMatch(w, thc);
 					break;
 				case wndFinder[] a:
-					foreach(var v in a) {
-						if(yes = v.IsMatch(w, thc)) break;
+					foreach (var v in a) {
+						if (yes = v.IsMatch(w, thc)) break;
 					}
 					break;
 				}
@@ -511,8 +483,7 @@ namespace Au.Triggers
 			set => commonBefore = _Func(value);
 		}
 
-		TFunc _Func(TFunc f)
-		{
+		TFunc _Func(TFunc f) {
 			//if(f != null) Used = true;
 			return f;
 		}
@@ -520,8 +491,7 @@ namespace Au.Triggers
 		/// <summary>
 		/// Clears all properties (sets = null).
 		/// </summary>
-		public void Reset()
-		{
+		public void Reset() {
 			nextAfter = null;
 			nextBefore = null;
 			commonAfter = null;
