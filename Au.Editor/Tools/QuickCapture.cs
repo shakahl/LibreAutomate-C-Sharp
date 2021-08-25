@@ -1,15 +1,38 @@
-﻿namespace Au.Tools
+﻿//CONSIDER: disable hotkeys when editor hidden.
+
+namespace Au.Tools
 {
 	static class QuickCapture
 	{
-		static keys.more.Hotkey _rk;
+		static keys.more.Hotkey _rk1, _rk2, _rk3;
+		static popupMenu _m;
 
-		//public static void Dialog() {
+		public static void Info() {
+			print.it($@"Hotkeys for quick capturing:
+	{App.Settings.hotkeys.capture_menu} - capture window from mouse and show menu to insert code to find it etc.
+	{App.Settings.hotkeys.capture_wnd} - capture window from mouse and show dialog 'Find window or control'.
+	{App.Settings.hotkeys.capture_elm} - capture UI element from mouse and show dialog 'Find UI element'.
+");
+		}
 
-		//}
+		public static void RegisterHotkeys() {
+			_Register(ref _rk1, ERegisteredHotkeyId.QuickCaptureMenu, App.Settings.hotkeys.capture_menu);
+			_Register(ref _rk2, ERegisteredHotkeyId.QuickCaptureDwnd, App.Settings.hotkeys.capture_wnd);
+			_Register(ref _rk3, ERegisteredHotkeyId.QuickCaptureDelm, App.Settings.hotkeys.capture_elm);
 
-		public static void RegisterHotkey(AnyWnd w) {
-			_rk.Register((int)ERegisteredHotkeyId.QuickCapture, "Ctrl+Shift+Q", w);
+			void _Register(ref keys.more.Hotkey rk, ERegisteredHotkeyId id, string keys) { //ref, not in!
+				try {
+					if (!rk.Register((int)id, keys, App.Hwnd))
+						print.warning($"Failed to register hotkey {keys} for quick capturing. You can set a hotkey in Options.", -1);
+				}
+				catch (Exception ex) { print.it(ex); }
+			}
+		}
+
+		public static void UnregisterHotkeys() {
+			_rk1.Unregister();
+			_rk2.Unregister();
+			_rk3.Unregister();
 		}
 
 		//CONSIDER simplified tool version. Without tree and capturing but with option to show full.
@@ -23,7 +46,9 @@
 		//		on 2 F3 show simplified Delm with options to click/focus/etc;
 		//		on 3 F3 show Duiimage.
 
-		public static void WmHotkey() {
+		public static void Menu() {
+			_m?.Close();
+
 			var p = mouse.xy;
 			wnd w0 = wnd.fromXY(p), w = w0.Window, c = w == w0 ? default : w0;
 			//int color = 0; using (var dc = new ScreenDC_()) { color = Api.GetPixel(dc, p.x, p.y); }
@@ -35,8 +60,6 @@
 			var m = new popupMenu();
 			m["Find window"] = o => _Insert(_Wnd_Find(w, default));
 			m["Activate window"] = o => _Insert(_Wnd_Find(w, default, activate: true));
-			m["Window/control tool"] = o => new Dwnd(w0).Show();
-			m["UI element tool"] = o => Delm.Dialog(p: p);
 			m.Submenu("Click", m => {
 				m["Window"] = o => _Insert(_Wnd_Find(w, default) + _Click(w, "w"));
 				m["Control"] = o => _Insert(_Wnd_Find(w, c) + _Click(c, "c"));
@@ -79,9 +102,12 @@
 					}
 				});
 			m.Separator();
+			m["About"] = _ => Info();
 			m.Add("Cancel");
 
+			_m = m;
 			m.Show();
+			_m = null;
 		}
 
 		static string _Str(string s) {
@@ -127,6 +153,14 @@
 		static void _Insert(string s) {
 			//print.it(s);
 			InsertCode.Statements(s, fold: s.Contains("/*image:\r\n"));
+		}
+
+		public static void ToolDwnd() {
+			new Dwnd(wnd.fromMouse()).Show();
+		}
+
+		public static void ToolDelm() {
+			Delm.Dialog(p: mouse.xy);
 		}
 	}
 }

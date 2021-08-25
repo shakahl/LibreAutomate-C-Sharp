@@ -22,6 +22,14 @@ namespace Au.Controls
 					_owner = _node._pm._ContainerWindow;
 					_isToolbar = _node._IsToolbarsNode;
 
+					//workaround for: if a HwndHost-ed native control in this panel is focused, WPF will activate the floating panel and disable next mouse click
+					if (Keyboard.FocusedElement == null) {
+						var wFocus = Api.GetFocus();
+						if (!wFocus.Is0 && wFocus.IsChildOf(_owner.Hwnd())) {
+							if (null != _node.Elem.FindVisualDescendant(o => o is HwndHost h && h.Handle == wFocus.Handle)) _owner.Focus();
+						}
+					}
+
 					var style = WS.THICKFRAME | WS.POPUP | WS.CLIPCHILDREN; if (node._IsStack) style |= WS.CAPTION;
 					var estyle = WSE.TOOLWINDOW | WSE.WINDOWEDGE; if (_isToolbar) estyle |= WSE.NOACTIVATE;
 					RECT rect = default;
@@ -69,17 +77,18 @@ namespace Au.Controls
 				}
 
 				private void _Owner_Closing(object sender, CancelEventArgs e) {
-					//print.it("owner closing");
-					this.Close();
+					//print.it("owner closing", e.Cancel);
+					if (!e.Cancel) this.Close();
 				}
 
 				protected override void OnClosing(CancelEventArgs e) {
-					//print.it("closing");
-					_owner.IsVisibleChanged -= _Owner_IsVisibleChanged;
-					Save();
-					Content = null;
-					_node._floatWindow = null;
-
+					//print.it("closing", e.Cancel);
+					if (!e.Cancel) {
+						_owner.IsVisibleChanged -= _Owner_IsVisibleChanged;
+						Save();
+						Content = null;
+						_node._floatWindow = null;
+					}
 					base.OnClosing(e);
 				}
 

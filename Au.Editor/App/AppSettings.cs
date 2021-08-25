@@ -20,6 +20,14 @@ record AppSettings : JSettings
 
 	public string wndPos, tools_Dwnd_wndPos, tools_Delm_wndPos, tools_Duiimage_wndPos;
 
+	public record hotkeys_t //somehow does not support struct and record struct, InvalidCastException
+	{
+		public string capture_menu = "Ctrl+Shift+Q", capture_wnd = "Ctrl+Shift+W", capture_elm = "Ctrl+Shift+E";
+		//tested: adding/removing members works well.
+		//tested: tuple does not work well. New members are null. Also item names in file are like "Item1".
+	}
+	public hotkeys_t hotkeys = new();
+
 	public bool edit_wrap, edit_noImages, output_wrap, output_white, output_topmost;
 
 	public int templ_use;
@@ -28,6 +36,8 @@ record AppSettings : JSettings
 	//public SIZE ci_sizeSignXaml, ci_sizeComplXaml, ci_sizeComplList;
 	public bool ci_complGroup = true;
 	public int ci_complParen; //0 spacebar, 1 always, 2 never
+
+	public Au.Tools.Delm.EOptions tools_Delm_flags;
 
 	public string db_copy_ref, db_copy_doc, db_copy_winapi;
 

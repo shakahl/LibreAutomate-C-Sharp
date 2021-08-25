@@ -2228,7 +2228,7 @@ namespace Au
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
-		/// var w = +wnd.find("*Notepad", "Notepad");
+		/// var w = wnd.find(0, "*Notepad", "Notepad");
 		/// w.TaskbarButton.Delete();
 		/// ]]></code>
 		/// </example>

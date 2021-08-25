@@ -343,7 +343,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Returns "" if this property is unavailable or if failed. Supports <see cref="lastError"/>.
-		/// If this is a Java UI element, returns all actions that can be used with <see cref="InvokeJavaAction"/>, like "action1, action2, action3", from which the first is considered default and is used by <see cref="Invoke"/>.
+		/// If this is a Java UI element, returns all actions that can be used with <see cref="JavaInvoke"/>, like "action1, action2, action3", from which the first is considered default and is used by <see cref="Invoke"/>.
 		/// Uses <msdn>IAccessible.get_accDefaultAction</msdn>.
 		/// </remarks>
 		public string DefaultAction {
@@ -356,7 +356,7 @@ namespace Au
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// Fails if the UI element does not have a default action. Then you can use <see cref="ExtAu.MouseClick(elm, Coord, Coord, MButton)"/>, or try <see cref="VirtualClick"/>, <see cref="Select"/>, <see cref="Focus"/> and keyboard functions.
-		/// The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="InvokeJavaAction"/> or one of the above functions (MouseClick etc).
+		/// The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="JavaInvoke"/> or one of the above functions (MouseClick etc).
 		/// Uses <msdn>IAccessible.accDoDefaultAction</msdn>.
 		/// </remarks>
 		public void Invoke() { //sorry, I did not find a better name. Alternatives: DoAction (weird), DoDefaultAction (too long), Execute.
@@ -428,9 +428,9 @@ namespace Au
 		/// <remarks>
 		/// Read more about Java UI elements in <see cref="elm"/> topic.
 		/// 
-		/// Problem: if the action opens a dialog, Invoke/InvokeJavaAction do not return until the dialog is closed (or fail after some time). The caller then waits and cannot automate the dialog. Also then this process cannot exit until the dialog is closed. If the action parameter is null and the UI element is focusable, this function tries a workaround: it makes the UI element (button etc) focused and posts Space key message, which should press the button; then this function does not wait.
+		/// Problem: if the action opens a dialog, Invoke/JavaInvoke do not return until the dialog is closed (or fail after some time). The caller then waits and cannot automate the dialog. Also then this process cannot exit until the dialog is closed. If the action parameter is null and the UI element is focusable, this function tries a workaround: it makes the UI element (button etc) focused and posts Space key message, which should press the button; then this function does not wait.
 		/// </remarks>
-		public void InvokeJavaAction(string action = null) {
+		public void JavaInvoke(string action = null) {
 			//problem: if the button click action opens a modal dialog, doAccessibleActions waits until closed.
 			//	Waits 8 s and then returns true. Somehow in QM2 returns false.
 			//	During that time any JAB calls (probably from another thread) are blocked and fail. Tried various combinations.
@@ -461,7 +461,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="Invoke"/> or <i>action</i> and waits until window name changes and web page name changes.
+		/// Calls <see cref="Invoke"/> or <i>action</i> and waits until changes the web page (window name and page name).
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).
 		/// Default 60 seconds.
@@ -474,10 +474,10 @@ namespace Au
 		/// <exception cref="Exception">Exceptions thrown by <see cref="Invoke"/> or by the <i>action</i> function.</exception>
 		/// <remarks>
 		/// This function is used to click a link in a web page and wait until current web page is gone. It prevents a following 'wait for UI element' function from finding a matching UI element in the old page, which would be bad.
-		/// This function does not wait until the new page is completely loaded. There is no reliable/universal way for it. Instead, after calling it you can call a 'wait for UI element' function which waits for a known UI element that must be in the new page.
-		/// This function cannot be used when the new page has the same title as current page. Then it waits until <i>secondsTimeout</i> time or forever. The same if the action does not open a web page.
+		/// Does not wait until the new page is completely loaded. There is no reliable/universal way for it. Instead, after calling it you can call a 'wait for UI element' function which waits for a known UI element that must be in the new page.
+		/// This function cannot be used when the new page has the same title as current page. Then it waits until <i>secondsTimeout</i> time or forever. The same if the invoked action does not open a web page.
 		/// </remarks>
-		public bool InvokeAndWaitForNewWebPage(double secondsTimeout = 60, Action<elm> action = null) {
+		public bool WebInvoke(double secondsTimeout = 60, Action<elm> action = null) {
 			wnd w = WndTopLevel; if (w.Is0) throw new AuException("*get window");
 			elm doc = elm.wait(-1, w, "web:"); if (doc == null) throw new AuException("*find web page");
 
@@ -487,7 +487,7 @@ namespace Au
 
 			if (action == null) Invoke(); else action(this);
 
-			//wait until window name and document name both are changed. They can change in any order, especially in Chrome.
+			//wait until window name and document name both are changed. They can change in any order.
 			var to = new wait.Loop(secondsTimeout, new OWait(period: 25));
 			while (to.Sleep()) {
 				w.ThrowIfInvalid();

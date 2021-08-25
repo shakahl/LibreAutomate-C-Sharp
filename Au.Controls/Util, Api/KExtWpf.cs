@@ -167,9 +167,11 @@ namespace Au.Tools
 		/// <param name="b"></param>
 		/// <param name="name">Checkbox text.</param>
 		/// <param name="noNewRow"></param>
-		public static KCheckBox xAddCheck(this wpfBuilder b, string name, bool noNewRow = false) {
+		/// <param name="check">Checkbox state.</param>
+		public static KCheckBox xAddCheck(this wpfBuilder b, string name, bool noNewRow = false, bool check = false) {
 			if (!noNewRow && b.Panel is Grid) b.Row(0);
 			b.Add(out KCheckBox c, name).Height(18).AlignContent(y: "C");
+			if (check) b.Checked();
 			return c;
 		}
 

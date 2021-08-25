@@ -3,7 +3,8 @@
         {
             "src": [
                 {
-                    "src": "../../../Au/",
+                    //"src": "../../../Au/",
+                    "src": "Q:/Temp/Au/DocFX/source/",
                     "files": [
                         "Au.csproj"
                     ]

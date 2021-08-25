@@ -69,7 +69,7 @@ partial class SciCode : KScintilla
 	}
 
 	protected override void ZOnHandleCreated() {
-		Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT /*| MOD.SC_MOD_INSERTCHECK*/
+		Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT /*| MOD.SC_MOD_INSERTCHECK | MOD.SC_MOD_BEFOREINSERT*/
 			//| MOD.SC_MOD_CHANGEFOLD //only when text modified, but not when user clicks +-
 			));
 		Call(SCI_SETLEXER, (int)LexLanguage.SCLEX_NULL); //default SCLEX_CONTAINER
@@ -278,7 +278,7 @@ partial class SciCode : KScintilla
 		case Api.WM_CHAR: {
 				int c = (int)wparam;
 				if (c < 32) {
-					if (!(c == 9 || c == 10 || c == 13)) return true;
+					if (c is not (9 or 10 or 13)) return true;
 				} else {
 					if (CodeInfo.SciBeforeCharAdded(this, (char)c)) return true;
 				}

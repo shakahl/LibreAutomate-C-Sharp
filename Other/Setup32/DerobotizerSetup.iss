@@ -3,7 +3,7 @@
 
 #define MyAppName "Derobotize Me C#"
 #define MyAppNameShort "Derobotizer"
-#define MyAppVersion "0.0.2 (2021-08-15)"
+#define MyAppVersion "0.0.3 (2021-08-23)"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.quickmacros.com/au/help/"
 #define MyAppExeName "Au.Editor.exe"
@@ -47,13 +47,12 @@ Source: "Q:\app\Au\_\Templates\files\*"; DestDir: "{app}\Templates\files"; Flags
 Source: "Q:\app\Au\_\Templates\files.xml"; DestDir: "{app}\Templates"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Editor.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Editor.dll"; DestDir: "{app}"; Flags: ignoreversion
-;Source: "Q:\app\Au\_\Au.Editor32.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Task.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Controls.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Net45.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Setup32.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Roslyn\*.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Q:\app\Au\_\Roslyn\*.dll"; DestDir: "{app}\Roslyn"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Controls.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Net45.exe.config"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.xml"; DestDir: "{app}"; Flags: ignoreversion
@@ -64,7 +63,6 @@ Source: "Q:\app\Au\_\64\SciLexer.dll"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "Q:\app\Au\_\64\sqlite3.dll"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "Q:\app\Au\_\32\Au.AppHost.exe"; DestDir: "{app}\32"; Flags: ignoreversion
 Source: "Q:\app\Au\_\32\AuCpp.dll"; DestDir: "{app}\32"; Flags: ignoreversion
-;Source: "Q:\app\Au\_\32\SciLexer.dll"; DestDir: "{app}\32"; Flags: ignoreversion
 Source: "Q:\app\Au\_\32\sqlite3.dll"; DestDir: "{app}\32"; Flags: ignoreversion
 Source: "Q:\app\Au\Other\Data\doc.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\Other\Data\ref.db"; DestDir: "{app}"; Flags: ignoreversion
@@ -77,6 +75,9 @@ Source: "Q:\app\Au\_\xrefmap.yml"; DestDir: "{app}"; Flags: ignoreversion
 ;Type: filesandordirs; Name: "{app}\Default"
 Type: files; Name: "{app}\Au.CL.exe"
 Type: files; Name: "{app}\Au.Task32.exe"
+;Roslyn dlls moved to subfolder Roslyn
+Type: files; Name: "{app}\Microsoft.*.dll"
+Type: files; Name: "{app}\System.*.dll"
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

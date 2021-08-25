@@ -83,7 +83,6 @@ namespace Au.Controls
 					});
 				}
 #if DEBUG
-				//SHOULDDO: WPF windows start black or white sometimes. Maybe need to auto-redraw float after opening, eg use timer.
 				m.Separator();
 				m.Submenu("Debug", m => {
 					m["Invalidate window"] = _ => _Invalidate(_pm._ContainerWindow);

@@ -166,8 +166,8 @@ default: return;
 			<list item="&amp;Number input">if (!dialog.showInputNumber(out int s, "$end$")) return;</list>
 		</snippet>
 
-		<snippet name="winFindSnippet" info="Find window." more="The + operator throws exception if not found.">
-			<![CDATA[var w = +wnd.find("$end$*Name$end$");]]>
+		<snippet name="winFindSnippet" info="Find window." more="With non-negative waitS argument (0, ) throws exception if not found.">
+			<![CDATA[var w = wnd.find(0, "$end$*Name$end$");]]>
 		</snippet>
 
 		<snippet name="winWaitSnippet" info="Find window, wait." more="Throws exception on timeout, unless the wait time is negative.">
@@ -180,19 +180,19 @@ default: return;
 
 		<snippet name="clickSnippet" info="Mouse click or move in window." more="The + operator throws exception if not found.">
 			<list item="Left click">
-				<![CDATA[var w = +wnd.find("$end$*Name$end$");
+				<![CDATA[var w = wnd.find(0, "$end$*Name$end$");
 mouse.click(w, );]]>
 			</list>
 			<list item="&amp;Right click">
-				<![CDATA[var w = +wnd.find("$end$*Name$end$");
+				<![CDATA[var w = wnd.find(0, "$end$*Name$end$");
 mouse.rightClick(w, );]]>
 			</list>
 			<list item="&amp;Double click">
-				<![CDATA[var w = +wnd.find("$end$*Name$end$");
+				<![CDATA[var w = wnd.find(0, "$end$*Name$end$");
 mouse.doubleClick(w, );]]>
 			</list>
 			<list item="&amp;Move">
-				<![CDATA[var w = +wnd.find("$end$*Name$end$");
+				<![CDATA[var w = wnd.find(0, "$end$*Name$end$");
 mouse.move(w, );]]>
 			</list>
 		</snippet>
@@ -235,8 +235,7 @@ print.it(s);]]>
 
 		<snippet name="actWinSnippet" info="Activate window; check if window is active." more="The + operator throws exception if not found.">
 			<list item="Find window and activate">
-				<![CDATA[var w = +wnd.find("$end$*Name$end$");
-w.Activate();]]>
+				<![CDATA[var w = wnd.find(0, "$end$*Name$end$").Activate();]]>
 			</list>
 			<list item="If the active window has the specified name etc">
 				<![CDATA[var w = wnd.active;

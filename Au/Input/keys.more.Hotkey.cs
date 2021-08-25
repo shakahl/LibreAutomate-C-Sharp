@@ -32,10 +32,7 @@ namespace Au
 			/// </remarks>
 			/// <example>
 			/// <code><![CDATA[
-			/// using Au;
-			/// using System;
 			/// using System.Windows.Forms;
-			/// using Au.Types;
 			/// 
 			/// var f = new FormRegisterHotkey();
 			/// f.ShowDialog();

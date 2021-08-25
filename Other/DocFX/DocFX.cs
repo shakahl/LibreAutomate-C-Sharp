@@ -20,6 +20,8 @@ using Renci.SshNet;
 
 [module: DefaultCharSet(CharSet.Unicode)]
 
+//TODO: no JSettings. Maybe does not support record.
+
 //note: DocFX does not replace/modify the yml files if the source code of the C# project not changed. Then ProcessYamlFile not called.
 //	To apply changes of this script, change something in C# XML comments, save, then run this script.
 
@@ -63,6 +65,24 @@ unsafe class Program
 		//Compress(docDir); return;
 		//Upload(docDir); return;
 		//CompressAndUpload(docDir); return;
+
+		//preprocess and copy source files, because DocFX does not support latest C# features
+		var sourceDir1 = @"Q:\app\Au\Au";
+		var sourceDir2 = @"Q:\Temp\Au\DocFX\source";
+		filesystem.delete(sourceDir2);
+		filesystem.createDirectory(sourceDir2);
+		foreach(var v in Directory.EnumerateFiles(sourceDir1, "*", SearchOption.AllDirectories)) {
+			if (!(v.Ends(".cs", true) || v.Ends(".csproj", true))) continue;
+			if (0 != v.Starts(true, @"Q:\app\Au\Au\bin\", @"Q:\app\Au\Au\obj\")) continue;
+			var v2 = sourceDir2 + v[sourceDir1.Length..];
+			//print.it(v, v2);
+			if (filesystem.getProperties(v2, out var p2, FAFlags.UseRawPath | FAFlags.DontThrow)
+				&& filesystem.getProperties(v, out var p1, FAFlags.UseRawPath)
+				&& p2.LastWriteTimeUtc == p1.LastWriteTimeUtc) continue;
+			print.it(v);
+			filesystem.copy(v, v2, FIfExists.Delete);
+		}
+		return;
 
 		foreach (var v in Process.GetProcessesByName("docfx")) v.Kill();
 		if (isConsole) {

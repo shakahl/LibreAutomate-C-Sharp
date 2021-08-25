@@ -23,7 +23,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<DefineConstants>TRACE</DefineConstants>
+		<DefineConstants></DefineConstants>
 		<Deterministic>False</Deterministic>
 	</PropertyGroup>
 

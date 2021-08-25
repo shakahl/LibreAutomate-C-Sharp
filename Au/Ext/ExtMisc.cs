@@ -339,7 +339,7 @@ namespace Au.Types
 			t = *(T*)&a;
 		}
 
-		//rejected. Rarely used. Adds many garbage in compiled documentation for enums.
+		//rejected. Rarely used. Adds many garbage in compiled documentation for enums. Maybe C# 10 will have a list pattern for it.
 		//	Can istead write: if(e is EnumX.Val1 or EnumX.Val2 ...). But currently problems with intellisense; works better with (): if(e is (EnumX.Val1 or EnumX.Val2 ...)).
 		//		/// <summary>Returns true if this is equal to a value in list.</summary>
 		//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

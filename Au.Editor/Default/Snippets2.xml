@@ -8,8 +8,8 @@
 	Examples:
 
 	<group context="Function">
-		<snippet name="winFindSnippet" info="Find window." more="The + operator throws exception if not found.">
-			<![CDATA[var w = +wnd.find("$end$");]]>
+		<snippet name="winFindSnippet" info="Find window." more="With non-negative waitS argument (0, ) throws exception if not found.">
+			<![CDATA[var w = wnd.find(0, "$end$*Name$end$");]]>
 		</snippet>
 
 		<snippet name="foriSnippet" info="Repeat count times. Set variable i = 0 and increment after each loop.">

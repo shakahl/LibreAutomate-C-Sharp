@@ -39,6 +39,7 @@ class DOptions : KDialogWindow
 		_Font();
 		_Templates();
 		_Code();
+		_Hotkeys();
 
 		//_tc.SelectedIndex = 2;
 
@@ -398,11 +399,32 @@ To apply changes after deleting etc, restart this application.
 		};
 
 		static void _SnippetsButton(WBButtonClickArgs o) {
-			switch(popupMenu.showSimple("1 Edit snippets|2 Find default snippets")) {
+			switch (popupMenu.showSimple("1 Edit snippets|2 Find default snippets")) {
 			case 1: run.selectInExplorer(folders.ThisAppDocuments + @".settings\Snippets.xml"); break;
 			case 2: run.selectInExplorer(folders.ThisApp + @"Default\Snippets.xml"); break;
 			}
 		}
+	}
+
+	void _Hotkeys() {
+		var b = _Page("Hotkeys");
+		b.R.Add("Quick capture menu", out TextBox captureMenu, App.Settings.hotkeys.capture_menu);
+		b.R.Add("Quick capture wnd tool", out TextBox captureDwnd, App.Settings.hotkeys.capture_wnd);
+		b.R.Add("Quick capture elm tool", out TextBox captureDelm, App.Settings.hotkeys.capture_elm);
+		b.End();
+
+		_b.OkApply += e => {
+			AppSettings.hotkeys_t v = new() {
+				capture_menu = captureMenu.Text,
+				capture_wnd = captureDwnd.Text,
+				capture_elm = captureDelm.Text
+			};
+			if (v != App.Settings.hotkeys) {
+				App.Settings.hotkeys = v;
+				Au.Tools.QuickCapture.UnregisterHotkeys();
+				Au.Tools.QuickCapture.RegisterHotkeys();
+			}
+		};
 	}
 
 	static class api

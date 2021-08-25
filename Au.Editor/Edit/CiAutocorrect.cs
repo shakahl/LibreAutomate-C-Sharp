@@ -73,7 +73,7 @@ class CiAutocorrect
 	}
 
 	/// <summary>
-	/// Called on WM_CHAR, before passing it to Scintilla. Won't pass if returns true, unless ch is ';'.
+	/// Called on WM_CHAR, before passing it to Scintilla. Won't pass if returns true, unless ch is ';'. Not called for chars below space.
 	/// If ch is ')' etc, and at current position is ')' etc previously added on '(' etc, clears the temp range, sets the out vars and returns true.
 	/// If ch is ';' inside '(...)' and the terminating ';' is missing, sets newPosUtf8 = where ';' should be and returns true.
 	/// Also called by SciBeforeKey on Backspace and Tab.
@@ -81,6 +81,11 @@ class CiAutocorrect
 	public bool SciBeforeCharAdded(SciCode doc, char ch, out BeforeCharContext c) {
 		c = null;
 		bool isBackspace = false, isOpenBrac = false;
+
+		int pos = doc.zCurrentPos8;
+		if (pos == doc.zLen8 && ch != (char)KKey.Back) { //if pos is at the end of text, add newline
+			doc.zInsertText(false, pos, "\r\n");
+		}
 
 		switch (ch) {
 		case ';': return _OnEnterOrSemicolon(anywhere: false, onSemicolon: true, out c);
@@ -90,7 +95,6 @@ class CiAutocorrect
 		default: return false;
 		}
 
-		int pos = doc.zCurrentPos8;
 		var r = doc.ZTempRanges_Enum(pos, this, endPosition: (ch == '\"' || ch == '\''), utf8: true).FirstOrDefault();
 		if (r == null) return false;
 		if (isOpenBrac && !(r.OwnerData == (object)"ac" || r.OwnerData == (object)"new")) return false;

@@ -69,11 +69,7 @@ namespace Au
 		/// <example>
 		/// Simple program with output window.
 		/// <code><![CDATA[
-		/// using Au;
-		/// using Au.Types;
-		/// using System;
 		/// using System.Windows.Forms;
-		/// using System.Threading.Tasks;
 		/// 
 		/// class OutputFormExample : Form
 		/// {

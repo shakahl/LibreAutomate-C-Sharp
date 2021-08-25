@@ -11,7 +11,7 @@ namespace Au.Controls
 		/// <summary>
 		/// Returns code to find window w and optionally control con in it. Without end newline.
 		/// If w/con is same as previous and code of this control is modified and valid, gets code from this code control, from the start to ZReadonlyStart.
-		/// Else creates code "var w = +wnd.find(...);". If w is invalid, creates code "wnd w = default;".
+		/// Else creates code "var w = wnd.find(...);". If w is invalid, creates code "wnd w = default;".
 		/// The returned wndVar is final wnd variable name (of window or control).
 		/// </summary>
 		public (string code, string wndVar) ZGetWndFindCode(wnd w, wnd con = default) {

@@ -377,7 +377,9 @@ enum EProgramState
 
 enum ERegisteredHotkeyId
 {
-	QuickCapture = 1,
+	QuickCaptureMenu = 1,
+	QuickCaptureDwnd = 2,
+	QuickCaptureDelm = 3,
 }
 
 namespace Au.Editor

@@ -230,17 +230,17 @@ static class Menus
 		[Command("u_iimage (find image)")]
 		public static void uiimage() { new Duiimage().Show(); }
 
+		[Command("Quick capturing info")]
+		public static void Quick_capture() { QuickCapture.Info(); }
+
 		[Command(separator = true, keysText = "Ctrl+Space in string")]
 		public static void Keys() { CiTools.CmdShowKeysWindow(); }
 
 		[Command(keysText = "Ctrl+Space in string")]
 		public static void Regex() { CiTools.CmdShowRegexWindow(); }
 
-		[Command(separator = true)]
+		[Command]
 		public static void Windows_API() { new DWinapi().Show(); }
-
-		[Command(keysText = "Ctrl+Shift+Q")]
-		public static void Quick_capture() { print.it("Info: To quickly capture a window or UI element and insert code to find it etc, move the mouse to the window/element and press Ctrl+Shift+Q."); }
 
 		[Command(separator = true, image = "*Material.CommentEditOutline #B340FF")]
 		public static void Add_file_description() { InsertCode.AddFileDescription(); }

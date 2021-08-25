@@ -208,9 +208,9 @@ namespace Au
 		/// <example>
 		/// Code created with dialog "Find image or color in window".
 		/// <code><![CDATA[
-		/// var w = +wnd.find("Window Name");
+		/// var w = wnd.find(0, "Window Name");
 		/// string image = "image:iVBORw0KGgoAAAANSUhEUgAAABYAAAANCAYAAACtpZ5jAAAAAXNSR0IArs4c...";
-		/// var wi = +uiimage.find(w, image);
+		/// var wi = uiimage.find(0, w, image);
 		/// wi.Click();
 		/// ]]></code>
 		/// </example>

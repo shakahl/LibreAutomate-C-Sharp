@@ -7,8 +7,9 @@ using System.Windows.Input;
 
 //SHOULDDO: when capturing, if fails to get element from point, try UIA. Eg now htmlhelp tree. Maybe also if gets CLIENT.
 //	Or like in QM2, option to capture smallest object at that point.
-//SHOULDDO: if checked state, activate window before test. Else different FOCUSED etc.
+//SHOULDDO: if checked 'state', activate window before test. Else different FOCUSED etc.
 //SHOULDDO: capture image to display in editor.
+//SHOULDDO: sometimes VS 2022 hangs on Ctrl+Shift+E (dialog "Find UI element").
 
 namespace Au.Tools
 {
@@ -20,8 +21,9 @@ namespace Au.Tools
 		string _wndName;
 
 		KSciInfoBox _info;
-		Button _bTest, _bOK;
+		Button _bTest, _bOK, _bSett;
 		Label _speed;
+		ComboBox _cbAction;
 		KCheckBox _cCapture;
 		ScrollViewer _scroller;
 		Border _attr;
@@ -30,23 +32,28 @@ namespace Au.Tools
 
 		KCheckTextBox roleA, nameA, uiaidA, idA, classA, valueA, descriptionA, actionA, keyA, helpA, elemA, stateA, rectA, alsoA, skipA, navigA, waitA, notinA, maxccA, levelA;
 		KCheckBox controlC, exceptionA, hiddenTooA, reverseA, uiaA, notInprocA, clientAreaA, menuTooA;
-		ComboBox callA;
 
-		public Delm(elm e = null, POINT? p = null) {
+		public Delm(POINT? p = null) {
+			elm e = null;
 			if (p != null) e = elm.fromXY(p.Value, EXYFlags.NoThrow | EXYFlags.PreferLink);
 
 			Title = "Find UI element";
 
-			var b = new wpfBuilder(this).WinSize((600, 440..), (600, 420..)).Columns(-1, 0);
+			var b = new wpfBuilder(this).WinSize((600, 450..), (600, 450..)).Columns(-1, 0);
 			b.R.Add(out _info).Height(60);
-			b.R.StartOkCancel()
-				.AddButton(out _bTest, "_Test", _bTest_Click).Width(70..).Disabled().Tooltip("Executes the code now.\nShows rectangle of the found UI element.\nIgnores options: wait, Exception, Call.")
-				.Add(out _speed).Width(110).Tooltip("Search time (wnd.find + elm.find). Red if not found.")
-				.AddOkCancel(out _bOK, out _, out _)
-				.End().Align("L")
-				.Add(out _cCapture, "_Capture").Align(y: "C").Tooltip("Enables hotkeys F3 and Ctrl+F3. Shows UI element rectangles when moving the mouse.");
+			b.R.StartGrid().Columns(100, 0, -1);
+			b.R.AddButton(out _bTest, "_Test", _bTest_Click).Size(70, 21).Align("L").Disabled().Tooltip("Executes the code now.\nShows rectangle of the found UI element.\nIgnores options: wait, Exception, Action.");
+			b.AddOkCancel(out _bOK, out _, out _).Margin("T0");
+			b.Add(out _cCapture, "_Capture").Align("R", "C").Tooltip("Enables hotkeys F3 and Ctrl+F3. Shows UI element rectangles when moving the mouse.");
+			b.R.Add(out _speed).Tooltip("The search time (wnd.find + elm.find). Red if not found.")
+			.Add(out _cbAction).Items("Set variable|Invoke|WebInvoke|JavaInvoke|VirtualClick|MouseClick|MouseMove|Focus|Select|ScrollTo")
+			.And(20).AddButton(out _bSett, "...", _ => _Options()).Tooltip("Saved settings of this tool dialog");
+			exceptionA = b.xAddCheck("Exception if not found", noNewRow: true, check: true);
+			b.End();
+			b.R.AddSeparator(false);
 			_bOK.IsEnabled = false;
 			b.OkApply += _bOK_Click;
+			_SetActionComboInitOK(true);
 
 			//elm properties, other parameters, search settings
 			b.Row(184);
@@ -75,7 +82,7 @@ namespace Au.Tools
 			b.StartGrid(); //right side
 			controlC = b.xAddCheck("Control");
 			b.xAddButton("Window/control...", _bWnd_Click);
-			alsoA = b.xAddCheckText("also", "o => true");
+			alsoA = b.xAddCheckText("also", "o=>true");
 			skipA = b.xAddCheckText("skip", "1");
 			navigA = b.xAddCheckText("navig");
 			waitA = b.xAddCheckText("wait", "1", check: true);
@@ -91,13 +98,7 @@ namespace Au.Tools
 			levelA = b.xAddCheckText("level");
 			b.End();
 			b.xEndPropertyGrid();
-			//separator + some more
-			b.R.AddSeparator(false).Margin("T3 B3");
-			b.R.StartStack();
-			exceptionA = b.xAddCheck("Exception if not found"); b.Margin("R30").Checked();
-			b.Add("Call", out callA).Items("|Invoke|VirtualClick|MouseClick|MouseMove|Focus|Select|ScrollTo"); b.Width(100); //CONSIDER: just checkbox with info; maybe with menu.
-			callA.SelectionChanged += (o, _) => _AnyCheckTextBoxValueChanged(o);
-			b.End();
+			b.R.AddSeparator(false);
 
 			//code
 			b.Row(64).xAddInBorder(out _code, "B");
@@ -114,6 +115,11 @@ namespace Au.Tools
 
 			_elm = e; //will be processed in OnLoad
 
+			if (e != null) b.WinProperties(
+				showActivated: false, //eg if captured a popup menu item, activating this window closes the menu and we cannot get properties
+				topmost: true //when inactive, sometimes could open below the active window
+				);
+
 			WndSavedRect.Restore(this, App.Settings.tools_Delm_wndPos, o => App.Settings.tools_Delm_wndPos = o);
 		}
 
@@ -121,13 +127,13 @@ namespace Au.Tools
 			TUtil.OnAnyCheckTextBoxValueChanged<Delm>((d, o) => d._AnyCheckTextBoxValueChanged(o));
 		}
 
-		public static void Dialog(elm e = null, POINT? p = null) {
+		public static void Dialog(POINT? p = null) {
 #if THREAD
-			if (e != null || Environment.CurrentManagedThreadId != 1) { //cannot simply pass an iaccessible to other thread
-				new Delm(e, p).Show();
+			if (Environment.CurrentManagedThreadId != 1) { //cannot simply pass an iaccessible to other thread
+				new Delm(p).Show();
 			} else {
 				run.thread(() => { //don't allow main thread to hang when something is slow when working with UI elements
-					new Delm(e, p).ShowDialog();
+					new Delm(p).ShowDialog();
 				});
 			}
 #else
@@ -326,8 +332,8 @@ namespace Au.Tools
 
 			var (wndCode, wndVar) = _code.ZGetWndFindCode(_wnd, _useCon ? _con : default);
 
-			bool isCall = !forTest && callA.SelectedIndex > 0;
-			bool orThrow = !forTest && (exceptionA.IsChecked || isCall);
+			bool isCall = !forTest && _cbAction.SelectedIndex > 0;
+			bool orThrow = !forTest && exceptionA.IsChecked;
 
 			var b = new StringBuilder();
 			b.AppendLine(wndCode);
@@ -406,9 +412,9 @@ namespace Au.Tools
 			if (navigA.GetText(out var navig)) b.AppendStringArg(navig, "navig");
 
 			b.Append(')');
-			if (isCall) b.Append($".{callA.SelectedValue}()");
+			if (isCall) b.Append($"{(orThrow ? null : "?")}.{_cbAction.SelectedValue}()");
 			b.Append(';');
-			if (!orThrow && !forTest) b.AppendLine().Append("if(a == null) { print.it(\"not found\"); }");
+			if (!(forTest|orThrow|isCall)) b.AppendLine().Append("if(a == null) { print.it(\"not found\"); }");
 
 			var R = b.ToString();
 
@@ -489,6 +495,7 @@ namespace Au.Tools
 			ZResultCode = _code.zText;
 			if (ZResultCode.NE()) { ZResultCode = null; e.Cancel = true; return; }
 			InsertCode.Statements(ZResultCode);
+			_SetActionComboInitOK(false);
 		}
 
 		private void _bTest_Click(WBButtonClickArgs ea) {
@@ -764,6 +771,31 @@ namespace Au.Tools
 			}
 		}
 
+		void _Options() {
+			var m = new popupMenu();
+			//m.Add("Tool options", disable: true).FontBold = true;
+			var c1 = m.AddCheck("Remember action", App.Settings.tools_Delm_flags.Has(EOptions.ActionRemember));
+			m.Show(owner: this);
+			App.Settings.tools_Delm_flags.SetFlag(EOptions.ActionRemember, c1.IsChecked);
+		}
+
+		[Flags]
+		public enum EOptions
+		{
+			ActionMask = 15,
+			ActionRemember = 16,
+		}
+
+		void _SetActionComboInitOK(bool init) {
+			if (init) {
+				if (App.Settings.tools_Delm_flags.Has(EOptions.ActionRemember))
+					_cbAction.SelectedIndex = Math.Clamp((int)(App.Settings.tools_Delm_flags & EOptions.ActionMask), 0, _cbAction.Items.Count - 1);
+				_cbAction.SelectionChanged += (o, _) => _AnyCheckTextBoxValueChanged(o);
+			} else {
+				App.Settings.tools_Delm_flags = (App.Settings.tools_Delm_flags & ~EOptions.ActionMask) | ((EOptions)_cbAction.SelectedIndex & EOptions.ActionMask);
+			}
+		}
+
 		#endregion
 
 		#region info
@@ -824,9 +856,9 @@ Relative to the window, control (if used <b>class<> or <b>id<>) or web page (rol
 			_info.InfoC(exceptionA,
 @"Throw exception if not found.
 If unchecked, returns null.");
-			_info.Info(callA, "Call",
-@"Call this single function and don't add variable.
-With variable later you can add code to call one or more functions (like e.Invoke()) and get properties (like var s = e.Name).");
+			_info.Info(_cbAction, "Action",
+@"Set an elm variable, or call a single function without a variable.
+With the variable later you can add code to call one or more functions. Examples e.Invoke(); var s = e.Name.");
 
 			_info.InfoC(hiddenTooA, "Flag <help>Au.Types.EFFlags<>.HiddenToo.");
 			_info.InfoC(reverseA, "Flag <help>Au.Types.EFFlags<>.Reverse (search bottom to top).");
@@ -850,10 +882,10 @@ Useful when creating <b>navig<> string.");
 		}
 
 		const string c_dialogInfo =
-@"Creates code to find <help elm.find>UI element<> in <help wnd.find>window<>. Your script can click it, etc.
-1. Move the mouse to a UI element (button, link, etc). Press key <b>F3<> or <b>Ctrl+F3<>.
-2. Click the Test button. It finds and shows the UI element and the search time.
-3. If need, check/uncheck/edit some fields or select another UI element; click Test.
+@"This dialog creates code to find <help elm.find>UI element<> in <help wnd.find>window<> (to click etc).
+1. Move the mouse to a UI element. Press key <b>F3<> or <b>Ctrl+F3<>.
+2. Click the Test button. It finds and shows the UI element.
+3. If need, change some fields or select another element.
 4. Click OK, it inserts C# code in editor. Or copy/paste.
 5. In editor add code to use the UI element. <help elm>Examples<>. If need, rename variables, delete duplicate wnd.find lines, replace part of window name with *, etc.
 

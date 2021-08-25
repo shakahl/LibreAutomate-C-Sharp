@@ -140,12 +140,12 @@ namespace Au
 		/// <example>
 		/// Find link "Example" in web page, and click. Wait max 5 s. Throw <b>NotFoundException</b> if not found.
 		/// <code><![CDATA[
-		/// var w = +wnd.find("* Chrome");
+		/// var w = wnd.find(0, "* Chrome");
 		/// elm.find(5, w, "web:LINK", "Example").Invoke();
 		/// ]]></code>
 		/// Try to find link "Example" in web page. Return if not found.
 		/// <code><![CDATA[
-		/// var w = +wnd.find("* Chrome");
+		/// var w = wnd.find(0, "* Chrome");
 		/// var e = elm.find(w, "web:LINK", "Example");
 		/// //var e = elm.find(-5, w, "web:LINK", "Example"); //waits max 5 s
 		/// if(e == null) { print.it("not found"); return; }
@@ -153,7 +153,7 @@ namespace Au
 		/// ]]></code>
 		/// Use <see cref="elmFinder"/>.
 		/// <code><![CDATA[
-		/// var w = +wnd.find("* Chrome");
+		/// var w = wnd.find(0, "* Chrome");
 		/// var f = new elmFinder("BUTTON", "Example");
 		/// if(!f.Find(w)) { print.it("not found"); return; }
 		/// elm e = f.Result;
@@ -280,7 +280,7 @@ namespace Au
 		/// <example>
 		/// Get all taskbar buttons (Windows 10).
 		/// <code><![CDATA[
-		/// var w = +wnd.find(null, "Shell_TrayWnd");
+		/// var w = wnd.find(0, null, "Shell_TrayWnd");
 		/// foreach(var e in elm.findAll(w, "BUTTON", prop: "level=7")) print.it(e);
 		/// ]]></code>
 		/// </example>
@@ -305,8 +305,8 @@ namespace Au
 		/// <example>
 		/// Get all taskbar buttons (Windows 10).
 		/// <code><![CDATA[
-		/// var w = +wnd.find(null, "Shell_TrayWnd");
-		/// var etb = +elm.find(w, "TOOLBAR", "Running applications");
+		/// var w = wnd.find(0, null, "Shell_TrayWnd");
+		/// var etb = elm.find(0, w, "TOOLBAR", "Running applications");
 		/// foreach(var e in etb.FindAll("BUTTON", prop: "level=0")) print.it(e);
 		/// ]]></code>
 		/// </example>

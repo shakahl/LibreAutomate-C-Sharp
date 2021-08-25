@@ -26,6 +26,13 @@ static class InsertCode
 	public static void Statements(string s, bool goToPercent = false, bool fold = false) {
 		if (Environment.CurrentManagedThreadId != 1) App.Wmain.Dispatcher.InvokeAsync(() => _Action(s, goToPercent, fold)); else _Action(s, goToPercent, fold);
 		static void _Action(string s, bool goToPercent, bool fold) {
+			if (!App.Hwnd.IsVisible) {
+				//probably the window exists (already was visible), else there is no code that could call this func
+				Debug.Assert(!App.Hwnd.Is0); if (App.Hwnd.Is0) return;
+				App.TrayIcon.ShowWindow_();
+				timerm.after(500, _ => _Action(s, goToPercent, fold)); //works without this, but safer with this
+				return;
+			}
 			var d = Panels.Editor.ZActiveDoc;
 			if (d == null || d.zIsReadonly) {
 				print.it(s);

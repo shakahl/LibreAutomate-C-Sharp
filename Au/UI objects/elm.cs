@@ -144,17 +144,16 @@ namespace Au
 	/// <example>
 	/// Click link "Example" in Chrome.
 	/// <code><![CDATA[
-	/// var w = +wnd.find("* Chrome");
-	/// var e = +elm.find(w, "web:LINK", "Example");
+	/// var w = wnd.find(0, "* Chrome");
+	/// var e = elm.find(5, w, "web:LINK", "Example");
 	/// e.Invoke();
 	/// ]]></code>
 	/// Click a link, wait for new web page, click a link in it.
 	/// <code><![CDATA[
-	/// var w = +wnd.find("* Chrome");
-	/// var e = elm.wait(1, w, "web:LINK", "Link 1");
-	/// e.InvokeAndWaitForNewWebPage();
-	/// e = elm.wait(10, w, "web:LINK", "Link 2");
-	/// e.InvokeAndWaitForNewWebPage();
+	/// var w = wnd.find(0, "* Chrome");
+	/// var e = elm.find(1, w, "web:LINK", "Link 1");
+	/// e.WebInvoke();
+	/// elm.find(10, w, "web:LINK", "Link 2").WebInvoke();
 	/// ]]></code>
 	/// </example>
 	[StructLayout(LayoutKind.Sequential)]
@@ -574,7 +573,7 @@ namespace Au
 		/// Displays visible UI elements in Chrome web page.
 		/// <code><![CDATA[
 		/// print.clear();
-		/// var w = +wnd.find("* Chrome");
+		/// var w = wnd.find(0, "* Chrome");
 		/// print.it("---- all ----");
 		/// elm.printAll(w, "web:");
 		/// print.it("---- links ----");

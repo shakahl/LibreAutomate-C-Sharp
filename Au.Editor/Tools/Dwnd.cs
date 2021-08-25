@@ -30,20 +30,21 @@ namespace Au.Tools
 		public Dwnd(wnd w = default, bool uncheckControl = false) {
 			Title = "Find window or control";
 
-			var b = new wpfBuilder(this).WinSize((600, 440..), (600, 460..)).Columns(-1, 0);
+			var b = new wpfBuilder(this).WinSize((600, 460..), (600, 460..)).Columns(-1, 0);
 			b.R.Add(out _info).Height(60);
-			b.R.StartOkCancel()
-				.AddButton(out _bTest, "_Test", _bTest_Click).Width(70..).Tooltip("Executes the code now.\nShows rectangle of the found window/control.\nIgnores options: wait, Exception, Activate.")
-				.Add(out _speed).Width(110).Tooltip("Search time (window + control). Red if not found.")
-				.AddOkCancel(out _bOK, out _, out _)
-				.End().Align("L")
-				.Add(out _cCapture, "_Capture").Align(y: "C").Tooltip("Enables hotkeys F3 and Ctrl+F3. Shows window/control rectangles when moving the mouse.");
-			_bTest.IsEnabled = false;
+			b.R.StartGrid().Columns(100, 0, -1);
+			b.R.AddButton(out _bTest, "_Test", _bTest_Click).Size(70, 21).Align("L").Disabled().Tooltip("Executes the code now.\nShows rectangle of the found window/control.\nIgnores options: wait, Exception, Activate.");
+			b.AddOkCancel(out _bOK, out _, out _).Margin("T0");
+			b.Add(out _cCapture, "_Capture").Align("R", "C").Tooltip("Enables hotkeys F3 and Ctrl+F3. Shows window/control rectangles when moving the mouse.");
+			b.R.Add(out _speed).Tooltip("The search time (window + control). Red if not found.");
+			cActivate = b.xAddCheck("Activate window", noNewRow: true);
+			cException = b.xAddCheck("Exception if not found", noNewRow: true, check: true);
+			b.End();
 			_bOK.IsEnabled = false;
 			b.OkApply += _bOK_Click;
 
 			//window and control properties and search settings
-			b.R.AddSeparator(false).Margin("T3 B0");
+			b.R.AddSeparator(false).Margin("T B");
 			b.Row(0); //auto height, else adds v scrollbar when textbox height changes when a textbox text is multiline or too long (with h scrollbar)
 			_scroller = b.xStartPropertyGrid("L2 T3 R2 B1"); //actually never shows scrollbar because of row auto height, but sets some options etc
 			_scroller.Visibility = Visibility.Hidden;
@@ -60,7 +61,7 @@ namespace Au.Tools
 			b.StartGrid().Columns(44, -1);
 			cHiddenTooW = b.xAddCheck("Find hidden too");
 			cCloakedTooW = b.xAddCheck("Find cloaked too");
-			alsoW = b.xAddCheckText("also", "o => true");
+			alsoW = b.xAddCheckText("also", "o=>true");
 			waitW = b.xAddCheckText("wait", "1", check: true);
 			b.End();
 			//control
@@ -73,16 +74,11 @@ namespace Au.Tools
 			b.End().Skip();
 			b.StartGrid().Columns(44, -1); _gCon2 = b.Panel as Grid;
 			cHiddenTooC = b.xAddCheck("Find hidden too");
-			alsoC = b.xAddCheckText("also", "o => true");
+			alsoC = b.xAddCheckText("also", "o=>true");
 			skipC = b.xAddCheckText("skip", "1");
 			b.End();
 			b.xEndPropertyGrid();
-			//separator + some more
-			b.R.AddSeparator(false).Margin("T3 B3");
-			b.R.StartStack();
-			cException = b.xAddCheck("Exception if not found"); b.Checked();
-			cActivate = b.xAddCheck("Activate window"); b.Margin(20);
-			b.End();
+			b.R.AddSeparator(false);
 
 			//code
 			b.Row(64).xAddInBorder(out _code, "B");
@@ -101,6 +97,11 @@ namespace Au.Tools
 
 			_con = w;
 			_uncheckControl = uncheckControl;
+
+			if (!w.Is0) b.WinProperties(
+				showActivated: false, //eg if captured a popup menu, activating this window closes the menu and we cannot get properties
+				topmost: true //when inactive, sometimes opens below the active window
+				);
 
 			WndSavedRect.Restore(this, App.Settings.tools_Dwnd_wndPos, o => App.Settings.tools_Dwnd_wndPos = o);
 		}
@@ -685,12 +686,12 @@ If unchecked, returns default(wnd).");
 		}
 
 		const string c_dialogInfo =
-@"This dialog creates code to <help wnd.find>find window<> or <help wnd.Child>control<>.
+@"This dialog creates code to find <help wnd.find>window<> or <help wnd.Child>control<>.
 1. Move the mouse to a window or control. Press key <b>F3<> or <b>Ctrl+F3<>.
-2. Click the Test button. It finds and shows the window/control and the search time.
-3. If need, check/uncheck/edit some fields or select another window/control; click Test.
+2. Click the Test button. It finds and shows the window/control.
+3. If need, change some fields or select another window/control.
 4. Click OK, it inserts C# code in editor. Or copy/paste.
-5. In editor add code to use the window/control. If need, rename variables, delete duplicate wnd.find lines, replace part of window name with *, etc.
+5. In editor add code to use the window/control. If need, rename variables, delete duplicate wnd.find lines, replace part of window name with *, etc. Then call functions; examples: w.Activate(); var s = w.Name;.
 
 If F3 does not work when the target window is active, probably its process is admin and this process isn't. Ctrl+F3 should still work, but may fail to get some properties.";
 

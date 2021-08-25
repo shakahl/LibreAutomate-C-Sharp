@@ -200,8 +200,9 @@ namespace Au.Types
 								}
 							}
 						}
-					} else {
-						Debug_.Print(k.code); //didn't detect the window? Because unhooks when detects.
+					} else { //didn't detect the window? Because unhooks when detects.
+						Debug_.Print($"{k.code} {k.Hwnd}");
+						//Debug_.PrintIf(k.code != HookData.CbtEvent.SETFOCUS, $"{k.code} {k.Hwnd}"); //sometimes SETFOCUS before CREATEWND, and it is bad
 					}
 					return false;
 				});

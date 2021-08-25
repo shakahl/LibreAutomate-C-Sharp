@@ -43,25 +43,6 @@ partial class MainWindow : Window
 		//timerm.after(500, _ => { new Au.Tools.Delm().Show(); });
 		//timerm.after(500, _ => { new Au.Tools.Duiimage().Show(); });
 
-//		timerm.after(100, _ => {
-//#if !true
-//					//var w = +wnd.find("Quick Macros -*");
-//					//w = +w.ChildById(2212);
-//					var w = +wnd.find("Character Map");
-//					w = +w.ChildById(103);
-//					//print.it(w);
-//					//new Au.Tools.Dwnd(w).Show();
-//					//new Au.Tools.Dwnd(w, uncheckControl: true).Show();
-//					new Au.Tools.Delm(elm.fromWindow(w, EObjid.CLIENT)).Show();
-//#elif true
-//			new Au.Tools.Duiimage().Show();
-//#else
-//					var w = +wnd.find("Untitled Document - Google Chrome", "Chrome_WidgetWin_1");
-//					var e = +elm.find(w, "web:BUTTON", "PayPal - The safer, easier way to pay online!");
-//					new Au.Tools.Delm(e).Show();
-//#endif
-//		});
-
 #if DEBUG
 		App.Timer1s += () => {
 			var e = Keyboard.FocusedElement as FrameworkElement;
@@ -72,17 +53,17 @@ partial class MainWindow : Window
 	}
 
 	protected override void OnClosing(CancelEventArgs e) {
-		base.OnClosing(e);
-		if (e.Cancel) return;
+		if (!e.Cancel) {
+			App.Model.Save.AllNowIfNeed();
+			Panels.PanelManager.Save();
 
-		App.Model.Save.AllNowIfNeed();
-		Panels.PanelManager.Save();
-
-		if (App.Settings.runHidden && IsVisible) {
-			e.Cancel = true;
-			Hide();
-			process.ThisProcessMinimizePhysicalMemory_(1000);
+			if (App.Settings.runHidden && IsVisible) {
+				e.Cancel = true;
+				Hide();
+				process.ThisProcessMinimizePhysicalMemory_(1000);
+			}
 		}
+		base.OnClosing(e); //note: must be at the end, after we set Cancel
 	}
 
 	protected override void OnClosed(EventArgs e) {
@@ -117,7 +98,7 @@ partial class MainWindow : Window
 
 		hs.AddHook(_WndProc);
 
-		Au.Tools.QuickCapture.RegisterHotkey(App.Hwnd);
+		Au.Tools.QuickCapture.RegisterHotkeys();
 
 		CommandLine.UILoaded();
 	}
@@ -138,7 +119,9 @@ partial class MainWindow : Window
 		case Api.WM_HOTKEY:
 			handled = true;
 			switch ((ERegisteredHotkeyId)(int)wParam) {
-			case ERegisteredHotkeyId.QuickCapture: Au.Tools.QuickCapture.WmHotkey(); break;
+			case ERegisteredHotkeyId.QuickCaptureMenu: Au.Tools.QuickCapture.Menu(); break;
+			case ERegisteredHotkeyId.QuickCaptureDwnd: Au.Tools.QuickCapture.ToolDwnd(); break;
+			case ERegisteredHotkeyId.QuickCaptureDelm: Au.Tools.QuickCapture.ToolDelm(); break;
 			}
 			break;
 		}

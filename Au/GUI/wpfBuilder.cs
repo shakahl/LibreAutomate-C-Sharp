@@ -28,7 +28,11 @@ using System.Windows.Input;
 
 //SHOULDDO: a workaround for WPF bug: sometimes window or part of window is white, until invalidating.
 //	Noticed with all kinds of WPF windows and popups, not only created with wpfBuilder. Noticed in other WPF apps too, usually black parts.
-//	Maybe set timer that invalidates window.
+//	Maybe set timer that invalidates window. Tested InvalidateRect, works.
+//	Can reproduce in ~50% times: hide main window and press Ctrl+Shift+W. The wnd tool first time often white.
+//	It seems OK when using Nvidia graphic card for all apps. Select in Nvidia control panel -> Manage 3D settings.
+//	Tested on 1 computer.
+//	Maybe never mind, it's just a low-quality graphic card. Had other problems with it too, eg video rendering in web browser.
 
 //never mind: on Win7 text of all WPF checkboxes too low by 1 pixel. Not only of wpfBuilder.
 

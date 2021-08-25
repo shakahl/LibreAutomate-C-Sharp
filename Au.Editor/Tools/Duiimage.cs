@@ -5,6 +5,14 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Drawing;
 
+//CONSIDER: reorder controls:
+/*
+Capture		Test	OK	Cancel
+...			speed	cbAction	Mouse
+Wait		Exception
+Image				Properties
+*/
+
 namespace Au.Tools
 {
 	class Duiimage : KDialogWindow
@@ -38,7 +46,7 @@ namespace Au.Tools
 			b.R.StartGrid()
 				.R.AddButton("_Capture", _bCapture_Click).AddButton("_...", _bEtc_Click).Width(30).Align("L").Tooltip("File, array")
 				.R.AddButton(out _bTest, "_Test", _bTest_Click).Width(70..).Disabled().Tooltip("Executes the code now.\nShows rectangle of the found image.\nIgnores options: Find all, wait, Exception, Mouse.")
-				.Add(out _speed).Tooltip("Search time (window + image). Red if not found.")
+				.Add(out _speed).Tooltip("The search time (window + image). Red if not found.")
 				.R.AddOkCancel(out _bOK, out _, out _).Align("L"); _bOK.IsEnabled = false;
 			b.Row(110).xAddInBorder(out _pict);
 			b.End();
@@ -458,10 +466,10 @@ If unchecked, returns false.");
 		}
 
 		const string c_dialogInfo =
-@"Creates code to <help uiimage.find>find image or color<> in <help wnd.find>window<>. Your script can click it, etc.
+@"This dialog creates code to find/click <help uiimage.find>image or color<> in <help wnd.find>window<>.
 1. Click the Capture button. Mouse-draw rectangle around the image.
-2. Click the Test button. It finds and shows the image and the search time.
-3. If need, check/uncheck/edit some fields; click Test.
+2. Click the Test button. It finds and shows the image.
+3. If need, change some fields.
 4. Click OK, it inserts C# code in editor. Or copy/paste.
 5. If need, edit the code in editor: rename variables, delete duplicate wnd.find lines, replace part of window name with *, etc.";
 
