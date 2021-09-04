@@ -26,6 +26,11 @@ namespace Au.Controls
 			zStyleFont(style, c.FontFamily.ToString(), c.FontSize.ToInt() * 72 / 96);
 		}
 
+		/// <remarks>Segoe UI, 9.</remarks>
+		public void zStyleFont(int style) {
+			zStyleFont(style, "Segoe UI", 9);
+		}
+
 		public void zStyleFontSize(int style, int value) {
 			Call(SCI_STYLESETSIZE, style, value);
 		}

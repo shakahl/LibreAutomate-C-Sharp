@@ -26,7 +26,6 @@ namespace Au
 	/// 
 	/// To add an image resource in Visual Studio, use build action "Resource" for the image file.
 	/// </remarks>
-	[EditorBrowsable(EditorBrowsableState.Never)]
 	public abstract partial class MTBase
 	{
 		private protected readonly string _name;
@@ -209,7 +208,6 @@ namespace Au
 		/// <summary>
 		/// Base of <see cref="popupMenu.MenuItem"/> etc.
 		/// </summary>
-		[EditorBrowsable(EditorBrowsableState.Never)]
 		public abstract class MTItem
 		{
 			internal Delegate clicked;

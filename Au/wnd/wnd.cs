@@ -78,7 +78,7 @@
 		/// <summary>Compares window handles.</summary>
 		public static bool operator !=(wnd w1, wnd w2) => w1._h != w2._h;
 
-		//Prevent accidental usage wnd==null. The C# compiler allowed it without a warning; level-5 warning since C# 9. Bad: disables wnd==wnd?.
+		//Prevent accidental usage wnd==null. The C# compiler used to allow it without a warning; level-5 warning since C# 9. Bad: disables wnd==wnd?.
 		//[Obsolete("Replace wnd==wnd? with wnd.Equals(wnd?). Replace wnd==null with wnd.Is0.", true), NoDoc]
 		//public static bool operator ==(wnd w1, wnd? w2) => false;
 		//[Obsolete("Replace wnd==wnd? with wnd.Equals(wnd?). Replace wnd==null with wnd.Is0.", true), NoDoc]
@@ -87,17 +87,6 @@
 		//public static bool operator ==(wnd? w1, wnd w2) => false;
 		//[Obsolete("Replace wnd==wnd? with wnd.Equals(wnd?). Replace wnd==null with wnd.Is0.", true), NoDoc]
 		//public static bool operator !=(wnd? w1, wnd w2) => true;
-
-		/// <summary>
-		/// Returns the same value if it is not default(wnd). Else throws <see cref="NotFoundException"/>.
-		/// </summary>
-		/// <exception cref="NotFoundException"></exception>
-		/// <example>
-		/// <code><![CDATA[
-		/// var w = +wnd.find("Example");
-		/// ]]></code>
-		/// </example>
-		public static wnd operator +(wnd w) => !w.Is0 ? w : throw new NotFoundException("Not found (wnd).");
 #pragma warning restore 1591 //XML doc
 
 		/// <summary>

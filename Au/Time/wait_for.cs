@@ -95,13 +95,13 @@ namespace Au
 				MaxPeriod = Period * 50f;
 				_step = Period / 10f;
 
-				if (secondsTimeout == 0) {
+				if (secondsTimeout == 0d || secondsTimeout > 9223372036854775d || secondsTimeout < -9223372036854775d) { //long.MaxValue/1000 = 292_471_208 years
 					_hasTimeout = _throw = false;
 					_timeRemaining = _timePrev = 0;
 				} else {
 					_hasTimeout = true;
 					if (secondsTimeout > 0) _throw = true; else { _throw = false; secondsTimeout = -secondsTimeout; }
-					_timeRemaining = checked((long)(secondsTimeout * 1000d));
+					_timeRemaining = (long)(secondsTimeout * 1000d);
 					_timePrev = computer.tickCountWithoutSleep;
 				}
 				_precisionIsSet = false;

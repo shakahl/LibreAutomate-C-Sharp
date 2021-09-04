@@ -1,6 +1,6 @@
 //Key/mouse/autotext triggers use low-level keyboard and mouse hooks. The hooks are in a separate thread, because:
 //	1. Safer when user code is slow or incorrect.
-//	2. Works well with COM. In LL hook procedure some COM functions fail, eg elm.find with some windows.
+//	2. Works well with COM. In LL hook procedure some COM functions fail, eg find elm with some windows.
 //		Error "An outgoing call cannot be made since the application is dispatching an input-synchronous call". Like when using SendMessage for IPC.
 //		It is important because scripts often use UI elements in scope context functions etc that run in the main thread.
 

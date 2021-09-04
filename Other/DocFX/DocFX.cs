@@ -255,7 +255,7 @@ unsafe class Program
 		if (test) {
 			//files = @"\api\Au.AaaDocFX*";
 			//files = @"\api\Au.regexp.Replace";
-			files = @"\api\Au.elm.find";
+			files = @"\api\Au.elmFinder.this";
 			files = @"\api\Au.dialog.show";
 			files = @"\articles\Wildcard expression";
 			files += ".html";

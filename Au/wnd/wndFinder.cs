@@ -1,16 +1,15 @@
-﻿
-using static Au.wnd.Internal_;
+﻿using static Au.wnd.Internal_;
 
 namespace Au
 {
 	/// <summary>
-	/// Contains top-level window properties and can be used to find the window.
+	/// Finds top-level windows (<see cref="wnd"/>). Contains name and other parameters of windows to find.
 	/// </summary>
 	/// <remarks>
 	/// Can be used instead of <see cref="wnd.find"/> or <see cref="wnd.findAll"/>.
 	/// These codes are equivalent:
 	/// <code>wnd w = wnd.find(a, b, c, d, e); if(!w.Is0) print.it(w);</code>
-	/// <code>var p = new wnd.wndFinder(a, b, c, d, e); if(p.Find()) print.it(p.Result);</code>
+	/// <code>var p = new wnd.wndFinder(a, b, c, d, e); if(p.Exists()) print.it(p.Result);</code>
 	/// Also can find in a list of windows.
 	/// </remarks>
 	public class wndFinder
@@ -93,31 +92,32 @@ namespace Au
 			_contains = contains;
 		}
 
-		/// <summary>
-		/// Implicit conversion from string that can contain window name, class name, program and/or a <i>contains</i> object.
-		/// Examples: <c>"name,cn,program"</c>, <c>"name"</c>, <c>",cn"</c>, <c>",,program"</c>, <c>"name,cn"</c>, <c>"name,,program"</c>, <c>",cn,program"</c>, <c>"name,,,object"</c>.
-		/// </summary>
-		/// <param name="s">
-		/// One or more comma-separated window properties: name, class, program and/or a <i>contains</i> object. Empty parts are considered null.
-		/// The same as parameters of <see cref="wnd.find"/>. The first 3 parts are <i>name</i>, <i>cn</i> and <i>of</i>. The last part is <i>contains</i> as string; can specify a UI element, control or image.
-		/// The first 3 comma-separated parts cannot contain commas. Alternatively, parts can be separated by '\0' characters, like <c>"name\0"+"cn\0"+"program\0"+"object"</c>. Then parts can contain commas. Example: <c>"*one, two, three*\0"</c> (name with commas).
-		/// </param>
-		/// <exception cref="ArgumentException">See <see cref="wnd.find"/>.</exception>
-		/// <exception cref="Exception">If specifies a <i>contains</i> object: exceptions of constructor of <see cref="wndChildFinder"/> or <see cref="elmFinder"/> or <see cref="uiimageFinder"/>.</exception>
-		public static implicit operator wndFinder(string s) {
-			string name = null, cn = null, prog = null, contains = null;
-			char[] sep = null; if (s.Contains('\0')) sep = s_sepZero; else if (s.Contains(',')) sep = s_sepComma;
-			if (sep == null) name = s;
-			else {
-				var ra = s.Split(sep, 4);
-				if (ra[0].Length > 0) name = ra[0];
-				if (ra[1].Length > 0) cn = ra[1];
-				if (ra.Length > 2 && ra[2].Length > 0) prog = ra[2];
-				if (ra.Length > 3 && ra[3].Length > 0) contains = ra[3];
-			}
-			return new wndFinder(name, cn, prog, contains: contains);
-		}
-		static readonly char[] s_sepComma = { ',' }, s_sepZero = { '\0' };
+		//rejected. Better slightly longer code than unclear and possibly ambiguous code where you have to learn string parsing rules.
+		///// <summary>
+		///// Implicit conversion from string that can contain window name, class name, program and/or a <i>contains</i> object.
+		///// Examples: <c>"name,cn,program"</c>, <c>"name"</c>, <c>",cn"</c>, <c>"*,,program"</c>, <c>"name,cn"</c>, <c>"name,,program"</c>, <c>",cn,program"</c>, <c>"name,,,object"</c>.
+		///// </summary>
+		///// <param name="s">
+		///// One or more comma-separated window properties: name, class, program and/or a <i>contains</i> object. Empty name means "" (for any use *); other empty parts mean null.
+		///// The same as parameters of <see cref="wnd.find"/>. The first 3 parts are <i>name</i>, <i>cn</i> and <i>of</i>. The last part is <i>contains</i> as string; can specify a UI element, control or image.
+		///// The first 3 comma-separated parts cannot contain commas. Alternatively, parts can be separated by '\0' characters, like <c>"name\0"+"cn\0"+"program\0"+"object"</c>. Then parts can contain commas. Example: <c>"*one, two, three*\0"</c> (name with commas).
+		///// </param>
+		///// <exception cref="ArgumentException">See <see cref="wnd.find"/>.</exception>
+		///// <exception cref="Exception">If specifies a <i>contains</i> object: exceptions of constructor of <see cref="wndChildFinder"/> or <see cref="elmFinder"/> or <see cref="uiimageFinder"/>.</exception>
+		//public static implicit operator wndFinder(string s) {
+		//	string name = null, cn = null, prog = null, contains = null;
+		//	char[] sep = null; if (s.Contains('\0')) sep = s_sepZero; else if (s.Contains(',')) sep = s_sepComma;
+		//	if (sep == null) name = s;
+		//	else {
+		//		var ra = s.Split(sep, 4);
+		//		name = ra[0];
+		//		if (ra[1].Length > 0) cn = ra[1];
+		//		if (ra.Length > 2 && ra[2].Length > 0) prog = ra[2];
+		//		if (ra.Length > 3 && ra[3].Length > 0) contains = ra[3];
+		//	}
+		//	return new wndFinder(name, cn, prog, contains: contains);
+		//}
+		//static readonly char[] s_sepComma = { ',' }, s_sepZero = { '\0' };
 
 		/// <summary>
 		/// The found window.
@@ -126,22 +126,63 @@ namespace Au
 
 		/// <summary>
 		/// Finds the specified window, like <see cref="wnd.find"/>.
-		/// If found, sets <see cref="Result"/> and returns true.
 		/// </summary>
-		public bool Find() {
-			using var k = new WndList_(_AllWindows());
-			return _FindOrMatch(k) >= 0;
-		}
+		/// <returns>If found, returns <see cref="Result"/>, else default(wnd).</returns>
+		/// <remarks>
+		/// Functions <b>Find</b> and <b>Exists</b> differ only in their return types.
+		/// </remarks>
+		public wnd Find() => Exists() ? Result : default;
 
 		/// <summary>
 		/// Finds the specified window, like <see cref="wnd.find"/>. Can wait and throw <b>NotFoundException</b>.
 		/// </summary>
-		/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>waitS</i> negative).</returns>
+		/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns default(wnd) (if <i>waitS</i> negative).</returns>
 		/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
 		/// <exception cref="NotFoundException" />
-		public bool Find(double waitS) {
-			var r = waitS == 0d ? Find() : wait.forCondition(waitS < 0 ? waitS : -waitS, () => Find());
+		/// <remarks>
+		/// Functions <b>Find</b> and <b>Exists</b> differ only in their return types.
+		/// </remarks>
+		public wnd Find(double waitS) => Exists(waitS) ? Result : default;
+
+		/// <inheritdoc cref="Find()"/>
+		/// <returns>If found, sets <see cref="Result"/> and returns true, else false.</returns>
+		public bool Exists() {
+			using var k = new WndList_(_AllWindows());
+			return _FindOrMatch(k) >= 0;
+		}
+
+		/// <inheritdoc cref="Find(double)"/>
+		/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>waitS</i> negative).</returns>
+		public bool Exists(double waitS) {
+			var r = waitS == 0d ? Exists() : !Wait(waitS < 0 ? waitS : -waitS, false).Is0;
 			return r || waitS < 0 ? r : throw new NotFoundException();
+		}
+
+		/// <summary>
+		/// Waits until window exists or is active.
+		/// </summary>
+		/// <returns>Returns <see cref="Result"/>. On timeout returns default(wnd) if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="active">The window must be the active window (<see cref="wnd.active"/>), and not minimized.</param>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
+		/// <remarks>
+		/// Same as <see cref="Find(double)"/>, except:
+		/// - 0 timeout means infinite.
+		/// - on timeout throws <b>TimeoutException</b>, not <b>NotFoundException</b>.
+		/// - has parameter <i>active</i>.
+		/// </remarks>
+		public wnd Wait(double secondsTimeout, bool active) {
+			var to = new wait.Loop(secondsTimeout);
+			for (; ; ) {
+				if (active) {
+					wnd w = wnd.active;
+					if (IsMatch(w) && !w.IsMinimized) return Result = w;
+					//CONSIDER: also wait until released mouse buttons.
+				} else {
+					if (Exists()) return Result;
+				}
+				if (!to.Sleep()) return default;
+			}
 		}
 
 		ArrayBuilder_<wnd> _AllWindows() {
@@ -153,10 +194,9 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds the specified window in a list of windows.
-		/// Returns 0-based index, or -1 if not found.
-		/// The <see cref="Result"/> property will be the window.
+		/// Finds the specified window in a list of windows, and sets <see cref="Result"/>.
 		/// </summary>
+		/// <returns>Returns 0-based index, or -1 if not found.</returns>
 		/// <param name="a">Array or list of windows, for example returned by <see cref="wnd.getwnd.allWindows"/>.</param>
 		public int FindInList(IEnumerable<wnd> a) {
 			using var k = new WndList_(a);
@@ -165,16 +205,16 @@ namespace Au
 
 		/// <summary>
 		/// Finds all matching windows, like <see cref="wnd.findAll"/>.
-		/// Returns array containing 0 or more window handles as <b>wnd</b>.
 		/// </summary>
+		/// <returns>Array containing 0 or more window handles as <b>wnd</b>.</returns>
 		public wnd[] FindAll() {
 			return _FindAll(new WndList_(_AllWindows()));
 		}
 
 		/// <summary>
 		/// Finds all matching windows in a list of windows.
-		/// Returns array containing 0 or more window handles as <b>wnd</b>.
 		/// </summary>
+		/// <returns>Array containing 0 or more window handles as <b>wnd</b>.</returns>
 		/// <param name="a">Array or list of windows, for example returned by <see cref="wnd.getwnd.allWindows"/>.</param>
 		public wnd[] FindAllInList(IEnumerable<wnd> a) {
 			return _FindAll(new WndList_(a));
@@ -320,9 +360,9 @@ namespace Au
 					bool found = false;
 					try {
 						switch (_contains.Value) {
-						case elmFinder f: found = f.Find(w); break;
-						case wndChildFinder f: found = f.Find(w); break;
-						case uiimageFinder f: found = f.Find(w); break;
+						case elmFinder f: found = w.HasElm(f); break;
+						case wndChildFinder f: found = f.Exists(w); break;
+						case uiimageFinder f: found = f.Exists(w); break;
 						}
 					}
 					catch (Exception ex) {

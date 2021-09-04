@@ -121,20 +121,8 @@ namespace Au
 			}
 		}
 
-		/// <summary>
-		/// Returns the same value if it is not null. Else throws <see cref="NotFoundException"/>.
-		/// </summary>
-		/// <exception cref="NotFoundException"></exception>
-		/// <example>
-		/// <code><![CDATA[
-		/// var w = +wnd.find("Example");
-		/// var wi = +uiimage.find(w, ...);
-		/// ]]></code>
-		/// </example>
-		public static uiimage operator +(uiimage wi) => wi ?? throw new NotFoundException("Not found (uiimage).");
-
 		///
-		public override string ToString() => $"{ListIndex.ToString()}, {MatchIndex.ToString()}, {Rect.ToString()}";
+		public override string ToString() => $"{ListIndex}, {MatchIndex}, {Rect}";
 
 		#endregion
 
@@ -143,7 +131,7 @@ namespace Au
 		/// </summary>
 		/// <returns>
 		/// Returns a <see cref="uiimage"/> object that contains the rectangle of the found image and can click it etc.
-		/// Returns null if not found. See example.
+		/// Returns null if not found.
 		/// </returns>
 		/// <param name="area">
 		/// Where to search:
@@ -199,11 +187,8 @@ namespace Au
 		/// wi.Click();
 		/// ]]></code>
 		/// </example>
-		public static uiimage find(IFArea area, IFImage image, IFFlags flags = 0, int colorDiff = 0, Func<uiimage, IFAlso> also = null) {
-			var f = new uiimageFinder(image, flags, colorDiff, also);
-			if (!f.Find(area)) return null;
-			return f.Result;
-		}
+		public static uiimage find(IFArea area, IFImage image, IFFlags flags = 0, int colorDiff = 0, Func<uiimage, IFAlso> also = null)
+			=> new uiimageFinder(image, flags, colorDiff, also).Find(area);
 
 		/// <summary>
 		/// Finds image(s) or color(s) displayed in a window or other area. Can wait and throw <b>NotFoundException</b>.
@@ -221,14 +206,8 @@ namespace Au
 		/// <exception cref="NotFoundException" />
 		/// <exception cref="Exception">Exceptions of other overload.</exception>
 		/// <exception cref="AuWndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
-		public static uiimage find(double waitS, IFArea area, IFImage image, IFFlags flags = 0, int colorDiff = 0, Func<uiimage, IFAlso> also = null) {
-			var f = new uiimageFinder(image, flags, colorDiff, also);
-			bool found = waitS == 0 ? f.Find(area) : f.Wait_(Action_.Wait, waitS < 0 ? waitS : -waitS, area);
-			var r = found ? f.Result : null;
-			return found || waitS < 0 ? r : throw new NotFoundException();
-		}
-
-		internal enum Action_ { Find, Wait, WaitNot, WaitChanged }
+		public static uiimage find(double waitS, IFArea area, IFImage image, IFFlags flags = 0, int colorDiff = 0, Func<uiimage, IFAlso> also = null)
+			=> new uiimageFinder(image, flags, colorDiff, also).Find(area, waitS);
 
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		/// <summary>
@@ -240,42 +219,36 @@ namespace Au
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuWndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="find"/>.</exception>
-		public static uiimage wait(double secondsTimeout, IFArea area, IFImage image, IFFlags flags = 0, int colorDiff = 0, Func<uiimage, IFAlso> also = null) {
-			var f = new uiimageFinder(image, flags, colorDiff, also);
-			return f.Wait_(Action_.Wait, secondsTimeout, area) ? f.Result : null;
-			//SHOULDDO: suspend waiting while a mouse button is pressed.
-			//	Now, eg if finds while scrolling, although MouseMove waits until buttons released, but moves to the old (wrong) place.
-		}
+		public static uiimage wait(double secondsTimeout, IFArea area, IFImage image, IFFlags flags = 0, int colorDiff = 0, Func<uiimage, IFAlso> also = null)
+			=> new uiimageFinder(image, flags, colorDiff, also).Wait(secondsTimeout, area);
 
 		/// <summary>
 		/// Waits until image(s) or color(s) is not displayed in a window or other area.
 		/// More info: <see cref="find"/>.
 		/// </summary>
-		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuWndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="find"/>.</exception>
-		public static bool waitNot(double secondsTimeout, IFArea area, IFImage image, IFFlags flags = 0, int colorDiff = 0, Func<uiimage, IFAlso> also = null) {
-			var f = new uiimageFinder(image, flags, colorDiff, also);
-			return f.Wait_(Action_.WaitNot, secondsTimeout, area);
-		}
+		public static bool waitNot(double secondsTimeout, IFArea area, IFImage image, IFFlags flags = 0, int colorDiff = 0, Func<uiimage, IFAlso> also = null)
+			=> new uiimageFinder(image, flags, colorDiff, also).WaitNot(secondsTimeout, area);
 
 		/// <summary>
 		/// Waits until something visually changes in a window or other area.
 		/// More info: <see cref="find"/>.
 		/// </summary>
-		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuWndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="find"/>.</exception>
 		/// <remarks>
-		/// The same as <see cref="waitNot"/>, but instead of <i>image</i> parameter this function captures the area image at the beginning.
+		/// Like <see cref="waitNot"/>, but instead of <i>image</i> parameter this function captures the area image at the beginning.
 		/// </remarks>
 		public static bool waitChanged(double secondsTimeout, IFArea area, IFFlags flags = 0, int colorDiff = 0) {
 			var f = new uiimageFinder(default, flags, colorDiff, null);
-			return f.Wait_(Action_.WaitChanged, secondsTimeout, area);
+			return f.Wait_(uiimageFinder.Action_.WaitChanged, secondsTimeout, area);
 		}
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 	}
@@ -290,7 +263,7 @@ namespace Au.Types
 	/// <remarks>
 	/// It can be a window/control, UI element, another image or a rectangle in screen.
 	/// Also allows to specify a rectangle in it, which makes the search area smaller and the function faster.
-	/// Has implicit conversions from wnd, elm, Bitmap, RECT (rectangle in screen), tuple (wnd, RECT), tuple (Acc, RECT).
+	/// Has implicit conversions from wnd, elm, Bitmap, RECT (rectangle in screen), tuple (wnd, RECT), tuple (elm, RECT).
 	/// Example: <c>uiimage.find((w, (left, top, width, height)), image);</c>.
 	/// </remarks>
 	public class IFArea

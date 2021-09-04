@@ -362,7 +362,7 @@ namespace Au
 		/// Returns selected item id, or 0 if cancelled.
 		/// </summary>
 		/// <param name="items">
-		/// Menu items. Can be string[], List&lt;string&gt; or string like "One|Two|Three".
+		/// Menu items, like <c>"One|Two|Three"</c> or <c>new("One", "Two", "Three")</c> or string array or List.
 		/// Item id can be optionally specified like "1 One|2 Two|3 Three". If missing, uses id of previous non-separator item + 1. Example: "One|Two|100 Three Four" //1|2|100|101.
 		/// For separators use null or empty strings: "One|Two||Three|Four".
 		/// </param>
@@ -374,7 +374,7 @@ namespace Au
 		/// The function adds menu items and calls <see cref="Show"/>. Returns when menu closed. All parameters except <i>items</i> are same as of <b>Show</b>.
 		/// </remarks>
 		/// <seealso cref="dialog.showList"/>
-		public static int showSimple(DStringList items, MSFlags flags = 0, POINT? xy = null, RECT? excludeRect = null, AnyWnd owner = default) {
+		public static int showSimple(Strings items, MSFlags flags = 0, POINT? xy = null, RECT? excludeRect = null, AnyWnd owner = default) {
 			var a = items.ToArray();
 			var m = new popupMenu();
 			foreach (var v in a) {
@@ -1059,7 +1059,7 @@ namespace Au.Types
 		/// <summary>Vertically align the menu so that the show position would be in its center.</summary>
 		AlignCenterV = 0x10,
 
-		/// <summary>Vertically align the menu so that the show position would at in its bottom.</summary>
+		/// <summary>Vertically align the menu so that the show position would at its bottom.</summary>
 		AlignBottom = 0x20,
 
 		/// <summary>Show at bottom or top of <i>excludeRect</i>, not at righ/left.</summary>

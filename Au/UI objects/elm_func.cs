@@ -460,9 +460,9 @@ namespace Au
 		/// Does not wait until the new page is completely loaded. There is no reliable/universal way for it. Instead, after calling it you can call a 'wait for UI element' function which waits for a known UI element that must be in the new page.
 		/// This function cannot be used when the new page has the same title as current page. Then it waits until <i>secondsTimeout</i> time or forever. The same if the invoked action does not open a web page.
 		/// </remarks>
-		public bool WebInvoke(double secondsTimeout = 60, Action<elm> action = null) {
+		public bool WebInvoke(double secondsTimeout = 60d, Action<elm> action = null) {
 			wnd w = WndTopLevel; if (w.Is0) throw new AuException("*get window");
-			elm doc = elm.wait(-1, w, "web:"); if (doc == null) throw new AuException("*find web page");
+			elm doc = w.Elm["web:"].Find(-1) ?? throw new AuException("*find web page");
 
 			string wndName = w.NameTL_, docName = doc.Name; Debug.Assert(!wndName.NE() && !docName.NE());
 			bool wndOK = false, docOK = false;
@@ -481,8 +481,8 @@ namespace Au
 				}
 				if (wndOK && !docOK) {
 					f ??= new elmFinder("web:") { ResultGetProperty = 'n' };
-					if (!f.Find(w)) continue; //eg in Firefox for some time there is no DOCUMENT
-					var s = f.ResultProperty as string; if (s == null) continue;
+					if (!w.HasElm(f)) continue; //eg in Firefox for some time there is no DOCUMENT
+					if (f.ResultProperty is not string s) continue;
 					docOK = s != docName;
 					//if(!docOK) print.it("doc is late");
 				}
@@ -813,7 +813,7 @@ namespace Au
 		/// - <c>"child"</c> - child UI element by 1-based index. Example: <c>"child3"</c> (3-th child). Negative index means from end, for example -1 is the last child.
 		/// - <c>"#N"</c> - custom. More info in Remarks.
 		/// </param>
-		/// <param name="secondsToWait">Wait for the wanted UI element max this number of seconds. If negative, waits forever.</param>
+		/// <param name="waitS">Wait for the wanted UI element max this number of seconds. If negative, waits forever.</param>
 		/// <exception cref="ArgumentException">Invalid <i>navig</i> string.</exception>
 		/// <remarks>
 		/// Can be only 2 letters, like <c>"pr"</c> for <c>"previous"</c>.
@@ -829,13 +829,13 @@ namespace Au
 		/// a = a.Navigate("parent next ch3", true);
 		/// ]]></code>
 		/// </example>
-		public elm Navigate(string navig, double secondsToWait = 0) {
+		public elm Navigate(string navig, double waitS = 0) {
 			ThrowIfDisposed_();
 			int hr; Cpp.Cpp_Acc ca;
-			if (secondsToWait == 0) {
+			if (waitS == 0) {
 				hr = Cpp.Cpp_AccNavigate(this, navig, out ca);
 			} else {
-				var to = new wait.Loop(secondsToWait > 0 ? -secondsToWait : 0.0);
+				var to = new wait.Loop(waitS > 0 ? -waitS : 0.0);
 				do hr = Cpp.Cpp_AccNavigate(this, navig, out ca);
 				while (hr != 0 && hr != (int)Cpp.EError.InvalidParameter && to.Sleep());
 			}
@@ -847,7 +847,12 @@ namespace Au
 			//FUTURE: when fails, possibly this is disconnected etc. Retry find with same elmFinder.
 		}
 
-		//rejected: public elm Parent() (call get_accParent directly). Can use Navigate(), it's almost as fast. Useful mostly in programming, not in scripts.
+		/// <summary>
+		/// Gets parent element. Same as <see cref="Navigate"/> with argument "pa".
+		/// Returns null if fails.
+		/// </summary>
+		public elm Parent => Navigate("pa");
+		//rejected: public elm Parent => call get_accParent directly. Can use Navigate(), it's almost as fast. Useful mostly in programming, not in scripts.
 
 		/// <summary>
 		/// Gets HTML.

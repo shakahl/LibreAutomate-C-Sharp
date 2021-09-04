@@ -8,7 +8,7 @@ namespace Au.Types
 		}
 
 		//speed:
-		//	Calling DllImport functions is 4-5 times slower than C# functions.
+		//	Calling DllImport functions is 4-5 times slower than C# functions. (tested with the old .NET Framework, now should be faster)
 		//	Calling COM functions is 2-10 times slower than DllImport functions.
 		//	Tested with int and string parameters, with default marshaling and with 'fixed'.
 		//	If only int parameters, DllImport is only 50% slower than C#. But COM slow anyway.

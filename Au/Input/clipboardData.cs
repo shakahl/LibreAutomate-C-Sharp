@@ -495,7 +495,7 @@ EndFragment:0000000000
 			//print.it(ish, ieh, isf, ief);
 
 			int isu = s.Find("SourceURL:", true), ieu;
-			if (isu >= 0 && (ieu = s.FindAny("\r\n", isu += 10)) >= 0) sourceURL = s[isu..ieu];
+			if (isu >= 0 && (ieu = s.FindAny("\r\n", (isu += 10)..)) >= 0) sourceURL = s[isu..ieu];
 
 			fragmentStart = isf - ish; fragmentLength = ief - isf;
 			return s[ish..ieh];

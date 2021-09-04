@@ -64,7 +64,7 @@ namespace Au.Tools
 			//public _Control(InfoWindow t) {
 			public _InfoBox() {
 				//_t = t;
-				this.ZInitUseControlFont = App.Wmain;
+				this.ZInitUseSystemFont = true;
 				this.ZInitBlankMargins = (4, 4);
 			}
 

@@ -4,7 +4,7 @@ namespace Au
 	{
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		/// <summary>
-		/// Waits until window exists, is visible (optionally) and active (optionally).
+		/// Waits until window exists or is active.
 		/// </summary>
 		/// <returns>Window handle. On timeout returns default(wnd) if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
@@ -38,28 +38,16 @@ namespace Au
 			[ParamString(PSFormat.wildex)] string name = null,
 			[ParamString(PSFormat.wildex)] string cn = null,
 			[ParamString(PSFormat.wildex)] WOwner of = default,
-			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default) {
-			var f = new wndFinder(name, cn, of, flags, also, contains);
-			var to = new wait.Loop(secondsTimeout);
-			for (; ; ) {
-				if (active) {
-					wnd w = wnd.active;
-					if (f.IsMatch(w) && !w.IsMinimized) return w;
-				} else {
-					if (f.Find()) return f.Result;
-				}
-				if (!to.Sleep()) return default;
-			}
-		}
+			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default
+			) => new wndFinder(name, cn, of, flags, also, contains).Wait(secondsTimeout, active);
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-		//SHOULDDO: if wait for active, also wait until released mouse buttons.
 
 		/// <summary>
-		/// Waits until any of specified windows exists, is visible (optionally) and active (optionally).
+		/// Waits until any of specified windows exists or is active.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="active">The window must be the active window (<see cref="active"/>), and not minimized.</param>
-		/// <param name="windows">One or more variables containing window properties. Can be strings, see <see cref="wndFinder.op_Implicit(string)"/>.</param>
+		/// <param name="windows">Specifies windows, like <c>new("Window1"), new("Window2")</c>.</param>
 		/// <returns>1-based index and window handle. On timeout returns <c>(0, default(wnd))</c> if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>
@@ -84,7 +72,7 @@ namespace Au
 				} else {
 					for (int i = 0; i < windows.Length; i++) {
 						var f = windows[i];
-						if (f.Find()) return (i + 1, f.Result);
+						if (f.Exists()) return (i + 1, f.Result);
 					}
 					//FUTURE: optimization: get list of windows once (Lib.EnumWindows2).
 					//	Problem: list filtering depends on wndFinder flags. Even if all finders have same flags, its easy to make bugs.
@@ -133,7 +121,7 @@ namespace Au
 		//			wnd w = default;
 		//			for(; ; ) {
 		//				if(!w.IsAlive || !f.IsMatch(w)) { //if first time, or closed (!IsAlive), or changed properties (!IsMatch)
-		//					if(!f.Find()) { wFound = default; return true; }
+		//					if(!f.Exists()) { wFound = default; return true; }
 		//					wFound = w = f.Result;
 		//				}
 		//				if(!to.Sleep()) return false;
@@ -185,7 +173,7 @@ namespace Au
 		/// 
 		/// //wait until window w contains focused control classnamed "Edit"
 		/// var c = new wndChildFinder(cn: "Edit");
-		/// w.WaitForCondition(10, t => c.Find(t) && c.Result.IsFocused);
+		/// w.WaitForCondition(10, t => c.Exists(t) && c.Result.IsFocused);
 		/// print.it("control focused");
 		/// ]]></code>
 		/// </example>

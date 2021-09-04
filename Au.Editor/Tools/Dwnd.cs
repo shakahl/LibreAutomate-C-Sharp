@@ -75,7 +75,7 @@ namespace Au.Tools
 			b.StartGrid().Columns(44, -1); _gCon2 = b.Panel as Grid;
 			cHiddenTooC = b.xAddCheck("Find hidden too");
 			alsoC = b.xAddCheckText("also", "o=>true");
-			skipC = b.xAddCheckText("skip", "1");
+			skipC = b.xAddCheckText("skip");
 			b.End();
 			b.xEndPropertyGrid();
 			b.R.AddSeparator(false);
@@ -98,9 +98,9 @@ namespace Au.Tools
 			_con = w;
 			_uncheckControl = uncheckControl;
 
-			if (!w.Is0) b.WinProperties(
-				showActivated: false, //eg if captured a popup menu, activating this window closes the menu and we cannot get properties
-				topmost: true //when inactive, sometimes opens below the active window
+			b.WinProperties(
+				topmost: true,
+				showActivated: !w.Is0 ? false : null //eg if captured a popup menu, activating this window closes the menu and we cannot get properties
 				);
 
 			WndSavedRect.Restore(this, App.Settings.tools_Dwnd_wndPos, o => App.Settings.tools_Dwnd_wndPos = o);
@@ -221,7 +221,7 @@ namespace Au.Tools
 					}
 					//elm
 					var a2 = new List<string>();
-					var a3 = elm.findAll(_wnd, name: "?*", prop: "notin=SCROLLBAR\0maxcc=100", flags: EFFlags.ClientArea); //all that have a name
+					var a3 = _wnd.Elm[name: "?*", prop: "notin=SCROLLBAR\0maxcc=100", flags: EFFlags.ClientArea].FindAll(); //all that have a name //TODO: test
 					string prevName = null;
 					for (int i = a3.Length; --i >= 0;) {
 						if (!a3[i].GetProperties("Rn", out var prop)) continue;
@@ -296,7 +296,7 @@ namespace Au.Tools
 			programW.GetText(out f.programW);
 			alsoW.GetText(out f.alsoW);
 			containsW.GetText(out f.containsW);
-			if(!forTest) waitW.GetText(out f.waitW, emptyToo: true);
+			if (!forTest) waitW.GetText(out f.waitW, emptyToo: true);
 
 			if (f.NeedControl) {
 				if (!idC.GetText(out f.idC)) nameC.GetText(out f.nameC, emptyToo: true);
@@ -316,7 +316,7 @@ namespace Au.Tools
 			return (R, "w");
 		}
 
-#region capture
+		#region capture
 
 		TUtil.CaptureWindowEtcWithHotkey _capt;
 
@@ -337,9 +337,9 @@ namespace Au.Tools
 			}
 		}
 
-#endregion
+		#endregion
 
-#region OK, Test
+		#region OK, Test
 
 		/// <summary>
 		/// When OK clicked, the top-level window (even when <see cref="ZResultUseControl"/> is true).
@@ -397,9 +397,9 @@ namespace Au.Tools
 			});
 		}
 
-#endregion
+		#endregion
 
-#region tree
+		#region tree
 
 		void _InitTree() {
 			_tree.SingleClickActivate = true;
@@ -445,7 +445,7 @@ namespace Au.Tools
 			bool _isExpanded;
 			bool _isFailed;
 
-#region ITreeViewItem
+			#region ITreeViewItem
 
 			string ITreeViewItem.DisplayText {
 				get {
@@ -483,12 +483,12 @@ namespace Au.Tools
 
 			int ITreeViewItem.TextColor => _isFailed ? 0xff : (c.IsVisible ? Api.GetSysColor(Api.COLOR_WINDOWTEXT) : Api.GetSysColor(Api.COLOR_GRAYTEXT));
 
-#endregion
+			#endregion
 		}
 
-#endregion
+		#endregion
 
-#region info
+		#region info
 
 		struct _WinInfo
 		{
@@ -657,7 +657,7 @@ Or a control in the window. Format: c 'class' text.", true, "name/class/text");
 			_info.InfoC(cCloakedTooW, "Flag <help>Au.Types.WFlags<>.CloakedToo.");
 			_info.InfoCT(waitW,
 @"The wait timeout, seconds.
-The function waits for such window max this time interval. On timeout throws exception if 'Exception...' checked, else returns default(wnd). If empty, uses 1e11 (3251 years).");
+The function waits for such window max this time interval. On timeout throws exception if 'Exception...' checked, else returns default(wnd). If empty, uses 8e88 (infinite).");
 			_info.InfoCT(alsoW,
 @"<help>wnd.find<> " + TUtil.CommonInfos.c_alsoParameter);
 			_info.InfoC(cHiddenTooC, "Flag <help>Au.Types.WCFlags<>.HiddenToo.");
@@ -695,6 +695,6 @@ If unchecked, returns default(wnd).");
 
 If F3 does not work when the target window is active, probably its process is admin and this process isn't. Ctrl+F3 should still work, but may fail to get some properties.";
 
-#endregion
+		#endregion
 	}
 }

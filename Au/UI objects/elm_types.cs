@@ -1,7 +1,7 @@
 namespace Au.Types
 {
 	/// <summary>
-	/// Flags for <see cref="elm.find"/> and similar functions.
+	/// Flags for "find UI element" functions (<see cref="elmFinder"/>).
 	/// </summary>
 	[Flags]
 	public enum EFFlags
@@ -36,8 +36,8 @@ namespace Au.Types
 		/// <summary>
 		/// Search without loading dll into the target process.
 		/// Disadvantages: 1. Much slower. 2. Some properties are not supported, for example HTML attributes (while searching and later). 3. And more.
-		/// Even without this flag, the default search method is not used with Windows Store app windows, console windows, most Java windows, windows of protected processes and processes of higher [](xref:uac) integrity level, Firefox web page if its multiprocess feature is not disabled.
-		/// Some windows have child controls that belong to a different process or thread than the window. Example - Internet Explorer. When searching in such windows, the default search method is not used when searching in these controls. Workaround - find the control(s) and search in it/them. For it can be used one of: 1. With Internet Explorer use role prefix "web:". 2. Find the control with <see cref="wnd.Child"/> and search in it. 3. Use <see cref="elmFinder.Find(wnd, wndChildFinder)"/>.
+		/// Even without this flag, the default search method is not used with Windows Store app windows, console windows, most Java windows, windows of protected processes and processes of higher [](xref:uac) integrity level, partially Firefox web page if its multiprocess feature is not disabled.
+		/// Some windows have child controls that belong to a different process or thread than the window. For example the Windows Task Scheduler window. When searching in such windows, the default search method is not used when searching in these controls. Workaround - find the control (<see cref="wnd.Child"/> etc) and search in it.
 		/// Don't need this flag when searching in elm (then it is inherited from the elm variable).
 		/// See also: <see cref="elm.MiscFlags"/>.
 		/// </summary>
@@ -105,7 +105,7 @@ namespace Au.Types
 		UIA = 1,
 
 		/// <summary>
-		/// Get the direct parent UI element if it's LINK or BUTTON.
+		/// Get the direct parent UI element if probaly it would be much more useful, for example if its role is LINK or BUTTON.
 		/// Usually links have one or more children of type TEXT, STATICTEXT, IMAGE or other.
 		/// </summary>
 		PreferLink = 2,

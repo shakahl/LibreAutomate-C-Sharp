@@ -345,7 +345,7 @@ namespace Au
 
 			bool _hasXButton;
 
-			internal _TDCBF SetButtons(string buttons, DStringList customButtons) {
+			internal _TDCBF SetButtons(string buttons, Strings customButtons) {
 				_customButtons = null;
 				_mapIdUserNative = null;
 				_defaultButtonUserId = 0;
@@ -353,7 +353,7 @@ namespace Au
 
 				switch (customButtons.Value) {
 				case string s:
-					_ParseStringList(s, true);
+					_ParseButtons(s, true);
 					break;
 				case IEnumerable<string> e:
 					int id = 0;
@@ -366,10 +366,11 @@ namespace Au
 					break;
 				}
 
-				return _ParseStringList(buttons, false);
+				return _ParseButtons(buttons, false);
 			}
 
-			_TDCBF _ParseStringList(string b, bool onlyCustom) {
+			//TODO: Strings
+			_TDCBF _ParseButtons(string b, bool onlyCustom) {
 				if (b.NE()) return 0;
 
 				_TDCBF commonButtons = 0;
@@ -509,7 +510,7 @@ namespace Au
 		/// Button ids will be 1, 2, ... .
 		/// <see cref="DefaultButton"/> will be 1. You can change it later.
 		/// </param>
-		public void SetButtons(string buttons, bool asCommandLinks = false, DStringList customButtons = default) {
+		public void SetButtons(string buttons, bool asCommandLinks = false, Strings customButtons = default) {
 			_c.dwCommonButtons = _buttons.SetButtons(buttons, customButtons);
 			_SetFlag(_TDF.USE_COMMAND_LINKS, asCommandLinks);
 		}
@@ -1577,7 +1578,7 @@ namespace Au
 		/// Shows dialog with a list of command-link buttons.
 		/// Returns 1-based index of the selected button. Returns 0 if clicked the X (close window) button or pressed Esc.
 		/// </summary>
-		/// <param name="list">List items (buttons). Can be string like "One|Two|Three" or string[] or List&lt;string&gt;. See <see cref="SetButtons"/>.</param>
+		/// <param name="list">List items (buttons). Can be like <c>"One|Two|Three"</c> or <c>new("One", "Two", "Three")</c> or string array or List. See <see cref="SetButtons"/>.</param>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Text below main instruction.</param>
 		/// <param name="flags"></param>
@@ -1604,7 +1605,7 @@ namespace Au
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
 		/// <seealso cref="popupMenu.showSimple"/>
 		public static int showList(
-			DStringList list, string text1 = null, string text2 = null, DFlags flags = 0, AnyWnd owner = default,
+			Strings list, string text1 = null, string text2 = null, DFlags flags = 0, AnyWnd owner = default,
 			string expandedText = null, string footer = null, string title = null, DControls controls = null,
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0,
 			Action<DEventArgs> onLinkClick = null

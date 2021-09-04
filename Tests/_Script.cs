@@ -436,43 +436,43 @@ partial class TestScript
 	//	print.it(so, ca);
 	//}
 
-	void TestBitmapLockBitsDispose() {
-		//Bitmap.FromFile(@"Q:\Test\qm small icon.png").Dispose();
-		//print.it("start");
-		//3.s();
-		//Debug_.MemorySetAnchor_();
-		//for(int i = 0; i < 1000; i++) {
-		//	var b = Bitmap.FromFile(@"Q:\Test\qm small icon.png") as Bitmap;
-		//	//var d=b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
-		//	var d = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadOnly, PixelFormat.Format64bppArgb);
-		//	b.Dispose();
-		//	b.UnlockBits(d);
-		//}
-		//Debug_.MemoryPrint_();
-		//while(keys.isScrollLock) 100.ms();
+	//void TestBitmapLockBitsDispose() {
+	//	//Bitmap.FromFile(@"Q:\Test\qm small icon.png").Dispose();
+	//	//print.it("start");
+	//	//3.s();
+	//	//Debug_.MemorySetAnchor_();
+	//	//for(int i = 0; i < 1000; i++) {
+	//	//	var b = Bitmap.FromFile(@"Q:\Test\qm small icon.png") as Bitmap;
+	//	//	//var d=b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+	//	//	var d = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadOnly, PixelFormat.Format64bppArgb);
+	//	//	b.Dispose();
+	//	//	b.UnlockBits(d);
+	//	//}
+	//	//Debug_.MemoryPrint_();
+	//	//while(keys.isScrollLock) 100.ms();
 
 
-		var w = +wnd.find("Au - Microsoft Visual Studio", "HwndWrapper[DefaultDomain;*");
-		string image = @"image:iVBORw0KGgoAAAANSUhEUgAAAA0AAAAQCAYAAADNo/U5AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAC2SURBVDhPYzhz9cN/DHzlw/+Hp1b8v7osHisGazoNVISOr6/N+39rZ+f/k6efY2C4Jmwm4sJDRdPNjSVgGobvH56BVQMIwzX1rz36nzd40n8Grx4w3bfh3P8Hxxfg1wRSuHzvZXCQgmgQ/+Hj8/g1gWxAjgvpmGlgcYKa0G0CiWPDDCDCo2krWBMMgzTM3XkZnJxAhqJjBpgGEI1sGjbFMAzWBNOATQE2DHYeKRpAGBwQpOEP/wF46o8knB4kYgAAAABJRU5ErkJggg==";
-		//string image = @"Q:\Test\find.bmp";
+	//	var w = +wnd.find("Au - Microsoft Visual Studio", "HwndWrapper[DefaultDomain;*");
+	//	string image = @"image:iVBORw0KGgoAAAANSUhEUgAAAA0AAAAQCAYAAADNo/U5AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAC2SURBVDhPYzhz9cN/DHzlw/+Hp1b8v7osHisGazoNVISOr6/N+39rZ+f/k6efY2C4Jmwm4sJDRdPNjSVgGobvH56BVQMIwzX1rz36nzd40n8Grx4w3bfh3P8Hxxfg1wRSuHzvZXCQgmgQ/+Hj8/g1gWxAjgvpmGlgcYKa0G0CiWPDDCDCo2krWBMMgzTM3XkZnJxAhqJjBpgGEI1sGjbFMAzWBNOATQE2DHYeKRpAGBwQpOEP/wF46o8knB4kYgAAAABJRU5ErkJggg==";
+	//	//string image = @"Q:\Test\find.bmp";
 
-		//for(int i = 0; i < 10; i++) {
-		//	var im = +uiimage.find(w, image, IFFlags.WindowDC);
-		//	print.it(im);
-		//}
+	//	//for(int i = 0; i < 10; i++) {
+	//	//	var im = +uiimage.find(w, image, IFFlags.WindowDC);
+	//	//	print.it(im);
+	//	//}
 
-		var im = +uiimage.find(w, image, IFFlags.WindowDC);
+	//	var im = uiimage.find(0, w, image, IFFlags.WindowDC);
 
-		//var h = Api.LoadImage(default, image, Api.IMAGE_BITMAP, 0, 0, Api.LR_LOADFROMFILE);
-		//var b = Bitmap.FromHbitmap(h);
-		//var d = b.LockBits(new Rectangle(default, b.Size), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
-		//print.it(d.Stride);
-		//b.UnlockBits(d);
+	//	//var h = Api.LoadImage(default, image, Api.IMAGE_BITMAP, 0, 0, Api.LR_LOADFROMFILE);
+	//	//var b = Bitmap.FromHbitmap(h);
+	//	//var d = b.LockBits(new Rectangle(default, b.Size), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+	//	//print.it(d.Stride);
+	//	//b.UnlockBits(d);
 
-		//var im = +uiimage.find(w, b, IFFlags.WindowDC);
-		print.it(im);
+	//	//var im = +uiimage.find(w, b, IFFlags.WindowDC);
+	//	print.it(im);
 
-	}
+	//}
 
 	static HashSet<object> hs = new HashSet<object>();
 	static HashSet<object> hs2 = new HashSet<object>();
@@ -698,31 +698,25 @@ partial class TestScript
 	//void One(bool two) { }
 	//bool Two() => false;
 
-	void TestFirefoxElm() {
-		try {
-			//var w = +wnd.find("*- Mozilla Firefox", "MozillaWindowClass");
-			//var a = elm.fromWindow(w);
+//	void TestFirefoxElm() {
+//		try {
+//			//var w = +wnd.find("*- Mozilla Firefox", "MozillaWindowClass");
+//			//var a = elm.fromWindow(w);
 
-			var w = +wnd.find("Au automation library and editor | Au - Mozilla Firefox", "MozillaWindowClass");
-			//var a = +elm.find(w, "web:LINK", "Library");
-			var a = +elm.find(w, "web:DOCUMENT");
-			a = +a.Navigate("ch2");
-			//a = +a.Navigate("fi ne fi4 ne fi ne fi2");
-			//a=a.Find("LINK", "Library");
 
-			print.it(a.MiscFlags, a);
+//			print.it(a.MiscFlags, a);
 
-			if (a.GetProperties("@", out var p)) {
-				print.it(p.HtmlAttributes);
-			}
+//			if (a.GetProperties("@", out var p)) {
+//				print.it(p.HtmlAttributes);
+//			}
 
-		}
-		finally {
-#if DEBUG
-			Cpp.DebugUnload();
-#endif
-		}
-	}
+//		}
+//		finally {
+//#if DEBUG
+//			Cpp.DebugUnload();
+//#endif
+//		}
+//	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	void TestUnsafe() {

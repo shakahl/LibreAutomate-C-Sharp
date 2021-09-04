@@ -16,26 +16,57 @@ int _IsSpecWnd(HWND w, bool onlyChrome)
 	return wn::ClassNameIs(w, { L"Chrome*", L"SunAwt*", L"SALFRAME" });
 }
 
+bool _IsLinkOrButton(int role) {
+	switch(role) {
+	case ROLE_SYSTEM_LINK:
+	case ROLE_SYSTEM_PUSHBUTTON: case ROLE_SYSTEM_BUTTONMENU: case ROLE_SYSTEM_BUTTONDROPDOWN: case ROLE_SYSTEM_BUTTONDROPDOWNGRID:
+	case ROLE_SYSTEM_CHECKBUTTON: case ROLE_SYSTEM_RADIOBUTTON:
+		return true;
+	}
+	return false;
+}
+
 void _FromPoint_GetLink(ref IAccessible*& a, ref long& elem, ref int& role)
 {
 	//note: the child AO of LINK/BUTTON can be anything except LINK/BUTTON, although usually TEXT, STATICTEXT, IMAGE.
-	switch(role) { case ROLE_SYSTEM_LINK: case ROLE_SYSTEM_PUSHBUTTON: return; }
-										IAccessible* parent = null;
-										if(elem != 0) parent = a; else if(0 != ao::get_accParent(a, out parent)) return;
-										int role2 = ao::get_accRole(parent);
-										switch(role2) {
-										case ROLE_SYSTEM_LINK: case ROLE_SYSTEM_PUSHBUTTON:
-											//bug in old Chrome and new Firefox in some cases: AO retrieved with get_accParent is invalid, eg cannot get its window.
-											HWND wp; if(elem == 0 && WindowFromAccessibleObject(parent, &wp)) { PRINTF(L"Cannot get parent LINK because WindowFromAccessibleObject would fail."); break; }
-
-											if(elem != 0) elem = 0; else util::Swap(ref a, ref parent);
-											role = role2;
-										}
-										if(parent != a) parent->Release();
-										//rejected: support 2 levels, eg youtube right-side list.
-										//	Can be even more levels, and multiple children of LINK, some of them may be useful for automation.
-										//	Often they have default action "jump" and value=URL.
-										//	Then also usually have state LINKED. But many objects don't have this state.
+	if(_IsLinkOrButton(role)) return;
+	IAccessible* parent = null;
+	if(elem != 0) parent = a; else if(0 != ao::get_accParent(a, out parent)) return;
+	int role2 = ao::get_accRole(parent);
+	bool useParent = _IsLinkOrButton(role2);
+	if(!useParent) {
+		switch(role2) {
+		case ROLE_SYSTEM_STATICTEXT:
+			useParent = role == ROLE_SYSTEM_STATICTEXT; //eg WPF label control
+			break;
+		case 0: case ROLE_SYSTEM_GROUPING: case ROLE_SYSTEM_GRAPHIC:
+			break;
+		default:
+			if(ao::IsStatic(role, a)) {
+				long cc = 0;
+				useParent = 0 == parent->get_accChildCount(&cc) && cc == 1;
+				if(useParent) {
+					Bstr bn;
+					useParent = (0 == parent->get_accName(ao::VE(elem), &bn)) && bn && bn.Length() > 0;
+				}
+			}
+			break;
+		}
+	}
+	if(useParent) {
+		//bug in old Chrome and some Firefox version in some cases: AO retrieved with get_accParent is invalid, eg cannot get its window.
+		HWND wp;
+		if(elem == 0 && WindowFromAccessibleObject(parent, &wp)) {
+			PRINTF(L"Cannot get parent LINK because WindowFromAccessibleObject would fail.");
+			useParent = false;
+		}
+		if(useParent) {
+			if(elem != 0) elem = 0; else util::Swap(ref a, ref parent);
+			role = role2;
+		}
+	}
+	if(parent != a) parent->Release();
+	//rejected: support > 1 level. The capturing tool in C# supports it.
 }
 } //namespace
 

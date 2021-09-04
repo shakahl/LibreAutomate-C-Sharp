@@ -106,7 +106,7 @@ namespace Au
 		public static screen of(wndFinder f, SODefault defaultScreen = SODefault.Nearest, bool lazy = true)
 			=> lazy
 			? new screen(() => of(f, defaultScreen, false))
-			: of(f.Find() ? f.Result : default, defaultScreen);
+			: of(f.Find(), defaultScreen);
 
 		/// <summary>
 		/// Gets screen containing the biggest part of the specified winforms window or control or nearest to it.

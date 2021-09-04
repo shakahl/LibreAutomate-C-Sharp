@@ -13,6 +13,10 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 using Microsoft.CodeAnalysis.Options;
 
+//TODO: no popup list if first parameter of indexer is enum. Even on Ctrl+Space does not select the enum in list. In VS works well. Tested with this code:
+//ActionTriggers at=new(); at.Window[TWEvent.Active, "dsds"]=null;
+
+
 partial class CiCompletion
 {
 	CiPopupList _popupList;

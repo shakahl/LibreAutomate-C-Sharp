@@ -459,23 +459,36 @@ namespace Au.Types
 
 	/// <summary>
 	/// Used for function parameters to specify multiple strings.
-	/// Contains a string like "One|Two|Three" or string[] or List&lt;string&gt;. Has implicit conversions from these types.
+	/// Contains a string like "One|Two|Three" or string[] or List&lt;string&gt;. Has implicit conversions from these types. Also constructor with params string[].
 	/// </summary>
-	public struct DStringList //with prefix D because this was created for dialog
+	public struct Strings
 	{
 		readonly object _o;
-		DStringList(object o) { _o = o; }
+		Strings(object o) { _o = o; }
 
-		/// <summary> Assignment of a value of type string. </summary>
-		public static implicit operator DStringList(string s) => new DStringList(s);
+		///
+		public Strings(params string[] a) { _o = a; }
 
-		/// <summary> Assignment of a value of type string[]. </summary>
-		public static implicit operator DStringList(string[] e) => new DStringList(e);
+		///
+		public static implicit operator Strings(string s) => new((object)s);
 
-		/// <summary> Assignment of a value of type List&lt;string&gt;. </summary>
-		public static implicit operator DStringList(List<string> e) => new DStringList(e);
+		///
+		public static implicit operator Strings(string[] e) => new(e);
 
-		//note: C# does not allow DStringList(IEnumerable<string> e), because it is interface. Callers can use .ToArray().
+		///
+		public static implicit operator Strings(List<string> e) => new(e);
+
+		//rejected. Shorter just by 'new'. Can make difficult to read code. No intellisense.
+		/////
+		//public static implicit operator Strings((string s1, string s2) t) => new(t.s1, t.s2);
+
+		/////
+		//public static implicit operator Strings((string s1, string s2, string s3) t) => new(t.s1, t.s2, t.s3);
+
+		/////
+		//public static implicit operator Strings((string s1, string s2, string s3, string s4) t) => new(t.s1, t.s2, t.s3, t.s4);
+
+		//note: C# does not allow Strings(IEnumerable<string> e), because it is interface. Callers can use .ToArray().
 
 		/// <summary>
 		/// The raw value.
@@ -484,11 +497,12 @@ namespace Au.Types
 
 		/// <summary>
 		/// Converts the value to string[].
+		/// Note: don't modify array elements. If the caller passed an array, this function returns it, not a copy.
 		/// </summary>
 		public string[] ToArray() {
 			return _o switch {
-				string s => s.Split('|'),
 				string[] a => a,
+				string s => s.Split('|'),
 				List<string> a => a.ToArray(),
 				_ => Array.Empty<string>(), //null
 			};

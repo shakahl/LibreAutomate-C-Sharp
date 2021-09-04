@@ -292,8 +292,7 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Gets ancestor nodes (parent, its parent and so on).
-		/// The order is from <see cref="Parent"/> to <see cref="RootAncestor"/>.
+		/// Gets ancestor nodes. The order is from this node towards the root node.
 		/// </summary>
 		/// <param name="andSelf">Include this node.</param>
 		/// <param name="noRoot">Don't include <see cref="RootAncestor"/>.</param>
@@ -307,11 +306,11 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Gets ancestor nodes in reverse order than <see cref="Ancestors"/>.
+		/// Gets ancestor nodes. The order is from the root node towards this node.
 		/// </summary>
 		/// <param name="andSelf">Include this node. Default false.</param>
 		/// <param name="noRoot">Don't include <see cref="RootAncestor"/>.</param>
-		public T[] AncestorsReverse(bool andSelf = false, bool noRoot = false) {
+		public T[] AncestorsFromRoot(bool andSelf = false, bool noRoot = false) {
 			T nFrom = andSelf ? this as T : _parent;
 			//count
 			int len = 0;

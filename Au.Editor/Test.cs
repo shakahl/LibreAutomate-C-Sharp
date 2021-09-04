@@ -184,19 +184,6 @@ static unsafe class Test
 
 
 
-		//if (false) {
-		//	TestDoc.One(1);
-		//	TestDoc.One(1, "");
-		//	TestDoc.One(true, 7);
-		//	TestDoc.One("", 7);
-		//	TestDoc.One(2d, 7, "");
-		//	TestDoc.Two(1d, 7);
-		//	TestDoc.TwoNoParam(7);
-		//	TestDoc.TwoNoExcept(3d, 7);
-		//	TestDoc.TwoInheritPara(3d, 7, "");
-		//}
-
-
 
 		//TestCallerExpression("yyyy" + 5);
 

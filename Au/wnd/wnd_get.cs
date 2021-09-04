@@ -412,7 +412,7 @@
 			public static bool desktop(out wnd desktopWindow, out wnd control) {
 				wnd w = shellWindow;
 				var f = new wndChildFinder(cn: "SysListView32");
-				if (!f.Find(w)) w = wnd.find(null, "WorkerW", WOwner.Thread(w.ThreadId), also: t => f.Find(t));
+				if (!f.Exists(w)) w = wnd.find(null, "WorkerW", WOwner.Thread(w.ThreadId), also: t => f.Exists(t));
 				desktopWindow = w;
 				control = f.Result;
 				return !w.Is0;

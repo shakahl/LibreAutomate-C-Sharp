@@ -92,11 +92,11 @@ static class InsertCode
 	/// <param name="c">If null, uses the focused control, else sets focus.</param>
 	/// <param name="s">If contains '%', removes it and moves caret there. Alternatively use '\b', then does not touch '%'.</param>
 	public static void TextSimplyInControl(FrameworkElement c, string s) {
-		Debug.Assert(Environment.CurrentManagedThreadId == 1);
 		if (c == null) {
 			c = App.FocusedElement;
 			if (c == null) return;
 		} else {
+			Debug.Assert(Environment.CurrentManagedThreadId == c.Dispatcher.Thread.ManagedThreadId);
 			if (c != App.FocusedElement) //be careful with HwndHost
 				c.Focus();
 		}

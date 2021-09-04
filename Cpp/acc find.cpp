@@ -8,25 +8,14 @@ bool AccMatchHtmlAttributes(IAccessible* iacc, NameValue* prop, int count);
 
 class AccFinder
 {
-	//A parsed path part, when the role parameter is path like "A/B[4]/C". 
-	struct _PathPart {
-		STR role; //eg "B" if "B[4]" //stored in _roleStrings
-		int startIndex; //eg 4 if "B[4]"
-		bool exactIndex; //true if eg "B[4!]"
-
-		_PathPart() { ZEROTHIS; }
-	};
-
 	AccFindCallback* _callback; //receives found AO
 	STR _role; //null if used path or if the role parameter is null
-	_PathPart* _path; //null if no path
 	str::Wildex _controlClass; //used when the prop parameter has "class=x". Then _flags2 has eAF2::InControls.
 	str::Wildex _name; //name. If the name parameter is null, _name.Is()==false.
 	NameValue* _prop; //other string properties and HTML attributes. Specified in the prop parameter, like L"value=XXX\0 @id=YYY".
 	STR _controlWF; //WinForms name. Used when the prop parameter has "id=x" where x is not a number. Then _flags2 has eAF2::InControls.
 	STR* _notin; //when searching, skip descendants of AO of these roles. Specified in the prop parameter.
 	Bstr _roleStrings, _propStrings; //a copy of the input role/prop string when eg need to parse (modify) the string
-	int _pathCount; //_path array element count
 	int _propCount; //_prop array element count
 	int _notinCount; //_notin array element count
 	int _controlId; //used when the prop parameter has "id=x" wherex x is a number. Then _flags2 has eAF2::InControls|IsId.
@@ -41,6 +30,17 @@ class AccFinder
 	IAccessible** _findDOCUMENT; //used by _FindDocumentSimple, else null
 	BSTR* _errStr; //error string, when a parameter is invalid
 	HWND _wTL; //window in which currently searching
+
+	//A parsed path part, when the role parameter is path like "A/B[4]/C". 
+	//struct _PathPart {
+	//	STR role; //eg "B" if "B[4]" //stored in _roleStrings
+	//	int startIndex; //eg 4 if "B[4]"
+	//	bool exactIndex; //true if eg "B[4!]"
+
+	//	_PathPart() { ZEROTHIS; }
+	//};
+	//_PathPart* _path; //null if no path
+	//int _pathCount; //_path array element count
 
 	bool _Error(STR es) {
 		if(_errStr) *_errStr = SysAllocString(es);
@@ -77,41 +77,41 @@ class AccFinder
 		}
 
 		//is path?
-		if(_pathCount = (int)std::count(role, role + roleLen, '/')) {
-			auto a = _path = new _PathPart[++_pathCount];
-			int level = 0;
-			LPWSTR s = _roleStrings.Assign(role, roleLen);
-			for(LPWSTR partStart = s, eos = s + roleLen; s <= eos; s++) {
-				auto c = *s;
-				if(c == '/' || c == '[' || s == eos) {
-					_PathPart& e = a[level];
-					if(s > partStart) { //else can be any role at this level
-						e.role = partStart;
-						*s = 0;
-					}
-					if(c == '[') {
-						auto s0 = s + 1;
-						e.startIndex = strtoi(s0, &s);
-						if(s == s0) goto ge;
-						if(*s == '!') { s++; e.exactIndex = true; }
-						if(*s++ != ']') goto ge;
-						if(s < eos && *s != '/') goto ge;
-					}
-					partStart = s + 1;
-					level++;
-				}
-			}
+		//rejected. Nobody will use.
+		//if(_pathCount = (int)std::count(role, role + roleLen, '/')) {
+		//	auto a = _path = new _PathPart[++_pathCount];
+		//	int level = 0;
+		//	LPWSTR s = _roleStrings.Assign(role, roleLen);
+		//	for(LPWSTR partStart = s, eos = s + roleLen; s <= eos; s++) {
+		//		auto c = *s;
+		//		if(c == '/' || c == '[' || s == eos) {
+		//			_PathPart& e = a[level];
+		//			if(s > partStart) { //else can be any role at this level
+		//				e.role = partStart;
+		//				*s = 0;
+		//			}
+		//			if(c == '[') {
+		//				auto s0 = s + 1;
+		//				e.startIndex = strtoi(s0, &s);
+		//				if(s == s0) goto ge;
+		//				if(*s == '!') { s++; e.exactIndex = true; }
+		//				if(*s++ != ']') goto ge;
+		//				if(s < eos && *s != '/') goto ge;
+		//			}
+		//			partStart = s + 1;
+		//			level++;
+		//		}
+		//	}
+		//	//Print(_pathCount); for(int i = 0; i < _pathCount; i++) Printf(L"'%s'  %i %i", a[i].role, a[i].startIndex, a[i].exactIndex);
 
-			//Print(_pathCount); for(int i = 0; i < _pathCount; i++) Printf(L"'%s'  %i %i", a[i].role, a[i].startIndex, a[i].exactIndex);
-
-			//FUTURE: "PART/PART/.../PART"
-		} else {
+		//	//FUTURE: "PART/PART/.../PART"
+		//} else {
 			if(role[roleLen] == 0) _role = role;
 			else _role = _roleStrings.Assign(role, roleLen);
-		}
+		//}
 
 		return true;
-	ge:
+//ge:
 		return _Error(L"Invalid role.");
 	}
 
@@ -159,7 +159,7 @@ class AccFinder
 		if(*s++ != '{' || *(--eos) != '}') goto ge;
 		for(; s < eos; s++) {
 			LPWSTR s1 = s++, s2;
-			if(*s++ != '=') goto ge;
+			if(*s++ != '=') goto ge; //FUTURE: support operators < > etc. Also Coord. Example: {L>=0.5 T<^20}
 			int t = strtoi(s, &s2);
 			if(s2 == s) goto ge; s = s2;
 			switch(*s1) {
@@ -209,7 +209,7 @@ class AccFinder
 								if(!_ParseState(va, s)) return false;
 								break;
 							case 2:
-								if(_path != null) return _Error(L"Path and level.");
+								//if(_path != null) return _Error(L"Path and level.");
 								_minLevel = strtoi(va, &s2);
 								if(s2 == va || _minLevel < 0) goto ge;
 								if(s2 == s) _maxLevel = _minLevel;
@@ -278,7 +278,7 @@ public:
 
 	~AccFinder()
 	{
-		delete[] _path;
+		//delete[] _path;
 		delete[] _prop;
 		delete[] _notin;
 	}
@@ -307,8 +307,8 @@ public:
 		_callback = callback;
 
 		if(a) {
-			if(!!(_flags2 & eAF2::InWebPage)) return _ErrorHR(L"Don't use role prefix when searching in Acc.");
-			if(!!(_flags2 & eAF2::InControls)) return _ErrorHR(L"Don't use class/id when searching in Acc.");
+			if(!!(_flags2 & eAF2::InWebPage)) return _ErrorHR(L"Don't use role prefix when searching in elm.");
+			if(!!(_flags2 & eAF2::InControls)) return _ErrorHR(L"Don't use class/id when searching in elm.");
 			assert(!(_flags & (eAF::UIA | eAF::ClientArea))); //checked in C#
 
 			_FindInAcc(ref * a, 0);
@@ -365,7 +365,7 @@ private:
 
 		//isControl is true when is specified class or id. Now caller is enumerating controls. Need _Match for control's WINDOW, not only for descendants.
 		int level = 0;
-		if(isControl && _path == null) {
+		if(isControl /*&& _path == null*/) {
 			switch(_Match(ref aw, level++)) {
 			case _eMatchResult::Stop: return 0;
 			case _eMatchResult::SkipChildren: goto gnf;
@@ -381,10 +381,10 @@ private:
 	bool _FindInAcc(const Cpp_Acc& aParent, int level)
 	{
 		int startIndex = 0; bool exactIndex = false;
-		if(_path != null) {
-			startIndex = _path[level].startIndex;
-			if(_path[level].exactIndex) exactIndex = true;
-		}
+		//if(_path != null) {
+		//	startIndex = _path[level].startIndex;
+		//	if(_path[level].exactIndex) exactIndex = true;
+		//}
 
 		AccChildren c(ref aParent, startIndex, exactIndex, !!(_flags & eAF::Reverse), _maxCC);
 		if(c.Count() == 0) {
@@ -450,7 +450,7 @@ private:
 			}
 		}
 
-		STR roleNeeded = _path != null ? _path[level].role : _role;
+		STR roleNeeded = /*_path != null ? _path[level].role :*/ _role;
 
 		if(level >= _minLevel) {
 		//If eAF::Mark, the caller is getting all AO using callback, and wants us to add eAccMiscFlags::Marked to AOs that match role, rect, name and state.
@@ -467,14 +467,14 @@ private:
 					if(!roleString) roleString = ao::RoleToString(ref varRole);
 					if(wcscmp(roleNeeded, roleString)) {
 						if(mark) mark = -1;
-						else if(_path != null) return _eMatchResult::SkipChildren;
+						//else if(_path != null) return _eMatchResult::SkipChildren;
 						else goto gr;
 					}
 				}
-				if(_path != null) {
-					if(level < _pathCount - 1) goto gr;
-					skipChildren = true;
-				}
+				//if(_path != null) {
+				//	if(level < _pathCount - 1) goto gr;
+				//	skipChildren = true;
+				//}
 			}
 
 			if(!!(_flags2 & eAF2::IsElem) && a.elem != _elem) goto gr;
@@ -575,7 +575,7 @@ private:
 		case ROLE_SYSTEM_ALERT: //eg web browser message box. In Firefox can be some invisible alerts.
 		case ROLE_SYSTEM_MENUPOPUP: //eg in Firefox.
 			return true;
-			//note: these roles must be the same as in Acc.IsInvisible
+			//note: these roles must be the same as in elm.IsInvisible
 		}
 		return false;
 		//note: don't add CLIENT. It is often used as default role. Although in some windows it can make faster.

@@ -33,7 +33,7 @@ void HotkeyTriggers() {
 		//hk[""] = o => {  };
 		//...
 
-		Triggers.Of.Windows(",,notepad.exe"); //all windows of notepad.exe process
+		Triggers.Of.Window(of: "notepad.exe"); //all windows of notepad.exe process
 		
 		hk["Ctrl+F5"] = o => print.it("trigger action example 6", o.Trigger, o.Window);
 		//hk[""] = o => {  };

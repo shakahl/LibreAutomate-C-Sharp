@@ -310,34 +310,29 @@
 		/// </summary>
 		/// <param name="t">This string.</param>
 		/// <param name="chars">Characters.</param>
-		/// <param name="startOfRange">The start index of the search range. Default 0.</param>
-		/// <param name="endOfRange">The end index of the search range. If -1 (default), the length of this string.</param>
+		/// <param name="range">The search range.</param>
 		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startOfRange</i> or <i>endOfRange</i>.</exception>
-		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
-		public static int FindAny(this string t, string chars, int startOfRange = 0, int endOfRange = -1) {
-			int len = (endOfRange >= 0 ? endOfRange : t.Length) - startOfRange;
-			int r = t.AsSpan(startOfRange, len).IndexOfAny(chars);
-			return r < 0 ? r : r + startOfRange;
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)] //functions with Range parameter are very slow until fully optimized
+		public static int FindAny(this string t, string chars, Range? range = null) {
+			var (start, len) = range.GetOffsetAndLength(t.Length);
+			int r = t.AsSpan(start, len).IndexOfAny(chars);
+			return r < 0 ? r : r + start;
 		}
-
-		//Span does not have a fast 'not' function. Can be used TrimStart, but much slower.
-		//tested: > 2 times slower with Range instead of startOfRange/endOfRange.
 
 		/// <summary>
 		/// Finds the first character not specified in <i>chars</i>. Returns its index, or -1 if not found.
 		/// </summary>
 		/// <param name="t">This string.</param>
 		/// <param name="chars">Characters.</param>
-		/// <param name="startOfRange">The start index of the search range. Default 0.</param>
-		/// <param name="endOfRange">The end index of the search range. If -1 (default), the length of this string.</param>
+		/// <param name="range">The search range.</param>
 		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startOfRange</i> or <i>endOfRange</i>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
-		public static int FindNot(this string t, string chars, int startOfRange = 0, int endOfRange = -1) {
-			int len = (endOfRange >= 0 ? endOfRange : t.Length) - startOfRange;
-			int r = t.AsSpan(startOfRange, len).IndexOfNot(chars);
-			return r < 0 ? r : r + startOfRange;
+		public static int FindNot(this string t, string chars, Range? range = null) {
+			var (start, len) = range.GetOffsetAndLength(t.Length);
+			int r = t.AsSpan(start, len).IndexOfNot(chars);
+			return r < 0 ? r : r + start;
 		}
 
 		/// <summary>
@@ -379,15 +374,14 @@
 		/// </summary>
 		/// <param name="t">This string.</param>
 		/// <param name="chars">Characters.</param>
-		/// <param name="startOfRange">The start index of the search range. Default 0.</param>
-		/// <param name="endOfRange">The end index of the search range. If -1 (default), the length of this string.</param>
+		/// <param name="range">The search range.</param>
 		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startOfRange</i> or <i>endOfRange</i>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
-		public static int FindLastAny(this string t, string chars, int startOfRange = 0, int endOfRange = -1) {
-			int len = (endOfRange >= 0 ? endOfRange : t.Length) - startOfRange;
-			int r = t.AsSpan(startOfRange, len).LastIndexOfAny(chars);
-			return r < 0 ? r : r + startOfRange;
+		public static int FindLastAny(this string t, string chars, Range? range = null) {
+			var (start, len) = range.GetOffsetAndLength(t.Length);
+			int r = t.AsSpan(start, len).LastIndexOfAny(chars);
+			return r < 0 ? r : r + start;
 		}
 
 		/// <summary>
@@ -395,15 +389,14 @@
 		/// </summary>
 		/// <param name="t">This string.</param>
 		/// <param name="chars">Characters.</param>
-		/// <param name="startOfRange">The start index of the search range. Default 0.</param>
-		/// <param name="endOfRange">The end index of the search range. If -1 (default), the length of this string.</param>
+		/// <param name="range">The search range.</param>
 		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startOfRange</i> or <i>endOfRange</i>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
-		public static int FindLastNot(this string t, string chars, int startOfRange = 0, int endOfRange = -1) {
-			int len = (endOfRange >= 0 ? endOfRange : t.Length) - startOfRange;
-			int r = t.AsSpan(startOfRange, len).LastIndexOfNot(chars);
-			return r < 0 ? r : r + startOfRange;
+		public static int FindLastNot(this string t, string chars, Range? range = null) {
+			var (start, len) = range.GetOffsetAndLength(t.Length);
+			int r = t.AsSpan(start, len).LastIndexOfNot(chars);
+			return r < 0 ? r : r + start;
 		}
 
 		/// <summary>
@@ -903,7 +896,6 @@
 		public static bool ToInt(this string t, out ulong result, int startIndex = 0, STIFlags flags = 0)
 			=> ToInt(t, out result, startIndex, out _, flags);
 
-#if true
 		/// <summary>
 		/// Converts this string or its part to double number.
 		/// Returns the number, or 0 if fails to convert.
@@ -1029,6 +1021,7 @@
 			return ulong.TryParse(_NumSpan(t, range, out var ci), style, ci, out result);
 		}
 
+		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
 		static RStr _NumSpan(string t, Range? range, out CultureInfo ci) {
 			ci = CultureInfo.InvariantCulture;
 			if (t == null) return default;
@@ -1042,135 +1035,6 @@
 
 			return t.AsSpan(start, len);
 		}
-#else
-		/// <summary>
-		/// Converts part of this string to double number and gets the number end index.
-		/// Returns the number, or 0 if fails to convert.
-		/// </summary>
-		/// <param name="t">This string. Can be null.</param>
-		/// <param name="startIndex">Offset in this string where to start parsing.</param>
-		/// <param name="numberEndIndex">Receives offset in this string where the number part ends. If fails to convert, receives 0.</param>
-		/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
-		/// <remarks>
-		/// Calls <see cref="double.TryParse(RStr, NumberStyles, IFormatProvider, out double)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b> and <see cref="NumberStyles"/> <b>Float</b> and <b>AllowThousands</b>.
-		/// Fails if this string is null or "" or does not contain a valid floating-point number at the specified start index.
-		/// Examples of valid numbers: "12", " -12.3", ".12", "12.", "1,234.5", "12E3", "12.3e-45". String like "89text" is valid too; then <i>numberEndIndex</i> recives 2. String "text89text" is valid if <i>startIndex</i> is 4 or 5; then <i>numberEndIndex</i> receives 6.
-		/// </remarks>
-		public static double ToNumber(this string t, int startIndex, out int numberEndIndex)
-		{
-			ToNumber(t, out double r, startIndex, out numberEndIndex);
-			return r;
-		}
-
-		/// <summary>
-		/// Converts part of this string to double number.
-		/// Returns the number, or 0 if fails to convert.
-		/// </summary>
-		/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
-		public static double ToNumber(this string t, int startIndex = 0)
-		{
-			ToNumber(t, out double r, startIndex, out _);
-			return r;
-		}
-
-		/// <summary>
-		/// Converts part of this string to double number and gets the number end index.
-		/// Returns false if fails.
-		/// </summary>
-		/// <param name="t">This string. Can be null.</param>
-		/// <param name="result">Receives the result number.</param>
-		/// <param name="startIndex">Offset in this string where to start parsing.</param>
-		/// <param name="numberEndIndex">Receives offset in this string where the number part ends. If fails to convert, receives 0.</param>
-		/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
-		public static bool ToNumber(this string t, out double result, int startIndex, out int numberEndIndex)
-		{
-			if(_ScanFloatNumber(t, startIndex, out numberEndIndex)) {
-				var span = t.AsSpan(startIndex, numberEndIndex - startIndex);
-				if(double.TryParse(span, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out result)) return true;
-				Debug_.Print("TryParse");
-			}
-			result = 0.0;
-			numberEndIndex = 0;
-			return false;
-		}
-
-		/// <summary>
-		/// Converts part of this string to double number.
-		/// Returns false if fails.
-		/// </summary>
-		/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
-		public static bool ToNumber(this string t, out double result, int startIndex = 0)
-			=> ToNumber(t, out result, startIndex, out _);
-
-		/// <summary>
-		/// Converts part of this string to float number and gets the number end index.
-		/// Returns false if fails.
-		/// </summary>
-		/// <param name="t">This string. Can be null.</param>
-		/// <param name="result">Receives the result number.</param>
-		/// <param name="startIndex">Offset in this string where to start parsing.</param>
-		/// <param name="numberEndIndex">Receives offset in this string where the number part ends. If fails to convert, receives 0.</param>
-		/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
-		public static bool ToNumber(this string t, out float result, int startIndex, out int numberEndIndex)
-		{
-			if(_ScanFloatNumber(t, startIndex, out numberEndIndex)) {
-				var span = t.AsSpan(startIndex, numberEndIndex - startIndex);
-				if(float.TryParse(span, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out result)) return true;
-				Debug_.Print("TryParse");
-			}
-			result = 0f;
-			numberEndIndex = 0;
-			return false;
-		}
-
-		/// <summary>
-		/// Converts part of this string to float number.
-		/// Returns false if fails.
-		/// </summary>
-		/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
-		public static bool ToNumber(this string t, out float result, int startIndex = 0)
-			=> ToNumber(t, out result, startIndex, out _);
-
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		static bool _ScanFloatNumber(string t, int i, out int end)
-		{
-			end = 0;
-
-			int len = t.Lenn();
-			if((uint)i > len) throw new ArgumentOutOfRangeException("startIndex");
-
-			while(i < len && _IsWhite(t[i])) i++;
-			if(i < len) switch(t[i]) { case '-': case '+': i++; break; }
-			if(i == len) return false;
-
-			bool isDot;
-			if(_IsDigit(t[i])) {
-				for(++i; i < len && (_IsDigit(t[i]) || t[i] == ',');) i++;
-				if(isDot = (i < len && t[i] == '.')) i++;
-			} else if(t[i] == '.' && ++i < len && _IsDigit(t[i])) {
-				i++;
-				isDot = true;
-			} else return false;
-
-			if(isDot) {
-				while(i < len && _IsDigit(t[i])) i++;
-			}
-
-			if(i < len && (t[i] == 'E' || t[i] == 'e')) {
-				if(++i < len) switch(t[i]) { case '-': case '+': i++; break; }
-				int i0 = i; while(i < len && _IsDigit(t[i])) i++;
-				if(i == i0) return false;
-			}
-
-			end = i;
-			return true;
-
-			//from .NET source
-			static bool _IsWhite(int ch) => ch == 0x20 || (uint)(ch - 0x09) <= (0x0D - 0x09) ? true : false;
-			static bool _IsDigit(int ch) => ((uint)ch - '0') <= 9;
-		}
-		//static regexp s_rxNum = new regexp(@"\s*[-+]?(?:\d[\d,]*\.?\d*|\.\d+)(?:[Ee][-+]?\d+)?", RXFlags.ANCHORED); //with regex 5 times slower
-#endif
 
 		#endregion
 

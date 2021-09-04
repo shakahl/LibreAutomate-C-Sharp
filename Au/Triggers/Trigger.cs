@@ -317,13 +317,7 @@ namespace Au.Triggers
 		/// Sets scope "only these windows". Hotkey, autotext and mouse triggers added afterwards will work only when one of the specified windows is active.
 		/// </summary>
 		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
-		/// <param name="any">
-		/// Specifies one or more windows.
-		/// Tip: <b>wndFinder</b> has implicit conversion from string. See <see cref="wndFinder.op_Implicit(string)"/>.
-		/// Examples: <c>"Name"</c>, <c>"Name,Class"</c>, <c>",,Program.exe"</c>.
-		/// The easiest way to specify "all windows of program X.exe": <c>Triggers.Of.Windows(",,X.exe")</c>.
-		/// </param>
-		/// <exception cref="Exception">Exceptions of <see cref="wndFinder.op_Implicit(string)"/>. This function itself does not throw exceptions.</exception>
+		/// <param name="any">Specifies windows, like <c>new("Window1"), new("Window2")</c>.</param>
 		public TriggerScope Windows(params wndFinder[] any)
 			=> _Add(false, any);
 
@@ -331,8 +325,7 @@ namespace Au.Triggers
 		/// Sets scope "not these windows". Hotkey, autotext and mouse triggers added afterwards will not work when one of the specified windows is active.
 		/// </summary>
 		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
-		/// <param name="any">See <see cref="Windows"/>.</param>
-		/// <exception cref="Exception">See <see cref="Windows"/>.</exception>
+		/// <param name="any">Specifies windows, like <c>new("Window1"), new("Window2")</c>.</param>
 		public TriggerScope NotWindows(params wndFinder[] any)
 			=> _Add(true, any);
 
@@ -343,7 +336,7 @@ namespace Au.Triggers
 		}
 
 		TriggerScope _Add(bool not, wndFinder[] a) {
-			if (a.Length == 0) return _Add(not, a[0]);
+			if (a.Length == 1) return _Add(not, a[0]);
 			foreach (var v in a) if (v == null) throw new ArgumentNullException();
 			Used = true;
 			return Current = new TriggerScope(a, not);

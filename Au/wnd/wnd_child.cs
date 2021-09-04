@@ -5,7 +5,7 @@
 		/// <summary>
 		/// Finds a child control and returns its handle as <see cref="wnd"/>.
 		/// </summary>
-		/// <returns>Returns <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="operator +(wnd)"/>.</returns>
+		/// <returns>Returns <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>.</returns>
 		/// <param name="name">
 		/// Control name.
 		/// String format: [](xref:wildcard_expression).
@@ -46,12 +46,7 @@
 			[ParamString(PSFormat.wildex)] string name = null,
 			[ParamString(PSFormat.wildex)] string cn = null,
 			WCFlags flags = 0, Func<wnd, bool> also = null, int skip = 0
-			) {
-			//ThrowIfInvalid(); //will be called later
-			var f = new wndChildFinder(name, cn, flags, also, skip);
-			f.Find(this);
-			return f.Result;
-		}
+			) => new wndChildFinder(name, cn, flags, also, skip).Find(this);
 
 		/// <summary>
 		/// Finds a child control and returns its handle as <see cref="wnd"/>. Can wait and throw <b>NotFoundException</b>.
@@ -71,18 +66,13 @@
 			[ParamString(PSFormat.wildex)] string name = null,
 			[ParamString(PSFormat.wildex)] string cn = null,
 			WCFlags flags = 0, Func<wnd, bool> also = null, int skip = 0
-			) {
-			//ThrowIfInvalid(); //will be called later
-			var f = new wndChildFinder(name, cn, flags, also, skip);
-			f.Find(this, waitS);
-			return f.Result;
-		}
+			) => new wndChildFinder(name, cn, flags, also, skip).Find(this, waitS);
 
 		/// <summary>
 		/// Returns true if this window contains the specified control.
 		/// Calls <see cref="Child"/>.
 		/// <note>
-		/// Using this function many times with same parameters is inefficient. Instead create new <see cref="wndChildFinder"/> and call <see cref="wndChildFinder.Find"/> or <see cref="HasChild(wndChildFinder)"/>. See example.
+		/// Using this function many times with same parameters is inefficient. Instead create new <see cref="wndChildFinder"/> and call <see cref="wndChildFinder.Exists"/> or <see cref="HasChild(wndChildFinder)"/>. See example.
 		/// </note>
 		/// </summary>
 		/// <exception cref="AuWndException"/>
@@ -105,7 +95,7 @@
 
 		/// <summary>
 		/// Returns true if this window contains the specified control.
-		/// Calls <see cref="wndChildFinder.Find"/>.
+		/// Calls <see cref="wndChildFinder.Exists"/>.
 		/// </summary>
 		/// <exception cref="AuWndException"/>
 		/// <example>
@@ -117,32 +107,28 @@
 		/// print.it(f.Result);
 		/// ]]></code>
 		/// </example>
-		public bool HasChild(wndChildFinder f) {
-			return f.Find(this);
-		}
+		public bool HasChild(wndChildFinder f) => f.Exists(this);
 
 		/// <summary>
 		/// Returns true if this window contains the specified UI element.
-		/// Calls <see cref="elmFinder.Find(wnd, wndChildFinder)"/>.
+		/// Calls <see cref="elmFinder.Exists"/>.
 		/// </summary>
 		/// <exception cref="AuWndException"/>
 		/// <example>
 		/// Find window that contains certain UI element, and get the UI element too.
 		/// <code><![CDATA[
-		/// var ef = new elmFinder("BUTTON", "OK"); //UI element properties
-		/// wnd w = wnd.find(cn: "#32770", also: t => t.HasElm(ef));
+		/// var f = new elmFinder("BUTTON", "OK"); //UI element properties
+		/// wnd w = wnd.find(cn: "#32770", also: t => t.HasElm(f));
 		/// print.it(w);
 		/// print.it(f.Result);
 		/// ]]></code>
 		/// </example>
-		public bool HasElm(elmFinder f) {
-			return f.Find(this);
-		}
+		public bool HasElm(elmFinder f) => f.Find_(false, this, null);
 
 		/// <summary>
 		/// Finds a child control by its id and returns its handle as <see cref="wnd"/>.
 		/// </summary>
-		/// <returns>Child control handle, or <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="operator +(wnd)"/>.</returns>
+		/// <returns>Child control handle, or <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>.</returns>
 		/// <param name="id">Control id.</param>
 		/// <param name="flags">This function supports flags DirectChild and HiddenToo. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="Child"/>.</param>
 		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
@@ -219,7 +205,7 @@
 		/// <summary>
 		/// Finds a direct child control and returns its handle as <see cref="wnd"/>.
 		/// </summary>
-		/// <returns>Child control handle, or <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="operator +(wnd)"/>. Supports <see cref="lastError"/>.</returns>
+		/// <returns>Child control handle, or <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>. Supports <see cref="lastError"/>.</returns>
 		/// <param name="name">
 		/// Name.
 		/// Full, case-insensitive. Wildcard etc not supported.

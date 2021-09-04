@@ -1,15 +1,14 @@
 namespace Au
 {
 	/// <summary>
-	/// UI element.
-	/// Finds UI elements in windows and web pages. Clicks, gets properties, etc.
+	/// Represents a UI element. Clicks, gets properties, etc.
 	/// </summary>
 	/// <remarks>
-	/// UI elements are user interface (UI) parts that are accessible through programming interfaces (API). For example buttons, links, list items. This class can find them, get properties, click, etc. Web pages and many other windows don't use controls but support UI elements. But not all UI objects are accessible.
+	/// UI elements are user interface (UI) parts that are accessible through programming interfaces (API). For example buttons, links, list items. This class can find them, get properties, click, etc. Web pages and most other windows support UI elements.
 	/// 
 	/// An <b>elm</b> variable contains a COM interface pointer (<msdn>IAccessible</msdn> or other) and uses methods of that interface or/and related API.
 	/// 
-	/// <b>elm</b> functions that get properties don't throw exception when the COM etc method failed (returned an error code of <b>HRESULT</b> type). Then they return "" (string properties), 0, false, null or empty collection, depending on return type. Applications implement UI elements differently, often with bugs, and their COM interface functions return a variety of error codes. It's impossible to reliably detect whether the error code means a serious error or the property is merely unavailable. These <b>elm</b> functions also set the last error code of this thread = the return value (<b>HRESULT</b>) of the COM function, and callers can use <see cref="lastError"/> to get it. If <b>lastError.code</b> returns 1 (<b>S_FALSE</b>), in most cases it's not an error, just the property is unavailable. On error it will probably be a negative error code.
+	/// <b>elm</b> functions that get properties don't throw exception when the COM etc method failed (returned an error code of <b>HRESULT</b> type). Then they return "" (string properties), 0, false, null or empty collection, depending on return type. Applications implement UI elements differently, often with bugs, and their COM interface functions return a variety of error codes. It's impossible to reliably detect whether the error code means an error or the property is merely unavailable. These <b>elm</b> functions also set the last error code of this thread = the return value (<b>HRESULT</b>) of the COM function, and callers can use <see cref="lastError"/> to get it. If <b>lastError.code</b> returns 1 (<b>S_FALSE</b>), in most cases it's not an error, just the property is unavailable. On error it will probably be a negative error code.
 	/// 
 	/// You can dispose <b>elm</b> variables to release the COM object, but it is not necessary (GC will do it later).
 	/// 
@@ -27,14 +26,13 @@ namespace Au
 	/// <th>Problems</th>
 	/// </tr>
 	/// <tr>
-	///  <td>Chrome web browser. Also Opera and other apps that use Chrome code. Window class name is like "Chrome_WidgetWin_1".</td>
+	///  <td>Chrome web browser. Also Edge, Opera and other apps that use Chrome code. Window class name is like "Chrome_WidgetWin_1".</td>
 	///  <td>
 	///   <ol>
-	///    <li>Web page UI elements initially are disabled(missing). Workarounds:
+	///    <li>Web page UI elements initially are disabled (missing). Workarounds:
 	///     <ul>
-	///      <li>Functions Find, Wait and FindAll enable it if used role prefix "web:" or "chrome:". Functions FromXY, FromMouse and Focused enable it if window class name starts with "Chrome". However Chrome does it lazily, therefore first time the functions often get wrong UI element. Note: this auto-enabing may fail with future Chrome versions.</li>
+	///      <li>Functions <b>Find</b>, <b>Exists</b>, <b>Wait</b> and <b>FindAll</b> enable it if used role prefix "web:" or "chrome:". Functions <b>FromXY</b>, <b>FromMouse</b> and <b>Focused</b> enable it if window class name starts with "Chrome". However Chrome does it lazily, therefore first time the functions often get wrong UI element. Note: this auto-enabing may fail with future Chrome versions.</li>
 	///      <li>Start Chrome with command line --force-renderer-accessibility.</li>
-	///      <li>In the future the script editor will have an option to enable Chrome UI elements when it starts.</li>
 	///     </ul>
 	///    </li>
 	///    <li>Some new web browser versions add new features or bugs that break something.</li>
@@ -45,9 +43,9 @@ namespace Au
 	///  <td>Firefox web browser.</td>
 	///  <td>
 	///   <ol>
-	///    <li>By default, the Find function is about 50 times slower than it could be. Also for this reason the Wait function consumes much CPU. And HTML attributes may be unavailable. See <see cref="EFFlags.NotInProc"/>. Workaround: disable the Firefox multiprocess feature: set system environment variable MOZ_FORCE_DISABLE_E10S=1 and restart Firefox. Note: Firefox may remove this option in the future. If this does not work, google how to disable Firefox multiprocess. Or use Chrome instead.</li>
-	///    <li>When Firefox starts, its web page UI elements are unavailable. It creates them only when somebody asks (eg function Find), but does it lazily, and Find at first fails. Workaround: use Wait, not Find.</li>
-	///    <li>Ocassionally Firefox briefly turns off its web page UI elements. Workaround: use Wait, not Find. With other web browsers also it's better to use Wait.</li>
+	///    <li>By default, the <b>Find</b> function is about 50 times slower than it could be, and uses much CPU when waiting. And HTML attributes may be unavailable. See <see cref="EFFlags.NotInProc"/>. Workaround: disable the Firefox multiprocess feature: set system environment variable MOZ_FORCE_DISABLE_E10S=1 and restart Firefox. Note: Firefox may remove this option in the future. If this does not work, google how to disable Firefox multiprocess. Or use Chrome instead.</li>
+	///    <li>When Firefox starts, its web page UI elements are unavailable. It creates them only when somebody asks (eg function <b>Find</b>), but does it lazily, and <b>Find</b> at first fails. Workaround: use parameter <i>waitS</i>.</li>
+	///    <li>Ocassionally Firefox briefly turns off its web page UI elements. Workaround: use parameter <i>waitS</i>. With other web browsers also it's better to use <i>waitS</i>.</li>
 	///    <li>Some new web browser versions add new features or bugs that break something.</li>
 	///   </ol>
 	///  </td>
@@ -71,18 +69,10 @@ namespace Au
 	///  </td>
 	/// </tr>
 	/// <tr>
-	///  <td>OpenOffice.</td>
-	///  <td>
-	///   <ol>
-	///    <li>Often crashes after using UI elements, usually when closing. Noticed in OpenOffice 4.1.4; may be fixed in newer versions.</li>
-	///   </ol>
-	///  </td>
-	/// </tr>
-	/// <tr>
 	///  <td>Some controls.</td>
 	///  <td>
 	///   <ol>
-	///    <li>UI elements of some controls are not connected to the UI element of the parent control. Then Find cannot find them if searches in whole window.<br/>Workaround: search only in that control. For example, use <i>prop</i> <c>"class"</c> or <c>"id"</c>. If it's a web browser control, use role prefix <c>"web:"</c>. Or find the control with <see cref="wnd.Child"/> and search in it. Or use <see cref="elmFinder.Find(wnd, wndChildFinder)"/>.</li>
+	///    <li>UI elements of some controls are not connected to the UI element of the parent control. Then cannot find them if searching in whole window.<br/>Workaround: search only in that control. For example, use <i>prop</i> <c>"class"</c> or <c>"id"</c>. Or find the control (<see cref="wnd.Child"/> etc) and search in it.</li>
 	///   </ol>
 	///  </td>
 	/// </tr>
@@ -101,7 +91,7 @@ namespace Au
 	///  <td>When cannot load dll into the target process. For example Windows Store apps.</td>
 	///  <td>
 	///   <ol>
-	///    <li>Function Find is much slower. Function Wait then consumes much more CPU. More info: <see cref="EFFlags.NotInProc"/>.</li>
+	///    <li>Function <b>Find</b> is much slower, and uses much more CPU when waiting. More info: <see cref="EFFlags.NotInProc"/>.</li>
 	///   </ol>
 	///  </td>
 	/// </tr>
@@ -128,15 +118,15 @@ namespace Au
 	/// Click link "Example" in Chrome.
 	/// <code><![CDATA[
 	/// var w = wnd.find(0, "* Chrome");
-	/// var e = elm.find(5, w, "web:LINK", "Example");
+	/// var e = w.Elm["web:LINK", "Example"].Find(5);
 	/// e.Invoke();
 	/// ]]></code>
 	/// Click a link, wait for new web page, click a link in it.
 	/// <code><![CDATA[
 	/// var w = wnd.find(0, "* Chrome");
-	/// var e = elm.find(1, w, "web:LINK", "Link 1");
+	/// var e = w.Elm["web:LINK", "Link 1"].Find(5);
 	/// e.WebInvoke();
-	/// elm.find(10, w, "web:LINK", "Link 2").WebInvoke();
+	/// w.Elm["web:LINK", "Link 2"].Find(5).WebInvoke();
 	/// ]]></code>
 	/// </example>
 	[StructLayout(LayoutKind.Sequential)]
@@ -199,7 +189,7 @@ namespace Au
 		}
 
 		int _MemoryPressure => _elem == 0 ? c_memoryPressure : c_memoryPressure / 10;
-		const int c_memoryPressure = 500; //Ideally this should be the average UI element memory size, if counting both processes.
+		const int c_memoryPressure = 1000; //Ideally this should be the average UI element memory size, if counting both processes.
 
 		//internal static int DebugMaxMemoryPressure;
 		//static int s_dmp;
@@ -228,6 +218,7 @@ namespace Au
 		///
 		~elm() {
 			Dispose();
+			//TODO: now no GC at process exit. Who releases these poor remote COM objects?
 		}
 
 		/// <summary>
@@ -251,7 +242,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// When <b>find</b> or similar function finds a UI element, it sets this property of the <b>elm</b> variable. If <b>fromXY</b> etc, it is 0 (unknown).
-		/// When searching in a window, at level 0 are direct children of the WINDOW. When searching in controls (specified class or id), at level 0 is the control; however if used path, at level 0 are direct children. When searching in <b>elm</b>, at level 0 are its direct children. When searching in web page (role prefix <c>"web:"</c> etc), at level 0 is the web page (role DOCUMENT or PANE).
+		/// When searching in a window, at level 0 are direct children of the WINDOW. When searching in controls (specified class or id), at level 0 is the control. When searching in <b>elm</b>, at level 0 are its direct children. When searching in web page (role prefix <c>"web:"</c> etc), at level 0 is the web page (role DOCUMENT or PANE).
 		/// </remarks>
 		public int Level { get => _misc.level; set => _misc.SetLevel(value); }
 
@@ -508,7 +499,6 @@ namespace Au
 		/// The string starts with role. Other properties have format like <c>x="value"</c>, where x is a property character like with <see cref="GetProperties"/>; character e is <see cref="SimpleElementId"/>. HTML attributes have format <c>@name="value"</c>. In string values are used C# escape sequences, for example \r\n for new line.
 		/// Indentation depends on <see cref="Level"/>.
 		/// </remarks>
-		/// <seealso cref="printAll"/>
 		public override string ToString() {
 			if (_Disposed) return "<disposed>";
 			if (!GetProperties("Rnsvdarw@", out var k)) return "<failed>";
@@ -540,34 +530,6 @@ namespace Au
 
 				return b.ToString();
 			}
-		}
-
-		/// <summary>
-		/// Displays properties of all found UI elements of window w.
-		/// </summary>
-		/// <remarks>
-		/// Uses <see cref="ToString"/>.
-		/// Catches exceptions. On exception writes to the output: <c>$"!exception! exceptionType exceptionMessage"</c>.
-		/// Parameters are of <see cref="find"/>.
-		/// By default skips invisible UI elements and UI elements in menus. Use flags to include them.
-		/// Chrome web page UI elements normally are disabled (missing) when it starts. Use role prefix <c>"web:"</c> or <c>"chrome:"</c> to enable. See example.
-		/// </remarks>
-		/// <example>
-		/// Displays visible UI elements in Chrome web page.
-		/// <code><![CDATA[
-		/// print.clear();
-		/// var w = wnd.find(0, "* Chrome");
-		/// print.it("---- all ----");
-		/// elm.printAll(w, "web:");
-		/// print.it("---- links ----");
-		/// elm.printAll(w, "web:LINK");
-		/// ]]></code>
-		/// </example>
-		public static void printAll(wnd w, string role = null, EFFlags flags = 0, string prop = null) {
-			try {
-				find(w, role, null, prop, flags, also: o => { print.it(o); return false; });
-			}
-			catch (Exception ex) { print.it($"!exception! {ex.ToStringWithoutStack()}"); }
 		}
 	}
 }

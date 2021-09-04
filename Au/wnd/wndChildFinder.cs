@@ -4,7 +4,7 @@ using static Au.wnd.Internal_;
 namespace Au
 {
 	/// <summary>
-	/// Contains control (child window) properties and is used to find the control.
+	/// Finds window controls (child windows). Contains name and other parameters of controls to find.
 	/// </summary>
 	/// <remarks>
 	/// Can be used instead of <see cref="wnd.Child"/> or <see cref="wnd.ChildAll"/>.
@@ -14,7 +14,7 @@ namespace Au
 	/// Find window that contains certain control, and get the control too.
 	/// <code><![CDATA[
 	/// var f = new wndChildFinder("Password*", "Static"); //control properties
-	/// wnd w = wnd.find(cn: "#32770", also: t => f.Find(t));
+	/// wnd w = wnd.find(cn: "#32770", also: t => f.Exists(t));
 	/// print.it(w);
 	/// print.it(f.Result);
 	/// ]]></code>
@@ -39,7 +39,8 @@ namespace Au
 		public wndChildFinder(
 			[ParamString(PSFormat.wildex)] string name = null,
 			[ParamString(PSFormat.wildex)] string cn = null,
-			WCFlags flags = 0, Func<wnd, bool> also = null, int skip = 0) {
+			WCFlags flags = 0, Func<wnd, bool> also = null, int skip = 0
+			) {
 			if (cn != null) {
 				if (cn.Length == 0) throw new ArgumentException("Class name cannot be \"\". Use null.");
 				_className = cn;
@@ -68,24 +69,38 @@ namespace Au
 		/// <summary>
 		/// Finds the specified child control, like <see cref="wnd.Child"/>.
 		/// </summary>
-		/// <returns>If found, sets <see cref="Result"/> and returns true. Else returns false.</returns>
+		/// <returns>If found, returns <see cref="Result"/>, else default(wnd).</returns>
 		/// <param name="wParent">Direct or indirect parent window. Can be top-level window or control.</param>
 		/// <exception cref="AuWndException">Invalid <i>wParent</i>.</exception>
-		public bool Find(wnd wParent) {
-			using var k = new WndList_(_AllChildren(wParent));
-			return _FindInList(wParent, k) >= 0;
-		}
+		/// <remarks>
+		/// Functions <b>Find</b> and <b>Exists</b> differ only in their return types.
+		/// </remarks>
+		public wnd Find(wnd wParent) => Exists(wParent) ? Result : default;
 
 		/// <summary>
 		/// Finds the specified child control, like <see cref="wnd.Child"/>. Can wait and throw <b>NotFoundException</b>.
 		/// </summary>
-		/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>waitS</i> negative).</returns>
+		/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns default(wnd) (if <i>waitS</i> negative).</returns>
 		/// <param name="wParent">Direct or indirect parent window. Can be top-level window or control.</param>
 		/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
-		/// <exception cref="NotFoundException" />
 		/// <exception cref="AuWndException">Invalid <i>wParent</i>.</exception>
-		public bool Find(wnd wParent, double waitS) {
-			var r = waitS == 0d ? Find(wParent) : wait.forCondition(waitS < 0 ? waitS : -waitS, () => Find(wParent));
+		/// <exception cref="NotFoundException" />
+		/// <remarks>
+		/// Functions <b>Find</b> and <b>Exists</b> differ only in their return types.
+		/// </remarks>
+		public wnd Find(wnd wParent, double waitS) => Exists(wParent, waitS) ? Result : default;
+
+		/// <inheritdoc cref="Find(wnd)"/>
+		/// <returns>If found, sets <see cref="Result"/> and returns true, else false.</returns>
+		public bool Exists(wnd wParent) {
+			using var k = new WndList_(_AllChildren(wParent));
+			return _FindInList(wParent, k) >= 0;
+		}
+
+		/// <inheritdoc cref="Find(wnd, double)"/>
+		/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>waitS</i> negative).</returns>
+		public bool Exists(wnd wParent, double waitS) {
+			var r = waitS == 0d ? Exists(wParent) : wait.forCondition(waitS < 0 ? waitS : -waitS, () => Exists(wParent));
 			return r || waitS < 0 ? r : throw new NotFoundException();
 		}
 

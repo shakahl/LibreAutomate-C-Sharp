@@ -40,7 +40,7 @@ partial class MainWindow : Window
 		//timerm.after(100, _ => Menus.File.Workspace.New_workspace());
 		//timerm.after(100, _ => DIcons.ZShow());
 		//timerm.after(500, _ => { new Au.Tools.Dwnd(wnd.find(null, "Shell_TrayWnd")).Show(); });
-		//timerm.after(500, _ => { new Au.Tools.Delm().Show(); });
+		timerm.after(500, _ => { new Au.Tools.Delm(new POINT(806, 1580)).Show(); });
 		//timerm.after(500, _ => { new Au.Tools.Duiimage().Show(); });
 
 #if DEBUG

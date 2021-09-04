@@ -86,7 +86,7 @@ namespace Au.Tools
 		/// Appends waitTime. If !orThrow, appends "-" if need.
 		/// </summary>
 		public static StringBuilder AppendWaitTime(this StringBuilder t, string waitTime, bool orThrow) {
-			if (waitTime.NE()) waitTime = "1e11";
+			if (waitTime.NE()) waitTime = "8e88";
 			if (!orThrow && waitTime != "0" && !waitTime.Starts('-')) t.Append('-');
 			t.Append(waitTime);
 			return t;
@@ -401,31 +401,37 @@ namespace Au.Tools
 		/// <summary>
 		/// Creates standard <see cref="osdRect"/>.
 		/// </summary>
-		public static osdRect CreateOsdRect(int thickness = 4) => new() { Color = 0xFF8A2BE2, Thickness = thickness }; //Color.BlueViolet
+		public static osdRect CreateOsdRect(int thickness = 4) => new() { Color = 0xFFFF0000, Thickness = thickness }; //red
 
 		/// <summary>
 		/// Briefly shows standard blinking on-screen rectangle.
 		/// </summary>
-		public static void ShowOsdRect(RECT r, bool limitToScreen = false) {
-			var osr = CreateOsdRect();
-			r.Inflate(2, 2); //2 pixels inside, 2 outside
+		public static void ShowOsdRect(RECT r, bool error = false, bool limitToScreen = false) {
+			int thick = error ? 6 : 2;
+			var osr = new osdRect { Color = 0xFFFFFF00, Thickness = thick * 2 }; //yellow
+			r.Inflate(thick, thick); //2 pixels inside, 2 outside
 			if (limitToScreen) {
 				var k = screen.of(r).Rect;
 				r.Intersect(k);
 			}
 			osr.Rect = r;
+			t_hideCapturingRect = true;
 			osr.Show();
 
 			int i = 0;
 			timerm.every(250, t => {
 				if (i++ < 5) {
-					osr.Color = (i & 1) != 0 ? 0xFFFFFF00 : 0xFF8A2BE2;
+					osr.Hwnd.ZorderTop();
+					osr.Color = (i & 1) != 0 ? (error ? 0xFFFF0000 : 0xFF0000FF) : 0xFFFFFF00; //(red : blue) : yellow
 				} else {
 					t.Stop();
 					osr.Dispose();
+					t_hideCapturingRect = false;
 				}
 			});
 		}
+
+		[ThreadStatic] static bool t_hideCapturingRect;
 
 		#endregion
 
@@ -492,7 +498,7 @@ namespace Au.Tools
 
 						//set timer that shows UI element rect
 						if (_timer == null) {
-							_osr = TUtil.CreateOsdRect();
+							_osr = TUtil.CreateOsdRect(2);
 							_timer = new timerm(t => {
 								//Don't capture too frequently.
 								//	Eg if the callback is very slow. Or if multiple timer messages are received without time interval (possible in some conditions).
@@ -511,11 +517,12 @@ namespace Au.Tools
 									//	if(w.UacAccessDenied)print.it("F3 ");
 									//}
 								}
-								if (r.HasValue) {
+								if (r.HasValue && !t_hideCapturingRect) {
 									var rr = r.GetValueOrDefault();
-									rr.Inflate(2, 2); //2 pixels inside, 2 outside
+									rr.Inflate(1, 1); //1 pixel inside, 1 outside
 									_osr.Rect = rr;
 									_osr.Show();
+									//TODO: also display UI object role. Eg often user wants to capture a LINK, but there is a child TEXT.
 								} else {
 									_osr.Visible = false;
 								}
@@ -555,14 +562,15 @@ namespace Au.Tools
 		/// Returns the found object and speed.
 		/// </summary>
 		/// <param name="code">
-		/// Must start with one or more lines that find window or control and set wnd variable named wndVar. Can be any code.
-		/// The last line must be a 'find object' function call. Example: <c>elm.find(...);</c>. Without 'var obj = ', without +, without Wait.
+		/// Must start with one or more lines that find window or control and set wnd variable named <i>wndVar</i>. Can be any code.
+		/// The last line must be a 'find object' function call, like <c>uiimage.find(...);</c>. No 'var obj = '. No 'not found' exception and waiting.
 		/// </param>
 		/// <param name="wndVar">Name of wnd variable of the window or control in which to search.</param>
 		/// <param name="w">Window or control in which to search.</param>
 		/// <param name="bTest">The 'Test' button. This function disables it while executing code.</param>
 		/// <param name="lSpeed">Label control that displays speed.</param>
 		/// <param name="getRect">Callback function that returns object's rectangle in screen. Called when object has been found.</param>
+		/// <param name="activateWindow">Activate the window before finding object.</param>
 		/// <remarks>
 		/// The test code is executed in this thread. Else would get invalid UI element etc. If need, caller can use Task.Run.
 		/// </remarks>
@@ -575,10 +583,13 @@ namespace Au.Tools
 			string code, string wndVar, wnd w, Button bTest, Label lSpeed, KSciInfoBox tInfo, Func<object, RECT> getRect, bool activateWindow = false) {
 			if (code.NE()) return default;
 			wnd dlg = lSpeed.Hwnd();
+			bool dlgActive = dlg.IsActive, noDlgActDelay = false;
 			lSpeed.Content = "";
+			tInfo.SuspendElems(0);
 
 			//print.it(code);
 			//perf.first();
+			//TODO: if activateWindow, minimize dlg. Because always-on-top.
 
 			var code0 = code;
 			var b = new StringBuilder();
@@ -591,8 +602,12 @@ namespace Au.Tools
 			for (int i = 0; i < lastLine; i++) b.AppendLine(lines[i]);
 			b.AppendLine("_p_.Next(); var _a_ =");
 			b.AppendLine("#line " + (lastLine + 1));
-			b.AppendLine(lines[lastLine]);
-			b.AppendLine($"_p_.Next(); return new object[] {{ _p_.ToArray(), _a_, {wndVar} }};");
+			string sFind = lines[lastLine], sAction = null;
+			if (sFind.RxMatch(@"\)(\?\.\w+\(.*?\));$", out var m)) { sAction = m[1].Value; sFind = sFind.Remove(m[1].Start, m[1].Length); }
+			b.AppendLine(sFind);
+			b.AppendLine("_p_.Next();");
+			if (sAction != null) b.Append("_a_").Append(sAction).AppendLine(";");
+			b.AppendLine($"return new object[] {{ _p_.ToArray(), _a_, {wndVar} }};");
 			b.AppendLine("\r\n}");
 			code = b.ToString(); //print.it(code);
 
@@ -603,7 +618,7 @@ namespace Au.Tools
 				if (!Au.Compiler.Scripting.Compile(code, out var c, addUsings: true, addGlobalCs: true, wrapInClass: true, dll: true)) {
 					Debug_.Print("---- CODE ----\r\n" + code + "--------------");
 					//show code in output, because it may be slightly different than in the code box. And not in dialog's expanded text, because may wrap, trim, etc.
-					tInfo.zText = $"<Z #F0E080><b>Errors:<><>\r\n{c.errors}\r\n\r\n<Z #C0C0C0><b>Code:<><>\r\n<code>{code0}</code>";
+					tInfo.InfoError("Errors:", $"{c.errors}\r\n\r\n<Z #C0C0C0><b>Code:<><>\r\n<code>{code0}</code>");
 				} else {
 					var rr = (object[])c.method.Invoke(null, null); //use array because fails to cast tuple, probably because in that assembly it is new type
 					r = ((long[])rr[0], rr[1], (wnd)rr[2]);
@@ -617,9 +632,15 @@ namespace Au.Tools
 			catch (Exception e) {
 				if (e is TargetInvocationException tie) e = tie.InnerException;
 				string s1, s2;
-				if (e is NotFoundException) { s1 = "Window not found"; s2 = "Tip: If part of window name changes, replace it with *"; } //info: throws only when window not found. This is to show time anyway when elm etc not found.
-				else { s1 = e.GetType().Name; s2 = e.Message; }
-				dialog.showError(s1, s2, owner: dlg, flags: DFlags.CenterOwner);
+				if (e is NotFoundException) { //info: throws only when window not found. This is to show time anyway when elm etc not found.
+					s1 = "Window not found";
+					s2 = "Tip: If part of window name changes, replace it with *";
+				} else {
+					s1 = e.GetType().Name;
+					s2 = e.Message.RxReplace(@"^Exception of type '.+?' was thrown. ", "");
+					if (e.StackTrace.RxMatch(@"(?m)^\s*( at .+?)\(.+\R\s+\Qat __script__.__TestFunc__()\E", 1, out string s3)) s1 += s3;
+				}
+				tInfo.InfoError(s1, s2);
 			}
 			finally {
 				bTest.IsEnabled = true;
@@ -647,23 +668,22 @@ namespace Au.Tools
 					if (re.IntersectsWith(ow.Rect)) {
 						r.w.Window.ActivateL();
 						wait.doEvents(1500);
+						noDlgActDelay = true;
 						break;
 					}
 				}
 			} else {
-				//dialog.show("Not found", owner: dialog, flags: DFlags.OwnerCenter, icon: DIcon.Info, secondsTimeout: 2);
 				lSpeed.Foreground = Brushes.Red;
 				lSpeed.Content = "Not found,";
 				timerm.after(700, _ => lSpeed.Content = sTime);
 			}
 
-			dlg.ActivateL();
+			if (dlgActive) timerm.after(activateWindow && !noDlgActDelay && r.w == w ? 1500 : 300, _ => dlg.ActivateL());
 
 			if (r.w != w && !r.w.Is0) {
-				dialog.showWarning("The code finds another " + (r.w.IsChild ? "control" : "window"),
-				$"Need:  {w}\r\n\r\nFound:  {r.w}",
-				owner: dlg, flags: DFlags.CenterOwner | DFlags.Wider);
-				ShowOsdRect(r.w.Rect, true);
+				tInfo.InfoError("The code finds another " + (r.w.IsChild ? "control" : "window"), $"<i>Need:<>  {w}\r\n<i>Found:<>  {r.w}");
+				ShowOsdRect(r.w.Rect, error: true, limitToScreen: true);
+				//FUTURE: show list of objects inside the wanted window, same as in the Dwnd 'contains' combo. Let user choose. Then update window code quickly.
 				return default;
 			}
 			return (r.obj, r.speed[1]);
@@ -672,6 +692,11 @@ namespace Au.Tools
 		#endregion
 
 		#region info
+
+		public static void InfoError(this KSciInfoBox t, string header, string text) {
+			t.zText = $"<Z #F0E080><b>{header}<><>\r\n{text}";
+			t.SuspendElems();
+		}
 
 		public static void Info(this KSciInfoBox t, FrameworkElement e, string name, string text) {
 			text = CommonInfos.PrependName(name, text);
@@ -724,8 +749,7 @@ namespace Au.Tools
 			public static string PrependName(string name, string text) => "<b>" + name + "<> - " + text;
 
 			public static string AppendWildexInfo(string s, string part = null) => s + "\r\n" + (part ?? "The text") +
-	@" is <help articles/Wildcard expression>wildcard expression<>. Can contain <+regex>regular expression<> like <c brown>@""**rc regex""<>.
-This and other text fields can contain text like <c brown>abcd<> or C# string like <c brown>""ab\tcd""<> or <c brown>@""abcd""<>.
+	@" is <help articles/Wildcard expression>wildcard expression<>. Can contain <+regex>regular expression<> like <c brown>**rc regex<>.
 Examples:
 whole text
 *end
@@ -740,6 +764,7 @@ time ??:??
 **n not this
 **m this||or this||**r or this regex||**n and not this
 **m(^^^) this^^^or this^^^or this
+@""C# verbatim string""
 ";
 
 			public const string c_alsoParameter = @"<i>also<> lambda.

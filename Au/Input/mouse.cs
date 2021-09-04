@@ -1321,7 +1321,7 @@ namespace Au.Types
 		/// <exception cref="AuException">Failed to get UI element rectangle (<see cref="elm.GetRect(out RECT, wnd)"/>) or container window (<see cref="elm.WndContainer"/>).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.</exception>
 		public static void MouseMove(this elm t, Coord x = default, Coord y = default)
-			=> _ElmMouseAction(+t, false, x, y, default);
+			=> _ElmMouseAction(t ?? throw new NotFoundException(), false, x, y, default);
 
 		/// <summary>
 		/// Clicks this UI element.
@@ -1335,7 +1335,7 @@ namespace Au.Types
 		/// <exception cref="AuException">Failed to get UI element rectangle (<see cref="elm.GetRect(out RECT, wnd)"/>) or container window (<see cref="elm.WndContainer"/>).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.</exception>
 		public static MRelease MouseClick(this elm t, Coord x = default, Coord y = default, MButton button = MButton.Left) {
-			_ElmMouseAction(+t, true, x, y, button);
+			_ElmMouseAction(t ?? throw new NotFoundException(), true, x, y, button);
 			return button;
 		}
 
@@ -1370,7 +1370,7 @@ namespace Au.Types
 		/// <exception cref="InvalidOperationException">area is Bitmap.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.</exception>
 		public static void MouseMove(this uiimage t, Coord x = default, Coord y = default)
-			=> (+t).MouseAction_(0, x, y);
+			=> (t ?? throw new NotFoundException()).MouseAction_(0, x, y);
 
 		/// <summary>
 		/// Clicks the found image.
@@ -1384,7 +1384,7 @@ namespace Au.Types
 		/// <exception cref="InvalidOperationException">area is Bitmap.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.</exception>
 		public static MRelease MouseClick(this uiimage t, Coord x = default, Coord y = default, MButton button = MButton.Left) {
-			(+t).MouseAction_(button == 0 ? MButton.Left : button, x, y);
+			(t ?? throw new NotFoundException()).MouseAction_(button == 0 ? MButton.Left : button, x, y);
 			return button;
 		}
 

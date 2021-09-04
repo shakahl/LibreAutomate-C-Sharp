@@ -558,7 +558,7 @@ class PanelFind : UserControl
 		var folder = App.Model.Root;
 		if (!names && _cFolder.IsChecked && Panels.Editor.ZActiveDoc?.ZFile is FileNode fn) {
 			if (fn.FindProject(out var proj, out _, ofAnyScript: true)) folder = proj;
-			else folder = fn.AncestorsReverse(noRoot: true).FirstOrDefault() ?? folder;
+			else folder = fn.AncestorsFromRoot(noRoot: true).FirstOrDefault() ?? folder;
 		}
 
 		foreach (var v in folder.Descendants()) {

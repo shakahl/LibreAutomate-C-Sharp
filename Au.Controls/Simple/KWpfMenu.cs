@@ -244,7 +244,7 @@ namespace Au.Controls
 		/// The menu is modal; the function returns when closed.
 		/// </remarks>
 		/// <seealso cref="dialog.showList"/>
-		public static int ShowSimple(DStringList items, UIElement owner, bool byCaret = false, Action<KWpfMenu> beforeShow = null) {
+		public static int ShowSimple(Strings items, UIElement owner, bool byCaret = false, Action<KWpfMenu> beforeShow = null) {
 			var a = items.ToArray();
 			var m = new KWpfMenu();
 			//	var dispFrame = new DispatcherFrame();

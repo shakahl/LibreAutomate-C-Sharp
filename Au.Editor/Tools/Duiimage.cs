@@ -58,7 +58,7 @@ namespace Au.Tools
 			rectC = b.xAddCheckText("Rectangle", "(left, top, width, height)"); b.And(20).xAddButton("...", _bRect_Click);
 			wiflagsC = b.xAddCheckCombo("Window pixels", "IFFlags.WindowDC|IFFlags.PrintWindow");
 			diffC = b.xAddCheckText("Color deviation", "10");
-			skipC = b.xAddCheckText("Skip", "1");
+			skipC = b.xAddCheckText("Skip");
 
 			b.StartGrid().Columns(-1, 0);
 			b.xAddOther(out function).Margin(2, 4, 8, 4); b.Items("Find or wait for image|Wait until image disappears");
@@ -453,7 +453,7 @@ For example, if 1, gets the second matching image.");
 			_info.Info(function, "Function", "Create code for function find() or waitNot().");
 			_info.InfoC(allC, "Find all matching images.");
 			_info.InfoCT(waitC, @"The wait timeout, seconds.
-The function waits max this time interval. On timeout throws exception if 'Exception...' checked, else returns null. If empty, uses 1e11 (3251 years).");
+The function waits max this time interval. On timeout throws exception if 'Exception...' checked, else returns null. If empty, uses 8e88 (infinite).");
 			_info.InfoCT(waitnoC, @"The wait timeout, seconds.
 The function waits max this time interval. On timeout throws exception if 'Exception...' checked, else returns false. No timeout if unchecked or 0 or empty.");
 			_info.InfoC(exceptionC,

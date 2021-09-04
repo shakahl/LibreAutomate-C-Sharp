@@ -32,7 +32,7 @@ static HRESULT get_accParent(IAccessible* acc, out IAccessible*& aParent)
 
 	aParent = null;
 	IDispatch* idisp = null;
-	HRESULT hr = acc->get_accParent(out &idisp);
+	HRESULT hr = acc->get_accParent(out & idisp);
 	if(hr == 0) hr = IDispatchToIAccessible(idisp, out aParent);
 	return hr;
 }
@@ -140,7 +140,7 @@ static HRESULT get_accState(out long& state, IAccessible* iacc, long elem = 0)
 {
 	state = 0;
 	_variant_t v;
-	HRESULT hr = iacc->get_accState(VE(elem), out &v);
+	HRESULT hr = iacc->get_accState(VE(elem), out & v);
 	if(hr == 0 && v.vt == VT_I4) state = v.lVal;
 	return hr;
 }
@@ -151,6 +151,13 @@ static HRESULT accLocation(out RECT& r, IAccessible* iacc, long elem = 0)
 	HRESULT hr = iacc->accLocation(&x, &y, &wid, &hei, VE(elem));
 	if(hr == 0) SetRect(&r, x, y, x + wid, y + hei); else memset(&r, 0, 16);
 	return hr;
+}
+
+static bool IsStatic(int role, IAccessible* iacc) {
+	if(role == ROLE_SYSTEM_STATICTEXT || role == ROLE_SYSTEM_GRAPHIC) return true;
+	if(role != ROLE_SYSTEM_TEXT) return false;
+	long state = 0;
+	return 0 == get_accState(state, iacc) && 0 == (state & (STATE_SYSTEM_FOCUSABLE | STATE_SYSTEM_UNAVAILABLE));
 }
 
 #if TRACE
@@ -191,7 +198,7 @@ public:
 	//Does nothing if w has flag AccEnableYes. Adds this flag if need.
 	void Set(HWND w)
 	{
-		if(!!(WinFlags::Get(w)&eWinFlags::AccEnableYes)) return;
+		if(!!(WinFlags::Get(w) & eWinFlags::AccEnableYes)) return;
 		int r = 0;
 		SystemParametersInfoW(SPI_GETSCREENREADER, 0, &r, 0);
 		_restore = r == 0 && SystemParametersInfoW(SPI_SETSCREENREADER, 1, 0, 0);
@@ -348,7 +355,7 @@ struct AccRaw : public Cpp_Acc
 
 		a.acc = null; a.elem = 0;
 		_variant_t v;
-		int hr = acc->accNavigate(navDir, ao::VE(elem), out &v);
+		int hr = acc->accNavigate(navDir, ao::VE(elem), out & v);
 		if(hr == 0 && v.vt != 0) {
 			if(elem == 0 && v.vt == VT_I4 && v.lVal != 0 && navDir >= NAVDIR_UP && navDir <= NAVDIR_PREVIOUS) {
 				IAccessible* aParent;
@@ -377,7 +384,7 @@ private:
 	{
 		a.Zero();
 		_variant_t v;
-		HRESULT hr = acc->get_accFocus(out &v);
+		HRESULT hr = acc->get_accFocus(out & v);
 		if(hr == 0) {
 			if(v.vt == 0) hr = 1;
 			else if(v.vt == VT_I4 && v.lVal == 0) a.acc = acc;
@@ -455,7 +462,7 @@ public:
 	AccChildren(const Cpp_Acc& parent, int startAtIndex = 0, bool exactIndex = false, bool reverse = false, int maxcc = 10000)
 	{
 		_parent = parent.acc;
-		_miscFlags = parent.misc.flags&eAccMiscFlags::InheritMask;
+		_miscFlags = parent.misc.flags & eAccMiscFlags::InheritMask;
 		_v = null;
 		_count = -1;
 		_i = 0;
@@ -488,7 +495,7 @@ public:
 					if(hr < 0) { PRINTHEX(hr); n = 0; }
 				}
 			}
-		} else if(!(parent.misc.flags&(eAccMiscFlags::UIA | eAccMiscFlags::Java))) {
+		} else if(!(parent.misc.flags & (eAccMiscFlags::UIA | eAccMiscFlags::Java))) {
 			n = _RemoveInvisibleNonclient(v, n, parent.misc.role);
 		}
 
@@ -563,20 +570,20 @@ private:
 			DWORD bits = 1 << 3; //CLIENT
 
 			DWORD style = wn::Style(w);
-			if(style&WS_VSCROLL) bits |= 1 << 4;
-			if(style&WS_HSCROLL) bits |= 1 << 5;
-			if((style&(WS_VSCROLL | WS_HSCROLL)) == (WS_VSCROLL | WS_HSCROLL)) bits |= 1 << 6; //GRIP
+			if(style & WS_VSCROLL) bits |= 1 << 4;
+			if(style & WS_HSCROLL) bits |= 1 << 5;
+			if((style & (WS_VSCROLL | WS_HSCROLL)) == (WS_VSCROLL | WS_HSCROLL)) bits |= 1 << 6; //GRIP
 
-			if(style&WS_CHILD) {
+			if(style & WS_CHILD) {
 				//note: child windows cannot have app MENUBAR.
 				//note: assume system MENUBAR always visible if TITLEBAR visible; it depends on WS_SYSMENU + on don't know what.
-				if((style&WS_CAPTION) == WS_CAPTION) bits |= 3; //system MENUBAR, TITLEBAR
+				if((style & WS_CAPTION) == WS_CAPTION) bits |= 3; //system MENUBAR, TITLEBAR
 			} else {
 				//With top-level windows don't use style/GetWindowLongPtrW(w, GWL_ID)/GetMenu. Can be custom MENUBAR etc. Here the speed is not so important.
 				for(int i = 0; i < 3; i++) {
 					Smart<IAccessible> iacc; long state;
 					if(0 != v[i].pdispVal->QueryInterface(&iacc)) continue;
-					if(0 != ao::get_accState(out state, iacc) || !(state&STATE_SYSTEM_INVISIBLE)) bits |= 1 << i;
+					if(0 != ao::get_accState(out state, iacc) || !(state & STATE_SYSTEM_INVISIBLE)) bits |= 1 << i;
 				}
 			}
 

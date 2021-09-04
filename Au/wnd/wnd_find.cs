@@ -5,7 +5,7 @@
 		/// <summary>
 		/// Finds a top-level window and returns its handle as <b>wnd</b>.
 		/// </summary>
-		/// <returns>Window handle, or <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="operator +(wnd)"/>.</returns>
+		/// <returns>Window handle, or <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>.</returns>
 		/// <param name="name">
 		/// Window name. Usually it is the title bar text.
 		/// String format: [](xref:wildcard_expression).
@@ -81,12 +81,7 @@
 			[ParamString(PSFormat.wildex)] string cn = null,
 			[ParamString(PSFormat.wildex)] WOwner of = default,
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default
-			) {
-			var f = new wndFinder(name, cn, of, flags, also, contains);
-			f.Find();
-			//LastFind = f;
-			return f.Result;
-		}
+			) => new wndFinder(name, cn, of, flags, also, contains).Find();
 
 		//note: <inheritdoc cref="find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)"/> does not work, even if specified for each parameter.
 		//	Our editor's CiSignature._FormatText extracts undocumented parameter doc from the documented overload.
@@ -108,12 +103,7 @@
 			[ParamString(PSFormat.wildex)] string cn = null,
 			[ParamString(PSFormat.wildex)] WOwner of = default,
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default
-			) {
-			var f = new wndFinder(name, cn, of, flags, also, contains);
-			f.Find(waitS);
-			//LastFind = f;
-			return f.Result;
-		}
+			) => new wndFinder(name, cn, of, flags, also, contains).Find(waitS);
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
 		//rejected: probably most users will not understand/use it. It's easy and more clear to create and use wndFinder instances.
@@ -132,6 +122,8 @@
 		///// </example>
 		//[field: ThreadStatic]
 		//public static wndFinder lastFind { get; set; }
+
+		//CONSIDER: add property: [field: ThreadStatic] public static wnd last { get; set; }
 
 		/// <summary>
 		/// Finds all matching windows.
@@ -159,7 +151,7 @@
 		/// <summary>
 		/// Finds a top-level window and returns its handle as <b>wnd</b>.
 		/// </summary>
-		/// <returns>Returns <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="operator +(wnd)"/>.</returns>
+		/// <returns>Returns <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>.</returns>
 		/// <param name="name">
 		/// Name.
 		/// Full, case-insensitive. Wildcard etc not supported.
@@ -240,10 +232,10 @@
 			[ParamString(PSFormat.wildex)] string cn = null,
 			[ParamString(PSFormat.wildex)] WOwner of = default,
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default,
-			Action run = null, double runWaitS = 60.0, bool needActiveWindow = true) {
+			Action run = null, double runWaitS = 60d, bool needActiveWindow = true) {
 			wnd w = default;
 			var f = new wndFinder(name, cn, of, flags, also, contains);
-			if (f.Find()) {
+			if (f.Exists()) {
 				w = f.Result;
 				if (needActiveWindow) w.Activate();
 			} else if (run != null) {

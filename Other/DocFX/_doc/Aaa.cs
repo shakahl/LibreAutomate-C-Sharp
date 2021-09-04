@@ -117,7 +117,7 @@ namespace Au
 		/// <remarks>
 		/// type <see cref="elm"/>
 		/// 
-		/// method <see cref="elm.find"/>
+		/// method <see cref="wnd.find"/>
 		/// 
 		/// property <see cref="elm.Name"/>
 		/// 
