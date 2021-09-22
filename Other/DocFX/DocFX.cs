@@ -154,6 +154,9 @@ unsafe class Program
 		void _PreprocessFile(string fileFrom, string fileTo) {
 			var s = File.ReadAllText(fileFrom);
 
+			//namespace X; -> namespace X { ... }
+			s = s.RxReplace(@"(?ms)^(namespace Au(?:\.\w+)?);(.+)", "$1{$2\r\n}", 1);
+
 			s = s.RxReplace(@"\brecord (struct|class)\b", "$1");
 			s = usings + s;
 
@@ -587,7 +590,7 @@ this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your pag
 */
 (function() { // DON'T EDIT BELOW THIS LINE
 var d = document, s = d.createElement('script');
-s.src = 'https://derobotizer.disqus.com/embed.js';
+s.src = 'https://autepad.disqus.com/embed.js';
 s.setAttribute('data-timestamp', +new Date());
 (d.head || d.body).appendChild(s);
 })();

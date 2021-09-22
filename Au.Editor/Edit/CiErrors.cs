@@ -8,6 +8,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 
+//TODO: when "Label" is unknown, the tooltip gives only link to add using System.Reflection.Emit and not using System.Windows.Controls.
+
 class CiErrors
 {
 	SemanticModel _semo;

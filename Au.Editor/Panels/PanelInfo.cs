@@ -9,6 +9,8 @@ class PanelInfo : Grid
 	KScintilla _sci;
 
 	public PanelInfo() {
+		//this.UiaSetName("Info panel"); //no UIA element for Panel. Use this in the future if this panel will be : UserControl.
+
 		_sci = new KScintilla { ZInitReadOnlyAlways = true, ZInitTagsStyle = KScintilla.ZTagsStyle.AutoAlways, Visibility = Visibility.Hidden, Name = "Info_mouse" };
 		_sci.ZHandleCreated += _sci_ZHandleCreated;
 		this.Children.Add(_sci);

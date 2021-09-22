@@ -1,10 +1,10 @@
 ---
-uid: Derobotizer
+uid: Autepad
 ---
 
-# Derobotize Me C#
+# Autepad C#
 
-Derobotize Me C# is an integrated scripting environment (ISE) for creating and executing automation scripts using its automation library and C# programming language.
+Autepad C# is an integrated scripting environment (ISE) for creating and executing automation scripts using its automation library and C# programming language.
 
 ![window](../images/window.png "Editor window")
 

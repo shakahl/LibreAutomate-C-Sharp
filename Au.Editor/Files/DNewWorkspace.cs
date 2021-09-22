@@ -16,7 +16,6 @@ partial class FilesModel
 			Title = "New Workspace";
 
 			var b = new wpfBuilder(this).WinSize(600).Columns(-3, 0, -1);
-			b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
 			b.R.Add<Label>("Parent folder").Skip().Add<Label>("Name");
 			b.R.Add(out TextBox tLocation, _location).Validation(_Validate)
 				.Add<Label>("\\")

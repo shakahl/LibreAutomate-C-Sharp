@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Au.More
 {
 	/// <summary>
@@ -6,7 +8,7 @@ namespace Au.More
 	public static class StringUtil
 	{
 		/// <summary>
-		/// Parses a function parameter that can optionally have a "***name " prefix, like "***id 100".
+		/// Parses a function parameter that can optionally have a "***name " prefix, like "***value xyz".
 		/// Returns: 0 - s does not start with "***"; i+1 - s starts with "***names[i] "; -1 - s is invalid.
 		/// </summary>
 		/// <param name="s">Parameter. If starts with "***" and is valid, receives the 'value' part; else unchanged. Can be null.</param>
@@ -236,5 +238,29 @@ namespace Au.More
 			}
 			return n;
 		}
+
+		/// <summary>
+		/// Converts JSON element to multiline indented JSON string.
+		/// </summary>
+		public static string JsonMultiline(JsonElement json) {
+			var so = s_jsOptions.Value;
+			return JsonSerializer.Serialize(json, so);
+		}
+
+		/// <summary>
+		/// Converts single-line JSON string to multiline indented JSON string.
+		/// </summary>
+		public static string JsonMultiline(string json) {
+			var so = s_jsOptions.Value;
+			var v = JsonSerializer.Deserialize<JsonElement>(json, so);
+			return JsonSerializer.Serialize(v, so);
+		}
+
+		static readonly Lazy<JsonSerializerOptions> s_jsOptions = new(() => new() {
+			WriteIndented = true
+			//Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+		});
+
+		internal static JsonSerializerOptions JsonOptions => s_jsOptions.Value;
 	}
 }

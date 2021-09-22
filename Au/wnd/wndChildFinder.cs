@@ -21,7 +21,7 @@ namespace Au
 	/// </example>
 	public class wndChildFinder
 	{
-		enum _NameIs { name, id, text, elmName, wfName }
+		enum _NameIs : byte { name, text, elmName, wfName }
 
 		readonly wildex _name;
 		readonly wildex _className;
@@ -29,8 +29,8 @@ namespace Au
 		WinformsControlNames _wfControls;
 		readonly int _skipCount;
 		readonly WCFlags _flags;
+		readonly int? _id;
 		readonly _NameIs _nameIs;
-		readonly int _id;
 
 		/// <summary>
 		/// See <see cref="wnd.Child"/>.
@@ -39,24 +39,24 @@ namespace Au
 		public wndChildFinder(
 			[ParamString(PSFormat.wildex)] string name = null,
 			[ParamString(PSFormat.wildex)] string cn = null,
-			WCFlags flags = 0, Func<wnd, bool> also = null, int skip = 0
+			WCFlags flags = 0, int? id = null, Func<wnd, bool> also = null, int skip = 0
 			) {
 			if (cn != null) {
 				if (cn.Length == 0) throw new ArgumentException("Class name cannot be \"\". Use null.");
 				_className = cn;
 			}
 			if (name != null) {
-				switch (StringUtil.ParseParam3Stars(ref name, "id", "text", "elmName", "wfName"/*, "label"*/)) {
-				case -1: throw new ArgumentException("Invalid name prefix. Can be: \"***id \", \"***text \", \"***elmName \", \"***wfName \"."); //, \"***label \"
-				case 1: _nameIs = _NameIs.id; _id = name.ToInt(); break;
-				case 2: _nameIs = _NameIs.text; break;
-				case 3: _nameIs = _NameIs.elmName; break;
-				case 4: _nameIs = _NameIs.wfName; break;
-					//case 5: _nameIs = _NameIs.label; break;
+				switch (StringUtil.ParseParam3Stars(ref name, "text", "elmName", "wfName"/*, "label"*/)) {
+				case -1: throw new ArgumentException("Invalid name prefix. Can be: \"***text \", \"***elmName \", \"***wfName \"."); //, \"***label \"
+				case 1: _nameIs = _NameIs.text; break;
+				case 2: _nameIs = _NameIs.elmName; break;
+				case 3: _nameIs = _NameIs.wfName; break;
+					//case 4: _nameIs = _NameIs.label; break;
 				}
-				if (_nameIs != _NameIs.id) _name = name;
+				_name = name;
 			}
 			_flags = flags;
+			_id = id;
 			_also = also;
 			_skipCount = skip;
 		}
@@ -180,8 +180,8 @@ namespace Au
 						}
 					}
 
-					if (_nameIs == _NameIs.id) {
-						if (w.ControlId != _id) continue;
+					if (_id != null) {
+						if (w.ControlId != _id.Value) continue;
 					}
 
 					if (_className != null) {
@@ -194,9 +194,6 @@ namespace Au
 						case _NameIs.text:
 							s = w.ControlText;
 							break;
-						//case _NameIs.label:
-						//	s = w.NameLabel;
-						//	break;
 						case _NameIs.elmName:
 							s = w.NameElm;
 							break;
@@ -215,8 +212,10 @@ namespace Au
 							}
 							s = _wfControls.GetControlName(w);
 							break;
+						//case _NameIs.label:
+						//	s = w.NameLabel;
+						//	break;
 						default:
-							Debug.Assert(_nameIs == _NameIs.name);
 							s = w.Name;
 							break;
 						}

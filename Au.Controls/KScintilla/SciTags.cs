@@ -665,7 +665,7 @@ namespace Au.Controls
 
 			switch (lang) {
 			case LexLanguage.SCLEX_CPP:
-				_c.zSetLexerCpp(noClear: true);
+				_c.zSetLexerCpp(noClear: true, codeBackColor: 0xE0E0E0);
 				break;
 			}
 		}
@@ -676,14 +676,21 @@ namespace Au.Controls
 		/// </summary>
 		internal void OnLinkClick_(int pos, bool ctrl) {
 			if (keys.gui.isAlt) return;
+			if (!GetLinkFromPos(pos, out var tag, out var attr)) return;
+			//process it async, because bad things happen if now we remove focus or change control text etc
+			_c.Dispatcher.InvokeAsync(() => _OnLinkClick(tag, attr));
+		}
+
+		public bool GetLinkFromPos(int pos, out string tag, out string attr) {
+			tag = attr = null;
 
 			int iTag, iText, k;
-			//to find beginning of link text (after <tag>), search for STYLE_HIDDEN before
+			//to find the start of link text (after <tag>), search for STYLE_HIDDEN before
 			for (iText = pos; iText > 0; iText--) if (_c.zGetStyleAt(iText - 1) == STYLE_HIDDEN) break;
-			if (iText == 0) return;
-			//to find beginning of <tag>, search for some other style before
+			if (iText == 0) return false;
+			//to find the start of <tag>, search for some other style before
 			for (iTag = iText - 1; iTag > 0; iTag--) if (_c.zGetStyleAt(iTag - 1) != STYLE_HIDDEN) break;
-			//to find end of link text, search for a non-hotspot style after
+			//to find the end of link text, search for a non-hotspot style after
 			for (pos++; /*SCI_GETSTYLEAT returns 0 if index invalid, it is documented*/; pos++) {
 				k = _c.zGetStyleAt(pos);
 				if (k < STYLE_FIRST_EX || !_c.zStyleHotspot(k)) break;
@@ -696,15 +703,14 @@ namespace Au.Controls
 			if (s == " >>") {
 				int line = _c.Call(SCI_LINEFROMPOSITION, iTag);
 				_c.Call(SCI_TOGGLEFOLD, line);
-				return;
+				return false;
 			}
 			//get tag, attribute and text
-			if (!s.RxMatch(@"(?s)^<(\+?\w+)(?: ""([^""]*)""| ([^>]*))?>(.+)", out var m)) return;
-			string tag = m[1].Value, attr = m[2].Value ?? m[3].Value ?? m[4].Value;
+			if (!s.RxMatch(@"(?s)^<(\+?\w+)(?: ""([^""]*)""| ([^>]*))?>(.+)", out var m)) return false;
+			tag = m[1].Value; attr = m[2].Value ?? m[3].Value ?? m[4].Value;
 			//print.it($"'{tag}'  '{attr}'  '{m[4].Value}'");
 
-			//process it async, because bad things happen if now we remove focus or change control text etc
-			_c.Dispatcher.InvokeAsync(() => _OnLinkClick(tag, attr));
+			return true;
 		}
 
 		//note: attr can be ""

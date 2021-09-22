@@ -1,3 +1,5 @@
+//FUTURE: ChildFromXY. Like wnd.ChildFromXY. Use IAccessible.accHitTest.
+
 namespace Au
 {
 	public unsafe partial class elm
@@ -338,7 +340,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
-		/// Fails if the UI element does not have a default action. Then you can use <see cref="ExtAu.MouseClick(elm, Coord, Coord, MButton)"/>, or try <see cref="VirtualClick"/>, <see cref="Select"/>, <see cref="Focus"/> and keyboard functions.
+		/// Fails if the UI element does not have a default action. Then you can use <see cref="MouseClick"/>, or try <see cref="VirtualClick"/>, <see cref="Select"/>, <see cref="Focus"/> and keyboard functions.
 		/// The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="JavaInvoke"/> or one of the above functions (MouseClick etc).
 		/// Uses <msdn>IAccessible.accDoDefaultAction</msdn>.
 		/// </remarks>
@@ -357,48 +359,69 @@ namespace Au
 		//}
 
 		/// <summary>
-		/// Posts mouse-click messages to the container window, using coordinates of this element.
+		/// Moves the cursor (mouse pointer) to this UI element.
+		/// Calls <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.
 		/// </summary>
+		/// <param name="x">X coordinate in the bounding rectangle of this UI element. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="y">Y coordinate in the bounding rectangle of this UI element. Default - center.</param>
+		/// <exception cref="AuException">Failed to get UI element rectangle (<see cref="elm.GetRect(out RECT, wnd)"/>) or container window (<see cref="elm.WndContainer"/>).</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.</exception>
+		public void MouseMove(Coord x = default, Coord y = default) => _ElmMouseAction(false, x, y, default);
+
+		/// <summary>
+		/// Clicks this UI element.
+		/// Calls <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.
+		/// </summary>
+		/// <param name="x">X coordinate in the bounding rectangle of this UI element. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="y">Y coordinate in the bounding rectangle of this UI element. Default - center.</param>
+		/// <param name="button">Which button and how to use it.</param>
+		/// <exception cref="AuException">Failed to get UI element rectangle (<see cref="elm.GetRect(out RECT, wnd)"/>) or container window (<see cref="elm.WndContainer"/>).</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.</exception>
+		public MRelease MouseClick(Coord x = default, Coord y = default, MButton button = MButton.Left) {
+			_ElmMouseAction(true, x, y, button);
+			return button;
+		}
+
+		void _ElmMouseAction(bool click, Coord x, Coord y, MButton button) {
+			var w = WndContainer; //info: not necessary, but with window the mouse functions are more reliable, eg will not click another window if it is over our window
+
+			//never mind: if w.Is0 and the action is 'click', get UI element from point and fail if it is not this. But need to compare UI element properties. Rare.
+
+			if (!(w.Is0 ? GetRect(out RECT r) : GetRect(out r, w))) throw new AuException(0, "*get rectangle");
+			var p = Coord.NormalizeInRect(x, y, r, centerIfEmpty: true);
+			if (w.Is0) {
+				if (button == 0) mouse.move(p);
+				else mouse.clickEx(button, p);
+			} else {
+				if (button == 0) mouse.move(w, p.x, p.y);
+				else mouse.clickEx(button, w, p.x, p.y);
+			}
+		}
+
+		/// <summary>
+		/// Posts mouse-click messages to the container window, using coordinates in this UI element.
+		/// </summary>
+		/// <param name="x">X coordinate in the bounding rectangle of this UI element. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="y">Y coordinate in the bounding rectangle of this UI element. Default - center.</param>
 		/// <param name="button">Can specify the left (default), right or middle button. Also flag for double-click, press or release.</param>
-		/// <exception cref="AuException">Failed to get rectangle, or the element is invisible/offscreen.</exception>
-		/// <exception cref="NotSupportedException">Unsupported button specified.</exception>
+		/// <exception cref="AuException">
+		/// - Failed to get rectangle.
+		/// - The element is invisible/offscreen.
+		/// </exception>
+		/// <exception cref="ArgumentException">Unsupported button specified.</exception>
 		/// <remarks>
 		/// Does not move the mouse.
 		/// Does not wait until the target application finishes processing the message.
 		/// Works not with all elements.
 		/// Try this function when <see cref="Invoke"/> does not work and you don't want to use <c>MouseClick</c>.
 		/// </remarks>
-		public void VirtualClick(MButton button = MButton.Left) {
+		public void VirtualClick(Coord x = default, Coord y = default, MButton button = MButton.Left) {
 			var w = WndContainer;
 			if (!GetRect(out var r, w)) throw new AuException(0, "*get rectangle");
 			if (r.NoArea || State.HasAny(EState.INVISIBLE | EState.OFFSCREEN)) throw new AuException(0, "Invisible or offscreen");
 			//FUTURE: Chrome bug: OFFSCREEN not updated after scrolling.
 
-			MButton mask = MButton.Down | MButton.Up | MButton.DoubleClick, b = button & ~mask, dud = button & mask;
-			if (b == 0) b = MButton.Left;
-			int m = b switch {
-				MButton.Left => Api.WM_LBUTTONDOWN,
-				MButton.Right => Api.WM_RBUTTONDOWN,
-				MButton.Middle => Api.WM_MBUTTONDOWN,
-				_ => throw new ArgumentException("supported buttons: left, right, middle")
-			};
-			if (dud is not (0 or MButton.Down or MButton.Up or MButton.DoubleClick)) throw new ArgumentException();
-
-			nint xy = Math2.MakeLparam(r.CenterX, r.CenterY);
-			nint p = 0; if (keys.isCtrl) p |= Api.MK_CONTROL; if (keys.isShift) p |= Api.MK_SHIFT;
-			nint p1 = p; if (dud != MButton.Up) p1 |= b switch { MButton.Left => Api.MK_LBUTTON, MButton.Right => Api.MK_RBUTTON, _ => Api.MK_MBUTTON };
-			if (dud != MButton.Up) w.Post(m, p1, xy);
-			if (dud != MButton.Down) {
-				w.Post(Api.WM_MOUSEMOVE, p1, xy);
-				w.Post(m + 1, p, xy);
-			}
-			if (dud == MButton.DoubleClick) {
-				w.Post(m + 2, p1, xy);
-				w.Post(m + 1, p, xy);
-			}
-			//_MinimalSleep(); //don't need. Invoke() does not wait too.
-
-			//never mind: support nonclient (WM_NCRBUTTONDOWN etc)
+			mouse.VirtualClick_(w, r, x, y, button);
 		}
 
 		/// <summary>
@@ -820,13 +843,13 @@ namespace Au
 		/// A string like <c>"next3"</c> or <c>"next,3"</c> is the same as <c>"next next next"</c>. Except for <c>"child"</c>.
 		/// Use string like <c>"#1000"</c> to specify a custom <i>navDir</i> value to pass to <msdn>IAccessible.accNavigate</msdn>. Can be any standard or custom value supported by the UI element.
 		/// 
-		/// For <c>"next"</c>, <c>"previous"</c>, <c>"firstchild"</c>, <c>"lastchild"</c> and <c>"#N"</c> is used <msdn>IAccessible.accNavigate</msdn>. Not all UI elements support it. Some UI elements skip invisible siblings. Instead you can use <c>"parent childN"</c> or <c>"childN"</c>.
-		/// For <c>"parent"</c> is used <msdn>IAccessible.get_accParent</msdn>. Few UI elements don't support. Some UI elements return a different parent than in the tree of UI elements.
-		/// For <c>"child"</c> is used API <msdn>AccessibleChildren</msdn>.
+		/// For <c>"next"</c>, <c>"previous"</c>, <c>"firstchild"</c>, <c>"lastchild"</c> and <c>"#N"</c> the function calls <msdn>IAccessible.accNavigate</msdn>. Not all UI elements support it. Some UI elements skip invisible siblings. Instead you can use <c>"parent childN"</c> or <c>"childN"</c>.
+		/// For <c>"parent"</c> the function calls <msdn>IAccessible.get_accParent</msdn>. Few UI elements don't support. Some UI elements return a different parent than in the tree of UI elements.
+		/// For <c>"child"</c> the function calls API <msdn>AccessibleChildren</msdn>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// a = a.Navigate("parent next ch3", true);
+		/// a = a.Navigate("parent next ch3");
 		/// ]]></code>
 		/// </example>
 		public elm Navigate(string navig, double waitS = 0) {
@@ -923,6 +946,26 @@ namespace Au
 			AuException.ThrowIfHresultNot0(hr, "*scroll");
 
 			//tested: Chrome and Firefox don't support UI Automation scrolling (IUIAutomationScrollItemPattern).
+		}
+
+		/// <summary>
+		/// Waits for a user-defined state/condition of this UI element. For example enabled, checked, changed name.
+		/// </summary>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true.</param>
+		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="AuWndException">Failed to get container window (<see cref="WndContainer"/>), or it was closed while waiting.</exception>
+		public bool WaitFor(double secondsTimeout, Func<elm, bool> condition) {
+			var w = WndContainer;
+			var to = new wait.Loop(secondsTimeout);
+			for (; ; ) {
+				w.ThrowIfInvalid();
+				bool ok = condition(this);
+				w.ThrowIfInvalid(); //eg when waiting for button enabled, if window closed while in callback, the DISABLED state may be removed
+				if (ok) return true;
+				if (!to.Sleep()) return false;
+			}
 		}
 	}
 }

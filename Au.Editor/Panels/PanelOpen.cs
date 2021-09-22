@@ -9,6 +9,8 @@ class PanelOpen : DockPanel
 	bool _updatedOnce;
 
 	public PanelOpen() {
+		//this.UiaSetName("Open panel"); //no UIA element for Panel. Use this in the future if this panel will be : UserControl.
+
 		_tv = new KTreeView { Name = "Open_list" };
 		this.Children.Add(_tv);
 	}

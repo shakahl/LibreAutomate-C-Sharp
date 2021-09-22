@@ -250,9 +250,6 @@ namespace Au.More
 		/// If null, uses element's <b>DesiredSize</b> property, max 1024x1024.
 		/// If not null, sets element's <b>Width</b> and <b>Height</b>; the element should not be used in UI.
 		/// </param>
-		/// <remarks>
-		/// The <b>Tag</b> property of the bitmap is array of bitmap pixels; don't replace.
-		/// </remarks>
 		public static unsafe System.Drawing.Bitmap ConvertWpfImageElementToGdipBitmap(FrameworkElement e, int dpi, SIZE? size = null) {
 			bool measured = e.IsMeasureValid;
 			if (size != null) {
@@ -274,13 +271,25 @@ namespace Au.More
 			if (!arranged) e.InvalidateArrange(); //prevent huge memory leak
 			if (!measured) e.InvalidateMeasure();
 			int stride = wid * 4, msize = hei * stride;
-			var m = GC.AllocateUninitializedArray<byte>(msize, pinned: true);
-			fixed (byte* pixels = m) {
+#if true
+			var R = new System.Drawing.Bitmap(wid, hei, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+			var d = R.LockBits(new(0, 0, wid, hei), System.Drawing.Imaging.ImageLockMode.ReadWrite, R.PixelFormat);
+			try { rtb.CopyPixels(new(0, 0, wid, hei), d.Scan0, msize, stride); }
+			finally { R.UnlockBits(d); }
+			R.SetResolution(dpi, dpi);
+			return R;
+			//tested: GC OK. Don't need GC_.AddObjectMemoryPressure. WPF makes enough garbage to trigger GC when need.
+#else //no. See uuimage._Capture.
+			var m = GC.AllocateUninitializedArray<uint>(wid * hei, pinned: true);
+			fixed (uint* pixels = m) {
 				rtb.CopyPixels(new Int32Rect(0, 0, wid, hei), (IntPtr)pixels, msize, stride);
-				var b = new System.Drawing.Bitmap(wid, hei, stride, System.Drawing.Imaging.PixelFormat.Format32bppPArgb, (IntPtr)pixels) { Tag = m }; //only this Bitmap creation method preserves alpha
+				var b = new System.Drawing.Bitmap(wid, hei, stride, System.Drawing.Imaging.PixelFormat.Format32bppPArgb, (IntPtr)pixels) { Tag = m };
+				//only this Bitmap creation method preserves alpha.
+				//	Update: But now with LockBits OK. Maybe pixel format was wrong (without P) when tested previously.
 				b.SetResolution(dpi, dpi);
 				return b;
 			}
+#endif
 		}
 		//[ThreadStatic] static RenderTargetBitmap t_rtb;
 	}

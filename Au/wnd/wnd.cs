@@ -231,17 +231,21 @@
 		/// <summary>
 		/// If <see cref="Is0"/>, throws <see cref="AuWndException"/>.
 		/// </summary>
+		/// <returns>This.</returns>
 		/// <exception cref="AuWndException"></exception>
-		public void ThrowIf0() {
+		public wnd ThrowIf0() {
 			if (Is0) throw new AuWndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
+			return this;
 		}
 
 		/// <summary>
 		/// If <see cref="Is0"/> or !<see cref="IsAlive"/>, throws <see cref="AuWndException"/>.
 		/// </summary>
+		/// <returns>This.</returns>
 		/// <exception cref="AuWndException"></exception>
-		public void ThrowIfInvalid() {
+		public wnd ThrowIfInvalid() {
 			if (Is0 || !Api.IsWindow(this)) throw new AuWndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
+			return this;
 		}
 
 		///// <summary>
@@ -825,7 +829,7 @@
 				if (w != this) return w.Activate_((flags | Internal_.ActivateFlags.NoGetWindow) & ~Internal_.ActivateFlags.NoThrowIfInvalid, waitS);
 			}
 
-			if (waitS != 0d) WaitForCondition(-waitS, w => w.IsActiveOrNoActiveAndThisIsWndRoot_ && !w.IsMinimized && w.IsVisible);
+			if (waitS != 0d) WaitFor(-waitS, w => w.IsActiveOrNoActiveAndThisIsWndRoot_ && !w.IsMinimized && w.IsVisible);
 
 			bool R, noAct = false, isMinimized = false, ofThisThread = IsOfThisThread;
 			bool forScreenCapture = 0 != (flags & Internal_.ActivateFlags.ForScreenCapture);

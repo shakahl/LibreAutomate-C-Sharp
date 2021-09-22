@@ -9,7 +9,7 @@ namespace Au
 	/// Can be used instead of <see cref="wnd.find"/> or <see cref="wnd.findAll"/>.
 	/// These codes are equivalent:
 	/// <code>wnd w = wnd.find(a, b, c, d, e); if(!w.Is0) print.it(w);</code>
-	/// <code>var p = new wnd.wndFinder(a, b, c, d, e); if(p.Exists()) print.it(p.Result);</code>
+	/// <code>var p = new wndFinder(a, b, c, d, e); if(p.Exists()) print.it(p.Result);</code>
 	/// Also can find in a list of windows.
 	/// </remarks>
 	public class wndFinder

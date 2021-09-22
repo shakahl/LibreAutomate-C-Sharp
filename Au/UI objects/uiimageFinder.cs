@@ -1,4 +1,5 @@
-﻿
+﻿//FUTURE: option to allow % of image completely different. Eg button with/without focus rectangle.
+
 //#define WI_DEBUG_PERF
 //#define WI_SIMPLE
 //#define WI_TEST_NO_OPTIMIZATION
@@ -70,7 +71,7 @@ public unsafe class uiimageFinder
 	//ctor parameters
 	readonly List<_Image> _images; //support multiple images
 	readonly IFFlags _flags;
-	readonly uint _colorDiff;
+	readonly uint _diff;
 	readonly Func<uiimage, IFAlso> _also;
 
 	Action_ _action;
@@ -89,9 +90,9 @@ public unsafe class uiimageFinder
 	/// <exception cref="ArgumentException">An argument is/contains a null/invalid value.</exception>
 	/// <exception cref="FileNotFoundException">Image file does not exist.</exception>
 	/// <exception cref="Exception">Exceptions of <see cref="ImageUtil.LoadGdipBitmap"/>.</exception>
-	public uiimageFinder(IFImage image, IFFlags flags = 0, int colorDiff = 0, Func<uiimage, IFAlso> also = null) {
+	public uiimageFinder(IFImage image, IFFlags flags = 0, int diff = 0, Func<uiimage, IFAlso> also = null) {
 		_flags = flags;
-		_colorDiff = (uint)colorDiff; if (_colorDiff > 250) throw new ArgumentOutOfRangeException("colorDiff range: 0 - 250");
+		uint d = (uint)diff; _diff = d switch { <= 30 => d, <= 60 => 30 + (d - 30) * 2, <= 100 => 90 + (d - 60) * 3, _ => throw new ArgumentOutOfRangeException("diff range: 0 - 100") }; //make slightly exponential, 0 - 210
 		_also = also;
 
 		_images = new List<_Image>();
@@ -111,7 +112,6 @@ public unsafe class uiimageFinder
 			case IFImage[] a:
 				foreach (var v in a) _AddImage(v);
 				break;
-			case null: throw new ArgumentNullException();
 			}
 		}
 	}
@@ -210,8 +210,8 @@ public unsafe class uiimageFinder
 			_area.W.ThrowIfInvalid();
 			break;
 		case IFArea.AreaType.Elm:
-			if (_area.A == null) throw new ArgumentNullException(nameof(area));
-			_area.W = _area.A.WndContainer;
+			if (_area.E == null) throw new ArgumentNullException(nameof(area));
+			_area.W = _area.E.WndContainer;
 			goto case IFArea.AreaType.Wnd;
 		case IFArea.AreaType.Bitmap:
 			if (_action != Action_.Find) throw new ArgumentException("wait", "image");
@@ -252,7 +252,7 @@ public unsafe class uiimageFinder
 			failedGetRect = !w.GetClientRect(out r, inScreen);
 			break;
 		case IFArea.AreaType.Elm:
-			failedGetRect = !(inScreen ? _area.A.GetRect(out r) : _area.A.GetRect(out r, w));
+			failedGetRect = !(inScreen ? _area.E.GetRect(out r) : _area.E.GetRect(out r, w));
 			break;
 		case IFArea.AreaType.Bitmap:
 			r = new RECT(0, 0, _area.B.Width, _area.B.Height);
@@ -274,7 +274,14 @@ public unsafe class uiimageFinder
 		//Intermediate results will be relative to r. Then will be added _resultOffset if a limiting rectangle is used.
 
 		if (_area.HasRect) {
-			var rr = _area.R;
+			RECT rr;
+			if (_area.HasCoord) {
+				RECT rc = new(0, 0, r.Width, r.Height);
+				POINT p1 = Coord.NormalizeInRect(_area.cLeft, _area.cTop, rc), p2 = Coord.NormalizeInRect(_area.cRight, _area.cBottom, rc);
+				rr = RECT.FromLTRB(p1.x, p1.y, p2.x, p2.y);
+			} else {
+				rr = _area.R;
+			}
 			_resultOffset.x = rr.left; _resultOffset.y = rr.top;
 			rr.Offset(r.left, r.top);
 			r.Intersect(rr);
@@ -380,7 +387,7 @@ public unsafe class uiimageFinder
 
 			//this is a workaround for compiler not using registers for variables in fast loops (part 1)
 			var f = new _FindData {
-				color = (optim.v0.color & 0xffffff) | (_colorDiff << 24),
+				color = (optim.v0.color & 0xffffff) | (_diff << 24),
 				p = pFirst - 1,
 				pLineLast = pFirst + areaWidthMinusImage
 			};
@@ -563,8 +570,10 @@ public unsafe class uiimageFinder
 		public POSCOLOR v0, v1, v2, v3; //POSCOLOR[] would be slower
 #pragma warning restore 649
 		public int N; //A valid count
+		int _areaWidth;
 
 		public bool Init(_Image image, int areaWidth) {
+			if (areaWidth != _areaWidth) { _areaWidth = areaWidth; N = 0; }
 			if (N != 0) return N > 0;
 
 			int imageWidth = image.width, imageHeight = image.height;
@@ -573,7 +582,7 @@ public unsafe class uiimageFinder
 			int i;
 
 #if WI_TEST_NO_OPTIMIZATION
-				_Add(image, 0, areaWidth);
+			_Add(image, 0, areaWidth);
 #else
 
 			//Find several unique-color pixels for first-pixel search.
@@ -588,7 +597,7 @@ public unsafe class uiimageFinder
 			//CONSIDER:
 			//1. Start from center.
 			//2. Prefer high saturation pixels.
-			//3. If large area, find its its dominant color(s) and don't use them. For speed, compare eg every 11-th.
+			//3. If large area, find its dominant color(s) and don't use them. For speed, compare eg every 11-th.
 			//4. Create a better algorithm. Maybe just shorter. This code is converted from QM2.
 
 			//find first nonbackground pixel (consider top-left pixel is background)

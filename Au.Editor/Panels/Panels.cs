@@ -47,6 +47,7 @@ static class Panels
 		ToolBar _TB(string name, bool isHelp = false) {
 			var c = new ToolBar { Name = name };
 			var tt = new ToolBarTray { IsLocked = true }; //because ToolBar looks bad if parent is not ToolBarTray
+			c.UiaSetName(name);
 			tt.ToolBars.Add(c);
 #if true
 			if (isHelp) {

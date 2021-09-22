@@ -184,10 +184,10 @@ namespace Au.Compiler
 		public List<string> NoWarnings { get; private set; }
 
 		/// <summary>
-		/// Gets or sets default meta option 'noWarnings' value. Initially null.
+		/// Gets or sets default meta option 'noWarnings' value. Initially CS1701,CS1702.
 		/// </summary>
-		public static List<string> DefaultNoWarnings { get; set; } //= new() { "CS1701", "CS1702" };
-		//CS1702: eg Core 3.1 System.Drawing.Common references System.Runtime version of Core 3.0; VS does not show this warning; VS used to add 1701,1702 to default project properties.
+		public static List<string> DefaultNoWarnings { get; set; } = new() { "CS1701", "CS1702" };
+		//CS1701,CS1702: VS used to add 1701,1702 to default project properties. Now no, but it seems it implicitly disables these warnings. So we too.
 
 		/// <summary>
 		/// Meta 'testInternal'.

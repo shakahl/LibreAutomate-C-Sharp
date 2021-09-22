@@ -68,7 +68,7 @@ static class Menus
 			[Command]
 			public static void Select_in_explorer() { App.Model.OpenSelected(4); }
 
-			[Command(separator = true, target = "", keysText = "M-click")]
+			[Command(separator = true, target = "", keys = "Ctrl+F4", keysText = "M-click")]
 			public static void Close() { App.Model.CloseEtc(FilesModel.ECloseCmd.CloseSelectedOrCurrent); }
 
 			[Command(target = "")]
@@ -133,7 +133,7 @@ static class Menus
 			[Command("...")]
 			public static void New_workspace() { FilesModel.NewWorkspaceUI(); }
 
-			[Command(separator = true, keys = "Ctrl+S", image = "*BoxIcons.RegularSave #EABB00")]
+			[Command(separator = true, keys = "Ctrl+S", image = "*BoxIcons.RegularSave #505050")]
 			public static void Save_now() { App.Model?.Save.AllNowIfNeed(); }
 		}
 
@@ -222,13 +222,13 @@ static class Menus
 	public static class Code
 	{
 		[Command("wnd (find window)")]
-		public static void wnd() { new Dwnd().Show(); }
+		public static void wnd() { Dwnd.Dialog(); }
 
 		[Command("elm (find UI element)")]
 		public static void elm() { Delm.Dialog(); }
 
 		[Command("u_iimage (find image)")]
-		public static void uiimage() { new Duiimage().Show(); }
+		public static void uiimage() { Duiimage.Dialog(); }
 
 		[Command("Quick capturing info")]
 		public static void Quick_capture() { QuickCapture.Info(); }
@@ -337,7 +337,7 @@ static class Menus
 		[Command(image = "*PicolIcons.Settings #99BF00")]
 		public static void Options() { DOptions.ZShow(); }
 
-		[Command(image = "*FontAwesome.IconsSolid #EABB00")]
+		[Command(image = "*FontAwesome.IconsSolid #99BF00")]
 		public static void Icons() { DIcons.ZShow(); }
 
 		[Command(separator = true, target = "Output")]

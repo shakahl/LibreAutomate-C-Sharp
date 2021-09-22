@@ -141,18 +141,18 @@ namespace Au.Types
 		//info: if type and value are constants, compiler knows the final value and does not use the << and | operators in the compiled code.
 
 		/// <summary>
-		/// Creates Coord of Normal type.
+		/// Creates <b>Coord</b> of <b>Normal</b> type.
 		/// </summary>
 		//[MethodImpl(MethodImplOptions.NoInlining)] //makes bigger/slower
 		public static implicit operator Coord(int v) => new(CoordType.Normal, v);
 
 		/// <summary>
-		/// Creates Coord of Normal or Reverse type. Reverse if the index is from end, like <c>^1</c>.
+		/// Creates <b>Coord</b> of <b>Normal</b> or <b>Reverse</b> type. Reverse if the index is from end, like <c>^1</c>.
 		/// </summary>
 		public static implicit operator Coord(Index v) => new(v.IsFromEnd ? CoordType.Reverse : CoordType.Normal, v.Value);
 
 		/// <summary>
-		/// Creates Coord of Fraction type.
+		/// Creates <b>Coord</b> of <b>Fraction</b> type.
 		/// </summary>
 		public static implicit operator Coord(float v) => Fraction(v);
 
@@ -169,13 +169,14 @@ namespace Au.Types
 		//tested: compiler does not allow to assign nint.
 
 		/// <summary>
-		/// Creates Coord of Reverse type.
+		/// Creates <b>Coord</b> of <b>Reverse</b> type.
 		/// Value 0 is at the right or bottom, and does not belong to the rectangle. Positive values are towards left or top.
+		/// Instead can be use "from end" index, for example argument <c>Coord.Reverse(1)</c> can be replaced with <c>^1</c>.
 		/// </summary>
 		public static Coord Reverse(int v) => new(CoordType.Reverse, v);
 
 		/// <summary>
-		/// Creates Coord of Fraction type.
+		/// Creates <b>Coord</b> of <b>Fraction</b> type.
 		/// Value 0.0 is the left or top of the rectangle. Value 1.0 is the right or bottom of the rectangle. Values &lt;0.0 and &gt;=1.0 are outside of the rectangle.
 		/// Instead can be used implicit conversion from float, for example argument <c>Coord.Fraction(0.5)</c> can be replaced with <c>0.5f</c>.
 		/// </summary>
@@ -191,14 +192,14 @@ namespace Au.Types
 		public static Coord Center => Fraction(0.5);
 
 		/// <summary>
-		/// Returns <c>Reverse(0)</c>.
+		/// Returns <c>Reverse(0)</c>. Same as <c>^0</c>.
 		/// This point will be outside of the rectangle. See also <see cref="MaxInside"/>.
 		/// </summary>
 		/// <seealso cref="Reverse"/>
 		public static Coord Max => Reverse(0);
 
 		/// <summary>
-		/// Returns <c>Reverse(1)</c>.
+		/// Returns <c>Reverse(1)</c>. Same as <c>^1</c>.
 		/// This point will be inside of the rectangle, at the very right or bottom, assuming the rectangle is not empty.
 		/// </summary>
 		/// <seealso cref="Reverse"/>

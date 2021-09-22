@@ -257,7 +257,7 @@ namespace Au
 		/// </param>
 		/// <param name="encoding">
 		/// Console's text encoding.
-		/// If null (default), uses the default console text encoding (API <msdn>GetOEMCP</msdn>); it is not Unicode. Programs that display Unicode text use <see cref="Encoding.UTF8"/>.
+		/// If null (default), uses <see cref="Console.OutputEncoding"/>, which by default isn't Unicode. Programs that display Unicode text use <see cref="Encoding.UTF8"/> or <see cref="Encoding.Unicode"/>.
 		/// </param>
 		/// <returns>The process exit code. Usually a non-0 value means error.</returns>
 		/// <exception cref="AuException">Failed, for example file not found.</exception>
@@ -322,13 +322,18 @@ namespace Au
 			exe = _NormalizeFile(true, exe, out _, out _);
 			//args = pathname.expand(args); //rejected
 
+			encoding ??= Console.OutputEncoding; //fast. Default is an internal type System.Text.OSEncoding that wraps API GetConsoleOutputCP.
+			var decoder = encoding.GetDecoder(); //ensures we'll not get partial multibyte chars (UTF8 etc) at buffer end/start
+
 			var ps = new ProcessStarter_(exe, args, curDir, rawExe: true);
 
 			Handle_ hProcess = default;
 			var sa = new Api.SECURITY_ATTRIBUTES(null) { bInheritHandle = 1 };
 			if (!Api.CreatePipe(out Handle_ hOutRead, out Handle_ hOutWrite, sa, 0)) throw new AuException(0);
 
-			byte* b = null; char* c = null;
+			byte* b = null; //buffer before decoding
+			char* c = null; //buffer after decoding
+			StringBuilder sb = null; //holds part of line when buffer does not end with newline
 			try {
 				Api.SetHandleInformation(hOutRead, 1, 0); //remove HANDLE_FLAG_INHERIT
 
@@ -342,74 +347,58 @@ namespace Au
 				pi.hThread.Dispose();
 				hProcess = pi.hProcess;
 
-				int offs = 0; bool skipN = false;
-
-				int bSize = 8000;
+				//native console API allows any buffer size when writing, but wrappers usually use small buffer, eg .NET 4-5 KB, msvcrt 5 KB, C++ not tested
+				const int bSize = 8000, cSize = bSize + 10;
 				b = MemoryUtil.Alloc(bSize);
 
-				for (bool ended = false; !ended;) {
-					if (bSize - offs < 1000) { //part of 'prevent getting partial lines' code
-						MemoryUtil.ReAlloc(ref b, bSize *= 2);
-						MemoryUtil.Free(c); c = null;
-					}
-
-					if (Api.ReadFile(hOutRead, b + offs, bSize - offs, out int nr)) {
+				for (bool skipN = false; ;) {
+					if (Api.ReadFile(hOutRead, b, bSize, out int nr)) {
 						if (nr == 0) continue;
-						nr += offs;
 					} else {
 						if (lastError.code != Api.ERROR_BROKEN_PIPE) throw new AuException(0);
 						//process ended
-						if (offs == 0) break;
-						nr = offs;
-						offs = 0;
-						ended = true;
+						if (sb != null && sb.Length > 0) {
+							outAction(sb.ToString());
+						}
+						break;
 					}
 
-					//prevent getting partial lines. They can be created by the console program, or by the above code when buffer too small.
-					int moveFrom = 0;
+					if (c == null) c = MemoryUtil.Alloc<char>(cSize);
+					int nc = decoder.GetChars(b, nr, c, cSize, false);
+
 					if (needLines) {
-						if (skipN) { //if was split between \r and \n, remove \n now
+						var k = new Span<char>(c, nc);
+						if (skipN) {
 							skipN = false;
-							if (b[0] == '\n') Api.memmove(b, b + 1, --nr);
-							if (nr == 0) continue;
+							if (c[0] == '\n' && nc > 0) k = k[1..]; //\r\n split in 2 buffers
 						}
-						int i;
-						for (i = nr; i > 0; i--) { var k = b[i - 1]; if (k == '\n' || k == '\r') break; }
-						if (i == nr) { //ends with \n or \r
-							offs = 0;
-							if (b[--nr] == '\r') skipN = true;
-							else if (nr > 0 && b[nr - 1] == '\r') nr--;
-						} else if (i > 0) { //contains \n or \r
-							moveFrom = i;
-							offs = nr - i;
-							if (b[--i] == '\n' && i > 0 && b[i - 1] == '\r') i--;
-							nr = i;
-						} else if (!ended) {
-							offs = nr;
-							continue;
+						while (k.Length > 0) {
+							int i = k.IndexOfAny('\n', '\r');
+							if (i < 0) {
+								(sb ??= new()).Append(k);
+								break;
+							}
+							string s;
+							if (sb != null && sb.Length > 0) {
+								sb.Append(k[0..i]);
+								s = sb.ToString();
+								sb.Clear();
+							} else {
+								s = k[0..i].ToString();
+							}
+							outAction(s);
+							if (k[i++] == '\r') {
+								if (i == k.Length) skipN = true;
+								else if (k[i] == '\n') i++;
+							}
+							k = k[i..];
 						}
-					}
-
-					if (c == null) c = MemoryUtil.Alloc<char>(bSize);
-					if (encoding == null) {
-						if ((encoding = s_oemEncoding) == null) {
-							Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-							var oemCP = Api.GetOEMCP();
-							try { encoding = Encoding.GetEncoding(oemCP); }
-							catch { encoding = Encoding.GetEncoding(437); }
-							s_oemEncoding = encoding;
+					} else if (nc > 0) {
+						if (outAction != null) {
+							outAction(new(c, 0, nc));
+						} else {
+							outStr.Append(c, nc);
 						}
-					}
-					int nc = encoding.GetChars(b, nr, c, bSize);
-
-					if (moveFrom > 0) Api.memmove(b, b + moveFrom, offs); //part of 'prevent getting partial lines' code
-
-					var s = new string(c, 0, nc);
-					if (outAction != null) {
-						if (!needLines || s.FindAny("\r\n") < 0) outAction(s);
-						else foreach (var k in s.Segments(SegSep.Line)) outAction(s[k.Range]);
-					} else {
-						outStr.Append(s);
 					}
 				}
 
@@ -424,8 +413,6 @@ namespace Au
 				MemoryUtil.Free(c);
 			}
 		}
-
-		static Encoding s_oemEncoding;
 
 		/// <summary>
 		/// Opens parent folder in Explorer and selects the file.

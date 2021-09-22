@@ -9,7 +9,7 @@ using System.Drawing.Imaging;
 unsafe class ColorQuantizer
 {
 	/// <summary>
-	/// Takes screenshot of specified rectangle in screen, quantizes colors to make smaller, compresses, Base64 encodes and returns comment string like <c>" /*image:\r\n...*/"</c>.
+	/// Takes screenshot of specified rectangle in screen, quantizes colors to make smaller, compresses, Base64 encodes and returns comment string like <c>" /*image:...*/"</c>.
 	/// If fails, prints warning and returns null.
 	/// </summary>
 	public static string MakeScreenshotComment(RECT r, DpiOf dpi = default) {
@@ -21,7 +21,9 @@ unsafe class ColorQuantizer
 			var b = uiimage.capture(r);
 			var a = Quantize(b, 16);
 			var z = Convert2.BrotliCompress(a);
-			return " /*image:\r\nWkJN" + Convert.ToBase64String(z) + "*/";
+			return " /*image:"
+				//+ "\r\n" //rejected
+				+ "WkJN" + Convert.ToBase64String(z) + "*/";
 		}
 		catch (Exception e1) { print.warning("MakeScreenshotComment() failed. " + e1.ToStringWithoutStack()); return null; }
 	}

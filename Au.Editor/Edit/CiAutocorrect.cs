@@ -83,7 +83,7 @@ class CiAutocorrect
 		bool isBackspace = false, isOpenBrac = false;
 
 		int pos = doc.zCurrentPos8;
-		if (pos == doc.zLen8 && ch != (char)KKey.Back) { //if pos is at the end of text, add newline
+		if (pos == doc.zLen8 && ch != (char)KKey.Back && !doc.zIsSelection) { //if pos is at the end of text, add newline
 			doc.zInsertText(false, pos, "\r\n");
 		}
 

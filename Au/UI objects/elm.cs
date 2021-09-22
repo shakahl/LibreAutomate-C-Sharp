@@ -189,7 +189,7 @@ namespace Au
 		}
 
 		int _MemoryPressure => _elem == 0 ? c_memoryPressure : c_memoryPressure / 10;
-		const int c_memoryPressure = 1000; //Ideally this should be the average UI element memory size, if counting both processes.
+		const int c_memoryPressure = 1000; //assume this is the average UI element memory size in both processes
 
 		//internal static int DebugMaxMemoryPressure;
 		//static int s_dmp;
@@ -218,7 +218,6 @@ namespace Au
 		///
 		~elm() {
 			Dispose();
-			//TODO: now no GC at process exit. Who releases these poor remote COM objects?
 		}
 
 		/// <summary>

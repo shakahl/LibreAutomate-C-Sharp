@@ -354,7 +354,7 @@ partial class SciCode : KScintilla
 		//	break;
 		case Api.WM_LBUTTONUP:
 			if (Keyboard.Modifiers == ModifierKeys.Control) {
-				Dispatcher.InvokeAsync(() => CiGoTo.GoToSymbolFromPos(onCtrlClick: true));
+				Dispatcher.InvokeAsync(() => CiGoTo.GoToSymbolFromPos());
 			}
 			break;
 		}

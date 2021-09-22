@@ -226,7 +226,10 @@ namespace Au.Compiler
 
 		//public static void CompactCache() => _MR.CompactCache();
 
-		public static bool IsDotnetAssembly(string path) {
+		/// <summary>
+		/// Returns true if the dll file is a .NET assembly (any, not only of the .NET library).
+		/// </summary>
+		public static bool IsNetAssembly(string path) {
 			using var stream = filesystem.loadStream(path);
 			using var pr = new System.Reflection.PortableExecutable.PEReader(stream);
 			return pr.HasMetadata;

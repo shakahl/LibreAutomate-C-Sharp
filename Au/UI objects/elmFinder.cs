@@ -11,7 +11,7 @@
 /// ]]></code>
 /// Find window that contains certain UI element, and get the UI element too.
 /// <code><![CDATA[
-/// var f = new elmFinder("BUTTON", "Apply");
+/// var f = new elmFinder("BUTTON", "Apply"); //or var f = elm.path["BUTTON", "Apply"];
 /// wnd w = wnd.find(cn: "#32770", also: t => f.In(t).Exists()); //or t => t.HasElm(f)
 /// print.it(w);
 /// print.it(f.Result);
@@ -113,7 +113,7 @@ public unsafe class elmFinder
 	/// </param>
 	/// <param name="prop">
 	/// Other UI element properties and search settings.
-	/// Examples: <c>"description=xxx|@href=yyy"</c>, <c>new("description=xxx", "@href=yyy")</c>.
+	/// Examples: <c>"value=xxx|@href=yyy"</c>, <c>new("value=xxx", "@href=yyy")</c>.
 	/// More info in Remarks.
 	/// </param>
 	/// <param name="flags"></param>
@@ -123,7 +123,7 @@ public unsafe class elmFinder
 	/// </param>
 	/// <param name="skip">
 	/// 0-based index of matching UI element to use. Will skip this number of matching elements.
-	/// Value -1 means "any", and can be useful with intermediate element finders. Then the finder will search for next element in all matching intermediate elements. It is slower and not so often useful, therefore the default value of this parameter is 0, not -1.
+	/// Value -1 means "any", and can be useful when this finder is intermediate in a path or when it has <i>navig</i>. If intermediate, will search for next element in all matching intermediate elements. If has <i>navig</i>, will retry with other matching elements if fails to navigate in the first found. It is slower and not so often useful, therefore the default value of this parameter is 0, not -1.
 	/// </param>
 	/// <param name="navig">If not null, after finding the specified UI element will call <see cref="elm.Navigate"/> with this string and use its result instead of the found element.</param>
 	/// <exception cref="ArgumentException"><i>flags</i> contains <b>UIA</b> or <b>ClientArea</b> when appending (only the first finder can have these flags).</exception>
@@ -156,14 +156,14 @@ public unsafe class elmFinder
 	/// 
 	/// ##### About the <i>prop</i> parameter
 	/// 
-	/// Format: one or more <c>"name=value"</c> strings, like <c>new("description=xxx", "@href=yyy")</c> or <c>"description=xxx|@href=yyy"</c>. Names must match case. Values of most string properties are wildcard expressions.
+	/// Format: one or more <c>"name=value"</c> strings, like <c>new("key=xxx", "@href=yyy")</c> or <c>"key=xxx|@href=yyy"</c>. Names must match case. Values of most string properties are wildcard expressions.
 	/// 
 	/// - <c>"class"</c> - search only in child controls that have this class name (see <see cref="wnd.ClassName"/>).\
 	///   Cannot be used when searching in a UI element.
 	/// - <c>"id"</c> - search only in child controls that have this id (see <see cref="wnd.ControlId"/>). If the value is not a number - Windows Forms control name (see <see cref="wnd.NameWinforms"/>); case-sensitive, not wildcard.\
 	///   Cannot be used when searching in a UI element.
 	/// - <c>"value"</c> - <see cref="elm.Value"/>.
-	/// - <c>"description"</c> - <see cref="elm.Description"/>.
+	/// - <c>desc</c> - <see cref="elm.Description"/>.
 	/// - <c>"state"</c> - <see cref="elm.State"/>. List of states the UI element must have and/or not have.\
 	///   Example: <c>"state=CHECKED, FOCUSABLE, !DISABLED"</c>.\
 	///   Example: <c>"state=0x100010, !0x1"</c>.\
@@ -201,7 +201,9 @@ public unsafe class elmFinder
 			return this;
 		}
 	}
-	//TODO: test many cases, maybe make skip = -1.
+	//rejected: default skip = -1. Rarely need.
+	//	In some cases could find an unexpected element. Better to not find than to find (and click etc) wrong element.
+	//	Instead the tool gives info to try -1 when not found or found wrong element.
 
 	/// <summary>
 	/// Gets or sets next finder in path (immediately after this finder).
@@ -352,10 +354,10 @@ public unsafe class elmFinder
 
 		var ap = new Cpp.Cpp_AccParams(_role, _name, _prop, flags, Math.Max(0, _skip), _resultProp);
 
-		//if used path and skip<0, need to search in all possible paths. For it we use the 'also' callback.
+		//if used skip<0 and path or navig, need to search in all possible paths. For it we use the 'also' callback.
 		//FUTURE: optimize. Add part of code to the C++ dll. Now can walk same tree branches multiple times.
 		Cpp.AccCallbackT also = null;
-		bool allPaths = _next != null && _skip < 0;
+		bool allPaths = _skip < 0 && (_next != null || _navig != null);
 		if (allPaths) {
 			also = _also2 ??= ca => {
 				var e = new elm(ca);
@@ -439,8 +441,10 @@ public unsafe class elmFinder
 	bool _AlsoNavigNext(ref elm e, bool noAlso = false) {
 		if (!noAlso & _also != null && !_also(e)) return false;
 		if (_navig != null) {
-			e = e.Navigate(_navig);
-			if (e == null) return false;
+			var e2 = e.Navigate(_navig);
+			if (e2 == null) return false;
+			if (t_navigResult.need) t_navigResult = (true, e, e2);
+			e = e2;
 		}
 		if (_next != null) {
 			if (e.SimpleElementId != 0) return false;
@@ -509,6 +513,8 @@ public unsafe class elmFinder
 			b.Append(value);
 		}
 	}
+
+	[ThreadStatic] internal static (bool need, elm before, elm after) t_navigResult;
 
 	//rejected. Rarely used. Maybe in the future, but different API, maybe ...In(controls).Find(), and move the code into Find_.
 	///// <summary>

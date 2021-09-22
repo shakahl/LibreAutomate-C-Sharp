@@ -446,7 +446,7 @@ namespace Au
 			_ThrowIfNotWindow();
 			if (_IsNested) throw new InvalidOperationException("Missing End() for a StartX() panel");
 			End();
-			_window.Owner = owner;
+			_window.Owner = owner; //SHOULDDO: try to support AnyWnd. Why WPF here supports only Window? Why if we need Popup or HwndSource?
 			return true == _window.ShowDialog();
 		}
 
@@ -989,17 +989,20 @@ namespace Au
 		/// <param name="ok">Text of OK button. If null, does not add the button.</param>
 		/// <param name="cancel">Text of Cancel button. If null, does not add the button.</param>
 		/// <param name="apply">Text of Apply button. If null, does not add the button.</param>
+		/// <param name="noStackPanel">Add buttons without <b>StackPanel</b>.</param>
 		/// <remarks>
 		/// Sets properties of OK/Cancel buttons so that click and Enter/Esc close the window; then <see cref="ShowDialog"/> returns true on OK, false on Cancel.
 		/// See also event <see cref="OkApply"/>.
 		/// 
-		/// By default adds a right-bottom aligned <see cref="StackPanel"/> and adds buttons in it. If 1 button, adds single button without panel.
-		/// Also does not add panel if already in a stack panel; it can be used to add more buttons. See <see cref="StartOkCancel"/>.
+		/// By default adds a right-bottom aligned <see cref="StackPanel"/> and adds buttons in it. Does not add if:
+		/// - <i>noPanel</i> true.
+		/// - Single button.
+		/// - Already in a stack panel; it can be used to add more buttons. See <see cref="StartOkCancel"/>.
 		/// </remarks>
-		public wpfBuilder AddOkCancel(out Button bOK, out Button bCancel, out Button bApply, string ok = "OK", string cancel = "Cancel", string apply = null) {
+		public wpfBuilder AddOkCancel(out Button bOK, out Button bCancel, out Button bApply, string ok = "OK", string cancel = "Cancel", string apply = null, bool noStackPanel = false) {
 			int n = 0; if (ok != null) n++; if (cancel != null) n++;
 			if (n == 0) throw new ArgumentNullException();
-			bool stack = n > 1 && !(_p is _StackPanel);
+			bool stack = !noStackPanel && n > 1 && !(_p is _StackPanel);
 			if (stack) StartOkCancel();
 			if (ok != null) AddButton(out bOK, ok, null, WBBFlags.OK); else bOK = null;
 			if (cancel != null) AddButton(out bCancel, cancel, null, WBBFlags.Cancel); else bCancel = null;
@@ -1008,21 +1011,11 @@ namespace Au
 			return this;
 		}
 
-		/// <summary>
-		/// Adds OK and/or Cancel and/or Apply buttons.
-		/// </summary>
-		/// <param name="ok">Text of OK button. If null, does not add the button.</param>
-		/// <param name="cancel">Text of Cancel button. If null, does not add the button.</param>
-		/// <param name="apply">Text of Apply button. If null, does not add the button.</param>
-		/// <remarks>
-		/// Sets properties of OK/Cancel buttons so that click and Enter/Esc close the window; then <see cref="ShowDialog"/> returns true on OK, false on Cancel.
-		/// See also event <see cref="OkApply"/>.
-		/// 
-		/// By default adds a right-bottom aligned <see cref="StackPanel"/> and adds buttons in it. If 1 button, adds single button without panel.
-		/// Also does not add panel if already in a stack panel; it can be used to add more buttons. See <see cref="StartOkCancel"/>.
-		/// </remarks>
-		public wpfBuilder AddOkCancel(string ok = "OK", string cancel = "Cancel", string apply = null)
-			=> AddOkCancel(out _, out _, out _, ok, cancel, apply);
+		/// <inheritdoc cref="AddOkCancel(out Button, out Button, out Button, string, string, string, bool)"/>
+		public wpfBuilder AddOkCancel(string ok = "OK", string cancel = "Cancel", string apply = null, bool noStackPanel = false)
+			=> AddOkCancel(out _, out _, out _, ok, cancel, apply, noStackPanel);
+		//TODO: bool noStackPanel = false  ->  bool? stackPanel = null
+		//TODO: vcenter checkboxes etc
 
 		/// <summary>
 		/// Adds <see cref="Separator"/> control.
@@ -1416,6 +1409,14 @@ namespace Au
 		//FUTURE: hyperlinks in tooltip. Now does not work because tooltip closes when mouse leaves the element.
 
 		/// <summary>
+		/// Sets UI Automation name of the last added element.
+		/// </summary>
+		public wpfBuilder UiaName(string name) {
+			Last.UiaSetName(name);
+			return this;
+		}
+
+		/// <summary>
 		/// Sets background and/or foreground brush (color, gradient, etc) of the last added element.
 		/// </summary>
 		/// <param name="background">Background brush. See <see cref="Brushes"/>, <see cref="SystemColors"/>. Descendants usually inherit this property.</param>
@@ -1773,7 +1774,7 @@ namespace Au
 		/// </remarks>
 		public wpfBuilder Items(params object[] items) => _Items(items, null);
 
-		wpfBuilder _Items(object[] a, System.Collections.IEnumerable e) {
+		wpfBuilder _Items(object[] a, IEnumerable e) {
 			var ic = Last as ItemsControl ?? throw new NotSupportedException("Items(): Last added must be ItemsControl, for example ComboBox");
 			if (a != null) {
 				ic.Items.Clear();
@@ -1794,7 +1795,7 @@ namespace Au
 		/// - The last added element is not <b>ItemsControl</b>.
 		/// - <i>lazy</i> is true and the last added element is not <b>ComboBox</b>.
 		/// </exception>
-		public wpfBuilder Items(System.Collections.IEnumerable items, bool lazy = false) => lazy ? Items(true, o => o.ItemsSource = items) : _Items(null, items);
+		public wpfBuilder Items(IEnumerable items, bool lazy = false) => lazy ? Items(true, o => o.ItemsSource = items) : _Items(null, items);
 
 		/// <summary>
 		/// Sets callback function that should add items to the last added <see cref="ComboBox"/> later.

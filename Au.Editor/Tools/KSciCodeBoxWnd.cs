@@ -9,12 +9,24 @@ namespace Au.Controls
 	class KSciCodeBoxWnd : KSciCodeBox
 	{
 		/// <summary>
-		/// Returns code to find window w and optionally control con in it. Without end newline.
+		/// Returns code to find window w and optionally control con in it. Without newline at the end.
 		/// If w/con is same as previous and code of this control is modified and valid, gets code from this code control, from the start to ZReadonlyStart.
 		/// Else creates code "var w = wnd.find(...);". If w is invalid, creates code "wnd w = default;".
 		/// The returned wndVar is final wnd variable name (of window or control).
 		/// </summary>
-		public (string code, string wndVar) ZGetWndFindCode(wnd w, wnd con = default) {
+		public (string code, string wndVar) ZGetWndFindCode(bool forTest, wnd w, wnd con = default) {
+			if (forTest) { //remove 'wait' and 'activate' from wnd.find and wnd.Child. If no 'wait', insert 0 to throw notfoundexception.
+				var k = ZGetWndFindCode(false, w, con);
+				const string c_rx1 = @" *\(\K(?i) *([+-]* *(\d+[dfuL]?|\d*\.?\d+(?:e[+-]?\d+)?[df]?|\d+UL) *,|(?=[""@$]))";
+				k.code = k.code.RxReplace(@"^ *\w+ +\w+ *= *wnd *\. *find" + c_rx1, "0,", 1)
+					.RxReplace(@"(?m)\)\.Activate\(\d*\);$", ");", 1);
+				//same for child
+				int i = k.code.IndexOf('\n') + 1;
+				if (i > 0) k.code = k.code.RxReplace(@" *\w+ +\w+ *= *\w+ *\. *Child" + c_rx1, "0,", 1, RXFlags.ANCHORED, range: i..);
+				//print.it(k.code);
+				return k;
+			}
+
 			string R = null, sCode = null, wndVar = "w", conVar = "c";
 
 			if (w != _wnd) _userModified = false; else if (!_userModified) _userModified = 0 != Call(Sci.SCI_GETMODIFY);
@@ -23,7 +35,7 @@ namespace Au.Controls
 					sCode = zRangeText(false, 0, _ReadonlyStartUtf8);
 					if (sCode.RxMatch(@"(?s)^(?:var|wnd) (\w+)", out var mw)) { //window
 						bool isConCode = sCode.RxMatch(@"(?s)\R(?:var|wnd) (\w+)", out var mc, 0, mw.End..); //control
-						//print.it(isConCode);
+																											 //print.it(isConCode);
 						if (con == _con && !con.Is0 == isConCode) {
 							//print.it(isConCode ? "same control" : "no control");
 							return (sCode, (isConCode ? mc : mw)[1].Value);

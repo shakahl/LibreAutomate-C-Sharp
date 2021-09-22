@@ -10,6 +10,8 @@ class PanelOutput : DockPanel
 	public KScintilla ZOutput => _c;
 
 	public PanelOutput() {
+		//this.UiaSetName("Output panel"); //no UIA element for Panel. Use this in the future if this panel will be : UserControl.
+
 		_c = new _SciOutput(this) { Name = "Output_text" };
 		this.Children.Add(_c);
 		_history = new Queue<PrintServerMessage>();
@@ -184,7 +186,7 @@ class PanelOutput : DockPanel
 							.Append("line ").Append(s, i1, len1).Append("<> in <z 0xFAFAD2>").Append(f.Name).Append("<>");
 
 							isMain
-								= s.Eq(k.start, "   at <Program>$.<Main>$(String[] args) in ") //top-level statements
+								= s.Eq(k.start, "   at Program.<Main>$(String[] args) in ") //top-level statements
 								|| s.Eq(k.start, "   at Program..ctor(String[] args) in ")
 								|| s.Eq(k.start, "   at Script..ctor(String[] args) in ");
 							if (!isMain || !f.IsScript) b.Append(", <\a>").Append(s, k.start + 6, g.Start - k.start - 10).Append("</\a>");

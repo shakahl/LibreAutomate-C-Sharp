@@ -39,9 +39,9 @@ partial class MainWindow : Window
 		//timerm.after(100, _ => App.Model.Properties());
 		//timerm.after(100, _ => Menus.File.Workspace.New_workspace());
 		//timerm.after(100, _ => DIcons.ZShow());
-		//timerm.after(500, _ => { new Au.Tools.Dwnd(wnd.find(null, "Shell_TrayWnd")).Show(); });
-		timerm.after(500, _ => { new Au.Tools.Delm(new POINT(806, 1580)).Show(); });
-		//timerm.after(500, _ => { new Au.Tools.Duiimage().Show(); });
+		//timerm.after(600, _ => Au.Tools.Dwnd.Dialog(wnd.find(null, "Shell_TrayWnd")));
+		//timerm.after(500, _ => Au.Tools.Delm.Dialog(new POINT(806, 1580)));
+		//timerm.after(400, _ => Au.Tools.Duiimage.Dialog());
 
 #if DEBUG
 		App.Timer1s += () => {

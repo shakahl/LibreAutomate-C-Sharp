@@ -151,6 +151,13 @@ namespace Au.Types
 		}
 
 		/// <summary>
+		/// Sets UI Automation name.
+		/// </summary>
+		public static void UiaSetName(this DependencyObject t, string name) {
+			System.Windows.Automation.AutomationProperties.SetName(t, name);
+		}
+
+		/// <summary>
 		/// Returns true if <see cref="ToggleButton.IsChecked"/> == true.
 		/// </summary>
 		/// <param name="t"></param>

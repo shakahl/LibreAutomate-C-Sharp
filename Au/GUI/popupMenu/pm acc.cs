@@ -3,7 +3,7 @@ using IAccessible = Au.Types.Api.IAccessible;
 using VarInt = Au.Types.Api.VarInt;
 using NAVDIR = Au.Types.Api.NAVDIR;
 
-namespace Au
+namespace Au.Types
 {
 	[ComVisible(true)]
 	partial class MTBase
@@ -28,7 +28,10 @@ namespace Au
 		}
 		IAccessible _stdAO;
 	}
+}
 
+namespace Au
+{
 	[ComVisible(true)]
 	partial class popupMenu : IAccessible
 	{

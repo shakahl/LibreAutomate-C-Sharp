@@ -23,21 +23,25 @@ static class InsertCode
 	/// <param name="s">Text without "\r\n" at the end.</param>
 	/// <param name="goToPercent">If contains '%', removes it and moves caret there.</param>
 	/// <param name="fold">Collapse folding points in inserted code.</param>
-	public static void Statements(string s, bool goToPercent = false, bool fold = false) {
-		if (Environment.CurrentManagedThreadId != 1) App.Wmain.Dispatcher.InvokeAsync(() => _Action(s, goToPercent, fold)); else _Action(s, goToPercent, fold);
-		static void _Action(string s, bool goToPercent, bool fold) {
+	/// <param name="activate">Activate editor window.</param>
+	public static void Statements(string s, bool goToPercent = false, bool fold = false, bool activate = false) {
+		if (Environment.CurrentManagedThreadId == 1) _Action(s, goToPercent, fold, activate);
+		else App.Wmain.Dispatcher.InvokeAsync(() => _Action(s, goToPercent, fold, activate));
+
+		static void _Action(string s, bool goToPercent, bool fold, bool activate) {
 			if (!App.Hwnd.IsVisible) {
 				//probably the window exists (already was visible), else there is no code that could call this func
 				Debug.Assert(!App.Hwnd.Is0); if (App.Hwnd.Is0) return;
 				App.TrayIcon.ShowWindow_();
-				timerm.after(500, _ => _Action(s, goToPercent, fold)); //works without this, but safer with this
+				timerm.after(500, _ => _Action(s, goToPercent, fold, activate)); //works without this, but safer with this
 				return;
 			}
 			var d = Panels.Editor.ZActiveDoc;
 			if (d == null || d.zIsReadonly) {
 				print.it(s);
 			} else {
-				d.Focus();
+				if (activate) d.Hwnd.Window.ActivateL();
+				if(d.Hwnd.Window.IsActive) d.Focus();
 				int start = d.zLineStartFromPos(false, d.zCurrentPos8);
 				int indent = d.zLineIndentationFromPos(false, start);
 				if (indent == 0) {
@@ -119,6 +123,7 @@ static class InsertCode
 			tb.CaretIndex = tb.SelectionStart + tb.SelectionLength - Math.Max(i, 0);
 		} else {
 			Debug_.Print(c);
+			if (!c.Hwnd().Window.ActivateL()) return;
 			Task.Run(() => {
 				var k = new keys(null);
 				k.AddText(s);

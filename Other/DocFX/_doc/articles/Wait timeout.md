@@ -25,3 +25,5 @@ print.it(w);
 if(!keys.waitForHotkey(-5, "Ctrl+Shift+K")) return;
 print.it("hotkey");
 ```
+
+Some 'find' functions have a *waitS* parameter. It is like *secondsTimeout*, but 0 means "don't wait". To wait infinitely, use some large value, for example `8e88`. Also, 'find' functions throw **NotFoundException**, not **TimeoutException**.

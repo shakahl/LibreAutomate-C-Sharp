@@ -254,7 +254,7 @@ struct AccRaw : public Cpp_Acc
 
 	//Gets a string property and calls w.Match.
 	//If fails to get, uses L"".
-	//propName: name, value, description, help, action, key. Compares only the first character.
+	//propName: name, value, desc, help, action, key. Compares only the first character.
 	bool MatchStringProp(STR propName, const str::Wildex& w) const
 	{
 		Bstr b; STR s = L""; auto lens = 0;
@@ -482,8 +482,16 @@ public:
 			//ao::PrintAcc(_parent);
 		}
 
+		//Printf(L"A %i", n);
 		if(n == c_nStack) { //more children?
-			_parent->get_accChildCount(&n); //note: some objects return 0 or 1, ie < n, and hr is usually 0. Noticed this only in IE, when c_nStack<10.
+			/*int hr2 = */_parent->get_accChildCount(&n); //note: some objects return 0 or 1, ie < n, and hr is usually 0. Noticed this only in IE, when c_nStack<10.
+			//Printf(L"B %i 0x%X", n, hr2);
+			//Sleep(100);
+
+			//SHOULDDO: VS 2022 Preview sometimes hangs. Attached debugger always shows it hangs in get_accChildCount.
+			//	Sometimes hangs when capturing (maybe when creating tree or auto-testing). Sometimes when searching.
+			//	Now cannot reproduce. Always n<100.
+
 			if(n != c_nStack) { //yes, more children
 				for(int i = c_nStack; i > 0;) VariantClear(&v[--i]);
 				if(n > maxcc) { //protection from AO such as LibreOffice Calc TABLE that has 1073741824 children. Default 10000.
@@ -564,8 +572,24 @@ private:
 	{
 		if(n == 7 && (role == ROLE_SYSTEM_WINDOW || role == 0)) {
 			for(int i = 0; i < 7; i++) if(v[i].vt != VT_DISPATCH) goto gr;
+			//Perf.First();
 			if(role == 0 && ao::get_accRole(_parent) != ROLE_SYSTEM_WINDOW) goto gr;
 			HWND w; if(0 != WindowFromAccessibleObject(_parent, &w)) goto gr;
+
+			//is it native WINDOW AO? Eg WPF uses role WINDOW instead of CLIENT.
+			//Perf.Next();
+			{
+				//this way is fast, even if not inproc. Tried 2 other ways, both slow.
+				//	Bad: the identity string is undocumented, and "clients should not attempt to dissect it or otherwise interpret it manually".
+				Smart<IAccIdentity> aid; DWORD* k = nullptr; DWORD len = 0;
+				if(0 != _parent->QueryInterface(&aid) || 0 != aid->GetIdentityString(0, (BYTE**)&k, &len)) goto gr;
+				//Printf(L"0x%X 0x%X 0x%X 0x%X  w=0x%X", k[0], k[1], k[2], k[3], (int)w);
+#pragma warning(suppress: 4311 4302) //(DWORD)w
+				bool ok = len == 16 && k[0] == 0x80000001 && k[1] == (DWORD)w && k[2] == 0 && k[3] == 0; //0x80000001, hwnd, objid (OBJID_WINDOW is 0), childid
+				CoTaskMemFree(k);
+				if(!ok) goto gr;
+			}
+			//Perf.Next();
 
 			DWORD bits = 1 << 3; //CLIENT
 
@@ -599,6 +623,7 @@ private:
 					n--;
 				}
 			}
+			//Perf.NW();
 		}
 	gr:	return n;
 

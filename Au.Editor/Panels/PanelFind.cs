@@ -19,6 +19,8 @@ class PanelFind : UserControl
 	KPopup _ttRegex, _ttNext;
 
 	public PanelFind() {
+		this.UiaSetName("Find panel");
+
 		var cstyle = Application.Current.FindResource(ToolBar.CheckBoxStyleKey) as Style;
 		var bstyle = Application.Current.FindResource(ToolBar.ButtonStyleKey) as Style;
 
@@ -214,7 +216,8 @@ class PanelFind : UserControl
 		b.End();
 		b.R.AddOkCancel();
 		b.End();
-		if (!b.ShowDialog()) return;
+		b.Window.ShowInTaskbar = false;
+		if (!b.ShowDialog(App.Wmain)) return;
 		App.Settings.find_searchIn = _searchIn = cbFileType.SelectedIndex;
 		App.Settings.find_skip = tSkip.Text; _aSkipWildcards = null;
 		App.Settings.find_printSlow = tSlow.Text.ToInt();
@@ -832,7 +835,7 @@ Opens files to enable Undo.",
 	#endregion
 }
 
-class FRRecentItem //not nested in PanelFind because used with JSettings (would load UI dlls).
+record FRRecentItem //not nested in PanelFind because used with JSettings (would load UI dlls).
 {
 	public string t;
 	public int o;

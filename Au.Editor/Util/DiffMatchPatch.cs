@@ -1478,8 +1478,7 @@ namespace DiffMatchPatch
 		{
 			List<Diff> diffs = new List<Diff>();
 			int pointer = 0;  // Cursor in text1
-			string[] tokens = delta.Split(new string[] { "\t" },
-				StringSplitOptions.None);
+			string[] tokens = delta.Split('\t');
 			foreach(string token in tokens) {
 				if(token.Length == 0) {
 					// Blank tokens are ok (from a trailing \t).

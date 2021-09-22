@@ -2,7 +2,7 @@
 uid: index
 ---
 
-# Derobotize Me C#
+# Autepad C#
 
 The program consists of an automation library and a script editor.
 
@@ -33,7 +33,7 @@ Also need .NET 5 Runtime. Download the Desktop x64. Need only Runtime, not SDK.
 Currently both editor and library are unfinished. The most important parts are finished and can be used, but some classes/functions/etc may be changed in the future.
 
 #### Links
-- [Download](https://www.quickmacros.com/au/DerobotizerSetup.exe) v0.0.3, 2021-08-23, 22 MB
+- [Download](https://www.quickmacros.com/au/AutepadSetup.exe) v0.0.3, 2021-08-23, 22 MB
 - [.NET 5 Runtime](https://dotnet.microsoft.com/download)
 - [Source code](https://github.com/qmgindi/Au)
 - [Forum](https://www.quickmacros.com/forum/forumdisplay.php?fid=19)

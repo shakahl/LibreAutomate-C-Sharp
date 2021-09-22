@@ -193,7 +193,7 @@ class AccFinder
 					bool addToProp = true;
 					if(na[0] != '@') { //HTML attribute names have prefix "@"
 						int i = str::Switch(na, va - 1 - na, {
-							L"value", L"description", L"help", L"action", L"key", L"uiaid", //string props
+							L"value", L"desc", L"help", L"action", L"key", L"uiaid", //string props
 							L"state", L"level", L"maxcc", L"notin", L"rect", L"elem",
 							L"class", L"id", //control
 							});
@@ -387,6 +387,7 @@ private:
 		//}
 
 		AccChildren c(ref aParent, startIndex, exactIndex, !!(_flags & eAF::Reverse), _maxCC);
+		//Printf(L"%i  %i", level, c.Count());
 		if(c.Count() == 0) {
 			if(_wTL) {
 				//Java?

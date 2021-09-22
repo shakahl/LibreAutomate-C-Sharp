@@ -16,7 +16,6 @@
 		/// - <c>"***text "</c> - use <see cref="ControlText"/>. Slower and less reliable because can get editable text. If a character can be underlined with Alt, insert '&amp;' before it.
 		/// - <c>"***elmName "</c> - use <see cref="NameElm"/>. Slower.
 		/// - <c>"***wfName "</c> - use .NET Forms control name (see <see cref="WinformsControlNames"/>). Slower and can fail because of [](xref:uac).
-		/// - <c>"***id "</c> like <c>"***id 15"</c> - use control id (<see cref="ControlId"/>). See also <see cref="ChildById"/>.
 		/// </param>
 		/// <param name="cn">
 		/// Control class name.
@@ -24,6 +23,7 @@
 		/// null means 'can be any'. Cannot be "".
 		/// </param>
 		/// <param name="flags"></param>
+		/// <param name="id">Control id. See <see cref="ControlId"/>. Not used if null (default).</param>
 		/// <param name="also">
 		/// Callback function. Called for each matching control.
 		/// It can evaluate more properties of the control and return true when they match.
@@ -45,8 +45,8 @@
 		public wnd Child(
 			[ParamString(PSFormat.wildex)] string name = null,
 			[ParamString(PSFormat.wildex)] string cn = null,
-			WCFlags flags = 0, Func<wnd, bool> also = null, int skip = 0
-			) => new wndChildFinder(name, cn, flags, also, skip).Find(this);
+			WCFlags flags = 0, int? id = null, Func<wnd, bool> also = null, int skip = 0
+			) => new wndChildFinder(name, cn, flags, id, also, skip).Find(this);
 
 		/// <summary>
 		/// Finds a child control and returns its handle as <see cref="wnd"/>. Can wait and throw <b>NotFoundException</b>.
@@ -56,6 +56,7 @@
 		/// <param name="name"></param>
 		/// <param name="cn"></param>
 		/// <param name="flags"></param>
+		/// <param name="id"></param>
 		/// <param name="also"></param>
 		/// <param name="skip"></param>
 		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc). Or closed while waiting.</exception>
@@ -65,14 +66,34 @@
 			double waitS,
 			[ParamString(PSFormat.wildex)] string name = null,
 			[ParamString(PSFormat.wildex)] string cn = null,
-			WCFlags flags = 0, Func<wnd, bool> also = null, int skip = 0
-			) => new wndChildFinder(name, cn, flags, also, skip).Find(this, waitS);
+			WCFlags flags = 0, int? id = null, Func<wnd, bool> also = null, int skip = 0
+			) => new wndChildFinder(name, cn, flags, id, also, skip).Find(this, waitS);
+
+		/// <summary>
+		/// Finds all matching child controls.
+		/// Everything except the return type is the same as with <see cref="Child"/>.
+		/// </summary>
+		/// <returns>List containing 0 or more control handles as <see cref="wnd"/>.</returns>
+		/// <exception cref="AuWndException"/>
+		/// <exception cref="ArgumentException"/>
+		/// <remarks>
+		/// In the returned list, hidden controls (when using WCFlags.HiddenToo) are always after visible controls.
+		/// </remarks>
+		/// <seealso cref="getwnd.Children"/>
+		public wnd[] ChildAll(
+			[ParamString(PSFormat.wildex)] string name = null,
+			[ParamString(PSFormat.wildex)] string cn = null,
+			WCFlags flags = 0, int? id = null, Func<wnd, bool> also = null) {
+			//ThrowIfInvalid(); //will be called later
+			var f = new wndChildFinder(name, cn, flags, id, also);
+			return f.FindAll(this);
+		}
 
 		/// <summary>
 		/// Returns true if this window contains the specified control.
 		/// Calls <see cref="Child"/>.
 		/// <note>
-		/// Using this function many times with same parameters is inefficient. Instead create new <see cref="wndChildFinder"/> and call <see cref="wndChildFinder.Exists"/> or <see cref="HasChild(wndChildFinder)"/>. See example.
+		/// Calling this function many times with same arguments is inefficient. Instead create new <see cref="wndChildFinder"/> and call <see cref="wndChildFinder.Exists"/> or <see cref="HasChild(wndChildFinder)"/>. See example.
 		/// </note>
 		/// </summary>
 		/// <exception cref="AuWndException"/>
@@ -89,8 +110,8 @@
 		public bool HasChild(
 			[ParamString(PSFormat.wildex)] string name = null,
 			[ParamString(PSFormat.wildex)] string cn = null,
-			WCFlags flags = 0, Func<wnd, bool> also = null, int skip = 0) {
-			return default != Child(name, cn, flags, also, skip);
+			WCFlags flags = 0, int? id = null, Func<wnd, bool> also = null, int skip = 0) {
+			return default != Child(name, cn, flags, id, also, skip);
 		}
 
 		/// <summary>
@@ -125,87 +146,69 @@
 		/// </example>
 		public bool HasElm(elmFinder f) => f.Find_(false, this, null);
 
-		/// <summary>
-		/// Finds a child control by its id and returns its handle as <see cref="wnd"/>.
-		/// </summary>
-		/// <returns>Child control handle, or <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>.</returns>
-		/// <param name="id">Control id.</param>
-		/// <param name="flags">This function supports flags DirectChild and HiddenToo. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="Child"/>.</param>
-		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
-		/// <remarks>
-		/// To create code for this function, use dialog "Find window or control".
-		/// 
-		/// Not all controls have a useful id. If control id is not unique or is different in each window instance, this function is not useful.
-		/// </remarks>
-		public wnd ChildById(int id, WCFlags flags = 0) {
-			ThrowIfInvalid();
-			if (flags.Has(WCFlags.DirectChild | WCFlags.HiddenToo)) return Api.GetDlgItem(this, id); //fast
+		//rejected. Use Child. Don't need 2 function for the same. Also the waitS parameter is confusing. Also there is no finder.
+		//	This is faster and less garbage, but it's not so important. Also there is ChildFast(id) for direct children.
+		///// <summary>
+		///// Finds a child control by its id and returns its handle as <see cref="wnd"/>.
+		///// </summary>
+		///// <returns>Child control handle, or <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>.</returns>
+		///// <param name="id">Control id.</param>
+		///// <param name="flags">This function supports flags <b>DirectChild</b> and <b>HiddenToo</b>. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="Child"/>.</param>
+		///// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
+		///// <remarks>
+		///// To create code for this function, use dialog "Find window or control".
+		///// 
+		///// Not all controls have a useful id. If control id is not unique or is different in each window instance, this function is not useful.
+		///// </remarks>
+		//public wnd ChildById(int id, WCFlags flags = 0) {
+		//	ThrowIfInvalid();
+		//	if (flags.Has(WCFlags.DirectChild | WCFlags.HiddenToo)) return Api.GetDlgItem(this, id); //fast
 
-			var d = new _KidEnumData() { wThis = this, id = id }; //info: to avoid garbage delegates, we use _KidEnumData instead of captured variables
-			var wParent = this;
-			Api.EnumChildWindows(this, (c, p) => {
-				ref var x = ref *(_KidEnumData*)p;
-				if (c.ControlId == x.id) {
-					if (x.flags.Has(WCFlags.DirectChild) && c.ParentGWL_ != x.wThis) return 1;
-					if (c.IsVisibleIn_(wParent)) { x.cVisible = c; return 0; }
-					if (x.flags.Has(WCFlags.HiddenToo) && x.cHidden.Is0) x.cHidden = c;
-				}
-				return 1;
-			}, &d);
-			return d.cVisible.Is0 ? d.cHidden : d.cVisible;
-		}
+		//	var d = new _KidEnumData() { wThis = this, id = id }; //info: to avoid garbage delegates, we use _KidEnumData instead of captured variables
+		//	var wParent = this;
+		//	Api.EnumChildWindows(this, (c, p) => {
+		//		ref var x = ref *(_KidEnumData*)p;
+		//		if (c.ControlId == x.id) {
+		//			if (x.flags.Has(WCFlags.DirectChild) && c.ParentGWL_ != x.wThis) return 1;
+		//			if (c.IsVisibleIn_(wParent)) { x.cVisible = c; return 0; }
+		//			if (x.flags.Has(WCFlags.HiddenToo) && x.cHidden.Is0) x.cHidden = c;
+		//		}
+		//		return 1;
+		//	}, &d);
+		//	return d.cVisible.Is0 ? d.cHidden : d.cVisible;
+		//}
 
-		/// <summary>
-		/// Finds a child control by its id and returns its handle as <see cref="wnd"/>. Can wait and throw <b>NotFoundException</b>.
-		/// </summary>
-		/// <returns>Child control handle. If not found, throws exception or returns <c>default(wnd)</c> (if <i>waitS</i> negative).</returns>
-		/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
-		/// <param name="id"></param>
-		/// <param name="flags"></param>
-		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc). Or closed while waiting.</exception>
-		/// <exception cref="NotFoundException" />
-		public wnd ChildById(double waitS, int id, WCFlags flags = 0) {
-			wnd r;
-			if (waitS == 0) {
-				r = ChildById(id, flags);
-			} else {
-				var to = new wait.Loop(waitS < 0 ? waitS : -waitS);
-				do { r = ChildById(id, flags); if (!r.Is0) break; } while (to.Sleep());
-			}
-			return !r.Is0 || waitS < 0 ? r : throw new NotFoundException();
-		}
+		///// <summary>
+		///// Finds a child control by its id and returns its handle as <see cref="wnd"/>. Can wait and throw <b>NotFoundException</b>.
+		///// </summary>
+		///// <returns>Child control handle. If not found, throws exception or returns <c>default(wnd)</c> (if <i>waitS</i> negative).</returns>
+		///// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
+		///// <param name="id"></param>
+		///// <param name="flags"></param>
+		///// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc). Or closed while waiting.</exception>
+		///// <exception cref="NotFoundException" />
+		//public wnd ChildById(double waitS, int id, WCFlags flags = 0) {
+		//	wnd r;
+		//	if (waitS == 0) {
+		//		r = ChildById(id, flags);
+		//	} else {
+		//		var to = new wait.Loop(waitS < 0 ? waitS : -waitS);
+		//		do { r = ChildById(id, flags); if (!r.Is0) break; } while (to.Sleep());
+		//	}
+		//	return !r.Is0 || waitS < 0 ? r : throw new NotFoundException();
+		//}
 
-		struct _KidEnumData
-		{
-			public wnd wThis, cVisible, cHidden;
-			public int id;
-			public WCFlags flags;
-		}
-
-		/// <summary>
-		/// Finds all matching child controls.
-		/// Everything except the return type is the same as with <see cref="Child"/>.
-		/// </summary>
-		/// <returns>List containing 0 or more control handles as <see cref="wnd"/>.</returns>
-		/// <exception cref="AuWndException"/>
-		/// <exception cref="ArgumentException"/>
-		/// <remarks>
-		/// In the returned list, hidden controls (when using WCFlags.HiddenToo) are always after visible controls.
-		/// </remarks>
-		/// <seealso cref="getwnd.Children"/>
-		public wnd[] ChildAll(
-			[ParamString(PSFormat.wildex)] string name = null,
-			[ParamString(PSFormat.wildex)] string cn = null,
-			WCFlags flags = 0, Func<wnd, bool> also = null) {
-			//ThrowIfInvalid(); //will be called later
-			var f = new wndChildFinder(name, cn, flags, also);
-			return f.FindAll(this);
-		}
+		//struct _KidEnumData
+		//{
+		//	public wnd wThis, cVisible, cHidden;
+		//	public int id;
+		//	public WCFlags flags;
+		//}
 
 		/// <summary>
-		/// Finds a direct child control and returns its handle as <see cref="wnd"/>.
+		/// Finds a direct child control by name and/or class name and returns its handle as <see cref="wnd"/>.
 		/// </summary>
-		/// <returns>Child control handle, or <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>. Supports <see cref="lastError"/>.</returns>
+		/// <returns>Returns <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>. Supports <see cref="lastError"/>.</returns>
 		/// <param name="name">
 		/// Name.
 		/// Full, case-insensitive. Wildcard etc not supported.
@@ -222,7 +225,7 @@
 		/// Calls API <msdn>FindWindowEx</msdn>.
 		/// Faster than <see cref="Child"/>, which uses API <msdn>EnumChildWindows</msdn>.
 		/// Can be used only when you know full name and/or class name.
-		/// Finds hidden controls too.
+		/// Finds hidden controls too. Finds only direct children, not other descendants.
 		/// </remarks>
 		public wnd ChildFast(string name, string cn, wnd wAfter = default) {
 			//ThrowIfInvalid(); //no, it can be HWND_MESSAGE
@@ -231,6 +234,22 @@
 				return default;
 			}
 			return Api.FindWindowEx(this, wAfter, cn, name);
+		}
+
+		/// <summary>
+		/// Finds a direct child control by its id and returns its handle as <see cref="wnd"/>.
+		/// </summary>
+		/// <returns>Returns <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>. Supports <see cref="lastError"/>.</returns>
+		/// <param name="id">Control id.</param>
+		/// <remarks>
+		/// Calls API <msdn>GetDlgItem</msdn>.
+		/// Faster than <see cref="Child"/>, which uses API <msdn>EnumChildWindows</msdn>.
+		/// Finds only direct children, not other descendants. Finds hidden controls too.
+		/// Not all controls have a useful id. If control id is not unique or is different in each window instance, this function is not useful.
+		/// </remarks>
+		public wnd ChildFast(int id) {
+			//ThrowIfInvalid(); //no, let it be same as other overload
+			return Api.GetDlgItem(this, id);
 		}
 
 		public partial struct getwnd
@@ -286,6 +305,8 @@
 			//}
 		}
 
+		//TODO: consider: remove or change button functions. Anyway will be rarely used when there is elm.
+
 		/// <summary>
 		/// Casts this to <see cref="WButton"/>.
 		/// </summary>
@@ -295,17 +316,17 @@
 		/// Finds a child button by id and sends a "click" message. Does not use the mouse.
 		/// Calls <see cref="WButton.Click(bool)"/>.
 		/// </summary>
-		/// <param name="buttonId">Control id of the button. This function calls <see cref="ChildById"/> to find the button.</param>
+		/// <param name="id">Control id of the button. This function calls <see cref="Child"/> to find the button.</param>
 		/// <param name="useElm">Use <see cref="elm.Invoke"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
 		/// <exception cref="NotFoundException" />
-		/// <exception cref="Exception">Exceptions of <see cref="ChildById"/> and <see cref="WButton.Click(bool)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Child"/> and <see cref="WButton.Click(bool)"/>.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// wnd.find("Options").ButtonClick(2);
 		/// ]]></code>
 		/// </example>
-		public void ButtonClick(int buttonId, bool useElm = false) {
-			var c = ChildById(buttonId);
+		public void ButtonClick(int id, bool useElm = false) {
+			var c = Child(id: id);
 			if (c.Is0) throw new NotFoundException();
 			c.AsButton.Click(useElm);
 		}
@@ -314,7 +335,7 @@
 		/// Finds a child button by name and sends a "click" message. Does not use the mouse.
 		/// Calls <see cref="WButton.Click(bool)"/>.
 		/// </summary>
-		/// <param name="buttonName">Button name. This function calls <see cref="Child"/> to find the button.</param>
+		/// <param name="name">Button name. This function calls <see cref="Child"/> to find the button.</param>
 		/// <param name="cn">Button class name to pass to <see cref="Child"/>.</param>
 		/// <param name="useElm">Use <see cref="elm.Invoke"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
 		/// <exception cref="NotFoundException" />
@@ -325,10 +346,10 @@
 		/// ]]></code>
 		/// </example>
 		public void ButtonClick(
-			[ParamString(PSFormat.wildex)] string buttonName,
+			[ParamString(PSFormat.wildex)] string name,
 			[ParamString(PSFormat.wildex)] string cn = null,
 			bool useElm = false) {
-			var c = Child(buttonName, cn);
+			var c = Child(name, cn);
 			if (c.Is0) throw new NotFoundException(); //CONSIDER: try to find UI element. Eg toolbar button.
 			c.AsButton.Click(useElm);
 		}

@@ -34,7 +34,7 @@ using System.Runtime.InteropServices;
 [module: DefaultCharSet(CharSet.Unicode)]
 
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Derobotize Me C#")]
+[assembly: AssemblyProduct("Autepad C#")]
 [assembly: AssemblyCopyright("Copyright 2021 Gintaras Didžgalvis")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

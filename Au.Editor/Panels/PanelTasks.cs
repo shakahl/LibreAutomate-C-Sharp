@@ -8,6 +8,8 @@ class PanelTasks : DockPanel
 	bool _updatedOnce;
 
 	public PanelTasks() {
+		//this.UiaSetName("Tasks panel"); //no UIA element for Panel. Use this in the future if this panel will be : UserControl.
+
 		_tv = new KTreeView { Name = "Tasks_list" };
 		this.Children.Add(_tv);
 	}

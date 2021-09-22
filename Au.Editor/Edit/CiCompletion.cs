@@ -13,8 +13,8 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 using Microsoft.CodeAnalysis.Options;
 
-//TODO: no popup list if first parameter of indexer is enum. Even on Ctrl+Space does not select the enum in list. In VS works well. Tested with this code:
-//ActionTriggers at=new(); at.Window[TWEvent.Active, "dsds"]=null;
+//PROBLEM: Roslyn bug: no popup list if first parameter of indexer setter is enum. Same in VS.
+//	Even on Ctrl+Space does not select the enum in list. And does not add enum members like "Enum.Member".
 
 
 partial class CiCompletion

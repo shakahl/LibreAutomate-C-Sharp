@@ -227,7 +227,7 @@ namespace Au
 		/// Parameters etc are of <see cref="show"/>.
 		/// </summary>
 		public dialog(
-			string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
+			string text1 = null, string text2 = null, Strings buttons = default, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
 			string expandedText = null, string footer = null, string title = null, DControls controls = null,
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
 			) : this(flags) {
@@ -240,7 +240,7 @@ namespace Au
 			if (controls != null) {
 				_controls = controls;
 				if (controls.Checkbox != null) SetCheckbox(controls.Checkbox, controls.IsChecked);
-				if (controls.RadioButtons != null) SetRadioButtons(controls.RadioButtons, controls.RadioId);
+				if (controls.RadioButtons.Value != null) SetRadioButtons(controls.RadioButtons, controls.RadioId);
 			}
 			SetOwnerWindow(owner, 0 != (flags & DFlags.CenterOwner));
 			SetXY(x, y, 0 != (flags & DFlags.RawXY));
@@ -345,7 +345,7 @@ namespace Au
 
 			bool _hasXButton;
 
-			internal _TDCBF SetButtons(string buttons, Strings customButtons) {
+			internal _TDCBF SetButtons(Strings buttons, Strings customButtons) {
 				_customButtons = null;
 				_mapIdUserNative = null;
 				_defaultButtonUserId = 0;
@@ -369,14 +369,13 @@ namespace Au
 				return _ParseButtons(buttons, false);
 			}
 
-			//TODO: Strings
-			_TDCBF _ParseButtons(string b, bool onlyCustom) {
-				if (b.NE()) return 0;
+			_TDCBF _ParseButtons(Strings buttons, bool onlyCustom) {
+				var ba = buttons.ToArray(); if(ba.NE_()) return 0;
 
 				_TDCBF commonButtons = 0;
 				int id = 0, nextNativeId = 100;
 
-				foreach (var v in b.Split('|')) {
+				foreach (var v in ba) {
 					string s = _ParseSingleString(v, ref id, onlyCustom);
 
 					int nativeId = 0;
@@ -415,13 +414,13 @@ namespace Au
 				return r;
 			}
 
-			internal void SetRadioButtons(string buttons) {
+			internal void SetRadioButtons(Strings buttons) {
 				_radioButtons = null;
-				if (buttons.NE()) return;
+				var ba = buttons.ToArray(); if(ba.NE_()) return;
 
 				_radioButtons = new List<_Button>();
 				int id = 0;
-				foreach (var v in buttons.Split('|')) {
+				foreach (var v in ba) {
 					string s = _ParseSingleString(v, ref id, false);
 					_radioButtons.Add(new _Button(id, s));
 				}
@@ -510,7 +509,7 @@ namespace Au
 		/// Button ids will be 1, 2, ... .
 		/// <see cref="DefaultButton"/> will be 1. You can change it later.
 		/// </param>
-		public void SetButtons(string buttons, bool asCommandLinks = false, Strings customButtons = default) {
+		public void SetButtons(Strings buttons, bool asCommandLinks = false, Strings customButtons = default) {
 			_c.dwCommonButtons = _buttons.SetButtons(buttons, customButtons);
 			_SetFlag(_TDF.USE_COMMAND_LINKS, asCommandLinks);
 		}
@@ -530,7 +529,7 @@ namespace Au
 		/// <remarks>
 		/// To get selected radio button id after closing the dialog, use <see cref="Controls"/>.
 		/// </remarks>
-		public void SetRadioButtons(string buttons, int defaultId = 0) {
+		public void SetRadioButtons(Strings buttons, int defaultId = 0) {
 			_controls ??= new DControls();
 			_buttons.SetRadioButtons(_controls.RadioButtons = buttons);
 			_c.nDefaultRadioButton = _controls.RadioId = defaultId;
@@ -1388,7 +1387,7 @@ namespace Au
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
 		public static int show(
-			string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
+			string text1 = null, string text2 = null, Strings buttons = default, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
 			string expandedText = null, string footer = null, string title = null, DControls controls = null,
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
 			) {
@@ -1403,7 +1402,7 @@ namespace Au
 		/// Calls <see cref="show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int showInfo(string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, AnyWnd owner = default, string expandedText = null) {
+		public static int showInfo(string text1 = null, string text2 = null, Strings buttons = default, DFlags flags = 0, AnyWnd owner = default, string expandedText = null) {
 			return show(text1, text2, buttons, flags, DIcon.Info, owner, expandedText);
 		}
 
@@ -1412,7 +1411,7 @@ namespace Au
 		/// Calls <see cref="show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int showWarning(string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, AnyWnd owner = default, string expandedText = null) {
+		public static int showWarning(string text1 = null, string text2 = null, Strings buttons = default, DFlags flags = 0, AnyWnd owner = default, string expandedText = null) {
 			return show(text1, text2, buttons, flags, DIcon.Warning, owner, expandedText);
 		}
 
@@ -1421,7 +1420,7 @@ namespace Au
 		/// Calls <see cref="show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int showError(string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, AnyWnd owner = default, string expandedText = null) {
+		public static int showError(string text1 = null, string text2 = null, Strings buttons = default, DFlags flags = 0, AnyWnd owner = default, string expandedText = null) {
 			return show(text1, text2, buttons, flags, DIcon.Error, owner, expandedText);
 		}
 
@@ -1610,11 +1609,11 @@ namespace Au
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0,
 			Action<DEventArgs> onLinkClick = null
 			) {
-			var d = new dialog(text1, text2, null, flags | DFlags.XCancel, 0, owner,
+			var d = new dialog(text1, text2, default, flags | DFlags.XCancel, 0, owner,
 				expandedText, footer, title, controls,
 				defaultButton, x, y, secondsTimeout, onLinkClick);
 
-			d.SetButtons(null, true, list);
+			d.SetButtons(default, true, list);
 			d.SetExpandedText(expandedText, true);
 			return d.ShowDialog();
 		}
@@ -1692,7 +1691,7 @@ namespace Au
 		/// </example>
 		/// <exception cref="AggregateException">Failed to show dialog.</exception>
 		public static dialog showNoWait(
-			string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
+			string text1 = null, string text2 = null, Strings buttons = default, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
 			string expandedText = null, string footer = null, string title = null, DControls controls = null,
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
 			) {
@@ -1837,10 +1836,10 @@ namespace Au.Types
 		public bool IsChecked { get; set; }
 
 		/// <summary>
-		/// If not null, adds radio buttons.
+		/// Adds radio buttons.
 		/// A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".
 		/// </summary>
-		public string RadioButtons { get; set; }
+		public Strings RadioButtons { get; set; }
 
 		/// <summary>
 		/// Sets initial and gets final checked radio button. It is button id (as specified in <see cref="RadioButtons"/>), not index.
@@ -1849,7 +1848,7 @@ namespace Au.Types
 		public int RadioId { get; set; }
 
 		/// <summary>
-		/// If set (not None, which is default), adds a text edit control.
+		/// Adds a text edit control.
 		/// Note: then the dialog cannot have a progress bar.
 		/// </summary>
 		public DEdit EditType { get; set; }

@@ -1,6 +1,4 @@
-﻿//TODO: add class Classless. Then in global.cs: global using static Au.Classless;. Currently don't need, but maybe in the future will need.
-
-namespace Au.Types
+﻿namespace Au.Types
 {
 	/// <summary>
 	/// In DocFX-generated help files removes documentation and auto-generated links in TOC and class pages.

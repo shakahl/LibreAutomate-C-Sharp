@@ -245,7 +245,7 @@ class DProperties : KDialogWindow
 		var a = d.FileNames;
 
 		foreach (var v in a) {
-			if (MetaReferences.IsDotnetAssembly(v)) continue;
+			if (MetaReferences.IsNetAssembly(v)) continue;
 			dialog.showError("Not a .NET assembly.", v, owner: this);
 			return;
 		}
@@ -533,7 +533,7 @@ C# file properties here are similar to C# project properties in Visual Studio.
 Saved in <c green>/*/ meta comments /*/<> at the start of code, and can be edited there too.
 ";
 
-		info.AddElem(role,
+		info.ZAddElem(role,
 @"<b>role</b> - purpose of this C# code file. What type of assembly to create and how to execute.
  • <i>miniProgram</i> - execute in a separate host process started from editor.
  • <i>exeProgram</i> - create/execute .exe file. It can run on any computer, without editor installed.
@@ -543,7 +543,7 @@ Saved in <c green>/*/ meta comments /*/<> at the start of code, and can be edite
 
 Default role for scripts is miniProgram; cannot be the last two. Default for class files is classFile.
 ");
-		info.AddElem(testScript,
+		info.ZAddElem(testScript,
 @"<b>testScript</b> - a script to run when you click the Run button.
 Can be path relative to this file (examples: Script5.cs, Folder\Script5.cs, ..\Folder\Script5.cs) or path in the workspace (examples: \Script5.cs, \Folder\Script5.cs).
 
@@ -551,7 +551,7 @@ Usually it is used to test this class file or class library. It can contain meta
 
 This option is saved in current workspace, not in meta comments.
 ");
-		info.AddElem(ifRunning,
+		info.ZAddElem(ifRunning,
 @"<b>ifRunning</b> - when trying to start this script, what to do if it is already running.
  • <i>warn</i> - write warning in output and don't run.
  • <i>cancel</i> - don't run.
@@ -564,7 +564,7 @@ Default is warn_restart.
 
 This option is ignored when the task runs as .exe program started not from editor; instead use code: script.single(""unique string"");.
 ");
-		info.AddElem(uac,
+		info.ZAddElem(uac,
 @"<b>uac</b> - <help articles/UAC>UAC<> integrity level (IL) of the task process.
  • <i>inherit</i> (default) - the same as of the editor process. Normally High IL if installed on admin account, else Medium IL.
  • <i>user</i> - Medium IL, like most applications. The task cannot automate high IL process windows, write some files, change some settings, etc.
@@ -572,14 +572,14 @@ This option is ignored when the task runs as .exe program started not from edito
 
 This option is ignored when the task runs as .exe program started not from editor.
 ");
-		info.AddElem(outputPath,
+		info.ZAddElem(outputPath,
 @"<b>outputPath</b> - directory for the output assembly file and related files (used dlls, etc).
 Full path. Can start with %environmentVariable% or %folders.SomeFolder%. Can be path relative to this file or workspace, like with other options. Default if role exeProgram: <link>%folders.Workspace%\bin\filename<>. Default if role classLibrary: <link>%folders.ThisApp%\Libraries<>. The compiler creates the folder if does not exist.
 
 If role exeProgram, the exe file is named like the script. The 32-bit version has suffix ""-32"". If optimize true (checked in Properties), creates both 64-bit and 32-bit versions. Else creates only 32-bit if bit32 true (checked in Properties) or 32-bit OS, else only 64-bit.
 If role classLibrary, the dll file is named like the class file. It can be used by 64-bit and 32-bit processes.
 ");
-		info.AddElem(icon,
+		info.ZAddElem(icon,
 @"<b>icon</b> - icon of the output exe file.
 The .ico file must be in this workspace. Can be path relative to this file (examples: App.ico, Folder\App.ico, ..\Folder\App.ico) or path in the workspace (examples: \App.ico, \Folder\App.ico).
 
@@ -587,7 +587,7 @@ The icon will be added as a native resource and displayed in File Explorer etc. 
 
 If not specified, uses custom icon of the main C# file. See menu Tools -> Icons.
 ");
-		info.AddElem(manifest,
+		info.ZAddElem(manifest,
 @"<b>manifest</b> - <google manifest file site:microsoft.com>manifest<> of the output exe or dll file.
 The .manifest file must be in this workspace. Can be path relative to this file (examples: App.manifest, Folder\App.manifest, ..\Folder\App.manifest) or path in the workspace (examples: \App.manifest, \Folder\App.manifest).
 
@@ -600,25 +600,25 @@ The manifest will be added as a native resource.
 		//.res files contain compiled native resources of any type, including icons and manifest.
 		//This option is rarely used. Instead you use managed resources (button ""Resource..."").
 		//");
-		info.AddElem(sign,
+		info.ZAddElem(sign,
 @"<b>sign</b> - strong-name signing key file, to sign the output assembly.
 The file must be in this workspace. Can be path relative to this file (examples: App.snk, Folder\App.snk, ..\Folder\App.snk) or path in the workspace (examples: \App.snk, \Folder\App.snk).
 ");
-		info.AddElem(console,
+		info.ZAddElem(console,
 @"<b>console</b> - let the program run with console.
 ");
-		info.AddElem(bit32,
+		info.ZAddElem(bit32,
 @"<b>bit32</b> - whether the exe process must be 32-bit everywhere.
  • <i>false</i> (default) - the process is 64-bit or 32-bit, the same as Windows on that computer.
  • <i>true</i> (checked in Properties) - the process is 32-bit on all computers.
 ");
-		info.AddElem(xmlDoc,
+		info.ZAddElem(xmlDoc,
 @"<b>xmlDoc</b> - create XML documentation file from /// XML comments of classes, functions, etc.
 Creates in the 'outputPath' folder.
 
 XML documentation files are used by code editors to display class/function/parameter info. Also can be used to create online documentation or help file, for example with <google>Sandcastle Help File Builder<> or <google>DocFX<>.
 ");
-		info.AddElem(optimize,
+		info.ZAddElem(optimize,
 @"<b>optimize</b> - whether to make the compiled code as fast as possible.
  • <i>false</i> (default) - don't optimize. Define DEBUG and TRACE. Aka ""Debug configuration"".
  • <i>true</i> (checked in Properties) - optimize. Aka ""Release configuration"".
@@ -627,7 +627,7 @@ Default is false, because optimization makes difficult to debug. It makes notice
 
 This option is also applied to class files compiled together, eg as part of project. Use true (checked in Properties) if they contain code that must be as fast as possible.
 ");
-		info.AddElem(define,
+		info.ZAddElem(define,
 @"<b>define</b> - symbols that can be used with #if.
 Example: ONE,TWO,d:THREE,r:FOUR
 Can be used prefix r: or d: to define the symbol only if optimize true (checked in Properties) or false (unchecked).
@@ -635,7 +635,7 @@ If no optimize true, DEBUG and TRACE are added implicitly.
 These symbols also are visible in class files compiled together, eg as part of project.
 See also <google C# #define>#define<>.
 ");
-		info.AddElem(warningLevel,
+		info.ZAddElem(warningLevel,
 @"<b>warningLevel</b> - how many warnings to show.
 0 - no warnings.
 1 - only severe warnings.
@@ -647,20 +647,20 @@ See also <google C# #define>#define<>.
 
 This option is also applied to class files compiled together, eg as part of project.
 ");
-		info.AddElem(noWarnings,
+		info.ZAddElem(noWarnings,
 @"<b>noWarnings</b> - don't show these warnings.
 Example: 151,3001,120
 
 This option is also applied to class files compiled together, eg as part of project.
 See also <google C# #pragma warning>#pragma warning<>.
 ");
-		info.AddElem(testInternal,
+		info.ZAddElem(testInternal,
 @"<b>testInternal</b> - access internal symbols of these assemblies, like with InternalsVisibleToAttribute.
 Example: Assembly1,Assembly2
 
 This option is also applied to class files compiled together, eg as part of project.
 ");
-		info.AddElem(preBuild,
+		info.ZAddElem(preBuild,
 @"<b>preBuild</b> - a script to run before compiling this code file.
 Can be path relative to this file (examples: Script5.cs, Folder\Script5.cs, ..\Folder\Script5.cs) or path in the workspace (examples: \Script5.cs, \Folder\Script5.cs).
 
@@ -673,11 +673,11 @@ By default it receives full path of the output exe or dll file in args[0]. If ne
  • $(optimize) - meta comment 'optimize'.
  • $(bit32) - meta comment 'bit32'.
 ");
-		info.AddElem(postBuild,
+		info.ZAddElem(postBuild,
 @"<b>postBuild</b> - a script to run after compiling this code file successfully.
 Everything else is like with preBuild.
 ");
-		info.AddElem(addAssembly,
+		info.ZAddElem(addAssembly,
 @"<b>Assembly<> - add one or more .NET assemblies (.dll files) as references.
 Adds meta comment <c green>r FileName<>.
 
@@ -694,9 +694,9 @@ An interop assembly is a .NET assembly without real code. Not used at run time. 
 
 To remove this meta comment, edit the code. Optionally delete unused interop assemblies.
 ";
-		info.AddElem(addComRegistry, @"<b>COM<> - convert a registered" + c_com);
-		info.AddElem(addComBrowse, @"<b>...<> - convert a" + c_com);
-		info.AddElem(addProject,
+		info.ZAddElem(addComRegistry, @"<b>COM<> - convert a registered" + c_com);
+		info.ZAddElem(addComBrowse, @"<b>...<> - convert a" + c_com);
+		info.ZAddElem(addProject,
 @"<b>Project<> - add a reference to a class library created in this workspace.
 Adds meta comment <c green>pr File.cs<>. The compiler will compile it if need and use the created dll file as a reference.
 
@@ -704,7 +704,7 @@ The recommended outputPath of the library project is <link>%folders.ThisApp%\Lib
 
 To remove this meta comment, edit the code. Optionally delete unused dll files.
 ");
-		info.AddElem(addClassFile,
+		info.ZAddElem(addClassFile,
 @"<b>Class file<> - add a C# code file that contains some classes/functions used by this file.
 Adds meta comment <c green>c File.cs<>. The compiler will compile all code files and create single assembly.
 
@@ -714,7 +714,7 @@ Can be path relative to this file (examples: Class5.cs, Folder\Class5.cs, ..\Fol
 If folder, adds all its descendant class files.
 To remove this meta comment, edit the code.
 ");
-		info.AddElem(addResource,
+		info.ZAddElem(addResource,
 @"<b>Resource<> - add image etc file(s) as managed resources.
 Adds meta comment <c green>resource File<>. If folder, the compiler will add all files in it and subfolders.
 

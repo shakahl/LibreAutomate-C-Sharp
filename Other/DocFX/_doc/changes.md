@@ -1,13 +1,15 @@
 ﻿v0.0.4
 
-## Breaking changes
+### Breaking changes
 
 **elm** and **elmFinder**:
 - Removed functions **elm.find**, **elm.wait**, **elm.printAll**, **elm.Find**, **elm.Wait**. Now use **elmFinder.Find** etc with the new syntax.
 - Now *role* parameter cannot contain path. Instead use the new path syntax.
 - The *prop* parameter type now is **Strings**, and separator is `|` (was `\0`). If substrings contain `|`, use `new("substring", "substring")`.
+- In *prop* use `"desc=..."` instead of `"description=..."`.
 - Removed property **elmFinder.NavigFailed**.
 - Renamed **elm.Navigate** parameter *secondsToWait* to *waitS*.
+- **elm.VirtualClick** parameters *x y*.
 
 Now functions **Find** and **Wait** of all finders (**wndFinder**, **wndChildFinder**, **elmFiner**, **uiimageFinder**) return the found object, not bool. Functions **Exists** return bool.
 
@@ -17,10 +19,22 @@ From **wnd**, **elm** and **uiimage** removed operator + that was used to throw 
 
 **DStringList** renamed to **Strings**.
 
+In **dialog** functions, the *buttons* parameter type now is **Strings**.
+
 String extension methods **FindAny**, **FindNot**, **FindLastAny** and **FindLastNot** now have parameter *range* instead of *startOfRange* and *endOfRange*.
 
+**IFArea** tuple casts replaced with constructors. Eg instead of `uiimage.find((w, (1, 2, 3, 4)), "image")` use `uiimage.find(new(w, (1, 2, 3, 4)), "image")`.
 
-## Other changes
-Many changes in **elm** and **elmFinder** classes and in the "Find UI element" dialog. The **Find** function can find through intermediate elements (path) and can wait and throw exception if not found.
+In **uiimage** and **uiimageFinder** functions renamed parameter *colorDiff* to *diff*. Also its range now is 0 - 100.
+
+Renamed **wnd.WaitForCondition** to **wnd.WaitFor**.
+
+In **wnd.Child** added parameter *id* instead of `***id` in *name*. Same in **wndChildFinder** constructor etc.
+
+Removed **wnd.ChildById**. Instead use code like `w.Child(id: 15)`.
+
+
+### Other changes
+Many changes in **elm** and **elmFinder** classes and in the "Find UI element" dialog. The **Find** function can use intermediate elements (path) and can wait and throw exception if not found.
 
 Replaced syntax of finding UI elements (**elm**). Now instead of code `var e = elm.find(w, ...)` use code `var e = w[...].Find()` or `var e = w[...][...][...].Find()`.

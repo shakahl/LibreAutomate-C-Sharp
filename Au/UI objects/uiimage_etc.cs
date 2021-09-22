@@ -12,9 +12,9 @@ namespace Au
 		/// <summary>
 		/// Creates image from a rectangle of screen pixels.
 		/// </summary>
-		/// <param name="rect">A rectangle in screen coordinates.</param>
+		/// <param name="r">Rectangle in screen.</param>
 		/// <exception cref="ArgumentException">Empty rectangle.</exception>
-		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (with*height*4 bytes).</exception>
+		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (width*height*4 bytes).</exception>
 		/// <remarks>
 		/// PixelFormat is always Format32bppRgb.
 		/// </remarks>
@@ -27,30 +27,24 @@ namespace Au
 		/// run.it(file);
 		/// ]]></code>
 		/// </example>
-		public static Bitmap capture(RECT rect) {
-			return _Capture(rect);
-		}
+		public static Bitmap capture(RECT r) => _Capture(r);
 
 		/// <summary>
 		/// Creates image from a rectangle of window client area pixels.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="rect">A rectangle in w client area coordinates. Use <c>w.ClientRect</c> to get whole client area.</param>
-		/// <param name="usePrintWindow">Use flag <see cref="ICFlags.PrintWindow"/>.</param>
-		/// <exception cref="AuWndException">Invalid w.</exception>
+		/// <param name="r">Rectangle in <i>w</i> client area coordinates. Use <c>w.ClientRect</c> to get whole client area.</param>
+		/// <param name="usePrintWindow">Get pixels like with flag <see cref="IFFlags.PrintWindow"/>.</param>
+		/// <exception cref="AuWndException">Invalid <i>w</i>.</exception>
 		/// <exception cref="ArgumentException">Empty rectangle.</exception>
-		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (with*height*4 bytes).</exception>
+		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (width*height*4 bytes).</exception>
 		/// <remarks>
-		/// How this is different from <see cref="capture(RECT)"/>:
-		/// 1. Gets pixels from window's device context (DC), not from screen DC, unless the Aero theme is turned off (on Windows 7). The window can be under other windows. The image can be different.
-		/// 2. If the window is partially or completely transparent, gets non-transparent image.
-		/// 3. Does not work with Windows Store app windows, Chrome and some other windows. Creates black image.
-		/// 4. If the window is DPI-scaled, captures its non-scaled view. And <i>rect</i> must contain non-scaled coordinates.
+		/// Unlike <see cref="capture(RECT)"/>, this overload gets pixels directly from window, not from screen. Like with flag <see cref="IFFlags.WindowDC"/> or <see cref="IFFlags.PrintWindow"/>. The window can be under other windows. The captured image can be different than displayed on screen.
+		/// If the window is partially or completely transparent, captures its non-transparent view.
+		/// If the window is DPI-scaled, captures its non-scaled view. And <i>r</i> must contain non-scaled coordinates.
 		/// </remarks>
-		public static Bitmap capture(wnd w, RECT rect, bool usePrintWindow = false) {
-			w.ThrowIfInvalid();
-			return _Capture(rect, w, usePrintWindow);
-		}
+		public static Bitmap capture(wnd w, RECT r, bool usePrintWindow = false)
+			=> _Capture(r, w.ThrowIfInvalid(), usePrintWindow);
 
 		static unsafe Bitmap _Capture(RECT r, wnd w = default, bool usePrintWindow = false, GraphicsPath path = null) {
 			//Transfer from screen/window DC to memory DC (does not work without this) and get pixels.
@@ -62,6 +56,34 @@ namespace Au
 			//FUTURE: if w is DWM-scaled...
 
 			using var mb = new MemoryBitmap(r.Width, r.Height);
+			_CaptureToDC(mb, r, w, usePrintWindow);
+
+#if !true //with this code can allocate gigabytes without triggering GC
+			var R = new Bitmap(r.Width, r.Height, PixelFormat.Format32bppRgb);
+			try {
+				var d = R.LockBits(new Rectangle(0, 0, r.Width, r.Height), ImageLockMode.ReadWrite, R.PixelFormat); //tested: fast, no copy
+				try { _GetPixelsFromDC(mb, r, (uint*)d.Scan0, path); }
+				finally { R.UnlockBits(d); } //tested: fast, no copy
+				return R;
+			}
+			catch { R.Dispose(); throw; }
+#elif !true //with this code GC should be OK, but isn't. Allocates large amount before starting to free. Also unsafe etc because uses Tag.
+			var a = GC.AllocateUninitializedArray<uint>(r.Width * r.Height, pinned: true);
+			fixed (uint* p = a) {
+				_GetPixelsFromDC(mb, r, p, path);
+				return new Bitmap(r.Width, r.Height, r.Width * 4, PixelFormat.Format32bppRgb, (IntPtr)p) { Tag = a };
+			}
+#else
+			var R = new Bitmap(r.Width, r.Height, PixelFormat.Format32bppRgb);
+			GC_.AddObjectMemoryPressure(R, r.Width * r.Height * 4);
+			var d = R.LockBits(new(0, 0, r.Width, r.Height), ImageLockMode.ReadWrite, R.PixelFormat); //tested: fast, no copy
+			try { _GetPixelsFromDC(mb, r, (uint*)d.Scan0, path); }
+			finally { R.UnlockBits(d); } //tested: fast, no copy
+			return R;
+#endif
+		}
+
+		static void _CaptureToDC(MemoryBitmap mb, RECT r, wnd w = default, bool usePrintWindow = false) {
 			if (usePrintWindow && Api.PrintWindow(w, mb.Hdc, Api.PW_CLIENTONLY | (osVersion.minWin8_1 ? Api.PW_RENDERFULLCONTENT : 0))) {
 				//print.it("PrintWindow OK");
 			} else {
@@ -71,32 +93,25 @@ namespace Au
 				bool ok = Api.BitBlt(mb.Hdc, 0, 0, r.Width, r.Height, dc, r.left, r.top, rop);
 				Debug.Assert(ok); //the API fails only if a HDC is invalid
 			}
-
-			var R = new Bitmap(r.Width, r.Height, PixelFormat.Format32bppRgb);
-			try {
-				var bi = new Api.BITMAPINFO(r.Width, -r.Height, 32);
-				var d = R.LockBits(new Rectangle(0, 0, r.Width, r.Height), ImageLockMode.ReadWrite, R.PixelFormat); //tested: fast, no copy
-				try {
-					var apiResult = Api.GetDIBits(mb.Hdc, mb.Hbitmap, 0, r.Height, (void*)d.Scan0, ref bi, 0); //DIB_RGB_COLORS
-					if (apiResult != r.Height) throw new AuException("GetDIBits");
-					_SetAlpha(d, r, path);
-				}
-				finally { R.UnlockBits(d); } //tested: fast, no copy
-				return R;
-			}
-			catch { R.Dispose(); throw; }
 		}
 
-		static unsafe void _SetAlpha(BitmapData d, RECT r, GraphicsPath path = null) {
+		static unsafe void _GetPixelsFromDC(MemoryBitmap mb, RECT r, uint* pixels, GraphicsPath path = null) {
+			var bi = new Api.BITMAPINFO(r.Width, -r.Height, 32);
+			var n = Api.GetDIBits(mb.Hdc, mb.Hbitmap, 0, r.Height, pixels, ref bi, 0); //DIB_RGB_COLORS
+			if (n != r.Height) throw new AuException("GetDIBits");
+			_SetAlpha(pixels, r, path);
+		}
+
+		static unsafe void _SetAlpha(uint* pixels, RECT r, GraphicsPath path = null) {
 			//remove alpha. Will compress better.
 			//perf.first();
-			byte* p = (byte*)d.Scan0, pe = p + r.Width * r.Height * 4;
+			byte* p = (byte*)pixels, pe = p + r.Width * r.Height * 4;
 			for (p += 3; p < pe; p += 4) *p = 0xff;
 			//perf.nw(); //1100 for max window
 
 			//if path used, set alpha=0 for outer points
 			if (path != null) {
-				int* k = (int*)d.Scan0;
+				uint* k = pixels;
 				for (int y = r.top; y < r.bottom; y++)
 					for (int x = r.left; x < r.right; x++, k++) {
 						//print.it(x, y, path.IsVisible(x, y));
@@ -152,7 +167,7 @@ namespace Au
 		/// </summary>
 		/// <param name="w">Window or control.</param>
 		/// <param name="outline">The outline (shape) of the area in w client area coordinates. If single element, captures single pixel.</param>
-		/// <param name="usePrintWindow">Use flag <see cref="ICFlags.PrintWindow"/>.</param>
+		/// <param name="usePrintWindow"></param>
 		/// <exception cref="AuWndException">Invalid <i>w</i>.</exception>
 		/// <exception cref="ArgumentException"><i>outline</i> is null or has 0 elements.</exception>
 		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size.</exception>
@@ -160,6 +175,76 @@ namespace Au
 		public static Bitmap capture(wnd w, List<POINT> outline, bool usePrintWindow = false) {
 			w.ThrowIfInvalid();
 			return _Capture(outline, w, usePrintWindow);
+		}
+
+		/// <summary>
+		/// Gets pixel colors from a rectangle in screen.
+		/// </summary>
+		/// <returns>2-dimensional array [row, column] containing pixel colors in 0xAARRGGBB format. Alpha 0xFF.</returns>
+		/// <param name="r">Rectangle in screen.</param>
+		/// <exception cref="ArgumentException">Empty rectangle.</exception>
+		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (width*height*4 bytes).</exception>
+		/// <remarks>
+		/// Getting pixels from screen usually is slow. If need faster, try <see cref="getPixels(wnd, RECT, bool)"/> (get pixels from window client area).
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// print.clear();
+		/// var a = uiimage.getPixels(new(100, 100, 4, 10));
+		/// for(int i = 0, nRows = a.GetLength(0); i < nRows; i++) print.it(a[i,0], a[i,1], a[i,2], a[i,3]);
+		/// ]]></code>
+		/// </example>
+		public static uint[,] getPixels(RECT r) => _Pixels(r);
+
+		/// <summary>
+		/// Gets pixel colors from a rectangle in window client area.
+		/// </summary>
+		/// <returns>2-dimensional array [row, column] containing pixel colors in 0xAARRGGBB format. Alpha 0xFF.</returns>
+		/// <param name="w">Window or control.</param>
+		/// <param name="r">Rectangle in <i>w</i> client area coordinates. Use <c>w.ClientRect</c> to get whole client area.</param>
+		/// <param name="usePrintWindow">Get pixels like with flag <see cref="IFFlags.PrintWindow"/>.</param>
+		/// <exception cref="AuWndException">Invalid <i>w</i>.</exception>
+		/// <exception cref="ArgumentException">Empty rectangle.</exception>
+		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (width*height*4 bytes).</exception>
+		/// <remarks>
+		/// Unlike <see cref="getPixels(RECT)"/>, this overload gets pixels directly from window, not from screen. Like with flag <see cref="IFFlags.WindowDC"/> or <see cref="IFFlags.PrintWindow"/>. The window can be under other windows. The captured image can be different than displayed on screen.
+		/// If the window is partially or completely transparent, captures its non-transparent view.
+		/// If the window is DPI-scaled, captures its non-scaled view. And <i>r</i> must contain non-scaled coordinates.
+		/// </remarks>
+		public static uint[,] getPixels(wnd w, RECT r, bool usePrintWindow = false)
+			=> _Pixels(r, w.ThrowIfInvalid(), usePrintWindow);
+
+		static unsafe uint[,] _Pixels(RECT r, wnd w = default, bool usePrintWindow = false) {
+			using var mb = new MemoryBitmap(r.Width, r.Height);
+			_CaptureToDC(mb, r, w, usePrintWindow);
+			var a = new uint[r.Height, r.Width];
+			fixed (uint* p = a) { _GetPixelsFromDC(mb, r, p); }
+			return a;
+		}
+
+		/// <summary>
+		/// Gets color of a screen pixel.
+		/// </summary>
+		/// <param name="p">x y in screen.</param>
+		/// <returns>Pixel color in 0xAARRGGBB format. Alpha 0xFF. Returns 0 if fails, eg if x y is not in screen.</returns>
+		/// <remarks>
+		/// Uses, API <msdn>GetPixel</msdn>. It is slow. If need faster, try <see cref="getPixels(wnd, RECT, bool)"/> (get 1 or more pixels from window client area).
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// //print.clear();
+		/// //for (;;) {
+		/// //	1.s();
+		/// //	print.it(uiimage.getPixel(mouse.xy));
+		/// //}
+		/// ]]></code>
+		/// </example>
+		public static unsafe uint getPixel(POINT p) {
+			using var dc = new ScreenDC_();
+			//using var dc = new WindowDC_(wnd.getwnd.root); //same speed. Same with printwindow.
+			uint R = Api.GetPixel(dc, p.x, p.y);
+			if (R == 0xFFFFFFFF) return 0; //it's better than exception
+			return ColorInt.SwapRB(R) | 0xFF000000;
 		}
 
 		#endregion
@@ -172,7 +257,7 @@ namespace Au
 		/// </summary>
 		/// <param name="result">Receives results.</param>
 		/// <param name="flags"></param>
-		/// <param name="owner">Owner window. Temporarily hides it and its owner windows.</param>
+		/// <param name="owner">Owner window. Temporarily minimizes it.</param>
 		/// <remarks>
 		/// Gets all screen pixels and shows in a full-screen topmost window, where the user can select an area.
 		/// </remarks>
@@ -184,12 +269,11 @@ namespace Au
 			default: throw new ArgumentException();
 			}
 
-			List<wnd> aw = null; wnd wTool = default;
+			wnd wTool = default;
 			try {
 				if (!owner.IsEmpty) {
 					wTool = owner.Hwnd;
-					aw = wTool.Get.Owners(andThisWindow: true, onlyVisible: true);
-					foreach (var w in aw) w.ShowL(false);
+					wTool.ShowMinimized(noAnimation: true);
 					using (new inputBlocker(BIEvents.MouseClicks)) Au.wait.doEvents(300); //time for animations
 				}
 
@@ -226,12 +310,9 @@ namespace Au
 				result = r;
 			}
 			finally {
-				if (aw != null) {
-					foreach (var w in aw) w.ShowL(true);
-					if (wTool.IsAlive) {
-						wTool.ShowNotMinimized();
-						wTool.ActivateL();
-					}
+				if (wTool.IsAlive) {
+					wTool.ShowNotMinimized();
+					wTool.ActivateL();
 				}
 			}
 			return true;
@@ -359,16 +440,16 @@ namespace Au
 					bool canColor = ic.Has(ICFlags.Color);
 					if (canColor) {
 						var color = _img.GetPixel(pc.x, pc.y).ToArgb() & 0xffffff;
-						s.Append("Color  0x").Append(color.ToString("X6")).Append('\n');
+						s.Append("Color  #").Append(color.ToString("X6")).Append('\n');
 					}
 					if (ic == ICFlags.Color) {
 						s.Append("Click to capture color.\n");
 					} else if (ic == ICFlags.Rectangle) {
 						s.Append("Mouse-drag to capture rectangle.\n");
+					} else if (!canColor) {
+						s.Append("Mouse-drag to capture image.\n");
 					} else {
-						s.Append("How to capture\n");
-						s.Append("  rectangle:  mouse-drag\n  any shape:  Shift+drag\n");
-						if (canColor) s.Append("  color:  Ctrl+click\n");
+						s.Append("Mouse-drag to capture image,\nor Ctrl+click to capture color.\n");
 					}
 					s.Append("More:  right-click"); //"  cancel:  key Esc\n  retry:  key F3 ... F3"
 					text = s.ToString();
@@ -419,7 +500,8 @@ namespace Au
 			}
 
 			void _WmLbuttondown(POINT p0) {
-				bool isColor = false, isAnyShape = false;
+				bool isColor = false;
+				//bool isAnyShape = false; //rejected. Not useful.
 				var ic = _flags & (ICFlags.Image | ICFlags.Color | ICFlags.Rectangle);
 				if (ic == ICFlags.Color) {
 					isColor = true;
@@ -428,8 +510,8 @@ namespace Au
 					if (mod != 0 && ic == ICFlags.Rectangle) return;
 					switch (mod) {
 					case 0: break;
-					case KMod.Shift: isAnyShape = true; break;
-					case KMod.Ctrl when ic != ICFlags.Image: isColor = true; break;
+					//case KMod.Shift: isAnyShape = true; break;
+					case KMod.Ctrl when ic == 0: isColor = true; break;
 					default: return;
 					}
 				}
@@ -437,10 +519,10 @@ namespace Au
 				Result = new ICResult();
 				var r = new RECT(p0.x, p0.y, 0, 0);
 				if (isColor) {
-					Result.color = _img.GetPixel(p0.x, p0.y).ToArgb();
+					Result.color = (uint)_img.GetPixel(p0.x, p0.y).ToArgb();
 					r.right++; r.bottom++;
 				} else {
-					var a = isAnyShape ? new List<POINT>() { p0 } : null;
+					//var a = isAnyShape ? new List<POINT>() { p0 } : null;
 					var pen = Pens.Red;
 					bool notFirstMove = false;
 					_capturing = true;
@@ -449,20 +531,20 @@ namespace Au
 							if (m.Msg.message != Api.WM_MOUSEMOVE) return;
 							POINT p = m.Msg.pt; _w.MapScreenToClient(ref p);
 							using var g = Graphics.FromHwnd(_w.Handle);
-							if (isAnyShape) {
-								a.Add(p);
-								g.DrawLine(pen, p0, p);
-								p0 = p;
-							} else {
-								if (notFirstMove) { //erase prev rect
-									r.right++; r.bottom++;
-									g.DrawImage(_img, r, r, GraphicsUnit.Pixel);
-									//FUTURE: prevent flickering. Also don't draw under magnifier.
-								} else notFirstMove = true;
-								r = RECT.FromLTRB(p0.x, p0.y, p.x, p.y);
-								r.Normalize(true);
-								g.DrawRectangle(pen, r);
-							}
+							//if (isAnyShape) {
+							//	a.Add(p);
+							//	g.DrawLine(pen, p0, p);
+							//	p0 = p;
+							//} else {
+							if (notFirstMove) { //erase prev rect
+								r.right++; r.bottom++;
+								g.DrawImage(_img, r, r, GraphicsUnit.Pixel);
+								//FUTURE: prevent flickering. Also don't draw under magnifier.
+							} else notFirstMove = true;
+							r = RECT.FromLTRB(p0.x, p0.y, p.x, p.y);
+							r.Normalize(true);
+							g.DrawRectangle(pen, r);
+							//}
 						})) { //Esc key etc
 							Api.InvalidateRect(_w);
 							return;
@@ -470,13 +552,13 @@ namespace Au
 					}
 					finally { _capturing = false; }
 
-					GraphicsPath path = null;
-					if (isAnyShape && a.Count > 1) {
-						path = _CreatePath(a);
-						r = RECT.From(path.GetBounds(), false);
-					} else {
-						r.right++; r.bottom++;
-					}
+					//GraphicsPath path = null;
+					//if (isAnyShape && a.Count > 1) {
+					//	path = _CreatePath(a);
+					//	r = RECT.From(path.GetBounds(), false);
+					//} else {
+					r.right++; r.bottom++;
+					//}
 					if (r.NoArea) {
 						Api.DestroyWindow(_w);
 						return;
@@ -485,10 +567,8 @@ namespace Au
 					if (ic != ICFlags.Rectangle) {
 						var b = _img.Clone(r, PixelFormat.Format32bppArgb);
 						var d = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadWrite, b.PixelFormat);
-						try {
-							_SetAlpha(d, r, path);
-						}
-						finally { b.UnlockBits(d); path?.Dispose(); }
+						try { unsafe { _SetAlpha((uint*)d.Scan0, r/*, path*/); } }
+						finally { b.UnlockBits(d); /*path?.Dispose();*/ }
 						Result.image = b;
 					}
 
@@ -550,9 +630,9 @@ namespace Au.Types
 		public Bitmap image;
 
 		/// <summary>
-		/// Captured color.
+		/// Captured color in 0xAARRGGBB format. Alpha 0xFF.
 		/// </summary>
-		public ColorInt color;
+		public uint color;
 
 		/// <summary>
 		/// Location of the captured image or rectangle, in screen coordinates.

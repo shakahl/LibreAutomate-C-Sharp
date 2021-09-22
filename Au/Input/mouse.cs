@@ -1047,6 +1047,69 @@ namespace Au
 			if (cursorHash == 0) throw new ArgumentException();
 			return wait.forCondition(secondsTimeout, () => (MouseCursor.GetCurrentVisibleCursor(out var c) && MouseCursor.Hash(c) == cursorHash) ^ not);
 		}
+
+		/// <summary>
+		/// Posts mouse-click messages to the window.
+		/// </summary>
+		/// <param name="w">Window or control.</param>
+		/// <param name="x">X coordinate in <b>w</b> client area or <b>rect</b>. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="y">Y coordinate in <b>w</b> client area or <b>rect</b>. Default - center.</param>
+		/// <param name="button">Can specify the left (default), right or middle button. Also flag for double-click, press or release.</param>
+		/// <param name="rect">A rectangle in <b>w</b> client area. If null (default), <i>x y</i> are relative to the client area.</param>
+		/// <exception cref="AuWndException">Invalid window.</exception>
+		/// <exception cref="ArgumentException">Unsupported button specified.</exception>
+		/// <remarks>
+		/// Does not move the mouse.
+		/// Does not wait until the target application finishes processing the message.
+		/// Works not with all windows.
+		/// </remarks>
+		public static void virtualClick(wnd w, Coord x = default, Coord y = default, MButton button = MButton.Left, RECT? rect = null) {
+			RECT r;
+			if (rect != null) {
+				r = rect.Value;
+				w.ThrowIfInvalid();
+			} else {
+				if (!w.GetClientRect(out r)) w.ThrowUseNative();
+			}
+			VirtualClick_(w, r, x, y, button);
+		}
+
+		internal static void VirtualClick_(wnd w, RECT r, Coord x = default, Coord y = default, MButton button = MButton.Left) {
+			MButton mask = MButton.Down | MButton.Up | MButton.DoubleClick, b = button & ~mask, dud = button & mask;
+			if (b == 0) b = MButton.Left;
+			int m = b switch {
+				MButton.Left => Api.WM_LBUTTONDOWN,
+				MButton.Right => Api.WM_RBUTTONDOWN,
+				MButton.Middle => Api.WM_MBUTTONDOWN,
+				_ => throw new ArgumentException("supported buttons: left, right, middle")
+			};
+			if (dud is not (0 or MButton.Down or MButton.Up or MButton.DoubleClick)) throw new ArgumentException();
+
+			POINT point = Coord.NormalizeInRect(x, y, r, centerIfEmpty: true);
+
+			//if the control is mouse-transparent, use its ancestor. Example: the color selection controls in the classic color dialog.
+			if (w.HasStyle(WS.CHILD)) {
+				var w2 = w; var ps = point; w.MapClientToScreen(ref ps);
+				while (!w2.Is0 && Api.HTTRANSPARENT == w2.Send(Api.WM_NCHITTEST, 0, Math2.MakeLparam(ps))) w2 = w2.Get.DirectParent;
+				if (w2 != w && !w2.Is0) { w.MapClientToClientOf(w2, ref point); w = w2; }
+			}
+
+			nint xy = Math2.MakeLparam(point);
+			nint mk = 0; if (keys.isCtrl) mk |= Api.MK_CONTROL; if (keys.isShift) mk |= Api.MK_SHIFT;
+			nint mk1 = mk; if (dud != MButton.Up) mk1 |= b switch { MButton.Left => Api.MK_LBUTTON, MButton.Right => Api.MK_RBUTTON, _ => Api.MK_MBUTTON };
+			if (dud != MButton.Up) w.Post(m, mk1, xy);
+			if (dud != MButton.Down) {
+				w.Post(Api.WM_MOUSEMOVE, mk1, xy);
+				w.Post(m + 1, mk, xy);
+			}
+			if (dud == MButton.DoubleClick) {
+				w.Post(m + 2, mk1, xy);
+				w.Post(m + 1, mk, xy);
+			}
+			//_MinimalSleep(); //don't need. Eg elm.Invoke() does not wait too.
+
+			//never mind: support nonclient (WM_NCRBUTTONDOWN etc)
+		}
 	}
 
 #if unfinished
@@ -1278,117 +1341,5 @@ namespace Au.Types
 
 		/// <summary>Arrow and question mark.</summary>
 		Help = 32651,
-	}
-
-	/// <summary>
-	/// Extension methods for types of this library.
-	/// </summary>
-	public static partial class ExtAu
-	{
-		//rejected. Why to have 2 functions for same thing. And not the window clicks the mouse, but the mouse clicks the window.
-		//#region wnd
-
-		///// <summary>
-		///// Moves the cursor (mouse pointer) to the position x y relative to this window.
-		///// Calls <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.
-		///// </summary>
-		///// <exception cref="NotFoundException">Window not found (this variable is 0).</exception>
-		///// <exception cref="Exception">Exceptions of <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.</exception>
-		//public static void MouseMove(this wnd w, Coord x = default, Coord y = default, bool nonClient = false)
-		//	=> mouse.move(+w, x, y, nonClient);
-
-		///// <summary>
-		///// Clicks, double-clicks, presses or releases a mouse button at position x y relative to this window.
-		///// Calls <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.
-		///// </summary>
-		///// <exception cref="NotFoundException">Window not found (this variable is 0).</exception>
-		///// <exception cref="Exception">Exceptions of <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.</exception>
-		//public static MRelease MouseClick(this wnd w, Coord x = default, Coord y = default, MButton button = MButton.Left, bool nonClient = false)
-		//	=> mouse.clickEx(button, +w, x, y, nonClient);
-
-		//#endregion
-
-		#region elm
-
-		/// <summary>
-		/// Moves the cursor (mouse pointer) to this UI element.
-		/// Calls <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.
-		/// </summary>
-		/// <param name="t"></param>
-		/// <param name="x">X coordinate in the bounding rectangle of this UI element. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
-		/// <param name="y">Y coordinate in the bounding rectangle of this UI element. Default - center.</param>
-		/// <exception cref="NotFoundException">UI element not found (this variable is null).</exception>
-		/// <exception cref="AuException">Failed to get UI element rectangle (<see cref="elm.GetRect(out RECT, wnd)"/>) or container window (<see cref="elm.WndContainer"/>).</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.</exception>
-		public static void MouseMove(this elm t, Coord x = default, Coord y = default)
-			=> _ElmMouseAction(t ?? throw new NotFoundException(), false, x, y, default);
-
-		/// <summary>
-		/// Clicks this UI element.
-		/// Calls <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.
-		/// </summary>
-		/// <param name="t"></param>
-		/// <param name="x">X coordinate in the bounding rectangle of this UI element. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
-		/// <param name="y">Y coordinate in the bounding rectangle of this UI element. Default - center.</param>
-		/// <param name="button">Which button and how to use it.</param>
-		/// <exception cref="NotFoundException">UI element not found (this variable is null).</exception>
-		/// <exception cref="AuException">Failed to get UI element rectangle (<see cref="elm.GetRect(out RECT, wnd)"/>) or container window (<see cref="elm.WndContainer"/>).</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.</exception>
-		public static MRelease MouseClick(this elm t, Coord x = default, Coord y = default, MButton button = MButton.Left) {
-			_ElmMouseAction(t ?? throw new NotFoundException(), true, x, y, button);
-			return button;
-		}
-
-		static void _ElmMouseAction(elm t, bool click, Coord x, Coord y, MButton button) {
-			var w = t.WndContainer; //info: not necessary, but with window the mouse functions are more reliable, eg will not click another window if it is over our window
-
-			//never mind: if w.Is0 and the action is 'click', get UI element from point and fail if it is not t. But need to compare UI element properties. Rare.
-
-			if (!(w.Is0 ? t.GetRect(out RECT r) : t.GetRect(out r, w))) throw new AuException(0, "*get rectangle");
-			var p = Coord.NormalizeInRect(x, y, r, centerIfEmpty: true);
-			if (w.Is0) {
-				if (button == 0) mouse.move(p);
-				else mouse.clickEx(button, p);
-			} else {
-				if (button == 0) mouse.move(w, p.x, p.y);
-				else mouse.clickEx(button, w, p.x, p.y);
-			}
-		}
-
-		#endregion
-
-		#region uiimage
-
-		/// <summary>
-		/// Moves the mouse to the found image.
-		/// Calls <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.
-		/// </summary>
-		/// <param name="t"></param>
-		/// <param name="x">X coordinate in the found image. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
-		/// <param name="y">Y coordinate in the found image. Default - center.</param>
-		/// <exception cref="NotFoundException">Image not found (this variable is null).</exception>
-		/// <exception cref="InvalidOperationException">area is Bitmap.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.</exception>
-		public static void MouseMove(this uiimage t, Coord x = default, Coord y = default)
-			=> (t ?? throw new NotFoundException()).MouseAction_(0, x, y);
-
-		/// <summary>
-		/// Clicks the found image.
-		/// Calls <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.
-		/// </summary>
-		/// <param name="t"></param>
-		/// <param name="x">X coordinate in the found image. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
-		/// <param name="y">Y coordinate in the found image. Default - center.</param>
-		/// <param name="button">Which button and how to use it.</param>
-		/// <exception cref="NotFoundException">Image not found (this variable is null).</exception>
-		/// <exception cref="InvalidOperationException">area is Bitmap.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.</exception>
-		public static MRelease MouseClick(this uiimage t, Coord x = default, Coord y = default, MButton button = MButton.Left) {
-			(t ?? throw new NotFoundException()).MouseAction_(button == 0 ? MButton.Left : button, x, y);
-			return button;
-		}
-
-		#endregion
-
 	}
 }

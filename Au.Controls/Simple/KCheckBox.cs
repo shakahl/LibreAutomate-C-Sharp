@@ -3,6 +3,10 @@ using System.Windows.Controls;
 
 namespace Au.Controls
 {
+	/// <summary>
+	/// Replaces bool? IsChecked with bool IsChecked.
+	/// Adds events/overrides for "checked state changed".
+	/// </summary>
 	public class KCheckBox : CheckBox
 	{
 		public new bool IsChecked {

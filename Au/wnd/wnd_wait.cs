@@ -14,7 +14,7 @@ namespace Au
 		/// <remarks>
 		/// Parameters etc are the same as <see cref="find"/>.
 		/// By default ignores invisible and cloaked windows. Use flags if need.
-		/// If you have a window's wnd variable, to wait until it is active/visible/etc use <see cref="WaitForCondition"/> instead.
+		/// If you have a window's wnd variable, to wait until it is active/visible/etc use <see cref="WaitFor"/> instead.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -139,7 +139,7 @@ namespace Au
 		//}
 
 		/// <summary>
-		/// Waits for a user-defined state/condition of this window. For example active, visible, enabled, closed, contains control.
+		/// Waits for a user-defined state/condition of this window. For example active, visible, enabled, closed, contains something.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true.</param>
@@ -155,29 +155,29 @@ namespace Au
 		/// wnd w = wnd.find("* Notepad");
 		/// 
 		/// //wait max 30 s until window w is active. Exception on timeout or if closed.
-		/// w.WaitForCondition(30, t => t.IsActive);
+		/// w.WaitFor(30, t => t.IsActive);
 		/// print.it("active");
 		/// 
 		/// //wait max 30 s until window w is enabled. Exception on timeout or if closed.
-		/// w.WaitForCondition(30, t => t.IsEnabled);
+		/// w.WaitFor(30, t => t.IsEnabled);
 		/// print.it("enabled");
 		/// 
 		/// //wait until window w is closed
-		/// w.WaitForCondition(0, t => !t.IsAlive, true); //same as w.WaitForClosed()
+		/// w.WaitFor(0, t => !t.IsAlive, true); //same as w.WaitForClosed()
 		/// print.it("closed");
 		/// 
 		/// //wait until window w is minimized or closed
-		/// w.WaitForCondition(0, t => t.IsMinimized || !t.IsAlive, true);
+		/// w.WaitFor(0, t => t.IsMinimized || !t.IsAlive, true);
 		/// if(!w.IsAlive) { print.it("closed"); return; }
 		/// print.it("minimized");
 		/// 
 		/// //wait until window w contains focused control classnamed "Edit"
 		/// var c = new wndChildFinder(cn: "Edit");
-		/// w.WaitForCondition(10, t => c.Exists(t) && c.Result.IsFocused);
+		/// w.WaitFor(10, t => c.Exists(t) && c.Result.IsFocused);
 		/// print.it("control focused");
 		/// ]]></code>
 		/// </example>
-		public bool WaitForCondition(double secondsTimeout, Func<wnd, bool> condition, bool dontThrowIfClosed = false) {
+		public bool WaitFor(double secondsTimeout, Func<wnd, bool> condition, bool dontThrowIfClosed = false) {
 			bool wasInvalid = false;
 			var to = new wait.Loop(secondsTimeout);
 			for (; ; ) {
@@ -205,7 +205,7 @@ namespace Au
 		/// <exception cref="ArgumentException">Invalid wildcard expression.</exception>
 		public bool WaitForName(double secondsTimeout, [ParamString(PSFormat.wildex)] string name) {
 			wildex x = name; //ArgumentNullException
-			return WaitForCondition(secondsTimeout, t => x.Match(t.Name));
+			return WaitFor(secondsTimeout, t => x.Match(t.Name));
 		}
 
 		/// <summary>
@@ -220,7 +220,7 @@ namespace Au
 		/// If the window is already closed, immediately returns true.
 		/// </remarks>
 		public bool WaitForClosed(double secondsTimeout, bool waitUntilProcessEnds = false) {
-			if (!waitUntilProcessEnds) return WaitForCondition(secondsTimeout, t => !t.IsAlive, true);
+			if (!waitUntilProcessEnds) return WaitFor(secondsTimeout, t => !t.IsAlive, true);
 
 			//SHOULDDO: if window of this thread or process...
 

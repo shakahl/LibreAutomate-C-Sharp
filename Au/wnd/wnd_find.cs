@@ -60,7 +60,6 @@
 		/// Try to find Notepad window. Throw NotFoundException if not found.
 		/// <code>
 		/// wnd w1 = wnd.find(0, "* Notepad");
-		/// //wnd w1 = +wnd.find("* Notepad"); //the same
 		/// </code>
 		/// Wait for Notepad window max 3 seconds. Throw NotFoundException if not found during that time.
 		/// <code>

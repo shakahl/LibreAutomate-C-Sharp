@@ -54,7 +54,7 @@ namespace Au.Controls
 		/// Sets element's tooltip text to show in this control instead of standard tooltip popup.
 		/// Uses <b>ToolTip</b> property; don't overwrite it.
 		/// </summary>
-		public void AddElem(FrameworkElement c, string text) {
+		public void ZAddElem(FrameworkElement c, string text) {
 			c.ToolTip = text;
 			c.ToolTipOpening += (o, e) => {
 				e.Handled = true;
@@ -67,12 +67,15 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Temporarily suspends showing tooltips of elements in this control. See <see cref="AddElem"/>.
+		/// Temporarily suspends showing tooltips of elements in this control. See <see cref="ZAddElem"/>.
 		/// </summary>
 		/// <param name="timeMS">Suspend for this time interval, ms. If 0, resumes.</param>
-		public void SuspendElems(long timeMS = 5000) {
+		public void ZSuspendElems(long timeMS = 5000) {
 			_suspendElems = Environment.TickCount64 + timeMS;
 		}
 		long _suspendElems;
+
+		///
+		public bool ZElemsSuspended => _suspendElems != 0 && Environment.TickCount64 < _suspendElems;
 	}
 }

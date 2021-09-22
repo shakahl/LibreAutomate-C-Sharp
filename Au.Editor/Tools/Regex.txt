@@ -36,8 +36,6 @@
 
 This program uses PCRE2 version 10.33.
 
-If Regex is checked in the Find panel, this window is visible when a text field has focus. You can close it. To show again, press F1 or uncheck/check Regex.
-
 -- options --
 
 <.h>Options<>

@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
+//using Microsoft.CodeAnalysis.FindSymbols;
 
 static class CiUtil
 {
@@ -28,9 +29,12 @@ static class CiUtil
 		return GetSymbolOrKeywordFromPos(cd.document, cd.pos16, cd.code);
 	}
 
-	public static (ISymbol symbol, string keyword, HelpKind helpKind, SyntaxToken token)
-		GetSymbolOrKeywordFromPos(Document document, int position, string code) {
+	public static (ISymbol symbol, string keyword, HelpKind helpKind, SyntaxToken token) GetSymbolOrKeywordFromPos(Document document, int position, string code) {
 		//using var p1 = perf.local();
+
+		//CONSIDER: try SymbolFinder. Same speed.
+		//var r = SymbolFinder.FindSymbolAtPositionAsync(document, position).Result;
+		//print.it(r);
 
 		if (position > 0 && SyntaxFacts.IsIdentifierPartCharacter(code[position - 1])) position--;
 
@@ -451,7 +455,27 @@ static class CiUtil
 	}
 
 	//The order must match CiItemKind.
-	public static string[] ItemKindNames { get; } = new string[] { "Class", "Structure", "Interface", "Enum", "Delegate", "Method", "ExtensionMethod", "Property", "Operator", "Event", "Field", "LocalVariable", "Constant", "EnumMember", "Namespace", "Keyword", "Label", "Snippet", "TypeParameter" }; //must match enum CiItemKind
+	public static string[] ItemKindNames { get; } = new[] {
+		"Class",
+		"Structure",
+		"Interface",
+		"Enum",
+		"Delegate",
+		"Method",
+		"ExtensionMethod",
+		"Property",
+		"Operator",
+		"Event",
+		"Field",
+		"LocalVariable",
+		"Constant",
+		"EnumMember",
+		"Namespace",
+		"Keyword",
+		"Label",
+		"Snippet",
+		"TypeParameter"
+	};
 
 #if DEBUG
 	//unfinished. Just prints what we can get from CSharpSyntaxContext.
@@ -600,11 +624,11 @@ static class CiExt
 	/// Cached, thread-safe.
 	/// </summary>
 	public static string QualifiedNameCached(this INamespaceSymbol t) { //only 2 times faster than QualifiedName, but no garbage. Same speed with Dictionary.
-		//if (t.IsGlobalNamespace || t.ContainingNamespace.IsGlobalNamespace) return t.Name; //same speed. Few such namespaces.
+																		//if (t.IsGlobalNamespace || t.ContainingNamespace.IsGlobalNamespace) return t.Name; //same speed. Few such namespaces.
 		if (!_namespaceNames.TryGetValue(t, out var s)) {
 			s = t.QualifiedName();
 			_namespaceNames.AddOrUpdate(t, s); //OrUpdate for thread safety
-			//print.it(s);
+											   //print.it(s);
 		}
 		return s;
 	}

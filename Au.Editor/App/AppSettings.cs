@@ -5,11 +5,11 @@
 record AppSettings : JSettings
 {
 	//This is loaded at startup and therefore must be fast.
-	//	Don't use types that would cause to load UI dlls (WPF etc). Eg when it is a nested type and its parent class is a WPF etc control.
-	//	Tested with .NET 5: first time takes ~40 ms. Mostly to load/jit/etc dlls used in JSON deserialization, which then is fast regardless of data size.
+	//	NOTE: Don't use types that would cause to load UI dlls (WPF etc). Eg when it is a nested type and its parent class is a WPF etc control.
+	//	Speed tested with .NET 5: first time 40-60 ms. Mostly to load/jit/etc dlls used in JSON deserialization, which then is fast regardless of data size.
+	//	CONSIDER: Jit_ something in other thread. But it isn't good when runs at PC startup.
 
 	public static AppSettings Load() => Load<AppSettings>(DirBS + "Settings.json");
-	//CONSIDER: it takes 60 ms. We can Jit_ something in other thread. But it isn't good when runs at PC startup.
 
 	public static readonly string DirBS = folders.ThisAppDocuments + @".settings\";
 
@@ -37,13 +37,15 @@ record AppSettings : JSettings
 	public bool ci_complGroup = true;
 	public int ci_complParen; //0 spacebar, 1 always, 2 never
 
-	public Au.Tools.Delm.EOptions tools_Delm_flags;
+	public int tools_Delm_flags;
 
 	public string db_copy_ref, db_copy_doc, db_copy_winapi;
 
+	public Dictionary<string, CiGoTo.AssemblySett> ci_gotoAsm;
+
 	public string find_skip;
 	public int find_searchIn, find_printSlow = 50;
-	public FRRecentItem[] find_recent, find_recentReplace; //possibly big arrays should be at the end
+	public FRRecentItem[] find_recent, find_recentReplace; //possibly-big arrays should be at the end
 }
 
 /// <summary>

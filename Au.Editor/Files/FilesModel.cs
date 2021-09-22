@@ -1240,7 +1240,7 @@ partial class FilesModel
 	/// <param name="name">Default name of the workspace.</param>
 	/// <param name="location">Default parent directory of the main directory of the workspace.</param>
 	public static string GetDirectoryPathForNewWorkspace(string name = null, string location = null) {
-		var d = new DNewWorkspace(name, location ?? folders.ThisAppDocuments);
+		var d = new DNewWorkspace(name, location ?? folders.ThisAppDocuments) { Owner = App.Wmain, ShowInTaskbar = false };
 		if (d.ShowDialog() != true) return null;
 		return d.ResultPath;
 	}

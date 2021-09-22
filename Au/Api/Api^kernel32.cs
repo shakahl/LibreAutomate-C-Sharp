@@ -887,16 +887,6 @@ namespace Au.Types
 		[DllImport("kernel32.dll", EntryPoint = "OutputDebugStringW")]
 		internal static extern void OutputDebugString(string lpOutputString);
 
-		//internal const uint THREAD_SET_CONTEXT = 0x10;
-
-		//internal delegate void PAPCFUNC(nint Parameter);
-
-		//[DllImport("kernel32.dll", SetLastError = true)]
-		//internal static extern uint QueueUserAPC(PAPCFUNC pfnAPC, IntPtr hThread, nint dwData);
-
-		[DllImport("kernel32.dll")]
-		internal static extern int GetOEMCP();
-
 		[DllImport("kernel32.dll")]
 		internal static extern bool SetProcessWorkingSetSize(IntPtr hProcess, nint dwMinimumWorkingSetSize, nint dwMaximumWorkingSetSize);
 

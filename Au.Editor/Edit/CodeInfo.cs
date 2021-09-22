@@ -35,9 +35,9 @@ static class CodeInfo
 		//warm up
 		//Task.Delay(100).ContinueWith(_1 => {
 		Task.Run(() => {
-			//var p1 = perf.local();
+			//using var p1 = perf.local();
 			try {
-				var code = @"using Au; print.it(""t"" + 'c' + 1);";
+				var code = @"using Au; print.it(""t"" + 1);";
 
 				var refs = new MetaReferences().Refs;
 				ProjectId projectId = ProjectId.CreateNewId();
@@ -49,10 +49,11 @@ static class CodeInfo
 					.AddDocument(documentId, "f.cs", code);
 				var document = sol.GetDocument(documentId);
 				//p1.Next();
-				//_ = document.GetSemanticModelAsync().Result;
+				var semo = document.GetSemanticModelAsync().Result;
+				//p1.Next();
+				Microsoft.CodeAnalysis.Classification.Classifier.GetClassifiedSpans(semo, new TextSpan(0, code.Length), ws);
 				//p1.Next();
 				App.Wmain.Dispatcher.InvokeAsync(() => {
-					//perf.next('w');
 					_isWarm = true;
 					ReadyForStyling?.Invoke();
 					Panels.Editor.ZActiveDocChanged += Stop;
@@ -63,7 +64,6 @@ static class CodeInfo
 				//p1.Next();
 				//Compiler.Warmup(document); //don't need. Later fast enough. Now just uses more memory and CPU at startup.
 				//p1.NW('w');
-				//perf.nw();
 
 				//EdUtil.MinimizeProcessPhysicalMemory(500); //with this later significantly slower
 			}

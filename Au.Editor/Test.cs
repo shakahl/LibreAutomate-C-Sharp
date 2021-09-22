@@ -178,12 +178,11 @@ static unsafe class Test
 
 
 	public static void FromMenubar() {
-		Panels.PanelManager.Save();
-		App.Wmain.Hide();
 
 
 
-
+		//Panels.PanelManager.Save();
+		//App.Wmain.Hide();
 
 		//TestCallerExpression("yyyy" + 5);
 

@@ -299,8 +299,8 @@ namespace Au.Types
 			public int iPaddedBorderWidth;
 		}
 
-		[DllImport("gdi32.dll")]
-		internal static extern int GetPixel(IntPtr hdc, int x, int y);
+		[DllImport("gdi32.dll")] //does not set last error when fails
+		internal static extern uint GetPixel(IntPtr hdc, int x, int y);
 
 		#endregion
 

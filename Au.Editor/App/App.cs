@@ -6,8 +6,8 @@ using System.Windows;
 static class App
 {
 	public const string
-		AppName = "Derobotize Me C#", //TODO: change name
-		AppNameShort = "Derobotizer"; //must be without spaces etc
+		AppName = "Autepad C#",
+		AppNameShort = "Autepad"; //must be without spaces etc
 	public static string UserGuid;
 	internal static print.Server PrintServer;
 	public static AppSettings Settings;

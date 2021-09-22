@@ -390,9 +390,9 @@ partial class CiStyling
 		XmlDocText,
 		XmlDocTag, //tags, CDATA, ///, etc
 
-		Image,
-
 		countUserDefined,
+
+		Image = countUserDefined,
 
 		//STYLE_HIDDEN=31,
 		//STYLE_DEFAULT=32,
