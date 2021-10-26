@@ -369,15 +369,15 @@ namespace Au.Types
 		/// <param name="r">Rectangle relative to the primary screen.</param>
 		/// <param name="x">X relative to the rectangle. Default - center.</param>
 		/// <param name="y">Y relative to the rectangle. Default - center.</param>
-		public static PopupXY In(RECT r, Coord x = default, Coord y = default) => new PopupXY(x, y) { inRect = true, rect = r };
+		public static PopupXY In(RECT r, Coord x = default, Coord y = default) => new(x, y) { inRect = true, rect = r };
 
 		/// <summary>
 		/// Creates new <b>PopupXY</b> that specifies position relative to the work area of the primary screen.
 		/// </summary>
-		public static implicit operator PopupXY((Coord x, Coord y) p) => new PopupXY(p.x, p.y, true);
+		public static implicit operator PopupXY((Coord x, Coord y) p) => new(p.x, p.y, true);
 
 		/// <summary>Creates new <b>PopupXY</b> that specifies position relative to the primary screen (not to the work area).</summary>
-		public static implicit operator PopupXY(POINT p) => new PopupXY(p.x, p.y, false);
+		public static implicit operator PopupXY(POINT p) => new(p.x, p.y, false);
 		//info: this conversion can be used with PopupXY.Mouse.
 
 		//public bool IsRawXY => !inRect && screen.IsNull && workArea == false && x.Type == Coord.CoordType.Normal && y.Type == Coord.CoordType.Normal;
@@ -402,7 +402,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Gets <see cref="screen"/>.Now if not empty, else screen that contains the specified point.
+		/// Gets <see cref="screen.Now"/> if not empty, else screen that contains the specified point.
 		/// </summary>
 		public screen GetScreen() {
 			if (!screen.IsEmpty) return screen.Now;

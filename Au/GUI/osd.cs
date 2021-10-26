@@ -14,6 +14,7 @@ namespace Au.Types
 		protected virtual void Dispose(bool disposing) {
 			if (_w.Is0) return;
 			_w.Close();
+			_TopmostWorkaroundUndo();
 			_w = default;
 		}
 
@@ -96,7 +97,10 @@ namespace Au.Types
 			set {
 				if (value == _r) return;
 				_r = value;
-				if (IsHandleCreated) _w.SetWindowPos(SWPFlags.NOACTIVATE, _r.left, _r.top, _r.Width, _r.Height, SpecHWND.TOPMOST);
+				if (IsHandleCreated) {
+					_w.SetWindowPos(SWPFlags.NOACTIVATE, _r.left, _r.top, _r.Width, _r.Height, SpecHWND.TOPMOST);
+					_TopmostWorkaroundApply();
+				}
 			}
 		}
 		RECT _r;
@@ -119,10 +123,12 @@ namespace Au.Types
 		public virtual void Show() {
 			if (Visible) {
 				_w.ZorderTopmost();
+				_TopmostWorkaroundApply();
 			} else {
 				if (_w.Is0) _CreateWindow();
 				_w.ShowL(true);
 				_w.ZorderTopmost();
+				_TopmostWorkaroundApply();
 				Api.UpdateWindow(_w);
 			}
 		}
@@ -227,13 +233,88 @@ namespace Au.Types
 		public static void closeAll([ParamString(PSFormat.wildex)] string name = null) {
 			foreach (var w in wnd.findAll(name, "**m Au.OSD||Au.OSD2", WOwner.Process(Api.GetCurrentProcessId()))) w.Close(noWait: true);
 		}
+
+		#region topmost workaround
+
+		//SHOULDDO: find a better workaround for: our topmost window is below some other topmost windows (Win8+).
+		//	Window examples:
+		//	A. Windows Start menu, search, TaskListThumbnailWnd.
+		//	B. uiAccess apps, eg on-screen keyboard, Inspect, NVDA, QM2 uiAccess.
+		//	C. Probably Win8 Store apps.
+		//	Known workarounds:
+		//	1. Temporarily make the window non-topmost. But it fails for A and probably C. Fails always if this process is not admin.
+		//	2. Temporarily set partially transparent. But it is useful only for on-screen rect. Not useful for menus and toolbars. Fails if not admin. Fails with WPF windows.
+		//	3. Set window region. Too crazy. Tested, does not work with eg OSK, although works with eg Notepad.
+		//	4. Run tools in uiAccess processes. Too crazy and limited.
+
+		internal bool TopmostWorkaround_ { get; set; }
+
+		void _TopmostWorkaroundApply() {
+			if (!TopmostWorkaround_ || !osVersion.minWin10) return; //never mind: on Win8 not tested. Would be bad to make full-screen windows transparent.
+			var w = wnd.fromXY(new(_r.CenterX, _r.CenterY), WXYFlags.NeedWindow);
+			bool apply = false;
+			lock (s_twList) {
+				List<OsdWindow> aosd = null;
+				foreach (var v in s_twList) if (v.w == w) { if (v.a.Contains(this)) return; aosd = v.a; break; }
+				if (w.HasExStyle(WSE.TOPMOST)) {
+					RECT r = w.Rect; r.Inflate(10, 10);
+					if (r.Width > _r.Width && r.Height > _r.Height) {
+						if (!_w.ZorderIsAbove(w)) {
+							if (apply = aosd == null) s_twList.Add((w, new() { this }));
+							else aosd.Add(this);
+							//print.it(apply, w);
+						}
+					}
+				}
+				if (apply && s_twTimer == null) {
+					s_twTimer = new(_ => {
+						List<wnd> aw = null;
+						lock (s_twList) {
+							foreach (var (w, _) in s_twList) {
+								//print.it(w.GetTransparency(out var op, out var col), op, col);
+								if (!w.GetTransparency(out var op, out var col) || op == null || op.Value > 200) {
+									if (w.IsAlive) (aw ??= new()).Add(w);
+								}
+							}
+						}
+						if (aw != null) foreach (var w in aw) w.SetTransparency(true, 200, noException: true);
+					});
+					s_twTimer.Every(1000);
+				}
+			}
+			if (apply) w.SetTransparency(true, 200, noException: true);
+		}
+
+		void _TopmostWorkaroundUndo() {
+			if (!TopmostWorkaround_ || !osVersion.minWin10) return;
+			List<wnd> aw = null;
+			lock (s_twList) {
+				for (int i = s_twList.Count; --i >= 0;) {
+					var (w, a) = s_twList[i];
+					if (a.Remove(this) && a.Count == 0) {
+						s_twList.RemoveAt(i);
+						if (w.IsAlive) (aw ??= new()).Add(w);
+					}
+				}
+				if (s_twList.Count == 0 && s_twTimer != null) {
+					s_twTimer.Stop();
+					s_twTimer = null;
+				}
+			}
+			if (aw != null) foreach (var w in aw) w.SetTransparency(!true, 255, noException: true);
+		}
+
+		static List<(wnd w, List<OsdWindow> a)> s_twList = new();
+		static timer2 s_twTimer;
+
+		#endregion
 	}
 }
 
 namespace Au
 {
 	/// <summary>
-	/// Shows mouse-transparent rectangle on screen. Its interior can be visually transparent or opaque.
+	/// Shows a mouse-transparent rectangle on screen. Its interior can be visually transparent or opaque.
 	/// </summary>
 	/// <remarks>
 	/// Creates a temporary partially transparent window, and draws rectangle in it.
@@ -330,7 +411,7 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// var m = new osdText { Text = "Text" };
-		/// m.XY = new PopupXY(Coord.Center, Coord.Max); //bottom-center of the work area of the primary screen
+		/// m.XY = new(Coord.Center, Coord.Max); //bottom-center of the work area of the primary screen
 		/// m.Show();
 		/// ]]></code>
 		/// </example>
@@ -563,7 +644,7 @@ namespace Au
 				if (!wait.forMessagesAndCondition(t, () => !IsHandleCreated)) Close();
 			} else if (t > 0) {
 				t = Math.Min(t, int.MaxValue / 1000) * 1000; //s -> ms
-				timerm.after(t, _ => Close());
+				timer.after(t, _ => Close());
 			}
 		}
 
@@ -674,7 +755,7 @@ namespace Au
 			if (XY != null) {
 				if (XY.inRect) r.MoveInRect(XY.rect, XY.x, XY.y, false);
 				else r.MoveInScreen(XY.x, XY.y, XY.screen, XY.workArea, ensureInScreen: false);
-				r.EnsureInScreen(workArea: true);
+				r.EnsureInScreen(workArea: XY.workArea);
 			} else {
 				r.MoveInScreen(Coord.Center, Coord.Center, defaultScreen, workArea: true, ensureInScreen: true);
 			}

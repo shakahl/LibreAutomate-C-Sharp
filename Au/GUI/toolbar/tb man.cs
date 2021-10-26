@@ -154,7 +154,7 @@ namespace Au
 		{
 			internal readonly List<toolbar> _atb = new List<toolbar>();
 			readonly List<_OwnerWindow> _aow = new List<_OwnerWindow>();
-			timerm _timer;
+			timer _timer;
 			int _timerPeriod;
 			WinEventHook _hook;
 			int _tempHook;
@@ -180,7 +180,7 @@ namespace Au
 						},
 						_Hook,
 						flags: EHookFlags.SKIPOWNTHREAD);
-					_timer = new timerm(_Timer);
+					_timer = new timer(_Timer);
 				}
 
 				tb._hide = TBHide.Owner;
@@ -207,7 +207,7 @@ namespace Au
 				_timer.Every(_timerPeriod = period);
 			}
 
-			void _Timer(timerm t) {
+			void _Timer(timer t) {
 				if (_timerPeriod != 250) _SetTimer(250);
 
 				//remove closed toolbars and their owners if need. Now don't need because toolbars call Remove when closing.
@@ -553,7 +553,7 @@ namespace Au
 
 		void _WmDisplayChange() {
 			if (_os != null) {
-				timerm.after(200, _ => {
+				timer.after(200, _ => {
 					if (_os == null || _closed) return;
 					_os.UpdateRect(out bool changed);
 					if (changed) _FollowRect();
@@ -567,9 +567,9 @@ namespace Au
 
 				//Wait until owner's DPI updated. If owner is pm-dpi-aware, its DPI is updated at random times, maybe after several s.
 				int i = 15, oldDpi = _dpi;
-				timerm.every(1000, t => {
+				timer.every(1000, t => {
 					if (--i > 0 && _dpi == oldDpi && !_closed && !_hide.Has(TBHide.Owner)) {
-						if (Dpi.OfWindow(OwnerWindow, true) == oldDpi) return;
+						if(screen.of(OwnerWindow).Dpi == oldDpi) return;
 						//print.it("DPI changed", _dpi, Dpi.OfWindow(OwnerWindow, true));
 						_FollowRect();
 					}

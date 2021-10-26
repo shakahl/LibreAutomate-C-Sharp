@@ -268,7 +268,6 @@ public unsafe class uiimageFinder
 			w.ThrowIfInvalid();
 			throw new AuException("*get rectangle");
 		}
-		//FUTURE: DPI
 
 		//r is the area from where to get pixels. If !inScreen, it is relative to the client area.
 		//Intermediate results will be relative to r. Then will be added _resultOffset if a limiting rectangle is used.
@@ -477,6 +476,7 @@ public unsafe class uiimageFinder
 			if (_action != Action_.WaitChanged) {
 				int iFound = (int)(f.p - o_pos0 - areaPixels);
 				var r = new RECT(iFound % _ad.width, iFound / _ad.width, imageWidth, imageHeight);
+				_DpiScaleRect(ref r);
 				r.Offset(_resultOffset.x, _resultOffset.y);
 				Result.Rect = r;
 
@@ -678,15 +678,16 @@ public unsafe class uiimageFinder
 		}
 
 		//copy from screen/window to memory bitmap
-		if (0 != (_flags & IFFlags.PrintWindow) && Api.PrintWindow(_area.W, _ad.mb.Hdc, Api.PW_CLIENTONLY | (osVersion.minWin8_1 ? Api.PW_RENDERFULLCONTENT : 0))) {
-			//PW_RENDERFULLCONTENT is new in Win8.1. Undocumented in MSDN, but defined in h. Then can capture windows like Chrome, winstore.
-			//print.it("PrintWindow OK");
+		if (0 != (_flags & IFFlags.PrintWindow)) {
+			//PW_RENDERFULLCONTENT is new in Win8.1. Undocumented in MSDN, but defined in h. Then works with windows like Chrome, winstore.
+			if (!Api.PrintWindow(_area.W, _ad.mb.Hdc, Api.PW_CLIENTONLY | (osVersion.minWin8_1 ? Api.PW_RENDERFULLCONTENT : 0)))
+				_area.W.ThrowNoNative("Failed to get pixels");
 		} else {
 			//get DC of screen or window
 			bool windowDC = 0 != (_flags & IFFlags.WindowDC);
 			wnd w = windowDC ? _area.W : default;
 			using var dc = new WindowDC_(w);
-			if (dc.Is0) w.ThrowNoNative("Failed");
+			if (dc.Is0) w.ThrowNoNative("Failed to get pixels");
 			//_Debug("get DC");
 			//copy from screen/window DC to memory bitmap
 			uint rop = windowDC ? Api.SRCCOPY : Api.SRCCOPY | Api.CAPTUREBLT;
@@ -737,6 +738,18 @@ public unsafe class uiimageFinder
 			//}
 			////run.it(testFile);
 		}
+	}
+
+	//r is relative to the search area
+	void _DpiScaleRect(ref RECT r) {
+		if (!_flags.HasAny(IFFlags.WindowDC | IFFlags.PrintWindow)) return;
+		var w = _area.W;
+		if (!Dpi.GetScalingInfo_(w, out bool scaled, out _, out _) || !scaled) return; //makes faster on Win10+; don't scale on older OS
+		int d1 = screen.of(w.Window).Dpi, d2 = Dpi.OfWindow(w);
+		r.left = Math2.MulDiv(r.left, d1, d2);
+		r.top = Math2.MulDiv(r.top, d1, d2);
+		r.right = Math2.MulDiv(r.right, d1, d2);
+		r.bottom = Math2.MulDiv(r.bottom, d1, d2);
 	}
 
 	//[Conditional("WI_DEBUG_PERF")]

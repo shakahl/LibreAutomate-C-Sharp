@@ -665,7 +665,7 @@ namespace Au.Controls
 
 			switch (lang) {
 			case LexLanguage.SCLEX_CPP:
-				_c.zSetLexerCpp(noClear: true, codeBackColor: 0xE0E0E0);
+				_c.zSetLexerCpp(noClear: true/*, codeBackColor: 0xF0F0F0*/);
 				break;
 			}
 		}

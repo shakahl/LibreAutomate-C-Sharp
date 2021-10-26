@@ -64,7 +64,7 @@ namespace Au
 			/// Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
 			/// Returns 1 if gets user model id, 2 if gets path, 0 if fails.
 			/// </summary>
-			/// <param name="w">Window.</param>
+			/// <param name="w">A top-level window.</param>
 			/// <param name="appId">Receives app ID.</param>
 			/// <param name="prependShellAppsFolder">Prepend <c>@"shell:AppsFolder\"</c> (to run or get icon).</param>
 			/// <param name="getExePathIfNotWinStoreApp">Get program path if it is not a Windows Store app.</param>
@@ -174,45 +174,6 @@ namespace Au
 			//	[ThreadStatic] static LastWndProps _ofThread;
 			//	internal static LastWndProps OfThread => _ofThread ??= new LastWndProps();
 			//}
-
-			/// <summary>
-			/// Auto-registers window class "Au.DWP" with wndproc = DefWindowProc and creates hidden window.
-			/// </summary>
-			/// <param name="messageOnly"></param>
-			/// <param name="wndProcUnsafe">If not null, replaces window procedure (SetWindowLongPtr). The caller must protect the delegate from GC.</param>
-			public static wnd CreateWindowDWP(bool messageOnly, WNDPROC wndProcUnsafe = null) {
-				var cn = WindowClassDWP;
-				var w = messageOnly ? WndUtil.CreateMessageOnlyWindow(cn) : WndUtil.CreateWindow(cn);
-				if (wndProcUnsafe != null) Api.SetWindowLongPtr(w, GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProcUnsafe));
-				return w;
-			}
-			static int s_registeredDWP;
-			const string c_wndClassDWP = "Au.DWP";
-
-			/// <summary>
-			/// Auto-registers window class "Au.DWP" with wndproc = DefWindowProc and returns "Au.DWP".
-			/// </summary>
-			public static string WindowClassDWP {
-				get {
-					if (0 == Interlocked.CompareExchange(ref s_registeredDWP, 1, 0)) {
-						var x = new Api.WNDCLASSEX { cbSize = sizeof(Api.WNDCLASSEX), style = Api.CS_GLOBALCLASS };
-						fixed (char* pCN = c_wndClassDWP) {
-							x.lpszClassName = pCN;
-							x.lpfnWndProc = Api.GetProcAddress("user32.dll", "DefWindowProcW");
-							if (0 == Api.RegisterClassEx(x)) throw new Win32Exception();
-						}
-					}
-					return c_wndClassDWP;
-				}
-			}
-
-			/// <summary>
-			/// Replaces window procedure (SetWindowLongPtr). Returns previous window procedure.
-			/// The caller must protect the delegate from GC.
-			/// </summary>
-			public static IntPtr SubclassUnsafe(wnd w, WNDPROC wndProc) {
-				return Api.SetWindowLongPtr(w, GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
-			}
 
 			/// <summary>
 			/// Returns true if w contains a non-zero special handle value (<see cref="SpecHWND"/>).

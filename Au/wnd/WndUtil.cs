@@ -200,6 +200,46 @@
 		}
 
 		/// <summary>
+		/// Auto-registers window class "Au.DWP" with wndproc = DefWindowProc and creates hidden window.
+		/// </summary>
+		/// <param name="messageOnly"></param>
+		/// <param name="wndProcUnsafe">If not null, replaces window procedure (SetWindowLongPtr). The caller must protect the delegate from GC.</param>
+		/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
+		internal static wnd CreateWindowDWP_(bool messageOnly, WNDPROC wndProcUnsafe = null) {
+			var cn = WindowClassDWP_;
+			var w = messageOnly ? CreateMessageOnlyWindow(cn) : CreateWindow(cn);
+			if (wndProcUnsafe != null) Api.SetWindowLongPtr(w, GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProcUnsafe));
+			return w;
+		}
+		static int s_registeredDWP;
+		const string c_wndClassDWP = "Au.DWP";
+
+		/// <summary>
+		/// Auto-registers window class "Au.DWP" with wndproc = DefWindowProc and returns "Au.DWP".
+		/// </summary>
+		internal static unsafe string WindowClassDWP_ {
+			get {
+				if (0 == Interlocked.CompareExchange(ref s_registeredDWP, 1, 0)) {
+					var x = new Api.WNDCLASSEX { cbSize = sizeof(Api.WNDCLASSEX), style = Api.CS_GLOBALCLASS };
+					fixed (char* pCN = c_wndClassDWP) {
+						x.lpszClassName = pCN;
+						x.lpfnWndProc = Api.GetProcAddress("user32.dll", "DefWindowProcW");
+						if (0 == Api.RegisterClassEx(x)) throw new Win32Exception();
+					}
+				}
+				return c_wndClassDWP;
+			}
+		}
+
+		/// <summary>
+		/// Replaces window procedure (SetWindowLongPtr). Returns previous window procedure.
+		/// The caller must protect the delegate from GC.
+		/// </summary>
+		internal static IntPtr SubclassUnsafe_(wnd w, WNDPROC wndProc) {
+			return Api.SetWindowLongPtr(w, GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
+		}
+
+		/// <summary>
 		/// Destroys a native window of this thread.
 		/// Calls API <msdn>DestroyWindow</msdn>.
 		/// Returns false if failed. Supports <see cref="lastError"/>.
@@ -240,7 +280,7 @@
 		/// Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
 		/// Returns null if fails. Returns null if called on Windows 7 unless <i>getExePathIfNotWinStoreApp</i> true.
 		/// </summary>
-		/// <param name="w"></param>
+		/// <param name="w">A top-level window.</param>
 		/// <param name="prependShellAppsFolder">Prepend <c>@"shell:AppsFolder\"</c> (to run or get icon).</param>
 		/// <param name="getExePathIfNotWinStoreApp">Get program path if it is not a Windows Store app.</param>
 		/// <remarks>
@@ -260,6 +300,27 @@
 		/// In 32-bit process actually calls <b>GetClassLong</b>, because <b>GetClassLongPtr</b> is unavailable.
 		/// </remarks>
 		public static nint GetClassLong(wnd w, int index) => Api.GetClassLongPtr(w, index);
+
+		/// <summary>
+		/// Changes the owner window.
+		/// </summary>
+		/// <returns>If fails, returns false; supports <see cref="lastError"/>.</returns>
+		/// <remarks>
+		/// A window that has an owner window is always on top of it.
+		/// Don't call this for controls, they don't have an owner window.
+		/// Fails for example if the owner's process has higher [](xref:uac) integrity level or is a Store app.
+		/// </remarks>
+		/// <seealso cref="wnd.getwnd.Owner"/>
+		public static bool SetOwnerWindow(wnd w, wnd owner) {
+			Api.SetWindowLongPtr(w, GWL.HWNDPARENT, (nint)owner);
+			if (w.Get.Owner != owner) return false;
+			if (!owner.Is0) {
+				bool tm = owner.IsTopmost;
+				if (tm != w.IsTopmost) { if (tm) w.ZorderTopmost(); else w.ZorderNoTopmost(); }
+				if (!w.ZorderIsAbove(owner)) w.ZorderAbove(owner);
+			}
+			return true;
+		}
 
 		//probably not useful. Dangerous.
 		///// <summary>

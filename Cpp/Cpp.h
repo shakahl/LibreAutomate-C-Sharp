@@ -18,7 +18,7 @@ enum class eAccMiscFlags : BYTE {
 	Java = 4,
 	Marked = 128,
 
-	InheritMask= InProc|UIA|Java,
+	InheritMask = InProc | UIA | Java,
 };
 ENABLE_BITMASK_OPERATORS(eAccMiscFlags);
 
@@ -30,7 +30,7 @@ struct Cpp_Acc
 	long elem;
 	struct MISC {
 		eAccMiscFlags flags;
-		BYTE role; //for optimization. 0 if not set or failed to get or VT_BSTR or does not fit in BYTE.
+		BYTE roleByte; //for optimization. 0 if not set or failed to get. ROLE_CUSTOM (0xFF) if VT_BSTR or not 1-ROLE_MAX.
 		WORD level; //for ToString. 0 if not set.
 	} misc;
 
@@ -46,9 +46,8 @@ struct Cpp_Acc
 
 #ifdef Cpp_EXPORTS
 	void Zero() { memset(this, 0, sizeof(*this)); }
-	void SetRole();
-	void SetRole(DWORD role) { misc.role = (BYTE)(role <= 0xff ? role : 0); }
-	void SetLevel(DWORD level) { misc.level = (WORD)(level <= 0xffff ? level : 0xffff); }
+	void SetRoleByte();
+	void SetLevel(DWORD level) { misc.level = (WORD)(level < 0xffff ? level : 0xffff); }
 #endif
 };
 
@@ -77,8 +76,8 @@ enum class eAF
 	HiddenToo = 2,
 	MenuToo = 4,
 	ClientArea = 8,
-	NotInProc=0x100,
-	UIA=0x200,
+	NotInProc = 0x100,
+	UIA = 0x200,
 	Mark = 0x10000,
 	//used only in this dll
 	Marked_ = 0x40000000,
@@ -86,19 +85,34 @@ enum class eAF
 ENABLE_BITMASK_OPERATORS(eAF);
 
 //Parameters for Cpp_AccFind.
-struct Cpp_AccParams {
+struct Cpp_AccFindParams {
 	STR role, name, prop;
 	int roleLength, nameLength, propLength;
 	eAF flags;
 	int skip;
 	WCHAR resultProp;
 
-	Cpp_AccParams() noexcept { memset(this, 0, sizeof(*this)); }
+	Cpp_AccFindParams() noexcept { memset(this, 0, sizeof(*this)); }
 };
 
 //Cpp_AccFind callback function type.
 //Must Release a.iacc. Preferably later, in spare time. Can do it in another thread.
-using Cpp_AccCallbackT = BOOL(__stdcall*)(Cpp_Acc a);
+using Cpp_AccFindCallbackT = BOOL(__stdcall*)(Cpp_Acc a);
+
+enum class eXYFlags
+{
+	NotInProc = 1,
+	UIA = 2,
+	PreferLink = 4,
+	TrySmaller = 8,
+
+	//internal flags, used in the C# side too
+	DpiScaled_ = 0x10000,
+	Fail_ = 0x20000,
+};
+ENABLE_BITMASK_OPERATORS(eXYFlags);
+
+using Cpp_AccFromPointCallbackT = eXYFlags(__stdcall*)(eXYFlags flags, HWND wFP, HWND wTL);
 
 enum class eError
 {

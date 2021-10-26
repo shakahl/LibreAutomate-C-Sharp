@@ -2,8 +2,8 @@
 #include "cpp.h"
 #include "acc.h"
 
-HRESULT AccFind(AccFindCallback& callback, HWND w, Cpp_Acc* aParent, const Cpp_AccParams& ap, eAF2 flags2, out BSTR& errStr);
-HRESULT AccFromPoint(POINT p, int flags, int specWnd, out Cpp_Acc& aResult);
+HRESULT AccFind(AccFindCallback& callback, HWND w, Cpp_Acc* aParent, const Cpp_AccFindParams& ap, eAF2 flags2, out BSTR& errStr);
+HRESULT AccFromPoint(POINT p, HWND wFP, eXYFlags flags, int specWnd, out Cpp_Acc& aResult);
 HRESULT AccNavigate(Cpp_Acc aFrom, STR navig, out Cpp_Acc& aResult);
 HRESULT AccGetProp(Cpp_Acc a, WCHAR what, out BSTR& sResult);
 
@@ -21,7 +21,7 @@ struct MarshalParams_AccFind
 	int hwnd; //not HWND, because it must be of same size in 32 and 64 bit process
 	eAF2 flags2;
 private:
-	//these are the same as Cpp_AccParams, except is used int instead of STR. Cannot use STR because its size can be 32 or 64 bit.
+	//these are the same as Cpp_AccFindParams, except is used int instead of STR. Cannot use STR because its size can be 32 or 64 bit.
 	_FlatStr _role, _name, _prop;
 	eAF _flags;
 	int _skip;
@@ -43,11 +43,11 @@ private:
 		return (STR)this + r.offs;
 	}
 public:
-	static int CalcMemSize(const Cpp_AccParams& ap) {
+	static int CalcMemSize(const Cpp_AccFindParams& ap) {
 		return sizeof(MarshalParams_AccFind) + (ap.roleLength + ap.nameLength + ap.propLength + 3) * 2;
 	}
 
-	void Marshal(HWND w, const Cpp_AccParams& ap, eAF2 flags2_) {
+	void Marshal(HWND w, const Cpp_AccFindParams& ap, eAF2 flags2_) {
 		hwnd = (int)(LPARAM)w;
 		flags2 = flags2_;
 
@@ -60,7 +60,7 @@ public:
 		_resultProp = ap.resultProp;
 	}
 
-	void Unmarshal(out Cpp_AccParams& ap) {
+	void Unmarshal(out Cpp_AccFindParams& ap) {
 		ap.role = _GetString(_role, out ap.roleLength);
 		ap.name = _GetString(_name, out ap.nameLength);
 		ap.prop = _GetString(_prop, out ap.propLength);
@@ -71,8 +71,6 @@ public:
 };
 
 static long s_accMarshalWrapperCount;
-//static CSimpleArray<IUnknown*> s_accMarshalWrappers;
-//static concurrency::critical_section s_cs1;
 
 //Workaround for Firefox bug in TEXT AOs in multi-process mode.
 class AccessibleMarshalWrapper : public IAccessible
@@ -83,42 +81,14 @@ public:
 
 	AccessibleMarshalWrapper(IAccessible* a)
 	{
-		_a = a;//SHOULDDO: try to addref/release, maybe it will solve the WindowFromAccessibleObject problem for LINK in drag&dropped FF tab window
+		_a = a;
 		ignoreQI = true;
 
 		InterlockedIncrement(&s_accMarshalWrapperCount);
-		//concurrency::critical_section::scoped_lock sl(s_cs1);
-		//s_accMarshalWrappers.Add(this);
 	}
 
 	~AccessibleMarshalWrapper() {
 		InterlockedDecrement(&s_accMarshalWrapperCount);
-		//concurrency::critical_section::scoped_lock sl(s_cs1);
-		//s_accMarshalWrappers.Remove(this);
-	}
-
-	static bool Disconnect() {
-		//This process would crash later when releasing wrappers if this dll is unloaded then.
-#if true
-		//Don't allow to unload this dll if there are unreleased wrappers.
-		return s_accMarshalWrapperCount == 0;
-#else
-		//Disconnect unreleased acc wrappers. If fails don't allow to unload this dll.
-		//Does not work as expected. Just increments dll refcount, and then FreeLibraryAndExitThread does not unload it. Later is called Release().
-		concurrency::critical_section::scoped_lock sl(s_cs1);
-		int n = s_accMarshalWrappers.GetSize();
-		//PRINTI(n);
-		if(n == 0) return true;
-		bool failed = false;
-		for(int i = 0; i < n; i++) {
-			if(s_accMarshalWrappers[i] == null) continue;
-			int hr = CoDisconnectObject(s_accMarshalWrappers[i], 0);
-			if(hr != 0) { PRINTF(L"CoDisconnectObject, 0x%x", hr); failed = true; break; }
-			s_accMarshalWrappers[i] = null;
-		}
-		if(!failed) s_accMarshalWrappers.RemoveAll();
-		return !failed;
-#endif
 	}
 
 	virtual STDMETHODIMP QueryInterface(REFIID riid, void** ppvObject) override
@@ -265,7 +235,6 @@ enum class eAccResult {
 };
 ENABLE_BITMASK_OPERATORS(eAccResult);
 
-#if true
 bool WriteAccToStream(ref Smart<IStream>& stream, Cpp_Acc a, Cpp_Acc* aPrev = null)
 {
 	if(stream == null) CreateStreamOnHGlobal(0, true, &stream);
@@ -279,7 +248,7 @@ bool WriteAccToStream(ref Smart<IStream>& stream, Cpp_Acc a, Cpp_Acc* aPrev = nu
 		if(a.misc.level != 0) has |= eAccResult::Level;
 	}
 	if(a.elem != 0) has |= eAccResult::Elem;
-	if(a.misc.role != 0) has |= eAccResult::Role;
+	if(a.misc.roleByte != 0) has |= eAccResult::Role;
 
 	if(stream->Write(&has, 1, null)) return false;
 
@@ -299,9 +268,8 @@ bool WriteAccToStream(ref Smart<IStream>& stream, Cpp_Acc a, Cpp_Acc* aPrev = nu
 		else hr = CoMarshalInterface(stream, IID_IAccessible, a.acc, MSHCTX_LOCAL, null, MSHLFLAGS_NORMAL);
 		//ao::PrintAcc(a.acc, a.elem);
 		if(hr) {
-			//Firefox bug when multi-process: fails to marshal all TEXT AOs.
+			//Firefox fails to marshal all TEXT AO when multi-processs.
 			//	Workaround: wrap a.acc into an AccessibleMarshalWrapper and marshal it instead.
-			//	Or could detect Firefox multi-process and use NotInProc implicitly. But slower almost 2 times. Also then cannot get HTML attributes etc later.
 			//	With new Firefox we have to use this for all Firefox AOs.
 #if true
 			HRESULT hr1 = hr;
@@ -325,84 +293,13 @@ bool WriteAccToStream(ref Smart<IStream>& stream, Cpp_Acc a, Cpp_Acc* aPrev = nu
 	if(stream->Write(&a.misc.flags, 1, null)) return false;
 
 	if(!!(has & eAccResult::Role))
-		if(stream->Write(&a.misc.role, 1, null)) return false;
+		if(stream->Write(&a.misc.roleByte, 1, null)) return false;
 
 	if(!!(has & eAccResult::Level))
 		if(stream->Write(&a.misc.level, 2, null)) return false;
 
 	return true;
 }
-#else
-bool WriteAccToStream(ref Smart<IStream>& stream, Cpp_Acc a, Cpp_Acc* aPrev = null)
-{
-	if(stream == null) CreateStreamOnHGlobal(0, true, &stream);
-
-	eAccResult has = (eAccResult)0;
-	if(aPrev != null) {
-		if(a.acc == aPrev->acc && a.elem != 0) has |= eAccResult::UsePrevAcc; else aPrev->acc = a.acc;
-		if(a.misc.level != 0) has |= a.misc.level == aPrev->misc.level ? eAccResult::UsePrevLevel : eAccResult::Level;
-		aPrev->misc.level = a.misc.level;
-	} else {
-		if(a.misc.level != 0) has |= eAccResult::Level;
-	}
-	if(a.elem != 0) has |= eAccResult::Elem;
-	if(a.misc.role != 0) has |= eAccResult::Role;
-
-	if(stream->Write(&has, 1, null)) return false;
-
-	a.misc.flags |= eAccMiscFlags::InProc;
-	if(!(has & eAccResult::UsePrevAcc)) {
-		//problem: with some AO the hook is not called when we try to do something inproc, eg get all props.
-		//	They use a custom IMarshal, which redirects to another (not hooked) IAccessible interface. In most cases it is even in another process.
-		//	Known apps: 1. Firefox, when multiprocess not disabled. 2. Some hidden AO in IE. 3. Windows store apps, but we don't use inproc.
-		//	Known apps where is custom IMarshal but the hook works: 1. Task Scheduler MMC: controls of other process.
-		//	Workaround: don't add InProc flag. With all known such apps it does not make faster anyway.
-		//	Other workarounds:
-		//		Tested, fails: replace CoMarshalInterface with CoGetStandardMarshal/MarshalInterface. Chrome works, Firefox crashes.
-		//		Not tested: wrap the AO in our AO (like we do with Java and UIA). Makes no sense, just would make slower.
-		IMarshal* m = null;
-		if(0 == a.acc->QueryInterface(&m)) {
-			m->Release();
-			a.misc.flags &= ~eAccMiscFlags::InProc;
-			//PRINTS(L"custom IMarshal. Using NotInProc.");
-		}
-
-		HRESULT hr = CoMarshalInterface(stream, IID_IAccessible, a.acc, MSHCTX_LOCAL, null, MSHLFLAGS_NORMAL);
-		//ao::PrintAcc(a.acc, a.elem);
-		if(hr) {
-			//Firefox bug when multi-process: fails to marshal all TEXT AOs.
-			//	Workaround: wrap a.acc into an AccessibleMarshalWrapper and marshal it instead.
-			//	Or could detect Firefox multi-process and use NotInProc implicitly. But slower almost 2 times. Also then cannot get HTML attributes etc later.
-#if true
-			HRESULT hr1 = hr;
-			auto wrap = new AccessibleMarshalWrapper(a.acc);
-			a.acc = wrap;
-			hr = CoMarshalInterface(stream, IID_IAccessible, a.acc, MSHCTX_LOCAL, null, MSHLFLAGS_NORMAL);
-			if(hr == 0) wrap->ignoreQI = false; else delete wrap;
-			//Print((UINT)hr);
-
-			if(hr) PRINTF(L"failed to marshal AO: 0x%X 0x%X", hr1, hr);
-#endif
-			//ao::PrintAcc(a.acc, a.elem);
-		} //else Print(L"OK");
-		if(hr) return false;
-		inproc::s_hookIAcc.Hook(a.acc);
-	}
-
-	if(!!(has & eAccResult::Elem))
-		if(stream->Write(&a.elem, 4, null)) return false;
-
-	if(stream->Write(&a.misc.flags, 1, null)) return false;
-
-	if(!!(has & eAccResult::Role))
-		if(stream->Write(&a.misc.role, 1, null)) return false;
-
-	if(!!(has & eAccResult::Level))
-		if(stream->Write(&a.misc.level, 2, null)) return false;
-
-	return true;
-}
-#endif
 
 #pragma endregion
 
@@ -422,8 +319,8 @@ HRESULT AccFindOrGet(MarshalParams_Header* h, IAccessible* iacc, out BSTR& sResu
 		Cpp_Acc aFrom(iacc, p->elem, h->miscFlags), aResult;
 
 		HRESULT hr = AccNavigate(aFrom, (STR)(p + 1), out aResult);
-		if(hr) return hr;
-		aResult.SetRole();
+		if(hr != 0) return hr;
+		aResult.SetRoleByte();
 
 		if(!WriteAccToStream(ref stream, aResult)) return RPC_E_SERVER_CANTMARSHAL_DATA;
 
@@ -433,22 +330,22 @@ HRESULT AccFindOrGet(MarshalParams_Header* h, IAccessible* iacc, out BSTR& sResu
 		Smart<IAccessible> a;
 
 		HRESULT hr = ao::AccFromWindowSR((HWND)(LPARAM)p->hwnd, p->objid, &a);
-		if(hr) return hr;
+		if(hr != 0) return hr;
 
 		if(p->flags & 2) { //get name
 			return a->get_accName(ao::VE(), out & sResult);
 		}
 
 		Cpp_Acc aResult(a, 0);
-		aResult.SetRole();
+		aResult.SetRoleByte();
 
 		if(!WriteAccToStream(ref stream, aResult)) return RPC_E_SERVER_CANTMARSHAL_DATA;
 
 	} else if(action == InProcAction::IPA_AccFromPoint) {
 		auto x = (MarshalParams_AccFromPoint*)h;
 		Cpp_Acc aResult;
-		HRESULT hr = AccFromPoint(x->p, x->flags, x->specWnd, out aResult);
-		if(hr) return hr;
+		HRESULT hr = AccFromPoint(x->p, (HWND)(LPARAM)x->wFP, x->flags, x->specWnd, out aResult);
+		if(hr != 0) return hr;
 		if(!WriteAccToStream(ref stream, aResult)) return RPC_E_SERVER_CANTMARSHAL_DATA;
 
 		//Workaround for AO leak: the final Release called in the client process somehow does not release the true AO. Releases only the proxy.
@@ -460,7 +357,7 @@ HRESULT AccFindOrGet(MarshalParams_Header* h, IAccessible* iacc, out BSTR& sResu
 		aResult.acc->Release();
 
 	} else { //IPA_AccFind
-		Cpp_AccParams ap;
+		Cpp_AccFindParams ap;
 		auto p = (MarshalParams_AccFind*)h; p->Unmarshal(out ap);
 		HWND w = (HWND)(LPARAM)p->hwnd;
 		eAF2 flags2 = p->flags2;
@@ -475,7 +372,10 @@ HRESULT AccFindOrGet(MarshalParams_Header* h, IAccessible* iacc, out BSTR& sResu
 			if(!findAll && skip-- > 0) return eAccFindCallbackResult::Continue;
 
 			if(resultProp) {
-				if(resultProp != '-') AccGetProp(a, resultProp, out sResult);
+				if(resultProp != '-') {
+					a.misc.flags |= eAccMiscFlags::InProc;
+					AccGetProp(a, resultProp, out sResult);
+				}
 			} else {
 				if(!stream) CreateStreamOnHGlobal(0, true, &stream);
 
@@ -495,8 +395,8 @@ HRESULT AccFindOrGet(MarshalParams_Header* h, IAccessible* iacc, out BSTR& sResu
 			return eAccFindCallbackResult::StopNotFound;
 		}, w, w ? null : &aParent, ref ap, flags2, out sResult);
 
-		if(hr2 && hr2 != (HRESULT)eError::NotFound) return hr2;
-		if(hr) return hr;
+		if(hr2 != 0 && hr2 != (HRESULT)eError::NotFound) return hr2;
+		if(hr != 0) return hr;
 		if(resultProp) return 0;
 	}
 
@@ -509,7 +409,13 @@ HRESULT AccFindOrGet(MarshalParams_Header* h, IAccessible* iacc, out BSTR& sResu
 	return RPC_E_SERVER_CANTMARSHAL_DATA;
 }
 
-bool AccDisconnectWrappers() { return AccessibleMarshalWrapper::Disconnect(); }
+//Returns false if there are AccessibleMarshalWrapper objects in this process.
+//Then cannot unload this dll, because later will be called Release and this process would crash if unloaded.
+//Could not find a way to prevent Release. Even if client does not call it, COM calls it after 6 minutes. CoDisconnectObject prevents only other method calls.
+bool AccDisconnectWrappers() {
+	PRINTF_IF(s_accMarshalWrapperCount != 0, L"cannot unload dll because of %i alive acc marshal wrappers.  %s", s_accMarshalWrapperCount, GetCommandLineW());
+	return s_accMarshalWrapperCount == 0;
+}
 
 } //namespace inproc
 
@@ -554,8 +460,8 @@ HRESULT InProcCall::ReadResultAcc(ref Cpp_Acc& a, bool dontNeedAO/* = false*/) {
 
 	if(_stream->Read(&a.misc.flags, 1, null)) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
 
-	if(!(has & eAccResult::Role)) a.misc.role = 0;
-	else if(_stream->Read(&a.misc.role, 1, null)) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
+	if(!(has & eAccResult::Role)) a.misc.roleByte = 0;
+	else if(_stream->Read(&a.misc.roleByte, 1, null)) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
 
 	if(!(has & eAccResult::UsePrevLevel)) {
 		if(!(has & eAccResult::Level)) a.misc.level = 0;
@@ -638,7 +544,7 @@ g1:
 //	When this func returns eError::InvalidParameter, it is error string.
 //	When this func returns 0 and used ap.resultProp, it is the property (string, or binary struct); null if '-'.
 //	Else null.
-EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, const Cpp_AccParams& ap, Cpp_AccCallbackT also, out Cpp_Acc& aResult, out BSTR& sResult)
+EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, const Cpp_AccFindParams& ap, Cpp_AccFindCallbackT also, out Cpp_Acc& aResult, out BSTR& sResult)
 {
 	//Perf.First();
 	aResult.Zero(); sResult = null;

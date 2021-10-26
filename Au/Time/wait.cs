@@ -10,14 +10,15 @@
 		/// Calls <see cref="Thread.Sleep(int)"/>.
 		/// Does not process Windows messages and other events, therefore should not be used in threads with windows, timers, hooks, events or COM, unless <i>timeMilliseconds</i> is small. Supports APC.
 		/// If the computer goes to sleep or hibernate during that time, the real time is the specified time + the sleep/hibernate time.
+		/// 
+		/// Tip: the script editor replaces code like <c>100ms</c> with <c>100.ms();</c> when typing.
 		/// </remarks>
 		/// <exception cref="ArgumentOutOfRangeException"><i>timeMilliseconds</i> is negative and not Timeout.Infinite (-1).</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// wait.ms(500);
-		/// 500.ms(); //the same (ms is an extension method for int)
+		/// 500.ms(); //the same (ms is an extension method)
 		/// wait.s(0.5); //the same
-		/// 0.5.s(); //the same (s is an extension method for double)
 		/// ]]></code>
 		/// </example>
 		public static void ms(this int timeMilliseconds) {
@@ -39,11 +40,14 @@
 		/// </summary>
 		/// <param name="timeSeconds">Time to wait, seconds.</param>
 		/// <exception cref="ArgumentOutOfRangeException"><i>timeSeconds</i> is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
+		/// <remarks>
+		/// Tip: the script editor replaces code like <c>100ms</c> with <c>100.ms();</c> when typing.
+		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// wait.ms(5000);
+		/// wait.s(5);
+		/// 5.s(); //the same (s is an extension method)
 		/// 5000.ms(); //the same
-		/// 5.s(); //the same (s is an extension method for int)
 		/// ]]></code>
 		/// </example>
 		public static void s(this int timeSeconds) {
@@ -59,9 +63,9 @@
 		/// <exception cref="ArgumentOutOfRangeException"><i>timeSeconds</i> is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// wait.ms(2500);
+		/// wait.s(2.5);
+		/// 2.5.s(); //the same (s is an extension method)
 		/// 2500.ms(); //the same
-		/// 2.5.s(); //the same (s is an extension method for double)
 		/// ]]></code>
 		/// </example>
 		public static void s(this double timeSeconds) {
@@ -69,6 +73,9 @@
 			if (t > int.MaxValue || t < 0) throw new ArgumentOutOfRangeException();
 			ms((int)t);
 		}
+		//Maybe this should not be an extension method.
+		//	Code like 0.5.s() looks weird and better should use 500.ms(). Rarely need non-integer time when > 1 s.
+		//	But: 1. Symmetry. 2. Makes easier to convert QM2 code, like 0.5 to 0.5.s(); not 500.ms();.
 
 		/// <summary>
 		/// Waits <i>timeMS</i> milliseconds. While waiting, retrieves and dispatches Windows messages and other events.
@@ -130,7 +137,7 @@
 		/// The system uses the smallest period (best resolution) that currently is set by any application. You cannot make it bigger than current value.
 		/// <note>It is not recommended to keep small period (high resolution) for a long time. It can be bad for power saving.</note>
 		/// Don't need this for wait.SleepX and functions that use them (mouse.click etc). They call <see cref="TempSet1"/> when the sleep time is 1-99 ms.
-		/// This does not change the minimal period of <see cref="timerm"/> and System.Windows.Forms.Timer.
+		/// This does not change the minimal period of <see cref="timer"/> and System.Windows.Forms.Timer.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[

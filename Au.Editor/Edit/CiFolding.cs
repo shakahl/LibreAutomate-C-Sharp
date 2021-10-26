@@ -526,7 +526,7 @@ partial class SciCode
 
 	//	Call(SCI_FOLDALL, SC_FOLDACTION_EXPAND);
 	//	Sci_SetFoldLevels(SciPtr, 0, zLineCount - 1, 0, null);
-	//	timerm.after(1000, _ => _TestRestoreFolding(a));
+	//	timer.after(1000, _ => _TestRestoreFolding(a));
 	//}
 
 	//unsafe void _TestRestoreFolding(List<POINT> lines)

@@ -3,31 +3,52 @@ namespace Au
 	public partial struct wnd
 	{
 		/// <summary>
-		/// Sets opacity and/or transparent color.
+		/// Sets window transparency attributes (opacity and/or transparent color).
 		/// </summary>
 		/// <param name="allowTransparency">Set or remove WS_EX_LAYERED style that is required for transparency. If false, other parameters are not used.</param>
 		/// <param name="opacity">Opacity from 0 (completely transparent) to 255 (opaque). Does not change if null. If less than 0 or greater than 255, makes 0 or 255.</param>
 		/// <param name="colorKey">Make pixels of this color completely transparent. Does not change if null. The alpha byte is not used.</param>
+		/// <param name="noException">Don't throw exception when fails.</param>
 		/// <exception cref="AuWndException"/>
 		/// <remarks>
 		/// Uses API <msdn>SetLayeredWindowAttributes</msdn>.
-		/// On Windows 7 works only with top-level windows, on newer OS also with controls.
-		/// Does not work with WPF windows, class name "HwndWrapper*".
+		/// On Windows 7 works only with top-level windows, not with controls.
+		/// Fails with WPF windows, class name "HwndWrapper*".
 		/// </remarks>
-		public void SetTransparency(bool allowTransparency, int? opacity = null, ColorInt? colorKey = null) {
+		public void SetTransparency(bool allowTransparency, int? opacity = null, ColorInt? colorKey = null, bool noException = false) {
 			var est = ExStyle;
-			bool layered = (est & WSE.LAYERED) != 0;
+			bool layered = est.Has(WSE.LAYERED);
 
 			if (allowTransparency) {
 				uint col = 0, f = 0; byte op = 0;
 				if (colorKey != null) { f |= 1; col = (uint)colorKey.GetValueOrDefault().ToBGR(); }
 				if (opacity != null) { f |= 2; op = (byte)Math.Clamp(opacity.GetValueOrDefault(), 0, 255); }
 
-				if (!layered) SetExStyle(est | WSE.LAYERED);
-				if (!Api.SetLayeredWindowAttributes(this, col, op, f)) ThrowUseNative();
+				if (!layered) SetExStyle(est | WSE.LAYERED, noException ? WSFlags.NoException : 0);
+				if (!Api.SetLayeredWindowAttributes(this, col, op, f) && !noException) ThrowUseNative();
 			} else if (layered) {
-				SetExStyle(est & ~WSE.LAYERED); //tested: resets attributes, ie after adding WSE.LAYERED the window will be normal
+				SetExStyle(est & ~WSE.LAYERED, noException ? WSFlags.NoException : 0);
+				//tested: resets attributes, ie after adding WSE.LAYERED the window will be normal
 			}
+		}
+
+		/// <summary>
+		/// Gets window transparency attributes (opacity and transparency color).
+		/// </summary>
+		/// <param name="opacity">If this function returns true and the window has an opacity attribute, receives the opacity value 0-255, else null.</param>
+		/// <param name="colorKey">If this function returns true and the window has a transparency color attribute, receives the color, else null.</param>
+		/// <returns>True if the window has transparency attributes set with <see cref="SetTransparency"/> or API <msdn>SetLayeredWindowAttributes</msdn>. Supports <see cref="lastError"/>.</returns>
+		/// <remarks>
+		/// Uses API <msdn>GetLayeredWindowAttributes</msdn>.
+		/// </remarks>
+		public bool GetTransparency(out int? opacity, out ColorInt? colorKey) {
+			opacity = default; colorKey = default;
+			if (/*ExStyle.Has(WSE.LAYERED) && */Api.GetLayeredWindowAttributes(this, out uint col, out byte op, out uint f)) {
+				if (0 != (f & 1)) colorKey = col;
+				if (0 != (f & 2)) opacity = op;
+				return true;
+			}
+			return false;
 		}
 
 		/// <summary>
@@ -93,8 +114,8 @@ namespace Au
 				if (w == wDesk) return 1; //Progman. Other window (WorkerW) may be active when desktop active.
 
 				//cache because GetWindowThreadProcessId quite slow
-				if (w.Handle != _w) { _w = w.Handle; _tidW = Api.GetWindowThreadProcessId(w, out _pidW); }
-				if (wDesk.Handle != _wDesk) { _wDesk = wDesk.Handle; _tidD = Api.GetWindowThreadProcessId(wDesk, out _pidD); }
+				if (w.Handle != _w) { _w = w.Handle; _tidW = w.GetThreadProcessId(out _pidW); }
+				if (wDesk.Handle != _wDesk) { _wDesk = wDesk.Handle; _tidD = wDesk.GetThreadProcessId(out _pidD); }
 
 				if (_tidW == _tidD) return 1;
 				if (_pidW == _pidD) return 2;

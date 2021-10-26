@@ -32,6 +32,7 @@
 #include <UIAutomation.h>
 #include <shellapi.h>
 #include <shlobj.h>
+#include <shellscalingapi.h>
 
 #define PCRE2_STATIC 1
 #define PCRE2_CODE_UNIT_WIDTH 16

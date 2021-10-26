@@ -47,7 +47,7 @@ partial class CiStyling
 	bool _update;
 	bool _folded;
 	Sci_VisibleRange _visibleLines;
-	timerm _modTimer;
+	timer _modTimer;
 	int _modStart;
 	int _modFromEnd; //like SCI_GETENDSTYLED, but from end
 	int _diagCounter;
@@ -103,14 +103,14 @@ partial class CiStyling
 		doc.zSetStyled();
 		//using var p1 = perf.local();
 #if true
-		_modTimer ??= new timerm(_ModifiedTimer);
+		_modTimer ??= new timer(_ModifiedTimer);
 		if (!_modTimer.IsRunning) { _modTimer.Tag = doc; _modTimer.After(25); }
 #else
 		_StylingAndFolding(doc, doc.zLineEndFromPos(false, doc.zLen8 - _modFromEnd, withRN: true));
 #endif
 	}
 
-	void _ModifiedTimer(timerm t) {
+	void _ModifiedTimer(timer t) {
 		//var p1 = perf.local();
 		var doc = t.Tag as SciCode;
 		if (doc != Panels.Editor.ZActiveDoc) return;

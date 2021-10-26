@@ -113,7 +113,7 @@ class PanelFind : UserControl
 		var tb = sender as TextBox;
 		if (e.NewFocus == tb) {
 			//use timer to avoid temporary focus problems, for example when tabbing quickly or closing active Regex window (this was for forms, now not tested without)
-			timerm.after(70, _ => { if (tb.IsFocused) _ShowRegexInfo(tb, false); });
+			timer.after(70, _ => { if (tb.IsFocused) _ShowRegexInfo(tb, false); });
 		} else {
 			if ((_regexWindow?.IsVisible ?? false) && !_regexWindow.Hwnd.IsActive) {
 				var c = Keyboard.FocusedElement;
@@ -281,7 +281,7 @@ class PanelFind : UserControl
 		if (onlyEditor && _cName.IsChecked) return;
 		//print.it("UpdateQuickResults", Visible);
 
-		_timerUE ??= new timerm(_ => {
+		_timerUE ??= new timer(_ => {
 			if (_cName.IsChecked) {
 				_FindAllInFiles(true);
 			} else {
@@ -292,7 +292,7 @@ class PanelFind : UserControl
 
 		_timerUE.After(150);
 	}
-	timerm _timerUE;
+	timer _timerUE;
 
 	record _TextToFind
 	{
@@ -503,7 +503,7 @@ class PanelFind : UserControl
 
 			cFound.ZTags.AddLinkTag("+ra", s => {
 				if (!_OpenLinkClicked(s, replaceAll: true)) return;
-				timerm.after(10, _ => _ReplaceAllInFile());
+				timer.after(10, _ => _ReplaceAllInFile());
 				//info: without timer sometimes does not set cursor pos correctly
 			});
 
@@ -513,7 +513,7 @@ class PanelFind : UserControl
 				var doc = Panels.Editor.ZActiveDoc;
 				//doc.Focus();
 				int from = a[1].ToInt(), to = a[2].ToInt();
-				timerm.after(10, _ => doc.zSelect(true, from, to, true));
+				timer.after(10, _ => doc.zSelect(true, from, to, true));
 				//info: scrolling works better with async when now opened the file
 			});
 
@@ -746,7 +746,7 @@ Opens files to enable Undo.",
 
 	//	public void Dispose() {
 	//		if (_enableAfter == 0) _e.IsEnabled = true;
-	//		else { var e = _e; timerm.after(_enableAfter, _ => e.IsEnabled = true); }
+	//		else { var e = _e; timer.after(_enableAfter, _ => e.IsEnabled = true); }
 	//	}
 	//}
 

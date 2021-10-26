@@ -31,7 +31,7 @@ class PanelInfo : Grid
 		_sci.Call(Sci.SCI_SETWRAPMODE, Sci.SC_WRAP_WORD);
 
 		App.MousePosChangedWhenProgramVisible += _MouseInfo;
-		timerm.after(50, _ => ZSetAboutInfo());
+		timer.after(50, _ => ZSetAboutInfo());
 	}
 
 	void _SetVisibleControl(UIElement e) {
@@ -117,8 +117,10 @@ In other windows - x, y, window, control.");
 			if (cn != null) {
 #if true
 				var pc = p; w.MapScreenToClient(ref pc);
-				b.AppendFormat("<b>xy</b> {0,5} {1,5}  .  <b>window xy</b> {2,5} {3,5}  .  <b>program</b>  {4}\r\n<b>Window   ",
+				b.AppendFormat("<b>xy</b> {0,5} {1,5}  .  <b>window xy</b> {2,5} {3,5}  .  <b>program</b>  {4}",
 					p.x, p.y, pc.x, pc.y, w.ProgramName?.Escape());
+				if (c.UacAccessDenied) b.Append(" <c red>(admin)<>");
+				b.Append("\r\n<b>Window   ");
 				var name = w.Name?.Escape(200); if (!name.NE()) b.AppendFormat("name</b>  {0}  .  <b>", name);
 				b.Append("cn</b>  ").Append(cn.Escape());
 				if (c != w) {
@@ -134,6 +136,11 @@ In other windows - x, y, window, control.");
 						//print.it(m.GetText(true, true));
 					}
 				}
+				
+				//CONSIDER: use this pane only for mouse info. Because the code quick info often is bigger and need to scroll.
+				//	Or even remove this pane and use some other UI, only when user wants, eg on hotkey.
+				//	But maybe this pane also can be used for other purposes, eg tooltip-like info.
+
 #else //old version. Too many lines; part invisible if control height is smaller.
 				var pc = p; w.MapScreenToClient(ref pc);
 				b.AppendFormat("<b>xy</b> {0,5} {1,5},   <b>client</b> {2,5} {3,5}\r\n<b>Window</b>  {4}\r\n\t<b>cn</b>  {5}\r\n\t<b>program</b>  {6}",

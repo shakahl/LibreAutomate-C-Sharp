@@ -10,6 +10,11 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 
 //SHOULDDO: decrease indent when typing }.
 
+//SHOULDDO: menu command "Exit statement on Enter" and toolbar check-button [;].
+//	Would complete from anywhere in statement, eg in string or at the end of line.
+//	Tab would complete without new line.
+//	But problem with @"string". Maybe on Enter show menu "New line|Exit statement".
+
 class CiAutocorrect
 {
 	public class BeforeCharContext
@@ -133,7 +138,7 @@ class CiAutocorrect
 	/// </summary>
 	public void SciCharAdded(CodeInfo.CharContext c) {
 		char ch = c.ch;
-		string replaceText = ch switch { '\"' => "\"", '\'' => "'", '(' => ")", '[' => "]", '{' => "}", '<' => ">", '*' => "*/", _ => null };
+		string replaceText = ch switch { '\"' => "\"", '\'' => "'", '(' => ")", '[' => "]", '{' => "}", '<' => ">", '*' => "*/", 's' => "", _ => null };
 		if (replaceText == null) return;
 
 		if (!CodeInfo.GetContextAndDocument(out var cd)) return;
@@ -148,6 +153,19 @@ class CiAutocorrect
 
 		var root = cd.document.GetSyntaxRootAsync().Result;
 		//if(!root.ContainsDiagnostics) return; //no. Don't use errors. It can do more bad than good. Tested.
+
+		if (ch == 's') { //when typed like 5s or 500ms, replace with 5.s(); or 500.ms(); 
+			if (pos > 0 && code[pos - 1] == 'm') { pos--; replaceText = ".ms();"; } else replaceText = ".s();";
+			if (pos > 0 && code[pos - 1].IsAsciiDigit()) {
+				var node = root.FindToken(pos - 1).Parent;
+				if (node.IsKind(SyntaxKind.NumericLiteralExpression) && node.Parent is ExpressionStatementSyntax) {
+					//never mind: should ignore if not int s/ms or double s. Error if eg long or double ms.
+					c.doc.zReplaceRange(true, pos, cd.pos16, replaceText, moveCurrentPos: true);
+					c.ignoreChar = true;
+				}
+			}
+			return;
+		}
 
 		int replaceLength = 0, tempRangeFrom = cd.pos16, tempRangeTo = cd.pos16, newPos = 0;
 
@@ -285,7 +303,7 @@ class CiAutocorrect
 			canCorrect = (ch == ')' || ch == ']') && code[pos - 1] != ',';
 			if (!(canCorrect | canAutoindent)) return false;
 			//shoulddo?: don't correct after inner ']' etc, eg A(1, [In] 2)
-			//SHOULDDO: don't move ';' outside of lambda expression when user wants to enclose it. Example: timerm.after(1, _=>{print.it(1)); (user cannot ype ';' after "print.it(1)".
+			//SHOULDDO: don't move ';' outside of lambda expression when user wants to enclose it. Example: timer.after(1, _=>{print.it(1)); (user cannot ype ';' after "print.it(1)".
 		}
 
 		if (!cd.GetDocument()) return false;

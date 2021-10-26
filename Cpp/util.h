@@ -28,6 +28,7 @@ inline void Print(void* i) { Printf(sizeof(void*) == 8 ? L"%I64i" : L"%i", i); }
 #define PRINTHEX(x) Printf(L"debug: " __FILEW__ "(" _CRT_STRINGIZE(__LINE__) "):  0x%X", x)
 #define PRINTF(formatString, ...) Printf(L"debug: " __FILEW__ "(" _CRT_STRINGIZE(__LINE__) "):  " formatString, __VA_ARGS__)
 #define PRINTF_IF(condition, formatString, ...) { if(condition) PRINTF(formatString, __VA_ARGS__); }
+#define PRINTS_IF(condition, x) { if(condition) PRINTS(x); }
 
 inline void PrintComRefCount(IUnknown* u) {
 	if(u) {
@@ -166,6 +167,50 @@ public:
 	}
 
 };
+
+
+//Delay-loaded API pointers.
+struct DelayLoadedApi {
+	bool minWin81, minWin10;
+
+	//user32
+	BOOL(__stdcall* PhysicalToLogicalPoint)(HWND hWnd, LPPOINT lpPoint);
+	BOOL(__stdcall* LogicalToPhysicalPoint)(HWND hWnd, LPPOINT lpPoint);
+	DPI_AWARENESS_CONTEXT(__stdcall* GetWindowDpiAwarenessContext)(HWND hwnd);
+	DPI_AWARENESS(__stdcall* GetAwarenessFromDpiAwarenessContext)(DPI_AWARENESS_CONTEXT value);
+	DPI_AWARENESS_CONTEXT(__stdcall* SetThreadDpiAwarenessContext)(DPI_AWARENESS_CONTEXT dpiContext);
+
+	//shcore
+	HRESULT(__stdcall* GetProcessDpiAwareness)(HANDLE hprocess, PROCESS_DPI_AWARENESS* value);
+
+#define GPA(hm, f) *(FARPROC*)&f=GetProcAddress(hm, #f)
+#define GPA2(hm, f, name) *(FARPROC*)&f=GetProcAddress(hm, name)
+	DelayLoadedApi() noexcept {
+		minWin81 = minWin10 = false;
+		auto hm = GetModuleHandle(L"user32.dll");
+		GPA2(hm, PhysicalToLogicalPoint, "PhysicalToLogicalPointForPerMonitorDPI");
+		if(minWin81 = PhysicalToLogicalPoint) { //Win8.1+
+			GPA2(hm, LogicalToPhysicalPoint, "LogicalToPhysicalPointForPerMonitorDPI");
+
+			GPA(hm, GetWindowDpiAwarenessContext);
+			if(minWin10 = GetWindowDpiAwarenessContext) { //Win10 1607+
+				GPA(hm, GetAwarenessFromDpiAwarenessContext);
+				GPA(hm, SetThreadDpiAwarenessContext);
+
+			} else {
+				auto hm2 = GetModuleHandle(L"shcore.dll");
+				GPA(hm2, GetProcessDpiAwareness);
+			}
+
+
+		} else { //Win7/8
+			GPA(hm, PhysicalToLogicalPoint);
+			//GPA(hm, LogicalToPhysicalPoint);
+
+		}
+	}
+};
+extern DelayLoadedApi dlapi;
 
 
 //SECURITY_ATTRIBUTES that allows UAC low integrity level processes to open the kernel object.
@@ -341,7 +386,7 @@ void PrintWnd(HWND w);
 #endif
 }
 
-bool QueryService_(IUnknown* iFrom, OUT void** iTo, REFIID iid, const GUID* guidService=null);
+bool QueryService_(IUnknown* iFrom, OUT void** iTo, REFIID iid, const GUID* guidService = null);
 
 template<class T>
 bool QueryService(IUnknown* iFrom, OUT T** iTo, const GUID* guidService = null) {

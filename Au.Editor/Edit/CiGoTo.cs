@@ -155,7 +155,6 @@ class CiGoTo
 			App.Settings.ci_gotoAsm?.TryGetValue(_assembly, out se);
 
 			var b = new wpfBuilder("Github search").WinSize(450).Columns(-1);
-			b.AlsoAll((b, _) => { if (b.Last is CheckBox) b.Align(y: "C"); });
 			b.StartGrid<GroupBox>("Query").Columns(70, -1);
 			b.R.Add("Type", out TextBox tType, _type);
 			b.R.Add("Member", out TextBox tMember, _member).Tooltip("A member of the type (method, property, etc), or any word in the file.\r\nCan be multiple, like M1 M2 M3, if all are in same file.");

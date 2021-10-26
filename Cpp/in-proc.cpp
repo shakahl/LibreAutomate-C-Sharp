@@ -78,12 +78,12 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 		//Printf(L"P+  %i %s    tid=%i", GetCurrentProcessId(), GetCommandLineW(), GetCurrentThreadId());
 		s_moduleHandle = hModule;
 		break;
-	case DLL_PROCESS_DETACH:
-		//Printf(L"P-  %i %s    tid=%i", GetCurrentProcessId(), GetCommandLineW(), GetCurrentThreadId());
-		break;
-		//case DLL_THREAD_ATTACH:
-		//	Printf(L"T+  %i %i", GetCurrentProcessId(), GetCurrentThreadId());
-		//	break;
+	//case DLL_PROCESS_DETACH:
+	//	Printf(L"P-  %i %s    tid=%i", GetCurrentProcessId(), GetCommandLineW(), GetCurrentThreadId());
+	//	break;
+	//case DLL_THREAD_ATTACH:
+	//	Printf(L"T+  %i %i", GetCurrentProcessId(), GetCurrentThreadId());
+	//	break;
 	case DLL_THREAD_DETACH:
 		//Printf(L"T-  %i %i", GetCurrentProcessId(), GetCurrentThreadId());
 		HWND wAgent = inproc::t_agentWnd;
@@ -215,6 +215,8 @@ bool UnmarshalAgentIAccessible(HWND wAgent, out IAccessible*& iacc) {
 }
 #pragma endregion
 
+namespace uia { bool UiaDisconnectWrappers(); }
+
 namespace inproc
 {
 //Thread proc that unloads this dll.
@@ -228,7 +230,8 @@ DWORD WINAPI UnloadDllThreadProc(LPVOID lpParameter) {
 	}
 	s_agentWindowClassAtom = 0;
 	Sleep(100);
-	if(!AccDisconnectWrappers()) { PRINTS(L"failed to unload dll because of unreleased acc wrappers"); return 0; }
+	if(!AccDisconnectWrappers() | !uia::UiaDisconnectWrappers()) return 0;
+
 	FreeLibraryAndExitThread(s_moduleHandle, 0);
 	return 0;
 }
@@ -530,17 +533,8 @@ HRESULT InjectDllAndGetAgent(HWND w, out IAccessible*& iaccAgent, out HWND* wAge
 	//		tested: AcquireDeveloperLicense. It opens the Settings app -> security. No options to acquire a license.
 	//		see also: https://superuser.com/questions/496104/windows-8-developer-license
 	//	note: the child Windows.UI.Core.CoreWindow runs in other process than its host ApplicationFrameWindow. We need to inject into the control's process. Injection into the host's process succeeds but is useless.
-#if true
 	if(wn::ClassNameIs(GetAncestor(w, GA_ROOT), { L"ApplicationFrameWindow", L"Windows.UI.Core.CoreWindow", L"ConsoleWindowClass", L"SunAwt*" }))
 		return (HRESULT)eError::UseNotInProc;
-#else
-	int icn = wn::ClassNameIs(w, { L"ApplicationFrameWindow", L"Windows.UI.Core.CoreWindow", L"ConsoleWindowClass", L"SunAwt*" });
-	if(icn) {
-		if(icn == 2 && SetProcessRestrictionExemption(true)) {
-			Print("SetProcessRestrictionExemption OK");
-		} else return (HRESULT)eError::UseNotInProc;
-	}
-#endif
 
 	static CHandle s_mutex(CreateMutexW(SecurityAttributes::Common(), false, L"AuCpp_MutexGAW"));
 	DWORD wfso = WaitForSingleObject(s_mutex, INFINITE);

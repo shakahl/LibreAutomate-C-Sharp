@@ -426,9 +426,9 @@ namespace Au.Types
 		/// Like <b>WindowDC</b>, works with background windows, etc. Differences:
 		/// - On Windows 8.1 and later works with all windows and all window parts.
 		/// - Works without Aero theme too.
-		/// - Slower than with <b>WindowDC</b>, although usually faster than without these flags.
+		/// - Slower than with <b>WindowDC</b>. Usually same speed or faster than without these flags.
 		/// - Some windows may flicker.
-		/// - Does not work with windows of higher UAC integrity level. Then this flag is ignored.
+		/// - Does not work with windows of higher UAC integrity level. Then throws exception.
 		/// </summary>
 		PrintWindow = 2,
 

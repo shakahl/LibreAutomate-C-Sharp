@@ -343,6 +343,17 @@ namespace Au.Types
 		}
 
 		/// <summary>
+		/// Returns true if all fields of <i>r1</i> and <i>r2</i> are equal or almost equal with max difference +- <i>maxDiff</i>.
+		/// </summary>
+		internal static bool EqualFuzzy_(RECT r1, RECT r2, int maxDiff) {
+			if (Math.Abs(r1.left - r2.left) > maxDiff) return false;
+			if (Math.Abs(r1.top - r2.top) > maxDiff) return false;
+			if (Math.Abs(r1.right - r2.right) > maxDiff) return false;
+			if (Math.Abs(r1.bottom - r2.bottom) > maxDiff) return false;
+			return true;
+		}
+
+		/// <summary>
 		/// Converts to string "{L=left T=top W=width H=height}".
 		/// </summary>
 		/// <seealso cref="TryParse"/>

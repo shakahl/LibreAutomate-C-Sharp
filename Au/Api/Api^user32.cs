@@ -368,7 +368,7 @@ namespace Au.Types
 		internal static extern bool IsIconic(wnd hWnd);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern int GetWindowThreadProcessId(wnd hWnd, out int lpdwProcessId);
+		internal static extern int GetWindowThreadProcessId(wnd hWnd, int* lpdwProcessId);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool IsWindowUnicode(wnd hWnd);
@@ -773,7 +773,7 @@ namespace Au.Types
 		#endregion
 
 		/// <summary>
-		/// WindowFromPhysicalPoint.
+		/// WindowFromPhysicalPoint. On Win8.1 + it is the same as WindowFromPoint.
 		/// </summary>
 		[DllImport("user32.dll", EntryPoint = "WindowFromPhysicalPoint")]
 		internal static extern wnd WindowFromPoint(POINT pt);
@@ -915,6 +915,9 @@ namespace Au.Types
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool SetLayeredWindowAttributes(wnd hwnd, uint crKey, byte bAlpha, uint dwFlags);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool GetLayeredWindowAttributes(wnd hwnd, out uint pcrKey, out byte pbAlpha, out uint pdwFlags);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern IntPtr CreateIcon(IntPtr hInstance, int nWidth, int nHeight, byte cPlanes, byte cBitsPixel, byte[] lpbANDbits, byte[] lpbXORbits);
@@ -1447,14 +1450,6 @@ namespace Au.Types
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern int GetWindowRgn(wnd hWnd, IntPtr hRgn);
 
-#if DPI_WIN7
-		[DllImport("user32.dll")]
-		internal static extern bool LogicalToPhysicalPoint(wnd hWnd, ref POINT lpPoint);
-#endif
-
-		//[DllImport("user32.dll")]
-		//internal static extern bool PhysicalToLogicalPoint(wnd hWnd, ref POINT lpPoint);
-
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern int GetDpiForWindow(wnd hWnd);
 
@@ -1462,7 +1457,7 @@ namespace Au.Types
 		internal static extern IntPtr GetWindowDpiAwarenessContext(wnd hwnd);
 
 		[DllImport("user32.dll")]
-		internal static extern More.Dpi.Awareness GetAwarenessFromDpiAwarenessContext(IntPtr value);
+		internal static extern Dpi.Awareness GetAwarenessFromDpiAwarenessContext(IntPtr value);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern nint SetThreadDpiAwarenessContext(nint dpiContext);
@@ -1471,7 +1466,23 @@ namespace Au.Types
 		internal static extern int GetDpiForMonitor(IntPtr hmonitor, int dpiType, out int dpiX, out int dpiY);
 
 		[DllImport("shcore.dll", PreserveSig = true)]
-		internal static extern int GetProcessDpiAwareness(IntPtr hprocess, out More.Dpi.Awareness value); //Dpi.Awareness == PROCESS_DPI_AWARENESS
+		internal static extern int GetProcessDpiAwareness(IntPtr hprocess, out Dpi.Awareness value); //Dpi.Awareness is PROCESS_DPI_AWARENESS
+
+		[DllImport("user32.dll")]
+		internal static extern bool PhysicalToLogicalPointForPerMonitorDPI(wnd hWnd, ref POINT lpPoint);
+
+		//[DllImport("user32.dll")]
+		//internal static extern bool PhysicalToLogicalPoint(wnd hWnd, ref POINT lpPoint);
+
+		//internal static bool PhysicalToLogicalPoint_AnyOS(wnd w, ref POINT p) => osVersion.minWin8_1 ? PhysicalToLogicalPointForPerMonitorDPI(w, ref p) : PhysicalToLogicalPoint(w, ref p);
+
+		//[DllImport("user32.dll")]
+		//internal static extern bool LogicalToPhysicalPointForPerMonitorDPI(wnd hWnd, ref POINT lpPoint);
+
+		[DllImport("user32.dll")]
+		internal static extern bool LogicalToPhysicalPoint(wnd hWnd, ref POINT lpPoint);
+
+		//internal static bool LogicalToPhysicalPoint_AnyOS(wnd w, ref POINT p) => osVersion.minWin8_1 ? LogicalToPhysicalPointForPerMonitorDPI(w, ref p) : LogicalToPhysicalPoint(w, ref p);
 
 		[DllImport("user32.dll")]
 		internal static extern int GetSysColor(int nIndex);
@@ -1545,6 +1556,7 @@ namespace Au.Types
 
 		//[DllImport("user32.dll")]
 		//internal static extern bool CloseDesktop(IntPtr hDesktop);
+
 
 
 	}

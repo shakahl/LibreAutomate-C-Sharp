@@ -111,6 +111,8 @@ HMODULE GetCurrentModuleHandle()
 	return (HMODULE)&__ImageBase;
 }
 
+DelayLoadedApi dlapi;
+
 bool IsOS64Bit()
 {
 #ifdef _WIN64

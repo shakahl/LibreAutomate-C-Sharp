@@ -63,7 +63,7 @@ class MetaCommentsParser
 	/// Formats metacomments string "/*/ ... /*/".
 	/// Returns "" if there are no options.
 	/// </summary>
-	public string Format(string append) {
+	public string Format(string prepend, string append) {
 		//prepare to make relative paths
 		string dir = null;
 		if (_fn != null) {
@@ -72,7 +72,8 @@ class MetaCommentsParser
 			if (i > 1) dir = dir.Remove(i); else dir = null;
 		}
 
-		var b = new StringBuilder(_multiline ? "/*/\r\n" : "/*/ ");
+		var b = new StringBuilder();
+		b.Append(prepend).Append(_multiline ? "/*/\r\n" : "/*/ ");
 		_Append("role", role);
 
 		_Append("ifRunning", ifRunning);
@@ -103,7 +104,7 @@ class MetaCommentsParser
 
 		if (b.Length <= 5) return "";
 		b.Append("/*/");
-		if (append != null) b.Append(append);
+		b.Append(append);
 		return b.ToString();
 
 		void _Append(string name, string value, bool relativePath = false) {

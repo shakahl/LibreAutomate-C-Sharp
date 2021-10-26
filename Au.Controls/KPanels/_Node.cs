@@ -159,8 +159,8 @@ namespace Au.Controls
 						_stack.grid.IsVisibleChanged += eh;
 					}
 
-					//timerm.after(1000, _ => _Test(5));
-					////timerm.after(5000, _ => _Test(0));
+					//timer.after(1000, _ => _Test(5));
+					////timer.after(5000, _ => _Test(0));
 					//void _Test(int margin) {
 					//	foreach (var v in Descendants(true)) {
 					//		if (v._IsStack) v._stack.grid.Background = (v.Level & 3) switch { 0 => Brushes.CornflowerBlue, 1 => Brushes.Khaki, 2 => Brushes.YellowGreen, _ => Brushes.LightYellow };

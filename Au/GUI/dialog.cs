@@ -936,7 +936,7 @@ namespace Au
 				//if(FlagKeyboardShortcutsVisible) w.Post(Api.WM_UPDATEUISTATE, 0x30002); //rejected. Don't need too many rarely used features.
 
 				//fix API bug: dialog window is hidden if process STARTUPINFO specifies hidden window
-				timerm.after(1, _ => _dlg.ShowL(true)); //use timer because at this time still invisible always
+				timer.after(1, _ => _dlg.ShowL(true)); //use timer because at this time still invisible always
 
 				e = Created;
 				break;
@@ -1198,7 +1198,7 @@ namespace Au
 
 			//create or get cached font and calculate control height
 			_editFont = NativeFont_.RegularCached(Dpi.OfWindow(parent));
-			//tested: on Win8.1 API isn't PM-DPI-aware. //never mind: users can change Dpi.SupportPMOnWin8_1.
+			//tested: on Win8.1 API isn't PM-DPI-aware.
 
 			//We'll hide the progress bar control and create our Edit control in its place.
 			wnd prog = parent.Child(cn: "msctls_progress32", flags: WCFlags.HiddenToo);

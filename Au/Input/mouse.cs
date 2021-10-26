@@ -1094,6 +1094,8 @@ namespace Au
 				if (w2 != w && !w2.Is0) { w.MapClientToClientOf(w2, ref point); w = w2; }
 			}
 
+			using var workaround = new ButtonVirtualClickWorkaround_(w);
+
 			nint xy = Math2.MakeLparam(point);
 			nint mk = 0; if (keys.isCtrl) mk |= Api.MK_CONTROL; if (keys.isShift) mk |= Api.MK_SHIFT;
 			nint mk1 = mk; if (dud != MButton.Up) mk1 |= b switch { MButton.Left => Api.MK_LBUTTON, MButton.Right => Api.MK_RBUTTON, _ => Api.MK_MBUTTON };
@@ -1109,6 +1111,32 @@ namespace Au
 			//_MinimalSleep(); //don't need. Eg elm.Invoke() does not wait too.
 
 			//never mind: support nonclient (WM_NCRBUTTONDOWN etc)
+		}
+
+		/// <summary>
+		/// Workaround for the documented BM_CLICK/WM_LBUTTONDOWN bug of classic button controls: randomly fails if inactive window.
+		/// If c is a button in a dialog box, posts WM_ACTIVATE messages to the dialog box.
+		/// </summary>
+		internal ref struct ButtonVirtualClickWorkaround_
+		{
+			readonly wnd _w;
+
+			public ButtonVirtualClickWorkaround_(wnd c) {
+				//this func is fast, but slower is elm.wndcontainer (to get c) and JIT
+				_w = default;
+				var w = c.Window; //not c.DirectParent. Eg in taskdialog it is not #32770. The virtualclick/invoke worked without this workaround in all tested top-level non-#32770 windows, with or without an intermediate #32770.
+				if (w != c && !w.IsActive && w.ClassNameIs("#32770")) {
+					//if (c.ClassNameIs("*Button*")) {
+					if (65538 == c.Send(Api.WM_GETOBJECT, 0, (nint)EObjid.QUERYCLASSNAMEIDX)) {
+						w.Post(Api.WM_ACTIVATE, 1);
+						_w = w;
+					}
+				}
+			}
+
+			public void Dispose() {
+				if (!_w.Is0) _w.Post(Api.WM_ACTIVATE);
+			}
 		}
 	}
 

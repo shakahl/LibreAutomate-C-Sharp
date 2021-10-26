@@ -212,8 +212,8 @@
 			/// A window that has an owner window is always on top of it.
 			/// Controls don't have an owner window.
 			/// Supports <see cref="lastError"/>.
-			/// This function is the same as <see cref="wnd.OwnerWindow"/>, which also allows to change owner.
 			/// </remarks>
+			/// <seealso cref="WndUtil.SetOwnerWindow"/>
 			public wnd Owner => Api.GetWindow(_w, Api.GW_OWNER);
 
 			/// <summary>
@@ -241,8 +241,8 @@
 					var p = _w.GetWindowLong(GWL.HWNDPARENT);
 					if (p == default) {
 						//#if DEBUG
-						//						var p2 = Api.GetAncestor(_w, Api.GA_PARENT);
-						//						Debug.Assert(p2.Is0 || p2 == Root);
+						//var p2 = Api.GetAncestor(_w, Api.GA_PARENT);
+						//Debug.Assert(p2.Is0 || p2 == Root);
 						//#endif
 						return default;
 					}
@@ -305,7 +305,7 @@
 				var R = Api.GetLastActivePopup(wRoot);
 				if (!includeOwners) {
 					if (R != _w && wRoot != _w && !R.Is0) {
-						for (var t = _w; !t.Is0; t = t.OwnerWindow) if (t == R) return _w;
+						for (var t = _w; !t.Is0; t = t.Get.Owner) if (t == R) return _w;
 					}
 				}
 				return R;
@@ -327,7 +327,7 @@
 					//never mind speed, better make it simple
 				} else { //fast
 					for (wnd r = _w, t; ; r = t) {
-						t = r.OwnerWindow;
+						t = r.Get.Owner;
 						if (t.Is0) return r.IsAlive ? r : default;
 					}
 				}
@@ -439,7 +439,7 @@
 			/// Returns true if window w is considered a main window, ie probably is in the Windows taskbar.
 			/// Returns false if it is invisible, cloaked, owned, toolwindow, menu, etc.
 			/// </summary>
-			/// <param name="w"></param>
+			/// <param name="w">A top-level window.</param>
 			/// <param name="allDesktops">On Windows 10 include (return true for) windows on all virtual desktops. On Windows 8 include Windows Store apps if possible; read more: <see cref="allWindows(bool, bool)"/>.</param>
 			/// <param name="skipMinimized">Return false if w is minimized.</param>
 			public static bool isMainWindow(wnd w, bool allDesktops = false, bool skipMinimized = false) {
@@ -448,7 +448,7 @@
 				var exStyle = w.ExStyle;
 				if ((exStyle & WSE.APPWINDOW) == 0) {
 					if ((exStyle & (WSE.TOOLWINDOW | WSE.NOACTIVATE)) != 0) return false;
-					if (!w.OwnerWindow.Is0) return false;
+					if (!w.Get.Owner.Is0) return false;
 				}
 
 				if (skipMinimized && w.IsMinimized) return false;
@@ -566,35 +566,12 @@
 
 		#endregion
 
-		//These are in getwnd and here, because frequently used. Also because some have setters.
-
-		/// <summary>
-		/// Gets or sets the owner window of this top-level window.
-		/// </summary>
-		/// <exception cref="AuWndException">The 'set' function failed.</exception>
-		/// <remarks>
-		/// A window that has an owner window is always on top of it.
-		/// Don't call this for controls, they don't have an owner window.
-		/// The 'get' function returns default(wnd) if this window isn't owned or is invalid. Supports <see cref="lastError"/>.
-		/// The 'set' function can fail, eg if the owner's process has higher [](xref:uac) integrity level or is a Store app.
-		/// </remarks>
-		public wnd OwnerWindow {
-			get => Api.GetWindow(this, Api.GW_OWNER);
-			set {
-				SetWindowLong(GWL.HWNDPARENT, (nint)value);
-				if (!value.Is0) {
-					bool tm = value.IsTopmost;
-					if (tm != IsTopmost) { if (tm) ZorderTopmost(); else ZorderNoTopmost(); }
-					if (!ZorderIsAbove(value)) ZorderAbove(value);
-				}
-			}
-		}
-
 		/// <summary>
 		/// Gets the top-level parent window of this control.
 		/// If this is a top-level window, returns this. Returns default(wnd) if this window is invalid.
 		/// </summary>
 		/// <remarks>Supports <see cref="lastError"/>.</remarks>
+		/// <seealso cref="Get"/>
 		public wnd Window {
 			get {
 				var w = Api.GetAncestor(this, Api.GA_ROOT);
@@ -602,6 +579,7 @@
 				return w;
 			}
 		}
+		//This is in getwnd and here, because frequently used.
 
 		/// <summary>
 		/// Returns true if this is a child window (control), false if top-level window.

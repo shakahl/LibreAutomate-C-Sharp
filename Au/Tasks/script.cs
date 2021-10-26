@@ -334,7 +334,7 @@ namespace Au
 			} else if (sleepExit || lockExit) {
 				Au.run.thread(() => {
 					if (sleepExit) {
-						var w = wnd.Internal_.CreateWindowDWP(messageOnly: false, t_eocWP = (w, m, wp, lp) => {
+						var w = WndUtil.CreateWindowDWP_(messageOnly: false, t_eocWP = (w, m, wp, lp) => {
 							if (m == Api.WM_POWERBROADCAST && wp == Api.PBT_APMSUSPEND) ExitOnSleepOrDesktopSwitch_(sleep: true);
 							return Api.DefWindowProc(w, m, wp, lp);
 						}); //message-only windows don't receive WM_POWERBROADCAST
@@ -438,7 +438,7 @@ namespace Au
 		/// <param name="menu">Called before showing context menu. Can add menu items. Menu item actions must not block messages etc for long time; if need, run in other thread or process (<see cref="script.run"/>).</param>
 		/// <param name="f_">[](xref:caller_info). Don't use. Or set = null to disable script editing via the tray icon.</param>
 		/// <remarks>
-		/// Uses other thread. The <i>init</i> and <i>menu</i> actions run in that thread too. It dispatches messages, therefore they also can set timers (<see cref="timerm"/>), create hidden windows, etc. Current thread does not have to dispatch messages.
+		/// Uses other thread. The <i>init</i> and <i>menu</i> actions run in that thread too. It dispatches messages, therefore they also can set timers (<see cref="timer"/>), create hidden windows, etc. Current thread does not have to dispatch messages.
 		/// 
 		/// Does nothing if role editorExtension.
 		/// </remarks>

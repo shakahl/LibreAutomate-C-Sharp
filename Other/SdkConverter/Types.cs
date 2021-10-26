@@ -488,17 +488,19 @@ namespace SdkConverter
 					var bt = baseType as _Struct;
 					if (bt == null || bt.forwardDecl || ptr != 0) _Err(_i, "unexpected");
 					if (bt.members != null) { //null if IUnknown/IDispatch or no members
-						if (isInterface) {
-							//print.it(iBase, bt.csTypename);
-							inheritInterface = inheritInterface == null ? bt.csTypename : inheritInterface + ", " + bt.csTypename;
-						} else {
-							if (bt.members[0] != '/') {
-								sb.Append("// ");
-								sb.AppendLine(bt.csTypename);
-							}
-							sb.Append(bt.members);
-							addedBaseMembers = true;
+						if (bt.members[0] != '/') {
+							sb.Append("// ");
+							sb.AppendLine(bt.csTypename);
 						}
+						if (isInterface) {
+							//print.it(iBase, bt.csTypename); //iBase all 0
+							inheritInterface = inheritInterface == null ? bt.csTypename : inheritInterface + ", " + bt.csTypename;
+							sb.Append(new string(bt.members).RxReplace(@"\[PreserveSig\] (?!new )\K", "new "));
+							//info: for COM interfaces need to add base members, even if base interface specified.
+						} else {
+							sb.Append(bt.members);
+						}
+						addedBaseMembers = true;
 					} else {
 						if (iBase == 0 && !isDualInterface) isDualInterface = bt.csTypename == "IDispatch";
 					}

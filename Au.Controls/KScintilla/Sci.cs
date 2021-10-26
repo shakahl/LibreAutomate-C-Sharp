@@ -953,7 +953,7 @@ namespace Au.Controls
 				//If at the modified line index was a nested folding point, Scintilla will expand again, very async.
 				//	Could restore again with the following code, but it can be dangerous, eg document closed. Never mind.
 				//var sci = _sci; var i = _foldLine;
-				//timerm.after(300, _ => sci.Call(SCI_FOLDLINE, i));
+				//timer.after(300, _ => sci.Call(SCI_FOLDLINE, i));
 			}
 		}
 

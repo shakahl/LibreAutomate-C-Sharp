@@ -205,7 +205,7 @@ namespace Au.More
 						//print.it(w);
 						//print.it(w.ExStyle);
 						//Api.SetForegroundWindow(w); //does not work
-						timerm.after(1, _ => {
+						timer.after(1, _ => {
 							if (s_hook == null) return;
 							//print.it(wnd.active);
 							//print.it(wnd.thisThread.active);

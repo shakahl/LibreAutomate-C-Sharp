@@ -35,13 +35,15 @@ partial class MainWindow : Window
 		Panels.PanelManager.Container = g => { this.Content = g; };
 
 
-		//timerm.after(100, _ => DOptions.ZShow());
-		//timerm.after(100, _ => App.Model.Properties());
-		//timerm.after(100, _ => Menus.File.Workspace.New_workspace());
-		//timerm.after(100, _ => DIcons.ZShow());
-		//timerm.after(600, _ => Au.Tools.Dwnd.Dialog(wnd.find(null, "Shell_TrayWnd")));
-		//timerm.after(500, _ => Au.Tools.Delm.Dialog(new POINT(806, 1580)));
-		//timerm.after(400, _ => Au.Tools.Duiimage.Dialog());
+		//timer.after(100, _ => DOptions.ZShow());
+		//timer.after(100, _ => App.Model.Properties());
+		//timer.after(100, _ => Menus.File.Workspace.New_workspace());
+		//timer.after(100, _ => DIcons.ZShow());
+		//timer.after(600, _ => Au.Tools.Dwnd.Dialog(wnd.find(null, "Shell_TrayWnd")));
+		//timer.after(500, _ => Au.Tools.Delm.Dialog(new POINT(806, 1580)));
+		//timer.after(500, _ => Au.Tools.Delm.Dialog());
+		//timer.after(400, _ => Au.Tools.Duiimage.Dialog());
+		//timer2.every(200, _ => { GC.Collect(); });
 
 #if DEBUG
 		App.Timer1s += () => {
@@ -57,10 +59,12 @@ partial class MainWindow : Window
 			App.Model.Save.AllNowIfNeed();
 			Panels.PanelManager.Save();
 
+			Hide();
 			if (App.Settings.runHidden && IsVisible) {
 				e.Cancel = true;
-				Hide();
 				process.ThisProcessMinimizePhysicalMemory_(1000);
+			} else {
+				Au.Tools.TUtil.CloseDialogsInNonmainThreads(); //let they save rects etc
 			}
 		}
 		base.OnClosing(e); //note: must be at the end, after we set Cancel
@@ -135,7 +139,7 @@ partial class MainWindow : Window
 	//	if (wnd.active != w && _activationWorkaroundTime < Environment.TickCount64 - 5000) {
 	//		//print.it(new StackTrace());
 	//		_activationWorkaroundTime = Environment.TickCount64;
-	//		timerm.after(10, _ => {
+	//		timer.after(10, _ => {
 	//			Debug_.Print("OnActivated workaround, " + wnd.active);
 	//			//w.ActivateL(); //in some cases does not work, or need key etc
 	//			if (!w.IsMinimized) {

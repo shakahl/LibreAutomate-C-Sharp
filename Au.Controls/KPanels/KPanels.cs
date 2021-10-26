@@ -88,7 +88,7 @@ namespace Au.Controls
 					x.WriteStartDocument();
 					_rootStack.Save(x);
 				});
-				//run.it("notepad.exe", _xmlFile); timerm.after(1000, _ => DeleteSavedFile());
+				//run.it("notepad.exe", _xmlFile); timer.after(1000, _ => DeleteSavedFile());
 			}
 			catch (Exception ex) { print.qm2.write(ex); }
 		}

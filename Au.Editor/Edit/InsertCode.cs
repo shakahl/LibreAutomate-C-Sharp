@@ -33,7 +33,7 @@ static class InsertCode
 				//probably the window exists (already was visible), else there is no code that could call this func
 				Debug.Assert(!App.Hwnd.Is0); if (App.Hwnd.Is0) return;
 				App.TrayIcon.ShowWindow_();
-				timerm.after(500, _ => _Action(s, goToPercent, fold, activate)); //works without this, but safer with this
+				timer.after(500, _ => _Action(s, goToPercent, fold, activate)); //works without this, but safer with this
 				return;
 			}
 			var d = Panels.Editor.ZActiveDoc;
@@ -68,7 +68,7 @@ static class InsertCode
 
 		static void _FoldInsertedCode(SciCode doc, int start8, int nLines) {
 			string text = doc.zText;
-			timerm.after(400, _ => { //because fold points are added async, 250 ms timer + async/await
+			timer.after(400, _ => { //because fold points are added async, 250 ms timer + async/await
 				var d = Panels.Editor.ZActiveDoc; if (d != doc || d.zText != text) return;
 				for (int line = d.zLineFromPos(false, start8), i = line + nLines - 1; --i >= line;) {
 					if (0 != (d.Call(Sci.SCI_GETFOLDLEVEL, i) & Sci.SC_FOLDLEVELHEADERFLAG)) d.Call(Sci.SCI_FOLDLINE, i);

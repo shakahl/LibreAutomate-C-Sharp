@@ -21,7 +21,7 @@ class CiPopupList
 	bool _groupsEnabled;
 	List<string> _groups;
 	CiPopupText _textPopup;
-	timerm _tpTimer;
+	timer _tpTimer;
 
 	public KPopup PopupWindow => _popup;
 
@@ -86,7 +86,7 @@ class CiPopupList
 		};
 
 		_textPopup = new CiPopupText(CiPopupText.UsedBy.PopupList);
-		_tpTimer = new timerm(_ShowTextPopup);
+		_tpTimer = new timer(_ShowTextPopup);
 	}
 
 	private void _KindButton_Click(object sender, RoutedEventArgs e) {
@@ -137,7 +137,7 @@ class CiPopupList
 		}
 	}
 
-	void _ShowTextPopup(timerm t) {
+	void _ShowTextPopup(timer t) {
 		var ci = t.Tag as CiComplItem;
 		var text = _compl.GetDescriptionDoc(ci, 0);
 		if (text == null) return;

@@ -3,7 +3,7 @@ namespace Au
 	public partial class toolbar
 	{
 		bool _SetDpi() {
-			int dpi = _os != null ? _os.Screen.Dpi : Dpi.OfWindow(OwnerWindow, true);
+			int dpi = _os != null ? _os.Screen.Dpi : screen.of(OwnerWindow).Dpi;
 			if (dpi == _dpi) return false;
 			_dpi = dpi;
 			_dpiF = _dpi / 96d;

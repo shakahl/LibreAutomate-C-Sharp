@@ -8,19 +8,22 @@ bool AccMatchHtmlAttributes(IAccessible* iacc, NameValue* prop, int count);
 
 class AccFinder
 {
-	AccFindCallback* _callback; //receives found AO
-	STR _role; //null if used path or if the role parameter is null
+	//these have ctors
+	AccContext _context; //shared memory buffer and maxcc
 	str::Wildex _controlClass; //used when the prop parameter has "class=x". Then _flags2 has eAF2::InControls.
 	str::Wildex _name; //name. If the name parameter is null, _name.Is()==false.
+	Bstr _roleStrings, _propStrings; //a copy of the input role/prop string when eg need to parse (modify) the string
+
+	//our ctor ZEROTHISFROM(_callback)
+	AccFindCallback* _callback; //receives found AO
+	STR _role; //null if used path or if the role parameter is null
 	NameValue* _prop; //other string properties and HTML attributes. Specified in the prop parameter, like L"value=XXX\0 @id=YYY".
 	STR _controlWF; //WinForms name. Used when the prop parameter has "id=x" where x is not a number. Then _flags2 has eAF2::InControls.
 	STR* _notin; //when searching, skip descendants of AO of these roles. Specified in the prop parameter.
-	Bstr _roleStrings, _propStrings; //a copy of the input role/prop string when eg need to parse (modify) the string
 	int _propCount; //_prop array element count
 	int _notinCount; //_notin array element count
 	int _controlId; //used when the prop parameter has "id=x" wherex x is a number. Then _flags2 has eAF2::InControls|IsId.
 	int _minLevel, _maxLevel; //min and max level to search in the object subtree. Specified in the prop parameter. Default 0 1000.
-	int _maxCC; //skip descendants of AOs that have more children. Specified in the prop parameter. Default 10000.
 	int _stateYes, _stateNo; //the AO must have all _stateYes flags and none of _stateNo flags. Specified in the prop parameter.
 	int _elem; //simple element id. Specified in the prop parameter. _flags2 has IsElem.
 	RECT _rect; //AO location. Specified in the prop parameter. _flags2 has IsRect.
@@ -106,9 +109,9 @@ class AccFinder
 
 		//	//FUTURE: "PART/PART/.../PART"
 		//} else {
-			if(role[roleLen] == 0) _role = role;
-			else _role = _roleStrings.Assign(role, roleLen);
-		//}
+		if(role[roleLen] == 0) _role = role;
+		else _role = _roleStrings.Assign(role, roleLen);
+	//}
 
 		return true;
 //ge:
@@ -219,8 +222,8 @@ class AccFinder
 								} else goto ge;
 								break;
 							case 3:
-								_maxCC = strtoi(va, &s2);
-								if(_maxCC <= 0 || s2 != s) goto ge;
+								_context.maxcc = strtoi(va, &s2);
+								if(_context.maxcc < 1 || s2 != s) goto ge;
 								break;
 							case 4:
 								_ParseNotin(va, s);
@@ -270,10 +273,9 @@ class AccFinder
 public:
 
 	AccFinder(BSTR* errStr = null) {
-		ZEROTHIS;
+		ZEROTHISFROM(_callback);
 		_errStr = errStr;
 		_maxLevel = 1000;
-		_maxCC = 10000;
 	}
 
 	~AccFinder()
@@ -283,7 +285,7 @@ public:
 		delete[] _notin;
 	}
 
-	bool SetParams(const Cpp_AccParams& ap, eAF2 flags2)
+	bool SetParams(const Cpp_AccFindParams& ap, eAF2 flags2)
 	{
 		_flags = ap.flags;
 		_flags2 = flags2;
@@ -314,7 +316,7 @@ public:
 			_FindInAcc(ref * a, 0);
 		} else if(!!(_flags2 & eAF2::InWebPage)) {
 			if(!!(_flags2 & eAF2::InIES)) { //info: Cpp_AccFind finds IES control and adds this flag
-				_FindInWnd(w);
+				_FindInWnd(w, false, false);
 				//info: the hierarchy is WINDOW/CLIENT/PANE, therefore PANE will be at level 0
 			} else {
 				AccDtorIfElem0 aDoc;
@@ -328,26 +330,34 @@ public:
 				case _eMatchResult::Continue: _FindInAcc(ref aDoc, 1);
 				}
 			}
-		} else if(!!(_flags2 & eAF2::InControls)) {
-			wn::EnumChildWindows(w, [this, w](HWND c)
-			{
-				if(!(_flags & eAF::HiddenToo) && !wn::IsVisibleInWindow(c, w)) return true; //not IsWindowVisible, because we want to find controls in invisible windows
-				if(!!(_flags2 & eAF2::IsId) && GetDlgCtrlID(c) != _controlId) return true;
-				if(_controlClass.Is() && !wn::ClassNameIs(c, _controlClass)) return true;
-				if(_controlWF != null && !wn::WinformsNameIs(c, _controlWF)) return true;
-				return 0 != _FindInWnd(c, true);
-			});
 		} else {
-			_wTL = (wn::Style(w) & WS_CHILD) ? 0 : w;
-			_FindInWnd(w);
+			bool isJava = !(_flags & eAF::UIA) && (_role == null || (_role[0] >= 'a' && _role[0] <= 'z')) && wn::ClassNameIs(w, L"SunAwt*"); //note: can be control. I know only 1 such app - Sweet Home 3D.
+			if(!!(_flags2 & eAF2::InControls)) {
+				wn::EnumChildWindows(w, [this, w, isJava](HWND c)
+				{
+					if(!(_flags & eAF::HiddenToo) && !wn::IsVisibleInWindow(c, w)) return true; //not IsWindowVisible, because we want to find controls in invisible windows
+					if(!!(_flags2 & eAF2::IsId) && GetDlgCtrlID(c) != _controlId) return true;
+					if(_controlClass.Is() && !wn::ClassNameIs(c, _controlClass)) return true;
+					if(_controlWF != null && !wn::WinformsNameIs(c, _controlWF)) return true;
+					return 0 != _FindInWnd(c, true, isJava && wn::ClassNameIs(c, L"SunAwt*"));
+				});
+			} else {
+				_wTL = (wn::Style(w) & WS_CHILD) ? 0 : w;
+				_FindInWnd(w, false, isJava);
+			}
 		}
 
 		return _found ? 0 : (HRESULT)eError::NotFound;
 	}
 
 private:
-	HRESULT _FindInWnd(HWND w, bool isControl = false)
+	HRESULT _FindInWnd(HWND w, bool isControl, bool isJava)
 	{
+		if(isJava) {
+			AccDtorIfElem0 aj(AccJavaFromWindow(w), 0, eAccMiscFlags::Java);
+			if(aj.acc) return _FindInAcc(ref aj, 0) ? 0 : (HRESULT)eError::NotFound;
+		}
+
 		AccDtorIfElem0 aw;
 		HRESULT hr;
 		if(!!(_flags & eAF::UIA)) {
@@ -359,7 +369,7 @@ private:
 		} else {
 			bool inCLIENT = !!(_flags & eAF::ClientArea);
 			hr = ao::AccFromWindowSR(w, inCLIENT ? OBJID_CLIENT : OBJID_WINDOW, &aw.acc);
-			aw.misc.role = inCLIENT ? ROLE_SYSTEM_CLIENT : ROLE_SYSTEM_WINDOW; //not important: can be not CLIENT (eg DIALOG)
+			aw.misc.roleByte = inCLIENT ? ROLE_SYSTEM_CLIENT : ROLE_SYSTEM_WINDOW; //not important: can be not CLIENT (eg DIALOG)
 		}
 		if(hr) return hr;
 
@@ -386,22 +396,14 @@ private:
 		//	if(_path[level].exactIndex) exactIndex = true;
 		//}
 
-		AccChildren c(ref aParent, startIndex, exactIndex, !!(_flags & eAF::Reverse), _maxCC);
+		AccChildren c(ref _context, ref aParent, startIndex, exactIndex, !!(_flags & eAF::Reverse));
 		//Printf(L"%i  %i", level, c.Count());
 		if(c.Count() == 0) {
-			if(_wTL) {
-				//Java?
-				if(level == (!!(_flags & eAF::ClientArea) ? 0 : 1) && aParent.misc.role == ROLE_SYSTEM_CLIENT) {
-					if(wn::ClassNameIs(_wTL, L"SunAwt*")) {
-						AccDtorIfElem0 aw(AccJavaFromWindow(_wTL), 0, eAccMiscFlags::Java);
-						if(aw.acc) {
-							_wTL = 0;
-							return _FindInAcc(ref aw, 1);
-						}
-					}
-				}
-				//rejected: enable Chrome web AOs. Difficult to implement (lazy, etc). Let use prefix "web:".
-			}
+			//rejected: enable Chrome web AOs. Difficult to implement (lazy, etc). Let use prefix "web:".
+			//if(_wTL) {
+			//	if(level == (!!(_flags & eAF::ClientArea) ? 0 : 1) && aParent.misc.roleByte == ROLE_SYSTEM_CLIENT) {
+			//	}
+			//}
 			return false;
 		}
 		for(;;) {
@@ -429,8 +431,8 @@ private:
 		_AccState state(ref a);
 
 		_variant_t varRole;
-		int role = a.get_accRole(out varRole);
-		a.SetRole(role);
+		BYTE role = a.GetRoleByteAndVariant(out varRole);
+		a.misc.roleByte = role;
 		a.SetLevel(level);
 
 		//a.PrintAcc();
@@ -618,7 +620,7 @@ private:
 
 			//note: _rect is raw AO rect, relative to the screen, not to the window/control/page. Its right/bottom actually are width/height.
 			//	It is useful when you want to find AO in the object tree when you already have its another IAccessible eg retrieved from point.
-			//	For example, it is used by the "Find accessible object" tool, to select the captured AO in the tree.
+			//	For example, Delm uses it to select the captured AO in the tree.
 			//	Do not try to make it relative to window etc. Don't need to encourage users to use unreliable ways to find AO.
 
 			if(!!(_flags2 & eAF2::IsRectL) && L != _rect.left) return false;
@@ -669,7 +671,7 @@ private:
 			return GetChromeDOCUMENT(w, ap, out ar);
 		}
 
-		PRINTS(L"unknown browser, or failed Firefox accNavigate(0x1009)");
+		PRINTS(L"unknown browser, or failed Firefox accNavigate(0x1009). It's OK first time after Firefox starts.");
 		return _FindDocumentSimple(ap, out ar, _flags2);
 	}
 
@@ -691,7 +693,7 @@ private:
 	//Used by _FindDocumentSimple.
 	_eMatchResult _FindDocumentCallback(ref const AccRaw& a)
 	{
-		int role = a.misc.role;
+		int role = a.misc.roleByte;
 		if(role == ROLE_SYSTEM_DOCUMENT) {
 			long state; if(0 != a.get_accState(out state) || !!(state & STATE_SYSTEM_INVISIBLE)) return _eMatchResult::SkipChildren;
 			if(!!(_flags2 & eAF2::InChromePage)) { //skip devtools DOCUMENT
@@ -762,7 +764,7 @@ public:
 	}
 };
 
-HRESULT AccFind(AccFindCallback& callback, HWND w, Cpp_Acc* aParent, const Cpp_AccParams& ap, eAF2 flags2, out BSTR& errStr)
+HRESULT AccFind(AccFindCallback& callback, HWND w, Cpp_Acc* aParent, const Cpp_AccFindParams& ap, eAF2 flags2, out BSTR& errStr)
 {
 	AccFinder f(&errStr);
 	if(!f.SetParams(ref ap, flags2)) return (HRESULT)eError::InvalidParameter;

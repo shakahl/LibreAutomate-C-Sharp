@@ -2,6 +2,9 @@
 #include "stdafx.h"
 #include "internal.h"
 
+#define	ROLE_MAX 0x40 //ROLE_SYSTEM_OUTLINEBUTTON
+#define	ROLE_CUSTOM 0xFF
+
 //IAccessible helper methods. All methods are static; use this class like a namespace.
 //Other helper methods are in AccRaw. This class contains methods that don't depend on AccRaw.
 namespace ao
@@ -50,31 +53,32 @@ static HRESULT get_accChild(IAccessible* acc, long elem, out IAccessible*& aChil
 	return hr;
 }
 
-//Gets role.
-//intRole will be 0 if failed or not VT_I4.
-static HRESULT get_accRole(IAccessible* acc, long elem, out int& intRole, out _variant_t& varRole)
+//Gets role (get_accRole) as int (raw) and VARIANT.
+//roleInt - 0 if failed or not VT_I4.
+static HRESULT GetRoleIntAndVariant(IAccessible* acc, long elem, out int& roleInt, out _variant_t& roleVariant)
 {
-	intRole = 0; assert(varRole.vt == 0);
-	HRESULT hr = acc->get_accRole(VE(elem), &varRole);
-	if(hr != 0) {
-		PRINTF(L"failed to get role.  hr=0x%X  elem=%i", hr, elem);
-	} else {
-		switch(varRole.vt) {
-		case VT_I4: intRole = varRole.lVal; break;
-		case VT_BSTR: if(varRole.bstrVal) break; [[fallthrough]];
-		default: hr = 1;
-		}
-	}
+	assert(roleVariant.vt == 0);
+	roleInt = 0;
+	HRESULT hr = acc->get_accRole(VE(elem), &roleVariant);
+	if(hr != 0) PRINTF(L"failed to get role.  hr=0x%X  elem=%i", hr, elem);
+	else if(roleVariant.vt == VT_I4) {
+		roleInt = roleVariant.lVal;
+	} else if(roleVariant.vt == VT_BSTR) {
+		if(!roleVariant.bstrVal) { roleVariant.vt = 0; hr = 1; }
+	} else hr = 1;
 	return hr;
 }
 
-//Gets standard role.
-//Returns 0 if failed or not VT_I4.
-static int get_accRole(IAccessible* acc, long elem = 0)
+//Gets role (get_accRole) as BYTE.
+//Returns 0 if failed. Returns ROLE_CUSTOM (0xFF) if custom (VT_BSTR or not 1-ROLE_MAX).
+static BYTE GetRoleByte(IAccessible* acc, long elem = 0)
 {
-	_variant_t varRole; int intRole;
-	get_accRole(acc, elem, out intRole, out varRole);
-	return intRole;
+	_variant_t v;
+	HRESULT hr = acc->get_accRole(VE(elem), &v);
+	if(hr != 0) PRINTF(L"failed to get role.  hr=0x%X  elem=%i", hr, elem);
+	else if(v.vt == VT_I4) return v.lVal > 0 && v.lVal <= ROLE_MAX ? (BYTE)v.lVal : ROLE_CUSTOM;
+	else if(v.vt == VT_BSTR && v.bstrVal) return ROLE_CUSTOM;
+	return 0;
 }
 
 //Converts VARIANT role to string.
@@ -84,12 +88,13 @@ static int get_accRole(IAccessible* acc, long elem = 0)
 static STR RoleToString(ref VARIANT& role)
 {
 	static const STR s_roles[] = { L"0", L"TITLEBAR", L"MENUBAR", L"SCROLLBAR", L"GRIP", L"SOUND", L"CURSOR", L"CARET", L"ALERT", L"WINDOW", L"CLIENT", L"MENUPOPUP", L"MENUITEM", L"TOOLTIP", L"APPLICATION", L"DOCUMENT", L"PANE", L"CHART", L"DIALOG", L"BORDER", L"GROUPING", L"SEPARATOR", L"TOOLBAR", L"STATUSBAR", L"TABLE", L"COLUMNHEADER", L"ROWHEADER", L"COLUMN", L"ROW", L"CELL", L"LINK", L"HELPBALLOON", L"CHARACTER", L"LIST", L"LISTITEM", L"TREE", L"TREEITEM", L"PAGETAB", L"PROPERTYPAGE", L"INDICATOR", L"IMAGE", L"STATICTEXT", L"TEXT", L"BUTTON", L"CHECKBOX", L"RADIOBUTTON", L"COMBOBOX", L"DROPLIST", L"PROGRESSBAR", L"DIAL", L"HOTKEYFIELD", L"SLIDER", L"SPINBUTTON", L"DIAGRAM", L"ANIMATION", L"EQUATION", L"BUTTONDROPDOWN", L"BUTTONMENU", L"BUTTONDROPDOWNGRID", L"WHITESPACE", L"PAGETABLIST", L"CLOCK", L"SPLITBUTTON", L"IPADDRESS", L"TREEBUTTON" };
+	static_assert(sizeof(s_roles) / sizeof(STR) == ROLE_MAX + 1);
 	STR R = null; size_t i;
 g1:
 	switch(role.vt) {
 	case VT_BSTR:
 		R = role.bstrVal;
-		if(R != null) { //lcase if need, to distinguish with standard roles
+		if(R != null) { //lcase if need, to distinguish from standard roles
 			BSTR b = role.bstrVal;
 			int i, len = SysStringLen(b);
 			for(i = 0; i < len; i++) {
@@ -104,7 +109,7 @@ g1:
 		i = role.lVal;
 		if(i < _countof(s_roles)) return s_roles[i];
 		if(0 == VariantChangeType(&role, &role, 0, VT_BSTR)) goto g1;
-		[[fallthrough]];
+		break;
 	case 0: break; //failed to get role
 	default: PRINTF(L"role.vt=%i", role.vt);
 	}
@@ -149,7 +154,8 @@ static HRESULT accLocation(out RECT& r, IAccessible* iacc, long elem = 0)
 {
 	long x, y, wid, hei;
 	HRESULT hr = iacc->accLocation(&x, &y, &wid, &hei, VE(elem));
-	if(hr == 0) SetRect(&r, x, y, x + wid, y + hei); else memset(&r, 0, 16);
+	if(hr != 0) x = y = wid = hei = 0;
+	SetRect(&r, x, y, x + wid, y + hei);
 	return hr;
 }
 
@@ -163,9 +169,8 @@ static bool IsStatic(int role, IAccessible* iacc) {
 #if TRACE
 static void PrintAcc(IAccessible* acc, long elem = 0, int level = 0)
 {
-	_variant_t varRole; int intRole;
-	HRESULT hr = get_accRole(acc, elem, out intRole, out varRole);
-	STR sr = hr ? L"<failed>" : ao::RoleToString(ref varRole);
+	_variant_t vr; HRESULT hr = acc->get_accRole(VE(elem), &vr);
+	STR sr = (hr == 0 && (vr.vt == VT_I4 || (vr.vt == VT_BSTR && vr.bstrVal))) ? ao::RoleToString(ref vr) : L"<failed>";
 	Bstr bn; STR sn = L""; if(0 == acc->get_accName(ao::VE(elem), &bn) && bn) sn = bn;
 
 	Printf(L"<><c 0x80>%*s%s  \"%s\"</c>", level, L"", sr, sn);
@@ -181,11 +186,11 @@ public:
 	//Does not set SPI_SETSCREENREADER.
 	TempSetScreenReader() noexcept { _restore = false; }
 
-	//Calls Set() if w is not 0 and its classname is "SALFRAME".
+	//Calls Set() if w is not 0 and its classname matches "SAL*FRAME".
 	TempSetScreenReader(HWND w)
 	{
 		_restore = false;
-		if(w && wn::ClassNameIs(w, L"SALFRAME")) Set(w);
+		if(w && wn::ClassNameIs(w, L"SAL*FRAME")) Set(w);
 	}
 
 	~TempSetScreenReader()
@@ -206,7 +211,7 @@ public:
 	}
 };
 
-//Calls AccessibleObjectFromWindow. Uses TempSetScreenReader if w class name is "SALFRAME".
+//Calls AccessibleObjectFromWindow. Uses TempSetScreenReader if w class name matches "SAL*FRAME".
 static HRESULT AccFromWindowSR(HWND w, DWORD objid, out IAccessible** a)
 {
 	TempSetScreenReader tsr(w);
@@ -315,40 +320,37 @@ struct AccRaw : public Cpp_Acc
 		return hr;
 	}
 
-	//Gets standard role.
-	//Returns 0 if failed or not VT_I4.
-	int get_accRole() const
+	//Gets role (get_accRole) as BYTE.
+	//Returns 0 if failed. Returns ROLE_CUSTOM (0xFF) if custom (VT_BSTR or not 1-ROLE_MAX).
+	BYTE GetRoleByte() const
 	{
-		return ao::get_accRole(acc, elem);
+		return ao::GetRoleByte(acc, elem);
 	}
 
-	//Gets standard role and VARIANT that can receive string role.
-	//Returns 0 if failed or not VT_I4.
-	int get_accRole(out _variant_t& varRole) const
+	//Gets role (get_accRole) as BYTE and VARIANT.
+	//Returns 0 if failed. Returns ROLE_CUSTOM (0xFF) if custom (VT_BSTR or not 1-ROLE_MAX).
+	BYTE GetRoleByteAndVariant(out _variant_t& varRole) const
 	{
-		int intRole;
-		ao::get_accRole(acc, elem, out intRole, out varRole);
-		return intRole;
+		int roleInt;
+		if(0 != ao::GetRoleIntAndVariant(acc, elem, out roleInt, out varRole)) return 0;
+		return roleInt > 0 && roleInt <= ROLE_MAX ? (BYTE)roleInt : ROLE_CUSTOM;
 	}
 
-	//Gets standard (int) or custom (string) role.
+	//Gets role (get_accRole) as raw int (VT_I4) or string (VT_BSTR).
 	//If string, roleStr will be not null. Will need to free it.
 	bool GetRoleIntOrString(out int& roleInt, out BSTR& roleStr) const
 	{
-		_variant_t v;
 		roleStr = null;
-		roleInt = get_accRole(out v);
-		if(roleInt == 0) {
-			if(v.vt != VT_BSTR || v.bstrVal == null) return false;
-			roleStr = v.Detach().bstrVal;
-		}
+		_variant_t v;
+		if(0 != ao::GetRoleIntAndVariant(acc, elem, out roleInt, out v)) return false;
+		if(v.vt == VT_BSTR) roleStr = v.Detach().bstrVal;
 		return true;
 	}
 
 	//Calls acc->accNavigate and gets IAccessible/elem from VARIANT using standard pattern which may involve get_accParent/get_accChild.
 	//Does not support PARENT and CHILD (asserts). If NAVDIR_FIRSTCHILD or NAVDIR_LASTCHILD, elem must be 0 (asserts).
 	//Does not set a.misc.flags.
-	HRESULT accNavigate(int navDir, out AccRaw& a) const
+	HRESULT Navigate(int navDir, out AccRaw& a) const
 	{
 		assert(!(navDir == NAVDIR_PARENT || navDir == NAVDIR_CHILD)); //our special navdirs
 		assert(!(elem != 0 && (navDir == NAVDIR_FIRSTCHILD || navDir == NAVDIR_LASTCHILD)));
@@ -448,6 +450,40 @@ public:
 	}
 };
 
+//Provides a memory buffer for AccessibleChildren that can be reused by multiple AccChildren instances.
+class AccContext {
+public:
+	VARIANT* buffer;
+	int lenBuffer, maxcc;
+
+	explicit AccContext(int maxcc_ = 10000) noexcept {
+		buffer = null;
+		lenBuffer = 0;
+		maxcc = maxcc_;
+	}
+
+	bool Init() {
+		if(buffer == null) {
+			lenBuffer = min(maxcc, 1000000) + 1;
+			do {
+				buffer = (VARIANT*)VirtualAlloc(null, lenBuffer * sizeof(VARIANT), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+			} while(buffer == null && (lenBuffer /= 2) > 5000);
+			if(buffer == null) {
+				maxcc = lenBuffer = 0;
+				return false;
+			}
+			maxcc = lenBuffer - 1;
+		}
+		return true;
+	}
+
+	~AccContext() {
+		if(buffer != null) {
+			VirtualFree(buffer, 0, MEM_RELEASE);
+			buffer = null;
+		}
+	}
+};
 
 //Gets child AOs.
 class AccChildren
@@ -459,7 +495,7 @@ class AccChildren
 	eAccMiscFlags _miscFlags;
 
 public:
-	AccChildren(const Cpp_Acc& parent, int startAtIndex = 0, bool exactIndex = false, bool reverse = false, int maxcc = 10000)
+	AccChildren(AccContext& context, const Cpp_Acc& parent, int startAtIndex = 0, bool exactIndex = false, bool reverse = false)
 	{
 		_parent = parent.acc;
 		_miscFlags = parent.misc.flags & eAccMiscFlags::InheritMask;
@@ -470,48 +506,64 @@ public:
 		_reverse = reverse;
 		_startAtIndex = startAtIndex;
 
-		//note: don't call get_accChildCount here. With Firefox etc it makes almost 2 times slower (outproc). With others same speed.
+		//With get_accChildCount was faster in most tested cases, usually 10-20%, sometimes 50%, sometimes same speed, Chrome 30%, WPF 50%, never slower.
+		//	But in the past with some Firefox version outproc was 2 times slower.
+		//	Note: get_accChildCount can return different count than AccessibleChildren. Usually more. With this code bad is only when incorrectly returns 0 or >maxcc.
+		//	Never mind: with VS 2022 Preview get_accChildCount ocassionally hangs when parent is PAGETABLIST of document. OK with only AccessibleChildren.
 
-		const int c_nStack = 100; //info: fast even with 10 or 7, but 5 makes slower. Just slightly faster with 100. Not faster with 30 etc.
-		VARIANT v[c_nStack];
+		//For AccessibleChildren we use buffer of maxcc+1 size.
+		//	The buffer is in *context*. Reused by all AccChildren instances of that main function (find, navigate, etc).
+		//	Max possible maxcc is 1000000 (24 MB in 64-bit process, 16 MB in 32-bit). If fails to allocate, sets smaller maxcc.
+
+		//Perf.First();
 		long n = 0;
-		int hr = AccessibleChildren(_parent, 0, c_nStack, v, &n);
-		if(hr < 0) { //rare
+#if true
+		if(0 == _parent->get_accChildCount(&n) && n > 0 && n <= context.maxcc && context.Init()) {
 			n = 0;
-			//PRINTHEX(hr);
-			//ao::PrintAcc(_parent);
-		}
-
-		//Printf(L"A %i", n);
-		if(n == c_nStack) { //more children?
-			/*int hr2 = */_parent->get_accChildCount(&n); //note: some objects return 0 or 1, ie < n, and hr is usually 0. Noticed this only in IE, when c_nStack<10.
-			//Printf(L"B %i 0x%X", n, hr2);
-			//Sleep(100);
-
-			//SHOULDDO: VS 2022 Preview sometimes hangs. Attached debugger always shows it hangs in get_accChildCount.
-			//	Sometimes hangs when capturing (maybe when creating tree or auto-testing). Sometimes when searching.
-			//	Now cannot reproduce. Always n<100.
-
-			if(n != c_nStack) { //yes, more children
-				for(int i = c_nStack; i > 0;) VariantClear(&v[--i]);
-				if(n > maxcc) { //protection from AO such as LibreOffice Calc TABLE that has 1073741824 children. Default 10000.
-					n = 0;
-				} else {
-					if(n < c_nStack) n = 1000; //get_accChildCount returned error or incorrect value
-					_v = (VARIANT*)malloc(n * sizeof(VARIANT));
-					hr = AccessibleChildren(_parent, 0, n, _v, &n); //note: iChildStart must be 0, else not always gets all children
-					if(hr < 0) { PRINTHEX(hr); n = 0; }
+			int hr = AccessibleChildren(_parent, 0, context.lenBuffer, context.buffer, &n);
+			if(hr < 0) { //rare
+				n = 0;
+				//PRINTHEX(hr);
+				//ao::PrintAcc(_parent);
+			} else if(n > 0) {
+				//Printf(L"A %i", n);
+				if(!(parent.misc.flags & (eAccMiscFlags::UIA | eAccMiscFlags::Java))) {
+					n = _RemoveInvisibleNonclient(context.buffer, n, parent.misc.roleByte);
 				}
-			}
-		} else if(!(parent.misc.flags & (eAccMiscFlags::UIA | eAccMiscFlags::Java))) {
-			n = _RemoveInvisibleNonclient(v, n, parent.misc.role);
-		}
 
-		if(n > 0 && _v == null) {
-			int memSize = n * sizeof(VARIANT);
-			_v = (VARIANT*)malloc(memSize);
-			memcpy(_v, v, memSize);
+				int memSize = n * sizeof(VARIANT);
+				_v = (VARIANT*)malloc(memSize);
+				if(_v != null) memcpy(_v, context.buffer, memSize);
+				else while(n > 0) VariantClear(&context.buffer[--n]);
+			}
+		} else n = 0;
+#else //bad: Slow anyway when there are >maxcc children. And slower in most cases.
+		if(context.Init()) { //else failed to allocate memory, unlikely
+			int hr = AccessibleChildren(_parent, 0, context.lenBuffer, context.buffer, &n);
+			if(hr < 0) { //rare
+				n = 0;
+				//PRINTHEX(hr);
+				//ao::PrintAcc(_parent);
+			} else if(n > 0) {
+				if(n <= context.maxcc) { //maxcc default 10000, max 1000000
+				//Printf(L"A %i", n);
+					if(!(parent.misc.flags & (eAccMiscFlags::UIA | eAccMiscFlags::Java))) {
+						n = _RemoveInvisibleNonclient(context.buffer, n, parent.misc.roleByte);
+					}
+
+					int memSize = n * sizeof(VARIANT);
+					_v = (VARIANT*)malloc(memSize);
+					if(_v != null) memcpy(_v, context.buffer, memSize);
+				} else {
+					//Print(n);
+					n = min(n, context.lenBuffer);
+				}
+
+				if(_v == null) while(n > 0) VariantClear(&context.buffer[--n]);
+			}
 		}
+#endif
+	//Perf.NW();
 
 		_count = n;
 		if(n > 0 && _startAtIndex != 0) {
@@ -525,8 +577,7 @@ public:
 		//50% AO have 0 children. 20% have 1 child. Few have > 7.
 	}
 
-	~AccChildren()
-	{
+	~AccChildren() {
 		if(_v != null) {
 			while(_count > 0) VariantClear(&_v[--_count]); //info: it's OK to clear variants for which FromVARIANT was called because then vt is 0
 			free(_v); _v = null;
@@ -535,8 +586,7 @@ public:
 
 	int Count() { return _count; }
 
-	bool GetNext(out AccRaw& a)
-	{
+	bool GetNext(out AccRaw& a) {
 		assert(a.IsEmpty());
 		if(_count == 0) return false;
 		if(_exactIndex) {
@@ -568,12 +618,11 @@ public:
 
 private:
 	//Removes invisible nonclient children of WINDOW. They are annoying and make slower.
-	int _RemoveInvisibleNonclient(VARIANT* v, int n, int role)
-	{
+	int _RemoveInvisibleNonclient(VARIANT* v, int n, int role) {
 		if(n == 7 && (role == ROLE_SYSTEM_WINDOW || role == 0)) {
 			for(int i = 0; i < 7; i++) if(v[i].vt != VT_DISPATCH) goto gr;
 			//Perf.First();
-			if(role == 0 && ao::get_accRole(_parent) != ROLE_SYSTEM_WINDOW) goto gr;
+			if(role == 0 && ao::GetRoleByte(_parent) != ROLE_SYSTEM_WINDOW) goto gr;
 			HWND w; if(0 != WindowFromAccessibleObject(_parent, &w)) goto gr;
 
 			//is it native WINDOW AO? Eg WPF uses role WINDOW instead of CLIENT.
@@ -584,8 +633,7 @@ private:
 				Smart<IAccIdentity> aid; DWORD* k = nullptr; DWORD len = 0;
 				if(0 != _parent->QueryInterface(&aid) || 0 != aid->GetIdentityString(0, (BYTE**)&k, &len)) goto gr;
 				//Printf(L"0x%X 0x%X 0x%X 0x%X  w=0x%X", k[0], k[1], k[2], k[3], (int)w);
-#pragma warning(suppress: 4311 4302) //(DWORD)w
-				bool ok = len == 16 && k[0] == 0x80000001 && k[1] == (DWORD)w && k[2] == 0 && k[3] == 0; //0x80000001, hwnd, objid (OBJID_WINDOW is 0), childid
+				bool ok = len == 16 && k[0] == 0x80000001 && k[1] == (DWORD)(LPARAM)w && k[2] == 0 && k[3] == 0; //0x80000001, hwnd, objid (OBJID_WINDOW is 0), childid
 				CoTaskMemFree(k);
 				if(!ok) goto gr;
 			}
@@ -632,7 +680,8 @@ private:
 };
 
 IAccessible* AccJavaFromWindow(HWND w, bool getFocused = false);
-IAccessible* AccJavaFromPoint(POINT p, HWND w = 0);
+IAccessible* AccJavaFromPoint(POINT p, HWND w, bool alt);
 HRESULT AccUiaFromWindow(HWND w, out IAccessible** iacc);
 HRESULT AccUiaFromPoint(POINT p, out IAccessible** iacc);
 HRESULT AccUiaFocused(out IAccessible** iacc);
+//HRESULT AccUiaFromMSAA(IAccessible* msaa, int elem, out IAccessible** iacc);

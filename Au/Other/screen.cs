@@ -55,7 +55,7 @@ namespace Au
 		/// <remarks>
 		/// If this variable has <see cref="Handle"/>, returns its clone. Else if has <see cref="LazyFunc"/>, calls it. Else gets the primary screen.
 		/// </remarks>
-		public screen Now => new screen(_Handle());
+		public screen Now => new (_Handle());
 
 		/// <summary>
 		/// Gets the primary screen.
@@ -309,6 +309,7 @@ namespace Au
 		/// Calls <see cref="Dpi.OfScreen"/>.
 		/// </summary>
 		public int Dpi => More.Dpi.OfScreen(_Handle());
+		//public int Dpi(bool supportWin81 = false) => More.Dpi.OfScreen(_Handle(), supportWin81); //no, rarely need, don't complicate everything. When need, can use Dpi.OfScreen.
 
 		/// <summary>
 		/// True if the screen handle is valid.

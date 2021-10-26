@@ -164,7 +164,7 @@
 		//	get {
 		//		if(_test == false){
 		//			Debug_.MemorySetAnchor_();
-		//			timerm.after(500, _ => Debug_.MemoryPrint_());
+		//			timer.after(500, _ => Debug_.MemoryPrint_());
 		//		}
 
 		//		var k=new StackFrame(1, true);

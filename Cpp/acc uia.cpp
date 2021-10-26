@@ -7,7 +7,7 @@ namespace uia
 #ifdef _DEBUG
 void PrintGuid(const GUID& g)
 {
-	LPOLESTR os = 0;
+	LPOLESTR os = null;
 	StringFromIID(g, &os);
 	Print(os);
 	CoTaskMemFree(os);
@@ -47,33 +47,52 @@ IUIAutomationTreeWalker* WalkAll()
 	return tv.rawWalk;
 }
 
-class UIAccessible : public IAccessible//, IServiceProvider
+static long s_uiaWrapperCount;
+
+//Returns false if there are UIAccessible objects in this process.
+//Then cannot unload this dll, because later will be called Release and this process would crash if unloaded.
+//Could not find a way to prevent Release. Even if client does not call it, COM calls it after 6 minutes. CoDisconnectObject prevents only other method calls.
+bool UiaDisconnectWrappers() {
+	PRINTF_IF(s_uiaWrapperCount != 0, L"cannot unload dll because of %i alive UIA wrappers.  %s", s_uiaWrapperCount, GetCommandLineW());
+	return s_uiaWrapperCount == 0;
+}
+
+class UIAccessible : public IAccessible, IEnumVARIANT
 {
 	long _cRef;
-	DWORD _timeOfChildren;
-	Smart<IUIAutomationElement> _ae;
-	Smart<IUIAutomationElementArray> _children;
+	int _next;
+	IUIAutomationElement* _ae;
+	IUIAutomationElementArray* _children;
+	ULONGLONG _timeOfChildren;
 
 public:
-#pragma region ctor, dtor
-	UIAccessible(IUIAutomationElement* ae) : _ae(ae, false)
+	UIAccessible(IUIAutomationElement* ae)
 	{
-		//PRINTS(__FUNCTIONW__);
-		//_ae->AddRef(); Printf(L"+ %p ref=%i tid=%i", _ae.p, _ae->Release(), GetCurrentThreadId());
+		//PRINTF(L"+ %p", _ae);
+		//ae->AddRef(); Printf(L"+ %p ref=%i tid=%i", ae, ae->Release(), GetCurrentThreadId());
+		InterlockedIncrement(&s_uiaWrapperCount);
 
 		_cRef = 1;
+		_next = 0;
+		_ae = ae;
+		_children = null;
 		_timeOfChildren = 0;
+		assert(_ae != null);
+
 	}
 
-	//~UIAccessible()
-	//{
-	//	//PRINTS(__FUNCTIONW__);
-	//	auto p = _ae.p; Printf(L"- %p ref=%i tid=%i", p, _ae.Detach()->Release(), GetCurrentThreadId());
-	//	//note: intermediate elements still have refcount 1, because they are referenced by parent's IUIAutomationElementArray.
-	//}
-#pragma endregion
+	~UIAccessible()
+	{
+		if(_children) _children->Release();
+		_ae->Release();
+		//Printf(L"- %p ref=%i tid=%i", _ae, _ae->Release(), GetCurrentThreadId());
+		//note: intermediate elements still have refcount 1, because they are referenced by parent's IUIAutomationElementArray.
 
-#pragma region IDispatch
+		//PRINTF(L"- %p", _ae);
+		InterlockedDecrement(&s_uiaWrapperCount);
+	}
+
+#pragma region IUnknown, IDispatch
 	STDMETHODIMP QueryInterface(REFIID iid, void** ppv)
 	{
 		//PrintGuid(iid);
@@ -82,14 +101,19 @@ public:
 			InterlockedIncrement(&_cRef);
 			*ppv = this;
 			return 0;
-		//} else if(iid == IID_IUIAutomationElement) {
+		} else if(iid == IID_IEnumVARIANT) {
+			InterlockedIncrement(&_cRef);
+			*ppv = (IEnumVARIANT*)this;
+			return 0;
+		}
+		//else if(iid == IID_IUIAutomationElement) {
 		//	//note: does not work for inproc AO. This func is called, but QI (of proxy) fails. If need, try QS, not tested.
 		//	//tested: IUIAutomation.ElementFromIAccessible does not QI/QS IUIAutomationElement.
 		//	//Print("--UIA");
 		//	_ae->AddRef();
 		//	*ppv = _ae;
 		//	return 0;
-		}
+		//}
 		//else if(iid == IID_IServiceProvider) {
 		//	InterlockedIncrement(&_cRef);
 		//	*ppv = (IServiceProvider*)this;
@@ -100,7 +124,7 @@ public:
 		//else if(iid == IID_IServiceProvider) Print("IID_IServiceProvider");
 		//else PrintGuid(iid);
 
-		*ppv = 0;
+		* ppv = 0;
 		return E_NOINTERFACE;
 	}
 
@@ -122,7 +146,42 @@ public:
 
 	STDMETHODIMP GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames, UINT cNames, LCID lcid, __RPC__out_ecount_full(cNames) DISPID* rgDispId) { return E_NOTIMPL; }
 
-	STDMETHODIMP Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT* pVarResult, EXCEPINFO* pExcepInfo, UINT *puArgErr) { return E_NOTIMPL; }
+	STDMETHODIMP Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS* pDispParams, VARIANT* pVarResult, EXCEPINFO* pExcepInfo, UINT* puArgErr) { return E_NOTIMPL; }
+#pragma endregion
+
+#pragma region IEnumVARIANT
+	STDMETHODIMP Next(ULONG celt, VARIANT* rgVar, ULONG* pCeltFetched)
+	{
+		//PRINTS(__FUNCTIONW__);
+		if(pCeltFetched) *pCeltFetched = 0;
+		long cc;
+		HRESULT hr = get_accChildCount(&cc); if(hr != 0) return hr;
+		//Printf(__FUNCTIONW__ L" %i %i", celt, cc);
+		for(ULONG i = 0; i < celt; i++, _next++) {
+			if(_next >= cc) return 1;
+			IUIAutomationElement* e = null;
+			HRESULT hr = _children->GetElement(_next, &e); if(hr != 0) return hr;
+			rgVar[i].pdispVal = new UIAccessible(e);
+			rgVar[i].vt = VT_DISPATCH;
+			if(pCeltFetched) (*pCeltFetched)++;
+		}
+		return 0;
+	}
+	STDMETHODIMP Skip(ULONG celt)
+	{
+		PRINTS(__FUNCTIONW__);
+		return E_NOTIMPL;
+	}
+	STDMETHODIMP Reset(void)
+	{
+		_next = 0;
+		return 0;
+	}
+	STDMETHODIMP Clone(IEnumVARIANT** ppEnum)
+	{
+		PRINTS(__FUNCTIONW__);
+		return E_NOTIMPL;
+	}
 #pragma endregion
 
 #pragma region IAccessible
@@ -144,14 +203,14 @@ public:
 		//Perf.First();
 		*pcountChildren = 0;
 		HRESULT hr;
-		if(!_children || GetTickCount() - _timeOfChildren > 40) {
-			if(_children) _children.Release();
+		if(!_children || GetTickCount64() - _timeOfChildren > 40) {
+			if(_children) { _children->Release(); _children = null; }
 			hr = _ae->FindAll(TreeScope::TreeScope_Children, CondAll(), &_children);
 			//Printf(L"0x%X %p", hr, _children.p);
 			if(hr != 0 || !_children) return hr; //msdn lies: "NULL is returned if no matching element is found"
-			_timeOfChildren = GetTickCount();
+			_timeOfChildren = GetTickCount64();
 		}
-		//Perf.Next(); //150-500, depends on element and notinproc
+		//Perf.Next(); //in some cases very slow, eg in Firefox big pages
 		hr = _children->get_Length((int*)pcountChildren);
 		//Perf.NW(); //0-1
 		return hr;
@@ -163,11 +222,10 @@ public:
 		*ppdispChild = null;
 		if(varChild.vt != VT_I4) return E_INVALIDARG;
 		long cc;
-		HRESULT hr = get_accChildCount(&cc); if(hr) return hr; //fast, because usually we have _children
+		HRESULT hr = get_accChildCount(&cc); if(hr != 0) return hr;
 		long i = varChild.lVal - 1; if((DWORD)i >= (DWORD)cc) return E_INVALIDARG;
 		IUIAutomationElement* e = null;
 		hr = _children->GetElement(i, &e);
-		if(hr == 0 && !e) hr = 1;
 		if(hr == 0) *ppdispChild = new UIAccessible(e);
 		return hr;
 	}
@@ -309,7 +367,7 @@ public:
 		//	PRINTS(__FUNCTIONW__);
 		//}
 
-		STDMETHODIMP QueryInterface(REFIID riid, void ** ppvObject)
+		STDMETHODIMP QueryInterface(REFIID riid, void** ppvObject)
 		{
 			if(riid == IID_IEnumVARIANT || riid == IID_IUnknown) {
 				++_cRef;
@@ -329,7 +387,7 @@ public:
 			if(!ret) delete this;
 			return ret;
 		}
-		STDMETHODIMP Next(ULONG celt, VARIANT * rgVar, ULONG * pCeltFetched)
+		STDMETHODIMP Next(ULONG celt, VARIANT* rgVar, ULONG* pCeltFetched)
 		{
 			if(pCeltFetched) *pCeltFetched = 0;
 			for(ULONG i = 0; i < celt; i++, _next++) {
@@ -351,7 +409,7 @@ public:
 			_next = 0;
 			return 0;
 		}
-		STDMETHODIMP Clone(IEnumVARIANT ** ppEnum)
+		STDMETHODIMP Clone(IEnumVARIANT** ppEnum)
 		{
 			return E_NOTIMPL;
 		}
@@ -392,19 +450,19 @@ public:
 	STDMETHODIMP accSelect(long flagsSelect, VARIANT varChild)
 	{
 		if(_InvalidVarChildParam(ref varChild)) return E_INVALIDARG;
-		if(flagsSelect&SELFLAG_EXTENDSELECTION) return E_INVALIDARG;
+		if(flagsSelect & SELFLAG_EXTENDSELECTION) return E_INVALIDARG;
 		HRESULT hr = 0;
-		if(flagsSelect&(SELFLAG_TAKESELECTION | SELFLAG_ADDSELECTION | SELFLAG_REMOVESELECTION)) {
+		if(flagsSelect & (SELFLAG_TAKESELECTION | SELFLAG_ADDSELECTION | SELFLAG_REMOVESELECTION)) {
 			Smart<IUIAutomationSelectionItemPattern> p;
 			hr = _ae->GetCurrentPatternAs(UIA_SelectionItemPatternId, IID_PPV_ARGS(&p));
 			if(hr == 0 && !p) hr = 1;
 			if(hr == 0) {
-				if(flagsSelect&SELFLAG_TAKESELECTION) hr = p->Select();
-				if(flagsSelect&SELFLAG_ADDSELECTION && hr == 0) hr = p->AddToSelection();
-				if(flagsSelect&SELFLAG_REMOVESELECTION && hr == 0) hr = p->RemoveFromSelection();
+				if(flagsSelect & SELFLAG_TAKESELECTION) hr = p->Select();
+				if(flagsSelect & SELFLAG_ADDSELECTION && hr == 0) hr = p->AddToSelection();
+				if(flagsSelect & SELFLAG_REMOVESELECTION && hr == 0) hr = p->RemoveFromSelection();
 			}
 		}
-		if(flagsSelect&SELFLAG_TAKEFOCUS && hr == 0) {
+		if(flagsSelect & SELFLAG_TAKEFOCUS && hr == 0) {
 			hr = _ae->SetFocus();
 		}
 		return hr;
@@ -536,7 +594,7 @@ private:
 	HWND _GetHWND()
 	{
 		//PRINTS(__FUNCTIONW__);
-		for(IUIAutomationElement* e = _ae; ;) {
+		for(auto e = _ae; ;) {
 			UIA_HWND w = 0;
 			HRESULT hr = e->get_CurrentNativeWindowHandle(&w);
 			if(hr || w) {
@@ -640,6 +698,15 @@ HRESULT AccFocused(out IAccessible** iacc)
 	return hr;
 }
 
+//Fails with most. When succeeds, the object often is half-valid.
+//HRESULT AccFromMSAA(IAccessible* msaa, int elem, out IAccessible** iacc)
+//{
+//	IUIAutomationElement* e = null;
+//	HRESULT hr = UIA()->ElementFromIAccessible(msaa, elem, &e);
+//	*iacc = hr == 0 ? new UIAccessible(e) : null;
+//	return hr;
+//}
+
 } //namespace uia
 
 HRESULT AccUiaFromWindow(HWND w, out IAccessible** iacc)
@@ -656,3 +723,8 @@ HRESULT AccUiaFocused(out IAccessible** iacc)
 {
 	return uia::AccFocused(iacc);
 }
+
+//HRESULT AccUiaFromMSAA(IAccessible* msaa, int elem, out IAccessible** iacc)
+//{
+//	return uia::AccFromMSAA(msaa, elem, iacc);
+//}

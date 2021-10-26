@@ -815,12 +815,12 @@ namespace Au.Controls
 			_lePopup.ShowByRect(this, null, r);
 			_leTB.Focus();
 
-			//		timerm.after(1000,_=>Visibility=Visibility.Collapsed);
-			//		timerm.after(1000,_=>Window.GetWindow(this).Hide());
-			//		timerm.after(2000,_=>Window.GetWindow(this).Show());
-			//		timerm.after(1000,_=>Window.GetWindow(this).Width=500);
-			//		timerm.after(1000,_=>Expand(0, false));
-			//		timerm.after(1000,_=>ItemsRoot=null);
+			//		timer.after(1000,_=>Visibility=Visibility.Collapsed);
+			//		timer.after(1000,_=>Window.GetWindow(this).Hide());
+			//		timer.after(2000,_=>Window.GetWindow(this).Show());
+			//		timer.after(1000,_=>Window.GetWindow(this).Width=500);
+			//		timer.after(1000,_=>Expand(0, false));
+			//		timer.after(1000,_=>ItemsRoot=null);
 		}
 
 		KPopup _lePopup;

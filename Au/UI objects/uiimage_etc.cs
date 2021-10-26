@@ -37,7 +37,7 @@ namespace Au
 		/// <param name="usePrintWindow">Get pixels like with flag <see cref="IFFlags.PrintWindow"/>.</param>
 		/// <exception cref="AuWndException">Invalid <i>w</i>.</exception>
 		/// <exception cref="ArgumentException">Empty rectangle.</exception>
-		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (width*height*4 bytes).</exception>
+		/// <exception cref="AuException">Failed. For example there is not enough memory for bitmap of this size (width*height*4 bytes).</exception>
 		/// <remarks>
 		/// Unlike <see cref="capture(RECT)"/>, this overload gets pixels directly from window, not from screen. Like with flag <see cref="IFFlags.WindowDC"/> or <see cref="IFFlags.PrintWindow"/>. The window can be under other windows. The captured image can be different than displayed on screen.
 		/// If the window is partially or completely transparent, captures its non-transparent view.
@@ -84,11 +84,12 @@ namespace Au
 		}
 
 		static void _CaptureToDC(MemoryBitmap mb, RECT r, wnd w = default, bool usePrintWindow = false) {
-			if (usePrintWindow && Api.PrintWindow(w, mb.Hdc, Api.PW_CLIENTONLY | (osVersion.minWin8_1 ? Api.PW_RENDERFULLCONTENT : 0))) {
-				//print.it("PrintWindow OK");
+			if (usePrintWindow) {
+				if(!Api.PrintWindow(w, mb.Hdc, Api.PW_CLIENTONLY | (osVersion.minWin8_1 ? Api.PW_RENDERFULLCONTENT : 0)))
+					w.ThrowNoNative("Failed to get pixels");
 			} else {
 				using var dc = new WindowDC_(w);
-				if (dc.Is0) w.ThrowNoNative("Failed");
+				if (dc.Is0) w.ThrowNoNative("Failed to get pixels");
 				uint rop = !w.Is0 ? Api.SRCCOPY : Api.SRCCOPY | Api.CAPTUREBLT;
 				bool ok = Api.BitBlt(mb.Hdc, 0, 0, r.Width, r.Height, dc, r.left, r.top, rop);
 				Debug.Assert(ok); //the API fails only if a HDC is invalid

@@ -25,7 +25,7 @@ namespace Au.Types
 			public static implicit operator Cpp_Acc(elm e) => new(e);
 		}
 
-		internal delegate int AccCallbackT(Cpp_Acc a);
+		internal delegate int Cpp_AccFindCallbackT(Cpp_Acc a);
 
 		internal struct Cpp_AccParams
 		{
@@ -46,7 +46,7 @@ namespace Au.Types
 		}
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern EError Cpp_AccFind(wnd w, Cpp_Acc* aParent, in Cpp_AccParams ap, AccCallbackT also, out Cpp_Acc aResult, [MarshalAs(UnmanagedType.BStr)] out string sResult);
+		internal static extern EError Cpp_AccFind(wnd w, Cpp_Acc* aParent, in Cpp_AccParams ap, Cpp_AccFindCallbackT also, out Cpp_Acc aResult, [MarshalAs(UnmanagedType.BStr)] out string sResult);
 
 		internal enum EError
 		{
@@ -66,9 +66,11 @@ namespace Au.Types
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int Cpp_AccFromWindow(int flags, wnd w, EObjid objId, out Cpp_Acc aResult, out BSTR sResult);
 
+		internal delegate EXYFlags Cpp_AccFromPointCallbackT(EXYFlags flags, wnd wFP, wnd wTL);
+
 		//flags: 1 get UIA, 2 prefer LINK.
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int Cpp_AccFromPoint(POINT p, EXYFlags flags, out Cpp_Acc aResult);
+		internal static extern int Cpp_AccFromPoint(POINT p, EXYFlags flags, Cpp_AccFromPointCallbackT callback, out Cpp_Acc aResult);
 
 		//flags: 1 get UIA.
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -83,7 +85,7 @@ namespace Au.Types
 		internal static extern int Cpp_AccNavigate(Cpp_Acc aFrom, string navig, out Cpp_Acc aResult);
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int Cpp_AccGetProp(Cpp_Acc a, char prop, out BSTR sResult);
+		internal static extern int Cpp_AccGetStringProp(Cpp_Acc a, char prop, out BSTR sResult);
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int Cpp_AccWeb(Cpp_Acc a, string what, out BSTR sResult);

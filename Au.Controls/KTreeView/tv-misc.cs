@@ -175,7 +175,7 @@ namespace Au.Controls
 		{
 			readonly KTreeView _tv;
 			ToolTip _tt;
-			timerm _timer;
+			timer _timer;
 			int _i;
 			_VisibleItem[] _avi;
 
@@ -185,7 +185,7 @@ namespace Au.Controls
 				if (i >= 0) {
 					var r = _tv.GetRectPhysical(i, TVParts.Text, clampX: true);
 					if (_tv._avi[i].measured > r.Width) {
-						_timer ??= new timerm(_Show);
+						_timer ??= new timer(_Show);
 						_avi = _tv._avi; _i = i;
 						_timer.After(300);
 						return;
@@ -194,7 +194,7 @@ namespace Au.Controls
 				Hide();
 			}
 
-			void _Show(timerm t) {
+			void _Show(timer t) {
 				if (_avi != _tv._avi || _i != _tv._hotIndex) return;
 				if (_tt == null) {
 					_tt = new ToolTip() {

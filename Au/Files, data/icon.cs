@@ -299,7 +299,7 @@ namespace Au
 				//info: cannot resize from 256 because GetIcon(SHIL_JUMBO) gives 48 icon if 256 icon unavailable. Getting real icon size is either impossible or quite difficult and slow (not tested).
 			} else { ilIndex = Api.SHIL_JUMBO; realSize = 256; }
 
-			using var dac = new Dpi.AwarenessContext(Dpi.AwarenessContext.DPI_AWARENESS_CONTEXT_UNAWARE);
+			using var dac = new Dpi.AwarenessContext(-1); //unaware
 
 			//Need to lock this part, or randomly fails with some file types.
 			lock ("TK6Z4XiSxkGSfC14/or5Mw") {
@@ -492,7 +492,7 @@ namespace Au
 		/// Gets icon that is displayed in window title bar and in taskbar button.
 		/// </summary>
 		/// <returns>Returns null if failed.</returns>
-		/// <param name="w">Window of any process.</param>
+		/// <param name="w">A top-level window of any process.</param>
 		/// <param name="size">Icon width and height. Default 16.</param>
 		public static icon ofWindow(wnd w, int size = 16) {
 			//int size = Api.GetSystemMetrics(big ? Api.SM_CXICON : Api.SM_CXSMICON);

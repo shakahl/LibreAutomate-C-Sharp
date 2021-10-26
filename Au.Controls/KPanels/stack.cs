@@ -235,7 +235,7 @@ namespace Au.Controls
 						Parent._ContextMenu_Move(m);
 					});
 				}
-				timerm.after(100, _ => Mouse.SetCursor(Cursors.Arrow)); //workaround. 30 too small, 50 ok
+				timer.after(100, _ => Mouse.SetCursor(Cursors.Arrow)); //workaround. 30 too small, 50 ok
 				m.Show();
 			}
 

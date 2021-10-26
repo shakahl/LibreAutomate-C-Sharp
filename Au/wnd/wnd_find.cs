@@ -22,7 +22,7 @@
 		/// null means 'can be any'. Cannot be "". Cannot be path.
 		/// 
 		/// Or <see cref="WOwner.Process"/>(process id), <see cref="WOwner.Thread"/>(thread id), <see cref="WOwner.Window"/>(owner window).
-		/// See <see cref="ProcessId"/>, <see cref="process.thisProcessId"/>, <see cref="ThreadId"/>, <see cref="process.thisThreadId"/>, <see cref="OwnerWindow"/>.
+		/// See <see cref="ProcessId"/>, <see cref="process.thisProcessId"/>, <see cref="ThreadId"/>, <see cref="process.thisThreadId"/>, <see cref="getwnd.Owner"/>.
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="also">
@@ -454,7 +454,7 @@
 					if (api == EnumAPI.EnumChildWindows) {
 						if (directChild && w.ParentGWL_ != wParent) return 1;
 					} else {
-						if (!wParent.Is0 && w.OwnerWindow != wParent) return 1;
+						if (!wParent.Is0 && w.Get.Owner != wParent) return 1;
 					}
 					if (a == null) a = MemoryUtil.Alloc<int>(_cap = onlyVisible ? 200 : 1000);
 					else if (len == _cap) MemoryUtil.ReAlloc(ref a, _cap *= 2);
@@ -511,23 +511,23 @@ namespace Au.Types
 		WOwner(object o) => _o = o;
 
 		/// <summary>Program name like "notepad.exe", or null. See <see cref="wnd.ProgramName"/>.</summary>
-		public static implicit operator WOwner([ParamString(PSFormat.wildex)] string program) => new WOwner(program);
+		public static implicit operator WOwner([ParamString(PSFormat.wildex)] string program) => new(program);
 
 		//rejected. Cannot check whether it is default(WOwner) or 0 window handle. And less readable code.
 		///// <summary>Owner window. See <see cref="wnd.OwnerWindow"/>.</summary>
-		//public static implicit operator WOwner(wnd ownerWindow) => new WOwner(ownerWindow);
+		//public static implicit operator WOwner(wnd ownerWindow) => new(ownerWindow);
 
 		/// <summary>Process id. See <see cref="wnd.ProcessId"/>.</summary>
-		public static WOwner Process(int processId) => new WOwner(processId);
+		public static WOwner Process(int processId) => new(processId);
 
 		/// <summary>Thread id. See <see cref="wnd.ThreadId"/>.</summary>
-		public static WOwner Thread(int threadId) => new WOwner((uint)threadId);
+		public static WOwner Thread(int threadId) => new((uint)threadId);
 
 		/// <summary>Thread id of this thread.</summary>
-		public static WOwner ThisThread => new WOwner((uint)Api.GetCurrentThreadId());
+		public static WOwner ThisThread => new((uint)Api.GetCurrentThreadId());
 
-		/// <summary>Owner window. See <see cref="wnd.OwnerWindow"/>.</summary>
-		public static WOwner Window(AnyWnd ownerWindow) => new WOwner(ownerWindow);
+		/// <summary>Owner window. See <see cref="wnd.getwnd.Owner"/>.</summary>
+		public static WOwner Window(AnyWnd ownerWindow) => new(ownerWindow);
 
 		/// <summary>
 		/// Gets program name or process id or thread id or owner window.

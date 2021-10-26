@@ -2,7 +2,7 @@
 #include "cpp.h"
 #include "acc.h"
 
-void Cpp_Acc::SetRole() { SetRole(ao::get_accRole(acc)); }
+void Cpp_Acc::SetRoleByte() { misc.roleByte = ao::GetRoleByte(acc, elem); }
 
 #pragma region navigate
 
@@ -95,13 +95,13 @@ public:
 	}
 };
 
-bool Navig_Alt(int navDir, AccRaw af, out AccRaw& ar)
+bool Navig_Alt(AccContext& context, int navDir, AccRaw af, out AccRaw& ar)
 {
 	ar.acc = null; ar.elem = 0;
 	bool R = false;
 	if(navDir == NAVDIR_FIRSTCHILD || navDir == NAVDIR_LASTCHILD) {
 		if(af.elem != 0) return false;
-		AccChildren c(ref af, navDir == NAVDIR_FIRSTCHILD ? 1 : -1, true);
+		AccChildren c(ref context, ref af, navDir == NAVDIR_FIRSTCHILD ? 1 : -1, true);
 		R = c.GetNext(out ar);
 	} else if(navDir == NAVDIR_NEXT || navDir == NAVDIR_PREVIOUS) {
 
@@ -127,7 +127,7 @@ bool Navig_Alt(int navDir, AccRaw af, out AccRaw& ar)
 		int retry = false; int foundAt = -1;
 	g1:
 		{
-			AccChildren c(ref aParent, 0, false, navDir == NAVDIR_PREVIOUS);
+			AccChildren c(ref context, ref aParent, 0, false, navDir == NAVDIR_PREVIOUS);
 			AccComparer acomp;
 			for(int i = 0;; i++) {
 				AccDtorIfElem0 t;
@@ -148,7 +148,7 @@ bool Navig_Alt(int navDir, AccRaw af, out AccRaw& ar)
 		//Workaround for bugs of some AO: get_accParent returns WINDOW that does not exist in the tree.
 		//Try with parent of aParent.acc.
 		//When foundAt==0, aParent.acc has single child, and it is af.
-		if(!R && !retry && foundAt == 0 && af.elem == 0 && ao::get_accRole(aParent.acc) == ROLE_SYSTEM_WINDOW) {
+		if(!R && !retry && foundAt == 0 && af.elem == 0 && ao::GetRoleByte(aParent.acc) == ROLE_SYSTEM_WINDOW) {
 			IAccessible* p2;
 			if(0 == ao::get_accParent(aParent.acc, out p2)) {
 				aParent.acc->Release(); aParent.acc = p2;
@@ -161,33 +161,49 @@ bool Navig_Alt(int navDir, AccRaw af, out AccRaw& ar)
 	return R;
 }
 
-HRESULT Navig_Step(int navDir, int childIndex, AccRaw af, out AccRaw& ar)
+HRESULT Navig_Parent(const ref Cpp_Acc& af, ref Cpp_Acc& ar) {
+	if(af.elem != 0) {
+		ar.acc = af.acc; //caller must AddRef if need
+	} else {
+		HRESULT hr = ao::get_accParent(af.acc, out ar.acc);
+		if(hr != 0) return hr;
+	}
+	ar.misc.flags = af.misc.flags & eAccMiscFlags::InheritMask; //InProc | UIA | Java
+	if(af.elem == 0 && !!(af.misc.flags & eAccMiscFlags::Java) && *(void**)ar.acc != *(void**)af.acc) ar.misc.flags &= ~eAccMiscFlags::Java; //"frame" -> WINDOW
+	return 0;
+}
+
+HRESULT Navig_Hresult(HRESULT hr) {
+	switch(hr) {
+	case DISP_E_MEMBERNOTFOUND: case E_NOTIMPL: case E_INVALIDARG: case E_FAIL: case E_NOINTERFACE: hr = 1; break;
+	}
+	return hr;
+}
+
+HRESULT Navig_Step(AccContext& context, int navDir, int childIndex, AccRaw af, out AccRaw& ar)
 {
 	ar.acc = null; ar.elem = 0;
+
+	if(navDir == NAVDIR_PARENT) return Navig_Parent(ref af, ref ar);
+
+	if(af.elem != 0) if(navDir == NAVDIR_CHILD || navDir == NAVDIR_FIRSTCHILD || navDir == NAVDIR_LASTCHILD) return 1;
+
 	HRESULT hr = 0;
-	if(af.elem != 0 && navDir >= NAVDIR_FIRSTCHILD && navDir <= NAVDIR_CHILD) { //first, last, parent, child
-		if(navDir == NAVDIR_PARENT) ar.acc = af.acc;
-		else hr = 1;
+	if(navDir == NAVDIR_CHILD) {
+		AccChildren c(ref context, ref af, childIndex, true);
+		if(!c.GetNext(out ar)) hr = 1;
+		//note: for it cannot be used get_accChild. Its purpose is different. It accepts child id, not child index, which may be not the same.
 	} else {
-		if(navDir == NAVDIR_CHILD) {
-			AccChildren c(ref af, childIndex, true);
-			if(!c.GetNext(out ar)) hr = 1;
-			//note: for it cannot be used get_accChild. Its purpose is different. It accepts child id, not child index, which may be not the same.
-		} else if(navDir == NAVDIR_PARENT) {
-			hr = ao::get_accParent(af.acc, out ar.acc);
-			if(!!(af.misc.flags&eAccMiscFlags::Java) && *(void**)ar.acc != *(void**)af.acc) af.misc.flags &= ~eAccMiscFlags::Java; //"frame" -> WINDOW
-		} else {
-			hr = af.accNavigate(navDir, out ar);
-			if(hr != 0 && !(af.misc.flags&(eAccMiscFlags::UIA | eAccMiscFlags::Java))) {
-				//Perf.First();
-				if(Navig_Alt(navDir, af, out ar)) hr = 0;
-				//Perf.NW();
-			}
+		hr = af.Navigate(navDir, out ar);
+		if(hr != 0 && !(af.misc.flags & (eAccMiscFlags::UIA | eAccMiscFlags::Java))) {
+			//Perf.First();
+			if(Navig_Alt(ref context, navDir, af, out ar)) hr = 0;
+			//Perf.NW();
 		}
 	}
 	assert((hr != 0) == (ar.acc == null));
 	if(hr == 0) {
-		ar.misc.flags = af.misc.flags&eAccMiscFlags::InheritMask; //UIA, Java
+		ar.misc.flags = af.misc.flags & eAccMiscFlags::InheritMask; //InProc | UIA | Java
 	}
 	return hr;
 }
@@ -202,25 +218,23 @@ HRESULT AccNavigate(Cpp_Acc aFrom, STR navig, out Cpp_Acc& aResult)
 	if(a == null) return (HRESULT)eError::InvalidParameter;
 
 	HRESULT hr = 0;
+	AccContext context;
 	AccRaw af(aFrom), ar;
 	for(int i = 0; i < n; i++) {
 		NavdirAndCount x = a[i];
 		for(int nTimes = (x.navDir == NAVDIR_CHILD) ? 1 : x.count; nTimes > 0; nTimes--, af = ar) {
-			hr = Navig_Step(x.navDir, x.count, af, out ar);
+			hr = Navig_Step(ref context, x.navDir, x.count, af, out ar);
 			if(af.acc != aFrom.acc && af.acc != ar.acc) af.acc->Release(); //release intermediate AOs
-			if(hr) goto gBreak;
+			if(hr != 0) goto gBreak;
 		}
 	}
 gBreak:
 	delete a;
 	//ar.PrintAcc();
-	if(hr == 0) aResult = ar;
-	else {
-		switch(hr) {
-		case DISP_E_MEMBERNOTFOUND: case E_NOTIMPL: case E_INVALIDARG: case E_FAIL: case E_NOINTERFACE: hr = 1; break;
-		}
-	}
-	return hr;
+	if(hr != 0) return Navig_Hresult(hr);
+	if(ar.acc == aFrom.acc) ar.acc->AddRef(); //"pa" when aFrom.elem!=0, or eg "fi" when ar.elem!=0
+	aResult = ar;
+	return 0;
 }
 
 namespace outproc
@@ -228,7 +242,17 @@ namespace outproc
 EXPORT HRESULT Cpp_AccNavigate(Cpp_Acc aFrom, STR navig, out Cpp_Acc& aResult)
 {
 	HRESULT hr;
-	if(!(aFrom.misc.flags&eAccMiscFlags::InProc)) {
+
+	//optimize "pa". Eg used by elm.Parent.
+	if(navig[0] == 'p' && navig[1] == 'a' && (navig[2] == 0 || 0 == wcscmp(navig, L"parent"))) {
+		aResult.Zero();
+		hr = Navig_Parent(ref aFrom, ref aResult);
+		if(hr != 0) return Navig_Hresult(hr);
+		if(aResult.acc == aFrom.acc) aFrom.acc->AddRef();
+		return hr;
+	}
+
+	if(!(aFrom.misc.flags & eAccMiscFlags::InProc)) {
 		hr = AccNavigate(aFrom, navig, aResult);
 	} else {
 		aResult.Zero();
@@ -251,6 +275,83 @@ EXPORT HRESULT Cpp_AccNavigate(Cpp_Acc aFrom, STR navig, out Cpp_Acc& aResult)
 #pragma region get prop
 
 HRESULT AccWeb(IAccessible* iacc, STR what, out BSTR& sResult);
+
+namespace {
+void _AccScaleRect(IAccessible* acc, ref RECT& r) {
+	if(!dlapi.minWin81) return; //on Win7/8 we get physical rect
+
+	HWND w; if(!(0 == WindowFromAccessibleObject(acc, &w) && w)) { //SHOULDDO: if w specified too in the props string, don't call twice. Same with r/D.
+		PRINTS(L"failed WindowFromAccessibleObject");
+		return;
+	}
+
+	auto da = DPI_AWARENESS::DPI_AWARENESS_SYSTEM_AWARE;
+	if(dlapi.GetWindowDpiAwarenessContext) { //Win10 1607
+		da = dlapi.GetAwarenessFromDpiAwarenessContext(dlapi.GetWindowDpiAwarenessContext(w)); //fast
+		if(da != DPI_AWARENESS::DPI_AWARENESS_SYSTEM_AWARE && da != DPI_AWARENESS::DPI_AWARENESS_UNAWARE) return;
+	} else { //Win8.1
+		PROCESS_DPI_AWARENESS pda;
+		if(0 == dlapi.GetProcessDpiAwareness(GetCurrentProcess(), &pda) && pda == PROCESS_DPI_AWARENESS::PROCESS_PER_MONITOR_DPI_AWARE) return;
+	}
+
+	//On Win10+ we can easily, quickly and reliably detect whether the window is DPI-scaled.
+	RECT rw, r2; if(!GetWindowRect(w, &rw)) return;
+	if(dlapi.SetThreadDpiAwarenessContext) { //Win10 1607
+		auto ac = dlapi.SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2); //fast
+		bool scaled = GetWindowRect(w, &r2) && memcmp(&rw, &r2, 16);
+		dlapi.SetThreadDpiAwarenessContext(ac);
+		if(!scaled) return;
+	}
+
+	//Print("LogicalToPhysicalPoint");
+
+	//The API fails if the point is not in the window rect, except when touches it at the right/bottom.
+	//Tried workaround: create a hidden window with same DPI awareness and use it with the API instead of w.
+	//	In most cases it works, but often does not scale if the point is outside the top-level window.
+	//Current workaround: use r intersection with the container window rect.
+	if(!IntersectRect(&r, &r, &rw)) return;
+
+	POINT p1 = { r.left, r.top }, p2 = { r.right, r.bottom };
+	if(dlapi.LogicalToPhysicalPoint(w, &p1) && dlapi.LogicalToPhysicalPoint(w, &p2)) {
+		SetRect(&r, p1.x, p1.y, p2.x, p2.y);
+	} else {
+		PRINTS(L"failed LogicalToPhysicalPoint");
+	}
+}
+//void _AccScaleRect(IAccessible* acc, ref RECT& r) {
+//	HWND w; if(!(0 == WindowFromAccessibleObject(acc, &w) && w)) return;
+//	auto da = DPI_AWARENESS::DPI_AWARENESS_SYSTEM_AWARE;
+//	if(dlapi.GetWindowDpiAwarenessContext) { //Win10 1607
+//		da = dlapi.GetAwarenessFromDpiAwarenessContext(dlapi.GetWindowDpiAwarenessContext(w));
+//		if(da != DPI_AWARENESS::DPI_AWARENESS_SYSTEM_AWARE && da != DPI_AWARENESS::DPI_AWARENESS_UNAWARE) return;
+//	}
+//
+//	//The API fails if the point is not in the window rect.
+//	//	Workaround - create a big hidden window with same DPI awareness (System or Unaware) and use it instead of w.
+//	thread_local static HWND t_ww[2]; //Unaware 0, System 1
+//	HWND ww = t_ww[da]; if(ww && !IsWindow(ww)) t_ww[da] = ww = 0;
+//	if(!ww) ww = w;
+//	bool tooSmall = false;
+//	r.left = max(r.left, -0x8000); r.top = max(r.top, -0x8000); r.right = min(r.right, 0x7ffe); r.bottom = min(r.bottom, 0x7ffe);
+//g1:
+//	POINT p1 = { r.left, r.top }, p2 = { r.right, r.bottom };
+//	if(dlapi.LogicalToPhysicalPoint(ww, &p1) && dlapi.LogicalToPhysicalPoint(ww, &p2)) {
+//		//Printf(L"{%i %i %i %i}  {%i %i %i %i}", r.left, r.top, r.right, r.bottom, p1.x, p1.y, p2.x, p2.y);
+//		SetRect(&r, p1.x, p1.y, p2.x, p2.y);
+//	} else if(ww == w) {
+//		DPI_AWARENESS_CONTEXT dac = dlapi.SetThreadDpiAwarenessContext ? dlapi.SetThreadDpiAwarenessContext(da == DPI_AWARENESS::DPI_AWARENESS_SYSTEM_AWARE ? DPI_AWARENESS_CONTEXT_SYSTEM_AWARE : DPI_AWARENESS_CONTEXT_UNAWARE) : 0;
+//		t_ww[da] = ww = CreateWindowEx(WS_EX_NOACTIVATE, L"Static", null, WS_POPUP, -0x8000, -0x8000, 0xffff, 0xffff, HWND_MESSAGE, null, null, null);
+//		if(dlapi.SetThreadDpiAwarenessContext) dlapi.SetThreadDpiAwarenessContext(dac);
+//		//wn::PrintWnd(ww);
+//		goto g1;
+//	} else if(!tooSmall) {
+//		if(tooSmall = SetWindowPos(ww, 0, -0x8000, -0x8000, 0xffff, 0xffff, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOSENDCHANGING)) goto g1;
+//	} else {
+//		PRINTS(L"failed");
+//	}
+//	//todo: test on all OS.
+//}
+}
 
 HRESULT AccGetProp(Cpp_Acc a, WCHAR prop, out BSTR& sResult)
 {
@@ -277,7 +378,7 @@ HRESULT AccGetProp(Cpp_Acc a, WCHAR prop, out BSTR& sResult)
 	case 'd': hr = acc->get_accDescription(ve, &sResult); break;
 	case 'h': hr = acc->get_accHelp(ve, &sResult); break;
 	case 'u': //uiaid
-		if(!(a.misc.flags&eAccMiscFlags::UIA)) return 1;
+		if(!(a.misc.flags & eAccMiscFlags::UIA)) return 1;
 		ve.vt = VT_I1; ve.cVal = 'u'; hr = acc->get_accHelp(ve, &sResult);
 		break;
 	case 'a': hr = acc->get_accDefaultAction(ve, &sResult); break;
@@ -287,12 +388,16 @@ HRESULT AccGetProp(Cpp_Acc a, WCHAR prop, out BSTR& sResult)
 		if(hr == 0) sResult = SysAllocStringByteLen((LPCSTR)&state, 4);
 		break;
 	case 'r':
+	case 'D':
 		hr = ao::accLocation(out rect, acc, a.elem);
-		if(hr == 0) sResult = SysAllocStringByteLen((LPCSTR)&rect, 16);
+		if(hr == 0) {
+			if(prop == 'D' && !!(a.misc.flags & eAccMiscFlags::InProc)) _AccScaleRect(acc, ref rect);
+			sResult = SysAllocStringByteLen((LPCSTR)&rect, 16);
+		}
 		break;
 	case 'c':
 		if(a.elem) return 1;
-		hr = acc->get_accChildCount(out &cc);
+		hr = acc->get_accChildCount(out & cc);
 		if(hr == 0) sResult = SysAllocStringByteLen((LPCSTR)&cc, 4);
 		break;
 	case 'w':
@@ -313,9 +418,9 @@ HRESULT AccGetProp(Cpp_Acc a, WCHAR prop, out BSTR& sResult)
 
 	if(hr != 0) {
 		if(sResult != null) { SysFreeString(sResult); sResult = null; } //rare, but noticed few
-		switch(hr) { case DISP_E_MEMBERNOTFOUND: case E_NOTIMPL: hr = 1; break; }
-		//DISP_E_MEMBERNOTFOUND: many many. E_NOTIMPL: many.
-		//note: 0x80070005 (access denied) when trying to get value of a password field.
+	switch(hr) { case DISP_E_MEMBERNOTFOUND: case E_NOTIMPL: hr = 1; break; }
+	//DISP_E_MEMBERNOTFOUND: many many. E_NOTIMPL: many.
+	//note: 0x80070005 (access denied) when trying to get value of a password field.
 	}
 	return hr;
 }
@@ -346,14 +451,15 @@ namespace outproc
 //	Same speed, no bugs (toolbar button name, focusing standard controls).
 //	Call inproc only if may need multiple calls (Cpp_AccNavigate, Cpp_AccGetProps) or if works only inproc (Cpp_AccWeb).
 
-EXPORT HRESULT Cpp_AccGetProp(Cpp_Acc a, WCHAR prop, out BSTR& sResult)
+//this is called only for standard string props, like Name, Value. Not for rect, HTML attributes, etc.
+EXPORT HRESULT Cpp_AccGetStringProp(Cpp_Acc a, WCHAR prop, out BSTR& sResult)
 {
 	return ::AccGetProp(a, prop, sResult);
 }
 
 EXPORT HRESULT Cpp_AccGetProps(Cpp_Acc a, STR props, out BSTR& sResult)
 {
-	if(!(a.misc.flags&eAccMiscFlags::InProc)) return AccGetProps(a, props, out sResult);
+	if(!(a.misc.flags & eAccMiscFlags::InProc)) return AccGetProps(a, props, out sResult);
 
 	sResult = null;
 	InProcCall c;
@@ -368,22 +474,21 @@ EXPORT HRESULT Cpp_AccGetProps(Cpp_Acc a, STR props, out BSTR& sResult)
 	return 0;
 }
 
+//If a found inproc, gets raw rect (DPI-unscaled). To get physical rect use Cpp_AccGetProps('D').
 EXPORT HRESULT Cpp_AccGetRect(Cpp_Acc a, out RECT& r)
 {
-	//FUTURE: support high DPI.
-
 	return ao::accLocation(out r, a.acc, a.elem);
 }
 
 EXPORT HRESULT Cpp_AccGetRole(Cpp_Acc a, out int& roleInt, out BSTR& roleStr)
 {
 	roleInt = 0; roleStr = null;
-	assert(a.misc.role == 0);
-	_variant_t v;
-	HRESULT hr = ao::get_accRole(a.acc, a.elem, out roleInt, out v);
-	if(hr == 0 && v.vt == VT_BSTR) {
-		ao::RoleToString(ref v); //lcase if need
-		roleStr = v.Detach().bstrVal;
+	assert(a.misc.roleByte == 0 || a.misc.roleByte == ROLE_CUSTOM);
+	_variant_t vr;
+	HRESULT hr = ao::GetRoleIntAndVariant(a.acc, a.elem, out roleInt, out vr);
+	if(hr == 0 && vr.vt == VT_BSTR) {
+		ao::RoleToString(ref vr); //lcase if need
+		roleStr = vr.Detach().bstrVal;
 	}
 	return hr;
 }
@@ -401,7 +506,7 @@ g1:
 	//Outproc WindowFromAccessibleObject is very slow when the AO retrieved using navigation.
 	//	Then MSAA walks ancestors until finds WINDOW. Makes many RPC if outproc.
 
-	if(!(a.misc.flags&eAccMiscFlags::InProc)) {
+	if(!(a.misc.flags & eAccMiscFlags::InProc)) {
 		HWND w; HRESULT hr = WindowFromAccessibleObject(a.acc, &w);
 		if(hr == 0) R = (long)(LPARAM)w;
 		return hr;
@@ -420,7 +525,7 @@ void AGS_Add(Cpp_Acc a, ref VARIANT& v, ref CSimpleArray<AccRaw>& t) {
 	AccRaw r;
 	if(0 == r.FromVARIANT(a.acc, ref v, true)) {
 		if(r.elem) r.acc->AddRef();
-		r.misc.flags = a.misc.flags&eAccMiscFlags::InheritMask;
+		r.misc.flags = a.misc.flags & eAccMiscFlags::InheritMask;
 		t.Add(r);
 	}
 }
@@ -469,7 +574,7 @@ EXPORT HRESULT Cpp_AccAction(Cpp_Acc a, WCHAR action, BSTR param)
 	switch(action) {
 	case 'a':
 		if(param) { //Java action
-			assert(!!(a.misc.flags&eAccMiscFlags::Java));
+			assert(!!(a.misc.flags & eAccMiscFlags::Java));
 			ve.vt = VT_BSTR; ve.bstrVal = param;
 		}
 		hr = a.acc->accDoDefaultAction(ve);
@@ -478,7 +583,7 @@ EXPORT HRESULT Cpp_AccAction(Cpp_Acc a, WCHAR action, BSTR param)
 		hr = a.acc->put_accValue(ve, param);
 		break;
 	case 's':
-		assert(!!(a.misc.flags&eAccMiscFlags::UIA));
+		assert(!!(a.misc.flags & eAccMiscFlags::UIA));
 		ve.vt = VT_I1; ve.cVal = 's';
 		hr = a.acc->accDoDefaultAction(ve);
 		break;

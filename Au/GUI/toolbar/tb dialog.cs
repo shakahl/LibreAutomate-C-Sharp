@@ -58,7 +58,7 @@ namespace Au
 						r.Inflate(2, 2);
 						var osd = new osdRect { Rect = r, Color = 0xff0000 };
 						osd.Show();
-						timerm.after(1000, _ => osd.Dispose());
+						timer.after(1000, _ => osd.Dispose());
 					} else {
 						dialog.show("Offscreen", "Rectangle: " + r.ToString(), owner: dlg);
 					}

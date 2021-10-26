@@ -735,7 +735,7 @@
 			static void _EnableActivate_MinRes() {
 				Debug_.Print("EnableActivate: need min/res");
 
-				wnd t = WndUtil.CreateWindow(WindowClassDWP, null, WS.POPUP | WS.MINIMIZE | WS.VISIBLE, WSE.TOOLWINDOW);
+				wnd t = WndUtil.CreateWindow(WndUtil.WindowClassDWP_, null, WS.POPUP | WS.MINIMIZE | WS.VISIBLE, WSE.TOOLWINDOW);
 				//info: When restoring, the window must be visible, or may not work.
 				try {
 					var wp = new Api.WINDOWPLACEMENT { showCmd = Api.SW_RESTORE };
@@ -869,7 +869,7 @@
 							int tid = ThreadId; if (tid == 0) break;
 							if (f.ThreadId == tid) {
 								//at first try to recognize such known windows, to avoid the hard way
-								if (isMinimized || (f.OwnerWindow == this && Rect.NoArea)) {
+								if (isMinimized || (f.Get.Owner == this && Rect.NoArea)) {
 									R = true;
 								} else {
 									R = Api.SetForegroundWindow(getwnd.root) && ActivateL() && active.ThreadId == tid;
@@ -1804,8 +1804,8 @@
 						//Windows bug: before a dialog is first time shown, may fail to move if it has an owner window. Depends on coordinates and on don't know what.
 						//There are several workarounds. The best of them - temporarily set owner window 0.
 						if (!visible) {
-							hto = w.OwnerWindow;
-							if (!hto.Is0) w.OwnerWindow = default;
+							hto = w.Get.Owner;
+							if (!hto.Is0 && !WndUtil.SetOwnerWindow(w, default)) hto = default;
 						}
 
 						wp.rcNormalPosition = r;
@@ -1822,7 +1822,7 @@
 						}
 					}
 					finally {
-						if (!hto.Is0) w.OwnerWindow = hto;
+						if (!hto.Is0) WndUtil.SetOwnerWindow(w, hto);
 					}
 
 					w.MinimalSleepIfOtherThread_();
@@ -1892,7 +1892,7 @@
 
 		SWPFlags _SWP_ZorderFlags() {
 			var r = _SWP_ZORDER;
-			if (!OwnerWindow.Is0) r &= ~SWPFlags.NOOWNERZORDER;
+			if (!Get.Owner.Is0) r &= ~SWPFlags.NOOWNERZORDER;
 			return r;
 		}
 
@@ -1974,7 +1974,7 @@
 		/// </remarks>
 		public bool ZorderTopmost(bool ownerToo = false) {
 			if (ownerToo) { //cannot use without SWP_NOOWNERZORDER because of SWP bug. See comments below _SWP_ZORDER.
-				var ow = OwnerWindow;
+				var ow = Get.Owner;
 				if (!ow.Is0) ow.ZorderTopmost(true);
 			}
 			if (!SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, SpecHWND.TOPMOST)) return false;
@@ -2096,31 +2096,35 @@
 		/// </summary>
 		/// <param name="style">One or more <see cref="WS"/> flags and/or class-specific style flags. Reference: <msdn>window styles</msdn>.</param>
 		/// <param name="flags"></param>
+		/// <returns>Previous value.</returns>
 		/// <exception cref="AuWndException"/>
 		/// <seealso cref="Style"/>
-		public void SetStyle(WS style, WSFlags flags = 0)
-			=> _SetStyle(false, (int)style, flags);
+		public WS SetStyle(WS style, WSFlags flags = 0)
+			=> (WS)_SetStyle(false, (int)style, flags);
 
 		/// <summary>
 		/// Changes window extended style.
 		/// </summary>
 		/// <param name="style">One or more <see cref="WSE"/> flags. Reference: <msdn>extended window styles</msdn>.</param>
 		/// <param name="flags"></param>
+		/// <returns>Previous value.</returns>
 		/// <exception cref="AuWndException"/>
 		/// <seealso cref="ExStyle"/>
-		public void SetExStyle(WSE style, WSFlags flags = 0)
-			=> _SetStyle(true, (int)style, flags);
+		public WSE SetExStyle(WSE style, WSFlags flags = 0)
+			=> (WSE)_SetStyle(true, (int)style, flags);
 
-		void _SetStyle(bool ex, int style, WSFlags flags) {
+		nint _SetStyle(bool ex, int style, WSFlags flags) {
 			var gwl = ex ? GWL.EXSTYLE : GWL.STYLE;
 			switch (flags & (WSFlags.Add | WSFlags.Remove)) {
 			case WSFlags.Add: style = (int)GetWindowLong(gwl) | style; break;
 			case WSFlags.Remove: style = (int)GetWindowLong(gwl) & ~style; break;
 			}
-			SetWindowLong(gwl, style);
+			nint R = SetWindowLong(gwl, style, noException: flags.Has(WSFlags.NoException));
 
 			if (flags.Has(WSFlags.UpdateNonclient)) SetWindowPos(SWPFlags.FRAMECHANGED | SWPFlags.NOMOVE | SWPFlags.NOSIZE | SWPFlags.NOZORDER | SWPFlags.NOOWNERZORDER | SWPFlags.NOACTIVATE);
 			if (flags.Has(WSFlags.UpdateClient)) Api.InvalidateRect(this, true);
+
+			return R;
 		}
 
 		/// <summary>
@@ -2160,14 +2164,16 @@
 		/// </summary>
 		/// <param name="index">A constant from <see cref="GWL"/>, or an offset in window memory reserved when registering window class.</param>
 		/// <param name="newValue">New value.</param>
+		/// <param name="noException">Don't throw exception when fails.</param>
+		/// <returns>Previous value. If fails and <i>noException</i> true, returns 0, and can be used <see cref="lastError"/>.</returns>
 		/// <exception cref="AuWndException"/>
 		/// <remarks>
 		/// See also API <msdn>SetWindowSubclass</msdn>.
 		/// </remarks>
-		public nint SetWindowLong(int index, nint newValue) {
+		public nint SetWindowLong(int index, nint newValue, bool noException = false) {
 			lastError.clear();
 			var prev = Api.SetWindowLongPtr(this, index, newValue);
-			if (prev == 0) {
+			if (prev == 0 && !noException) {
 				var e = lastError.code;
 				if (e != 0 && (Api.GetWindowLongPtr(this, index) != newValue || !IsAlive)) ThrowUseNative(e);
 				//if GWL_HWNDPARENT(0), last error "invalid window handle"
@@ -2216,13 +2222,16 @@
 
 		/// <summary>
 		/// Calls API <msdn>GetWindowThreadProcessId</msdn>.
-		/// Returns thread id and also gets process id.
+		/// Returns mative thread id and also gets process id.
 		/// Returns 0 if fails. Supports <see cref="lastError"/>.
-		/// <note>It is native thread id, not Thread.ManagedThreadId.</note>
 		/// </summary>
-		public int GetThreadProcessId(out int processId) {
-			processId = 0;
-			return Api.GetWindowThreadProcessId(this, out processId);
+		/// <remarks>
+		/// It is not the same as <see cref="Thread.ManagedThreadId"/>.
+		/// </remarks>
+		public unsafe int GetThreadProcessId(out int processId) {
+			int pid = 0, tid = Api.GetWindowThreadProcessId(this, &pid);
+			processId = pid;
+			return tid;
 		}
 
 		/// <summary>
@@ -2232,7 +2241,7 @@
 		/// <remarks>
 		/// It is not the same as <see cref="Thread.ManagedThreadId"/>.
 		/// </remarks>
-		public int ThreadId => GetThreadProcessId(out var pid);
+		public int ThreadId => Api.GetWindowThreadProcessId(this, null); //2 times faster when pid null
 
 		/// <summary>
 		/// Gets native process id of this window. Calls API <msdn>GetWindowThreadProcessId</msdn>.
@@ -2795,5 +2804,8 @@ namespace Au.Types
 
 		/// <summary>Update client area.</summary>
 		UpdateClient = 8,
+
+		/// <summary>Don't throw exception when fails.</summary>
+		NoException = 16,
 	}
 }

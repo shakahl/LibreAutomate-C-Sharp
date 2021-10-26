@@ -76,13 +76,13 @@ class PanelOutput : DockPanel
 	void _SetTopmost(bool on) {
 		var w = this.Hwnd().Window;
 		if (on) {
-			w.OwnerWindow = default;
+			WndUtil.SetOwnerWindow(w, default);
 			w.ZorderTopmost();
 			//w.SetExStyle(WSE.APPWINDOW, SetAddRemove.Add);
 			//wnd.getwnd.root.ActivateL(); w.ActivateL(); //let taskbar add button
 		} else {
 			w.ZorderNoTopmost();
-			w.OwnerWindow = App.Wmain.Hwnd();
+			WndUtil.SetOwnerWindow(w, App.Wmain.Hwnd());
 		}
 	}
 

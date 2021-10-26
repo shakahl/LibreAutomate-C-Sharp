@@ -112,6 +112,14 @@ typedef struct AccessibleActionsToDoTag {
 	AccessibleActionInfo actions[MAX_ACTIONS_TO_DO];// the accessible actions to do
 } AccessibleActionsToDo;
 
+#define MAX_VISIBLE_CHILDREN 256
+
+// visible children information
+typedef struct VisibleChildenInfoTag {
+	int returnedChildrenCount; // number of children returned
+	AccessibleContext children[MAX_VISIBLE_CHILDREN]; // the visible children
+} VisibleChildrenInfo;
+
 
 //_________________________________________________________________
 
@@ -161,11 +169,21 @@ struct _JApi
 
 	BOOL(*setTextContents) (const long vmID, const AccessibleContext ac, const wchar_t *text);
 
-	AccessibleContext(*getTopLevelObject) (const long vmID, const AccessibleContext ac);
-
 	BOOL(*getVirtualAccessibleName) (const long vmID, const AccessibleContext accessibleContext, wchar_t *name, int len);
 
 	BOOL(*requestFocus) (const long vmID, const AccessibleContext accessibleContext);
+
+	//AccessibleContext(*getTopLevelObject) (const long vmID, const AccessibleContext ac);
+
+	//AccessibleContext(*getParentWithRole) (const long vmID, const AccessibleContext ac, const wchar_t* role);
+
+	//AccessibleContext(*getParentWithRoleElseRoot) (const long vmID, const AccessibleContext ac, const wchar_t* role);
+
+	//AccessibleContext(*getActiveDescendent) (const long vmID, const AccessibleContext ac); //does not work
+
+	//int (*getVisibleChildrenCount) (const long vmID, const AccessibleContext accessibleContext);
+
+	//BOOL(*getVisibleChildren) (const long vmID, const AccessibleContext accessibleContext, const int startIndex, VisibleChildrenInfo* children); //slow
 
 private:
 	HMODULE _hmodule;
@@ -221,9 +239,14 @@ public:
 		JF(clearAccessibleSelectionFromContext);
 		JF(removeAccessibleSelectionFromContext);
 		JF(setTextContents);
-		JF(getTopLevelObject);
 		JF(getVirtualAccessibleName);
 		JF(requestFocus);
+		//JF(getTopLevelObject);
+		//JF(getParentWithRole);
+		//JF(getParentWithRoleElseRoot);
+		//JF(getActiveDescendent);
+		//JF(getVisibleChildrenCount);
+		//JF(getVisibleChildren);
 
 		for(FARPROC* p = (FARPROC*)&Windows_run, *pe = (FARPROC*)&_hmodule; p < pe; p++) if(*p == null) {
 			PRINTS(L"Some JAB functions not found");

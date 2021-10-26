@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using Au.Controls;
 
 namespace Au.Tools
@@ -162,16 +163,16 @@ namespace Au.Tools
 	public static class KExtWpf
 	{
 		/// <summary>
-		/// Adds KCheckBox that can be used with TextBox in a propertygrid row. Or alone in a grid or stack row.
+		/// Adds KCheckBox, CheckBox or RadioButton that can be used with TextBox in a propertygrid row. Or alone in a grid or stack row.
 		/// </summary>
 		/// <param name="b"></param>
 		/// <param name="c"></param>
 		/// <param name="name">Checkbox text.</param>
 		/// <param name="noR">Don't add new row.</param>
 		/// <param name="check">Checkbox state.</param>
-		public static wpfBuilder xAddCheck(this wpfBuilder b, out KCheckBox c, string name, bool noR = false, bool check = false) {
+		public static wpfBuilder xAddCheck<T>(this wpfBuilder b, out T c, string name, bool noR = false, bool check = false) where T : ToggleButton, new() {
 			if (!noR && b.Panel is Grid) b.Row(0);
-			b.Add(out c, name).Height(18).AlignContent(y: "C");
+			b.Add<T>(out c, name).Height(18);
 			if (check) b.Checked();
 			return b;
 		}
@@ -195,7 +196,7 @@ namespace Au.Tools
 		/// <param name="noR">Don't add new row.</param>
 		/// <param name="check">Checkbox state.</param>
 		public static KCheckTextBox xAddCheckText(this wpfBuilder b, string name, string text = null, bool noR = false, bool check = false) {
-			xAddCheck(b, out var c, name, noR, check);
+			xAddCheck(b, out KCheckBox c, name, noR, check);
 			xAddText(b, out var t, text);
 			return new(c, t);
 		}
@@ -210,7 +211,7 @@ namespace Au.Tools
 		/// <param name="text">Textbox text.</param>
 		/// <param name="check">Checkbox state.</param>
 		public static KCheckTextBox xAddCheckTextDropdown(this wpfBuilder b, string name, string text = null, bool check = false) {
-			xAddCheck(b, out var c, name, check: check);
+			xAddCheck(b, out KCheckBox c, name, check: check);
 			xAddText(b, out var t, text);
 			b.And(14).Add(out Button k, "▾").Padding(new Thickness(0)).Border(); //tested: ok on Win7
 			k.Width += 4;
@@ -225,7 +226,7 @@ namespace Au.Tools
 		/// <param name="items">Combobox items like "One|Two".</param>
 		/// <param name="index">Combobox selected index.</param>
 		public static KCheckComboBox xAddCheckCombo(this wpfBuilder b, string name, string items, int index = 0) {
-			xAddCheck(b, out var c, name);
+			xAddCheck(b, out KCheckBox c, name);
 			xAddOther(b, out ComboBox t);
 			b.Items(items);
 			if (index != 0) t.SelectedIndex = index;
@@ -268,7 +269,7 @@ namespace Au.Tools
 		/// <param name="other"></param>
 		/// <param name="text">Other control text.</param>
 		public static KCheckBox xAddCheckAnd<T>(this wpfBuilder b, string name, out T other, string text = null) where T : FrameworkElement, new() {
-			xAddCheck(b, out var c, name);
+			xAddCheck(b, out KCheckBox c, name);
 			xAddOther(b, out other, text);
 			return c;
 		}

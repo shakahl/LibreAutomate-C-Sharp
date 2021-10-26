@@ -71,6 +71,9 @@ namespace Au.Types
 		/// Used by tools like "Find UI element", together with AFFlags_Mark.
 		/// </summary>
 		internal static EMiscFlags EMiscFlags_Marked = (EMiscFlags)128;
+
+		internal static EXYFlags EXYFlags_DpiScaled = (EXYFlags)0x10000;
+		internal static EXYFlags EXYFlags_Fail = (EXYFlags)0x20000; //currently not used
 	}
 
 	/// <summary>
@@ -96,28 +99,43 @@ namespace Au.Types
 	public enum EXYFlags
 	{
 		/// <summary>
-		/// Use UI Automation API.
-		/// Need this flag with some windows that don't support accessible objects but support UI Automation elements.
-		/// When this flag is not specified, the function detects most such windows and uses UI Automation API, but the detection is not perfect.
-		/// More info: <see cref="EFFlags.UIA"/>.
-		/// This flag can be used with most other windows too.
+		/// Don't load dll into the target process.
+		/// More info: <see cref="EFFlags.NotInProc"/>.
 		/// </summary>
-		UIA = 1,
+		NotInProc = 1,
+
+		/// <summary>
+		/// Use UI Automation API.
+		/// Need this flag with some windows that don't support accessible objects but support UI Automation elements. Can be used with most other windows too.
+		/// More info: <see cref="EFFlags.UIA"/>.
+		/// See also flag <b>TrySmaller</b>.
+		/// </summary>
+		UIA = 2,
 
 		/// <summary>
 		/// Get the direct parent UI element if probaly it would be much more useful, for example if its role is LINK or BUTTON.
 		/// Usually links have one or more children of type TEXT, STATICTEXT, IMAGE or other.
 		/// </summary>
-		PreferLink = 2,
+		PreferLink = 4,
 
 		/// <summary>
-		/// Don't load dll into the target process.
-		/// More info: <see cref="EFFlags.NotInProc"/>.
+		/// Try to get smaller element.
+		/// 1. When no flag <b>UIA</b>, use UIA element from point if it's smaller. Because some elements have only UIA children.
+		/// 2. Try to find a descendant that is smaller. Becauses some UI elements don't give a child element from point (bug).
+		/// 
+		/// Note: this flag is for UI element capturing tools, not for automation scripts. Its bahaviour may change in the future.
+		/// 
+		/// UI element capturing tools should use this flag only with user consent, because:
+		/// 1. It's impossible to get perfect UI element in all cases. Can get wrong element or use UIA when shouldn't.
+		/// 2. In some cases can be slow.
+		/// 3. In some apps some elements have bugs and the process can crash. Rare.
+		/// 
+		/// The "Find UI element" tool uses this flag when toggled CapsLock.
+		/// This flag is ignored when not in-process, because could be too slow.
 		/// </summary>
-		NotInProc = 4,
-
-		/// <summary>Don't throw exception when fails. Then returns null.</summary>
-		NoThrow = 0x100,
+		TrySmaller = 8,
+		//This flag is used in Delm tool dialog when Ctrl+Shift.
+		//Other tested similar apps fail to get/record these descendants. Even NVDA.
 
 		//note: don't change values. They are passed to the cpp function.
 	}
@@ -267,6 +285,12 @@ namespace Au.Types
 		SPLITBUTTON = 0x3E,
 		IPADDRESS = 0x3F,
 		TREEBUTTON = 0x40, //OUTLINEBUTTON
+
+		/// <summary>Failed to get role.</summary>
+		None = 0,
+
+		/// <summary>Not one of predefined roles. Usually string.</summary>
+		Custom = 0xFF,
 	}
 
 	/// <summary>
@@ -491,7 +515,7 @@ namespace Au.Types
 	/// <summary>
 	/// Used with <see cref="elm.GetProperties"/>.
 	/// </summary>
-	public struct EProperties
+	public class EProperties
 	{
 		public string Role, Name, Value, Description, Help, DefaultAction, KeyboardShortcut, UiaId, OuterHtml, InnerHtml;
 		public EState State;

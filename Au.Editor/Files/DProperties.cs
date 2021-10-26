@@ -45,7 +45,7 @@ class DProperties : KDialogWindow
 		b.End().Brush(Brushes.OldLace);
 
 		b.StartGrid(out gCompile, "Compile").Columns(0, 50, 20, 0, -1);
-		b.R.Add(out optimize, "optimize").Align(y: "C").Skip(2)
+		b.R.Add(out optimize, "optimize").Skip(2)
 			.Add("define", out define);
 		b.R.Add("warningLevel", out warningLevel).Editable().Skip()
 			.Add("noWarnings", out noWarnings);
@@ -66,9 +66,9 @@ class DProperties : KDialogWindow
 			.Add("manifest", out manifest).Validation(o => _ValidateFile(o, "manifest", FNFind.File));
 		b.R.Add("sign", out sign).Skip().Validation(o => _ValidateFile(o, "sign", FNFind.File));
 		b.StartStack()
-			.Add(out console, "console").Align(y: "C")
-			.Add(out bit32, "bit32").Align(y: "C").Margin(15)
-			.Add(out xmlDoc, "xmlDoc").Align(y: "C").Margin(15)
+			.Add(out console, "console")
+			.Add(out bit32, "bit32").Margin(15)
+			.Add(out xmlDoc, "xmlDoc").Margin(15)
 			.End();
 		b.End();
 		b.End().Brush(Brushes.OldLace);
@@ -220,12 +220,15 @@ class DProperties : KDialogWindow
 		var doc = Panels.Editor.ZActiveDoc;
 		var code = doc.zText;
 		var meta = MetaComments.FindMetaComments(code);
-		string append = null;
+		string prepend = null, append = null;
 		if (meta.end == 0) {
-			if(code.RxMatch(@"(?s)^(\s*///\N*\R|\s*/\*.*\*/)*\s*", 0, out RXGroup g)) { meta = (g.End, g.End); }
+			if (code.RxMatch(@"(?s)^(\s*///\N*\R|\s*/\*\*.*?\*/\R)+", 0, out RXGroup g)) { //description
+				meta = (g.End, g.End);
+				prepend = "\r\n";
+			}
 			append = (_f.IsScript && code.Eq(meta.end, "//.")) ? " " : "\r\n";
 		}
-		var s = _meta.Format(append);
+		var s = _meta.Format(prepend, append);
 
 		if (s.Length == 0) {
 			if (meta.end == 0) return;

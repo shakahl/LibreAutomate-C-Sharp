@@ -118,7 +118,7 @@ namespace Au.Controls
 				if (e.ChangedButton == MouseButton.Left) {
 					if (e.ClickCount == 1) {
 						e.Handled = false; //if tab item, let select it
-						timerm.after(1, _ => { //Dispatcher.InvokeAsync does not work
+						timer.after(1, _ => { //Dispatcher.InvokeAsync does not work
 							POINT p = mouse.xy;
 							if (Api.DragDetect(_elem.Hwnd(), p)) {
 								_SetDockState(_DockState.Float, onDrag: true);

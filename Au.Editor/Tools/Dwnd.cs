@@ -10,18 +10,8 @@ namespace Au.Tools;
 
 class Dwnd : KDialogWindow
 {
-	public static void Dialog(wnd w = default, bool uncheckControl = false) {
-		if (Environment.CurrentManagedThreadId != 1) _Show(false); //probably called from a similar dialog running in nonmain thread
-		else run.thread(() => _Show(true)); //don't allow the main thread to hang when something is slow, eg 'contains' UI elements or 'also' code
-
-		void _Show(bool dialog) {
-			try { //unhandled exception kills process if in nonmain thread
-				var d = new Dwnd(w, uncheckControl);
-				if (dialog) d.ShowDialog(); else d.Show();
-			}
-			catch (Exception e1) { print.it(e1); }
-		}
-	}
+	public static void Dialog(wnd w = default, bool uncheckControl = false)
+		=> TUtil.ShowDialogInNonmainThread(() => new Dwnd(w, uncheckControl));
 
 	wnd _wnd, _con;
 	bool _uncheckControl;
@@ -46,9 +36,9 @@ class Dwnd : KDialogWindow
 		b.R.Add(out _info).Height(60);
 		b.R.StartGrid().Columns(0, 0, 0, 0, -1);
 		b.R.AddButton(out _bTest, "Test", _bTest_Click).Width(70).Disabled().Tooltip("Executes the code now (except wait/fail/activate) and shows the found window/control");
-		b.AddOkCancel(out _bOK, out _, out _, noStackPanel: true);
+		b.AddOkCancel(out _bOK, out _, out _, stackPanel: false);
 		b.AddButton(out _bInsert, "Insert", _bOK_Click).Width(70).Disabled().Tooltip("Insert code and don't close");
-		b.Add(out _cCapture, "Capture").Align(y: "C").Tooltip("Enables hotkeys F3 and Ctrl+F3. Shows window/control rectangles when moving the mouse.");
+		b.Add(out _cCapture, "Capture").Tooltip("Enables hotkeys F3 and Ctrl+F3. Shows window/control rectangles when moving the mouse.");
 		b.R.Skip().Add(out cActivate, "Activate window").Span(2).Hidden().Add(out cException, "Fail if not found").Hidden().Checked();
 		b.End();
 		_bOK.IsEnabled = false;
@@ -172,7 +162,7 @@ class Dwnd : KDialogWindow
 			nameW.Set(true, TUtil.EscapeWindowName(wndName, true));
 			classW.Set(true, TUtil.StripWndClassName(f.wClass, true));
 			f.wProg = _wnd.ProgramName;
-			var ap = new List<string> { f.wProg, "WOwner.Process(processId)", "WOwner.Thread(threadId)" }; if (!_wnd.OwnerWindow.Is0) ap.Add("WOwner.Window(ow)");
+			var ap = new List<string> { f.wProg, "WOwner.Process(processId)", "WOwner.Thread(threadId)" }; if (!_wnd.Get.Owner.Is0) ap.Add("WOwner.Window(ow)");
 			programW.Set(wndName.NE(), f.wProg, ap);
 			containsW.Set(false, null, _ContainsCombo_DropDown);
 		} else if (wndName != _wndName) {
@@ -326,7 +316,7 @@ class Dwnd : KDialogWindow
 	TUtil.CaptureWindowEtcWithHotkey _capt;
 
 	void _cCapture_CheckedChanged() {
-		_capt ??= new TUtil.CaptureWindowEtcWithHotkey(_cCapture, _Capture, () => wnd.fromMouse().Rect);
+		_capt ??= new TUtil.CaptureWindowEtcWithHotkey(_cCapture, _Capture, p => (wnd.fromXY(p).Rect, null));
 		_capt.Capturing = _cCapture.IsChecked;
 	}
 
@@ -396,7 +386,7 @@ class Dwnd : KDialogWindow
 
 	private void _bTest_Click(WBButtonClickArgs ea) {
 		var (code, wndVar) = _FormatCode(true); if (code == null) return;
-		TUtil.RunTestFindObject(code, wndVar, _wnd, _info, o => {
+		var rr = TUtil.RunTestFindObject(this, code, wndVar, _wnd, getRect: o => {
 			var w = (wnd)o;
 			var r = w.Rect;
 			if (w.IsMaximized && !w.IsChild) {
@@ -405,6 +395,7 @@ class Dwnd : KDialogWindow
 			}
 			return r;
 		});
+		_info.InfoErrorOrInfo(rr.info);
 	}
 
 	#endregion
@@ -582,7 +573,7 @@ class Dwnd : KDialogWindow
 				b.Append("<i>ControlId<>:    ").AppendLine(cId.ToString());
 				b.AppendFormat("<+rect {0}><i>RectInWindow<><>:    ", sh).AppendLine(w.RectInWindow.ToString());
 			} else {
-				var wo = w.OwnerWindow;
+				var wo = w.Get.Owner;
 				if (!wo.Is0) b.AppendFormat("<+rect {0}><i>Owner<><>:    ", wo.Handle.ToString()).AppendLine(wo.ToString());
 				b.AppendFormat("<+rect {0}><i>Rect<><>:    ", sh).AppendLine(w.Rect.ToString());
 			}

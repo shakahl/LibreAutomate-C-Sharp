@@ -106,12 +106,12 @@ class CiWinapi
 				}
 			}
 
-			if (level == 0) { //insert missing usings first
-				int len = doc.zLen16;
-				//InsertCode.UsingDirective("Au;Au.Types;System;System.Runtime.InteropServices"); //Au: wnd; Au.Types: RECT etc; System: IntPtr, Guid etc //in global.cs. Or CiErrors will add.
-				int add = doc.zLen16 - len;
-				posInsert += add; posClass += add;
-			}
+			//if (level == 0) { //insert missing usings first. Now in global.cs. Or CiErrors will add.
+			//	int len = doc.zLen16;
+			//	InsertCode.UsingDirective("Au;Au.Types;System;System.Runtime.InteropServices"); //Au: wnd; Au.Types: RECT etc; System: IntPtr, Guid etc
+			//	int add = doc.zLen16 - len;
+			//	posInsert += add; posClass += add;
+			//}
 
 			text = emptyLine + text + "\r\n";
 			doc.zInsertText(true, posInsert, text, addUndoPointAfter: true, restoreFolding: true);
@@ -144,24 +144,38 @@ class CiWinapi
 					}
 					name = cd.code[span.Start..span.End];
 					//print.it(name);
+
 					if (!hs.Add(name)) { //same name again
 										 //print.it("same", name);
 						continue;
 					}
-					using (var db = EdDatabases.OpenWinapi()) //fast, if compared with GetDiagnostics
-					using (var stat = db.Statement("SELECT code, kind FROM api WHERE name=?", name)) {
+
+					//some parameter types add much garbage, but the parameters are rarely used.
+					//	If parameter, it is usually null. If interface member parameter, the member is rarely used.
+					//	Let's add empty definition. It's easy to replace it with full definition when need.
+					if (name == "IBindCtx") {
+						text = "internal interface IBindCtx {}";
+						kind = CiItemKind.Interface;
+					} else if (name == "PROPVARIANT") {
+						text = "internal struct PROPVARIANT { int a, b; nint c, d; }";
+						kind = CiItemKind.Structure;
+					} else {
+						using var db = EdDatabases.OpenWinapi(); //fast, if compared with GetDiagnostics
+						using var stat = db.Statement("SELECT code, kind FROM api WHERE name=?", name);
 						if (!stat.Step()) {
 							Debug_.Print("not in DB: " + name);
 							continue;
 						}
 						text = stat.GetText(0);
 						kind = (CiItemKind)stat.GetInt(1);
+						//print.it(kind, text);
 					}
-					//print.it(kind, text);
+
 					_Insert(level + 1, node, text, name, kind);
 				} else {
 					if (ec == ErrorCode.ERR_ManagedAddr) continue; //possibly same name is an internal managed type in some assembly, but in our DB it may be unmanaged. This error is for for field; we'll catch its type later.
-					else Debug_.Print(d);
+					if (ec == ErrorCode.WRN_NewNotRequired) continue; //when 'new' used with a repeated member of a base interface, the base is still not declared, therefore this warning
+					Debug_.Print(d);
 				}
 			}
 		}

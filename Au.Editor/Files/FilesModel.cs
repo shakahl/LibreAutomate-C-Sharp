@@ -554,7 +554,7 @@ partial class FilesModel
 				columnOrPos = i;
 			}
 			if (wasOpen) doc.zGoToPos(false, columnOrPos);
-			else timerm.after(10, _ => doc.zGoToPos(false, columnOrPos));
+			else timer.after(10, _ => doc.zGoToPos(false, columnOrPos));
 			//info: scrolling works better with async when now opened the file. Or with doevents; not with BeginInvoke.
 		}
 		return true;
@@ -1008,7 +1008,7 @@ partial class FilesModel
 			if (target == null) { target = Root; pos = FNPosition.Inside; }
 			if (files.Length == 1 && IsWorkspaceDirectoryOrZip_ShowDialogOpenImport(files[0], out int dialogResult)) {
 				switch (dialogResult) {
-				case 1: timerm.after(1, _ => LoadWorkspace(files[0])); break;
+				case 1: timer.after(1, _ => LoadWorkspace(files[0])); break;
 				case 2: ImportWorkspace(files[0], (target, pos)); break;
 				}
 				return;
@@ -1023,6 +1023,10 @@ partial class FilesModel
 	/// <param name="a">Files. If null, shows dialog to select files.</param>
 	public void ImportFiles(string[] a = null) {
 		if (a == null) {
+			//SHOULDDO: disable adding to Recent Items when opening a file with an "Open" dialog.
+			//	Now the takbar button's jump list is full of garbage.
+			//	The native API has a flag for it, but the WPF and winforms classes don't. Need to use the native API directly.
+
 			var d = new OpenFileDialog { Multiselect = true, Title = "Import files" };
 			if (d.ShowDialog(App.Wmain) != true) return;
 			a = d.FileNames;
@@ -1494,7 +1498,7 @@ partial class FilesModel
 					if (end > 0 && !sd.Ends("ms", true)) delay = (int)Math.Min(delay * 1000L, int.MaxValue);
 					if (delay < 10) delay = 10;
 				}
-				timerm.after(delay, t => {
+				timer.after(delay, t => {
 					CompileRun.CompileAndRun(true, f);
 				});
 			}

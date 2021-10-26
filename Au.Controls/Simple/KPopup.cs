@@ -245,7 +245,7 @@ namespace Au.Controls
 
 			_inSizeMove = false;
 			_w.MoveL(r);
-			if (_w.OwnerWindow != ow) _w.OwnerWindow = ow;
+			if (_w.Get.Owner != ow) WndUtil.SetOwnerWindow(_w, ow);
 			if (!IsVisible) _w.SetWindowPos(SWPFlags.SHOWWINDOW | SWPFlags.NOMOVE | SWPFlags.NOSIZE | SWPFlags.NOACTIVATE | SWPFlags.NOOWNERZORDER);
 		}
 

@@ -33,8 +33,22 @@ In **wnd.Child** added parameter *id* instead of `***id` in *name*. Same in **wn
 
 Removed **wnd.ChildById**. Instead use code like `w.Child(id: 15)`.
 
+**elm.RoleInt** for custom roles returns **ERole.Custom**, not 0.
+
+Removed **WButton** and **wnd.AsButton**.
+
+Changed **wnd.ButtonClick** parameters and how it works.
+
+Removed **wnd.OwnerWindow**. Use `w.Get.Owner` and **WndUtil.SetOwnerWindow**.
+
+Renamed classes: **timerm** -> **timer**; **timert** -> **timer2**.
+
+Removed **EXYFlags.NoThrow**. Now **elm.fromXY** and **elm.fromMouse** don't throw.
+
+Class **Dpi**: removed property **SupportPMOnWin8_1**. Instead added parameter *supportWin81* in functions. Removed **OfWindow** parameter *ofScreen*.
+
 
 ### Other changes
-Many changes in **elm** and **elmFinder** classes and in the "Find UI element" dialog. The **Find** function can use intermediate elements (path) and can wait and throw exception if not found.
+Many changes in **elm** and **elmFinder** classes and in the "Find UI element" dialog. The **Find** function can use intermediate elements (path) and can wait and throw exception if not found. Better supports high DPI screens.
 
 Replaced syntax of finding UI elements (**elm**). Now instead of code `var e = elm.find(w, ...)` use code `var e = w[...].Find()` or `var e = w[...][...][...].Find()`.

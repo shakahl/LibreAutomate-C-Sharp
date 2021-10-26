@@ -388,7 +388,7 @@ namespace Au
 				_data = data;
 				_wndProc = _WndProc;
 				_wFocus = wFocus;
-				wnd.Internal_.SubclassUnsafe(clipOwner, _wndProc);
+				WndUtil.SubclassUnsafe_(clipOwner, _wndProc);
 
 				//rejected: use SetClipboardViewer to block clipboard managers/viewers/etc. This was used in QM2.
 				//	Nowadays most such programs don't use SetClipboardViewer. They use AddClipboardFormatListener+WM_CLIPBOARDUPDATE.
@@ -498,7 +498,7 @@ namespace Au
 				_isOpen = false;
 				_w = default;
 				if (createOwner) {
-					_w = wnd.Internal_.CreateWindowDWP(messageOnly: true);
+					_w = WndUtil.CreateWindowDWP_(messageOnly: true);
 					//MSDN says, SetClipboardData fails if OpenClipboard called with 0 hwnd. It doesn't, but better use hwnd.
 				}
 				if (!noOpenNow) Reopen();

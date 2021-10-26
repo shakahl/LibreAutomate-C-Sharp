@@ -96,7 +96,6 @@ namespace Au.Controls
 
 		class _Palette : HwndHost
 		{
-			const string c_winClassName = "KColorPicker";
 			KColorPicker _cp;
 			wnd _w;
 			int _dpi;
@@ -106,17 +105,13 @@ namespace Au.Controls
 
 			public wnd Hwnd => _w;
 
-			static _Palette() {
-				WndUtil.RegisterWindowClass(c_winClassName);
-			}
-
 			public _Palette(KColorPicker cp) {
 				_cp = cp;
 			}
 
 			protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
 				var wParent = (wnd)hwndParent.Handle;
-				WndUtil.CreateWindow(_wndProc = _WndProc, false, c_winClassName, null, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
+				_w = WndUtil.CreateWindow(_wndProc = _WndProc, false, "Static", null, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
 
 				return new HandleRef(this, _w.Handle);
 			}
@@ -133,9 +128,6 @@ namespace Au.Controls
 				//if (WndUtil.PrintMsg(out string s, _w, msg, wParam, lParam, pmo)) print.it("<><c green>" + s + "<>");
 
 				switch (msg) {
-				case Api.WM_NCCREATE:
-					_w = w;
-					break;
 				case Api.WM_NCDESTROY:
 					_w = default;
 					break;

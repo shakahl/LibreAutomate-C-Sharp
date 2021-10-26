@@ -83,6 +83,8 @@ namespace Au.Compiler
 		}
 
 		static bool _Compile(bool forRun, FileNode f, out CompResults r, FileNode projFolder, out Action aFinally) {
+			//print.it("COMPILE");
+
 			var p1 = perf.local();
 			r = new CompResults();
 			aFinally = null;
@@ -151,11 +153,17 @@ namespace Au.Compiler
 				p1.Next('a');
 				if (refPaths) r.flags |= MiniProgram_.EFlags.RefPaths;
 
-				//if empty script, error "no Main". Users would not understand why. Append semicolon to make compiler detect top-level statements.
+				//if empty script, error "no Main". Users would not understand why.
 				if (m.Role != ERole.classLibrary) {
 					var diag1 = compilation.GetDiagnostics();
-					if (diag1.Any(o => o.Id == "CS5001")) //no Main
-						compilation = compilation.ReplaceSyntaxTree(trees[0], trees[0].WithChangedText(SourceText.From(m.MainFile.code + "\r\n;", Encoding.UTF8)) as CSharpSyntaxTree);
+					if (diag1.Any(o => o.Id == "CS5001")) { //no Main
+						var st = trees[m.CodeFiles.IndexOf(m.MainFile)];
+						var cu = st.GetCompilationUnitRoot();
+						var code2 = m.MainFile.code;
+						int i = cu.Members.Any() ? cu.Members.Span.Start : code2.Length;
+						code2 = code2.Insert(i, "\r\n{}\r\n");
+						compilation = compilation.ReplaceSyntaxTree(st, st.WithChangedText(SourceText.From(code2, Encoding.UTF8)) as CSharpSyntaxTree);
+					}
 				}
 
 				//Create debug info always. It is used for run-time error links.
@@ -727,7 +735,7 @@ namespace Au.Compiler
 				if (s_renamedFiles == null) {
 					s_renamedFiles = new List<string>();
 					process.thisProcessExit += _ => _DeleteRenamedLockedFiles(null);
-					s_rfTimer = new timerm(_DeleteRenamedLockedFiles);
+					s_rfTimer = new timer(_DeleteRenamedLockedFiles);
 				}
 				if (!s_rfTimer.IsRunning) s_rfTimer.Every(60_000);
 				s_renamedFiles.Add(renamed);
@@ -735,10 +743,10 @@ namespace Au.Compiler
 			return true;
 		}
 		static List<string> s_renamedFiles;
-		static timerm s_rfTimer;
+		static timer s_rfTimer;
 
 		//SHOULDDO: remove this? Probably fails anyway. Will delete when this app starts next time.
-		static void _DeleteRenamedLockedFiles(timerm timer) {
+		static void _DeleteRenamedLockedFiles(timer timer) {
 			var a = s_renamedFiles;
 			for (int i = a.Count; --i >= 0;) {
 				if (Api.DeleteFile(a[i]) || lastError.code == Api.ERROR_FILE_NOT_FOUND) a.RemoveAt(i);

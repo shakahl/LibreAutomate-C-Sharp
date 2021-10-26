@@ -48,8 +48,4 @@
     </None>
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Internal\unused\" />
-  </ItemGroup>
-
 </Project>

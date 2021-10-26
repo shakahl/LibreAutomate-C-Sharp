@@ -305,7 +305,7 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// timerm.after(2000, t => { print.it("timer"); });
+		/// timer.after(2000, t => { print.it("timer"); });
 		/// wait.forPostedMessage(5, (ref MSG m) => { print.it(m); return m.message == 0x113; }); //WM_TIMER
 		/// print.it("finished");
 		/// ]]></code>
@@ -329,7 +329,7 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// bool stop = false;
-		/// timerm.after(2000, t => { print.it("timer"); stop = true; });
+		/// timer.after(2000, t => { print.it("timer"); stop = true; });
 		/// wait.forMessagesAndCondition(5, () => stop);
 		/// print.it(stop);
 		/// ]]></code>

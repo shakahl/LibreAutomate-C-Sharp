@@ -1005,7 +1005,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 		/// <summary>
 		/// Opacity and transparent color.
 		/// </summary>
-		/// <seealso cref="wnd.SetTransparency(bool, int?, ColorInt?)"/>
+		/// <seealso cref="wnd.SetTransparency(bool, int?, ColorInt?, bool)"/>
 		/// <example>
 		/// <code><![CDATA[
 		/// t.Transparency = (64, null);

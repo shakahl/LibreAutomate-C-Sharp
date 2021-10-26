@@ -215,9 +215,11 @@ namespace Au.Controls
 
 		#region lexer
 
-		public void zSetLexerCpp(bool noClear = false, ColorInt? codeBackColor = null) {
+		public void zSetLexerCpp(bool noClear = false/*, ColorInt? codeBackColor = null*/) {
 			if (!noClear) zStyleClearRange(0, STYLE_HIDDEN); //STYLE_DEFAULT - 1
 			Call(SCI_SETLEXER, (int)LexLanguage.SCLEX_CPP);
+
+			//if (codeBackColor != null) for (int i = 0; i < STYLE_DEFAULT; i++) zStyleBackColor(i, codeBackColor.Value);
 
 			const int colorComment = 0x8000;
 			const int colorString = 0xA07040;
@@ -235,7 +237,7 @@ namespace Au.Controls
 			//zStyleForeColor((int)LexCppStyles.SCE_C_OPERATOR, 0x80); //+,;( etc. Let it be black.
 			zStyleForeColor((int)LexCppStyles.SCE_C_PREPROCESSOR, 0xFF8000);
 			zStyleForeColor((int)LexCppStyles.SCE_C_WORD, 0xFF); //keywords
-			zStyleForeColor((int)LexCppStyles.SCE_C_TASKMARKER, 0x00C000);
+			zStyleForeColor((int)LexCppStyles.SCE_C_TASKMARKER, 0x00C000); zStyleBackColor((int)LexCppStyles.SCE_C_TASKMARKER, 0);
 			//zStyleForeColor((int)LexCppStyles.SCE_C_WORD2, 0x80F0); //functions. Not using here.
 			//zStyleForeColor((int)LexCppStyles.SCE_C_GLOBALCLASS, 0xC000C0); //types. Not using here.
 
@@ -244,8 +246,6 @@ namespace Au.Controls
 			//zStyleForeColor((int)LexCppStyles.SCE_C_COMMENTDOCKEYWORD, ); //supports only JavaDoc and Doxygen
 			//zStyleForeColor((int)LexCppStyles.SCE_C_PREPROCESSORCOMMENT, ); //?
 			//zStyleForeColor((int)LexCppStyles.SCE_C_PREPROCESSORCOMMENTDOC, ); //?
-
-			for (int i = 0; i < STYLE_DEFAULT; i++) zStyleBackColor(i, i == (int)LexCppStyles.SCE_C_TASKMARKER ? 0 : (codeBackColor ?? 0xffffff));
 
 			zSetStringString(SCI_SETPROPERTY, "styling.within.preprocessor\0" + "1");
 			zSetStringString(SCI_SETPROPERTY, "lexer.cpp.allow.dollars\0" + "0");

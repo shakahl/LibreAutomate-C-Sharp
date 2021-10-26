@@ -766,14 +766,15 @@ namespace Au
 						break;
 					case ToggleButton:
 						c.HorizontalAlignment = HorizontalAlignment.Left; //default stretch
+						c.VerticalContentAlignment = VerticalAlignment.Center; //default top
 
 						//partial workaround for squint CheckBox/RadioButton when High DPI.
 						//	Without it, check mark size/alignment is different depending on control's xy.
 						//	With it at least all controls are equal, either bad (eg DPI 125%) or good (DPI 150%).
 						//	When bad, normal CheckBox check mark now still looks good. Only third state and RadioButtons look bad, but it is better than when controls look differently.
 						//	But now at 150% DPI draws thick border.
-						//					c.UseLayoutRounding=true;
-						//					c.SnapsToDevicePixels=true; //does not help
+						//c.UseLayoutRounding=true;
+						//c.SnapsToDevicePixels=true; //does not help
 						break;
 					case ComboBox cb:
 						//Change padding because default Windows font Segoe UI is badly centered vertically. Too big space above text, and too big control height.
@@ -989,20 +990,15 @@ namespace Au
 		/// <param name="ok">Text of OK button. If null, does not add the button.</param>
 		/// <param name="cancel">Text of Cancel button. If null, does not add the button.</param>
 		/// <param name="apply">Text of Apply button. If null, does not add the button.</param>
-		/// <param name="noStackPanel">Add buttons without <b>StackPanel</b>.</param>
+		/// <param name="stackPanel">Add a right-bottom aligned <see cref="StackPanel"/> that contains the buttons. See <see cref="StartOkCancel"/>. If null (default), adds if not already in a stack panel, except when there is 1 button.</param>
 		/// <remarks>
 		/// Sets properties of OK/Cancel buttons so that click and Enter/Esc close the window; then <see cref="ShowDialog"/> returns true on OK, false on Cancel.
 		/// See also event <see cref="OkApply"/>.
-		/// 
-		/// By default adds a right-bottom aligned <see cref="StackPanel"/> and adds buttons in it. Does not add if:
-		/// - <i>noPanel</i> true.
-		/// - Single button.
-		/// - Already in a stack panel; it can be used to add more buttons. See <see cref="StartOkCancel"/>.
 		/// </remarks>
-		public wpfBuilder AddOkCancel(out Button bOK, out Button bCancel, out Button bApply, string ok = "OK", string cancel = "Cancel", string apply = null, bool noStackPanel = false) {
+		public wpfBuilder AddOkCancel(out Button bOK, out Button bCancel, out Button bApply, string ok = "OK", string cancel = "Cancel", string apply = null, bool? stackPanel = null) {
 			int n = 0; if (ok != null) n++; if (cancel != null) n++;
 			if (n == 0) throw new ArgumentNullException();
-			bool stack = !noStackPanel && n > 1 && !(_p is _StackPanel);
+			bool stack = stackPanel ?? (n > 1 && !(_p is _StackPanel));
 			if (stack) StartOkCancel();
 			if (ok != null) AddButton(out bOK, ok, null, WBBFlags.OK); else bOK = null;
 			if (cancel != null) AddButton(out bCancel, cancel, null, WBBFlags.Cancel); else bCancel = null;
@@ -1011,11 +1007,9 @@ namespace Au
 			return this;
 		}
 
-		/// <inheritdoc cref="AddOkCancel(out Button, out Button, out Button, string, string, string, bool)"/>
-		public wpfBuilder AddOkCancel(string ok = "OK", string cancel = "Cancel", string apply = null, bool noStackPanel = false)
-			=> AddOkCancel(out _, out _, out _, ok, cancel, apply, noStackPanel);
-		//TODO: bool noStackPanel = false  ->  bool? stackPanel = null
-		//TODO: vcenter checkboxes etc
+		/// <inheritdoc cref="AddOkCancel(out Button, out Button, out Button, string, string, string, bool?)"/>
+		public wpfBuilder AddOkCancel(string ok = "OK", string cancel = "Cancel", string apply = null, bool? stackPanel = null)
+			=> AddOkCancel(out _, out _, out _, ok, cancel, apply, stackPanel);
 
 		/// <summary>
 		/// Adds <see cref="Separator"/> control.
@@ -1623,7 +1617,7 @@ namespace Au
 					var h = new Hyperlink(new Run(s));
 					h.Click += (o, y) => {
 						if (_FindAncestorTabItem(e, out var ti)) ti.IsSelected = true; //SHOULDDO: support other cases too, eg other tabcontrol-like control class or tabcontrol in tabcontrol.
-						timerm.after(1, _ => { //else does not focus etc if was in hidden tab page
+						timer.after(1, _ => { //else does not focus etc if was in hidden tab page
 							try {
 								e.BringIntoView();
 								e.Focus();
@@ -2260,7 +2254,7 @@ namespace Au.Types
 		ChildOfLast = 1,
 
 		/// <summary>
-		/// Don't adjust some properties (padding, specified in <see cref="wpfBuilder.Options"/>, etc) of some control types. Just set default margin, except if <i>ChildOfLast</i>.
+		/// Don't adjust some properties (padding, aligning, specified in <see cref="wpfBuilder.Options"/>, etc) of some control types. Just set default margin, except if <i>ChildOfLast</i>.
 		/// </summary>
 		DontSetProperties = 2,
 	}

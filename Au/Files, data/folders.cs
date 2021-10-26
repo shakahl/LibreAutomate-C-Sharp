@@ -410,14 +410,22 @@ namespace Au
 		/// <summary>
 		/// Gets drive type (fixed, removable, network, etc) of <see cref="WorkspaceDriveBS"/>.
 		/// </summary>
-		public static DriveType workspaceDriveType => s_driveTypeWS ??= new DriveInfo(WorkspaceDriveBS).DriveType;
+		public static DriveType workspaceDriveType => s_driveTypeWS ??= _GetDriveType(WorkspaceDriveBS);
 		static DriveType? s_driveTypeWS;
 
 		/// <summary>
 		/// Gets drive type (fixed, removable, network, etc) of <see cref="ThisAppDriveBS"/>.
 		/// </summary>
-		public static DriveType thisAppDriveType => s_driveTypeApp ??= new DriveInfo(ThisAppDriveBS).DriveType;
+		public static DriveType thisAppDriveType => s_driveTypeApp ??= _GetDriveType(ThisAppDriveBS);
 		static DriveType? s_driveTypeApp;
+
+		static DriveType _GetDriveType(string path) {
+			if (path.Starts(@"\\")) { //DriveInfo does not support it, exception
+				if (!path.Starts(@"\\?\")) return DriveType.Network;
+				path = path[4..];
+			}
+			return new DriveInfo(path).DriveType;
+		}
 
 		/// <summary>
 		/// Gets folder path of caller's source code file.

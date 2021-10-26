@@ -104,10 +104,10 @@ namespace Au
 	///  </td>
 	/// </tr>
 	/// <tr>
-	///  <td>DPI-scaled windows.</td>
+	///  <td>DPI-scaled windows (see <see cref="Dpi.IsWindowVirtualized(wnd)"/>).</td>
 	///  <td>
 	///   <ol>
-	///    <li>Currently this library does not support auto-scaled windows when using high DPI (text size 125%, 150% or more). If the target process is auto-scaled and this process isn't (or vice versa, or they have a different scaling factor), most coordinate-related functions don't work properly. For example, they get wrong UI element rectangles.</li>
+	///    <li>In some cases "element from point" and "get rect" functions may not work correctly with such windows. This process must be per-monitor-DPI-aware.</li>
 	///   </ol>
 	///  </td>
 	/// </tr>
@@ -139,10 +139,10 @@ namespace Au
 		internal struct Misc_
 		{
 			public EMiscFlags flags;
-			public byte role; //for optimization. 0 if not set or failed to get or VT_BSTR or does not fit in BYTE.
+			public byte roleByte; //for optimization. 0 if not set or failed to get. 0xFF (ERole.Custom) if VT_BSTR or not 1-ROLE_MAX.
 			public ushort level; //for ToString. 0 if not set.
 
-			public void SetRole(ERole role) { this.role = (byte)((uint)role <= 0xff ? role : 0); }
+			public void SetRole(ERole role) { this.roleByte = (byte)(role <= 0 || role > ERole.TREEBUTTON ? ERole.Custom : role); }
 			public void SetLevel(int level) { this.level = (ushort)Math.Clamp(level, 0, 0xffff); }
 		}
 
@@ -195,16 +195,15 @@ namespace Au
 		//static int s_dmp;
 		//internal static int DebugMemorySum;
 
-		/// <summary>
-		/// Releases COM object and clears this variable.
-		/// </summary>
-		public void Dispose() {
+		///
+		void Dispose(bool disposing) {
+			//print.it(disposing);
 			if (_iacc != default) {
 				var t = _iacc; _iacc = default;
 				//perf.first();
 				Marshal.Release(t);
 				//perf.nw();
-				//print.it($"rel: {Marshal.Release(t)}");
+				//print.it($"rel: {t}  {Marshal.Release(t)}");
 
 				int mp = _MemoryPressure;
 				GC.RemoveMemoryPressure(mp);
@@ -212,13 +211,29 @@ namespace Au
 			}
 			_elem = 0;
 			_misc = default;
+		}
+
+		/// <summary>
+		/// Releases COM object and clears this variable.
+		/// </summary>
+		public void Dispose() {
+			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
 
 		///
 		~elm() {
-			Dispose();
+#if DEBUG
+			try { Dispose(false); }
+			catch (Exception ex) { print.it(ex); }
+#else
+			Dispose(false);
+#endif
 		}
+
+		//internal void Debug1() {
+		//	print.it(_iacc, Debug_.GetComObjRefCount_(_iacc));
+		//}
 
 		/// <summary>
 		/// Gets or changes simple element id, also known as child id.
@@ -229,7 +244,7 @@ namespace Au
 		/// The 'set' function sometimes can be used as a fast alternative to <see cref="Navigate"/>. It modifies only this variable. It does not check whether the value is valid.
 		/// Simple elements cannot have child elements.
 		/// </remarks>
-		public int SimpleElementId { get => _elem; set { _misc.role = 0; _elem = value; } }
+		public int SimpleElementId { get => _elem; set { _misc.roleByte = 0; _elem = value; } }
 
 		/// <summary>
 		/// Returns some additional info about this variable, such as how the UI element was retrieved (inproc, UIA, Java).
@@ -298,15 +313,12 @@ namespace Au
 		/// <summary>
 		/// Gets UI element from point.
 		/// </summary>
+		/// <returns>Returns null if failed. Usually fails if the window is of a higher [](xref:uac) integrity level process. With some windows can fail occasionally.</returns>
 		/// <param name="p">
 		/// Coordinates.
 		/// Tip: To specify coordinates relative to the right, bottom, work area or a non-primary screen, use <see cref="Coord.Normalize"/>, like in the example.
 		/// </param>
 		/// <param name="flags"></param>
-		/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
-		/// <remarks>
-		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
-		/// </remarks>
 		/// <example>
 		/// Get UI element at 100 200.
 		/// <code><![CDATA[
@@ -321,14 +333,17 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		public static elm fromXY(POINT p, EXYFlags flags = 0) {
-			for (int i = 0; ; i++) {
-				var hr = Cpp.Cpp_AccFromPoint(p, flags, out var a);
-				if (hr == 0) return new elm(a);
-				if (i < 2) continue;
-				if (flags.Has(EXYFlags.NoThrow)) return null;
-				_WndThrow(hr, wnd.fromXY(p, WXYFlags.Raw), "*get UI element from point.");
-			}
+			int hr = Cpp.Cpp_AccFromPoint(p, flags, (flags, wFP, wTL) => {
+				if (osVersion.minWin8_1 ? !flags.Has(EXYFlags.NotInProc) : flags.Has(EXYFlags.UIA)) {
+					bool dpiV = Dpi.IsWindowVirtualized(wTL);
+					if (dpiV) flags |= Enum_.EXYFlags_DpiScaled;
+				}
+				return flags;
+			}, out var a);
+			if (hr == 0) return new elm(a);
+			return null;
 		}
+
 		//rejected: FromXY(Coord, Coord, ...). Coord makes no sense; could be int int, but it's easy to create POINT from it.
 
 		/// <summary>

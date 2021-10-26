@@ -145,7 +145,7 @@ partial class TestScript
 			if (Environment.HasShutdownStarted) return;
 			if (AppDomain.CurrentDomain.IsFinalizingForUnload()) return;
 			print.it("GC", GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2));
-			//timerm.after(1, _ => new TestGC());
+			//timer.after(1, _ => new TestGC());
 			//var f = Program.MainForm; if(!f.IsHandleCreated) return;
 			//f.BeginInvoke(new Action(() => new TestGC()));
 			new TestGC();
@@ -159,10 +159,10 @@ partial class TestScript
 			s_debug2 = true;
 			new TestGC();
 
-			//timerm.every(50, _ => {
+			//timer.every(50, _ => {
 			//	if(!s_debug) {
 			//		s_debug = true;
-			//		timerm.after(100, _ => new TestGC());
+			//		timer.after(100, _ => new TestGC());
 			//	}
 			//});
 		}
@@ -382,7 +382,7 @@ partial class TestScript
 			//dd.DoubleClickEnabled = true;
 			//dd.ButtonDoubleClick += (_, _) => print.it("button double click");
 
-			//timerm.after(3000, _ => {
+			//timer.after(3000, _ => {
 			//	var c = t.Control.Items[0];
 			//	c.Select();
 			//});
@@ -417,7 +417,7 @@ partial class TestScript
 		//var c = new System.Windows.Forms.VisualStyles.VisualStyleRenderer(VisualStyleElement.Window.FrameLeft.Inactive).GetColor(ColorProperty.BorderColor);
 		//print.it((uint)c.ToArgb());
 
-		//timerm.after(500, _ => {
+		//timer.after(500, _ => {
 		//	var w = (wnd)t.Control;
 		//	//w.SetStyle(WS.DLGFRAME, SetAddRemove.Add);
 		//});
@@ -425,7 +425,7 @@ partial class TestScript
 		dialog.options.topmostIfNoOwnerWindow = true;
 		dialog.show();
 
-		//timerm.after(10000, _ => Application.Exit());
+		//timer.after(10000, _ => Application.Exit());
 		//Application.Run();
 	}
 #endif

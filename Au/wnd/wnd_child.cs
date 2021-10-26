@@ -305,53 +305,56 @@
 			//}
 		}
 
-		//TODO: consider: remove or change button functions. Anyway will be rarely used when there is elm.
+		///// <summary>
+		///// Casts this to <see cref="WButton"/>.
+		///// </summary>
+		//public WButton AsButton => new(this);
 
 		/// <summary>
-		/// Casts this to <see cref="WButton"/>.
+		/// Finds and clicks a button in this window. Does not use the mouse.
 		/// </summary>
-		public WButton AsButton => new(this);
-
-		/// <summary>
-		/// Finds a child button by id and sends a "click" message. Does not use the mouse.
-		/// Calls <see cref="WButton.Click(bool)"/>.
-		/// </summary>
-		/// <param name="id">Control id of the button. This function calls <see cref="Child"/> to find the button.</param>
-		/// <param name="useElm">Use <see cref="elm.Invoke"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
-		/// <exception cref="NotFoundException" />
-		/// <exception cref="Exception">Exceptions of <see cref="Child"/> and <see cref="WButton.Click(bool)"/>.</exception>
+		/// <param name="id">Control id of the button. See <see cref="Child"/>.</param>
+		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
+		/// <exception cref="NotFoundException">Button not found.</exception>
+		/// <remarks>
+		/// This function just calls <see cref="Child"/> and <see cref="mouse.virtualClick"/>.
+		/// Uses this code: <c>mouse.virtualClick(this.Child(1, id: id));</c>
+		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// wnd.find("Options").ButtonClick(2);
 		/// ]]></code>
 		/// </example>
-		public void ButtonClick(int id, bool useElm = false) {
-			var c = Child(id: id);
-			if (c.Is0) throw new NotFoundException();
-			c.AsButton.Click(useElm);
-		}
+		public void ButtonClick(int id) => mouse.virtualClick(this.Child(1, id: id));
 
 		/// <summary>
-		/// Finds a child button by name and sends a "click" message. Does not use the mouse.
-		/// Calls <see cref="WButton.Click(bool)"/>.
+		/// Finds and clicks a button in this window. Does not use the mouse.
 		/// </summary>
-		/// <param name="name">Button name. This function calls <see cref="Child"/> to find the button.</param>
-		/// <param name="cn">Button class name to pass to <see cref="Child"/>.</param>
-		/// <param name="useElm">Use <see cref="elm.Invoke"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
-		/// <exception cref="NotFoundException" />
-		/// <exception cref="Exception">Exceptions of <see cref="Child"/> and <see cref="WButton.Click(bool)"/>.</exception>
+		/// <param name="name">Button name. String format: [](xref:wildcard_expression).</param>
+		/// <param name="asControl">
+		/// If true, finds/clicks as child control: <c>mouse.virtualClick(this.Child(1, name, roleCN ?? "*Button*"));</c>.
+		/// If false, finds/clicks as UI element: <c>this.Elm[roleCN ?? "BUTTON", name].Find(1).Invoke();</c>.
+		/// Default is false; it's slower but works with more windows.
+		/// </param>
+		/// <param name="roleCN">UI element role or control class name (if <i>asControl</i> true). String format: [](xref:wildcard_expression). Default role is <c>"BUTTON"</c>, class name <c>"*Button*"</c>.</param>
+		/// <remarks>
+		/// This function is just a shorter way to call other functions that have more options but require more code to call. If <i>asControl</i> true, it calls <see cref="Child"/> and <see cref="mouse.virtualClick"/>. Else <see cref="Elm"/>, <see cref="elmFinder.this"/>, <see cref="elmFinder.Find"/> and <see cref="elm.Invoke"/>.
+		/// </remarks>
+		/// <exception cref="ArgumentException">Invalid <i>name</i> (when starts with <c>"***"</c>). See <see cref="elmFinder.this"/>, <see cref="Child"/>.</exception>
+		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
+		/// <exception cref="NotFoundException">Button not found.</exception>
+		/// <exception cref="AuException">Failed to click. For example need to activate the window. No exception if <i>asControl</i> true.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// wnd.find("Options").ButtonClick("Cancel");
 		/// ]]></code>
 		/// </example>
-		public void ButtonClick(
-			[ParamString(PSFormat.wildex)] string name,
-			[ParamString(PSFormat.wildex)] string cn = null,
-			bool useElm = false) {
-			var c = Child(name, cn);
-			if (c.Is0) throw new NotFoundException(); //CONSIDER: try to find UI element. Eg toolbar button.
-			c.AsButton.Click(useElm);
+		public void ButtonClick([ParamString(PSFormat.wildex)] string name, bool asControl = false, string roleCN = null) {
+			if (asControl) {
+				mouse.virtualClick(this.Child(1, name, roleCN ?? "*Button*"));
+			} else {
+				this.Elm[roleCN ?? "BUTTON", name].Find(1).Invoke();
+			}
 		}
 
 		/// <summary>
@@ -362,7 +365,7 @@
 		/// <exception cref="AuWndException">Invalid window.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid itemId.</exception>
 		/// <remarks>
-		/// Works only with standard (classic) menus. The drop-down menu window class name must be "#32768". Works with menu items in window menu bar, system menu and some context menus.
+		/// Works only with classic menus. The drop-down menu window class name must be "#32768". Works with menu items in window menu bar, system menu and some context menus.
 		/// Does not use the menu itself. Just posts WM_COMMAND or WM_SYSCOMMAND message. Even if a menu item with this id does not exist.
 		/// This variable is the window that contains the menu bar or system menu. Or the drop-down menu window (class "#32768") that contains the menu item.
 		/// </remarks>
@@ -416,6 +419,7 @@ namespace Au.Types
 		DirectChild = 2,
 	}
 
+#if !true //rejected. Nobody would use this when there is elm. Eg BM_CLICK is the same as elm.Invoke or elm.VirtualClick. For Check can use code if(!e.IsChecked) e.Invoke();.
 	/// <summary>
 	/// Like <see cref="wnd"/>, but has only button, check box and radio button functions - <b>Click</b>, <b>Check</b> etc.
 	/// See also <see cref="wnd.AsButton"/>.
@@ -444,7 +448,7 @@ namespace Au.Types
 		public override string ToString() => W.ToString();
 
 		/// <summary>
-		/// Sends a "click" message to this button control. Does not use the mouse.
+		/// Posts a "click" message to this button control. Does not use the mouse.
 		/// </summary>
 		/// <param name="useElm">Use <see cref="elm.Invoke"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
 		/// <exception cref="AuWndException">This window is invalid.</exception>
@@ -603,4 +607,5 @@ namespace Au.Types
 		internal const uint BS_AUTORADIOBUTTON = 0x9;
 
 	}
+#endif
 }

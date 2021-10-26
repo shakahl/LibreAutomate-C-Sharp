@@ -42,26 +42,38 @@ namespace Au
 		/// Gets location of this UI element in screen.
 		/// </summary>
 		/// <remarks>
-		/// Calls <see cref="GetRect(out RECT)"/>.
+		/// Calls <see cref="GetRect(out RECT, bool)"/>.
 		/// Returns empty rectangle if failed or this property is unavailable. Supports <see cref="lastError"/>.
 		/// Most but not all UI elements support this property.
 		/// </remarks>
 		public RECT Rect { get { GetRect(out var r); return r; } }
 
+		internal RECT RectRawDpi_ { get { GetRect(out var r, true); return r; } }
+
 		/// <summary>
 		/// Gets location of this UI element in screen.
 		/// </summary>
-		/// <param name="r">Receives rectangle in screen coordinates.</param>
+		/// <param name="r">Rectangle in screen coordinates.</param>
+		/// <param name="raw">
+		/// Don't DPI-scale. When the element is in a DPI-scaled/virtualized window (see <see cref="Dpi.IsWindowVirtualized"/>), the raw rectangle may not match the visible rectangle.
+		/// This parameter is ignored on Windows 7 and 8.0 or if this element was retrieved not in-process.
+		/// </param>
 		/// <remarks>
 		/// Returns false if failed or this property is unavailable. Supports <see cref="lastError"/>.
 		/// Most but not all UI elements support this property.
 		/// Uses <msdn>IAccessible.accLocation</msdn>.
 		/// </remarks>
-		public bool GetRect(out RECT r) {
+		public bool GetRect(out RECT r, bool raw = false) {
 			ThrowIfDisposed_();
-			var hr = _Hresult(_FuncId.rectangle, Cpp.Cpp_AccGetRect(this, out r));
-			GC.KeepAlive(this);
-			return hr == 0;
+			if (!raw && _misc.flags.Has(EMiscFlags.InProc) && osVersion.minWin8_1) {
+				if (!GetProperties("D", out var p)) { r = default; return false; }
+				r = p.Rect;
+			} else {
+				var hr = _Hresult(_FuncId.rectangle, Cpp.Cpp_AccGetRect(this, out r));
+				GC.KeepAlive(this);
+				if (hr != 0) return false;
+			}
+			return true;
 		}
 
 		/// <summary>
@@ -72,26 +84,27 @@ namespace Au
 		/// <remarks>
 		/// Returns false if failed or this property is unavailable. Supports <see cref="lastError"/>.
 		/// Most but not all UI elements support this property.
-		/// Uses <msdn>IAccessible.accLocation</msdn> and <see cref="wnd.MapScreenToClient(ref RECT)"/>.
+		/// Uses <see cref="GetRect(out RECT, bool)"/> and <see cref="wnd.MapScreenToClient(ref RECT)"/>.
 		/// </remarks>
 		public bool GetRect(out RECT r, wnd w) {
 			return GetRect(out r) && w.MapScreenToClient(ref r);
 		}
 
 		/// <summary>
-		/// Gets standard non-string role, as enum ERole.
+		/// Gets role as enum <see cref="ERole"/>.
 		/// </summary>
 		/// <remarks>
-		/// Most UI elements have a standard role, as enum <see cref="ERole"/>. Some UI elements have a custom role, usually as string, for example in web pages in Firefox and Chrome.
-		/// Returns 0 if role is string or if failed. Supports <see cref="lastError"/>.
-		/// All UI elements must support this property. If failed, probably the elm is invalid, for example the window has been closed.
+		/// Most UI elements have a standard role, defined in enum <see cref="ERole"/> (except <b>None</b> and <b>Custom</b>). Some UI elements have a custom role, usually as string, for example in Firefox; then returns <b>ERole.Custom</b>.
+		/// Returns 0 (<b>ERole.None</b>) if failed. Supports <see cref="lastError"/>.
+		/// All UI elements must support this property. If failed, probably the <b>elm</b> is invalid, for example the window is closed.
 		/// Uses <msdn>IAccessible.get_accRole</msdn>.
 		/// </remarks>
 		public ERole RoleInt {
 			get {
 				ThrowIfDisposed_();
-				if (_misc.role != 0) return (ERole)_misc.role; //SHOULDDO: use EMiscFlags.RoleIsString
+				if (_misc.roleByte != 0) return (ERole)_misc.roleByte;
 				_Hresult(_FuncId.role, _GetRole(out var role, out _, dontNeedStr: true));
+				//Debug_.Print("roleByte 0 -> " + role + ", " + Role); //it's OK in some cases, eg when retrieved not inproc, or after navigating or changing simpleelementid
 				return role;
 			}
 		}
@@ -100,17 +113,17 @@ namespace Au
 		/// Gets standard or custom role, as string.
 		/// </summary>
 		/// <remarks>
-		/// Most UI elements have a standard role, defined in enum <see cref="ERole"/>. Some UI elements have a custom role, usually as string, for example in web pages in Firefox and Chrome.
+		/// Most UI elements have a standard role, defined in enum <see cref="ERole"/> (except <b>None</b> and <b>Custom</b>). Some UI elements have a custom role, usually as string, for example in Firefox.
 		/// For standard roles this function returns enum <see cref="ERole"/> member name. For string roles - the string. For unknown non-string roles - the int value like "0" or "500".
 		/// Returns "" if failed. Supports <see cref="lastError"/>.
-		/// All UI elements must support this property. If failed, probably the elm is invalid, for example the window has been closed.
+		/// All UI elements must support this property. If failed, probably the <b>elm</b> is invalid, for example the window is closed.
 		/// Uses <msdn>IAccessible.get_accRole</msdn>.
 		/// </remarks>
 		public string Role {
 			get {
 				ThrowIfDisposed_();
-				var role = (ERole)_misc.role;
-				if (role == 0) {
+				var role = (ERole)_misc.roleByte;
+				if (role is 0 or ERole.Custom) {
 					if (0 != _Hresult(_FuncId.role, _GetRole(out role, out var roleStr, dontNeedStr: false))) return "";
 					if (roleStr != null) return roleStr;
 				}
@@ -124,13 +137,14 @@ namespace Au
 		//Returns HRESULT.
 		int _GetRole(out ERole roleInt, out string roleStr, bool dontNeedStr) {
 			roleStr = null;
-			if (_misc.role != 0) { roleInt = (ERole)_misc.role; return 0; }
+			Debug.Assert((ERole)_misc.roleByte is 0 or ERole.Custom);
 			var hr = Cpp.Cpp_AccGetRole(this, out roleInt, out var b);
-			GC.KeepAlive(this);
 			if (hr == 0) {
-				if (b.Is0) _misc.SetRole(roleInt);
-				else if (dontNeedStr) b.Dispose();
-				else roleStr = b.ToStringAndDispose();
+				if (!b.Is0) {
+					roleInt = ERole.Custom;
+					if (dontNeedStr) b.Dispose(); else roleStr = b.ToStringAndDispose();
+				}
+				_misc.SetRole(roleInt);
 			}
 			return hr;
 		}
@@ -223,7 +237,7 @@ namespace Au
 
 		string _GetStringProp(char prop) {
 			ThrowIfDisposed_();
-			int hr = Cpp.Cpp_AccGetProp(this, prop, out var b);
+			int hr = Cpp.Cpp_AccGetStringProp(this, prop, out var b);
 			GC.KeepAlive(this);
 			var s = _BstrToString(hr, b);
 			_Hresult((_FuncId)prop, hr);
@@ -344,9 +358,15 @@ namespace Au
 		/// The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="JavaInvoke"/> or one of the above functions (MouseClick etc).
 		/// Uses <msdn>IAccessible.accDoDefaultAction</msdn>.
 		/// </remarks>
-		public void Invoke() { //sorry, I did not find a better name. Alternatives: DoAction (weird), DoDefaultAction (too long), Execute.
+		public void Invoke() {
 			ThrowIfDisposed_();
-			var hr = Cpp.Cpp_AccAction(this, 'a');
+			int hr;
+			if (!MiscFlags.HasAny(EMiscFlags.UIA | EMiscFlags.Java) && RoleInt is ERole.BUTTON or ERole.SPLITBUTTON) { //don't need for check/radio
+				using var workaround = new mouse.ButtonVirtualClickWorkaround_(WndContainer);
+				hr = Cpp.Cpp_AccAction(this, 'a');
+			} else {
+				hr = Cpp.Cpp_AccAction(this, 'a');
+			}
 			GC.KeepAlive(this);
 			AuException.ThrowIfHresultNot0(hr);
 			//_MinimalSleep(); //don't need. It does not make more reliable.
@@ -745,7 +765,8 @@ namespace Au
 		/// - k - <see cref="KeyboardShortcut"/>.
 		/// - u - <see cref="UiaId"/>.
 		/// - s - <see cref="State"/>.
-		/// - r - <see cref="Rect"/>.
+		/// - r - <see cref="GetRect(out RECT, bool)"/> with <i>raw</i> true.
+		/// - D - <see cref="Rect"/> or <see cref="GetRect(out RECT, bool)"/> with <i>raw</i> false. Don't use with r.
 		/// - w - <see cref="WndContainer"/>.
 		/// - o - <see cref="Html"/> outer.
 		/// - i - <see cref="Html"/> inner.
@@ -763,7 +784,7 @@ namespace Au
 		public bool GetProperties(string props, out EProperties result) {
 			//SHOULDDO: use cached role. Or not, because now can help to catch bugs where the cached role is incorrect.
 
-			result = default;
+			result = null;
 			ThrowIfDisposed_();
 			if (props.Length == 0) return true;
 			int hr = Cpp.Cpp_AccGetProps(this, props, out var b);
@@ -773,13 +794,14 @@ namespace Au
 				lastError.code = hr;
 				return false;
 			}
+			result = new();
 			using (b) {
 				var offsets = (int*)b.Ptr;
 				for (int i = 0; i < props.Length; i++) {
 					int offs = offsets[i], len = ((i == props.Length - 1) ? b.Length : offsets[i + 1]) - offs;
 					var p = b.Ptr + offs;
 					switch (props[i]) {
-					case 'r': result.Rect = len > 0 ? *(RECT*)p : default; break;
+					case 'r' or 'D': result.Rect = len > 0 ? *(RECT*)p : default; break;
 					case 's': result.State = len > 0 ? *(EState*)p : default; break;
 					case 'w': result.WndContainer = len > 0 ? (wnd)(*(int*)p) : default; break;
 					case '@': result.HtmlAttributes = AttributesToDictionary_(p, len); break;
@@ -854,6 +876,7 @@ namespace Au
 		/// </example>
 		public elm Navigate(string navig, double waitS = 0) {
 			ThrowIfDisposed_();
+			if (navig == null) throw new ArgumentNullException();
 			int hr; Cpp.Cpp_Acc ca;
 			if (waitS == 0) {
 				hr = Cpp.Cpp_AccNavigate(this, navig, out ca);
@@ -874,8 +897,7 @@ namespace Au
 		/// Gets parent element. Same as <see cref="Navigate"/> with argument "pa".
 		/// Returns null if fails.
 		/// </summary>
-		public elm Parent => Navigate("pa");
-		//rejected: public elm Parent => call get_accParent directly. Can use Navigate(), it's almost as fast. Useful mostly in programming, not in scripts.
+		public elm Parent => Navigate("pa"); //info: Navigate("pa") is optimized in C++
 
 		/// <summary>
 		/// Gets HTML.

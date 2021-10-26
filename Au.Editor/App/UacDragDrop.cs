@@ -5,7 +5,7 @@ class UacDragDrop
 	public class AdminProcess
 	{
 		WinEventHook _hook; //SYSTEM_CAPTURESTART
-		timerm _timer; //tracks mouse etc
+		timer _timer; //tracks mouse etc
 		bool _isDragMode; //is in drag-drop
 		bool _isProcess2; //is our non-admin process started
 		int _endCounter; //delays ending drag mode
@@ -26,7 +26,7 @@ class UacDragDrop
 		}
 
 		AdminProcess() {
-			_timer = new timerm(_Timer);
+			_timer = new timer(_Timer);
 
 			//use hook to detect when drag-drop started
 			_hook = new WinEventHook(EEvent.SYSTEM_CAPTURESTART, 0, d => {
@@ -64,7 +64,7 @@ class UacDragDrop
 		}
 
 		//Every 30 ms while in drag mode.
-		void _Timer(timerm t) {
+		void _Timer(timer t) {
 			if (!_isDragMode) return;
 
 			//when mouse released, end drag mode with ~100 ms delay

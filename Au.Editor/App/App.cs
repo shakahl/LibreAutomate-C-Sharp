@@ -3,6 +3,19 @@ using System.Windows;
 
 //TODO: need some learning stuff. Now users install the app, open the window first time, and don't know what to do.
 
+//TODO: example triggers:
+//	Now mouse triggers are disabled by default, and users will not easily understand why, and how to enable.
+//	Now other trigger examples may be unwanted.
+//	Maybe initially disable all, and print info with links to temporarily enable/disable.
+
+//TODO: new item:
+//	Move caret to the end of main function.
+//	Collapse //. script.setup //..
+
+//TODO: icon:
+//	Make // thinner.
+//	Make the top half of the gray circle thinner.
+
 static class App
 {
 	public const string
@@ -25,7 +38,7 @@ static class App
 #if TRACE
 	static App() {
 		perf.first();
-		//timerm.after(1, _ => perf.nw());
+		//timer.after(1, _ => perf.nw());
 		print.qm2.use = true;
 		//print.clear();
 		//print.redirectConsoleOutput = true; //cannot be before the CommandLine.ProgramStarted1 call.
@@ -85,7 +98,7 @@ static class App
 		Loaded = EProgramState.LoadedWorkspace;
 		Model.RunStartupScripts();
 
-		timerm.every(1000, t => _TimerProc(t));
+		timer.every(1000, t => _TimerProc(t));
 		//note: timer can make Process Hacker/Explorer show CPU usage, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, <0.01 if 1000.
 		//Timer1s += () => print.it("1 s");
 		//Timer1sOr025s += () => print.it("0.25 s");
@@ -154,7 +167,7 @@ static class App
 	public static bool IsTimer025 => s_timerCounter > 0;
 	static uint s_timerCounter;
 
-	static void _TimerProc(timerm t) {
+	static void _TimerProc(timer t) {
 		Timer1sOr025s?.Invoke();
 		bool needFast = Wmain?.IsVisible ?? false;
 		if (needFast != (s_timerCounter > 0)) t.Every(needFast ? 250 : 1000);
@@ -256,9 +269,9 @@ static class App
 				//d.uVersion = Api.NOTIFYICON_VERSION_4;
 				//Api.Shell_NotifyIcon(Api.NIM_SETVERSION, d);
 
-				//timerm.after(2000, _ => Update(TrayIconState.Disabled));
-				//timerm.after(3000, _ => Update(TrayIconState.Running));
-				//timerm.after(4000, _ => Update(TrayIconState.Normal));
+				//timer.after(2000, _ => Update(TrayIconState.Disabled));
+				//timer.after(3000, _ => Update(TrayIconState.Running));
+				//timer.after(4000, _ => Update(TrayIconState.Normal));
 			} else if (!restore) { //restore when "TaskbarCreated" message received. It is also received when taskbar DPI changed.
 				Debug_.Print(lastError.message);
 			}

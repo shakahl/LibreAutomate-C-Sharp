@@ -5,6 +5,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Controls.Primitives;
 using System.Linq;
+using System.Windows.Threading;
 
 namespace Au.Tools;
 
@@ -243,6 +244,26 @@ static class TUtil
 
 	#region misc
 
+	public static void ShowDialogInNonmainThread(Func<KDialogWindow> newDialog) {
+		if (Environment.CurrentManagedThreadId != 1) _Show(false); //cannot simply pass an iaccessible to other thread
+		else run.thread(() => _Show(true)); //don't allow the main thread to hang when something is slow when working with UI elements or executing 'also' code
+
+		void _Show(bool dialog) {
+			try { //unhandled exception kills process if in nonmain thread
+				var d = newDialog();
+				if (dialog) d.ShowDialog(); else d.Show();
+			}
+			catch (Exception e1) { print.it(e1); }
+		}
+	}
+
+	public static void CloseDialogsInNonmainThreads() {
+		//close tool windows running in other threads. Elso they would not save their rect etc.
+		var aw = wnd.findAll(null, "HwndWrapper[*", WOwner.Process(process.thisProcessId), WFlags.CloakedToo | WFlags.HiddenToo,
+			also: o => o.Prop["close me on exit"] == 1);
+		foreach (var v in aw) v.SendTimeout(1000, out _, Api.WM_CLOSE);
+	}
+
 	/// <summary>
 	/// Gets control id. Returns true if it can be used to identify the control in window wWindow.
 	/// </summary>
@@ -370,25 +391,31 @@ static class TUtil
 	/// <summary>
 	/// Creates standard <see cref="osdRect"/>.
 	/// </summary>
-	public static osdRect CreateOsdRect(int thickness = 4) => new() { Color = 0xFFFF0000, Thickness = thickness }; //red
+	public static osdRect CreateOsdRect(int thickness = 4) => new() { Color = 0xFFFF0000, Thickness = thickness, TopmostWorkaround_ = true }; //red
 
 	/// <summary>
 	/// Briefly shows standard blinking on-screen rectangle.
+	/// If disp, shows async in its thread.
 	/// </summary>
-	public static void ShowOsdRect(RECT r, bool error = false, bool limitToScreen = false) {
+	public static void ShowOsdRect(RECT r, bool error = false, bool limitToScreen = false, Dispatcher disp = null) {
+		if (disp != null) {
+			disp.InvokeAsync(() => ShowOsdRect(r, error, limitToScreen));
+			return;
+		}
+
 		int thick = error ? 6 : 2;
-		var osr = new osdRect { Color = 0xFFFFFF00, Thickness = thick * 2 }; //yellow
+		var osr = new osdRect { Color = 0xFFFFFF00, Thickness = thick * 2, TopmostWorkaround_ = true }; //yellow
 		r.Inflate(thick, thick); //2 pixels inside, 2 outside
 		if (limitToScreen) {
 			var k = screen.of(r).Rect;
 			r.Intersect(k);
-		}
+		} else _LimitInsaneRect(ref r);
 		osr.Rect = r;
 		t_hideCapturingRect = true;
 		osr.Show();
 
 		int i = 0;
-		timerm.every(250, t => {
+		timer.every(250, t => {
 			if (i++ < 5) {
 				osr.Hwnd.ZorderTop();
 				osr.Color = (i & 1) != 0 ? (error ? 0xFFFF0000 : 0xFF0000FF) : 0xFFFFFF00; //(red : blue) : yellow
@@ -402,6 +429,14 @@ static class TUtil
 
 	[ThreadStatic] static bool t_hideCapturingRect;
 
+	//eg VS Code code editor and output are {W=1000000 H=1000000}. Then the rect drawing code would fail.
+	static void _LimitInsaneRect(ref RECT r) {
+		if (r.Width > 2000 || r.Height > 1200) {
+			var rs = screen.virtualScreen; rs.Inflate(100, 100);
+			r.Intersect(rs);
+		}
+	}
+
 	#endregion
 
 	#region capture
@@ -413,20 +448,19 @@ static class TUtil
 	{
 		readonly KCheckBox _captureCheckbox;
 		readonly Action _cbCapture;
-		readonly Func<RECT?> _cbGetRect;
+		readonly Func<POINT, (RECT? r, string s)> _cbGetRect;
 		HwndSource _hs;
-		timerm _timer;
-		long _prevTime;
-		//wnd _prevWnd;
+		timer _timer;
 		osdRect _osr;
+		osdText _ost; //SHOULDDO: draw rect and text in same OsdWindow
 		bool _capturing;
 		const string c_propName = "Au.Capture";
 		readonly static int s_stopMessage = Api.RegisterWindowMessage(c_propName);
 		const int c_hotkeyId = 1623031890;
 
 		/// <param name="captureCheckbox">Checkbox that turns on/off capturing.</param>
-		/// <param name="getRect">Called to get rectangle of object from mouse. Can return default to hide rectangle.</param>
-		public CaptureWindowEtcWithHotkey(KCheckBox captureCheckbox, Action capture, Func<RECT?> getRect) {
+		/// <param name="getRect">Called to get rectangle of object from mouse. Receives mouse position. Can return default to hide the rectangle.</param>
+		public CaptureWindowEtcWithHotkey(KCheckBox captureCheckbox, Action capture, Func<POINT, (RECT? r, string s)> getRect) {
 			_captureCheckbox = captureCheckbox;
 			_cbCapture = capture;
 			_cbGetRect = getRect;
@@ -461,45 +495,56 @@ static class TUtil
 						_hs.Disposed += (_, _) => {
 							Capturing = false;
 							_osr?.Dispose();
+							_ost?.Dispose();
 						};
 					}
 					_hs.AddHook(_WndProc);
 
-					//set timer that shows UI element rect
+					//set timer to show rectangles of UI element from mouse
 					if (_timer == null) {
 						_osr = TUtil.CreateOsdRect(2);
-						_timer = new timerm(t => {
-							//Don't capture too frequently.
-							//	Eg if the callback is very slow. Or if multiple timer messages are received without time interval (possible in some conditions).
-							long t1 = perf.ms, t2 = t1 - _prevTime; _prevTime = t1; if (t2 < 100) return;
+						_timer = new timer(t => {
+							int t1 = Environment.TickCount;
 
-							//show rect of UI object from mouse
-							wnd w = wnd.fromMouse(WXYFlags.NeedWindow);
-							RECT? r = default;
-							if (!(w.Is0 || w == wDialog || w.OwnerWindow == wDialog)) {
-								r = _cbGetRect();
+							POINT p = mouse.xy;
+							wnd w = wnd.fromXY(p, WXYFlags.NeedWindow);
+							RECT? r = default; string text = null;
+							if (!(w.Is0 || w == wDialog || w.Get.Owner == wDialog)) {
+								(r, text) = _cbGetRect(p);
 
-								//F3 does not work if this process has lower UAC IL than the foreground process. Normally editor is admin, but if portable etc...
-								//Shift+F3 too. But Ctrl+F3 works.
-								//if (w!=_prevWnd && w.IsActive) {
-								//	w = _prevWnd;
+								//F3 does not work if this process has lower UAC IL than the foreground process.
+								//	Normally editor is admin, but if portable etc...
+								//	Shift+F3 too. But Ctrl+F3 works.
+								//if (w!=wPrev && w.IsActive) {
+								//	w = wPrev;
 								//	if(w.UacAccessDenied)print.it("F3 ");
 								//}
 							}
 							if (r.HasValue && !t_hideCapturingRect) {
 								var rr = r.GetValueOrDefault();
 								rr.Inflate(1, 1); //1 pixel inside, 1 outside
+								_LimitInsaneRect(ref rr);
 								_osr.Rect = rr;
 								_osr.Show();
-								//FUTURE: also display UI object role.
-								//	Eg often user wants to capture a LINK, but there is a child TEXT.
-								//	Also mouse x y in it. For MouseClick and VirtualClick.
+								if (!text.NE()) {
+									_ost ??= new() { Font = new(8), Shadow = false, ShowMode = OsdMode.ThisThread, SecondsTimeout = -1 };
+									_ost.Text = text;
+									var ro = _ost.Measure();
+									var rs = screen.of(rr).Rect;
+									int x = rr.left, y = rr.top + 8;
+									if (rr.top - rs.top >= ro.Height) y = rr.top - ro.Height; else if (rr.Height < 200) y = rr.bottom; else x += 8;
+									_ost.XY = new(x, y, false);
+									_ost.Show();
+								} else if (_ost != null) _ost.Visible = false;
 							} else {
 								_osr.Visible = false;
+								if (_ost != null) _ost.Visible = false;
 							}
+
+							_timer.After(Math.Min(Environment.TickCount - t1 + 200, 2000)); //normally the timer priod is ~250 ms
 						});
 					}
-					_timer.Every(250);
+					_timer.After(250);
 				} else {
 					_capturing = false;
 					_hs.RemoveHook(_WndProc);
@@ -508,6 +553,7 @@ static class TUtil
 					wDialog.Prop.Remove(c_propName);
 					_timer.Stop();
 					_osr.Hide();
+					_ost?.Hide();
 				}
 			}
 		}
@@ -530,31 +576,36 @@ static class TUtil
 
 	/// <summary>
 	/// Executes test code that finds an object in window.
-	/// Returns the found object and speed. On error speed negative.
+	/// Returns the found object, speed and info strings to display. On error speed negative.
 	/// </summary>
 	/// <param name="code">
 	/// Must start with one or more lines that find window or control and set wnd variable named <i>wndVar</i>. Can be any code.
 	/// The last line must be a 'find object' function call, like <c>uiimage.find(...);</c>. No 'var x = ', no 'not found' exception, no wait, no action.
 	/// </param>
+	/// <param name="owner">Owner dialog.</param>
 	/// <param name="wndVar">Name of wnd variable of the window or control in which to search.</param>
 	/// <param name="w">Window or control in which to search.</param>
-	/// <param name="tInfo">For error info.</param>
 	/// <param name="getRect">Callback function that returns object's rectangle in screen. Called when object has been found.</param>
 	/// <param name="activateWindow">Between finding window and object in it, activate the found window and wait 200 ms.</param>
-	/// <remarks>
-	/// The test code is executed in this thread. Else would get invalid UI element etc. If need, caller can use Task.Run.
-	/// </remarks>
+	/// <param name="rectDisp">Use this dispatcher to show rectangles. For example if calling this in a non-UI thread and want to show in UI thread.</param>
 	/// <example>
 	/// <code><![CDATA[
-	/// var r = await TUtil.RunTestFindObject(code, _wndVar, _wnd, _info, o => (o as elm).Rect);
+	/// var rr = TUtil.RunTestFindObject(this, code, wndVar, _wnd, o => (o as elm).Rect);
+	/// _info.InfoErrorOrInfo(rr.info);
 	/// ]]></code>
 	/// </example>
-	public static (object obj, long speed, string sSpeed) RunTestFindObject(
-		string code, string wndVar, wnd w, KSciInfoBox tInfo, Func<object, RECT> getRect, bool activateWindow = false) {
+	public static (object obj, long speed, InfoStrings info) RunTestFindObject(
+		AnyWnd owner, string code, string wndVar, wnd w,
+		Func<object, RECT> getRect = null,
+		/*
+		/// <param name="invoke">Callback that executes the code. Let it call/return MethodInfo.Invoke(null, null). For example if wants to execute in other thread. If null, the code is executed in this thread.</param>
+		Func<MethodInfo, object> invoke = null
+		*/
+		bool activateWindow = false, Dispatcher rectDisp = null) {
+
 		if (code.NE()) return default;
-		wnd dlg = tInfo.Hwnd();
+		wnd dlg = owner.Hwnd;
 		bool dlgWasActive = dlg.IsActive, dlgMinimized = false;
-		//tInfo.zText = "Searching..."; Api.UpdateWindow(tInfo.Hwnd); //no, in most cases it just flickers for 5-50 ms. And cannot use a timer because this thread is blocked while searching.
 
 		//print.it(code);
 		//perf.first();
@@ -580,22 +631,18 @@ static class TUtil
 		try {
 			if (!Au.Compiler.Scripting.Compile(code, out var c, addUsings: true, addGlobalCs: true, wrapInClass: true, dll: true)) {
 				Debug_.Print("---- CODE ----\r\n" + code + "--------------");
-				tInfo.InfoError("Errors:", $"{c.errors}\r\n\r\n<Z #C0C0C0><b>Code:<><>\r\n<code>{code0}</code>");
 				//shows code too, because it may be different than in the code box
-				return (null, -1, null);
-			} else {
-				var rr = (object[])c.method.Invoke(null, null); //use array because fails to cast tuple, probably because in that assembly it is new type
-				r = ((long[])rr[0], rr[1], (wnd)rr[2]);
+				return (null, -1, new(true, "Errors:", $"{c.errors}\r\n\r\n<Z #C0C0C0><b>Code:<><>\r\n<code>{code0}</code>"));
 			}
-
-			//note: the script runs in this thread.
-			//	Bad: blocks current UI thread. But maybe not so bad. Good: don't need to disable the Test button or dlg.
-			//	Good: we get valid elm result. Else it would be marshalled for a script thread.
+			//object ro = invoke?.Invoke(c.method) ?? c.method.Invoke(null, null);
+			object ro = c.method.Invoke(null, null);
+			var rr = (object[])ro; //use array because fails to cast tuple, probably because in that assembly it is new type
+			r = ((long[])rr[0], rr[1], (wnd)rr[2]);
 		}
 		catch (Exception e) {
 			if (e is TargetInvocationException tie) e = tie.InnerException;
 			string s1, s2;
-			if (e is NotFoundException) { //info: throws only when window not found. This is to show time anyway when elm etc not found.
+			if (e is NotFoundException) { //info: throws only when window not found
 				s1 = "Window not found";
 				s2 = "Tip: If part of window name changes, replace it with *";
 			} else {
@@ -603,8 +650,7 @@ static class TUtil
 				s2 = e.Message.RxReplace(@"^Exception of type '.+?' was thrown. ", "");
 				if (e.StackTrace.RxMatch(@"(?m)^\s*( at .+?)\(.+\R\s+\Qat __script__.__TestFunc__()\E", 1, out string s3)) s1 += s3;
 			}
-			tInfo.InfoError(s1, s2);
-			return (null, -2, null);
+			return (null, -2, new(true, s1, s2));
 		}
 
 		//perf.nw();
@@ -619,7 +665,7 @@ static class TUtil
 		if (r.obj is wnd w1 && w1.Is0) r.obj = null;
 		if (r.obj != null) {
 			var re = getRect(r.obj);
-			ShowOsdRect(re);
+			ShowOsdRect(re, disp: rectDisp);
 
 			//if dlg covers the found object, temporarily minimize it (may be always-on-top) and activate object's window. Never mind owners.
 			var wTL = r.w.Window;
@@ -632,35 +678,32 @@ static class TUtil
 
 		if (dlgWasActive || dlgMinimized) {
 			int after = activateWindow && !dlgMinimized && r.w == w ? 1500 : 300;
-			timerm.after(after, _ => {
+			timer.after(after, _ => {
 				if (dlgMinimized) dlg.ShowNotMinimized(noAnimation: true);
 				if (dlgWasActive) dlg.ActivateL();
 			});
 		}
 
 		if (r.w != w && !r.w.Is0) {
-			tInfo.InfoError("Finds another " + (r.w.IsChild ? "control" : "window"), $"<i>Need:<>  {w}\r\n<i>Found:<>  {r.w}");
-			ShowOsdRect(r.w.Rect, error: true, limitToScreen: true);
+			ShowOsdRect(r.w.Rect, error: true, limitToScreen: true, disp: rectDisp);
 			//FUTURE: show list of objects inside the wanted window, same as in the Dwnd 'contains' combo. Let user choose. Then update window code quickly.
-			return (null, -3, null);
+			//string wndCode = null;
+			//wndCode = "wnd w = wnd.find(\"Other\");";
+			return (null, -3, new(true, "Finds another " + (r.w.IsChild ? "control" : "window"), $"<i>Need:<>  {w}\r\n<i>Found:<>  {r.w}"));
 		}
 
-		if (r.obj != null) {
-			tInfo.InfoInfo("Found", null, ",  speed " + sSpeed);
-		} else {
-			tInfo.InfoError("Not found", null, ",  speed " + sSpeed);
-		}
-
-		return (r.obj, r.speed[1], sSpeed);
+		return (r.obj, r.speed[1], new(r.obj == null, r.obj != null ? "Found" : "Not found", null, ",  speed " + sSpeed));
 	}
+
+	public record InfoStrings(bool isError, string header, string text, string headerSmall = null);
 
 	/// <summary>
 	/// Executes action code for a found UI element etc.
 	/// </summary>
+	/// <returns>Error strings to display, or null if no error.</returns>
 	/// <param name="obj">The element. The function passes it to the test script.</param>
 	/// <param name="code">Code like "Method(arguments)". The function prepends "obj." and appends ";".</param>
-	/// <param name="tInfo">For errors.</param>
-	public static void RunTestAction(object obj, string code, KSciInfoBox tInfo) {
+	public static InfoStrings RunTestAction(object obj, string code) {
 		var code0 = code;
 		code = $@"static void __TestFunc__({obj.GetType()} obj) {{
 #line 1
@@ -669,15 +712,14 @@ obj.{code};
 		//print.it(code);
 
 		try {
-			if (!Au.Compiler.Scripting.Compile(code, out var c, addUsings: true, addGlobalCs: true, wrapInClass: true, dll: true)) {
-				tInfo.InfoError("Errors:", $"{c.errors}\r\n\r\n<Z #C0C0C0><b>Code:<><>\r\n<code>obj.{code0};</code>");
-			} else {
-				c.method.Invoke(null, new[] { obj });
-			}
+			if (!Au.Compiler.Scripting.Compile(code, out var c, addUsings: true, addGlobalCs: true, wrapInClass: true, dll: true))
+				return new(true, "Errors:", $"{c.errors}\r\n\r\n<Z #C0C0C0><b>Code:<><>\r\n<code>obj.{code0};</code>");
+			c.method.Invoke(null, new[] { obj });
+			return null;
 		}
 		catch (Exception e) {
 			if (e is TargetInvocationException tie) e = tie.InnerException;
-			tInfo.InfoError("Action failed", e.GetType().Name + ". " + e.Message.RxReplace(@"^Exception of type '.+?' was thrown. ", ""));
+			return new(true, "Action failed", e.GetType().Name + ". " + e.Message.RxReplace(@"^Exception of type '.+?' was thrown. ", ""));
 		}
 	}
 
@@ -693,6 +735,11 @@ obj.{code};
 	public static void InfoInfo(this KSciInfoBox t, string header, string text, string headerSmall = null) {
 		t.zText = $"<Z #C0E0C0><b>{header}<>{headerSmall}<>\r\n{text}";
 		t.ZSuspendElems();
+	}
+
+	public static void InfoErrorOrInfo(this KSciInfoBox t, InfoStrings info) {
+		if (info.isError) InfoError(t, info.header, info.text, info.headerSmall);
+		else InfoInfo(t, info.header, info.text, info.headerSmall);
 	}
 
 	public static void Info(this KSciInfoBox t, FrameworkElement e, string name, string text) {

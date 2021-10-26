@@ -89,7 +89,7 @@ class CiPopupText
 		_w.ShowByRect(ownerControl, side, anchorRect);
 
 		if (hideIfOutside) {
-			timerm.every(100, t => {
+			timer.every(100, t => {
 				if (IsVisible) {
 					var p = mouse.xy;
 					if (anchorRect.Contains(p) || _w.Hwnd.Rect.Contains(p) || _c.IsMouseCaptureWithin) return;

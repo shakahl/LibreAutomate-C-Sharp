@@ -46,10 +46,11 @@
 			//RealChildWindowFromPoint does not skip transparent TL. It works like ChildWindowFromPointEx(CWP_SKIPINVISIBLE).
 			//None of the above API prefers a really visible control that is under a transparent part of a sibling control. RealChildWindowFromPoint does it only for group buttons, but not for tab controls etc.
 			//All API skip windows that have a hole etc in window region at that point.
-			//None of the API uses WM_NCHITTEST+HTTRANSPARENT. Tested only with TL of other processes.
+			//If same thread, WindowFromPoint uses WM_NCHITTEST+HTTRANSPARENT. Other API tested only with TL of other processes and don't use.
 			//AccessibleObjectFromPoint too dirty, unreliable and often very slow, because sends WM_GETOBJECT etc.
 			//IUIAutomation.FromPoint very slow. Getting window handle from it is not easy, > 0.5 ms.
 		}
+
 		//rejected: FromXY(Coord, Coord, ...). Coord makes no sense; could be int int, but it's easy to create POINT from it.
 
 		/// <summary>

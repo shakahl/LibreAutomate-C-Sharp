@@ -9,8 +9,8 @@ namespace Au
 		toolbar _satPlanet;
 		bool _satVisible;
 		int _satAnimation;
-		timerm _satTimer;
-		timerm _satAnimationTimer;
+		timer _satTimer;
+		timer _satAnimationTimer;
 		screen _screenAHSE;
 
 		/// <summary>
@@ -59,16 +59,16 @@ namespace Au
 				_satellite._CreateWindow(true, owner);
 				_satellite._ow = new _OwnerWindow(owner);
 				_satellite._ow.a.Add(_satellite);
-				var w1 = _satellite._w; w1.OwnerWindow = owner; //let OS keep Z order and close/hide when owner toolbar closed/minimized
+				WndUtil.SetOwnerWindow(_satellite._w, owner); //let OS keep Z order and close/hide when owner toolbar closed/minimized
 			}
 			_SatFollow();
 			_SatShowHide(true, animate: true);
 
-			_satTimer ??= new timerm(_SatTimer);
+			_satTimer ??= new timer(_SatTimer);
 			_satTimer.Every(100);
 		}
 
-		void _SatTimer(timerm _) {
+		void _SatTimer(timer _) {
 			Debug.Assert(IsOpen);
 			if (_inMoveSize || _satellite._inMoveSize) return;
 
@@ -124,7 +124,7 @@ namespace Au
 				return;
 			}
 
-			_satAnimationTimer ??= new timerm(_ => {
+			_satAnimationTimer ??= new timer(_ => {
 				_satAnimation += _satVisible ? 64 : -32;
 				bool stop; if (_satVisible) { if (stop = _satAnimation >= 255) _satAnimation = 255; } else { if (stop = _satAnimation <= 0) _satAnimation = 0; }
 				if (stop) {

@@ -79,7 +79,7 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="color">0xBBGGRR</param>
 		public void DrawText(string s, int color = 0, Range? range = null) {
-			var (from, len) = range.GetOffsetAndLength(s.Length); if (len == 0) return;
+			var (from, len) = range.GetOffsetAndLength(s.Lenn()); if (len == 0) return;
 			if (_oldAlign == 0xffffffff) _oldAlign = Api.SetTextAlign(_dc, 1); //TA_UPDATECP
 			_DrawText(s, 0, 0, color, from, len);
 		}
@@ -89,7 +89,7 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="color">0xBBGGRR</param>
 		public void DrawText(string s, POINT p, int color = 0, Range? range = null) {
-			var (from, len) = range.GetOffsetAndLength(s.Length); if (len == 0) return;
+			var (from, len) = range.GetOffsetAndLength(s.Lenn()); if (len == 0) return;
 			if (_oldAlign != 0xffffffff) { Api.SetTextAlign(_dc, _oldAlign); _oldAlign = 0xffffffff; }
 			_DrawText(s, p.x, p.y, color, from, len);
 		}
@@ -99,7 +99,7 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="color">0xBBGGRR</param>
 		public void DrawText(string s, in RECT r, int color = 0, Range? range = null) {
-			var (from, len) = range.GetOffsetAndLength(s.Length); if (len == 0) return;
+			var (from, len) = range.GetOffsetAndLength(s.Lenn()); if (len == 0) return;
 			if (_oldAlign != 0xffffffff) { Api.SetTextAlign(_dc, _oldAlign); _oldAlign = 0xffffffff; }
 			_DrawText(s, r, color, from, len);
 		}
@@ -116,7 +116,7 @@ namespace Au.Controls
 		}
 
 		public SIZE MeasureText(string s, Range? range = null) {
-			var (from, len) = range.GetOffsetAndLength(s.Length); if (len == 0) return default;
+			var (from, len) = range.GetOffsetAndLength(s.Lenn()); if (len == 0) return default;
 			fixed (char* p = s) {
 				Api.GetTextExtentPoint32(_dc, p + from, len, out var z);
 				return z;

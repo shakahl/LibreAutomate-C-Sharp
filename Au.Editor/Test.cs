@@ -306,7 +306,7 @@ static unsafe class Test
 			if (Environment.HasShutdownStarted) return;
 			if (AppDomain.CurrentDomain.IsFinalizingForUnload()) return;
 			print.it("GC", GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2));
-			//timerm.after(1, _ => new TestGC());
+			//timer.after(1, _ => new TestGC());
 			//var f = App.Wmain; if(!f.IsHandleCreated) return;
 			//f.BeginInvoke(new Action(() => new TestGC()));
 			new TestGC();
@@ -319,10 +319,10 @@ static unsafe class Test
 		//	s_debug2 = true;
 		//	new TestGC();
 
-		//	//timerm.every(50, _ => {
+		//	//timer.every(50, _ => {
 		//	//	if(!s_debug) {
 		//	//		s_debug = true;
-		//	//		timerm.after(100, _ => new TestGC());
+		//	//		timer.after(100, _ => new TestGC());
 		//	//	}
 		//	//});
 		//}

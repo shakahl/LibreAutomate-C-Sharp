@@ -18,6 +18,9 @@
 				if (_systemDPI == 0) {
 					using var dcs = new ScreenDC_();
 					_systemDPI = Api.GetDeviceCaps(dcs, 90); //LOGPIXELSY
+
+					//could use GetDpiForSystem instead (Windows 10 1607).
+					//	Normally the same result (tested), but probably not if thread awareness context is Unaware (not tested).
 				}
 				return _systemDPI;
 			}
@@ -25,59 +28,46 @@
 		static int _systemDPI;
 
 		/// <summary>
-		/// Gets DPI of a window.
+		/// Gets the DPI of a window, as used by the window's process. It never changes for that window instance.
 		/// </summary>
-		/// <param name="w">Top-level window or control. Can belong to any process.</param>
-		/// <param name="ofScreen">
-		/// If true, the function gets DPI for which the window is (or should be) scaled, either by the program or by the OS; it depends on window's current screen DPI.
-		/// If false (default), gets DPI used internally by the window's program; it does not depend on whether the window is OS-scaled; it never changes for that window instance.
+		/// <param name="w">A top-level window or control. Can belong to any process.</param>
+		/// <param name="supportWin81">
+		/// If true, works on Windows 8.1 and later; however on Windows 8.1 slower and less reliable.
+		/// If false (default), works on Windows 10 1607 and later.
 		/// </param>
 		/// <remarks>
-		/// If <i>ofScreen</i> is false (default), the result depends on the DPI awareness of the window:
-		/// - per-monitor-DPI-aware - usually DPI of windows's screen.
-		/// - system aware - system DPI (DPI of primary screen).
+		/// The result depends on the DPI awareness of the window:
+		/// - per-monitor-DPI-aware - usually DPI of the windows's screen.
+		/// - system aware - system DPI (DPI of the primary screen).
 		/// - unaware - 96.
 		/// 
-		/// To get window's internal DPI, on Windows 10 1607 and later uses API <msdn>GetDpiForWindow</msdn>. On Windows 8.1 and early Windows 10, if <see cref="SupportPMOnWin8_1"/> is true, uses API <msdn>GetDpiForMonitor</msdn>. Older Windows versions don't support per-monitor DPI.
+		/// The result also depends on the Windows version:
+		/// - Works best on Windows 10 1607 and later. Uses API <msdn>GetDpiForWindow</msdn>.
+		/// - On Windows 8.1 works if <i>supportWin81</i> true. If false (default), returns <see cref="System"/>.
+		/// - On Windows 7 and 8.0 always returns <see cref="System"/>, because there are no Windows API. Most apps are system-DPI-aware and the result is correct; for unaware apps the result is incorrect. These Windows versions don't support per-monitor DPI.
 		/// 
-		/// Returns the system DPI (<see cref="System"/>) if fails or if not supported on this Windows version (see <see cref="SupportPMOnWin8_1"/>).
-		/// 
-		/// On Windows 7 and 8.0 always returns the system DPI, because of lack of Windows API; it is always correct only if <i>ofScreen</i> is true.
+		/// Returns the system DPI (<see cref="System"/>) if fails.
 		/// </remarks>
-		public static int OfWindow(wnd w, bool ofScreen = false) {
+		public static int OfWindow(wnd w, bool supportWin81 = false) {
 			if (!osVersion.minWin8_1) return System;
 			int R = 0;
 			if (!w.Is0) {
-				if (ofScreen) {
-					//	if(Api.GetSystemMetrics(SM_CMONITORS)<2) return screen.primary.Dpi; //slow
-					switch (WindowDpiAwareness(w)) {
-					case Awareness.PerMonitor: break;
-					case Awareness.Invalid: return System;
-					default: return _OfScreen(w);
-					}
-
-					//Good: when a non-pm-dpi-aware window is in 2 screens, MonitorFromWindow(w) gets screen that matches window's DPI scaling.
-					//	It can be different than MonitorFromRect(w.Rect). Tested on Win10; never mind Win8.1.
-
-					//Windows bug: if a non-pm-dpi-aware program is set pm-dpi-aware (in file Properties dialog), after changing screen DPI the API still returns old value.
-					//	Works correctly when window DPI changes when moving between screens.
-					//	Never mind. This is rare*rare.
-				}
 				if (osVersion.minWin10_1607) R = Api.GetDpiForWindow(w);
-				else if (ofScreen || SupportPMOnWin8_1) return _OfScreen(w);
+				else if (supportWin81) {
+					var v = WindowDpiAwareness(w); //info: quickly returns Awareness.PerMonitor if w.IsOfThisProcess
+					if (v == Awareness.Unaware) R = 96;
+					else if (v == Awareness.PerMonitor)
+						if (0 != Api.GetDpiForMonitor(Api.MonitorFromWindow(w.Window, SODefault.Nearest), 0, out R, out _)) R = 0;
+				}
 			}
 			return R != 0 ? R : System;
-
-			static int _OfScreen(wnd w) {
-				var hm = Api.MonitorFromWindow(w.Window, SODefault.Nearest);
-				return 0 == Api.GetDpiForMonitor(hm, 0, out int R, out _) ? R : System;
-			}
 		}
 
 		/// <summary>
 		/// Returns <c>OfWindow(w.Hwnd())</c>.
 		/// </summary>
 		public static int OfWindow(System.Windows.Forms.Control w) => OfWindow(w.Hwnd());
+		//rejected: supportWin81
 
 		/// <summary>
 		/// Returns <c>OfWindow(w.Hwnd())</c>.
@@ -86,35 +76,21 @@
 
 		/// <summary>
 		/// Gets DPI of a screen.
-		/// Returns <see cref="System"/> if fails or if not supported on this Windows version (see <see cref="SupportPMOnWin8_1"/>).
+		/// Returns <see cref="System"/> if fails or if not supported on this Windows version.
 		/// </summary>
+		/// <param name="hMonitor">Native screen handle (HMONITOR).</param>
+		/// <param name="supportWin81">Support Windows 8.1 and later. If false (default), supports Windows 10 1607 and later.</param>
 		/// <remarks>
 		/// Uses API <msdn>GetDpiForMonitor</msdn>.
 		/// </remarks>
-		/// <seealso cref="screen.of"/>
-		public static int OfScreen(IntPtr hMonitor) {
-			return
-				(SupportPMOnWin8_1 ? osVersion.minWin8_1 : osVersion.minWin10_1607) && 0 == Api.GetDpiForMonitor(hMonitor, 0, out int R, out _)
-				? R
-				: System;
+		/// <seealso cref="screen.Dpi"/>
+		public static int OfScreen(IntPtr hMonitor, bool supportWin81 = false) {
+			bool os = supportWin81 ? osVersion.minWin8_1 : osVersion.minWin10_1607;
+			return os && 0 == Api.GetDpiForMonitor(hMonitor, 0, out int R, out _) ? R : System;
 		}
 
-		/// <summary>
-		/// If true, <see cref="OfScreen"/> and <see cref="OfWindow"/> will support per-monitor DPI on Windows 8.1 and later.
-		/// If false (default) - on Windows 10 1607 and later; on 8.1 will always return <see cref="System"/>.
-		/// </summary>
-		/// <remarks>
-		/// This is a per-thread property. You can change/restore it before/after calling these functions.
-		/// Before Windows 10 1607 it is difficult to support per-monitor DPI because of lack of API and OS/.NET support.
-		/// </remarks>
-		[field: ThreadStatic]
-		public static bool SupportPMOnWin8_1 { get; set; }
-
-		///// <summary>
-		///// Gets small icon size that depends on DPI of the primary screen.
-		///// Width and Height are <see cref="OfThisProcess"/>/6, which is 16 if DPI is 96 (100%).
-		///// </summary>
-		//internal static SIZE SmallIconSize_ { get { var t = OfThisProcess / 6; return new SIZE(t, t); } } //same as icon.sizeSmall
+		/////
+		//public static int OfScreen(screen s, bool supportWin81 = false) => OfScreen(s.Now, supportWin81);
 
 		/// <summary>
 		/// Scales <b>int</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
@@ -237,47 +213,146 @@
 		/// <summary>
 		/// Gets DPI awareness of a window.
 		/// </summary>
+		/// <returns>Returns <b>Awareness.Invalid</b> if failed.</returns>
+		/// <param name="w">A top-level window or control. Can belong to any process.</param>
 		/// <remarks>
-		/// On Windows 7 and 8.0 always returns <b>System</b>, because of lack of Windows API.
+		/// Works best on Windows 10 1607 and later; uses API <msdn>GetWindowDpiAwarenessContext</msdn>.
+		/// On Windows 8.1 returns <b>Awareness.PerMonitor</b> if <i>w</i> is of this process; else uses API <msdn>GetProcessDpiAwareness</msdn>, which is slower and less reliable.
+		/// On Windows 7 and 8.0 always returns <b>System</b>, because there are no Windows API.
 		/// </remarks>
 		public static Awareness WindowDpiAwareness(wnd w) {
 			if (osVersion.minWin10_1607) {
-				var c = Api.GetWindowDpiAwarenessContext(w);
-				return Api.GetAwarenessFromDpiAwarenessContext(c);
+				return Api.GetAwarenessFromDpiAwarenessContext(Api.GetWindowDpiAwarenessContext(w));
 			} else if (osVersion.minWin8_1) {
+				if (w.IsOfThisProcess) return Awareness.PerMonitor;
 				using var hp = Handle_.OpenProcess(w);
 				return (!hp.Is0 && 0 == Api.GetProcessDpiAwareness(hp, out var a)) ? a : Awareness.Invalid;
 			} else {
-				return _IsWindowScaledWin7(w) switch { true => Awareness.Unaware, false => Awareness.System, _ => Awareness.Invalid };
+				return Awareness.System;
+				//could use, IsWindowVirtualized (except if of this process), but slow and unreliable.
 			}
 		}
 
-		static bool? _IsWindowScaledWin7(wnd w) {
-#if DPI_WIN7
-			if(Dpi.OfThisProcess==96) return w.IsAlive ? false : null;
-	
-			bool retry=false;
-			g1:
-			//test a point in hwnd most far from screen 0 0. Never mind: cannot detect DPI-scaled window if the point is 0 0 or near. 
-			if(!w.GetRect(out var r)) return null;
-			POINT p=new(Math.Abs(r.left)>Math.Abs(r.right) ? r.left : r.right, Math.Abs(r.top)>Math.Abs(r.bottom) ? r.top : r.bottom), pp=p;
-			if(LogicalToPhysicalPoint(w, ref p)) return p!=pp;
-			//tested: the logical/physical conversion API work with hidden and off-screen top-level windows too. Minimized windows are off-screen.
-	
-			//if control, retry with top-level window. LTPP fails if control is zero-size or not in window rect.
-			if(!retry) {
-				retry=true;
-				var tl=w.Window;
-				if(tl.Is0) return null;
-				if(tl!=w) { w=tl; goto g1; }
-			}
-			//maybe the window moved/resized while testing. Then LTPP fails if the point is not in the window.
-			if(!w.GetRect(out var rr) || rr==r) return null;
-			goto g1;
-#else
-			return w.IsAlive ? false : null;
-#endif
+		/// <summary>
+		/// Detects whether the window is DPI-scaled/virtualized.
+		/// </summary>
+		/// <returns>Returns false if not DPI-scaled/virtualized or if fails to detect or if invalid window handle.</returns>
+		/// <param name="w">A top-level window or control. Can belong to any process.</param>
+		/// <remarks>
+		/// The user can recognize such windows easily: entire client area is a little blurry.
+		/// 
+		/// OS scales a window when it is on a high-DPI screen, depending on the DPI awareness of the window:
+		/// - Unaware - always.
+		/// - System - if the screen DPI is not equal to the system DPI of that process (which usually is of the primary screen, but not always).
+		/// 
+		/// Such windows have various problems for automation apps:
+		/// - Often difficult or impossible to get correct rectangles of UI elements (and therefore cannot click etc) or get correct UI element from point. It depends on used API (UIA, MSAA, JAB), inproc/notinproc, OS version and application.
+		/// - On Windows 7 and 8.0 cannot easily get correct rectangles of such windows and their controls. This library ignores it, because would be too much work to apply workarounds in so many places and just for legacy OS versions (it has been fixed in Windows 8.1).
+		/// - If with <see cref="uiimage"/> want to use window pixels, need to capture image from window pixels, not from screen pixels.
+		/// 
+		/// This function is not completely reliable. And not very fast. This process should be per-monitor-DPI-aware.
+		/// </remarks>
+		public static bool IsWindowVirtualized(wnd w) {
+			if (GetScalingInfo_(w, out bool scaled, out _, out _)) return scaled;
+			return IsWindowVirtualizedLegacy_(w);
+
+			//note: child windows can have different DPI awareness (minWin10_1607). See GetWindowDpiHostingBehavior. Not tested, not seen.
+
+			//Also tested detecting with GDI. GDI functions return logical (not DPI-scaled) offsets/rectangles/etc. Works, but much slower.
 		}
+
+		/// <summary>
+		/// If possible, gets whether the window is DPI-scaled/virtualized, and gets physical and logical rects if scaled.
+		/// Returns false if !osVersion.minWin10_1607 or if cannot get that info.
+		/// Gets that info in a fast and reliable way.
+		/// </summary>
+		internal static bool GetScalingInfo_(wnd w, out bool scaled, out RECT rPhysical, out RECT rLogical) {
+			scaled = false; rPhysical = default; rLogical = default;
+			if (!osVersion.minWin10_1607) return false;
+			var awareness = WindowDpiAwareness(w); //fast on Win10
+			if (awareness is Awareness.System or Awareness.Unaware) { //tested: unaware-gdi-scaled same as unaware
+				if (awareness == Awareness.System && Api.GetDpiForWindow(w) != System) { /*fast*/
+					//Cannot get rLogical. It's rare and temporary, ie when the user recently changed DPI of the primary screen.
+					//Even if this func isn't used to get rects, without this fast code could be unreliable.
+					Debug_.Print("w System DPI != our System DPI");
+					return false;
+				}
+				for (; ; ) {
+					RECT r1 = w.Rect, r2, r3; //note: with ClientRect 4 times faster, but unreliable if small rect. Now fast enough.
+					bool rectWorkaround = false;
+					using (var u = new AwarenessContext(awareness == Awareness.System ? -2 : -1)) {
+						if (Api.GetAwarenessFromDpiAwarenessContext(u.Previous_) != Awareness.PerMonitor) { /*fast*/
+							//cannot get rPhysical. But let's set PM awareness and get it. Works even if this process is Unaware.
+							rectWorkaround = _GetRect(w, out r1);
+							Debug_.Print("bad DPI awareness of this thread; workaround " + (rectWorkaround ? "OK" : "failed"));
+							if (!rectWorkaround) return false; //unlikely. Then the caller probably will call the legacy func, it works with any DPI awareness.
+						}
+						r2 = w.Rect;
+						if (r2 == r1) break;
+					}
+					if (!rectWorkaround) r3 = w.Rect; else _GetRect(w, out r3);
+					if (r3 != r1) continue; //moved, resized or closed between Rect and Rect
+					scaled = true;
+					rPhysical = r1;
+					rLogical = r2;
+					break;
+				}
+
+				static bool _GetRect(wnd w, out RECT r) {
+					using (var u2 = new AwarenessContext(-4)) { //per-monitor-v2
+						if (u2.Previous_ == 0) { r = default; return false; } //API failed. Unlikely. Works even if this process is Unaware.
+						r = w.Rect;
+					}
+					return true;
+				}
+			}
+			return true;
+		}
+
+		internal static bool IsWindowVirtualizedLegacy_(wnd w) {
+			//less reliable if control.
+			//	LogicalToPhysicalPoint fails if not in top-level window rect.
+			//	It seems PhysicalToLogicalPointForPerMonitorDPI doesn't fail, but it fails if not in that screen.
+			w = w.Window;
+
+			RECT rPrev = default;
+			for (int i = 0; i < 5; i++) {
+				if (!Api.GetWindowRect(w, out var r)) break; //Win10 1 mcs hot, 20 cold, old OS fast
+				if (r != rPrev) { i = 0; rPrev = r; } //moved or resized
+				POINT p = new(r.CenterX, r.CenterY); //p must be inside the window
+				if (i == 1) p.y = r.bottom - 1; else if (i == 2) p.y = r.top; else if (i == 3) p.x = r.right - 1; else if (i == 4) p.x = r.left; //and p must be in correct screen, which is unknown and therefore we use this code to guess. Normally succeeds at i==0, but may fail when the window is more than in 1 screen.
+				POINT k = p;
+				if (osVersion.minWin8_1 ? Api.PhysicalToLogicalPointForPerMonitorDPI(w, ref p) : Api.LogicalToPhysicalPoint(w, ref p)) { //Win10 3 mcs hot, old OS fast
+
+					//API bug: may scale the point although the window isn't scaled. Never mind.
+					//	When window's center is between 2 screens and at the same time half of the window is offscreen. The area is several pixels wide.
+					//if (p != k) print.it(k, p);
+
+					if (p != k) return true;
+					break;
+				}
+			}
+			return false;
+			//tested: the API works with hidden and off-screen top-level windows too. Minimized windows are off-screen.
+			//tested: works even if this process is DPI System or Unaware. Tested on Win10.
+			//speed on Win10 when not PM-aware: 4 mcs hot, 40 mcs cold. All API much faster on old OS (tested on Vmware).
+		}
+
+		//No. In some cases (window positions) screen.of(w) does not match scaling. Not much faster.
+		//public static bool IsWindowVirtualized2(wnd w) {
+		//	if (osVersion.minWin10_1607) {
+		//		if (WindowDpiAwareness(w) is Awareness.PerMonitor or Awareness.Invalid) return false; //fast on Win10; slow on Win8.1, unavailable on Win7/8. Other API very slow on Win10, much faster on old OS (Vmware).
+		//		w = w.Window; if (w.Is0) return false; //0.6 mcs hot
+		//		var m = screen.of(w);
+		//		int d1 = m.Dpi, d2 = OfWindow(w);
+		//		//if (d1 == d2) print.it(d1);
+		//		if (d1 == d2) return false;
+		//		return w.IsAlive;
+		//	} else {
+		//		//same as now
+		//		return false;
+		//	}
+		//}
 
 		/// <summary>
 		/// Can be used to temporarily change thread's DPI awareness context with API <msdn>SetThreadDpiAwarenessContext</msdn>.
@@ -288,7 +363,7 @@
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// using var dac = new Dpi.AwarenessContext(Dpi.AwarenessContext.DPI_AWARENESS_CONTEXT_UNAWARE);
+		/// using var dac = new Dpi.AwarenessContext(-1);
 		/// ]]></code>
 		/// </example>
 		public struct AwarenessContext : IDisposable
@@ -298,10 +373,11 @@
 			/// <summary>
 			/// Calls API <msdn>SetThreadDpiAwarenessContext</msdn> if available.
 			/// </summary>
-			/// <param name="dpiContext">One of <b>DPI_AWARENESS_CONTEXT_X</b> constants, for example <see cref="DPI_AWARENESS_CONTEXT_UNAWARE"/>.</param>
+			/// <param name="dpiContext">One of <msdn>DPI_AWARENESS_CONTEXT</msdn> constants: -1 unaware, -2 system, -3 per-monitor, -4 per-monitor-v2, -5 unaware-gdiscaled. Or a DPI_AWARENESS_CONTEXT handle.</param>
 			public AwarenessContext(nint dpiContext) {
 				_dac = osVersion.minWin10_1607 ? Api.SetThreadDpiAwarenessContext(dpiContext) : default;
 			}
+			//rejected: enum dpiContext.
 
 			/// <summary>
 			/// Restores previous DPI awareness context.
@@ -313,15 +389,18 @@
 			}
 
 			///
-			public const nint DPI_AWARENESS_CONTEXT_UNAWARE = -1;
-			///
-			public const nint DPI_AWARENESS_CONTEXT_SYSTEM_AWARE = -2;
-			///
-			public const nint DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE = -3;
-			///
-			public const nint DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = -4;
-			///
-			public const nint DPI_AWARENESS_CONTEXT_UNAWARE_GDISCALED = -5;
+			internal nint Previous_ => _dac;
+
+			/////
+			//public const nint DPI_AWARENESS_CONTEXT_UNAWARE = -1;
+			/////
+			//public const nint DPI_AWARENESS_CONTEXT_SYSTEM_AWARE = -2;
+			/////
+			//public const nint DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE = -3;
+			/////
+			//public const nint DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = -4;
+			/////
+			//public const nint DPI_AWARENESS_CONTEXT_UNAWARE_GDISCALED = -5;
 		}
 	}
 }
@@ -334,7 +413,7 @@ namespace Au.Types
 	/// </summary>
 	public struct DpiOf
 	{
-		int _dpi;
+		readonly int _dpi;
 
 		///
 		public DpiOf(int dpi) { _dpi = dpi; }
@@ -344,6 +423,7 @@ namespace Au.Types
 			w.ThrowIfInvalid();
 			_dpi = More.Dpi.OfWindow(w);
 		}
+		//rejected: parameter supportWin81. Rarely used. Can use Dpi functions when need.
 
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="AuWndException">Invalid window handle.</exception>

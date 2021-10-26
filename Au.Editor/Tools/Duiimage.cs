@@ -11,18 +11,8 @@ namespace Au.Tools;
 
 class Duiimage : KDialogWindow
 {
-	public static void Dialog() {
-		if (Environment.CurrentManagedThreadId != 1) _Show(false); //probably called from a similar dialog running in nonmain thread
-		else run.thread(() => _Show(true)); //don't allow the main thread to hang when something is slow. Also, it calls Dwnd, which runs in nonmain thread.
-
-		void _Show(bool dialog) {
-			try { //unhandled exception kills process if in nonmain thread
-				var d = new Duiimage();
-				if (dialog) d.ShowDialog(); else d.Show();
-			}
-			catch (Exception e1) { print.it(e1); }
-		}
-	}
+	public static void Dialog()
+		=> TUtil.ShowDialogInNonmainThread(() => new Duiimage());
 
 	wnd _wnd, _con;
 	bool _useCon;
@@ -56,7 +46,7 @@ class Duiimage : KDialogWindow
 		//row 1
 		b.R.AddButton("Capture", _bCapture_Click).Width(70);
 		b.AddButton(out _bTest, "Test", _bTest_Click).Width(70).Disabled().Tooltip("Executes the code now (except wait/fail/mouse) and shows the found image");
-		b.AddOkCancel(out _bOK, out _, out _, noStackPanel: true); _bOK.IsEnabled = false;
+		b.AddOkCancel(out _bOK, out _, out _, stackPanel: false); _bOK.IsEnabled = false;
 		b.AddButton(out _bInsert, "Insert", _bOK_Click).Width(70).Span(1).Disabled().Tooltip("Insert code and don't close");
 		b.OkApply += _bOK_Click;
 		//row 2
@@ -71,7 +61,7 @@ class Duiimage : KDialogWindow
 		b.End();
 		b.End();
 		//row 4
-		b.R.AddButton("Window...", _bWnd_Click).And(-70).Add(out controlC, "Control").Align(y: "C").Disabled();
+		b.R.AddButton("Window...", _bWnd_Click).And(-70).Add(out controlC, "Control").Disabled();
 		b.xStartPropertyGrid();
 		rectC = b.xAddCheckText("Rectangle", "0, 0, ^0, ^0"); b.And(21).AddButton("...", _bRect_Click);
 		wiflagsC = b.xAddCheckCombo("Window pixels", "WindowDC|PrintWindow");
@@ -442,7 +432,8 @@ class Duiimage : KDialogWindow
 
 	private void _bTest_Click(WBButtonClickArgs ea) {
 		var (code, wndVar) = _FormatCode(true); if (code == null) return;
-		TUtil.RunTestFindObject(code, wndVar, _WndSearchIn, _info, o => (o as uiimage).RectInScreen, activateWindow: true);
+		var rr = TUtil.RunTestFindObject(this, code, wndVar, _WndSearchIn, getRect: o => (o as uiimage).RectInScreen, activateWindow: true);
+		_info.InfoErrorOrInfo(rr.info);
 	}
 
 	#endregion

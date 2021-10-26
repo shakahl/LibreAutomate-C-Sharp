@@ -5,25 +5,30 @@ namespace Au.Controls
 {
 	public unsafe partial class KTreeView : HwndHost
 	{
-		const string c_winClassName = "KTreeView";
 		wnd _w;
 		bool _hasHwnd;
 
 		public wnd Hwnd => _w;
 
-		static KTreeView() {
-			WndUtil.RegisterWindowClass(c_winClassName);
-		}
+		//const string c_winClassName = "KTreeView";
+		//static KTreeView() {
+		//	WndUtil.RegisterWindowClass(c_winClassName);
+		//}
 
 		protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
 			var wParent = (wnd)hwndParent.Handle;
-#if true
-			WndUtil.CreateWindow(_wndProc = _WndProc, false, c_winClassName, Name, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
-#else //the below code works, but not on Win7. The above code works if WS.DISABLED or WM_NCHITTEST returns HTTRANSPARENT. WPF can remove WS.DISABLED.
-			_w=WndUtil.CreateWindow(_wndProc = _WndProc, false, c_winClassName, null, WS.CHILD|WS.CLIPCHILDREN, WSE.TRANSPARENT|WSE.LAYERED, 0, 0, 10, 10, wParent);
-	//		_w.SetTransparency(true, 255);
-			Api.SetLayeredWindowAttributes(_w, 0, 0, 0);
-#endif
+			//WndUtil.CreateWindow(_wndProc = _WndProc, false, c_winClassName, Name, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
+
+			_w = WndUtil.CreateWindow(_wndProc = _WndProc, false, "Static", Name, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
+			_hasHwnd = true;
+			_SetDpiAndItemSize(More.Dpi.OfWindow(_w));
+
+			//Mouse messages must go to the parent window. On WM_NCHITTEST return HTTRANSPARENT.
+			//	But UIA element from point does not work. Solution: let it be Static; UIA knows it.
+			//Other tested ways don't work:
+			//	WS.DISABLED. Scrollbars don't work.
+			//	WSE.TRANSPARENT|WSE.LAYERED + Api.SetLayeredWindowAttributes(_w, 0, 0, 0). Unavailable on Win7. Scrollbars and UIA don't work.
+			//	Relay mouse messages to the parent window. Does not work.
 
 			return new HandleRef(this, _w.Handle);
 		}
@@ -36,15 +41,16 @@ namespace Au.Controls
 		nint _WndProc(wnd w, int msg, nint wParam, nint lParam) {
 			//var pmo = new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
 			//if (WndUtil.PrintMsg(out string s, _w, msg, wParam, lParam, pmo)) print.it("<><c green>" + s + "<>");
+			//if (WndUtil.PrintMsg(out string s, _w, msg, wParam, lParam)) print.it("<><c green>" + s + "<>");
 
 			if (_vscroll.WndProc(w, msg, wParam, lParam) || _hscroll.WndProc(w, msg, wParam, lParam)) return default;
 
 			switch (msg) {
-			case Api.WM_NCCREATE:
-				_w = w;
-				_hasHwnd = true;
-				_SetDpiAndItemSize(More.Dpi.OfWindow(_w));
-				break;
+			//case Api.WM_NCCREATE:
+			//	_w = w;
+			//	_hasHwnd = true;
+			//	_SetDpiAndItemSize(More.Dpi.OfWindow(_w));
+			//	break;
 			case Api.WM_NCDESTROY:
 				_w = default;
 				_hasHwnd = false;
@@ -77,7 +83,7 @@ namespace Au.Controls
 
 			switch (msg) {
 			case Api.WM_NCHITTEST:
-				if (R == Api.HTCLIENT) R = Api.HTTRANSPARENT; //workaround for focus problems and closing parent Popup on click
+				if (R == Api.HTCLIENT) R = Api.HTTRANSPARENT;
 				break;
 			}
 

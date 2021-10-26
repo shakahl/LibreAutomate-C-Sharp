@@ -23,7 +23,7 @@ public unsafe class elmFinder
 	readonly EFFlags _flags;
 	readonly int _skip;
 	readonly Func<elm, bool> _also;
-	Cpp.AccCallbackT _also2;
+	Cpp.Cpp_AccFindCallbackT _also2;
 	elmFinder _next;
 	char _resultProp;
 	wnd _wnd;
@@ -168,7 +168,7 @@ public unsafe class elmFinder
 	///   Example: <c>"state=CHECKED, FOCUSABLE, !DISABLED"</c>.\
 	///   Example: <c>"state=0x100010, !0x1"</c>.\
 	///   Will find UI element that has all states without <c>"!"</c> prefix and does not have any of states with <c>"!"</c> prefix.
-	/// - <c>"rect"</c> - <see cref="elm.Rect"/>. Can be specified left, top, width and/or height, using <see cref="RECT.ToString"/> format.\
+	/// - <c>"rect"</c> - <see cref="elm.GetRect(out RECT, bool)"/> with <i>raw</i> true. Can be specified left, top, width and/or height, using <see cref="RECT.ToString"/> format.\
 	///   Example: <c>"rect={L=1155 T=1182 W=132 H=13}"</c>.
 	///   Example: <c>"rect={W=132 T=1182}"</c>.
 	///   The L T coordinates are relative to the primary screen.
@@ -179,8 +179,8 @@ public unsafe class elmFinder
 	/// - <c>"key"</c> - <see cref="elm.KeyboardShortcut"/>.
 	/// - <c>"help"</c> - <see cref="elm.Help"/>.
 	/// - <c>"uiaid"</c> - <see cref="elm.UiaId"/>.
-	/// - <c>"maxcc"</c> - when searching, skip children of UI elements that have more than this number of direct children. It can make faster.\
-	///   The default value is 10000. It also prevents hanging or crashing when a UI element in the UI element tree has large number of children. For example OpenOffice Calc TABLE has one billion children.
+	/// - <c>"maxcc"</c> - when searching, skip children of UI elements that have more than this number of direct children. Default 10000, min 1, max 1000000.\
+	///   It can make faster. It also prevents hanging or crashing when a UI element in the UI element tree has large number of children. For example OpenOffice Calc TABLE has one billion children.
 	/// - <c>"notin"</c> - when searching, skip children of UI elements that have these roles. It can make faster.\
 	///   Example: <c>"notin=TREE,LIST,TOOLBAR"</c>.\
 	///   Roles in the list must be separated with <c>","</c> or <c>", "</c>. Case-sensitive, not wildcard. See also: <see cref="EFFlags.MenuToo"/>.
@@ -356,7 +356,7 @@ public unsafe class elmFinder
 
 		//if used skip<0 and path or navig, need to search in all possible paths. For it we use the 'also' callback.
 		//FUTURE: optimize. Add part of code to the C++ dll. Now can walk same tree branches multiple times.
-		Cpp.AccCallbackT also = null;
+		Cpp.Cpp_AccFindCallbackT also = null;
 		bool allPaths = _skip < 0 && (_next != null || _navig != null);
 		if (allPaths) {
 			also = _also2 ??= ca => {
@@ -381,12 +381,12 @@ public unsafe class elmFinder
 						if (_AlsoNavigNext(ref e, noAlso: true)) Result = e; else hr = Cpp.EError.NotFound;
 					}
 					break;
-				case 'r' or 's' or 'w' or '@':
+				case 'r' or 'D' or 's' or 'w' or '@':
 					if (sResult == null) break;
 					unsafe {
 						fixed (char* p = sResult) {
 							switch (_resultProp) {
-							case 'r': ResultProperty = *(RECT*)p; break;
+							case 'r' or 'D': ResultProperty = *(RECT*)p; break;
 							case 's': ResultProperty = *(EState*)p; break;
 							case 'w': ResultProperty = (wnd)(*(int*)p); break;
 							case '@': ResultProperty = elm.AttributesToDictionary_(p, sResult.Length); break;

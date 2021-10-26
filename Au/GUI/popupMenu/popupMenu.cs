@@ -118,7 +118,7 @@ namespace Au
 		bool _addedNewItems;
 		(SIZE window, SIZE client, int border) _size;
 		NativeScrollbar_ _scroll;
-		(popupMenu child, popupMenu parent, MenuItem item, timerm timer) _sub;
+		(popupMenu child, popupMenu parent, MenuItem item, timer timer) _sub;
 		(POINT p, bool track, bool left, bool right, bool middle) _mouse;
 		int _iHot = -1;
 		MSFlags _flags;
@@ -429,7 +429,7 @@ namespace Au
 			int R = 0;
 
 			WindowsHook hKey = null;
-			timerm timer = null;
+			timer timer = null;
 			try {
 				var wFore = wnd.active;
 				bool foreground = wFore.IsOfThisThread;

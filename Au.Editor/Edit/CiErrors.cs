@@ -8,8 +8,6 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 
-//TODO: when "Label" is unknown, the tooltip gives only link to add using System.Reflection.Emit and not using System.Windows.Controls.
-
 class CiErrors
 {
 	SemanticModel _semo;
@@ -108,7 +106,7 @@ class CiErrors
 
 			List<string> usings = _GetMissingUsings(amu);
 			if (usings != null) doc.Dispatcher.InvokeAsync(() => { //this func is called from scintilla notification
-				if (!pastingSilent && !dialog.showYesNo("Insert missing using directives?", string.Join('\n', usings), owner: doc)) return;
+				if (!pastingSilent && !dialog.showYesNo("Add missing using directives?", string.Join('\n', usings), owner: doc)) return;
 				InsertCode.UsingDirective(string.Join(';', usings), true);
 			});
 		}
@@ -272,10 +270,9 @@ class CiErrors
 			Debug_.PrintIf(extMethod && emReceiverType == null, "failed to get extension method receiver type"); //unlikely
 		}
 
-		public string name;
-		public bool isEM, isGeneric, isAttribute, found;
-		public ITypeSymbol emReceiverType;
-		//public object result = null;
+		public readonly string name;
+		public readonly bool isEM, isGeneric, isAttribute;
+		public readonly ITypeSymbol emReceiverType;
 	}
 
 	List<string> _GetMissingUsings(List<_MissingUsingError> a) {
@@ -283,61 +280,57 @@ class CiErrors
 		List<string> usings = null;
 		var compilation = _semo.Compilation;
 		var stack = new List<string>();
+		int need = 0; foreach (var v in a) if (v.isEM) need |= 2; else need |= 1;
 		//var p1 = perf.local();
 		//var p1 = new perf.Instance { Incremental = true };
 		_EnumNamespace(compilation.GlobalNamespace);
 		//p1.Write();
 		//p1.NW();
 
-		//shoulddo: async, because quite slow. Or use AssemblyMetadata.CachedSymbols (internal), it's faster except first time.
+		//CONSIDER: async, because slow. Or use AssemblyMetadata.CachedSymbols (internal), it's faster except first time.
 		void _EnumNamespace(INamespaceSymbol ns) {
-			int nTypes = 0, nEM = 0; foreach (var v in a) if (!v.found) if (v.isEM) nEM++; else nTypes++;
+			bool found = false;
 			foreach (var nt in ns.GetMembers()) {
 				string sn = nt.Name;
-				//print.it(sn);
+				//print.it("<>" + new string(' ', stack.Count) + (nt is INamespaceSymbol ? "<c blue>" + nt.ToString() + "<>" : nt.ToString())/*, nt.ContainingAssembly?.Name*/);
 				if (sn.NE() || sn[0] == '<') continue;
 				if (nt is INamespaceSymbol ins) {
 					stack.Add(sn);
 					_EnumNamespace(ins);
 					stack.RemoveAt(stack.Count - 1);
-				} else if (nTypes + nEM > 0) { //if found, continue to search in nested namespaces
-					if (nTypes > 0) {
+				} else if (!found) { //else continue to search in nested namespaces
+					var its = nt as INamedTypeSymbol;
+					if (0 != (need & 1)) {
 						foreach (var v in a) {
-							if (v.found || v.isEM) continue;
+							if (v.isEM) continue;
 							if (sn != v.name) {
 								if (!(v.isAttribute && sn.Length == v.name.Length + 9 && sn.Starts(v.name) && sn.Ends("Attribute"))) continue;
 							}
-							var its = nt as INamedTypeSymbol;
 							if (v.isGeneric && !its.IsGenericType) continue;
-							if (v.found = _AddNamespace(nt)) nTypes--;
-							if (nTypes == 0) break;
+							if (_AddNamespace(nt)) goto gNext;
 						}
 					}
-					if (nEM > 0) {
-						var its = nt as INamedTypeSymbol;
+					if (0 != (need & 2)) {
 						//p1.First();
 						if (its.IsStatic && its.MightContainExtensionMethods) { //fast, but without IsStatic slow first time
 							foreach (var m in nt.GetMembers().OfType<IMethodSymbol>()) { //fast; slightly slower than nt.MemberNames.Contains(errName) which gets member types etc too
 								foreach (var v in a) {
-									if (v.found || !v.isEM) continue;
+									if (!v.isEM) continue;
 									if (m.Name == v.name && m.IsExtensionMethod) {
 										if (null == m.ReduceExtensionMethod(v.emReceiverType)) { /*Debug_.Print(emReceiverType);*/ continue; }
-										if (v.found = _AddNamespace(m)) nEM--;
+										if (_AddNamespace(m)) goto gNext;
 									}
-									if (nEM == 0) break;
 								}
-								if (nEM == 0) break;
 							}
 						}
 						//p1.Next();
 					}
+					gNext:;
 
 					bool _AddNamespace(ISymbol sym) {
 						if (!sym.IsAccessibleWithin(compilation.Assembly)) return false;
-						var ns = string.Join('.', stack);
-						usings ??= new();
-						if (!usings.Contains(ns)) usings.Add(ns);
-						return true;
+						(usings ??= new()).Add(string.Join('.', stack));
+						return found = true;
 					}
 				}
 			}

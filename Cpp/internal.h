@@ -85,10 +85,12 @@ struct MarshalParams_AccFromPoint
 {
 	MarshalParams_Header hdr;
 	POINT p;
-	int flags, specWnd;
+	eXYFlags flags;
+	int specWnd;
+	int wFP;
 };
 
-//Used for marshaling parameters of Cpp_AccNavigate etc when calling the get_accHelpTopic hook function.
+//Used for marshaling parameters of Cpp_AccNavigate, Cpp_AccGetProps, etc when calling the get_accHelpTopic hook function.
 struct MarshalParams_AccElem
 {
 	MarshalParams_Header hdr;

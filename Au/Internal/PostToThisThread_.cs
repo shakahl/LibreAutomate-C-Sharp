@@ -10,7 +10,7 @@
 		readonly Queue<Action> _q = new();
 
 		PostToThisThread_() {
-			_w = wnd.Internal_.CreateWindowDWP(messageOnly: true, t_wp = _WndProc);
+			_w = WndUtil.CreateWindowDWP_(messageOnly: true, t_wp = _WndProc);
 		}
 
 		public static PostToThisThread_ OfThisThread => t_default ??= new();
