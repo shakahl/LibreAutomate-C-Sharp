@@ -11,9 +11,7 @@ void AutotextTriggers() {
 	
 	
 	
-	if (_enableAutotextTriggerExamples) {
-		//examples of autotext triggers
-		
+	if (!true) { //examples. To enable, replace (!true) with (true) and run this script.
 		tt["losa"] = o => o.Replace("Los Angeles (autotext example)");
 		tt["WIndows", TAFlags.MatchCase] = o => o.Replace("Windows (autotext example)");
 		

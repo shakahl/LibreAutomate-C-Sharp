@@ -194,11 +194,10 @@ partial class FilesModel
 	/// Shows "Open workspace" dialog. On OK loads the selected workspace.
 	/// </summary>
 	public static void OpenWorkspaceUI() {
-		var d = new OpenFileDialog { Title = "Open workspace", Filter = "files.xml|files.xml" };
-		if (d.ShowDialog(App.Wmain) != true) return;
-		var filesXml = d.FileName;
-		if (!pathname.getName(filesXml).Eqi("files.xml")) dialog.showError("Must be files.xml");
-		else LoadWorkspace(pathname.getDirectory(filesXml));
+		var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDA}") { Title = "Open workspace" };
+		if (!d.ShowOpen(out string s, App.Hwnd, selectFolder: true)) return;
+		if (!filesystem.exists(s + @"\files.xml").isFile) dialog.showError("The folder must contain file files.xml");
+		else LoadWorkspace(s);
 	}
 
 	/// <summary>
@@ -656,6 +655,58 @@ partial class FilesModel
 		return true;
 	}
 
+	//SHOULDDO: once (2 times) crashed when deleting folder "@Triggers and toolbars".
+	//	Both times in editor was opened a class file from the folder.
+	//	First time: messagebox "exception processing message, unexpected parameters".
+	//		After restarting were deleted files and tree items. Just several warnings about not found file id.
+	//	Second time with debugger: access violation exception somewhere in DispatchMessage -> COM message processing.
+	//		After restarting were deleted files but not tree items. Tried to reopen the file, but failed, and no editor control was created.
+	//	COM wasn't used explicitly. Maybe because of Recycle Bin.
+	//	Then could not reproduce (after recompiling same code).
+
+	//bool _Delete(FileNode f, bool dontDeleteFile = false, bool tryRecycleBin = true, bool canDeleteLinkTarget = false) {
+	//	print.qm2.clear();
+	//	var e = f.Descendants(true);
+
+	//	CloseFiles(e);
+	//	Uncut();
+
+	//	if (!dontDeleteFile && (canDeleteLinkTarget || !f.IsLink)) {
+	//		print.qm2.write("deleting files");
+	//		if (!TryFileOperation(() => filesystem.delete(f.FilePath, tryRecycleBin), deletion: true)) return false;
+	//		print.qm2.write("ok");
+	//		//FUTURE: move to folder 'deleted'. Moving to RB is very slow. No RB if in removable drive etc.
+	//	} else {
+	//		string s1 = dontDeleteFile ? "File not deleted:" : "The deleted item was a link to";
+	//		print.it($"<>Info: {s1} <explore>{f.FilePath}<>");
+	//	}
+
+	//	foreach (var k in e) {
+	//		print.qm2.write("deleting from DB", k);
+	//		print.qm2.write(f);
+	//		try { DB?.Execute("DELETE FROM _editor WHERE id=?", k.Id); } catch (SLException ex) { Debug_.Print(ex); }
+	//		print.qm2.write("ok 1");
+	//		Au.Compiler.Compiler.Uncache(k);
+	//		_idMap[k.Id] = null;
+	//		_nameMap.MultiRemove_(k.Name, k);
+	//		k.IsDeleted = true;
+	//		print.qm2.write("ok 2");
+	//	}
+	//	print.qm2.write("db ok");
+
+	//	f.Remove();
+	//	print.qm2.write(1);
+	//	UpdateControlItems();
+	//	print.qm2.write(2);
+	//	//FUTURE: call event to update other controls.
+
+	//	Save.WorkspaceLater();
+	//	print.qm2.write(3);
+	//	CodeInfo.FilesChanged();
+	//	print.qm2.write(4);
+	//	return true;
+	//}
+
 	/// <summary>
 	/// Opens the selected item(s) in our editor or in default app or selects in Explorer.
 	/// </summary>
@@ -1022,15 +1073,7 @@ partial class FilesModel
 	/// </summary>
 	/// <param name="a">Files. If null, shows dialog to select files.</param>
 	public void ImportFiles(string[] a = null) {
-		if (a == null) {
-			//SHOULDDO: disable adding to Recent Items when opening a file with an "Open" dialog.
-			//	Now the takbar button's jump list is full of garbage.
-			//	The native API has a flag for it, but the WPF and winforms classes don't. Need to use the native API directly.
-
-			var d = new OpenFileDialog { Multiselect = true, Title = "Import files" };
-			if (d.ShowDialog(App.Wmain) != true) return;
-			a = d.FileNames;
-		}
+		if (a == null) if (!new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDA}") { Title = "Import files" }.ShowOpen(out a)) return;
 
 		var (target, pos) = _GetInsertPos();
 		ImportFiles(a, target, pos);
@@ -1258,15 +1301,13 @@ partial class FilesModel
 
 		string wsDir;
 		if (zip) {
-			var d = new SaveFileDialog {
-				Filter = "Zip files|*.zip",
+			var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDA}") {
+				FileTypes = "Zip files|*.zip",
 				DefaultExt = "zip",
-				InitialDirectory = location ?? folders.ThisAppDocuments,
-				FileName = name + ".zip",
-				OverwritePrompt = false
+				InitFolderFirstTime = location ?? folders.ThisAppDocuments,
+				FileNameText = name + ".zip",
 			};
-			if (d.ShowDialog() != true) return false;
-			location = d.FileName;
+			if (!d.ShowSave(out location, App.Hwnd, overwritePrompt: false)) return false;
 			wsDir = folders.ThisAppTemp + "Workspace zip";
 			filesystem.delete(wsDir);
 		} else {
@@ -1370,32 +1411,25 @@ partial class FilesModel
 	#region fill menu
 
 	/// <summary>
-	/// Fills submenu File -> Workspace -> Recent.
+	/// Adds recent workspaces to submenu File -> Workspace.
 	/// </summary>
 	public static void FillMenuRecentWorkspaces(MenuItem sub) {
-		void _Add(string path, bool bold) {
+		void _Add(string path, int i) {
 			var mi = new MenuItem { Header = path.Replace("_", "__") };
-			if (bold) mi.FontWeight = FontWeights.Bold;
+			if (i == 0) mi.FontWeight = FontWeights.Bold;
 			mi.Click += (_, _) => LoadWorkspace(path);
-			sub.Items.Add(mi);
+			sub.Items.Insert(i, mi);
 		}
 
-		sub.Items.Clear();
-		_Add(App.Settings.workspace, true);
+		while (sub.Items[0] is not Separator) sub.Items.RemoveAt(0);
+		_Add(App.Settings.workspace, 0);
 		var ar = App.Settings.recentWS;
-		int nRemoved = 0;
-		for (int i = 0, n = ar?.Length ?? 0; i < n; i++) {
-			var path = ar[i];
-			if (sub.Items.Count >= 20 || !filesystem.exists(path).isDir) {
-				ar[i] = null;
-				nRemoved++;
-			} else _Add(path, false);
+		int j = 0, i = 0, n = ar?.Length ?? 0;
+		for (; i < n; i++) {
+			if (sub.Items.Count >= 15 || !filesystem.exists(ar[i]).isDir) ar[i] = null;
+			else _Add(ar[i], ++j);
 		}
-		if (nRemoved > 0) {
-			var an = new string[ar.Length - nRemoved];
-			for (int i = 0, j = 0; i < ar.Length; i++) if (ar[i] != null) an[j++] = ar[i];
-			App.Settings.recentWS = an;
-		}
+		if (j < i) App.Settings.recentWS = ar.Where(o => o != null).ToArray();
 	}
 
 	/// <summary>

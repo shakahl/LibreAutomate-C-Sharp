@@ -200,7 +200,7 @@ static class TUtil
 				if (containsW != null) b.AppendStringArg(containsW, "contains");
 
 				b.Append(')');
-				if (activate) b.Append(isWait ? ".Activate(1)" : ".Activate()");
+				if (activate) b.Append(".Activate()");
 				b.Append(';');
 			}
 

@@ -105,16 +105,16 @@ static class Menus
 
 			[Command("Import .zip...", separator = true)]
 			public static void Import_zip() {
-				var d = new OpenFileDialog { Title = "Import .zip", Filter = "Zip files|*.zip" };
-				if (d.ShowDialog(App.Wmain) != true) return;
-				App.Model.ImportWorkspace(d.FileName);
+				var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDA}") { Title = "Import .zip", FileTypes = "Zip files|*.zip" };
+				if (d.ShowOpen(out string s, App.Hwnd))
+					App.Model.ImportWorkspace(s);
 			}
 
 			[Command("...")]
 			public static void Import_workspace() {
-				var d = new OpenFileDialog { Title = "Import workspace", Filter = "files.xml|files.xml" };
-				if (d.ShowDialog(App.Wmain) != true) return;
-				App.Model.ImportWorkspace(pathname.getDirectory(d.FileName));
+				var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDA}") { Title = "Import workspace" };
+				if (d.ShowOpen(out string s, App.Hwnd, selectFolder: true))
+					App.Model.ImportWorkspace(s);
 			}
 
 			[Command("...")]
@@ -124,10 +124,7 @@ static class Menus
 		[Command(target = "")]
 		public static class Workspace
 		{
-			[Command]
-			public static class Recent_workspaces { }
-
-			[Command("...")]
+			[Command("...", separator = true)]
 			public static void Open_workspace() { FilesModel.OpenWorkspaceUI(); }
 
 			[Command("...")]

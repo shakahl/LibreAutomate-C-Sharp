@@ -11,15 +11,12 @@ void HotkeyTriggers() {
 	
 	
 	
-	if (_enableHotkeyTriggerExamples) {
-		//examples of hotkey triggers
-		
+	if (!true) { //examples. To enable, replace (!true) with (true) and run this script.
 		hk["Ctrl+Alt+K"] = o => print.it("trigger action example 1", o.Trigger); //it means: when I press Ctrl+Alt+K, execute trigger action print.it(...)
-		hk["Ctrl+Shift+F11"] = o => { //multiple statements. To hide the code, click the [-] box at the left.
-			var w1 = wnd.findOrRun("* Notepad", run: () => run.it(folders.System + "notepad.exe"));
-			keys.sendt("trigger action example 2");
-			500.ms();
-			w1.Close();
+		hk["Ctrl+Shift+F11"] = o => { //multiple statements
+			var w1 = wnd.active;
+			if(w1.Name.Like("* - Notepad")) keys.sendt("trigger action example 2\r\n");
+			else print.it("trigger action example 2");
 		};
 		hk["Ctrl+Shift+1"] = o => TriggerActionExample(); //call other function. To find it quickly, Ctrl+click the function name here.
 		hk["Ctrl+Shift+2"] = o => TriggerActionExample2(o.Window); //the function can be in any class or partial file of this project

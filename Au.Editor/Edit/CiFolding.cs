@@ -421,6 +421,16 @@ partial class SciCode
 		bool newFile = _openState == _EOpenState.NewFile, reopened = _openState == _EOpenState.Reopen;
 		_openState = _EOpenState.FoldingDone;
 		if (newFile) {
+			if (_fn.IsScript) {
+				if (0 == (1 & App.Settings.templ_flags)) Call(SCI_FOLDALL, 0);
+				var code = zText;
+				if (!code.NE() && code.RxMatch(@"//\.\.+\R\R?(?=\z|\R)", 0, out RXGroup g)) {
+					zGoToPos(true, g.End);
+				}
+				//if (CodeInfo.GetContextAndDocument(out var cd, 0, true) && !cd.code.NE() && cd.document.GetSyntaxRootAsync().Result is CompilationUnitSyntax cu) {
+				//	print.it(cu);
+				//}
+			}
 		} else {
 			//restore saved folding, markers, scroll position and caret position
 			var db = App.Model.DB; if (db == null) return;

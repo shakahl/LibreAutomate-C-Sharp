@@ -9,9 +9,7 @@ void MouseTriggers() {
 	
 	
 	
-	if (_enableMouseTriggerExamples) {
-		//examples of mouse triggers. Initially disabled. To enable, in the main script file set _enableMouseTriggerExamples = true;
-		
+	if (!true) { //examples. To enable, replace (!true) with (true) and run this script.
 		Triggers.Mouse[TMClick.Right, "Ctrl+Shift", TMFlags.ButtonModUp] = o => print.it("mouse trigger example", o.Trigger); //Ctrl+Shift+RightClick
 		Triggers.Mouse[TMEdge.RightInCenter50] = o => { //the right edge of the primary screen, center 50%
 			var m = new popupMenu("example");

@@ -26,10 +26,10 @@
      inkscape:snap-bbox="true"
      inkscape:snap-page="false"
      inkscape:zoom="47.0625"
-     inkscape:cx="6.5976096"
-     inkscape:cy="7.8087649"
-     inkscape:window-width="1920"
-     inkscape:window-height="1027"
+     inkscape:cx="5.6520584"
+     inkscape:cy="7.5325365"
+     inkscape:window-width="1811"
+     inkscape:window-height="1057"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
@@ -45,26 +45,26 @@
      inkscape:groupmode="layer"
      id="layer1">
     <circle
-       style="fill:#cccccc;stroke-width:0.264583"
+       style="fill:#b3b3b3;stroke-width:0.264583"
        id="path17867"
        cx="2.1166666"
        cy="2.1166666"
        r="2.1166666" />
     <circle
-       style="fill:#b3b3b3;stroke-width:1.84997"
+       style="fill:#ffffff;stroke-width:1.92935"
        id="path17871"
-       r="1.8499751"
-       cy="2.1152611"
-       cx="2.1152611" />
+       cy="2.0005145"
+       cx="2.1153436"
+       r="1.9293417" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:900;font-stretch:normal;font-size:2.11667px;line-height:1.25;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Heavy';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#009b00;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       style="font-style:normal;font-variant:normal;font-weight:900;font-stretch:normal;font-size:2.11667px;line-height:1.25;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Heavy';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:0.264583"
        x="0.91637897"
        y="2.6704295"
        id="text2120"><tspan
          sodipodi:role="line"
          id="tspan2118"
-         style="font-style:normal;font-variant:normal;font-weight:900;font-stretch:normal;font-size:2.11667px;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Heavy';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#009b00;fill-opacity:1;stroke-width:0.264583"
+         style="font-style:normal;font-variant:normal;font-weight:900;font-stretch:normal;font-size:2.11667px;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Heavy';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#b3b3b3;fill-opacity:1;stroke-width:0.264583"
          x="0.91637897"
          y="2.6704295">//.</tspan></text>
   </g>

@@ -7,9 +7,7 @@ void CommonToolbars() {
 	
 	//Call toolbar functions here, like in examples.
 	
-	if (_enableToolbarExamples) {
-		//examples
-		
+	if (!true) { //examples of triggers. To enable, replace (!true) with (true) and run this script.
 		Toolbar_Startup1();
 		Triggers.Mouse[TMEdge.TopInCenter50] = Toolbar_ScreenEdge_TopCenter;
 	}

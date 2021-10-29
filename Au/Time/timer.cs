@@ -14,7 +14,7 @@ namespace Au
 	/// timer.after(500, _ => print.it("after 500 ms"));
 	/// timer.every(1000, _ => print.it("every 1000 ms"));
 	/// var t3 = new timer(_ => print.it("after 3000 ms")); t3.After(3000); //the same as timer.after
-	/// dialog.show("timer"); //shows a window and waits until closed. While waiting, retrieves/dispatches messages in its own message loop.
+	/// dialog.show("timer"); //shows a dialog window and waits until closed. The dialog retrieves/dispatches messages in its message loop.
 	/// ]]></code>
 	/// </example>
 	public class timer

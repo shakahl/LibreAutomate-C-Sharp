@@ -26,6 +26,10 @@ namespace Au
 			_minWin8_1 = _winver >= win8_1;
 			_minWin10 = _winver >= win10;
 			if (_minWin10) _win10build = _winbuild;
+			//print.it(_win10build);
+
+			//this is to remind to add new members for new Windows 10/11 versions
+			Debug_.PrintIf(_win10build > 19044, $"{_win10build} {Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion", "DisplayVersion", "failed")}");
 
 			_is32BitOS = sizeof(nint) == 4 && !(Api.IsWow64Process(Api.GetCurrentProcess(), out _isWow64) && _isWow64);
 		}
@@ -107,6 +111,26 @@ namespace Au
 		/// true if Windows 10 version 2004 or later.
 		/// </summary>
 		public static bool minWin10_2004 => _win10build >= 19041;
+
+		/// <summary>
+		/// true if Windows 10 version 20H2 or later.
+		/// </summary>
+		public static bool minWin10_20H2 => _win10build >= 19042;
+
+		/// <summary>
+		/// true if Windows 10 version 21H1 or later.
+		/// </summary>
+		public static bool minWin10_21H1 => _win10build >= 19043;
+
+		/// <summary>
+		/// true if Windows 10 version 21H2 or later.
+		/// </summary>
+		public static bool minWin10_21H2 => _win10build >= 19044;
+
+		/// <summary>
+		/// true if Windows 11 or later.
+		/// </summary>
+		public static bool minWin11 => _win10build >= 22000;
 
 		/// <summary>
 		/// true if this process is 32-bit, false if 64-bit.

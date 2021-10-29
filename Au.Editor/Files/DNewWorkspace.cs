@@ -15,21 +15,19 @@ partial class FilesModel
 
 			Title = "New Workspace";
 
-			var b = new wpfBuilder(this).WinSize(600).Columns(-3, 0, -1);
-			b.R.Add<Label>("Parent folder").Skip().Add<Label>("Name");
-			b.R.Add(out TextBox tLocation, _location).Validation(_Validate)
-				.Add<Label>("\\")
-				.Add(out TextBox tName, _name).Validation(_Validate);
+			var b = new wpfBuilder(this).WinSize(600);
+			TextBox tName, tLocation = null;
+			b.R.Add("Folder name", out tName, _name).Validation(_Validate);
+			b.R.Add("Parent folder", out tLocation, _location).Validation(_Validate);
 			b.R.AddButton("Browse...", _Browse).Width(70).Align("L");
 			b.R.AddOkCancel();
 			b.End();
 
 			void _Browse(WBButtonClickArgs e) {
-				using var d = new System.Windows.Forms.FolderBrowserDialog {
-					SelectedPath = filesystem.exists(tLocation.Text).isDir ? tLocation.Text : folders.ThisAppDocuments,
-					ShowNewFolderButton = true
+				var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDA}") {
+					InitFolderNow = filesystem.exists(tLocation.Text).isDir ? tLocation.Text : folders.ThisAppDocuments,
 				};
-				if (d.ShowDialog() == System.Windows.Forms.DialogResult.OK) tLocation.Text = d.SelectedPath;
+				if (d.ShowOpen(out string s, this, selectFolder: true)) tLocation.Text = s;
 			}
 
 			string _Validate(FrameworkElement e) {

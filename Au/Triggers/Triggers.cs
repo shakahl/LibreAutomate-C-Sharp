@@ -99,8 +99,8 @@
 	/// tt["<b>"] = o => o.Replace("<b>[[|]]</b>");
 	/// tt["#file"] = o => {
 	/// 	o.Replace("");
-	/// 	var fd = new OpenFileDialog();
-	/// 	if(fd.ShowDialog() == true) keys.sendt(fd.FileName);
+	/// 	var fd = new FileOpenSaveDialog();
+	/// 	if(fd.ShowOpen(out string file)) keys.sendt(file);
 	/// };
 	/// tt.DefaultPostfixType = default;
 	/// 

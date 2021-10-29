@@ -10,9 +10,7 @@ void WindowTriggers() {
 	
 	
 	
-	if (_enableWindowTriggerExamples) {
-		//examples of window triggers
-		
+	if (!true) { //examples. To enable, replace (!true) with (true) and run this script.
 		Triggers.Window[TWEvent.ActiveNew, "* Notepad", "Notepad"] = o => print.it("window trigger example 1");
 		Triggers.Window[TWEvent.ActiveNew, "Notepad", "#32770", contains: "Do you want to save *"] = o => {
 			print.it("window trigger example 2");

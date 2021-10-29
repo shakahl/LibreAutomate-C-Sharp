@@ -1,4 +1,4 @@
-//.
+/*/ noWarnings 162; /*/ //.
 using Au.Triggers;
 using System.Reflection;
 partial class Program { static void Main(string[] a) => new Program(a); Program(string[] args) { //...
@@ -12,14 +12,6 @@ script.setup();
 
 RunTriggersAndToolbars();
 }
-
-//set these fields = true or !true to enable or disable the example triggers and/or toolbars
-bool _enableHotkeyTriggerExamples = true;
-bool _enableAutotextTriggerExamples = true;
-bool _enableMouseTriggerExamples = !true;
-bool _enableWindowTriggerExamples = true;
-bool _enableToolbarExamples = true;
-
 }
 
 //. RunTriggersAndToolbars

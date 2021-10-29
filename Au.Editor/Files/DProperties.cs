@@ -111,11 +111,10 @@ class DProperties : KDialogWindow
 			var m = new popupMenu();
 			m[_GetOutputPath(getDefault: true)] = o => outputPath.Text = o.ToString();
 			m["Browse..."] = o => {
-				using var fd = new System.Windows.Forms.FolderBrowserDialog {
-					SelectedPath = _GetOutputPath(getDefault: false, expandEnvVar: true),
-					ShowNewFolderButton = true,
+				var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDD}") {
+					InitFolderNow = _GetOutputPath(getDefault: false, expandEnvVar: true),
 				};
-				if (fd.ShowDialog() == System.Windows.Forms.DialogResult.OK) outputPath.Text = fd.SelectedPath;
+				if (d.ShowOpen(out string s, this, selectFolder: true)) outputPath.Text = s;
 			};
 			m.Show();
 		}
@@ -242,10 +241,11 @@ class DProperties : KDialogWindow
 
 	private void _ButtonClick_addNet(WBButtonClickArgs e) {
 		var dir = folders.ThisApp + "Libraries"; if (!filesystem.exists(dir).isDir) dir = folders.ThisApp;
-		var d = new OpenFileDialog { InitialDirectory = dir, Filter = "Dll|*.dll|All files|*.*", Multiselect = true };
-		if (d.ShowDialog(this) != true) return;
-
-		var a = d.FileNames;
+		var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDB}") {
+			InitFolderNow = dir,
+			FileTypes = "Dll|*.dll|All files|*.*"
+		};
+		if (!d.ShowOpen(out string[] a, this)) return;
 
 		foreach (var v in a) {
 			if (MetaReferences.IsNetAssembly(v)) continue;
@@ -321,8 +321,10 @@ class DProperties : KDialogWindow
 	#region COM
 
 	private void _bAddComBrowse_Click(WBButtonClickArgs e) {
-		var ofd = new OpenFileDialog { Filter = "Type library|*.dll;*.tlb;*.olb;*.ocx;*.exe|All files|*.*" };
-		if (ofd.ShowDialog(this) == true) _ConvertTypeLibrary(ofd.FileName, e.Button);
+		var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDC}") {
+			FileTypes = "Type library|*.dll;*.tlb;*.olb;*.ocx;*.exe|All files|*.*"
+		};
+		if (d.ShowOpen(out string s, this)) _ConvertTypeLibrary(s, e.Button);
 	}
 
 	private void _bAddComRegistry_Click(WBButtonClickArgs e) {

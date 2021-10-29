@@ -358,19 +358,16 @@ class Duiimage : KDialogWindow
 			return;
 		}
 
-		var d = new OpenFileDialog { Filter = c_fileDialogFilter, DefaultExt = "png" };
-		if (d.ShowDialog(this) != true) return;
-		var f = d.FileName;
+		if (!_FileDialog().ShowOpen(out string f, this)) return;
 		var im = new Bitmap(f);
 		_imageFile = embed ? null : f;
 		_SetImage(null, im);
 	}
-	const string c_fileDialogFilter = "png, bmp|*.png;*.bmp";
+
+	static FileOpenSaveDialog _FileDialog() => new("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDE}") { FileTypes = "png, bmp|*.png;*.bmp", DefaultExt = "png" };
 
 	bool _SaveFile() {
-		var d = new SaveFileDialog { Filter = c_fileDialogFilter, DefaultExt = "png" };
-		if (d.ShowDialog(this) != true) return false;
-		var f = d.FileName;
+		if (!_FileDialog().ShowSave(out string f, this)) return false;
 		_image.Save(f, f.Ends(".bmp", true) ? System.Drawing.Imaging.ImageFormat.Bmp : System.Drawing.Imaging.ImageFormat.Png);
 		_MultiRemove(true);
 		_imageFile = f;

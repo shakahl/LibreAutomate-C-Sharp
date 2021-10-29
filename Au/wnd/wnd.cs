@@ -821,15 +821,13 @@
 		/// Returns false if does not activate because of flag IgnoreIfNoActivateStyleEtc.
 		/// </summary>
 		/// <exception cref="AuWndException"/>
-		internal bool Activate_(Internal_.ActivateFlags flags, double waitS = 0) {
+		internal bool Activate_(Internal_.ActivateFlags flags) {
 			if (!flags.Has(Internal_.ActivateFlags.NoThrowIfInvalid)) ThrowIfInvalid();
 			if (flags.Has(Internal_.ActivateFlags.NoGetWindow)) Debug.Assert(!IsChild);
 			else {
 				var w = Window;
-				if (w != this) return w.Activate_((flags | Internal_.ActivateFlags.NoGetWindow) & ~Internal_.ActivateFlags.NoThrowIfInvalid, waitS);
+				if (w != this) return w.Activate_((flags | Internal_.ActivateFlags.NoGetWindow) & ~Internal_.ActivateFlags.NoThrowIfInvalid);
 			}
-
-			if (waitS != 0d) WaitFor(-waitS, w => w.IsActiveOrNoActiveAndThisIsWndRoot_ && !w.IsMinimized && w.IsVisible);
 
 			bool R, noAct = false, isMinimized = false, ofThisThread = IsOfThisThread;
 			bool forScreenCapture = 0 != (flags & Internal_.ActivateFlags.ForScreenCapture);
@@ -930,28 +928,28 @@
 		/// The active window is in the foreground and receives keyboard and mouse input.
 		/// </summary>
 		/// <returns>Self.</returns>
-		/// <param name="waitS">Max time interval (seconds) to wait until the window naturally becomes active before activating it.</param>
 		/// <remarks>
 		/// Activating a window usually also uncloaks it, for example switches to its virtual desktop on Windows 10.
 		/// Fails (throws exception) if cannot activate this window, except:
-		/// - If this is a control. Then activates its top-level parent window.
-		/// - If this is <see cref="getwnd.root"/>. Then just deactivates the currently active window.
-		/// - When the target application instead activates another window of the same thread.
+		/// - When this is a control. Then activates its top-level parent window.
+		/// - When the window's process instead activates another window of the same thread.
+		/// - If this is <see cref="getwnd.root"/>, just deactivates the currently active window.
 		/// </remarks>
-		/// <exception cref="AuWndException">
-		/// - failed to activate.
-		/// - closed while waiting (when <i>waitS</i> not 0).
-		/// </exception>
+		/// <exception cref="AuWndException">Failed to activate.</exception>
 		/// <seealso cref="ActivateL"/>
 		/// <seealso cref="IsActive"/>
 		/// <seealso cref="active"/>
 		/// <seealso cref="switchActiveWindow"/>
-		public wnd Activate(double waitS = 0) {
-			Activate_(0, waitS);
+		public wnd Activate() {
+			Activate_(0);
 			return this;
 		}
 		//CONSIDER: if fails to activate:
 		//dialog.show("Failed to activate window", w.ToString(), footer: The script will continue if you activate the window in {x} s.", timeout: 10);
+		
+		//rejected: Activate(double waitS = 0) /// <param name="waitS">Max time interval (seconds) to wait until the window naturally becomes active before activating it.</param>
+		//	It would have sense if we somehow know that the window was created by previous action (or several actions).
+		//	Would need an explicit function call before the action(s). Nobody would use it.
 
 		/// <summary>
 		/// Lightweight version of <see cref="Activate"/>.

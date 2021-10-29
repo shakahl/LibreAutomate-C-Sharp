@@ -323,7 +323,8 @@ To apply changes after deleting etc, restart this application.
 		var b = _Page("Templates").Columns(0, 100, -1, 0, 100);
 		b.R.Add("Template", out ComboBox template).Items("Script|Class")
 			.Skip().Add("Use", out ComboBox use).Items("Default|Custom");
-		b.Row(-1).Add(out KSciCodeBoxWnd sci).Span(5); sci.ZInitBorder = true;
+		b.Row(-1).Add(out KSciCodeBoxWnd sci); sci.ZInitBorder = true;
+		b.R.Add(out KCheckBox fold, "Fold script").Checked(0 == (1 & App.Settings.templ_flags));
 		b.End();
 
 		string[] customText = new string[2];
@@ -351,6 +352,10 @@ To apply changes after deleting etc, restart this application.
 				catch (Exception ex) { print.it(ex.ToStringWithoutStack()); }
 			}
 			App.Settings.templ_use = (int)useCustom;
+
+			int flags = App.Settings.templ_flags;
+			if (fold.True()) flags &= ~1; else flags |= 1;
+			App.Settings.templ_flags = flags;
 		};
 
 		void _Combo_Changed(object sender, SelectionChangedEventArgs e) {

@@ -3,19 +3,6 @@ using System.Windows;
 
 //TODO: need some learning stuff. Now users install the app, open the window first time, and don't know what to do.
 
-//TODO: example triggers:
-//	Now mouse triggers are disabled by default, and users will not easily understand why, and how to enable.
-//	Now other trigger examples may be unwanted.
-//	Maybe initially disable all, and print info with links to temporarily enable/disable.
-
-//TODO: new item:
-//	Move caret to the end of main function.
-//	Collapse //. script.setup //..
-
-//TODO: icon:
-//	Make // thinner.
-//	Make the top half of the gray circle thinner.
-
 static class App
 {
 	public const string

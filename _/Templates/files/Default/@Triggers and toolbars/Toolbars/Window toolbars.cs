@@ -7,9 +7,7 @@ void WindowToolbars() {
 	
 	//Add toolbar triggers here, like in examples.
 	
-	if (_enableToolbarExamples) {
-		//examples of toolbar triggers
-		
+	if (!true) { //examples of triggers. To enable, replace (!true) with (true) and run this script.
 		Triggers.Window[TWEvent.ActiveOnce, "*Notepad", "Notepad"] = Toolbar_Notepad;
 		//Triggers.Window[TWEvent.ActiveOnce, "*Name1", "ClassName1"] = Toolbar_OtherWindow;
 		//Triggers.Window[TWEvent.ActiveOnce, "*Name2", "ClassName2"] = o => { Toolbar_One(o); Toolbar_Two(o); } //attach 2 toolbars to this window

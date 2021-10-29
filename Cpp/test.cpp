@@ -659,9 +659,37 @@ void _TestIAccessibleImpl();
 //struct S4 { double d; int i; char a[]; };
 //struct S5 { char i; int a[]; };
 
+//void TestFileDialog() {
+//	IFileDialog* pfd;
+//
+//	// CoCreate the dialog object.
+//	HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog,
+//		NULL,
+//		CLSCTX_INPROC_SERVER,
+//		__uuidof(IFileDialog), (LPVOID*)&pfd);
+//
+//	if(SUCCEEDED(hr))     {
+//		// Show the dialog
+//		hr = pfd->Show(0);
+//
+//		if(SUCCEEDED(hr))         {
+//			// Obtain the result of the user's interaction with the dialog.
+//			IShellItem* psiResult;
+//			hr = pfd->GetResult(&psiResult);
+//
+//			if(SUCCEEDED(hr))             {
+//				// Do something with the result.
+//				psiResult->Release();
+//			}
+//		}
+//		pfd->Release();
+//	}
+//
+//}
+
 EXPORT void Cpp_Test()
 {
-
+	//TestFileDialog();
 
 
 	//_TestIAccessibleImpl();
