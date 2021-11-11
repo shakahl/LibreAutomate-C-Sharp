@@ -364,7 +364,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Creates new <b>PopupXY</b> that specifies position in a rectangle. For example of the owner window, like <c>PopupXY.In(myForm.Bounds)</c>.
+		/// Creates new <b>PopupXY</b> that specifies position in a rectangle. For example of the owner window.
 		/// </summary>
 		/// <param name="r">Rectangle relative to the primary screen.</param>
 		/// <param name="x">X relative to the rectangle. Default - center.</param>
@@ -388,6 +388,12 @@ namespace Au.Types
 		public static POINT Mouse {
 			get {
 				var p = mouse.xy;
+
+				var scr = screen.of(p);
+				var rs = scr.Rect;
+				int dy = Dpi.Scale(100, scr.Dpi);
+				if (rs.bottom - p.y < dy) return (p.x, p.y - dy);
+
 				int cy = Dpi.GetSystemMetrics(Api.SM_CYCURSOR, p);
 				if (MouseCursor.GetCurrentVisibleCursor(out var c) && Api.GetIconInfo(c, out var u)) {
 					if (u.hbmColor != default) Api.DeleteObject(u.hbmColor);

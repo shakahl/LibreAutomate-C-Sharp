@@ -145,18 +145,18 @@ public unsafe class uiimageFinder
 	/// </remarks>
 	public uiimage Find(IFArea area, double waitS) => Exists(area, waitS) ? Result : null;
 
-	/// <inheritdoc cref="Find(IFArea)"/>
 	/// <returns>If found, sets <see cref="Result"/> and returns true, else false.</returns>
+	/// <inheritdoc cref="Find(IFArea)"/>
 	public bool Exists(IFArea area) {
 		_Before(area, Action_.Find);
 		return Find_();
 	}
 
-	/// <inheritdoc cref="Find(IFArea, double)"/>
 	/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>waitS</i> negative).</returns>
+	/// <inheritdoc cref="Find(IFArea, double)"/>
 	public bool Exists(IFArea area, double waitS) {
 		bool r = waitS == 0 ? Exists(area) : Wait_(Action_.Wait, waitS < 0 ? waitS : -waitS, area);
-		return r || waitS < 0 ? r : throw new NotFoundException();
+		return r || double.IsNegative(waitS) ? r : throw new NotFoundException();
 	}
 
 	/// <summary>

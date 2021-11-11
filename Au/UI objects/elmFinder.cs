@@ -174,7 +174,7 @@ public unsafe class elmFinder
 	///   The L T coordinates are relative to the primary screen.
 	/// - <c>"level"</c> - level (see <see cref="elm.Level"/>) at which the UI element can be found. Can be exact level, or minimal and maximal level separated by space.\
 	///   The default value is 0 1000.
-	/// - <c>"elem"</c> - <see cref="elm.SimpleElementId"/>.
+	/// - <c>"item"</c> - <see cref="elm.Item"/>.
 	/// - <c>"action"</c> - <see cref="elm.DefaultAction"/>.
 	/// - <c>"key"</c> - <see cref="elm.KeyboardShortcut"/>.
 	/// - <c>"help"</c> - <see cref="elm.Help"/>.
@@ -259,7 +259,7 @@ public unsafe class elmFinder
 	/// - <i>navig</i> string is invalid.
 	/// - <i>flags</i> has <b>UIA</b> or <b>ClientArea</b> when searching in web page (role prefix <c>"web:"</c> etc) or <b>elm</b>.
 	/// - <i>role</i> has a prefix ("web:" etc) when searching in <b>elm</b>.
-	/// - <see cref="elm.SimpleElementId"/> not 0 when searching in <b>elm</b>.
+	/// - <see cref="elm.Item"/> not 0 when searching in <b>elm</b>.
 	/// </exception>
 	/// <exception cref="AuWndException">Invalid window handle (0 or closed). See also <see cref="In(wnd)"/>.</exception>
 	/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
@@ -301,15 +301,15 @@ public unsafe class elmFinder
 	/// </remarks>
 	public elm Find(double waitS) => Exists(waitS) ? Result : null;
 
-	/// <inheritdoc cref="Find()"/>
 	/// <returns>If found, sets <see cref="Result"/> and returns true, else false.</returns>
+	/// <inheritdoc cref="Find()"/>
 	public bool Exists() => Find_(_elm != null, _wnd, _elm);
 
-	/// <inheritdoc cref="Find(double)"/>
 	/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>waitS</i> negative).</returns>
+	/// <inheritdoc cref="Find(double)"/>
 	public bool Exists(double waitS) {
 		if (Find_(_elm != null, _wnd, _elm, waitS == 0d ? null : waitS < 0 ? waitS : -waitS)) return true;
-		return waitS < 0 ? false : throw new NotFoundException();
+		return double.IsNegative(waitS) ? false : throw new NotFoundException();
 	}
 
 	/// <summary>
@@ -339,7 +339,7 @@ public unsafe class elmFinder
 				if (_flags.HasAny(EFFlags.UIA | EFFlags.ClientArea)) throw new ArgumentException("Cannot use flags UIA and ClientArea when searching in elm.");
 				if (eParent == null) throw new ArgumentNullException();
 				eParent.ThrowIfDisposed_();
-				if (eParent.SimpleElementId != 0) throw new ArgumentException("SimpleElementId is not 0.");
+				if (eParent.Item != 0) throw new ArgumentException("Item not 0.");
 			}
 			aParent = new(eParent); pParent = &aParent;
 			if (!eParent._misc.flags.Has(EMiscFlags.InProc)) flags |= EFFlags.NotInProc;
@@ -447,7 +447,7 @@ public unsafe class elmFinder
 			e = e2;
 		}
 		if (_next != null) {
-			if (e.SimpleElementId != 0) return false;
+			if (e.Item != 0) return false;
 			if (!_next.Find_(true, default, e, isNext: true)) return false;
 			e = _next.Result;
 		}
@@ -531,8 +531,8 @@ public unsafe class elmFinder
 	///// </remarks>
 	//public elm Find(wnd w, wndChildFinder controls) => Exists(w, controls) ? Result : null;
 
-	///// <inheritdoc cref="Find(wnd, wndChildFinder)"/>
 	///// <returns>If found, sets <see cref="Result"/> and returns true, else false.</returns>
+	///// <inheritdoc cref="Find(wnd, wndChildFinder)"/>
 	//public bool Exists(wnd w, wndChildFinder controls) {
 	//	w.ThrowIfInvalid();
 	//	foreach (var c in controls.FindAll(w)) {

@@ -39,7 +39,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
-[assembly: AssemblyVersion("0.0.3")]
+[assembly: AssemblyVersion("0.1.0")]
 
 //note: once were released versions 1.0.0 and 1.0.1 "preview" versions, then decided to use 0.x before the first non-preview release.
 //	It could have problems in some code. Workaround: when it's time for 1.0.0 or 1.0.1, use eg 1.0.0.20. Or skip them and use 1.0.2.

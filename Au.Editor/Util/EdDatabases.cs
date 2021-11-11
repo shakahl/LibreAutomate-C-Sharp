@@ -236,8 +236,8 @@ static class EdDatabases
 		d.Execute("CREATE TABLE api (name TEXT, code TEXT, kind INTEGER)"); //note: no PRIMARY KEY. Don't need index.
 		using var statInsert = d.Statement("INSERT INTO api VALUES (?, ?, ?)");
 
-		string rxType = @"(?ms)^(?:\[[^\r\n]+\r\n)*internal (struct|enum|interface|class) (\w+)[^\r\n\{]+\{(?:\}$|.+?^\})";
-		string rxFunc = @"(?m)^(?:\[[^\r\n]+\r\n)*internal (static extern|delegate) \w+\** (\w+)\(.+;$";
+		string rxType = @"(?ms)^(?:\[\N+\R)*internal (struct|enum|interface|class) (\w+)[^\r\n\{]+\{(?: *\}$|.+?^\})";
+		string rxFunc = @"(?m)^(?:\[\N+\R)*internal (static extern|delegate) \w+\** (\w+)\(.+;$";
 		string rxVarConst = @"(?m)^internal (const|readonly|static) \w+ (\w+) =.+;$";
 
 		foreach (var m in s.RxFindAll(rxType)) _Add(m);
@@ -246,7 +246,9 @@ static class EdDatabases
 
 		void _Add(RXMatch m) {
 			statInsert.Bind(1, m[2].Value);
-			statInsert.Bind(2, m.Value);
+			var code = m.Value;
+			Debug.Assert(!code.Contains("\r\n\r")); //if contains newlines, the regex is bad, spans multiple definitions
+			statInsert.Bind(2, code);
 
 			CiItemKind kind = m[1].Value switch {
 				"struct" => CiItemKind.Structure,

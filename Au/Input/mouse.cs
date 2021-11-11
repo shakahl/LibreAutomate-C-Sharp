@@ -471,19 +471,29 @@ namespace Au
 			if (action != MButton.Up && !opt.mouse.Relaxed) { //allow to release anywhere, eg it could be a drag-drop
 				var wTL = w.Window;
 				bool bad = !wTL.Rect.Contains(p);
-				if (!bad && !_CheckWindowFromPoint()) {
-					//Debug_.Print("need to activate");
-					//info: activating brings to the Z top and also uncloaks
-					if (!wTL.IsEnabled(false)) bad = true; //probably an owned modal dialog disabled the window
-					else if (wTL.ThreadId == wnd.getwnd.shellWindow.ThreadId) bad = true; //desktop
-					else if (wTL.IsActive) wTL.ZorderTop(ownerToo: true); //can be below another window in the same topmost/normal Z order, although it is rare
-					else bad = !wTL.Activate_(wnd.Internal_.ActivateFlags.NoThrowIfInvalid | wnd.Internal_.ActivateFlags.IgnoreIfNoActivateStyleEtc | wnd.Internal_.ActivateFlags.NoGetWindow);
+				if (!bad) {
+					if (!_CheckWindowFromPoint()) {
+						//Debug_.Print("need to activate");
+						//info: activating brings to the Z top and also uncloaks
+						if (!wTL.IsEnabled(false)) bad = true; //probably an owned modal dialog disabled the window
+						else if (wTL.ThreadId == wnd.getwnd.shellWindow.ThreadId) bad = true; //desktop
+						else if (wTL.IsActive) wTL.ZorderTop(ownerToo: true); //can be below another window in the same topmost/normal Z order, although it is rare
+						else bad = !wTL.Activate_(wnd.Internal_.ActivateFlags.NoThrowIfInvalid | wnd.Internal_.ActivateFlags.IgnoreIfNoActivateStyleEtc | wnd.Internal_.ActivateFlags.NoGetWindow);
 
-					//rejected: if wTL is desktop, minimize windows. Scripts should not have a reason to click desktop. If need, they can minimize windows explicitly.
-					//CONSIDER: activate always, because some controls don't respond when clicked while the window is inactive. But there is a risk to activate a window that does not want to be activated on click, even if we don't activate windows that have noactivate style. Probably better let the script author insert Activate before Click when need.
-					//CONSIDER: what if the window is hung?
+						//rejected: if wTL is desktop, minimize windows. Scripts should not have a reason to click desktop. If need, they can minimize windows explicitly.
+						//CONSIDER: activate always, because some controls don't respond when clicked while the window is inactive. But there is a risk to activate a window that does not want to be activated on click, even if we don't activate windows that have noactivate style. Probably better let the script author insert Activate before Click when need.
+						//CONSIDER: what if the window is hung?
 
-					if (!bad) bad = !_CheckWindowFromPoint();
+						if (!bad) bad = !_CheckWindowFromPoint();
+					} else if (!wTL.IsActive && !wTL.IsNoActivateStyle_()) {
+						//activate window, because some windows/controls have this nasty feature:
+						//	If window inactive, the first click just activates the window but does not execute the click action.
+						//	Example: ribbon controls.
+						//	Usually on WM_MOUSEACTIVATE they return MA_ACTIVATEANDEAT. We could send the message to detect it, but it's dirty and dangerous, eg some windows try to activate or focus self.
+						//	In any case, activating could make more reliable. In QM2 it worked well, don't remember any problems.
+						wTL.ActivateL();
+						wTL.MinimalSleepIfOtherThread_();
+					}
 				}
 				if (bad) throw new AuWndException(wTL, "Cannot click. The point is not in the window");
 
@@ -1063,7 +1073,7 @@ namespace Au
 		/// Does not wait until the target application finishes processing the message.
 		/// Works not with all windows.
 		/// </remarks>
-		public static void virtualClick(wnd w, Coord x = default, Coord y = default, MButton button = MButton.Left, RECT? rect = null) {
+		public static void postClick(wnd w, Coord x = default, Coord y = default, MButton button = MButton.Left, RECT? rect = null) {
 			RECT r;
 			if (rect != null) {
 				r = rect.Value;
@@ -1071,10 +1081,10 @@ namespace Au
 			} else {
 				if (!w.GetClientRect(out r)) w.ThrowUseNative();
 			}
-			VirtualClick_(w, r, x, y, button);
+			PostClick_(w, r, x, y, button);
 		}
 
-		internal static void VirtualClick_(wnd w, RECT r, Coord x = default, Coord y = default, MButton button = MButton.Left) {
+		internal static void PostClick_(wnd w, RECT r, Coord x = default, Coord y = default, MButton button = MButton.Left) {
 			MButton mask = MButton.Down | MButton.Up | MButton.DoubleClick, b = button & ~mask, dud = button & mask;
 			if (b == 0) b = MButton.Left;
 			int m = b switch {
@@ -1094,7 +1104,7 @@ namespace Au
 				if (w2 != w && !w2.Is0) { w.MapClientToClientOf(w2, ref point); w = w2; }
 			}
 
-			using var workaround = new ButtonVirtualClickWorkaround_(w);
+			using var workaround = new ButtonPostClickWorkaround_(w);
 
 			nint xy = Math2.MakeLparam(point);
 			nint mk = 0; if (keys.isCtrl) mk |= Api.MK_CONTROL; if (keys.isShift) mk |= Api.MK_SHIFT;
@@ -1117,14 +1127,14 @@ namespace Au
 		/// Workaround for the documented BM_CLICK/WM_LBUTTONDOWN bug of classic button controls: randomly fails if inactive window.
 		/// If c is a button in a dialog box, posts WM_ACTIVATE messages to the dialog box.
 		/// </summary>
-		internal ref struct ButtonVirtualClickWorkaround_
+		internal ref struct ButtonPostClickWorkaround_
 		{
 			readonly wnd _w;
 
-			public ButtonVirtualClickWorkaround_(wnd c) {
+			public ButtonPostClickWorkaround_(wnd c) {
 				//this func is fast, but slower is elm.wndcontainer (to get c) and JIT
 				_w = default;
-				var w = c.Window; //not c.DirectParent. Eg in taskdialog it is not #32770. The virtualclick/invoke worked without this workaround in all tested top-level non-#32770 windows, with or without an intermediate #32770.
+				var w = c.Window; //not c.DirectParent. Eg in taskdialog it is not #32770. The postclick/invoke worked without this workaround in all tested top-level non-#32770 windows, with or without an intermediate #32770.
 				if (w != c && !w.IsActive && w.ClassNameIs("#32770")) {
 					//if (c.ClassNameIs("*Button*")) {
 					if (65538 == c.Send(Api.WM_GETOBJECT, 0, (nint)EObjid.QUERYCLASSNAMEIDX)) {

@@ -46,6 +46,7 @@ inline void PrintComRefCount(IUnknown* u) {
 #define PRINTHEX __noop
 #define PRINTF __noop
 #define PRINTF_IF __noop
+#define PRINTS_IF __noop
 #define PrintComRefCount __noop
 #endif
 

@@ -77,17 +77,24 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets location of this UI element in the client area of window w.
+		/// Gets location of this UI element in the client area of window <i>w</i>.
 		/// </summary>
-		/// <param name="r">Receives rectangle in w client area coordinates.</param>
+		/// <param name="r">Receives rectangle in <i>w</i> client area coordinates.</param>
 		/// <param name="w">Window or control.</param>
+		/// <param name="intersect">If part but not entire rectangle is in <i>w</i> client area, get only the part that is in the client area.</param>
 		/// <remarks>
 		/// Returns false if failed or this property is unavailable. Supports <see cref="lastError"/>.
 		/// Most but not all UI elements support this property.
 		/// Uses <see cref="GetRect(out RECT, bool)"/> and <see cref="wnd.MapScreenToClient(ref RECT)"/>.
 		/// </remarks>
-		public bool GetRect(out RECT r, wnd w) {
-			return GetRect(out r) && w.MapScreenToClient(ref r);
+		public bool GetRect(out RECT r, wnd w, bool intersect = false) {
+			//return GetRect(out r) && w.MapScreenToClient(ref r);
+			if (!(GetRect(out r) && w.MapScreenToClient(ref r))) return false;
+			if (intersect) {
+				var rr = r;
+				if (rr.Intersect(w.ClientRect)) r = rr;
+			}
+			return true;
 		}
 
 		/// <summary>
@@ -354,7 +361,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
-		/// Fails if the UI element does not have a default action. Then you can use <see cref="MouseClick"/>, or try <see cref="VirtualClick"/>, <see cref="Select"/>, <see cref="Focus"/> and keyboard functions.
+		/// Fails if the UI element does not have a default action. Then you can use <see cref="MouseClick"/>, or try <see cref="PostClick"/>, <see cref="Select"/>, <see cref="Focus"/> and keyboard functions.
 		/// The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="JavaInvoke"/> or one of the above functions (MouseClick etc).
 		/// Uses <msdn>IAccessible.accDoDefaultAction</msdn>.
 		/// </remarks>
@@ -362,7 +369,7 @@ namespace Au
 			ThrowIfDisposed_();
 			int hr;
 			if (!MiscFlags.HasAny(EMiscFlags.UIA | EMiscFlags.Java) && RoleInt is ERole.BUTTON or ERole.SPLITBUTTON) { //don't need for check/radio
-				using var workaround = new mouse.ButtonVirtualClickWorkaround_(WndContainer);
+				using var workaround = new mouse.ButtonPostClickWorkaround_(WndContainer);
 				hr = Cpp.Cpp_AccAction(this, 'a');
 			} else {
 				hr = Cpp.Cpp_AccAction(this, 'a');
@@ -380,42 +387,50 @@ namespace Au
 
 		/// <summary>
 		/// Moves the cursor (mouse pointer) to this UI element.
-		/// Calls <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.
 		/// </summary>
 		/// <param name="x">X coordinate in the bounding rectangle of this UI element. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the bounding rectangle of this UI element. Default - center.</param>
-		/// <exception cref="AuException">Failed to get UI element rectangle (<see cref="elm.GetRect(out RECT, wnd)"/>) or container window (<see cref="elm.WndContainer"/>).</exception>
+		/// <exception cref="AuException">Failed to get UI element rectangle or container window (<see cref="elm.WndContainer"/>).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.</exception>
+		/// <remarks>
+		/// Calls <see cref="mouse.move(wnd, Coord, Coord, bool)"/>. To get rectangle in window, uses <see cref="GetRect(out RECT, wnd, bool)"/> with <i>intersect</i> true.
+		/// </remarks>
 		public void MouseMove(Coord x = default, Coord y = default) => _ElmMouseAction(false, x, y, default);
 
 		/// <summary>
 		/// Clicks this UI element.
-		/// Calls <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.
 		/// </summary>
 		/// <param name="x">X coordinate in the bounding rectangle of this UI element. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the bounding rectangle of this UI element. Default - center.</param>
 		/// <param name="button">Which button and how to use it.</param>
-		/// <exception cref="AuException">Failed to get UI element rectangle (<see cref="elm.GetRect(out RECT, wnd)"/>) or container window (<see cref="elm.WndContainer"/>).</exception>
+		/// <exception cref="AuException">Failed to get UI element rectangle or container window (<see cref="WndContainer"/>).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.</exception>
+		/// <remarks>
+		/// Calls <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>. To get rectangle in window, uses <see cref="GetRect(out RECT, wnd, bool)"/> with <i>intersect</i> true.
+		/// </remarks>
 		public MRelease MouseClick(Coord x = default, Coord y = default, MButton button = MButton.Left) {
 			_ElmMouseAction(true, x, y, button);
 			return button;
 		}
 
+		/// <summary>
+		/// Double-clicks this UI element.
+		/// </summary>
+		/// <inheritdoc cref="MouseClick(Coord, Coord, MButton)"/>
+		public void MouseClickD(Coord x = default, Coord y = default) => MouseClick(x, y, MButton.DoubleClick);
+
+		/// <summary>
+		/// Right-clicks this UI element.
+		/// </summary>
+		/// <inheritdoc cref="MouseClick(Coord, Coord, MButton)"/>
+		public void MouseClickR(Coord x = default, Coord y = default) => MouseClick(x, y, MButton.Right);
+
 		void _ElmMouseAction(bool click, Coord x, Coord y, MButton button) {
-			var w = WndContainer; //info: not necessary, but with window the mouse functions are more reliable, eg will not click another window if it is over our window
-
-			//never mind: if w.Is0 and the action is 'click', get UI element from point and fail if it is not this. But need to compare UI element properties. Rare.
-
-			if (!(w.Is0 ? GetRect(out RECT r) : GetRect(out r, w))) throw new AuException(0, "*get rectangle");
+			var w = WndContainer; //with window the mouse functions are more reliable, eg will not click another window
+			if (!GetRect(out var r, w, intersect: true) || r.NoArea) throw new AuException(0, "*get rectangle");
 			var p = Coord.NormalizeInRect(x, y, r, centerIfEmpty: true);
-			if (w.Is0) {
-				if (button == 0) mouse.move(p);
-				else mouse.clickEx(button, p);
-			} else {
-				if (button == 0) mouse.move(w, p.x, p.y);
-				else mouse.clickEx(button, w, p.x, p.y);
-			}
+			if (button == 0) mouse.move(w, p.x, p.y);
+			else mouse.clickEx(button, w, p.x, p.y);
 		}
 
 		/// <summary>
@@ -425,7 +440,7 @@ namespace Au
 		/// <param name="y">Y coordinate in the bounding rectangle of this UI element. Default - center.</param>
 		/// <param name="button">Can specify the left (default), right or middle button. Also flag for double-click, press or release.</param>
 		/// <exception cref="AuException">
-		/// - Failed to get rectangle.
+		/// - Failed to get rectangle or container window.
 		/// - The element is invisible/offscreen.
 		/// </exception>
 		/// <exception cref="ArgumentException">Unsupported button specified.</exception>
@@ -435,14 +450,26 @@ namespace Au
 		/// Works not with all elements.
 		/// Try this function when <see cref="Invoke"/> does not work and you don't want to use <c>MouseClick</c>.
 		/// </remarks>
-		public void VirtualClick(Coord x = default, Coord y = default, MButton button = MButton.Left) {
+		public void PostClick(Coord x = default, Coord y = default, MButton button = MButton.Left) {
 			var w = WndContainer;
-			if (!GetRect(out var r, w)) throw new AuException(0, "*get rectangle");
+			if (!GetRect(out var r, w, intersect: true) || r.NoArea) throw new AuException(0, "*get rectangle");
 			if (r.NoArea || State.HasAny(EState.INVISIBLE | EState.OFFSCREEN)) throw new AuException(0, "Invisible or offscreen");
 			//FUTURE: Chrome bug: OFFSCREEN not updated after scrolling.
 
-			mouse.VirtualClick_(w, r, x, y, button);
+			mouse.PostClick_(w, r, x, y, button);
 		}
+
+		/// <summary>
+		/// Posts mouse-double-click messages to the container window, using coordinates in this UI element.
+		/// </summary>
+		/// <inheritdoc cref="PostClick(Coord, Coord, MButton)"/>
+		public void PostClickD(Coord x = default, Coord y = default) => PostClick(x, y, MButton.DoubleClick);
+
+		/// <summary>
+		/// Posts mouse-right-click messages to the container window, using coordinates in this UI element.
+		/// </summary>
+		/// <inheritdoc cref="PostClick(Coord, Coord, MButton)"/>
+		public void PostClickR(Coord x = default, Coord y = default) => PostClick(x, y, MButton.Right);
 
 		/// <summary>
 		/// Performs one of actions supported by this Java UI element.
@@ -881,7 +908,7 @@ namespace Au
 			if (waitS == 0) {
 				hr = Cpp.Cpp_AccNavigate(this, navig, out ca);
 			} else {
-				var to = new wait.Loop(waitS > 0 ? -waitS : 0.0);
+				var to = new wait.Loop(waitS > 0 ? -waitS : 0d);
 				do hr = Cpp.Cpp_AccNavigate(this, navig, out ca);
 				while (hr != 0 && hr != (int)Cpp.EError.InvalidParameter && to.Sleep());
 			}

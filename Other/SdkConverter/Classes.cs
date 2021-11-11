@@ -103,7 +103,7 @@ namespace SdkConverter
 
 		class _Struct :_Symbol
 		{
-			public bool isInterface, isClass;
+			public bool isInterface, isDualInterface, isClass;
 			public char[] attributes, members;
 
 			public _Struct(string csTypename, bool forwardDecl)
@@ -116,6 +116,7 @@ namespace SdkConverter
 			{
 				var r = new _Struct(name, x.forwardDecl);
 				r.isInterface = x.isInterface;
+				r.isDualInterface = x.isDualInterface;
 				r.attributes = x.attributes;
 				r.members = x.members;
 				return r;

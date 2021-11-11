@@ -10,16 +10,16 @@ namespace Au.Tools;
 
 class Dwnd : KDialogWindow
 {
-	public static void Dialog(wnd w = default, bool uncheckControl = false)
-		=> TUtil.ShowDialogInNonmainThread(() => new Dwnd(w, uncheckControl));
+	public static void Dialog(wnd w = default)
+		=> TUtil.ShowDialogInNonmainThread(() => new Dwnd(w));
 
 	wnd _wnd, _con;
-	bool _uncheckControl;
+	bool _uncheckControl, _dontInsert;
 	string _wndName;
 
 	KSciInfoBox _info, _winInfo;
-	Button _bTest, _bOK, _bInsert;
-	KCheckBox _cCapture, _cControl;
+	Button _bTest, _bInsert;
+	KCheckBox _cCapture, _cControl, _cActivate, _cOrRun, _cException;
 	Separator _sepControl;
 	ScrollViewer _scroller;
 	KSciCodeBoxWnd _code;
@@ -27,25 +27,25 @@ class Dwnd : KDialogWindow
 
 	Grid _gCon1, _gCon2;
 	KCheckTextBox nameW, classW, programW, containsW, idC, nameC, classC, alsoW, alsoC, waitW, skipC;
-	KCheckBox cHiddenTooW, cCloakedTooW, cHiddenTooC, cException, cActivate;
+	KCheckBox cHiddenTooW, cCloakedTooW, cHiddenTooC;
 
-	public Dwnd(wnd w = default, bool uncheckControl = false) {
+	public Dwnd(wnd w = default, bool uncheckControl = false, bool dontInsert = false) {
 		Title = "Find window or control";
 
-		var b = new wpfBuilder(this).WinSize((500, 410..), (600, 460..)).Columns(-1);
+		var b = new wpfBuilder(this).WinSize((500, 440..), (600, 430..)).Columns(-1);
 		b.R.Add(out _info).Height(60);
-		b.R.StartGrid().Columns(0, 0, 0, 0, -1);
-		b.R.AddButton(out _bTest, "Test", _bTest_Click).Width(70).Disabled().Tooltip("Executes the code now (except wait/fail/activate) and shows the found window/control");
-		b.AddOkCancel(out _bOK, out _, out _, stackPanel: false);
-		b.AddButton(out _bInsert, "Insert", _bOK_Click).Width(70).Disabled().Tooltip("Insert code and don't close");
-		b.Add(out _cCapture, "Capture").Tooltip("Enables hotkeys F3 and Ctrl+F3. Shows window/control rectangles when moving the mouse.");
-		b.R.Skip().Add(out cActivate, "Activate window").Span(2).Hidden().Add(out cException, "Fail if not found").Hidden().Checked();
+		b.R.StartGrid().Columns(0, 76, 76, 0, 0, -1);
+		_cCapture = b.xAddCheckIcon("*Unicons.Capture #FF4040", $"Enable capturing ({App.Settings.hotkeys.capture}) and show window/control rectangles");
+		b.AddButton(out _bTest, "Test", _bTest_Click).Disabled().Tooltip("Executes the 'find' part of the code now and shows the rectangle");
+		b.AddButton(out _bInsert, dontInsert ? "OK" : "Insert", _Insert).Disabled(); if (!dontInsert) b.Tooltip("Insert code in editor");
+		b.Add(out _cActivate, "Activate").Tooltip("Activate the found window");
+		b.Add(out _cOrRun, "Or run").Tooltip("Open new window if not found.\r\nNote: may need to edit the run: { ... } code in editor.");
+		b.Add(out _cException, "Fail if not found").Checked().Tooltip("Throw exception if not found");
+		//cActivate.CheckChanged += (_, _) => { cException.Visibility = cActivate.IsChecked ? Visibility.Hidden : Visibility.Visible; }; //no, need for control too
 		b.End();
-		_bOK.IsEnabled = false;
-		b.OkApply += _bOK_Click;
 
 		//window and control properties and search settings
-		b.R.AddSeparator(false).Margin("T B");
+		b.R.AddSeparator(false).Margin("B");
 		b.Row(0); //auto height, else adds v scrollbar when textbox height changes when a textbox text is multiline or too long (with h scrollbar)
 		_scroller = b.xStartPropertyGrid("L2 T3 R2 B1"); //actually never shows scrollbar because of row auto height, but sets some options etc
 		_scroller.Visibility = Visibility.Hidden;
@@ -98,13 +98,14 @@ class Dwnd : KDialogWindow
 
 		_con = w;
 		_uncheckControl = uncheckControl;
+		_dontInsert = dontInsert;
 
 		b.WinProperties(
 			topmost: true,
-			showActivated: !w.Is0 ? false : null //eg if captured a popup menu, activating this window closes the menu and we cannot get properties
+			showActivated: _dontInsert || w.Is0 ? null : false //eg if captured a popup menu, activating this window closes the menu and we cannot get properties
 			);
 
-		WndSavedRect.Restore(this, App.Settings.tools_Dwnd_wndPos, o => App.Settings.tools_Dwnd_wndPos = o);
+		WndSavedRect.Restore(this, App.Settings.Dwnd_wndPos, o => App.Settings.Dwnd_wndPos = o);
 	}
 
 	static Dwnd() {
@@ -126,8 +127,7 @@ class Dwnd : KDialogWindow
 	}
 
 	void _SetWnd(bool captured) {
-		_bTest.IsEnabled = true; _bOK.IsEnabled = true; _bInsert.IsEnabled = true;
-		cActivate.Visibility = Visibility.Visible; cException.Visibility = Visibility.Visible;
+		_bTest.IsEnabled = true; _bInsert.IsEnabled = true;
 
 		var wndOld = _wnd;
 		_wnd = _con.Window;
@@ -136,7 +136,7 @@ class Dwnd : KDialogWindow
 
 		_ClearTree();
 		if (!_FillProperties(newWindow)) return;
-		_FormatCode(false, newWindow);
+		_FormatCode(false);
 		_FillTree();
 	}
 
@@ -193,8 +193,13 @@ class Dwnd : KDialogWindow
 			bool idUseful = TUtil.GetUsefulControlId(_con, _wnd, out f.cId);
 			//idC.Visible = idUseful;
 			idC.Set(idUseful, f.cId.ToS() + (idUseful ? null : " /*probably not useful*/"));
-			nameC.Set(!idUseful, an[iSel], an);
-			classC.Set(!idUseful, TUtil.StripWndClassName(f.cClass, true));
+			string sName = an[iSel], sClass = TUtil.StripWndClassName(f.cClass, true);
+			nameC.Set(!idUseful, sName, an);
+			classC.Set(!idUseful, sClass);
+			bool hiddenToo = !_con.IsVisible;
+			cHiddenTooC.IsChecked = hiddenToo;
+			var skip = idUseful ? null : TUtil.GetControlSkip(_wnd, _con, sName, sClass, hiddenToo);
+			skipC.Set(skip != null, skip);
 		}
 
 		bool checkControl = isCon && !_uncheckControl;
@@ -247,6 +252,9 @@ class Dwnd : KDialogWindow
 				bool on = c.IsChecked;
 				if (c == _cControl) {
 					_ShowControlProperties(on, null);
+				} else if (source == _cOrRun) {
+					_cActivate.IsChecked = on;
+					waitW.Visible = !on;
 				}
 			} else if (source is TextBox t && t.Tag is KCheckTextBox k) {
 				_noeventValueChanged = _formattedOnValueChanged = false; //allow auto-check but prevent formatting twice
@@ -272,17 +280,24 @@ class Dwnd : KDialogWindow
 		_gCon2.IsEnabled = showGrid;
 	}
 
-	(string code, string wndVar) _FormatCode(bool forTest = false, bool newWindow = false) {
-		if (!_scroller.IsVisible) return default; //failed to get window props
+	(string code, string wndVar) _FormatCode(bool forTest = false) {
+		if (!_scroller.IsVisible) return default; //still not captured, or failed to get window props
+
+		string orRun = null;
+		if (!forTest && _cOrRun.IsChecked) {
+			var p = TUtil.PathInfo.FromWindow(_wnd);
+			if (p != null) orRun = "run.it(" + p.GetCode().path + ");";
+		}
 
 		var f = new TUtil.WindowFindCodeFormatter {
 			Test = forTest,
 			NeedControl = !_con.Is0 && _cControl.IsChecked,
-			Throw = cException.IsChecked,
-			Activate = cActivate.IsChecked,
+			Throw = _cException.IsChecked,
+			Activate = _cActivate.IsChecked,
 			hiddenTooW = cHiddenTooW.IsChecked,
 			cloakedTooW = cCloakedTooW.IsChecked,
 			hiddenTooC = cHiddenTooC.IsChecked,
+			orRunW = orRun,
 		};
 
 		nameW.GetText(out f.nameW, emptyToo: true);
@@ -313,10 +328,10 @@ class Dwnd : KDialogWindow
 
 	#region capture
 
-	TUtil.CaptureWindowEtcWithHotkey _capt;
+	TUtil.CapturingWithHotkey _capt;
 
 	void _cCapture_CheckedChanged() {
-		_capt ??= new TUtil.CaptureWindowEtcWithHotkey(_cCapture, _Capture, p => (wnd.fromXY(p).Rect, null));
+		_capt ??= new TUtil.CapturingWithHotkey(_cCapture, p => (wnd.fromXY(p).Rect, null), _Capture);
 		_capt.Capturing = _cCapture.IsChecked;
 	}
 
@@ -334,7 +349,7 @@ class Dwnd : KDialogWindow
 
 	#endregion
 
-	#region OK, Test
+	#region Insert, Test
 
 	/// <summary>
 	/// When OK clicked, the top-level window (even when <see cref="ZResultUseControl"/> is true).
@@ -357,35 +372,36 @@ class Dwnd : KDialogWindow
 	/// </summary>
 	public string ZResultCode { get; private set; }
 
-	/// <summary>
-	/// Don't insert code on OK.
-	/// See also <see cref="ZResultCode"/>.
-	/// </summary>
-	public bool ZDontInsertCodeOnOK { get; set; }
-
 	//rejected. Can use Closed event; then ZResultCode not null if OK.
 	///// <summary>
-	///// When dialog closed with OK button.
+	///// When closed with OK button.
 	///// </summary>
 	//public event Action OK;
 
-	private void _bOK_Click(WBButtonClickArgs e) {
-		var code = _code.zText.NullIfEmpty_();
-		if (e.Button == _bOK) {
-			ZResultCode = code;
-			if (code == null) {
-				e.Cancel = true;
-			} else {
-				ZResultUseControl = !_con.Is0 && _cControl.IsChecked;
-				if (!ZDontInsertCodeOnOK) InsertCode.Statements(code, activate: true);
-			}
-		} else if (code != null) {
-			InsertCode.Statements(code);
+	private void _Insert(WBButtonClickArgs e) {
+		var s = _code.zText.NullIfEmpty_();
+		if (_dontInsert) {
+			ZResultCode = s;
+			if (s == null) e.Cancel = true;
+			else ZResultUseControl = !_con.Is0 && _cControl.IsChecked;
+
+			base.Close();
+		} else if (_close) {
+			base.Close();
+		} else if (s != null) {
+			InsertCode.Statements(s);
+			_close = true;
+			_bInsert.Content = "Close";
+			_bInsert.MouseLeave += (_, _) => {
+				_close = !true;
+				_bInsert.Content = "Insert";
+			};
 		}
 	}
+	bool _close;
 
 	private void _bTest_Click(WBButtonClickArgs ea) {
-		var (code, wndVar) = _FormatCode(true); if (code == null) return;
+		var (code, wndVar) = _FormatCode(true); if (code.NE()) return;
 		var rr = TUtil.RunTestFindObject(this, code, wndVar, _wnd, getRect: o => {
 			var w = (wnd)o;
 			var r = w.Rect;
@@ -641,8 +657,8 @@ class Dwnd : KDialogWindow
 	void _InitInfo() {
 		_commonInfos = new TUtil.CommonInfos(_info);
 
-		_info.zText = c_dialogInfo;
-		_info.ZAddElem(this, c_dialogInfo);
+		_info.zText = _dialogInfo;
+		_info.ZAddElem(this, _dialogInfo);
 
 		_info.InfoCT(nameW, "Window name.", true);
 		_info.InfoCT(classW, "Window class name.", true);
@@ -667,13 +683,8 @@ The function waits for such window max this time interval. On timeout throws exc
 		_info.InfoCT(skipC,
 @"0-based index of matching control.
 For example, if 1, gets the second matching control.");
-		_info.InfoC(cException,
-@"Throw exception if not found.
-If unchecked, returns default(wnd).");
-		_info.InfoC(cActivate,
-@"Ensure the window is active.");
 
-		_info.Info(_tree, "Tree view", "All child and descendant controls of the window.");
+		_info.Info(_tree, "Tree view", "All child/descendant controls in the window.");
 
 		//SHOULDDO: now no info for HwndHost
 		//			_Info(_code, "Code",
@@ -686,15 +697,15 @@ If unchecked, returns default(wnd).");
 		//");
 	}
 
-	const string c_dialogInfo =
-@"This dialog creates code to find <help wnd.find>window<> or <help wnd.Child>control<>.
-1. Move the mouse to a window or control. Press key <b>F3<> or <b>Ctrl+F3<>.
-2. Click the Test button. It finds and shows the window/control.
+	string _dialogInfo =
+$@"This tool creates code to find <help wnd.find>window<> or <help wnd.Child>control<>.
+1. Move the mouse to a window or control. Press hotkey <b>{App.Settings.hotkeys.capture}<>.
+2. Click the Test button to see how the 'find' code works.
 3. If need, change some fields or select another window/control.
-4. Click OK, it inserts C# code in editor. Or copy/paste.
-5. In editor add code to use the window/control. If need, rename variables, delete duplicate wnd.find lines, replace part of window name with *, etc. Then call functions; examples: w.Activate(); var s = w.Name;.
+4. Click Insert. Click Close, or capture/insert again.
+5. If need, edit the code in editor. For example rename variables, delete duplicate wnd.find lines, replace part of window name with *. Add code to use the window or control. Examples: w.Activate(); var s = w.Name;.
 
-If F3 does not work when the target window is active, probably its process is admin and this process isn't. Ctrl+F3 should still work, but may fail to get some properties.";
+If the hotkey does not work when the target window is active, probably its process is admin and this process isn't. Or the process steals the hotkey; try another hotkey (Options -> Hotkeys).";
 
 	#endregion
 }

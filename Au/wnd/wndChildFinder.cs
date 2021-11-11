@@ -90,18 +90,18 @@ namespace Au
 		/// </remarks>
 		public wnd Find(wnd wParent, double waitS) => Exists(wParent, waitS) ? Result : default;
 
-		/// <inheritdoc cref="Find(wnd)"/>
 		/// <returns>If found, sets <see cref="Result"/> and returns true, else false.</returns>
+		/// <inheritdoc cref="Find(wnd)"/>
 		public bool Exists(wnd wParent) {
 			using var k = new WndList_(_AllChildren(wParent));
 			return _FindInList(wParent, k) >= 0;
 		}
 
-		/// <inheritdoc cref="Find(wnd, double)"/>
 		/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>waitS</i> negative).</returns>
+		/// <inheritdoc cref="Find(wnd, double)"/>
 		public bool Exists(wnd wParent, double waitS) {
 			var r = waitS == 0d ? Exists(wParent) : wait.forCondition(waitS < 0 ? waitS : -waitS, () => Exists(wParent));
-			return r || waitS < 0 ? r : throw new NotFoundException();
+			return r || double.IsNegative(waitS) ? r : throw new NotFoundException();
 		}
 
 		ArrayBuilder_<wnd> _AllChildren(wnd wParent) {

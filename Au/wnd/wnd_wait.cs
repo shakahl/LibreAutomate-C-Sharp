@@ -199,13 +199,14 @@ namespace Au
 		/// Window name. Usually it is the title bar text.
 		/// String format: [](xref:wildcard_expression).
 		/// </param>
+		/// <param name="not">Wait until this window does not have the specified name.</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuWndException">The window handle is invalid or the window was closed while waiting.</exception>
 		/// <exception cref="ArgumentException">Invalid wildcard expression.</exception>
-		public bool WaitForName(double secondsTimeout, [ParamString(PSFormat.wildex)] string name) {
+		public bool WaitForName(double secondsTimeout, [ParamString(PSFormat.wildex)] string name, bool not = false) {
 			wildex x = name; //ArgumentNullException
-			return WaitFor(secondsTimeout, t => x.Match(t.Name));
+			return WaitFor(secondsTimeout, t => x.Match(t.Name) != not);
 		}
 
 		/// <summary>

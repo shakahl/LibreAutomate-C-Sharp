@@ -51,6 +51,7 @@ class Cty
 
 static unsafe class Test
 {
+
 	//static void _ColorQuantizer() {
 	//	for (int i = 0; i < 8; i++) {
 	//		var r = new RECT(30, i * 100, 32, 32);
@@ -148,15 +149,15 @@ static unsafe class Test
 	//	print.it(n);
 	//}
 
-	static void TestScripting() {
-		string code = @"if(!keys.isScrollLock) print.it(""test"");";
+	//static void TestScripting() {
+	//	string code = @"if(!keys.isScrollLock) print.it(""test"");";
 
-		if (Scripting.Compile(code, out var c, addUsings: true, addGlobalCs: true, wrapInClass: !true, dll: false, load: "")) {
-			c.method.Invoke(null, new object[1]);
-		} else {
-			print.it(c.errors);
-		}
-	}
+	//	if (Scripting.Compile(code, out var c, addUsings: true, addGlobalCs: true, wrapInClass: !true, dll: false, load: "")) {
+	//		c.method.Invoke(null, new object[1]);
+	//	} else {
+	//		print.it(c.errors);
+	//	}
+	//}
 
 	//struct TestParameterlessCtor
 	//{
@@ -178,8 +179,9 @@ static unsafe class Test
 
 
 	public static void FromMenubar() {
+		
 
-
+		//var w = wnd.find(1, "a", "b", "");
 
 		//Panels.PanelManager.Save();
 		//App.Wmain.Hide();

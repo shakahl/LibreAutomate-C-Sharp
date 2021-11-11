@@ -40,6 +40,7 @@ partial class MainWindow : Window
 		//timer.after(100, _ => Menus.File.Workspace.New_workspace());
 		//timer.after(100, _ => DIcons.ZShow());
 		//timer.after(600, _ => Au.Tools.Dwnd.Dialog(wnd.find(null, "Shell_TrayWnd")));
+		//timer.after(600, _ => Au.Tools.Dwnd.Dialog(wnd.findOrRun(null, "Notepad", run: () => run.it(folders.System + "notepad.exe"))));
 		//timer.after(500, _ => Au.Tools.Delm.Dialog(new POINT(806, 1580)));
 		//timer.after(500, _ => Au.Tools.Delm.Dialog());
 		//timer.after(400, _ => Au.Tools.Duiimage.Dialog());

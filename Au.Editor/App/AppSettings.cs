@@ -18,13 +18,20 @@ record AppSettings : JSettings
 
 	public bool runHidden, files_multiSelect;
 
-	public string wndPos, tools_Dwnd_wndPos, tools_Delm_wndPos, tools_Duiimage_wndPos;
+	public string wndPos, Dwnd_wndPos, Delm_wndPos, Duiimage_wndPos;
 
-	public record hotkeys_t //somehow does not support struct and record struct, InvalidCastException
+	//When need a nested type, use record class. Everything works well; can add/remove members like in main type.
+	//	Somehow .NET does not support struct and record struct, InvalidCastException.
+	//	Tuple does not work well. New members are null. Also item names in file are like "Item1".
+	public record hotkeys_t
 	{
-		public string capture_menu = "Ctrl+Shift+Q", capture_wnd = "Ctrl+Shift+W", capture_elm = "Ctrl+Shift+E";
-		//tested: adding/removing members works well.
-		//tested: tuple does not work well. New members are null. Also item names in file are like "Item1".
+		public string
+			tool_quick = "Ctrl+Shift+Q",
+			tool_wnd = "Ctrl+Shift+W",
+			tool_elm = "Ctrl+Shift+E",
+			capture = "F3",
+			insert = "F4"
+			;
 	}
 	public hotkeys_t hotkeys = new();
 
@@ -35,10 +42,11 @@ record AppSettings : JSettings
 
 	//public byte ci_shiftEnterAlways, ci_shiftTabAlways;
 	//public SIZE ci_sizeSignXaml, ci_sizeComplXaml, ci_sizeComplList;
-	public bool ci_complGroup = true;
+	public bool ci_complGroup = true, ci_unexpandPath = true;
 	public int ci_complParen; //0 spacebar, 1 always, 2 never
 
-	public int tools_Delm_flags;
+	public int Delm_action, Delm_flags;
+	public string Delm_wait;
 
 	public string db_copy_ref, db_copy_doc, db_copy_winapi;
 
@@ -46,7 +54,7 @@ record AppSettings : JSettings
 
 	public string find_skip;
 	public int find_searchIn, find_printSlow = 50;
-	public FRRecentItem[] find_recent, find_recentReplace; //possibly-big arrays should be at the end
+	public FRRecentItem[] find_recent, find_recentReplace; //big arrays should be at the end
 }
 
 /// <summary>

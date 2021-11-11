@@ -574,11 +574,11 @@
 			case Api.SW_RESTORE:
 				ok = !wasMinimized;
 				break;
-			case Api.SW_SHOWNORMAL:
-				ok = !wasMinimized && !IsMaximized; //info: if invalid handle, Show() will return false, don't need to check here.
-				break;
 			case Api.SW_SHOWMAXIMIZED:
 				ok = IsMaximized;
+				break;
+			default: //SW_SHOWNORMAL
+				ok = !wasMinimized && !IsMaximized; //info: if invalid handle, Show() will return false, don't need to check here.
 				break;
 			}
 
@@ -587,9 +587,9 @@
 				Show(true);
 			} else {
 				if (!noAnimation) {
-					lastError.clear();
 					Api.ShowWindow(this, state);
-					ok = 0 == lastError.code;
+					//note: The API returns TRUE if was visible, not if succeeded. Tested: lastError can't be used.
+					ok = _IsState(this, state);
 				} else if (ok = GetWindowPlacement_(out var p, false)) {
 					int state2 = state;
 					switch (state) {
@@ -601,28 +601,37 @@
 						break;
 					}
 
-					//if(wasMinimized) p.flags|=Api.WPF_ASYNCWINDOWPLACEMENT; //fixes Windows bug: if window of another thread, deactivates currently active window and does not activate this window. However then animates window. If we set this while the window is not minimized, it would set blinking caret in inactive window. Instead we use another workaround, see below.
+					//if(wasMinimized) p.flags|=Api.WPF_ASYNCWINDOWPLACEMENT; //Windows bug: if window of another thread, deactivates currently active window and does not activate this window. However then animates window. If we set this while the window is not minimized, it would set blinking caret in inactive window. Instead we use another workaround, see below.
 					p.showCmd = state2;
 					ok = SetWindowPlacement_(ref p, false);
 				}
 
+				static bool _IsState(wnd w, int state) => state switch {
+					Api.SW_MINIMIZE => w.IsMinimized,
+					Api.SW_RESTORE => !w.IsMinimized,
+					Api.SW_SHOWMAXIMIZED => w.IsMaximized,
+					_ => !(w.IsMinimized || w.IsMaximized)
+				} && w.IsVisible;
+
 				if (!ok) {
-					if (lastError.code == Api.ERROR_ACCESS_DENIED) {
+					if (UacAccessDenied) {
 						var cmd = state switch {
 							Api.SW_MINIMIZE => Api.SC_MINIMIZE,
-							Api.SW_SHOWMAXIMIZED => Api.SC_MAXIMIZE,
+							Api.SW_SHOWMAXIMIZED => Api.SC_MAXIMIZE, //fails, never mind
 							_ => Api.SC_RESTORE,
 						};
-						ok = 0 != Send(Api.WM_SYSCOMMAND, cmd);
+						Send(Api.WM_SYSCOMMAND, cmd);
 						//if was minimized, now can be maximized, need to restore if SW_SHOWNORMAL
-						if (ok && state == Api.SW_SHOWNORMAL && IsMaximized) ok = 0 != Send(Api.WM_SYSCOMMAND, cmd);
+						if (state == Api.SW_SHOWNORMAL && IsMaximized) Send(Api.WM_SYSCOMMAND, cmd);
+						//note: the Send return value is unreliable
+						ok = _IsState(this, state);
 					}
 
-					if (!ok) ThrowUseNative("*minimize/maximize/restore*");
+					if (!ok) ThrowNoNative("*minimize/maximize/restore*");
 				}
 
 				if (!IsOfThisThread) {
-					if (wasMinimized) ActivateL(); //fix Windows bug: if window of another thread, deactivates currently active window and does not activate this window
+					if (wasMinimized) ActivateL(); //Windows bug: if window of another thread, deactivates currently active window and does not activate this window
 					else if (state == Api.SW_MINIMIZE) WndUtil.WaitForAnActiveWindow();
 				}
 			}
@@ -842,10 +851,7 @@
 			R = IsActiveOrNoActiveAndThisIsWndRoot_;
 			if (!R) {
 				if (0 != (flags & Internal_.ActivateFlags.IgnoreIfNoActivateStyleEtc)) {
-					var est = ExStyle;
-					if ((est & WSE.NOACTIVATE) != 0) noAct = true;
-					else if ((est & (WSE.TOOLWINDOW | WSE.APPWINDOW)) == WSE.TOOLWINDOW) noAct = !HasStyle(WS.CAPTION);
-					if (noAct && !IsCloaked) {
+					if (IsNoActivateStyle_() && !IsCloaked) {
 						ZorderTop(); //in most cases does not work, but try anyway, it just calls the API. It seems works if the window is topmost.
 						return false; //if cloaked, need to activate to uncloak
 					}
@@ -923,6 +929,13 @@
 			//tested: if the window is hung, activates the ghost window and fails (exception). It's OK.
 		}
 
+		internal bool IsNoActivateStyle_() {
+			var es = ExStyle;
+			if ((es & WSE.NOACTIVATE) != 0) return true;
+			if ((es & (WSE.TOOLWINDOW | WSE.APPWINDOW)) == WSE.TOOLWINDOW) return !HasStyle(WS.CAPTION);
+			return false;
+		}
+
 		/// <summary>
 		/// Activates this window. Also makes it visible and not minimized.
 		/// The active window is in the foreground and receives keyboard and mouse input.
@@ -946,7 +959,7 @@
 		}
 		//CONSIDER: if fails to activate:
 		//dialog.show("Failed to activate window", w.ToString(), footer: The script will continue if you activate the window in {x} s.", timeout: 10);
-		
+
 		//rejected: Activate(double waitS = 0) /// <param name="waitS">Max time interval (seconds) to wait until the window naturally becomes active before activating it.</param>
 		//	It would have sense if we somehow know that the window was created by previous action (or several actions).
 		//	Would need an explicit function call before the action(s). Nobody would use it.

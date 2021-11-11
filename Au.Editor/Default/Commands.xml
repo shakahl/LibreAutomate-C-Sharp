@@ -46,6 +46,8 @@ All attributes are optional. The Example command contains all.
 		<Cut separator="" />
 		<Copy />
 		<Paste />
+		<Comment separator="" />
+		<Uncomment />
 		<Wrap_lines separator="" />
 		<Images_in_code />
 		<Find separator="" />

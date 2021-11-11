@@ -34,7 +34,7 @@ namespace Au
 		/// </summary>
 		/// <param name="w">Window or control.</param>
 		/// <param name="r">Rectangle in <i>w</i> client area coordinates. Use <c>w.ClientRect</c> to get whole client area.</param>
-		/// <param name="usePrintWindow">Get pixels like with flag <see cref="IFFlags.PrintWindow"/>.</param>
+		/// <param name="printWindow">Get pixels like with flag <see cref="IFFlags.PrintWindow"/>.</param>
 		/// <exception cref="AuWndException">Invalid <i>w</i>.</exception>
 		/// <exception cref="ArgumentException">Empty rectangle.</exception>
 		/// <exception cref="AuException">Failed. For example there is not enough memory for bitmap of this size (width*height*4 bytes).</exception>
@@ -43,10 +43,10 @@ namespace Au
 		/// If the window is partially or completely transparent, captures its non-transparent view.
 		/// If the window is DPI-scaled, captures its non-scaled view. And <i>r</i> must contain non-scaled coordinates.
 		/// </remarks>
-		public static Bitmap capture(wnd w, RECT r, bool usePrintWindow = false)
-			=> _Capture(r, w.ThrowIfInvalid(), usePrintWindow);
+		public static Bitmap capture(wnd w, RECT r, bool printWindow = false)
+			=> _Capture(r, w.ThrowIfInvalid(), printWindow);
 
-		static unsafe Bitmap _Capture(RECT r, wnd w = default, bool usePrintWindow = false, GraphicsPath path = null) {
+		static unsafe Bitmap _Capture(RECT r, wnd w = default, bool printWindow = false, GraphicsPath path = null) {
 			//Transfer from screen/window DC to memory DC (does not work without this) and get pixels.
 
 			//rejected: parameter includeNonClient (GetWindowDC).
@@ -56,7 +56,7 @@ namespace Au
 			//FUTURE: if w is DWM-scaled...
 
 			using var mb = new MemoryBitmap(r.Width, r.Height);
-			_CaptureToDC(mb, r, w, usePrintWindow);
+			_CaptureToDC(mb, r, w, printWindow);
 
 #if !true //with this code can allocate gigabytes without triggering GC
 			var R = new Bitmap(r.Width, r.Height, PixelFormat.Format32bppRgb);
@@ -83,8 +83,8 @@ namespace Au
 #endif
 		}
 
-		static void _CaptureToDC(MemoryBitmap mb, RECT r, wnd w = default, bool usePrintWindow = false) {
-			if (usePrintWindow) {
+		static void _CaptureToDC(MemoryBitmap mb, RECT r, wnd w = default, bool printWindow = false) {
+			if (printWindow) {
 				if(!Api.PrintWindow(w, mb.Hdc, Api.PW_CLIENTONLY | (osVersion.minWin8_1 ? Api.PW_RENDERFULLCONTENT : 0)))
 					w.ThrowNoNative("Failed to get pixels");
 			} else {
@@ -136,7 +136,7 @@ namespace Au
 			return new GraphicsPath(p, t);
 		}
 
-		static Bitmap _Capture(List<POINT> outline, wnd w = default, bool usePrintWindow = false) {
+		static Bitmap _Capture(List<POINT> outline, wnd w = default, bool printWindow = false) {
 			int n = outline?.Count ?? 0;
 			if (n == 0) throw new ArgumentException();
 			if (n == 1) return _Capture(new RECT(outline[0].x, outline[0].y, 1, 1));
@@ -147,7 +147,7 @@ namespace Au
 				path.Widen(Pens.Black); //will be transparent, but no exception. Difficult to make non-transparent line.
 				r = RECT.From(path.GetBounds(), false);
 			}
-			return _Capture(r, w, usePrintWindow, path);
+			return _Capture(r, w, printWindow, path);
 		}
 
 		/// <summary>
@@ -168,14 +168,14 @@ namespace Au
 		/// </summary>
 		/// <param name="w">Window or control.</param>
 		/// <param name="outline">The outline (shape) of the area in w client area coordinates. If single element, captures single pixel.</param>
-		/// <param name="usePrintWindow"></param>
+		/// <param name="printWindow"></param>
 		/// <exception cref="AuWndException">Invalid <i>w</i>.</exception>
 		/// <exception cref="ArgumentException"><i>outline</i> is null or has 0 elements.</exception>
 		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size.</exception>
 		/// <remarks>More info: <see cref="capture(wnd, RECT, bool)"/>.</remarks>
-		public static Bitmap capture(wnd w, List<POINT> outline, bool usePrintWindow = false) {
+		public static Bitmap capture(wnd w, List<POINT> outline, bool printWindow = false) {
 			w.ThrowIfInvalid();
-			return _Capture(outline, w, usePrintWindow);
+			return _Capture(outline, w, printWindow);
 		}
 
 		/// <summary>
@@ -203,7 +203,7 @@ namespace Au
 		/// <returns>2-dimensional array [row, column] containing pixel colors in 0xAARRGGBB format. Alpha 0xFF.</returns>
 		/// <param name="w">Window or control.</param>
 		/// <param name="r">Rectangle in <i>w</i> client area coordinates. Use <c>w.ClientRect</c> to get whole client area.</param>
-		/// <param name="usePrintWindow">Get pixels like with flag <see cref="IFFlags.PrintWindow"/>.</param>
+		/// <param name="printWindow">Get pixels like with flag <see cref="IFFlags.PrintWindow"/>.</param>
 		/// <exception cref="AuWndException">Invalid <i>w</i>.</exception>
 		/// <exception cref="ArgumentException">Empty rectangle.</exception>
 		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (width*height*4 bytes).</exception>
@@ -212,12 +212,12 @@ namespace Au
 		/// If the window is partially or completely transparent, captures its non-transparent view.
 		/// If the window is DPI-scaled, captures its non-scaled view. And <i>r</i> must contain non-scaled coordinates.
 		/// </remarks>
-		public static uint[,] getPixels(wnd w, RECT r, bool usePrintWindow = false)
-			=> _Pixels(r, w.ThrowIfInvalid(), usePrintWindow);
+		public static uint[,] getPixels(wnd w, RECT r, bool printWindow = false)
+			=> _Pixels(r, w.ThrowIfInvalid(), printWindow);
 
-		static unsafe uint[,] _Pixels(RECT r, wnd w = default, bool usePrintWindow = false) {
+		static unsafe uint[,] _Pixels(RECT r, wnd w = default, bool printWindow = false) {
 			using var mb = new MemoryBitmap(r.Width, r.Height);
-			_CaptureToDC(mb, r, w, usePrintWindow);
+			_CaptureToDC(mb, r, w, printWindow);
 			var a = new uint[r.Height, r.Width];
 			fixed (uint* p = a) { _GetPixelsFromDC(mb, r, p); }
 			return a;

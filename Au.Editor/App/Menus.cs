@@ -395,7 +395,7 @@ static class Menus
 Version: {Assembly.GetExecutingAssembly().GetName().Version}
 Download: <link>https://www.quickmacros.com/au/help/<>
 Source code: <link>https://github.com/qmgindi/Au<>
-Uses libraries and algorithms: <link https://dotnet.microsoft.com/download>.NET 5<>, <link https://www.scintilla.org/>Scintilla<>, <link https://www.pcre.org/>PCRE<>, <link https://www.sqlite.org/index.html>SQLite<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, <link https://gist.github.com/bert/1192520>Wu's Color Quantizer<>, <link http://xoomer.virgilio.it/acantato/dev/wildcard/wildmatch.html>Cantatore wildcard<>, <link http://www.isthe.com/chongo/tech/comp/fnv/>FNV-1 hash<>.
+Uses libraries and algorithms: <link https://dotnet.microsoft.com/download>.NET 5<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://www.scintilla.org/>Scintilla<>, <link https://www.pcre.org/>PCRE 10.33<>, <link https://www.sqlite.org/index.html>SQLite 3.25.2<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, Wu's Color Quantizer, Cantatore wildcard.
 Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<>, <link {folders.ThisAppDocuments}>ThisAppDocuments<>, <link {folders.ThisAppDataLocal}>ThisAppDataLocal<>, <link {folders.ThisAppTemp}>ThisAppTemp<>.
 This program is still unfinished. It can be used, but some classes/functions/etc may be changed in the future.
 Copyright 2021 Gintaras Didžgalvis.

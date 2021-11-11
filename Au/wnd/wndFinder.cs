@@ -146,18 +146,18 @@ namespace Au
 		/// </remarks>
 		public wnd Find(double waitS) => Exists(waitS) ? Result : default;
 
-		/// <inheritdoc cref="Find()"/>
 		/// <returns>If found, sets <see cref="Result"/> and returns true, else false.</returns>
+		/// <inheritdoc cref="Find()"/>
 		public bool Exists() {
 			using var k = new WndList_(_AllWindows());
 			return _FindOrMatch(k) >= 0;
 		}
 
-		/// <inheritdoc cref="Find(double)"/>
 		/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>waitS</i> negative).</returns>
+		/// <inheritdoc cref="Find(double)"/>
 		public bool Exists(double waitS) {
 			var r = waitS == 0d ? Exists() : !Wait(waitS < 0 ? waitS : -waitS, false).Is0;
-			return r || waitS < 0 ? r : throw new NotFoundException();
+			return r || double.IsNegative(waitS) ? r : throw new NotFoundException();
 		}
 
 		/// <summary>

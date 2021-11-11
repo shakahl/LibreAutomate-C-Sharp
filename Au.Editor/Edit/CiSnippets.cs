@@ -284,7 +284,7 @@ static class CiSnippets
 		if (i >= 0) {
 			int newPos = pos + i;
 			doc.zSelect(true, newPos, newPos + selectLength, makeVisible: true);
-			if (tempRange != default) CodeInfo._correct.BracesAdded(doc, pos + tempRange.from, pos + tempRange.to, default);
+			if (tempRange != default) CodeInfo._correct.BracketsAdded(doc, pos + tempRange.from, pos + tempRange.to, default);
 			if (showSignature) CodeInfo.ShowSignature();
 		}
 	}

@@ -25,7 +25,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="hacker.txt">
+    <Text Include="ResourceHacker.txt">
       <Filter>Resource Files</Filter>
     </Text>
   </ItemGroup>

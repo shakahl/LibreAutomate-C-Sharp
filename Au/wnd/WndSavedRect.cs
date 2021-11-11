@@ -197,5 +197,30 @@
 			}
 			return ret;
 		}
+
+		//probably not useful. Unfinished. Or move to wnd.
+		///// <summary>
+		///// Calls <see cref="FromString"/>. If it returns true, sets <i>w</i> rectangle = <see cref="NormalizeRect"/>, maximizes if need, and returns true.
+		///// </summary>
+		///// <param name="w"></param>
+		///// <param name="saved">String created by <see cref="ToString"/>.</param>
+		///// <param name="allStates">If need to maximize and the window already is maximized, set the restored window rectangle too.</param>
+		//public static unsafe bool Restore(wnd w, string saved, bool allStates = false) {
+		//	w.ThrowIfInvalid();
+		//	bool ret = FromString(saved, out var v);
+		//	if (ret) {
+		//		//var p = new Api.WINDOWPLACEMENT {
+		//		//	rcNormalPosition = v.NormalizeRect(),
+		//		//	showCmd = v.Maximize ? Api.SW_SHOWMAXIMIZED : Api.SW_RESTORE
+		//		//};
+		//		//w.SetWindowPlacement_(ref p, false, "Failed to restore window position");
+
+		//		if (!allStates && v.Maximize && w.IsMaximized) return true;
+		//		if (w.IsMaximized) w.ShowNotMinMax(true);
+		//		if(!w.MoveL(v.NormalizeRect())) w.ThrowUseNative("Failed to restore window position");
+		//		if (v.Maximize) w.ShowMaximized(true);
+		//	}
+		//	return ret;
+		//}
 	}
 }

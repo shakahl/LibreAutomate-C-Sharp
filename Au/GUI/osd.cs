@@ -923,7 +923,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Show the OSD window in this thread and don't wait.
-		/// Don't use if this thread does not process messages and therefore cannot have windows.
+		/// This thread must must be a UI thread (with windows etc).
 		/// </summary>
 		ThisThread,
 

@@ -39,6 +39,8 @@ partial class SciCode
 		int maxWidth = 0;
 		int nextLineStart = 0;
 
+		//SHOULDDO: prefer /*image:...*/. Now, if before is eg "https:...", displays web icon.
+
 		for (int i = 0; i < a.Length; i++) {
 			if (a[i].TextSpan.Start < nextLineStart) continue; //max 1 image/line
 			string s;

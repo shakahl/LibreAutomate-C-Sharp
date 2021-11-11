@@ -3,7 +3,7 @@
 	<group context="Function">
 		<!-- snippets that are valid in functions -->
 
-		<snippet name="forRepeatLoopSnippet" info="Repeat { code } count times." more="There are 4 parts: for (part1; part2; part3) { part4 }. Each can be empty. Part1 sets variable(s), like i=0 or int i=0 or int i=0, j=-1. Part2 is an expression evaluated before each loop; repeats while it is true. Part3 increments or decrements variable(s) after each loop, like i++ or i+=10 or i++, j--. Part4 can be any code; it is executed repeatedly; if single statement, the { } are optional. The first snippet in human language: set variable i = 0; while i &amp;lt; count, repeat code in { }; incremet i after each loop.">
+		<snippet name="forRepeatLoopSnippet" info="Repeat { code } count times." more="There are 4 parts: for (part1; part2; part3) { part4 }. Each can be empty. Part1 sets variable(s), like i=0 or int i=0 or int i=0, j=-1. Part2 is an expression evaluated before each loop; repeats while it is true. Part3 increments or decrements variable(s) after each loop, like i++ or i+=10 or i++, j--. Part4 can be any code; it is executed repeatedly; if single statement, the { } are optional.&#10;&#10;The first snippet in human language: set variable i = 0; while i &lt; count, repeat code in { }; incremet i after each loop.&#10;&#10;Tip: the script editor replaces code like 5t with for (int i = 0; i &lt; 5; i++) {  } when typing.">
 			<list item="Increment variable i">
 				<![CDATA[for (int i = 0; i < $end$count$end$; i++) {
 	
@@ -606,13 +606,13 @@ unsafe class api : NativeApi {}
 ]]>
 		</snippet>
 
-		<snippet name="settingsSnippet" info="Adds record for settings used by this script/program/library/etc.">
+		<snippet name="settingsSnippet" info="Adds a class for settings used by this script/program/library/etc.">
 			<![CDATA[/// <summary>
 /// Settings of this script/program/library/etc.
 /// Function <see cref="MySettings.Load"/> loads settings from file or creates default; returns new variable through which you can get/set settings like <c>var v = sett.i; sett.i = 2;</c>.
 /// Settings are lazily auto-saved soon after changing.
 /// </summary>
-internal record MySettings : JSettings {
+internal record class MySettings : JSettings {
 	public static readonly string File = folders.ThisAppDocuments + @"$end$RenameMe$end$.json";
 
 	public static MySettings Load() => Load<MySettings>(File);

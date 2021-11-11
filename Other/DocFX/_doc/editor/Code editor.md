@@ -4,7 +4,7 @@ uid: code_editor
 
 # Code editor
 
-In the code editor you edit automation scripts and other C# code. It is a text editor with various features for easier C# code editing: lists of symbols, autocompletion, brace completion, statement completion, auto indentation, parameter info, quick info, XML documentation comments, go to documentation, go to definition/source, error info, code coloring, text folding, separators between functions, images in code, snippets, comment/uncomment/indent/unindent lines, drag/drop files, find/replace text, find namespace, find Windows API, insert keys/regex/etc, capture UI elements.
+In the code editor you edit automation scripts and other C# code. It is a text editor with various features for easier C# code editing: lists of symbols, autocompletion, bracket completion, statement completion, auto indentation, parameter info, quick info, XML documentation comments, go to documentation, go to definition/source, error info, code coloring, text folding, separators between functions, images in code, snippets, comment/uncomment/indent/unindent lines, drag/drop files, find/replace text, find namespace, find Windows API, insert keys/regex/etc, capture UI elements.
 
 C# code may look like this:
 ```csharp
@@ -35,7 +35,7 @@ To select list items you also can click or press arrow or page keys. It does not
 
 To hide the list without inserting item text you can press Esc or click somewhere in code.
 
-#### Automatic brace completion
+#### Automatic bracket completion
 When you type `(`, `[`, `{`, `<`, `"` or `'`, editor adds the closing `)`, `]`, `}`, `>`, `"` or `'`. Then, while the text cursor is before the added `)` etc, typing another `)` or tab just leaves the enclosed area. Also then Backspace erases both characters.
 
 #### Statement completion

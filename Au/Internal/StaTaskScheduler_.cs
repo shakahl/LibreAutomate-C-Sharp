@@ -65,8 +65,9 @@ namespace Au.More
 		/// <returns>true if the task was successfully inlined; otherwise, false.</returns>
 		protected override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued) =>
 			// Try to inline if the current thread is STA
-			Thread.CurrentThread.GetApartmentState() == ApartmentState.STA &&
-				TryExecuteTask(task);
+			//Thread.CurrentThread.GetApartmentState() == ApartmentState.STA &&
+			//	TryExecuteTask(task);
+			false; //important. Never run in thread that calls Task.Wait or Task.Result.
 
 		/// <summary>Gets the maximum concurrency level supported by this scheduler.</summary>
 		public override int MaximumConcurrencyLevel => _threads.Count;

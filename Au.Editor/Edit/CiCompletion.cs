@@ -955,8 +955,8 @@ partial class CiCompletion
 		//ci.DebugPrint();
 
 		//if typed space after method or keyword 'if' etc, replace the space with '(' etc. Also add if pressed Tab or Enter.
-		CiAutocorrect.EBraces bracesOperation = default;
-		int positionBack = 0, bracesFrom = 0, bracesLen = 0;
+		CiAutocorrect.EBrackets bracketsOperation = default;
+		int positionBack = 0, bracketsFrom = 0, bracketsLen = 0;
 		bool isEnter = key == KKey.Enter;
 		//ci.DebugPrint();
 		if (s.FindAny("({[<") < 0) {
@@ -1034,7 +1034,7 @@ partial class CiCompletion
 					var p1 = node.Parent; if (p1 is QualifiedNameSyntax) p1 = p1.Parent;
 					if (p1 is ObjectCreationExpressionSyntax) {
 						ch = '(';
-						bracesOperation = CiAutocorrect.EBraces.NewExpression;
+						bracketsOperation = CiAutocorrect.EBrackets.NewExpression;
 					}
 				}
 
@@ -1051,12 +1051,12 @@ partial class CiCompletion
 							s2 = " {  }";
 							positionBack = 2;
 						}
-						bracesFrom = i + s.Length + 2;
-						bracesLen = s2.Length - 3;
+						bracketsFrom = i + s.Length + 2;
+						bracketsLen = s2.Length - 3;
 					} else if (App.Settings.ci_complParen switch { 0 => isSpace, 1 => true, _ => false } && !_data.noAutoSelect && !doc.zText.Eq(i + len, ch)) { //info: noAutoSelect when lambda argument
 						s2 ??= ch == '(' ? "()" : "<>";
 						positionBack = 1;
-						bracesFrom = i + s.Length + s2.Length - 1;
+						bracketsFrom = i + s.Length + s2.Length - 1;
 					} else {
 						ch = default;
 						s2 = null;
@@ -1079,7 +1079,7 @@ partial class CiCompletion
 			doc.zSetAndReplaceSel(true, i, i + len, s);
 			if (isComplex) {
 				if (positionBack > 0) doc.zCurrentPos16 = i + s.Length - positionBack;
-				if (bracesFrom > 0) CodeInfo._correct.BracesAdded(doc, bracesFrom, bracesFrom + bracesLen, bracesOperation);
+				if (bracketsFrom > 0) CodeInfo._correct.BracketsAdded(doc, bracketsFrom, bracketsFrom + bracketsLen, bracketsOperation);
 			}
 
 			return isComplex ? CiComplResult.Complex : CiComplResult.Simple;

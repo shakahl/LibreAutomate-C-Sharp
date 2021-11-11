@@ -407,16 +407,15 @@ namespace SdkConverter
 
 				//look in _forwardDeclTypedefs, maybe need to swap this tag with previously declared alias
 				if (d.inTypedefNameToken == 0 && _nsCurrent == 0 && !isThisForwardDecl) {
-					string tag = _TokToString(_i); int k;
-					if (_forwardDeclTypedefs.TryGetValue(tag, out k)) {
+					string tag = _TokToString(_i);
+					if (_forwardDeclTypedefs.TryGetValue(tag, out int k)) {
 						//print.it($"<><c 0xff0000>{tag}, {_TokToString(k)}</c>");
 						d.inTypedefNameToken = k;
 						_forwardDeclTypedefs.Remove(tag);
 					}
 				}
 
-				bool wasForwardDecl;
-				if (!isThisForwardDecl && __MustSwapTagWithAlias(d.inTypedefNameToken, out wasForwardDecl)) {
+				if (!isThisForwardDecl && __MustSwapTagWithAlias(d.inTypedefNameToken, out bool wasForwardDecl)) {
 					iName = d.inTypedefNameToken;
 					name = _TokToString(iName);
 					_AddSymbol(iName, x = new _Struct(name, false));
@@ -442,7 +441,9 @@ namespace SdkConverter
 								"\r\n[ComImport, Guid({0}), ClassInterface(ClassInterfaceType.None)]"
 								+ "\r\ninternal class {1} {{}}\r\n"
 								, uuid, name);
-						} else if (!isInterface && _interfaces.Contains(name)) x.isInterface = true;
+						} else if (!isInterface && _interfaces.Contains(name)) {
+							x.isInterface = true;
+						}
 						return;
 					}
 				}
@@ -454,11 +455,13 @@ namespace SdkConverter
 			//skip IUnknown and IDispatch
 			if (isInterface || uuid != null) {
 				bool skip = false;
-				if (!__haveIUnknown && name == "IUnknown") __haveIUnknown = skip = true; else if (!__haveIDispatch && name == "IDispatch") __haveIDispatch = skip = true;
+				if (!__haveIUnknown && name == "IUnknown") __haveIUnknown = skip = true;
+				else if (!__haveIDispatch && name == "IDispatch") __haveIDispatch = skip = true;
 				if (skip) {
 					_SkipStatement();
 					x.forwardDecl = false;
 					x.isInterface = true;
+					x.isDualInterface = name == "IDispatch";
 					_DeclareGuid("IID_", name, uuid);
 					return;
 				}
@@ -482,7 +485,7 @@ namespace SdkConverter
 				if (_TokIsIdent(_i + 1) && _FindKeyword(_i).kwType == _KeywordT.PubPrivProt) _i++;
 
 				bool addedBaseMembers = false;
-				for (int iBase = 0; ; iBase++, _i++) { //support multiple inheritance
+				for (int iBase = 0; ; iBase++, _i++) { //support multiple inheritance, although currently none in SDK
 					_Symbol baseType = _FindType(_i, true);
 					int ptr = _Unalias(_i, ref baseType);
 					var bt = baseType as _Struct;
@@ -501,9 +504,8 @@ namespace SdkConverter
 							sb.Append(bt.members);
 						}
 						addedBaseMembers = true;
-					} else {
-						if (iBase == 0 && !isDualInterface) isDualInterface = bt.csTypename == "IDispatch";
 					}
+					if (isInterface) isDualInterface = bt.isDualInterface; //inherits IDispatch or another dual interface
 					if (!_TokIsChar(++_i, ',')) break;
 				}
 				if (addedBaseMembers) { sb.Append("// "); sb.AppendLine(name); }
@@ -630,6 +632,7 @@ namespace SdkConverter
 			if (isInterface) {
 				sb.AppendFormat("[ComImport, Guid({0}){1}\r\n", uuid, isDualInterface ? "] //dual" : ", InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]");
 				x.isInterface = true;
+				x.isDualInterface = isDualInterface;
 			} else {
 				if (hasBitfields) sb.AppendLine("[DebuggerStepThrough]");
 				if (_pack != 8) sb.AppendFormat("[StructLayout(LayoutKind.{0}, Pack={1})]\r\n", isUnion ? "Explicit" : "Sequential", _pack);

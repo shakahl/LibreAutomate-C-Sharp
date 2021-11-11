@@ -20,11 +20,13 @@ static class InsertCode
 	/// If editor is null or readonly, prints in output.
 	/// Async if called from non-main thread.
 	/// </summary>
-	/// <param name="s">Text without "\r\n" at the end.</param>
+	/// <param name="s">Text without "\r\n" at the end. Does nothing if null.</param>
 	/// <param name="goToPercent">If contains '%', removes it and moves caret there.</param>
 	/// <param name="fold">Collapse folding points in inserted code.</param>
 	/// <param name="activate">Activate editor window.</param>
 	public static void Statements(string s, bool goToPercent = false, bool fold = false, bool activate = false) {
+		if (s == null) return;
+
 		if (Environment.CurrentManagedThreadId == 1) _Action(s, goToPercent, fold, activate);
 		else App.Wmain.Dispatcher.InvokeAsync(() => _Action(s, goToPercent, fold, activate));
 

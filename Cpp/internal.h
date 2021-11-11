@@ -25,6 +25,8 @@ enum class eAF2
 	IsRect = 0xF000,
 	IsElem = 0x10000,
 	IsId = 0x20000, //"id=x", where x is a number
+
+	InFirefoxNotWebNotUIA = 0x100000,
 };
 ENABLE_BITMASK_OPERATORS(eAF2);
 

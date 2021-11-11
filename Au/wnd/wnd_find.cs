@@ -82,10 +82,8 @@
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default
 			) => new wndFinder(name, cn, of, flags, also, contains).Find();
 
-		//note: <inheritdoc cref="find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)"/> does not work, even if specified for each parameter.
-		//	Our editor's CiSignature._FormatText extracts undocumented parameter doc from the documented overload.
-		//	In DocFX it's empty and it's good, don't need to repeat same info.
-		//	Never mind VS.
+		//rejected: single overload with last parameter double? wait.
+		//	Then in scripts almost always would need eg ' , wait: 1'. Or would need ', wait: 0' just for 'exception if not found'.
 
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		/// <summary>
@@ -196,53 +194,93 @@
 			}
 		}
 
+#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		/// <summary>
-		/// Finds a top-level window (calls <see cref="find"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="run.it"/>.
-		/// Returns window handle as <b>wnd</b>. Returns <c>default(wnd)</c> if not found (if <i>runWaitS</i> is negative; else exception).
+		/// Finds a top-level window, like <see cref="find"/>. If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="run.it"/>.
 		/// </summary>
-		/// <param name="name">See <see cref="find"/>.</param>
-		/// <param name="cn">See <see cref="find"/>.</param>
-		/// <param name="of">See <see cref="find"/>.</param>
-		/// <param name="flags">See <see cref="find"/>.</param>
-		/// <param name="also">See <see cref="find"/>.</param>
-		/// <param name="contains">See <see cref="find"/>.</param>
+		/// <returns>Window handle as <b>wnd</b>. On timeout returns <c>default(wnd)</c> if <i>waitS</i> &lt; 0 (else exception).</returns>
 		/// <param name="run">Callback function. See example.</param>
-		/// <param name="runWaitS">How long to wait for the window after calling the callback function. Seconds. Default 60. See <see cref="wait"/>.</param>
-		/// <param name="needActiveWindow">Finally the window must be active. Default: true.</param>
-		/// <exception cref="TimeoutException"><i>runWaitS</i> time has expired. Not thrown if <i>runWaitS</i> &lt;= 0.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="find"/>.</exception>
-		/// <remarks>
-		/// The algorithm is:
-		/// <code>
-		/// var w=wnd.find(...);
-		/// if(w.Is0) { run(); w=wnd.wait(runWaitS, needActiveWindow, ...); }
-		/// else if(needActiveWindow) w.Activate();
-		/// return w;
-		/// </code>
-		/// </remarks>
+		/// <param name="waitS">How long to wait for the window after calling the callback function. Seconds. Default 60. See <see cref="wait"/>.</param>
+		/// <param name="activate">Activate the window. Default: true.</param>
+		/// <exception cref="ArgumentException">See <see cref="find"/>.</exception>
+		/// <exception cref="TimeoutException"><i>waitS</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="AuWndException">Failed to activate.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// wnd w = wnd.findOrRun("* Notepad", run: () => run.it("notepad.exe"));
 		/// print.it(w);
 		/// ]]></code>
 		/// </example>
+		/// <inheritdoc cref="find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)"/>
 		public static wnd findOrRun(
 			[ParamString(PSFormat.wildex)] string name = null,
 			[ParamString(PSFormat.wildex)] string cn = null,
 			[ParamString(PSFormat.wildex)] WOwner of = default,
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default,
-			Action run = null, double runWaitS = 60d, bool needActiveWindow = true) {
+			Action run = null, double waitS = 60d, bool activate = true) {
 			wnd w = default;
 			var f = new wndFinder(name, cn, of, flags, also, contains);
 			if (f.Exists()) {
 				w = f.Result;
-				if (needActiveWindow) w.Activate();
-			} else if (run != null) {
+			} else {
 				run();
-				w = waitAny(runWaitS, needActiveWindow, f).w;
+				w = waitAny(waitS, false, f).w;
+				if (w.Is0) return w; //timeout without exception (waitS < 0)
+
+				//What to do if activate true and the window started inactive? Activate immediately or wait, and how long?
+				//	Possible cases:
+				//		Starts inactive, but soon becomes active naturally.
+				//		Occasionally starts inactive and never would become active naturally, for example if the user clicked another window after starting the process and therefore OS disabled setforegroundwindow in the new process.
+				//		Always starts inactive and never becomes active naturally.
+				//	This code waits max 1 s. It's better if the window becomes active naturally (case 1), but need to activate in cases 2 and 3.
+				//	Tested many windows. Most were active after 0-10 ms, few after 11-70 ms, PowerShell after 250 ms, dotPeek after 1000 ms.
+				//	Some windows start active but soon a dialog pops up.
+				//	Also tested what happens if we activate the "slow" window without waiting.
+				//		Some are OK (eg PowerShell). Anyway, many windows render content after showing/activating.
+				//		But some windows (eg dotPeek) then soon become inactive temporarily, because the app activates another window.
+				if (activate && !w.IsActive) w.WaitFor(-1, o => o.IsActive); //note: exception if closed while waiting, as well as if will fail to activate
 			}
+			if (activate) w.Activate();
 			return w;
 		}
+#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+
+		//rejected: findOrRun -> find overload. Overload resolution OK, but makes code unclear.
+		//public static wnd find(
+		//	bool activate,
+		//	[ParamString(PSFormat.wildex)] string name = null,
+		//	[ParamString(PSFormat.wildex)] string cn = null,
+		//	[ParamString(PSFormat.wildex)] WOwner of = default,
+		//	WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default,
+		//	Action run = null, double waitS = 60d) {
+		//	wnd w;
+		//	var f = new wndFinder(name, cn, of, flags, also, contains);
+		//	if (f.Exists()) {
+		//		w = f.Result;
+		//	} else if (run != null) {
+		//		run();
+		//		w = waitAny(waitS, false, f).w;
+		//		if (w.Is0) return w; //timeout without exception (waitS < 0)
+
+		//		//What to do if activate true and the window started inactive? Activate immediately or wait, and how long?
+		//		//	Possible cases:
+		//		//		Starts inactive, but soon becomes active naturally.
+		//		//		Occasionally starts inactive and never would become active naturally, for example if the user clicked another window after starting the process and therefore OS disabled setforegroundwindow in the new process.
+		//		//		Always starts inactive and never becomes active naturally.
+		//		//	This code waits max 1 s. It's better if the window becomes active naturally (case 1), but need to activate in cases 2 and 3.
+		//		//	Tested many windows. Most were active after 0-10 ms, few after 11-70 ms, PowerShell after 250 ms, dotPeek after 1000 ms.
+		//		//	Some windows start active but soon a dialog pops up.
+		//		//	Also tested what happens if we activate the "slow" window without waiting.
+		//		//		Some are OK (eg PowerShell). Anyway, many windows render content after showing/activating.
+		//		//		But some windows (eg dotPeek) then soon become inactive temporarily, because the app activates another window.
+		//		if (activate && !w.IsActive) w.WaitFor(-1, o => o.IsActive); //note: exception if closed while waiting, as well as if will fail to activate
+		//	} else {
+		//		if (waitS < 0) return default;
+		//		throw new NotFoundException();
+		//	}
+		//	if (activate) w.Activate();
+		//	return w;
+		//}
 
 		/// <summary>
 		/// Compares window name and other properties like <see cref="find"/> does.

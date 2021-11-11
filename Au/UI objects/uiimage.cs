@@ -95,27 +95,43 @@ namespace Au
 
 		/// <summary>
 		/// Moves the mouse to the found image.
-		/// Calls <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.
 		/// </summary>
 		/// <param name="x">X coordinate in the found image. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the found image. Default - center.</param>
 		/// <exception cref="InvalidOperationException"><i>area</i> is <b>Bitmap</b>.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.</exception>
+		/// <remarks>
+		/// Calls <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.
+		/// </remarks>
 		public void MouseMove(Coord x = default, Coord y = default) => _MouseAction(x, y, 0);
 
 		/// <summary>
 		/// Clicks the found image.
-		/// Calls <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.
 		/// </summary>
 		/// <param name="x">X coordinate in the found image. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the found image. Default - center.</param>
 		/// <param name="button">Which button and how to use it.</param>
 		/// <exception cref="InvalidOperationException"><i>area</i> is <b>Bitmap</b>.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.</exception>
+		/// <remarks>
+		/// Calls <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.
+		/// </remarks>
 		public MRelease MouseClick(Coord x = default, Coord y = default, MButton button = MButton.Left) {
 			_MouseAction(x, y, button == 0 ? MButton.Left : button);
 			return button;
 		}
+
+		/// <summary>
+		/// Double-clicks the found image.
+		/// </summary>
+		/// <inheritdoc cref="MouseClick(Coord, Coord, MButton)"/>
+		public void MouseClickD(Coord x = default, Coord y = default) => MouseClick(x, y, MButton.DoubleClick);
+
+		/// <summary>
+		/// Right-clicks the found image.
+		/// </summary>
+		/// <inheritdoc cref="MouseClick(Coord, Coord, MButton)"/>
+		public void MouseClickR(Coord x = default, Coord y = default) => MouseClick(x, y, MButton.Right);
 
 		//Called by extension methods.
 		void _MouseAction(Coord x, Coord y, MButton button) {
@@ -137,7 +153,7 @@ namespace Au
 			} else {
 				var w = _area.W;
 				if (_area.Type == IFArea.AreaType.Elm) {
-					if (!_area.E.GetRect(out var r, w)) throw new AuException(0, "*get rectangle");
+					if (!_area.E.GetRect(out var r, w) || r.NoArea) throw new AuException(0, "*get rectangle");
 					p.x += r.left; p.y += r.top;
 				}
 				if (button == 0) mouse.move(w, p.x, p.y);
@@ -159,7 +175,7 @@ namespace Au
 		/// Does not wait until the target application finishes processing the message.
 		/// Works not with all elements.
 		/// </remarks>
-		public void VirtualClick(Coord x = default, Coord y = default, MButton button = MButton.Left) {
+		public void PostClick(Coord x = default, Coord y = default, MButton button = MButton.Left) {
 			if (_area.Type is IFArea.AreaType.Bitmap or IFArea.AreaType.Screen) throw new InvalidOperationException();
 
 			Debug.Assert(!Rect.NoArea);
@@ -168,12 +184,24 @@ namespace Au
 			var w = _area.W;
 			var r = Rect;
 			if (_area.Type == IFArea.AreaType.Elm) {
-				if (!_area.E.GetRect(out var rr, w)) throw new AuException(0, "*get rectangle");
+				if (!_area.E.GetRect(out var rr, w) || r.NoArea) throw new AuException(0, "*get rectangle");
 				r.Offset(rr.left, rr.top);
 			}
 
-			mouse.VirtualClick_(w, r, x, y, button);
+			mouse.PostClick_(w, r, x, y, button);
 		}
+
+		/// <summary>
+		/// Posts mouse-double-click messages to the window, using coordinates in the found image.
+		/// </summary>
+		/// <inheritdoc cref="PostClick(Coord, Coord, MButton)"/>
+		public void PostClickD(Coord x = default, Coord y = default) => PostClick(x, y, MButton.DoubleClick);
+
+		/// <summary>
+		/// Posts mouse-right-click messages to the window, using coordinates in the found image.
+		/// </summary>
+		/// <inheritdoc cref="PostClick(Coord, Coord, MButton)"/>
+		public void PostClickR(Coord x = default, Coord y = default) => PostClick(x, y, MButton.Right);
 
 		///
 		public override string ToString() => $"{ListIndex}, {MatchIndex}, {Rect}";

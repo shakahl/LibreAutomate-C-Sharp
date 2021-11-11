@@ -83,7 +83,7 @@ namespace Au.Types
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern void ShowWindow(wnd hWnd, int SW_X);
-		//note: the returns value does not say succeeded/failed.
+		//note: the return value does not say succeeded/failed.
 		//	It is non-zero if was visible, 0 if was hidden.
 		//	Declared void to avoid programming errors.
 

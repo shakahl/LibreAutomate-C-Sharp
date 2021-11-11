@@ -119,7 +119,7 @@ cd $(SolutionDir)_
 cd $(SolutionDir)_
 if EXIST Au.Editor.dll ( del Au.Editor.dll )
 if EXIST Au.Editor.exe ( del Au.Editor.exe )
-"$(SolutionDir)Other\Programs\ResourceHacker.exe" -script "$(ProjectDir)hacker.txt"
+"$(SolutionDir)Other\Programs\ResourceHacker.exe" -script "$(ProjectDir)ResourceHacker.txt"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -130,7 +130,7 @@ if EXIST Au.Editor.exe ( del Au.Editor.exe )
     <ClInclude Include="coreclrhost.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="hacker.txt" />
+    <Text Include="ResourceHacker.txt" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Script.ico" />

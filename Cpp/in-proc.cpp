@@ -548,15 +548,11 @@ HRESULT InjectDllAndGetAgent(HWND w, out IAccessible*& iaccAgent, out HWND* wAge
 	if(!wa) {
 		bool ok = false, is64bit, differentBits = IsProcess64Bit(pid, out is64bit) && is64bit != IsThisProcess64Bit();
 		//Perf.Next();
-		if(differentBits) {
-			Print(L"note: process of different bitness. Make sure 64 and 32 bit dll versions are built.");
-
-			if(RunDll(w)) { //speed: 40-60 ms
-				wa = FindWindowEx(HWND_MESSAGE, 0, c_agentWindowClassName, name);
-				ok = !!wa;
-			}
-		} else {
+		if(!differentBits) {
 			ok = InjectDll(w, out wa, tid, pid);
+		} else if(RunDll(w)) { //speed: 40-60 ms
+			wa = FindWindowEx(HWND_MESSAGE, 0, c_agentWindowClassName, name);
+			ok = !!wa;
 		}
 		//Perf.Next();
 

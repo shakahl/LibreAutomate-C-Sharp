@@ -106,8 +106,6 @@ class AccFinder
 		//		}
 		//	}
 		//	//Print(_pathCount); for(int i = 0; i < _pathCount; i++) Printf(L"'%s'  %i %i", a[i].role, a[i].startIndex, a[i].exactIndex);
-
-		//	//FUTURE: "PART/PART/.../PART"
 		//} else {
 		if(role[roleLen] == 0) _role = role;
 		else _role = _roleStrings.Assign(role, roleLen);
@@ -197,7 +195,7 @@ class AccFinder
 					if(na[0] != '@') { //HTML attribute names have prefix "@"
 						int i = str::Switch(na, va - 1 - na, {
 							L"value", L"desc", L"help", L"action", L"key", L"uiaid", //string props
-							L"state", L"level", L"maxcc", L"notin", L"rect", L"elem",
+							L"state", L"level", L"maxcc", L"notin", L"rect", L"item",
 							L"class", L"id", //control
 							});
 
@@ -343,6 +341,9 @@ public:
 				});
 			} else {
 				_wTL = (wn::Style(w) & WS_CHILD) ? 0 : w;
+				if(_wTL && !(_flags & eAF::UIA) && !isJava) {
+					if(wn::ClassNameIs(w, L"Mozilla*")) _flags2 |= eAF2::InFirefoxNotWebNotUIA; //skip background tabs
+				}
 				_FindInWnd(w, false, isJava);
 			}
 		}
@@ -437,6 +438,17 @@ private:
 
 		//a.PrintAcc();
 
+		//skip Firefox background tabs.
+		//	Searching without "web:" could take minutes. With "web:" would find wrong DOCUMENT when the fast way fails.
+		//	In recent versions: DOCUMENT's state does not have invisible/offscreen flags; parent browser and PROPERTYPEGE have OFFSCREEN.
+		//	Never mind UIA. Roles Custom/PANE/DOCUMENT instead of PROPERTYPAGE/browser/DOCUMENT. Also cannot be used "web:".
+		if(!!(_flags2 & eAF2::InFirefoxNotWebNotUIA) && role == ROLE_SYSTEM_PROPERTYPAGE && !skipChildren && level < 5) {
+			if(state.State() & (STATE_SYSTEM_INVISIBLE | STATE_SYSTEM_OFFSCREEN)) {
+				//Print(level); //2 in Firefox and Thunderbird
+				return _eMatchResult::SkipChildren;
+			}
+		}
+
 		if(_findDOCUMENT) {
 			auto fdr = _FindDocumentCallback(ref a);
 			if(skipChildren && fdr == _eMatchResult::Continue) fdr = _eMatchResult::SkipChildren;
@@ -491,7 +503,7 @@ private:
 			if(!hiddenToo) {
 				switch(state.IsInvisible()) {
 				case 2: //INVISISBLE and OFFSCREEN
-					if(!_IsRoleToSkipIfInvisible(role)) break; //eg prevents finding a background DOCUMENT in Firefox
+					if(!_IsRoleToSkipIfInvisible(role)) break;
 					[[fallthrough]];
 				case 1: //only INVISIBLE
 					if(_IsRoleTopLevelClient(role, level)) break; //rare
@@ -682,7 +694,8 @@ private:
 		AccFinder f;
 		f._findDOCUMENT = &ar.acc;
 		f._flags2 = flags2 & (eAF2::InChromePage | eAF2::InFirefoxPage);
-		f._maxLevel = 10; //DOCUMENT is at level 3 in current version
+		if(!!(flags2 & eAF2::InFirefoxPage)) f._flags2 |= eAF2::InFirefoxNotWebNotUIA; //skip background tabs
+		f._maxLevel = 10;
 		Cpp_Acc a(ap, 0);
 		if(0 != f.Find(0, &a, null)) return (HRESULT)eError::NotFound;
 		return 0;

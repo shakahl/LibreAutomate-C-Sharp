@@ -6,10 +6,11 @@
 - Removed functions **elm.find**, **elm.wait**, **elm.printAll**, **elm.Find**, **elm.Wait**. Now use **elmFinder.Find** etc with the new syntax.
 - Now *role* parameter cannot contain path. Instead use the new path syntax.
 - The *prop* parameter type now is **Strings**, and separator is `|` (was `\0`). If substrings contain `|`, use `new("substring", "substring")`.
-- In *prop* use `"desc=..."` instead of `"description=..."`.
+- In *prop* use `desc` instead of `description`.
 - Removed property **elmFinder.NavigFailed**.
 - Renamed **elm.Navigate** parameter *secondsToWait* to *waitS*.
-- **elm.VirtualClick** parameters *x y*.
+- **elm.VirtualClick** renamed to **elm.PostClick** and added parameters *x y*.
+- **elm.SimpleElementId** renamed to **elm.Item**. In *prop* use `item` instead of `elem`.
 
 Now functions **Find** and **Wait** of all finders (**wndFinder**, **wndChildFinder**, **elmFiner**, **uiimageFinder**) return the found object, not bool. Functions **Exists** return bool.
 

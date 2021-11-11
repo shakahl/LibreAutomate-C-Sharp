@@ -26,13 +26,13 @@ class CiAutocorrect
 	/// <summary>
 	/// Call when added text with { } etc and want it behave like when the user types { etc.
 	/// </summary>
-	public void BracesAdded(SciCode doc, int innerFrom, int innerTo, EBraces operation) {
+	public void BracketsAdded(SciCode doc, int innerFrom, int innerTo, EBrackets operation) {
 		var r = doc.ZTempRanges_Add(this, innerFrom, innerTo);
-		if (operation == EBraces.NewExpression) r.OwnerData = "new";
+		if (operation == EBrackets.NewExpression) r.OwnerData = "new";
 		else r.OwnerData = "ac";
 	}
 
-	public enum EBraces
+	public enum EBrackets
 	{
 		/// <summary>
 		/// The same as when the user types '(' etc and is auto-added ')' etc. The user can overtype the ')' with the same character or delete '()' with Backspace.
@@ -138,7 +138,7 @@ class CiAutocorrect
 	/// </summary>
 	public void SciCharAdded(CodeInfo.CharContext c) {
 		char ch = c.ch;
-		string replaceText = ch switch { '\"' => "\"", '\'' => "'", '(' => ")", '[' => "]", '{' => "}", '<' => ">", '*' => "*/", 's' => "", _ => null };
+		string replaceText = ch switch { '\"' => "\"", '\'' => "'", '(' => ")", '[' => "]", '{' => "}", '<' => ">", '*' => "*/", 's' or 't' => "", _ => null };
 		if (replaceText == null) return;
 
 		if (!CodeInfo.GetContextAndDocument(out var cd)) return;
@@ -154,13 +154,27 @@ class CiAutocorrect
 		var root = cd.document.GetSyntaxRootAsync().Result;
 		//if(!root.ContainsDiagnostics) return; //no. Don't use errors. It can do more bad than good. Tested.
 
-		if (ch == 's') { //when typed like 5s or 500ms, replace with 5.s(); or 500.ms(); 
+		if (ch == 's') { //when typed like 5s or 500ms, replace with 5.s(); or 500.ms();
 			if (pos > 0 && code[pos - 1] == 'm') { pos--; replaceText = ".ms();"; } else replaceText = ".s();";
 			if (pos > 0 && code[pos - 1].IsAsciiDigit()) {
 				var node = root.FindToken(pos - 1).Parent;
 				if (node.IsKind(SyntaxKind.NumericLiteralExpression) && node.Parent is ExpressionStatementSyntax) {
 					//never mind: should ignore if not int s/ms or double s. Error if eg long or double ms.
 					c.doc.zReplaceRange(true, pos, cd.pos16, replaceText, moveCurrentPos: true);
+					c.ignoreChar = true;
+				}
+			}
+			return;
+		}
+		if (ch == 't') { //when typed like 5t, replace with for (int i = 0; i < 5; i++) {  }
+			if (pos > 0 && code[pos - 1].IsAsciiDigit()) {
+				var node = root.FindToken(pos - 1).Parent;
+				if (node.IsKind(SyntaxKind.NumericLiteralExpression) && node.Parent is ExpressionStatementSyntax) {
+					int i = node.SpanStart;
+					var br = code.Eq(cd.pos16, '{') ? null : "{  }";
+					replaceText = $"for (int i = 0; i < {code[i..pos]}; i++) {br}";
+					c.doc.zReplaceRange(true, i, cd.pos16, replaceText);
+					c.doc.zCurrentPos16 = i + replaceText.Length - (br == null ? 0 : 2);
 					c.ignoreChar = true;
 				}
 			}

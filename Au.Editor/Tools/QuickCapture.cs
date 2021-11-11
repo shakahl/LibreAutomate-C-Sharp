@@ -9,21 +9,21 @@ namespace Au.Tools
 
 		public static void Info() {
 			print.it($@"Hotkeys for quick capturing:
-	{App.Settings.hotkeys.capture_menu} - capture window from mouse and show menu to insert code to find it etc.
-	{App.Settings.hotkeys.capture_wnd} - capture window from mouse and show dialog 'Find window or control'.
-	{App.Settings.hotkeys.capture_elm} - capture UI element from mouse and show dialog 'Find UI element'.
+	{App.Settings.hotkeys.tool_quick} - capture window from mouse and show menu to insert code to find it etc.
+	{App.Settings.hotkeys.tool_wnd} - capture window from mouse and show dialog 'Find window or control'.
+	{App.Settings.hotkeys.tool_elm} - capture UI element from mouse and show dialog 'Find UI element'.
 ");
 		}
 
 		public static void RegisterHotkeys() {
-			_Register(ref _rk1, ERegisteredHotkeyId.QuickCaptureMenu, App.Settings.hotkeys.capture_menu);
-			_Register(ref _rk2, ERegisteredHotkeyId.QuickCaptureDwnd, App.Settings.hotkeys.capture_wnd);
-			_Register(ref _rk3, ERegisteredHotkeyId.QuickCaptureDelm, App.Settings.hotkeys.capture_elm);
+			_Register(ref _rk1, ERegisteredHotkeyId.QuickCaptureMenu, App.Settings.hotkeys.tool_quick);
+			_Register(ref _rk2, ERegisteredHotkeyId.QuickCaptureDwnd, App.Settings.hotkeys.tool_wnd);
+			_Register(ref _rk3, ERegisteredHotkeyId.QuickCaptureDelm, App.Settings.hotkeys.tool_elm);
 
 			void _Register(ref keys.more.Hotkey rk, ERegisteredHotkeyId id, string keys) { //ref, not in!
 				try {
 					if (!rk.Register((int)id, keys, App.Hwnd))
-						print.warning($"Failed to register hotkey {keys} for quick capturing. You can set a hotkey in Options.", -1);
+						print.warning($"Failed to register hotkey {keys}. Look in Options -> Hotkeys.", -1);
 				}
 				catch (Exception ex) { print.it(ex); }
 			}
@@ -35,16 +35,8 @@ namespace Au.Tools
 			_rk3.Unregister();
 		}
 
-		//CONSIDER simplified tool version. Without tree and capturing but with option to show full.
-		//CONSIDER: the 'click' items should show a dialog to select Coord format. Or add tool in editor.
-		//CONSIDER: use another hotkey/menu for click. With several such hotkeys/menus would even not need a recorder.
 		//CONSIDER: while showing menu, show on-screen rectangles of the window, control and elm.
-		//CONSIDER: recording by image: on every clicks show eg 400x400 window with captured area and titled "Capture image". Let user select image rect etc.
-		//CONSIDER: instead of this hotkey/menu:
-		//	While editor visible and CapsLock toggled:
-		//		on single F3 show simplified Dwnd with options to click/activate/etc;
-		//		on 2 F3 show simplified Delm with options to click/focus/etc;
-		//		on 3 F3 show Duiimage.
+		//CONSIDER: the 'click' items could show a dialog to select Coord format. Or add tool in editor.
 
 		public static void Menu() {
 			_m?.Close();
@@ -59,17 +51,24 @@ namespace Au.Tools
 			var m = new popupMenu();
 			m["Find window"] = _ => _Insert(_Wnd_Find(w, default));
 			m["Activate window"] = _ => _Insert(_Wnd_Find(w, default, activate: true));
+			m["Find or run"] = _ => {
+				if(TUtil.PathInfo.FromWindow(w)?.filePath is string path) {
+					var s = _Wnd_Find(w, default).RxReplace(@"\bwnd\.find\K\(\d+, ", "OrRun(", 1);
+					s = s.Insert(s.Length - 2, $", run: () => {{ run.it({path}); }}");
+					_Insert(s);
+				}
+			};
 			m.Separator();
 			//m.Submenu("Click", m => {
-			m["Click window"] = _ => _Insert(_Wnd_Find(w, default) + _Click(w, "w"));
-			m["Click control"] = _ => _Insert(_Wnd_Find(w, c) + _Click(c, "c"));
-			m.Last.IsDisabled = c.Is0;
-			//CONSIDER: UI element
-			m["Click screen"] = _ => _Insert($"mouse.click({p.x}, {p.y});{screenshot}");
 			string _Click(wnd w, string v) {
 				w.MapScreenToClient(ref p);
 				return $"\r\nmouse.click({v}, {p.x}, {p.y});{screenshot}";
 			}
+			m["Click window"] = _ => _Insert(_Wnd_Find(w, default) + _Click(w, "w"), enclose: true);
+			m["Click control"] = _ => _Insert(_Wnd_Find(w, c) + _Click(c, "c"), enclose: true);
+			m.Last.IsDisabled = c.Is0;
+			//CONSIDER: UI element
+			m["Click screen"] = _ => _Insert($"mouse.click({p.x}, {p.y});{screenshot}");
 			//});
 			m.Separator();
 			m.Submenu("Color", m => {
@@ -91,29 +90,21 @@ namespace Au.Tools
 			//		};
 			//	});
 			m.Submenu("Program", m => {
-				string path = WndUtil.GetWindowsStoreAppId(w, true, true), pn = w.ProgramName;
-				if (path != null) {
+				var pi = TUtil.PathInfo.FromWindow(w);
+				if (pi != null) {
 					m["var s = path;"] = _ => _Path(0);
 					m["run.it(path);"] = _ => _Path(1);
 					m["t[name] = o => run.it(path);"] = _ => _Path(2);
 					m.Separator();
-					m["Copy path"] = _ => clipboard.text = path;
-				}
-				if (pn != null) m["Copy filename"] = _ => clipboard.text = pn;
+					m["Copy path"] = _ => clipboard.text = pi.filePath;
 
-				void _Path(int what) {
-					if (path.Ends(@"\explorer.exe") && w.ClassNameIs("CabinetWClass")) { //if folder window, try to get folder path
-						var tb = w.Child(cn: "ToolbarWindow32", id: 1001); // @"Address: C:\Program Files (x86)\Windows Kits\10\bin\x86"
-						if (!tb.Is0 && tb.Name is string sa && sa.RxMatch(@"^\S+: +(.+)", 1, out RXGroup rg) && filesystem.exists(sa = rg.Value, useRawPath: true).isDir) path = sa;
-						//SHOULDDO: it may be not path but eg "Documents". Another way - use COM; see QM2 func GetFolderWindowPath or GetFolderPathInExplorer.
+					void _Path(int what) {
+						var (path, name, args) = pi.GetCode();
+						if (what == 2 && path.Starts("shell:")) name = w.Name;
+						_Insert(what switch { 1 => $"run.it({path});", 2 => $"t[{_Str(name)}] = o => run.it({path});", _ => $"var s = {path};" });
 					}
-					var g = new TUtil.PathInfo(path);
-					int f = g.SelectFormatUI(); if (f == 0) return;
-					var r = g.GetResult(f);
-					var s = r.path;
-					if (what == 2 && path.Starts("shell:")) r.name = w.Name;
-					_Insert(what switch { 1 => $"run.it({s});", 2 => $"t[{_Str(r.name)}] = o => run.it({s});", _ => $"var s = {s};" });
 				}
+				if (w.ProgramName is string pn) m["Copy filename"] = _ => clipboard.text = pn;
 			});
 			m.Separator();
 			m["About"] = _ => Info();
@@ -159,13 +150,15 @@ namespace Au.Tools
 				} else {
 					f.nameC = cName;
 					f.classC = cClass;
+					f.SetSkipC(w, c);
 				}
 			}
 			return f.Format();
 		}
 
-		static void _Insert(string s) {
+		static void _Insert(string s, bool enclose = false) {
 			//print.it(s);
+			if (enclose) s = "{\r\n" + s + "\r\n}";
 			InsertCode.Statements(s/*, fold: s.Contains("/*image:\r\n")*/);
 		}
 

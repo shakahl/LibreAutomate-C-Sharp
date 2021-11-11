@@ -110,30 +110,18 @@ partial class SciCode
 						s = b.ToString();
 					}
 				} else if (_data.files != null) {
-					int format = 0;
 					foreach (var path in _data.files) {
 						if (what == 0) { _AppendFile(path, null); continue; }
-						var g = new TUtil.PathInfo(path);
-						if (format == 0) { //show dialog once if need
-							format = g.SelectFormatUI();
-							if (format == 0) { b.Clear(); break; }
-						}
-						var r = g.GetResult(format);
+						var r = new TUtil.PathInfo(path).GetCode();
 						_AppendFile(r.path, r.name, r.args);
 					}
 					s = b.ToString();
 				} else if (_data.shell != null) {
 					_GetShell(_data.shell, out var shells, out var names);
 					if (shells != null) {
-						int format = 0;
 						for (int i = 0; i < shells.Length; i++) {
 							if (what == 0) { _AppendFile(shells[i], null); continue; }
-							var g = new TUtil.PathInfo(shells[i]);
-							if (format == 0) { //show dialog once if need
-								format = g.SelectFormatUI();
-								if (format == 0) { b.Clear(); break; }
-							}
-							var r = g.GetResult(format);
+							var r = new TUtil.PathInfo(shells[i]).GetCode();
 							_AppendFile(r.path, names[i]);
 						}
 						s = b.ToString();

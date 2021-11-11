@@ -1,6 +1,10 @@
 using Au.Tools;
 using System.Windows;
 
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+
 namespace Au.Controls
 {
 	/// <summary>
@@ -14,16 +18,23 @@ namespace Au.Controls
 		/// Else creates code "var w = wnd.find(...);". If w is invalid, creates code "wnd w = default;".
 		/// The returned wndVar is final wnd variable name (of window or control).
 		/// </summary>
-		public (string code, string wndVar) ZGetWndFindCode(bool forTest, wnd w, wnd con = default) {
-			if (forTest) { //remove 'wait' and 'activate' from wnd.find and wnd.Child. If no 'wait', insert 0 to throw notfoundexception.
-				var k = ZGetWndFindCode(false, w, con);
-				const string c_rx1 = @" *\(\K(?i) *([+-]* *(\d+[dfuL]?|\d*\.?\d+(?:e[+-]?\d+)?[df]?|\d+UL) *,|(?=[""@$]))";
-				k.code = k.code.RxReplace(@"^ *\w+ +\w+ *= *wnd *\. *find" + c_rx1, "0,", 1)
-					.RxReplace(@"(?m)\)\.Activate\(\d*\);$", ");", 1);
-				//same for child
-				int i = k.code.IndexOf('\n') + 1;
-				if (i > 0) k.code = k.code.RxReplace(@" *\w+ +\w+ *= *\w+ *\. *Child" + c_rx1, "0,", 1, RXFlags.ANCHORED, range: i..);
-				//print.it(k.code);
+		public (string code, string wndVar) ZGetWndFindCode(bool test, wnd w, wnd con = default, bool private1 = false) {
+			if (test) { //remove 'wait' and 'activate' from wnd.find and wnd.Child. If no 'wait', insert 0 to throw notfoundexception.
+				var k = ZGetWndFindCode(false, w, con, private1: true);
+				var s = k.code;
+				var p = _ParseWndFind(s, test: true);
+				if (p?.wVar != null) {
+					void _Replace(int end, int argsStart, int argsEnd, int nameStart, bool orRun = false, bool orRunReplace = false, int funcNameEnd = 0) {
+						if (orRun && !orRunReplace) return;
+						s = s.ReplaceAt(argsEnd, end - argsEnd, ");"); //remove '.Activate()' etc. If orRun, removes run etc arguments.
+						s = s.ReplaceAt(argsStart, nameStart - argsStart, nameStart < argsEnd ? "0, " : "0"); //remove 'waitS, ' and add '0, ' (to throw NotFoundException)
+						if (orRun) s = s.Remove(funcNameEnd - 5, 5); //findOrRun -> find
+					}
+					if (p.cVar != null) _Replace(p.cEnd, p.cArgsStart, p.cArgsEnd, p.cNameStart);
+					_Replace(p.wEnd, p.wArgsStart, p.wArgsEnd, p.wNameStart, p.orRun, p.orRunReplace, p.wFuncNameEnd);
+				}
+				//print.it(s);
+				k.code = s;
 				return k;
 			}
 
@@ -31,23 +42,33 @@ namespace Au.Controls
 
 			if (w != _wnd) _userModified = false; else if (!_userModified) _userModified = 0 != Call(Sci.SCI_GETMODIFY);
 			if (!w.Is0) {
-				if (_userModified && w == _wnd) {
+				if (_userModified) {
 					sCode = zRangeText(false, 0, _ReadonlyStartUtf8);
-					if (sCode.RxMatch(@"(?s)^(?:var|wnd) (\w+)", out var mw)) { //window
-						bool isConCode = sCode.RxMatch(@"(?s)\R(?:var|wnd) (\w+)", out var mc, 0, mw.End..); //control
-																											 //print.it(isConCode);
+					var p = _ParseWndFind(sCode, test: false);
+					if (p?.wVar != null) {
+						bool isConCode = p.cVar != null;
+						//print.it(isConCode);
 						if (con == _con && !con.Is0 == isConCode) {
 							//print.it(isConCode ? "same control" : "no control");
-							return (sCode, (isConCode ? mc : mw)[1].Value);
+							if (!private1 && p.wName != null) {
+								//if window name changed and does not match the name in code, change it in code
+								var name = w.NameTL_;
+								if (name != null && !new wildex(p.wName).Match(name)) {
+									var s = TUtil.EscapeWindowName(name, true);
+									if (!(TUtil.IsVerbatim(s, out _) || TUtil.MakeVerbatim(ref s))) s = s.Escape(quote: true);
+									sCode = sCode.ReplaceAt(p.wNameStart, p.wNameEnd - p.wNameStart, s);
+								}
+							}
+							return (sCode, p.cVar ?? p.wVar);
 						}
-						wndVar = mw[1].Value;
-						if (isConCode) sCode = sCode[..mc.Start];
+						wndVar = p.wVar;
+						if (isConCode) sCode = sCode[..p.cStart];
 						if (con.Is0) {
 							//print.it("remove control");
 							_con = default;
 							return (sCode, wndVar);
 						}
-						if (isConCode) conVar = mc[1].Value;
+						if (isConCode) conVar = p.cVar;
 						//print.it(isConCode ? "replace control" : "add control");
 					} else sCode = null;
 				}
@@ -105,6 +126,7 @@ namespace Au.Controls
 
 							f.nameC = prefix + name;
 							f.hiddenTooC = !con.IsVisible;
+							f.SetSkipC(w, con);
 						}
 					} else con = default;
 				}
@@ -122,20 +144,89 @@ namespace Au.Controls
 		wnd _wnd, _con;
 		bool _userModified;
 
-		//rejected. Better don't update changed window name than overwrite user-edited code.
-		///// <summary>
-		///// Forget window and control handles. Then <see cref="ZGetWndFindCode"/> will format new code even if the window is the same as previously.
-		///// </summary>
-		//public void ZResetWndCon()
-		//{
-		//	_wnd = _con = default;
-		//}
+		record _WndFindParsing
+		{
+			//var w = wnd.find...
+			public string wVar, wName;
+			public int wEnd, wArgsStart, wArgsEnd, wNameStart, wNameEnd, wFuncNameEnd;
+			public bool orRun, orRunReplace;
+			//var c = w.Child...
+			public string cVar;
+			public int cStart, cEnd, cArgsStart, cArgsEnd, cNameStart;
+		}
+
+		//Parses var w = wnd.find(...)..., and var c = w.Child(...)... if exists.
+		//Gets only strings and offsets needed for replacements.
+		static _WndFindParsing _ParseWndFind(string code, bool test) {
+			if (code.NE()) return null;
+			var p = new _WndFindParsing();
+			var parseOpt = new CSharpParseOptions(LanguageVersion.Latest);
+			var cu = CSharpSyntaxTree.ParseText(code, parseOpt, "", Encoding.UTF8).GetRoot() as CompilationUnitSyntax; //fast
+			foreach (var g1 in cu.Members) {
+				if (g1 is not GlobalStatementSyntax g) break;
+				if (g.Statement is LocalDeclarationStatementSyntax lds && lds.Declaration.Type.ToString() is "var" or "wnd") {
+					var v = lds.Declaration.Variables[0];
+					if (v.ArgumentList != null) continue; //array
+					if (v.Initializer.Value is InvocationExpressionSyntax ies && ies.Expression is MemberAccessExpressionSyntax mae) {
+						while (mae.Expression is InvocationExpressionSyntax ies2 && ies2.Expression is MemberAccessExpressionSyntax mae2) { ies = ies2; mae = mae2; } //eg when with '.Activate()'
+						string s1 = mae.Expression.ToString(), s2 = mae.Name.ToString();
+						bool isW = p.wVar == null;
+						if (isW ? (s1 == "wnd" && s2 == "find" || (p.orRun = s2 == "findOrRun")) : (s1 == p.wVar && s2 == "Child")) {
+							var al = ies.ArgumentList;
+							int argsStart = al.OpenParenToken.Span.End, argsEnd = al.CloseParenToken.SpanStart, nameStart = argsStart;
+							var a = al.Arguments;
+							if (a.Count > 0) {
+								int iName = 0;
+								//waitS. Never mind: also can be +, ~, (cast), double.Constant, etc.
+								if (!p.orRun && a[0].Expression.Kind() is SyntaxKind.NumericLiteralExpression or SyntaxKind.UnaryMinusExpression) {
+									nameStart = a.Count > 1 ? a[1].SpanStart : argsEnd;
+									iName = a.Count > 1 ? 1 : -1;
+								}
+								if (isW && iName >= 0 && a[iName].Expression is LiteralExpressionSyntax les && les.IsKind(SyntaxKind.StringLiteralExpression)) {
+									p.wName = les.Token.ValueText;
+									p.wNameEnd = les.Span.End;
+								}
+							}
+							var varName = v.Identifier.ToString();
+							int end = lds.Span.End;
+							if (isW) { //wnd.find
+								p.wVar = varName;
+								p.wEnd = end;
+								p.wArgsStart = argsStart;
+								p.wArgsEnd = argsEnd;
+								p.wNameStart = nameStart;
+								p.wFuncNameEnd = mae.Name.Span.End;
+								if (p.orRun && test) {
+									for (int i = 1, n = a.Count; i < n; i++) {
+										if(a[i].NameColon?.Name.Identifier.Text == "run") {
+											p.orRunReplace = true;
+											p.wArgsEnd = a[i - 1].Span.End;
+											break;
+										}
+									}
+								}
+							} else { //w.Child
+								p.cVar = varName;
+								p.cEnd = end;
+								p.cArgsStart = argsStart;
+								p.cArgsEnd = argsEnd;
+								p.cNameStart = nameStart;
+								p.cStart = lds.FullSpan.Start; while (code[p.cStart - 1] <= ' ') p.cStart--;
+								break;
+							}
+						}
+					}
+				}
+			}
+			//print.it(p);
+			return p;
+		}
 
 		/// <summary>
 		/// Shows <see cref="Dwnd"/> and updates text.
 		/// </summary>
 		public (bool ok, wnd w, wnd con, bool useCon) ZShowWndTool(Window owner, wnd w, wnd con, bool uncheckControl) {
-			var d = new Dwnd(con.Is0 ? w : con, uncheckControl) { ZDontInsertCodeOnOK = true };
+			var d = new Dwnd(con.Is0 ? w : con, uncheckControl, dontInsert: true);
 			d.ShowAndWait(owner, hideOwner: true);
 			var code = d.ZResultCode; if (code == null) return default;
 			_wnd = d.ZResultWindow;

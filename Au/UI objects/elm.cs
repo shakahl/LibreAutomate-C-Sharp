@@ -244,7 +244,7 @@ namespace Au
 		/// The 'set' function sometimes can be used as a fast alternative to <see cref="Navigate"/>. It modifies only this variable. It does not check whether the value is valid.
 		/// Simple elements cannot have child elements.
 		/// </remarks>
-		public int SimpleElementId { get => _elem; set { _misc.roleByte = 0; _elem = value; } }
+		public int Item { get => _elem; set { _misc.roleByte = 0; _elem = value; } }
 
 		/// <summary>
 		/// Returns some additional info about this variable, such as how the UI element was retrieved (inproc, UIA, Java).
@@ -510,7 +510,7 @@ namespace Au
 		/// Formats string from main properties of this UI element.
 		/// </summary>
 		/// <remarks>
-		/// The string starts with role. Other properties have format like <c>x="value"</c>, where x is a property character like with <see cref="GetProperties"/>; character e is <see cref="SimpleElementId"/>. HTML attributes have format <c>@name="value"</c>. In string values are used C# escape sequences, for example \r\n for new line.
+		/// The string starts with role. Other properties have format like <c>x="value"</c>, where x is a property character like with <see cref="GetProperties"/>; character e is <see cref="Item"/>. HTML attributes have format <c>@name="value"</c>. In string values are used C# escape sequences, for example \r\n for new line.
 		/// Indentation depends on <see cref="Level"/>.
 		/// </remarks>
 		public override string ToString() {
@@ -526,7 +526,7 @@ namespace Au
 				_Add('d', k.Description);
 				_Add('a', k.DefaultAction);
 				if (!k.Rect.Is0) _Add('r', k.Rect.ToString(), '\0', '\0');
-				if (SimpleElementId != 0) b.Append(",  e=").Append(SimpleElementId);
+				if (Item != 0) b.Append(",  e=").Append(Item);
 				foreach (var kv in k.HtmlAttributes) {
 					b.Append(",  @").Append(kv.Key).Append('=').Append('\"');
 					b.Append(kv.Value.Escape(limit: 250)).Append('\"');

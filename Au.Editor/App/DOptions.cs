@@ -59,8 +59,8 @@ class DOptions : KDialogWindow
 		var b = _Page("General").Columns(-1, -1);
 		//left column
 		b.StartStack(vertical: true);
-		b.Add(out CheckBox startWithWin, "Start with Windows");
-		b.Add(out CheckBox startHidden, "Start hidden; hide when closing");
+		b.Add(out KCheckBox startWithWin, "Start with Windows");
+		b.Add(out KCheckBox startHidden, "Start hidden; hide when closing");
 		b.End();
 		//right column
 		b.StartStack(vertical: true);
@@ -79,7 +79,7 @@ class DOptions : KDialogWindow
 		startupScripts.Text = init_startupScripts;
 
 		_b.OkApply += e => {
-			if (startWithWin.True() != init_startWithWin) {
+			if (startWithWin.IsChecked != init_startWithWin) {
 				try {
 					using var rk = Registry.CurrentUser.OpenSubKey(c_rkRun, true);
 					if (init_startWithWin) rk.DeleteValue("Au.Editor");
@@ -87,7 +87,7 @@ class DOptions : KDialogWindow
 				}
 				catch (Exception ex) { print.it("Failed to change 'Start with Windows'. " + ex.ToStringWithoutStack()); }
 			}
-			App.Settings.runHidden = startHidden.True();
+			App.Settings.runHidden = startHidden.IsChecked;
 
 			var s = startupScripts.Text;
 			if (s != init_startupScripts) App.Model.StartupScriptsCsv = s;
@@ -272,7 +272,7 @@ Line number";
 				int tok = _SciStylesLineToTok(sciStyles.zLineFromPos(false, sciStyles.zCurrentPos8));
 				int col = color.Color;
 				if (tok >= 0) {
-					if (control == bold) sciStyles.zStyleBold(tok, bold.True());
+					if (control == bold) sciStyles.zStyleBold(tok, bold.IsChecked);
 					else sciStyles.zStyleForeColor(tok, col);
 				} else if (tok == -1) {
 					backColor = col;
@@ -354,7 +354,7 @@ To apply changes after deleting etc, restart this application.
 			App.Settings.templ_use = (int)useCustom;
 
 			int flags = App.Settings.templ_flags;
-			if (fold.True()) flags &= ~1; else flags |= 1;
+			if (fold.IsChecked) flags &= ~1; else flags |= 1;
 			App.Settings.templ_flags = flags;
 		};
 
@@ -383,6 +383,9 @@ To apply changes after deleting etc, restart this application.
 		b.Skip().StartGrid(); //right
 		b.End();
 		b.End();
+		b.StartGrid<GroupBox>("Insert code");
+		b.R.Add(out KCheckBox unexpandPath, "Unexpand path").Checked(App.Settings.ci_unexpandPath).Tooltip("Insert file path like folders.System + \"file.exe\"");
+		b.End();
 		//b.StartGrid<GroupBox>("Auto correction").Columns(0, 100, -1);
 		////b.R.StartStack().Add<TextBlock>("Need Shift to exit (...) with").Add(out KCheckBox shiftEnter, "Enter").Margin("T4").Add(out KCheckBox shiftTab, "Tab").Margin("T4").End(); //rejected
 		////b.R.Add(@"Break ""string""", out ComboBox breakString).Items(@"""abc"" + """"|""abc\r\n"" + """"|@""multiline""").Span(1); //rejected. Rarely used.
@@ -398,8 +401,9 @@ To apply changes after deleting etc, restart this application.
 
 		_b.OkApply += e => {
 			App.Settings.ci_complParen = complParen.SelectedIndex;
-			//App.Settings.ci_shiftEnterAlways = (byte)(shiftEnter.True() ? 0 : 1);
-			//App.Settings.ci_shiftTabAlways = (byte)(shiftTab.True() ? 0 : 1);
+			App.Settings.ci_unexpandPath = unexpandPath.IsChecked;
+			//App.Settings.ci_shiftEnterAlways = (byte)(shiftEnter.IsChecked ? 0 : 1);
+			//App.Settings.ci_shiftTabAlways = (byte)(shiftTab.IsChecked ? 0 : 1);
 			//App.Settings.ci_breakString = (byte)breakString.SelectedIndex;
 		};
 
@@ -413,16 +417,20 @@ To apply changes after deleting etc, restart this application.
 
 	void _Hotkeys() {
 		var b = _Page("Hotkeys");
-		b.R.Add("Quick capture menu", out TextBox captureMenu, App.Settings.hotkeys.capture_menu);
-		b.R.Add("Quick capture wnd tool", out TextBox captureDwnd, App.Settings.hotkeys.capture_wnd);
-		b.R.Add("Quick capture elm tool", out TextBox captureDelm, App.Settings.hotkeys.capture_elm);
+		b.R.Add("Capture wnd and show menu", out TextBox captureMenu, App.Settings.hotkeys.tool_quick).Validation(_Validate);
+		b.R.Add("Capture wnd and show tool", out TextBox captureDwnd, App.Settings.hotkeys.tool_wnd).Validation(_Validate);
+		b.R.Add("Capture elm and show tool", out TextBox captureDelm, App.Settings.hotkeys.tool_elm).Validation(_Validate);
+		b.R.Add("Capture from a tool", out TextBox capture, App.Settings.hotkeys.capture).Validation(_Validate);
+		b.R.Add("Insert captured code", out TextBox insert, App.Settings.hotkeys.insert).Validation(_Validate);
 		b.End();
 
 		_b.OkApply += e => {
 			AppSettings.hotkeys_t v = new() {
-				capture_menu = captureMenu.Text,
-				capture_wnd = captureDwnd.Text,
-				capture_elm = captureDelm.Text
+				tool_quick = captureMenu.Text,
+				tool_wnd = captureDwnd.Text,
+				tool_elm = captureDelm.Text,
+				capture = capture.Text,
+				insert = insert.Text
 			};
 			if (v != App.Settings.hotkeys) {
 				App.Settings.hotkeys = v;
@@ -430,6 +438,11 @@ To apply changes after deleting etc, restart this application.
 				Au.Tools.QuickCapture.RegisterHotkeys();
 			}
 		};
+
+		string _Validate(FrameworkElement e) {
+			if (keys.more.parseHotkeyString((e as TextBox).Text, out _, out _)) return null;
+			return "Invalid hotkey";
+		}
 	}
 
 	static class api

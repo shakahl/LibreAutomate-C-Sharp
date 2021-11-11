@@ -24,7 +24,7 @@ class Duiimage : KDialogWindow
 
 	KSciInfoBox _info;
 	KPopup _ttInfo;
-	Button _bTest, _bOK, _bInsert;
+	Button _bTest, _bInsert;
 	ComboBox _cbAction;
 	const int c_waitnot = 8, c_finder = 9;
 	_PictureBox _pict;
@@ -40,20 +40,17 @@ class Duiimage : KDialogWindow
 		Title = "Find image or color in window";
 
 		_noeventValueChanged = true;
-		var b = new wpfBuilder(this).WinSize((410, 402..), (400, 350..)).Columns(160, -1);
+		var b = new wpfBuilder(this).WinSize((410, 400..), (380, 330..)).Columns(160, -1);
 		b.R.Add(out _info).Height(60);
-		b.R.StartGrid().Columns(0, 0, 0, 0, 0, -1);
+		b.R.StartGrid().Columns(76, 76, 76, -1);
 		//row 1
-		b.R.AddButton("Capture", _bCapture_Click).Width(70);
-		b.AddButton(out _bTest, "Test", _bTest_Click).Width(70).Disabled().Tooltip("Executes the code now (except wait/fail/mouse) and shows the found image");
-		b.AddOkCancel(out _bOK, out _, out _, stackPanel: false); _bOK.IsEnabled = false;
-		b.AddButton(out _bInsert, "Insert", _bOK_Click).Width(70).Span(1).Disabled().Tooltip("Insert code and don't close");
-		b.OkApply += _bOK_Click;
-		//row 2
-		b.R.AddButton("More ▾", _bEtc_Click).Align("L"); //align to make smaller than other buttons
-		b.Add(out _cbAction).Span(2).Items("|MouseMove|MouseClick|MouseClick(D)|MouseClick(R)|VirtualClick|VirtualClick(D)|VirtualClick(R)|waitNot|new uiimageFinder").Select(1);
+		b.R.AddButton("Capture", _bCapture_Click);
+		b.AddButton(out _bTest, "Test", _Test).Disabled().Tooltip("Executes the code now (except wait/fail/mouse) and shows the found image");
+		b.AddButton(out _bInsert, "Insert", _Insert).Disabled();
+		b.Add(out _cbAction).Align("L").Width(140).Items("|MouseMove|MouseClick|MouseClickD|MouseClickR|PostClick|PostClickD|PostClickR|waitNot|new uiimageFinder").Select(2);
 		//row 3
-		b.R.StartStack();
+		b.R.AddButton("More ▾", _bEtc_Click).Align("L");
+		b.StartStack();
 		waitC = b.xAddCheckText("Wait", "1", check: true); b.Width(53);
 		(waitnoC = b.xAddCheckText("Timeout", "5")).Visible = false; b.Width(53);
 		b.xAddCheck(out exceptionC, "Fail if not found").Checked();
@@ -75,7 +72,7 @@ class Duiimage : KDialogWindow
 		b.End();
 		_noeventValueChanged = false;
 
-		WndSavedRect.Restore(this, App.Settings.tools_Duiimage_wndPos, o => App.Settings.tools_Duiimage_wndPos = o);
+		WndSavedRect.Restore(this, App.Settings.Duiimage_wndPos, o => App.Settings.Duiimage_wndPos = o);
 	}
 
 	static Duiimage() {
@@ -92,6 +89,8 @@ class Duiimage : KDialogWindow
 		if (_image != null) _pict.Image = _image = null;
 
 		base.OnClosed(e);
+
+		App.Hwnd.ActivateL();
 	}
 
 	private void _bCapture_Click(WBButtonClickArgs e) {
@@ -138,7 +137,7 @@ class Duiimage : KDialogWindow
 		//set _code
 		_FormatCode();
 
-		_bTest.IsEnabled = true; _bOK.IsEnabled = true; _bInsert.IsEnabled = true;
+		_bTest.IsEnabled = true; _bInsert.IsEnabled = true;
 
 		if (_MultiIsActive /*&& dialog.showYesNo("Add to array?", owner: this)*/) _MultiAdd();
 	}
@@ -226,7 +225,7 @@ class Duiimage : KDialogWindow
 			b.Append("var f = new uiimageFinder(");
 		} else {
 			b.Append(waitNot ? "uiimage.waitNot(" : "uiimage.find(");
-			if (wait || waitNot || orThrow) b.AppendWaitTime(waitTime ?? "0", orThrow).Append(", ");
+			if (wait || waitNot || orThrow) if(b.AppendWaitTime(waitTime ?? "0", orThrow)) b.Append(", ");
 
 			(wndCode, wndVar) = _code.ZGetWndFindCode(forTest, _wnd, _useCon ? _con : default);
 			bb.AppendLine(wndCode);
@@ -235,7 +234,9 @@ class Duiimage : KDialogWindow
 			else b.Append(wndVar);
 		}
 
-		b.AppendOtherArg(isColor ? "0x" : "image");
+		//string imageVar = isColor ? "0x" : ("image" + Environment.TickCount.ToS("X"));
+		string imageVar = isColor ? "0x" : "image";
+		b.AppendOtherArg(imageVar);
 		if (isColor) b.Append(_color.ToString("X6"));
 
 		if (wiflagsC.GetText(out var wiFlag)) b.AppendOtherArg("IFFlags." + wiFlag);
@@ -254,11 +255,11 @@ class Duiimage : KDialogWindow
 
 		if (!isColor) {
 			if (isMulti) {
-				bb.AppendLine("IFImage[] image = {");
+				bb.AppendLine($"IFImage[] {imageVar} = {{");
 				foreach (var v in _multi) bb.Append('\t').Append(v).AppendLine(",");
 				bb.Append('}');
 			} else {
-				bb.Append("string image = ").Append(_CurrentImageString());
+				bb.Append($"string {imageVar} = ").Append(_CurrentImageString());
 			}
 			bb.AppendLine(";");
 		}
@@ -271,11 +272,11 @@ class Duiimage : KDialogWindow
 				string mouse = iAction switch {
 					1 => "im.MouseMove();",
 					2 => "im.MouseClick();",
-					3 => "im.MouseClick(button: MButton.DoubleClick);",
-					4 => "im.MouseClick(button: MButton.Right);",
-					5 => "im.VirtualClick();",
-					6 => "im.VirtualClick(button: MButton.DoubleClick);",
-					7 => "im.VirtualClick(button: MButton.Right);",
+					3 => "im.MouseClickD();",
+					4 => "im.MouseClickR();",
+					5 => "im.PostClick();",
+					6 => "im.PostClickD();",
+					7 => "im.PostClickR();",
 					_ => null
 				};
 				if (findAll) {
@@ -349,7 +350,14 @@ class Duiimage : KDialogWindow
 		m.Separator();
 		m["Add to array", disable: _image == null] = o => _MultiMenuAdd();
 		m["Remove from array", disable: !_MultiIsActive] = o => _MultiRemove();
+		//m.Separator();
+		//var cIC = m.AddCheck("Let Insert close", _Opt.Has(_EOptions.InsertClose));
 		m.Show();
+		//_EOptions f = _Opt;
+		//f.SetFlag(_EOptions.InsertClose, cIC.IsChecked);
+		////var changed = _Opt ^ f;
+		//_Opt = f;
+		////if (changed.Has(_EOptions.)) _FormatCode();
 	}
 
 	void _OpenFile(bool embed, Button button) {
@@ -407,28 +415,49 @@ class Duiimage : KDialogWindow
 	//	_pict.Invalidate();
 	//}
 
+	//[Flags]
+	//enum _EOptions
+	//{
+	//	InsertClose = 1 << 5,
+	//}
+
+	//static _EOptions _Opt {
+	//	get => (_EOptions)App.Settings.tools_Duiimage_flags;
+	//	set => App.Settings.tools_Duiimage_flags = (int)value;
+	//}
+
 	#endregion
 
-	#region OK, Test
+	#region Insert, Test
 
-	/// <summary>
-	/// When OK clicked, contains C# code. Else null.
-	/// </summary>
-	public string ZResultCode { get; private set; }
+	///// <summary>
+	///// When OK clicked, contains C# code. Else null.
+	///// </summary>
+	//public string ZResultCode { get; private set; }
 
-	private void _bOK_Click(WBButtonClickArgs e) {
-		var s = _code.zText.NullIfEmpty_();
-		bool isOK = e.Button == _bOK;
-		if (isOK) {
-			ZResultCode = s;
-			if (s == null) { e.Cancel = true; return; }
-		} else if (s == null) return;
-		//s = s.Replace("@\"image:", "@\"image:\r\n"); //rejected. Better single looong line than 1 visible + 1 hidden line which makes editing unpleasant.
-		InsertCode.Statements(s/*, fold: true*/, activate: isOK);
+	void _Insert(WBButtonClickArgs _1) {
+		if (_close) {
+			base.Close();
+		} else if (_code.zText.NullIfEmpty_() is string s) {
+			string newline = _cbAction.SelectedIndex is 0 or >= c_finder ? "\r\n" : null; //if no action, add empty line
+			s = "{\r\n" + s + newline + "\r\n}"; //separates multiline code blocks, and don't need unique variable names
+			InsertCode.Statements(s);
+			//if (_Opt.Has(_EOptions.InsertClose)) {
+			//	base.Close();
+			//} else {
+			_close = true;
+			_bInsert.Content = "Close";
+			_bInsert.MouseLeave += (_, _) => {
+				_close = !true;
+				_bInsert.Content = "Insert";
+			};
+			//}
+		}
 	}
+	bool _close;
 
-	private void _bTest_Click(WBButtonClickArgs ea) {
-		var (code, wndVar) = _FormatCode(true); if (code == null) return;
+	void _Test(WBButtonClickArgs _1) {
+		var (code, wndVar) = _FormatCode(true); if (code.NE()) return;
 		var rr = TUtil.RunTestFindObject(this, code, wndVar, _WndSearchIn, getRect: o => (o as uiimage).RectInScreen, activateWindow: true);
 		_info.InfoErrorOrInfo(rr.info);
 	}
@@ -477,12 +506,12 @@ If unchecked, returns false.");
 	}
 
 	const string c_dialogInfo =
-@"This dialog creates code to find <help uiimage.find>image or color<> in <help wnd.find>window<>.
+@"This tool creates code to find <help uiimage.find>image or color<> in <help wnd.find>window<>.
 1. Click the Capture button. Mouse-drag-select the image.
-2. Click the Test button. It finds and shows the image.
+2. Click the Test button to see how the 'find' code works.
 3. If need, change some fields.
-4. Click OK, it inserts C# code in editor. Or copy/paste.
-5. If need, edit the code in editor: rename variables, delete duplicate wnd.find lines, replace part of window name with *, etc.";
+4. Click Insert. Click Close, or capture/insert again.
+5. If need, edit the code in editor. For example rename variables, delete duplicate wnd.find lines, replace part of window name with *, add code to click the image.";
 
 	protected override void OnPreviewKeyDown(KeyEventArgs e) {
 		_ttInfo?.Close();

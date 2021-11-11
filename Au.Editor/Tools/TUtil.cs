@@ -49,12 +49,16 @@ static class TUtil
 
 	/// <summary>
 	/// Appends waitTime. If !orThrow, appends "-" if need.
+	/// If !orThrow and waitTime == "0", appends nothing and returns false.
 	/// </summary>
-	public static StringBuilder AppendWaitTime(this StringBuilder t, string waitTime, bool orThrow) {
+	public static bool AppendWaitTime(this StringBuilder t, string waitTime, bool orThrow) {
 		if (waitTime.NE()) waitTime = "8e88";
-		if (!orThrow && waitTime != "0" && !waitTime.Starts('-')) t.Append('-');
+		if (!orThrow) {
+			if (waitTime == "0") return false;
+			if (!waitTime.Starts('-')) t.Append('-');
+		}
 		t.Append(waitTime);
-		return t;
+		return true;
 	}
 
 	/// <summary>
@@ -160,9 +164,9 @@ static class TUtil
 
 	#region formatters
 
-	public class WindowFindCodeFormatter
+	public record WindowFindCodeFormatter
 	{
-		public string nameW, classW, programW, containsW, alsoW, waitW;
+		public string nameW, classW, programW, containsW, alsoW, waitW, orRunW;
 		public bool hiddenTooW, cloakedTooW;
 		public string idC, nameC, classC, alsoC, skipC, nameC_comments, classC_comments;
 		public bool hiddenTooC;
@@ -174,17 +178,26 @@ static class TUtil
 			var b = new StringBuilder(CodeBefore);
 			if (CodeBefore != null && !CodeBefore.Ends('\n')) b.AppendLine();
 
-			bool orThrow = Throw && !Test, activate = Activate && !Test;
+			bool orThrow = false, orRun = false, activate = false;
+			if (!Test) {
+				orThrow = Throw;
+				orRun = orRunW != null;
+				activate = Activate;
+			}
 
 			if (NeedWindow) {
+				bool orThrowW = orThrow || NeedControl;
+
 				b.Append(Test ? "wnd " : "var ").Append(VarWindow);
 				if (Test) b.AppendLine(";").Append(VarWindow);
-				b.Append(" = wnd.find(");
 
-				bool orThrowW = orThrow || NeedControl || activate;
-				bool isWait = waitW != null && !Test;
+				if (orRun) {
+					b.Append(" = wnd.findOrRun(");
+				} else {
+					b.Append(" = wnd.find(");
+					if (waitW != null && !Test) b.AppendWaitTime(waitW, orThrowW); else if (orThrowW) b.Append('0');
+				}
 
-				if (isWait) b.AppendWaitTime(waitW, orThrowW); else if (orThrowW) b.Append('0');
 				b.AppendStringArg(nameW);
 				int m = 0;
 				if (classW != null) m |= 1;
@@ -199,8 +212,14 @@ static class TUtil
 				if (alsoW != null) b.AppendOtherArg(alsoW, "also");
 				if (containsW != null) b.AppendStringArg(containsW, "contains");
 
+				if (orRun) {
+					b.Append(", run: () => { ").Append(orRunW).Append(" }");
+					if (!orThrowW) b.Append(", waitS: -60");
+					if (!activate) b.Append(", activate: !true");
+					activate = false;
+				}
 				b.Append(')');
-				if (activate) b.Append(".Activate()");
+				if (activate && orThrowW) { b.Append(".Activate()"); activate = false; }
 				b.Append(';');
 			}
 
@@ -209,7 +228,7 @@ static class TUtil
 				if (!Test) b.Append("var ").Append(VarControl).Append(" = ");
 				b.Append(VarWindow).Append(".Child(");
 				if (!Test) {
-					if (waitW is not (null or "0")) b.Append(orThrow ? "1" : "-1"); else if (orThrow) b.Append('0');
+					if (waitW is not (null or "0") || orRun) b.Append(orThrow ? "1" : "-1"); else if (orThrow) b.Append('0');
 				}
 				if (nameC != null) b.AppendStringArg(nameC);
 				if (classC != null) b.AppendStringArg(classC, nameC == null ? "cn" : null);
@@ -233,10 +252,19 @@ static class TUtil
 				}
 			}
 
-			if (!orThrow && !Test && !(Activate && !NeedControl))
-				b.AppendLine().Append("if(").Append(NeedControl ? VarControl : VarWindow).Append(".Is0) { print.it(\"not found\"); }");
+			if (!orThrow && !Test) {
+				b.Append("\r\nif(").Append(NeedControl ? VarControl : VarWindow).Append(".Is0) { print.it(\"not found\"); }");
+				if (activate) b.Append(" else { ").Append(VarWindow).Append(".Activate(); }");
+			}
 
 			return b.ToString();
+		}
+
+		/// <summary>
+		/// Sets <b>skipC</b> if <i>c</i> is not the first found <i>w</i> child control with <b>nameC</b>/<b>classC</b>/<b>hiddenTooC</b>.
+		/// </summary>
+		public void SetSkipC(wnd w, wnd c) {
+			skipC = GetControlSkip(w, c, nameC, classC, hiddenTooC);
 		}
 	}
 
@@ -244,9 +272,11 @@ static class TUtil
 
 	#region misc
 
+	//Tool dialogs such as Delm normally run in new thread. If started from another such dialog - in its thread.
+	//	Else main thread would hang when something is slow or hangs when working with UI elements or executing 'also' code.
 	public static void ShowDialogInNonmainThread(Func<KDialogWindow> newDialog) {
-		if (Environment.CurrentManagedThreadId != 1) _Show(false); //cannot simply pass an iaccessible to other thread
-		else run.thread(() => _Show(true)); //don't allow the main thread to hang when something is slow when working with UI elements or executing 'also' code
+		if (Environment.CurrentManagedThreadId != 1) _Show(false);
+		else run.thread(() => _Show(true)).Name = "tool"; //info: thread name used for debugging
 
 		void _Show(bool dialog) {
 			try { //unhandled exception kills process if in nonmain thread
@@ -280,6 +310,20 @@ static class TUtil
 	}
 
 	/// <summary>
+	/// Returns <b>wnd.Child</b> parameter <i>skip</i> if <i>c</i> is not the first found <i>w</i> child control with <i>name</i> and <i>cn</i>.
+	/// </summary>
+	public static string GetControlSkip(wnd w, wnd c, string name, string cn, bool hiddenToo) {
+		if (!c.Is0) {
+			var a = w.ChildAll(name, cn, hiddenToo ? WCFlags.HiddenToo : 0);
+			if (a.Length > 1 && a[0] != c) {
+				int skip = Array.IndexOf(a, c);
+				if (skip > 0) return skip.ToS();
+			}
+		}
+		return null;
+	}
+
+	/// <summary>
 	/// Calls EventManager.RegisterClassHandler for CheckBox.CheckedEvent, CheckBox.UncheckedEvent, TextBox.TextChangedEvent and optionally ComboBox.SelectionChangedEvent.
 	/// Call from static ctor of KDialogWindow-based classes.
 	/// The specified event handler will be called on events of any of these controls in all dialogs of T type.
@@ -308,12 +352,15 @@ static class TUtil
 	}
 
 	/// <summary>
-	/// From path gets name and various path formats (raw, unexpanded, shortcut) for inserting in code. If shortcut, also gets arguments. Supports ":: ITEMIDLIST".
+	/// From path gets name and various path formats (raw, unexpanded, shortcut) for inserting in code.
+	/// If shortcut, also gets arguments.
+	/// Supports ":: ITEMIDLIST".
+	/// Can get path from window.
 	/// </summary>
 	public class PathInfo
 	{
-		public string filePath, lnkPath, fileUnexpanded, lnkUnexpanded;
-		string _name, _name2, _args;
+		public readonly string filePath, lnkPath, fileUnexpanded, lnkUnexpanded;
+		readonly string _name, _name2, _args;
 
 		public PathInfo(string path) {
 			filePath = path;
@@ -351,37 +398,47 @@ static class TUtil
 		}
 
 		/// <summary>
-		/// If is shortcut or can unexpand path, shows dialog and returns: 0 cancel, 1 use filePath, 2 use fileUnexpanded, 2 use lnkPath, 4 use lnkUnexpanded.
-		/// Else returns 1 (use filePath).
+		/// Gets path of window's program for <see cref="run.it"/>. Supports app id and folder path.
+		/// Returns null if failed to get path or app id.
 		/// </summary>
-		/// <param name="owner"></param>
-		public int SelectFormatUI(AnyWnd owner = default) {
-			if (lnkPath != null || fileUnexpanded != null) {
-				var b = new StringBuilder();
-				_Append("1 Path", filePath);
-				_Append("|2 Unexpanded path", fileUnexpanded);
-				_Append("|3 Shortcut path", lnkPath);
-				_Append("|4 Unexpanded shortcut path", lnkUnexpanded);
-				return dialog.show("Path format", buttons: b.ToString(), flags: DFlags.CommandLinks | DFlags.XCancel | DFlags.CenterMouse, owner: owner);
-
-				void _Append(string label, string path) {
-					if (path != null) b.Append(label).Append('\n').Append(path.Limit(50));
-				}
+		public static PathInfo FromWindow(wnd w) {
+			var path = WndUtil.GetWindowsStoreAppId(w, true, true);
+			if (path == null) return null;
+			//if folder window, try to get folder path
+			if (path.Ends(@"\explorer.exe", true) && w.ClassNameIs("CabinetWClass")) {
+				////This is simpler but less reliable. Can't get eg Documents, because the address bar displays name, not path.
+				//var tb = w.Child(cn: "ToolbarWindow32", id: 1001); // @"Address: C:\Program Files (x86)\Windows Kits\10\bin\x86"
+				//if (!tb.Is0 && tb.Name is string sa && sa.RxMatch(@"^\S+: +(.+)", 1, out RXGroup rg)
+				//	&& filesystem.exists(sa = rg.Value, useRawPath: true).isDir
+				//	) path = sa;
+				//else {
+				if (WndUtil.GetExplorerFolderPath_(w) is string s) path = s;
+				//}
 			}
-			return 1;
+			return new(path);
 		}
 
-		//static bool s_defUnexpanded, s_defLnk; //could be used to set default button depending on previous choice
-
 		/// <summary>
-		/// Gets path/name/args that match or are nearest to the return value of <see cref="SelectFormatUI"/>.
-		/// Paths are unexpanded/escaped/enclosed, like <c>@"x:\a\b.c"</c> or <c>folders.Example + @"a\b.c"</c>.
+		/// Gets path/name/args code for inserting in editor. Unexpands if App.Settings.ci_unexpandPath.
+		/// Paths are escaped/enclosed, like <c>@"x:\a\b.c"</c> or <c>folders.Example + @"a\b.c"</c>.
+		/// If shortcut, shows dialog, let the user choose target path or lnk path.
 		/// </summary>
-		public (string path, string name, string args) GetResult(int i) => (
+		public (string path, string name, string args) GetCode(AnyWnd owner = default) {
+			bool u = App.Settings.ci_unexpandPath, u1 = u && fileUnexpanded != null, u2 = u && lnkUnexpanded != null;
+			int i;
+			if (lnkPath == null) i = u1 ? 2 : 1;
+			else {
+				string s1 = u1 ? fileUnexpanded : filePath;
+				string s2 = u2 ? lnkUnexpanded : lnkPath;
+				string sb = $"{(u1 ? 2 : 1)} Target path\n{s1.Limit(99, middle: true)}|{(u2 ? 4 : 3)} Shortcut path\n{s2.Limit(99, middle: true)}";
+				i = dialog.show("Shortcut", buttons: sb, flags: DFlags.CommandLinks | DFlags.CenterMouse | DFlags.Wider, owner: owner);
+			}
+			return (
 			i switch { 1 => filePath, 2 => fileUnexpanded ?? filePath, 3 => lnkPath ?? filePath, 4 => lnkUnexpanded ?? lnkPath ?? filePath, _ => null },
 			i <= 2 ? _name2 ?? _name : _name,
 			i <= 2 ? _args : null
 			);
+		}
 	}
 
 	#endregion
@@ -444,11 +501,11 @@ static class TUtil
 	/// <summary>
 	/// Common code for tools that capture UI objects with F3.
 	/// </summary>
-	public class CaptureWindowEtcWithHotkey
+	public class CapturingWithHotkey
 	{
 		readonly KCheckBox _captureCheckbox;
-		readonly Action _cbCapture;
-		readonly Func<POINT, (RECT? r, string s)> _cbGetRect;
+		readonly Func<POINT, (RECT? r, string s)> _dGetRect;
+		readonly Action _dCapture, _dInsert;
 		HwndSource _hs;
 		timer _timer;
 		osdRect _osr;
@@ -456,14 +513,15 @@ static class TUtil
 		bool _capturing;
 		const string c_propName = "Au.Capture";
 		readonly static int s_stopMessage = Api.RegisterWindowMessage(c_propName);
-		const int c_hotkeyId = 1623031890;
+		const int c_hotkeyCapture = 1623031890, c_hotkeyInsert = 1623031891;
 
 		/// <param name="captureCheckbox">Checkbox that turns on/off capturing.</param>
 		/// <param name="getRect">Called to get rectangle of object from mouse. Receives mouse position. Can return default to hide the rectangle.</param>
-		public CaptureWindowEtcWithHotkey(KCheckBox captureCheckbox, Action capture, Func<POINT, (RECT? r, string s)> getRect) {
+		public CapturingWithHotkey(KCheckBox captureCheckbox, Func<POINT, (RECT? r, string s)> getRect, Action capture, Action insert = null) {
 			_captureCheckbox = captureCheckbox;
-			_cbCapture = capture;
-			_cbGetRect = getRect;
+			_dGetRect = getRect;
+			_dCapture = capture;
+			_dInsert = insert;
 		}
 
 		/// <summary>
@@ -484,10 +542,19 @@ static class TUtil
 						return false;
 					});
 
-					if (!(Api.RegisterHotKey(wDialog, c_hotkeyId, 0, KKey.F3) | Api.RegisterHotKey(wDialog, c_hotkeyId + 1, 2, KKey.F3))) {
-						dialog.showError("Failed to register hotkey F3 and Ctrl+F3", owner: wDialog);
-						return;
+					bool _RegisterHotkey(int id, string hotkey) {
+						string es = null;
+						try {
+							var (mod, key) = keys.more.Hotkey.Normalize_(hotkey);
+							if (Api.RegisterHotKey(wDialog, id, mod, key)) return true;
+							es = "Failed to register.";
+						}
+						catch (Exception e1) { es = e1.Message; }
+						dialog.showError("Hotkey " + hotkey, es + "\nLook in Options -> Hotkeys.", owner: wDialog);
+						return false;
 					}
+					if (!_RegisterHotkey(c_hotkeyCapture, App.Settings.hotkeys.capture)) return;
+					if (_dInsert != null) _RegisterHotkey(c_hotkeyInsert, App.Settings.hotkeys.insert);
 					_capturing = true;
 
 					if (_hs == null) {
@@ -510,7 +577,7 @@ static class TUtil
 							wnd w = wnd.fromXY(p, WXYFlags.NeedWindow);
 							RECT? r = default; string text = null;
 							if (!(w.Is0 || w == wDialog || w.Get.Owner == wDialog)) {
-								(r, text) = _cbGetRect(p);
+								(r, text) = _dGetRect(p);
 
 								//F3 does not work if this process has lower UAC IL than the foreground process.
 								//	Normally editor is admin, but if portable etc...
@@ -548,8 +615,8 @@ static class TUtil
 				} else {
 					_capturing = false;
 					_hs.RemoveHook(_WndProc);
-					Api.UnregisterHotKey(wDialog, c_hotkeyId);
-					Api.UnregisterHotKey(wDialog, c_hotkeyId + 1);
+					Api.UnregisterHotKey(wDialog, c_hotkeyCapture);
+					if (_dInsert != null) Api.UnregisterHotKey(wDialog, c_hotkeyInsert);
 					wDialog.Prop.Remove(c_propName);
 					_timer.Stop();
 					_osr.Hide();
@@ -562,17 +629,34 @@ static class TUtil
 			if (msg == s_stopMessage) {
 				handled = true;
 				_captureCheckbox.IsChecked = false;
-			} else if (msg == Api.WM_HOTKEY && (wParam == c_hotkeyId || wParam == c_hotkeyId + 1)) {
+			} else if (msg == Api.WM_HOTKEY && (wParam == c_hotkeyCapture || wParam == c_hotkeyInsert)) {
 				handled = true;
-				_cbCapture();
+				if (wParam == c_hotkeyInsert) _dInsert(); else _dCapture();
 			}
 			return default;
+		}
+
+		public static string MakeScreenshot(POINT p, CapturingWithHotkey capt = null) {
+			bool v1 = false, v2 = false;
+			if (capt != null) {
+				if (v1 = capt._osr.Visible) capt._osr.Hwnd.ShowL(false);
+				if (v2 = capt._ost.Visible) capt._ost.Hwnd.ShowL(false);
+			}
+			const int sh = 30;
+			var s = App.Settings.edit_noImages ? null : ColorQuantizer.MakeScreenshotComment(new(p.x - sh, p.y - sh / 2, sh * 2, sh), dpi: App.Hwnd);
+			if (capt != null) {
+				if (v1) capt._osr.Hwnd.ShowL(true);
+				if (v2) capt._ost.Hwnd.ShowL(true);
+			}
+			return s;
 		}
 	}
 
 	#endregion
 
 	#region test
+
+	public record RunTestFindResult(object obj, long speed, InfoStrings info);
 
 	/// <summary>
 	/// Executes test code that finds an object in window.
@@ -587,6 +671,7 @@ static class TUtil
 	/// <param name="w">Window or control in which to search.</param>
 	/// <param name="getRect">Callback function that returns object's rectangle in screen. Called when object has been found.</param>
 	/// <param name="activateWindow">Between finding window and object in it, activate the found window and wait 200 ms.</param>
+	/// <param name="restoreOwner">If this func minimizes or deactivates the owner window, it sets a timer to restore it after eg ~2 seconds. If <i>restoreOwner</i> not null, the timer will delay restoring until restoreOwner[0] != 0, after restoreOwner[0] ms.</param>
 	/// <param name="rectDisp">Use this dispatcher to show rectangles. For example if calling this in a non-UI thread and want to show in UI thread.</param>
 	/// <example>
 	/// <code><![CDATA[
@@ -594,16 +679,17 @@ static class TUtil
 	/// _info.InfoErrorOrInfo(rr.info);
 	/// ]]></code>
 	/// </example>
-	public static (object obj, long speed, InfoStrings info) RunTestFindObject(
+	public static RunTestFindResult RunTestFindObject(
 		AnyWnd owner, string code, string wndVar, wnd w,
 		Func<object, RECT> getRect = null,
 		/*
 		/// <param name="invoke">Callback that executes the code. Let it call/return MethodInfo.Invoke(null, null). For example if wants to execute in other thread. If null, the code is executed in this thread.</param>
 		Func<MethodInfo, object> invoke = null
 		*/
-		bool activateWindow = false, Dispatcher rectDisp = null) {
+		bool activateWindow = false, int[] restoreOwner = null, Dispatcher rectDisp = null) {
 
-		if (code.NE()) return default;
+		Debug.Assert(!code.NE());
+
 		wnd dlg = owner.Hwnd;
 		bool dlgWasActive = dlg.IsActive, dlgMinimized = false;
 
@@ -632,7 +718,7 @@ static class TUtil
 			if (!Au.Compiler.Scripting.Compile(code, out var c, addUsings: true, addGlobalCs: true, wrapInClass: true, dll: true)) {
 				Debug_.Print("---- CODE ----\r\n" + code + "--------------");
 				//shows code too, because it may be different than in the code box
-				return (null, -1, new(true, "Errors:", $"{c.errors}\r\n\r\n<Z #C0C0C0><b>Code:<><>\r\n<code>{code0}</code>"));
+				return new(null, -1, new(true, "Errors:", $"{c.errors}\r\n\r\n<Z #C0C0C0><b>Code:<><>\r\n<code>{code0}</code>"));
 			}
 			//object ro = invoke?.Invoke(c.method) ?? c.method.Invoke(null, null);
 			object ro = c.method.Invoke(null, null);
@@ -650,7 +736,7 @@ static class TUtil
 				s2 = e.Message.RxReplace(@"^Exception of type '.+?' was thrown. ", "");
 				if (e.StackTrace.RxMatch(@"(?m)^\s*( at .+?)\(.+\R\s+\Qat __script__.__TestFunc__()\E", 1, out string s3)) s1 += s3;
 			}
-			return (null, -2, new(true, s1, s2));
+			return new(null, -2, new(true, s1, s2));
 		}
 
 		//perf.nw();
@@ -672,15 +758,23 @@ static class TUtil
 			if (dlgMinimized = dlg.Rect.IntersectsWith(re) && !r.w.IsOfThisThread && !dlg.IsMinimized) {
 				dlg.ShowMinimized(noAnimation: true);
 				wTL.ActivateL();
-				wait.doEvents(1500);
+				wait.doEvents(1000);
 			}
 		}
 
 		if (dlgWasActive || dlgMinimized) {
-			int after = activateWindow && !dlgMinimized && r.w == w ? 1500 : 300;
-			timer.after(after, _ => {
-				if (dlgMinimized) dlg.ShowNotMinimized(noAnimation: true);
-				if (dlgWasActive) dlg.ActivateL();
+			int after = activateWindow && !dlgMinimized && r.w == w ? 1500 : 500;
+			timer.after(after, t => {
+				if (!dlg.IsAlive) return;
+				if (restoreOwner == null) {
+					if (dlgMinimized) dlg.ShowNotMinimized(noAnimation: true);
+					if (dlgWasActive) dlg.ActivateL();
+				} else if (restoreOwner[0] == 0) {
+					t.After(100);
+				} else {
+					t.After(restoreOwner[0]);
+					restoreOwner = null;
+				}
 			});
 		}
 
@@ -689,10 +783,10 @@ static class TUtil
 			//FUTURE: show list of objects inside the wanted window, same as in the Dwnd 'contains' combo. Let user choose. Then update window code quickly.
 			//string wndCode = null;
 			//wndCode = "wnd w = wnd.find(\"Other\");";
-			return (null, -3, new(true, "Finds another " + (r.w.IsChild ? "control" : "window"), $"<i>Need:<>  {w}\r\n<i>Found:<>  {r.w}"));
+			return new(null, -3, new(true, "Finds another " + (r.w.IsChild ? "control" : "window"), $"<i>Need:<>  {w}\r\n<i>Found:<>  {r.w}"));
 		}
 
-		return (r.obj, r.speed[1], new(r.obj == null, r.obj != null ? "Found" : "Not found", null, ",  speed " + sSpeed));
+		return new(r.obj, r.speed[1], new(r.obj == null, r.obj != null ? "Found" : "Not found", null, ",  speed " + sSpeed));
 	}
 
 	public record InfoStrings(bool isError, string header, string text, string headerSmall = null);
@@ -841,6 +935,62 @@ Can use global usings and classes/functions from file ""global.cs"".";
 
 	#endregion
 }
+
+///// <summary>
+///// Starts tasks running always in the same STA thread (each <b>ToolTask</b> instance has own thread).
+///// Caller can use async/await.
+///// </summary>
+//sealed class ToolTask : IDisposable
+//{
+//	readonly StaTaskScheduler_ _tasks = new(1);
+//	int _n;
+
+//	/// <summary>
+//	/// Disposes the task scheduler (ends its thread).
+//	/// </summary>
+//	public void Dispose() {
+//		_tasks.Dispose();
+//	}
+
+//	/// <summary>
+//	/// Don't run the task if it could not start in this time (ms) because other tasks were running. Then the task result is default. Default 2000.
+//	/// </summary>
+//	public int StartTimeout { get; set; } = 2000;
+
+//	/// <summary>
+//	/// Starts task that does not return a value.
+//	/// </summary>
+//	/// <param name="param">Callback parameters.</param>
+//	/// <param name="action">Callback.</param>
+//	/// <param name="lowPriority">Don't run (and return null) if a task is running.</param>
+//	public Task Run<TParam>(TParam param, Action<TParam> action, bool lowPriority = false) {
+//		if (!lowPriority) Interlocked.Increment(ref _n); else if (0 != Interlocked.CompareExchange(ref _n, 1, 0)) return null;
+//		long t = Environment.TickCount64;
+//		return Task.Factory.StartNew(() => {
+//			if (Environment.TickCount64 - t > StartTimeout) return;
+//			try { action(param); }
+//			catch (Exception e1) { Debug_.Print(e1); return; }
+//			finally { Interlocked.Decrement(ref _n); }
+//		}, default, 0, _tasks);
+//	}
+
+//	/// <summary>
+//	/// Starts task that returns a value.
+//	/// </summary>
+//	/// <param name="param">Callback parameters.</param>
+//	/// <param name="action">Callback.</param>
+//	/// <param name="lowPriority">Don't run (and return null) if a task is running.</param>
+//	public Task<TRet> Run<TRet, TParam>(TParam param, Func<TParam, TRet> f, bool lowPriority = false) {
+//		if (!lowPriority) Interlocked.Increment(ref _n); else if (0 != Interlocked.CompareExchange(ref _n, 1, 0)) return null;
+//		long t = Environment.TickCount64;
+//		return Task.Factory.StartNew(() => {
+//			if (Environment.TickCount64 - t > StartTimeout) return default;
+//			try { return f(param); }
+//			catch (Exception e1) { Debug_.Print(e1); return default; }
+//			finally { Interlocked.Decrement(ref _n); }
+//		}, default, 0, _tasks);
+//	}
+//}
 
 ///// <summary>
 ///// All tool dialogs that insert code in editor should inherit from this class.

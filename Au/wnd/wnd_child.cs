@@ -195,7 +195,7 @@
 		//		var to = new wait.Loop(waitS < 0 ? waitS : -waitS);
 		//		do { r = ChildById(id, flags); if (!r.Is0) break; } while (to.Sleep());
 		//	}
-		//	return !r.Is0 || waitS < 0 ? r : throw new NotFoundException();
+		//	return !r.Is0 || double.IsNegative(waitS) ? r : throw new NotFoundException();
 		//}
 
 		//struct _KidEnumData
@@ -317,28 +317,28 @@
 		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 		/// <exception cref="NotFoundException">Button not found.</exception>
 		/// <remarks>
-		/// This function just calls <see cref="Child"/> and <see cref="mouse.virtualClick"/>.
-		/// Uses this code: <c>mouse.virtualClick(this.Child(1, id: id));</c>
+		/// This function just calls <see cref="Child"/> and <see cref="mouse.postClick"/>.
+		/// Uses this code: <c>mouse.postClick(this.Child(1, id: id));</c>
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// wnd.find("Options").ButtonClick(2);
 		/// ]]></code>
 		/// </example>
-		public void ButtonClick(int id) => mouse.virtualClick(this.Child(1, id: id));
+		public void ButtonClick(int id) => mouse.postClick(this.Child(1, id: id));
 
 		/// <summary>
 		/// Finds and clicks a button in this window. Does not use the mouse.
 		/// </summary>
 		/// <param name="name">Button name. String format: [](xref:wildcard_expression).</param>
 		/// <param name="asControl">
-		/// If true, finds/clicks as child control: <c>mouse.virtualClick(this.Child(1, name, roleCN ?? "*Button*"));</c>.
+		/// If true, finds/clicks as child control: <c>mouse.postClick(this.Child(1, name, roleCN ?? "*Button*"));</c>.
 		/// If false, finds/clicks as UI element: <c>this.Elm[roleCN ?? "BUTTON", name].Find(1).Invoke();</c>.
 		/// Default is false; it's slower but works with more windows.
 		/// </param>
 		/// <param name="roleCN">UI element role or control class name (if <i>asControl</i> true). String format: [](xref:wildcard_expression). Default role is <c>"BUTTON"</c>, class name <c>"*Button*"</c>.</param>
 		/// <remarks>
-		/// This function is just a shorter way to call other functions that have more options but require more code to call. If <i>asControl</i> true, it calls <see cref="Child"/> and <see cref="mouse.virtualClick"/>. Else <see cref="Elm"/>, <see cref="elmFinder.this"/>, <see cref="elmFinder.Find"/> and <see cref="elm.Invoke"/>.
+		/// This function is just a shorter way to call other functions that have more options but require more code to call. If <i>asControl</i> true, it calls <see cref="Child"/> and <see cref="mouse.postClick"/>. Else <see cref="Elm"/>, <see cref="elmFinder.this"/>, <see cref="elmFinder.Find"/> and <see cref="elm.Invoke"/>.
 		/// </remarks>
 		/// <exception cref="ArgumentException">Invalid <i>name</i> (when starts with <c>"***"</c>). See <see cref="elmFinder.this"/>, <see cref="Child"/>.</exception>
 		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
@@ -351,7 +351,7 @@
 		/// </example>
 		public void ButtonClick([ParamString(PSFormat.wildex)] string name, bool asControl = false, string roleCN = null) {
 			if (asControl) {
-				mouse.virtualClick(this.Child(1, name, roleCN ?? "*Button*"));
+				mouse.postClick(this.Child(1, name, roleCN ?? "*Button*"));
 			} else {
 				this.Elm[roleCN ?? "BUTTON", name].Find(1).Invoke();
 			}
@@ -419,7 +419,7 @@ namespace Au.Types
 		DirectChild = 2,
 	}
 
-#if !true //rejected. Nobody would use this when there is elm. Eg BM_CLICK is the same as elm.Invoke or elm.VirtualClick. For Check can use code if(!e.IsChecked) e.Invoke();.
+#if !true //rejected. Nobody would use this when there is elm. Eg BM_CLICK is the same as elm.Invoke or elm.PostClick. For Check can use code if(!e.IsChecked) e.Invoke();.
 	/// <summary>
 	/// Like <see cref="wnd"/>, but has only button, check box and radio button functions - <b>Click</b>, <b>Check</b> etc.
 	/// See also <see cref="wnd.AsButton"/>.
