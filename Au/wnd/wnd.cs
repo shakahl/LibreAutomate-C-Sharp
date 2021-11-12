@@ -2683,8 +2683,8 @@
 
 		/// <summary>
 		/// Closes the window.
-		/// Returns true if successfuly closed or if it was already closed (the handle is 0 or invalid) or if <i>noWait</i>==true.
 		/// </summary>
+		/// <returns>true if successfuly closed or if it was already closed (the handle is 0 or invalid) or if <i>noWait</i>==true.</returns>
 		/// <param name="noWait">
 		/// If true, does not wait until the window is closed.
 		/// If false, waits about 1 s (depends on window type etc) until the window is destroyed or disabled.
@@ -2702,7 +2702,7 @@
 		/// <example>
 		/// <code><![CDATA[
 		/// //close all Notepad windows
-		/// wnd.findAll("* Notepad", "Notepad").ForEach(t => t.Close());
+		/// foreach (var w in wnd.findAll("* Notepad", "Notepad")) w.Close();
 		/// ]]></code>
 		/// </example>
 		public bool Close(bool noWait = false, bool useXButton = false) {
@@ -2774,7 +2774,7 @@
 		//	return (d >= milliseconds * 1000L);
 		//}
 
-		//Rarely used. It is easy, and there is example in Close() help: wnd.findAll("* Notepad", "Notepad").ForEach(t => t.Close());
+		//Rarely used. It is easy, and there is example in Close() help: foreach (var w in wnd.findAll("* Notepad", "Notepad")) w.Close();
 		///// <summary>
 		///// Closes all matching windows.
 		///// Calls <see cref="FindAll"/>. All parameters etc are the same. Then calls <see cref="Close"/> for each found window.

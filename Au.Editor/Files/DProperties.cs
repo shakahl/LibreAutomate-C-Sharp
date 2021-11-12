@@ -358,14 +358,14 @@ class DProperties : KDialogWindow
 		p.IsOpen = true;
 	}
 
-	//To convert a COM type library we use TypeLibConverter class. However .NET Core does not have it (not tested .NET 5).
-	//Workaround: the code is in Au.Net45.exe. It uses .NET Framework 4.5. We call it through run.console.
+	//To convert a COM type library we use TypeLibConverter class. However .NET Core+ does not have it.
+	//Workaround: the code is in Au.Net45.exe. It uses .NET Framework 4.8. We call it through run.console.
 	//We don't use tlbimp.exe:
-	//	1. If some used interop assemblies are in GAC (eg MS Office PIA), does not create files for them. But we cannot use GAC in Core/5 app.
+	//	1. If some used interop assemblies are in GAC (eg MS Office PIA), does not create files for them. But we cannot use GAC in a Core+ app.
 	//	2. Does not tell what files created.
 	//	3. My PC somehow has MS Office PIA installed and there is no uninstaller. After deleting the GAC files tlbimp.exe created all files, but it took several minutes.
 	//Tested: impossible to convert .NET Framework TypeLibConverter code. Part of it is in extern methods.
-	//Tested: cannot use .NET Framework dll for it. Fails at run time because uses Core/5 assemblies, and they don't have the class. Need exe.
+	//Tested: cannot use .NET Framework dll for it. Fails at run time because uses Core+ assemblies, and they don't have the class. Need exe.
 
 	class _RegTypelib
 	{

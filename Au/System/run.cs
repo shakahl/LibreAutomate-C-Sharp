@@ -278,7 +278,7 @@ namespace Au
 		/// print.it(text);
 		/// ]]></code>
 		/// </example>
-		public static unsafe int console(string exe, string args = null, string curDir = null, Encoding encoding = null) {
+		public static int console(string exe, string args = null, string curDir = null, Encoding encoding = null) {
 			return _RunConsole(s => print.it(s), null, exe, args, curDir, encoding, true);
 		}
 
@@ -291,7 +291,7 @@ namespace Au
 		/// <param name="curDir"></param>
 		/// <param name="encoding"></param>
 		/// <exception cref="AuException">Failed, for example file not found.</exception>
-		public static unsafe int console(out string output, string exe, string args = null, string curDir = null, Encoding encoding = null) {
+		public static int console(out string output, string exe, string args = null, string curDir = null, Encoding encoding = null) {
 			var b = new StringBuilder();
 			var r = _RunConsole(null, b, exe, args, curDir, encoding, false);
 			output = b.ToString();
@@ -314,7 +314,7 @@ namespace Au
 		/// <param name="encoding"></param>
 		/// <param name="rawText">Call the callback function whenever text is retrieved (don't wait for full line). Pass raw text, in chunks of any size.</param>
 		/// <exception cref="AuException">Failed, for example file not found.</exception>
-		public static unsafe int console(Action<string> output, string exe, string args = null, string curDir = null, Encoding encoding = null, bool rawText = false) {
+		public static int console(Action<string> output, string exe, string args = null, string curDir = null, Encoding encoding = null, bool rawText = false) {
 			return _RunConsole(output, null, exe, args, curDir, encoding, !rawText);
 		}
 

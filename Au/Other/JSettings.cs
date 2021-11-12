@@ -135,7 +135,8 @@ $@"Failed to load settings from {file}. Will use default settings.
 
 		//repeated serialization speed with same options ~50 times better, eg 15000 -> 300 mcs cold. It's documented. Can be shared by multiple types.
 		static readonly Lazy<JsonSerializerOptions> s_jsOptions = new(() => new() {
-			IgnoreNullValues = true,
+			//IgnoreNullValues = true, //obsolete, use DefaultIgnoreCondition
+			DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
 			IncludeFields = true,
 			IgnoreReadOnlyFields = true,
 			IgnoreReadOnlyProperties = true,

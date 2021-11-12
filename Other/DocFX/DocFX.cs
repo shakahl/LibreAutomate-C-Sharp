@@ -20,6 +20,11 @@ using Renci.SshNet;
 
 [module: DefaultCharSet(CharSet.Unicode)]
 
+//note: using an older DocFX 2 version (2.56.6).
+//	Version 2.58 does not work. Version 3 beta undocumented and does not work.
+//	Currently there is 1 error when building, but builds OK. Error "Could not load file or assembly 'System.Collections.Immutable...".
+//	To support latest C#, DocFX must use latest VS.
+
 //note: DocFX does not replace/modify the yml files if the source code of the C# project not changed. Then ProcessYamlFile not called.
 //	To apply changes of this script, change something in C# XML comments, save, then run this script.
 
@@ -28,12 +33,6 @@ using Renci.SshNet;
 //	Results are poorly sorted.
 //	The Google site search does it much better, and often faster.
 //	info: To enable it, add "_enableSearch": true in "globalMetadata".
-
-//note: uses msbuild from VS2019, not from VS2019 preview. It must be up to date.
-
-//note: using an older DocFX 2 version.
-//	It does not support C# 9. If can't resolve some links, in the source file replace all new() with new Type().
-//	Version 2.58 supports C# 9, but crashes. Not C# 10. Version 3 not tested.
 
 unsafe class Program
 {
@@ -64,7 +63,7 @@ unsafe class Program
 		//Upload(docDir); return;
 		//CompressAndUpload(docDir); return;
 
-		PreprocessSource();
+		//PreprocessSource();
 		//return;
 
 		foreach (var v in Process.GetProcessesByName("docfx")) v.Kill();
@@ -130,6 +129,8 @@ unsafe class Program
 	}
 
 	static void PreprocessSource() {
+		//it seems now after installing VS2022 and uninstalling older versions don't need to preprocess
+#if !true
 		//preprocess and copy source files, because DocFX does not support latest C# features
 		var sourceDir1 = @"Q:\app\Au\Au";
 		var sourceDir2 = @"Q:\Temp\Au\DocFX\source";
@@ -162,6 +163,7 @@ unsafe class Program
 
 			filesystem.saveText(fileTo, s);
 		}
+#endif
 	}
 
 	/// <summary>
@@ -450,11 +452,13 @@ unsafe class Program
 		pass = Encoding.UTF8.GetString(Convert.FromBase64String(pass)); //to encode: print.it(Convert.ToBase64String(Encoding.UTF8.GetBytes(pass)));
 		var name = @"\_site.tar.gz";
 		var path = docDir + name;
+#pragma warning disable SYSLIB0014 // Type or member is obsolete
 		using (var client = new WebClient()) {
 			client.Credentials = new NetworkCredential(user, pass);
 			//client.UploadFile("ftp://quickmacros.com/public_html/au" + name, WebRequestMethods.Ftp.UploadFile, path);
 			client.UploadFile("ftp://185.224.138.106/au" + name, WebRequestMethods.Ftp.UploadFile, path); //public_html is default at hostinger
 		}
+#pragma warning restore SYSLIB0014 // Type or member is obsolete
 		filesystem.delete(path);
 		print.it("Uploaded");
 

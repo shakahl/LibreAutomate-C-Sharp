@@ -640,6 +640,7 @@ class CiAutocorrect
 			//get indentation
 			bool prevBlock = false;
 			foreach (var v in node.AncestorsAndSelf()) {
+				//CiUtil.PrintNode(v);
 				if (v is BlockSyntax) {
 					prevBlock = true;
 				} else {
@@ -652,11 +653,10 @@ class CiAutocorrect
 					case SwitchStatementSyntax: //don't indent 'case' in 'switch'. If node is a switch section, it will indent its child statements and 'break.
 					case AccessorListSyntax:
 					case ElseClauseSyntax:
-					case CatchClauseSyntax:
-					case FinallyClauseSyntax:
+					case CatchClauseSyntax or FinallyClauseSyntax:
 					case LabeledStatementSyntax:
 					case AttributeListSyntax:
-					case NamespaceDeclarationSyntax: //don't indent namespaces
+					case NamespaceDeclarationSyntax or FileScopedNamespaceDeclarationSyntax: //don't indent namespaces
 					case IfStatementSyntax k3 when k3.Parent is ElseClauseSyntax:
 						//print.it("-" + v.GetType().Name, v.Span, pos);
 						continue;

@@ -179,7 +179,10 @@ static unsafe class Test
 
 
 	public static void FromMenubar() {
+		//EdDatabases.CreateRefAndDoc();
+		//EdDatabases.CreateWinapi();
 		
+
 
 		//var w = wnd.find(1, "a", "b", "");
 
@@ -245,8 +248,6 @@ static unsafe class Test
 		//run.it("fffffffffffffffff.exe");
 
 		//InsertCode.UsingDirective("System.Buffers");
-
-		//EdDatabases.CreateWinapi();
 
 		//var code = App.Settings.ci_usings.RxReplace(@"(?m)^.+$", "using $0;");
 		////var code = "using Au.Types;";

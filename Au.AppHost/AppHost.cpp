@@ -9,8 +9,8 @@
 #include "coreclrhost.h"
 
 //min supported .NET version. Installed major must be ==, minor >=, patch any (we'll use highest found), preview any (we'll use release or highest preview).
-//SHOULDDO: somehow auto-update, else will forget this when updating .NET version of C# projects (<TargetFramework>...</TargetFramework>).
-#define NETVERMAJOR 5
+//SHOULDDO: somehow auto-update, else can forget this when updating .NET version of C# projects (<TargetFramework>...</TargetFramework>).
+#define NETVERMAJOR 6
 #define NETVERMINOR 0
 #define NETVER_SUPPORT_PREVIEW 0 //eg fails with 5.0.0 preview, MethodNotFound exception
 

@@ -526,7 +526,7 @@
 			return new SegParser(t, separators, flags, range);
 		}
 
-		//rejected. Usually Split is good. In .NET Core/5 it also has option to trim spaces and in most cases is faster.
+		//rejected. Usually Split is good. In .NET Core+ it also has option to trim spaces and in most cases is faster.
 		///// <summary>
 		///// Splits this string into substrings using the specified separators.
 		///// </summary>

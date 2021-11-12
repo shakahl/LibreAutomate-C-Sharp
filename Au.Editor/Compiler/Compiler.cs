@@ -514,7 +514,7 @@ namespace Au.Compiler
 		}
 
 		static unsafe string _AppHost(string outFile, string fileName, MetaComments m, bool bit32) {
-			//A .NET Core/5 exe actually is a managed dll hosted by a native exe file known as apphost.
+			//A .NET Core+ exe actually is a managed dll hosted by a native exe file known as apphost.
 			//When creating an exe, VS copies template apphost from "C:\Program Files\dotnet\sdk\version\AppHostTemplate\apphost.exe" and modifies it, eg copies native resources from the dll.
 			//We have own apphost exe created by the Au.AppHost project. This function copies it and modifies in a similar way like VS does.
 

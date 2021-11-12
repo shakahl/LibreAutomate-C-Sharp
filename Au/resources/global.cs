@@ -41,9 +41,6 @@ using System.Runtime.InteropServices;
 
 [assembly: AssemblyVersion("0.1.0")]
 
-//note: once were released versions 1.0.0 and 1.0.1 "preview" versions, then decided to use 0.x before the first non-preview release.
-//	It could have problems in some code. Workaround: when it's time for 1.0.0 or 1.0.1, use eg 1.0.0.20. Or skip them and use 1.0.2.
-
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 
 // COM, set the ComVisible attribute to true on that type.
