@@ -123,7 +123,11 @@ static class App
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	static void _LoadUI() {
-		AppContext.SetSwitch("Switch.UseLegacyToolTipDisplay", true); //prevent tooltip on set focus. Must be before creating Application object.
+		//prevent tooltip on set focus
+		//SHOULDDO: broken in .NET 6.
+		//	This works: combo1.ToolTipOpening+=(o, e)=> { if(o is UIElement k && !k.IsMouseOver) e.Handled=true; };
+		AppContext.SetSwitch("Switch.UseLegacyToolTipDisplay", true); //must be before creating Application object
+
 		var app = new Au.Editor.WpfApp { ShutdownMode = ShutdownMode.OnMainWindowClose };
 		app.InitializeComponent(); //FUTURE: remove if not used. Adds 2 MB (10->12) when running hidden at startup.
 		new MainWindow();

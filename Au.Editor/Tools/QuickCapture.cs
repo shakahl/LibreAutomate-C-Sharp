@@ -21,6 +21,7 @@ namespace Au.Tools
 			_Register(ref _rk3, ERegisteredHotkeyId.QuickCaptureDelm, App.Settings.hotkeys.tool_elm);
 
 			void _Register(ref keys.more.Hotkey rk, ERegisteredHotkeyId id, string keys) { //ref, not in!
+				if (keys.NE()) return;
 				try {
 					if (!rk.Register((int)id, keys, App.Hwnd))
 						print.warning($"Failed to register hotkey {keys}. Look in Options -> Hotkeys.", -1);

@@ -2630,7 +2630,7 @@
 		/// <remarks>
 		/// <note>Use this with controls of other processes. Don't use with your controls, when you have a Control object.</note>
 		/// 
-		/// <note>Slow when getting names of multiple controls in a window. Instead create an <see cref="WinformsControlNames"/> instance and call its <see cref="WinformsControlNames.GetControlName"/> method for each control.</note>
+		/// <note>Slow when getting names of multiple controls in a window. Instead create a <see cref="WinformsControlNames"/> instance and call its <see cref="WinformsControlNames.GetControlName"/> method for each control.</note>
 		/// </remarks>
 		/// <seealso cref="WinformsControlNames.IsWinformsControl"/>
 		public string NameWinforms => WinformsControlNames.GetSingleControlName(this);

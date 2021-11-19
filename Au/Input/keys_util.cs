@@ -19,9 +19,9 @@ namespace Au
 				if (c >= 'A' && c <= 'Z') return (KKey)c;
 				if (c >= '0' && c <= '9') return (KKey)c;
 				switch (c) {
+				case '-': return KKey.OemMinus;
 				case '=': return KKey.OemPlus;
 				case '`': case '~': return KKey.OemTilde;
-				case '-': case '_': return KKey.OemMinus;
 				case '[': case '{': return KKey.OemOpenBrackets;
 				case ']': case '}': return KKey.OemCloseBrackets;
 				case '\\': case '|': return KKey.OemPipe;
@@ -39,10 +39,10 @@ namespace Au
 				//( //eg Alt+(A F)
 				//)
 				//# //numpad keys, eg #5, #*
-				//$ //Shift+
+				//_ //character
 
 				//reserved
-				//! @ % ^ &
+				//! @ $ % ^ &
 			}
 
 			//numpad keys
@@ -178,11 +178,10 @@ namespace Au
 		}
 
 		static IEnumerable<RXGroup> _SplitKeysString(string keys_) =>
-			(s_rxKeys ??= new regexp(@"[A-Z]\w*|#\S|\*\s*(?:\d+|down|up)\b|[+$]\s*\(|\S"))
+			(s_rxKeys ??= new regexp(@"(?s)[A-Z][[:alnum:]]*|#\S|\*\s*(?:\d+|down|up)\b|\+\s*\(|_.|\S"))
 			.FindAllG(keys_ ?? "", 0);
-		//KeyName | #n | *r | *down | *up | +( | $( | nonspace char
+		//KeyName | #n | *r | *down | *up | +( | _char | nonspace char
 		static regexp s_rxKeys;
-		//SHOULDDO: don't use regexp.
 
 		static System.Collections.Hashtable s_htEnum; //with Dictionary much slower JIT
 		[MethodImpl(MethodImplOptions.NoInlining)]
@@ -461,18 +460,17 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns <b>OKey</b> of this variable or <b>OKey</b> cloned from this variable and possibly modified by <b>Hook</b>.
+		/// Returns:
+		/// - optk - <b>OKey</b> of this variable or <b>OKey</b> cloned from this variable and possibly modified by <b>Hook</b>.
+		/// - wFocus - the focused or active window.
 		/// </summary>
-		/// <param name="wFocus">receives the focused or active window. Also the function uses it to avoid frequent calling of Hook.</param>
 		/// <param name="getWndAlways">if false, the caller does not need wFocus. Then wFocus will be default(wnd) if Hook is null.</param>
 		/// <param name="requireFocus">Wait for focused (and not just active) window longer, and throw exception on timeout. Used for clipboard copy/paste and send text.</param>
 		/// <exception cref="AuException">No focused window when <i>requireFocus</i>.</exception>
-		internal OKey GetOptionsAndWndFocused_(out wnd wFocus, bool getWndAlways, bool requireFocus = false) {
-			if (Options.Hook == null && !getWndAlways) {
-				wFocus = default;
-				return Options;
-			}
-			return GetOptions_(wFocus = Internal_.GetWndFocusedOrActive(requireFocus));
+		internal (OKey optk, wnd wFocus) GetOptionsAndWndFocused_(bool getWndAlways, bool requireFocus = false) {
+			if (Options.Hook == null && !getWndAlways) return (Options, default);
+			var w = Internal_.GetWndFocusedOrActive(requireFocus);
+			return (GetOptions_(w), w);
 		}
 
 		/// <summary>

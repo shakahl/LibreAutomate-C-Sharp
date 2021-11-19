@@ -267,23 +267,15 @@ static class CodeInfo
 	public static async void SciMouseDwellStarted(SciCode doc, int pos8) {
 		if (!_CanWork(doc) || pos8 < 0) return;
 
-		var pi = Panels.Info; if (!pi.IsVisible) pi = null;
-
 		var text0 = doc.zText;
 		int pos16 = doc.zPos16(pos8);
 		var diag = _diag.GetPopupTextAt(doc, pos8, pos16, out var onLinkClick);
 		var quick = await _quickInfo.GetTextAt(pos16);
 		if(doc != Panels.Editor.ZActiveDoc || (object)text0 != doc.zText) return; //changed while awaiting
 
-		if (quick == null) pi?.ZSetAboutInfo();
 		if (diag == null && quick == null) {
 			HideTextPopup();
 		} else {
-			if (quick != null && pi != null) {
-				pi.ZSetText(quick);
-				if (diag == null) return;
-				quick = null;
-			}
 			var text = diag ?? quick;
 			if (quick != null && diag != null) {
 				text.Blocks.Add(new System.Windows.Documents.BlockUIContainer(new System.Windows.Controls.Separator { Margin = new(4) }));

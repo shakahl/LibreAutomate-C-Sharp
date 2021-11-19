@@ -20,12 +20,12 @@ using Renci.SshNet;
 
 [module: DefaultCharSet(CharSet.Unicode)]
 
-//note: using an older DocFX 2 version (2.56.6).
-//	Version 2.58 does not work. Version 3 beta undocumented and does not work.
-//	Currently there is 1 error when building, but builds OK. Error "Could not load file or assembly 'System.Collections.Immutable...".
-//	To support latest C#, DocFX must use latest VS.
+//NOTES
+//DocFX should use latest VS.
 
-//note: DocFX does not replace/modify the yml files if the source code of the C# project not changed. Then ProcessYamlFile not called.
+//When updating DocFX, also may need to update the "memberpage" NuGet package, and its name in docfx.json.
+
+//DocFX does not replace/modify the yml files if the source code of the C# project not changed. Then ProcessYamlFile not called.
 //	To apply changes of this script, change something in C# XML comments, save, then run this script.
 
 //info: we don't use the full text search feature.
@@ -63,7 +63,7 @@ unsafe class Program
 		//Upload(docDir); return;
 		//CompressAndUpload(docDir); return;
 
-		//PreprocessSource();
+		PreprocessSource();
 		//return;
 
 		foreach (var v in Process.GetProcessesByName("docfx")) v.Kill();
@@ -128,10 +128,9 @@ unsafe class Program
 		//info: if DocFX starts throwing stack overflow exception, delete the obj folder manually. It is likely to happen after many refactorings in the project.
 	}
 
+	//preprocess and copy source files, because DocFX does not support latest C# features.
+	//note: if using this, in docfx.json change src: "src": "Q:/Temp/Au/DocFX/source/"
 	static void PreprocessSource() {
-		//it seems now after installing VS2022 and uninstalling older versions don't need to preprocess
-#if !true
-		//preprocess and copy source files, because DocFX does not support latest C# features
 		var sourceDir1 = @"Q:\app\Au\Au";
 		var sourceDir2 = @"Q:\Temp\Au\DocFX\source";
 		filesystem.delete(sourceDir2);
@@ -156,14 +155,14 @@ unsafe class Program
 			var s = File.ReadAllText(fileFrom);
 
 			//namespace X; -> namespace X { ... }
-			s = s.RxReplace(@"(?ms)^(namespace Au(?:\.\w+)?);(.+)", "$1{$2\r\n}", 1);
+			//s = s.RxReplace(@"(?ms)^(namespace Au(?:\.\w+)?);(.+)", "$1{$2\r\n}", 1);
 
 			s = s.RxReplace(@"\brecord (struct|class)\b", "$1");
+
 			s = usings + s;
 
 			filesystem.saveText(fileTo, s);
 		}
-#endif
 	}
 
 	/// <summary>

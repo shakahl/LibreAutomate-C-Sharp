@@ -173,7 +173,7 @@ namespace Au
 		/// <param name="image"></param>
 		/// <param name="l_">[](xref:caller_info)</param>
 		/// <remarks>
-		/// The submenu is an <see cref="popupMenu"/> object. It inherits these properties of this toolbar: <see cref="MTBase.ExtractIconPathFromCode"/>, <see cref="MTBase.ActionException"/>, <see cref="MTBase.ActionThread"/>, <see cref="MTBase.PathInTooltip"/>.
+		/// The submenu is a <see cref="popupMenu"/> object. It inherits these properties of this toolbar: <see cref="MTBase.ExtractIconPathFromCode"/>, <see cref="MTBase.ActionException"/>, <see cref="MTBase.ActionThread"/>, <see cref="MTBase.PathInTooltip"/>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[

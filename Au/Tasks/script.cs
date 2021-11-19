@@ -489,18 +489,23 @@ namespace Au
 			});
 		}
 
+		//SHOULDDO: users need it, even if dangerous/unreliable.
+		//	But not for each script separately. Let it be single hotkey in editor, like now Pause in QM2. Or in triggers.
+		//		Then can end all script tasks, not one at a time. Add setup parameter exitHotkey, maybe true by default.
+		//		Or then suspend script processes and show UI to select which process to end.
+		//		The hotkey must be registered all the time, or eg 1 s after all tasks ended. Else the keys could do something bad if pressed when scripts ended.
 #if false //not sure is it useful. Unreliable. Should use hook to detect user-pressed, but then UAC makes less reliable. Can instead use script.setup (Win+L, Ctrl+Alt+Delete and sleep-exit are reliable). If useful, can instead add script.setup parameter keyExit.
 		/// <summary>
 		/// Sets a hotkey that ends this process.
 		/// </summary>
 		/// <param name="hotkey">
 		/// See <see cref="keys.more.Hotkey.Register"/>.
-		/// Good hotkeys are Pause, madia/browser/launch keys, Insert, Up, PageUp. Don't use F12, Shift+numpad, hotkeys with Esc, Space, Tab, Sleep. Don't use keys and modifiers used in script (<b>keys.send</b> etc).
+		/// Good hotkeys are Pause, madia/browser/launch keys, Insert, Up, PageUp. Don't use F12, Shift+numpad, hotkeys with Space, Tab, Sleep. Don't use keys and modifiers used in script (<b>keys.send</b> etc).
 		/// </param>
-		/// <param name="exitCode">Process exit code. See <see cref="Environment.Exit"/>.</param>
+		/// <param name="exitCode">See <see cref="Environment.Exit"/>.</param>
 		/// <exception cref="InvalidOperationException">Calling second time.</exception>
 		/// <remarks>
-		/// This isn't a reliable way to end script. Consider <see cref="Setup"/> parameters <i>sleepExit</i>, <i>lockExit</i>.
+		/// This isn't a reliable way to end script. Consider <see cref="setup"/> parameters <i>sleepExit</i>, <i>lockExit</i>.
 		/// - Does not work if the hotkey is registered by any process or used by Windows.
 		/// - Does not work or is delayed if user input is blocked by an <see cref="inputBlocker"/> or keyboard hook. For example <see cref="keys.send"/> and similar functions block input by default.
 		/// - Most single-key and Shift+key hotkeys don't work when the active window has higher UAC integrity level (eg admin) than this process. Media keys may work.
@@ -513,6 +518,7 @@ namespace Au
 				var atom = Api.GlobalAddAtom("Au.EndHotkey");
 
 #if true
+				//CONSIDER: instead of repeated sleep use mutex.
 				while (!Api.RegisterHotKey(default, atom, mod, key)) Thread.Sleep(100); //several tasks may register same hotkey
 				Api.GetMessage(out _, default, Api.WM_HOTKEY, Api.WM_HOTKEY);
 				Environment.Exit(exitCode);
@@ -521,7 +527,7 @@ namespace Au
 				//	Use WM_SETHOTKEY too. It works with higher IL windows.
 				//	But can't use it alone. It is unreliable. Incorrectly documented, partially working, etc. Eg does not work when taskbar is active.
 				//rejected. Too dirty and unreliable.
-				//	And don't encourage to use a hotkey to end script, as it is unreliable. Let use EndOnDesktopSwitch or EndOnSleep.
+				//	And don't encourage to use a hotkey to end script, as it is unreliable. Let use exitSleep/exitLock.
 
 				bool workaround = hotkey.Mod is 0 or KMod.Shift && !uacInfo.isAdmin;
 				var timerW = workaround ? Api.SetTimer(default, 0, 1000, null) : default; //avoid creating windows etc for short scripts

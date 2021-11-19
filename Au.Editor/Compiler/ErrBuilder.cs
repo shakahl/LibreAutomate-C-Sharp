@@ -112,7 +112,7 @@ namespace Au.Compiler
 			if(ErrorCount != 0) _b.Append(ErrorCount).Append(" errors").Append(WarningCount != 0 ? ", " : "");
 			if(WarningCount != 0) _b.Append(WarningCount).Append(
 @" warnings <fold>	Warnings can be disabled in Properties -> noWarnings or warningLevel.
-	Warnings for part of code can be disabled with <google>C# #pragma warning<>.</fold>");
+	Warnings for part of code can be disabled with <google>C# #pragma warning<> (warningDisableSnippet).</fold>");
 			_b.AppendLine("<>");
 
 			//errors and warnings

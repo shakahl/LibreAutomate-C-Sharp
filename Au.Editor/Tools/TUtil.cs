@@ -505,7 +505,7 @@ static class TUtil
 	{
 		readonly KCheckBox _captureCheckbox;
 		readonly Func<POINT, (RECT? r, string s)> _dGetRect;
-		readonly Action _dCapture, _dInsert;
+		readonly (string hotkey, Action a) _dCapture, _dInsert;
 		HwndSource _hs;
 		timer _timer;
 		osdRect _osr;
@@ -517,7 +517,7 @@ static class TUtil
 
 		/// <param name="captureCheckbox">Checkbox that turns on/off capturing.</param>
 		/// <param name="getRect">Called to get rectangle of object from mouse. Receives mouse position. Can return default to hide the rectangle.</param>
-		public CapturingWithHotkey(KCheckBox captureCheckbox, Func<POINT, (RECT? r, string s)> getRect, Action capture, Action insert = null) {
+		public CapturingWithHotkey(KCheckBox captureCheckbox, Func<POINT, (RECT? r, string s)> getRect, (string hotkey, Action a) capture, (string hotkey, Action a) insert = default) {
 			_captureCheckbox = captureCheckbox;
 			_dGetRect = getRect;
 			_dCapture = capture;
@@ -550,11 +550,11 @@ static class TUtil
 							es = "Failed to register.";
 						}
 						catch (Exception e1) { es = e1.Message; }
-						dialog.showError("Hotkey " + hotkey, es + "\nLook in Options -> Hotkeys.", owner: wDialog);
+						dialog.showError("Hotkey " + hotkey, es + "\nClick the hotkey link to set another hotkey.", owner: wDialog);
 						return false;
 					}
-					if (!_RegisterHotkey(c_hotkeyCapture, App.Settings.hotkeys.capture)) return;
-					if (_dInsert != null) _RegisterHotkey(c_hotkeyInsert, App.Settings.hotkeys.insert);
+					if (!_RegisterHotkey(c_hotkeyCapture, _dCapture.hotkey)) return;
+					if (_dInsert.hotkey != null) _RegisterHotkey(c_hotkeyInsert, _dInsert.hotkey);
 					_capturing = true;
 
 					if (_hs == null) {
@@ -616,7 +616,7 @@ static class TUtil
 					_capturing = false;
 					_hs.RemoveHook(_WndProc);
 					Api.UnregisterHotKey(wDialog, c_hotkeyCapture);
-					if (_dInsert != null) Api.UnregisterHotKey(wDialog, c_hotkeyInsert);
+					if (_dInsert.hotkey != null) Api.UnregisterHotKey(wDialog, c_hotkeyInsert);
 					wDialog.Prop.Remove(c_propName);
 					_timer.Stop();
 					_osr.Hide();
@@ -631,7 +631,7 @@ static class TUtil
 				_captureCheckbox.IsChecked = false;
 			} else if (msg == Api.WM_HOTKEY && (wParam == c_hotkeyCapture || wParam == c_hotkeyInsert)) {
 				handled = true;
-				if (wParam == c_hotkeyInsert) _dInsert(); else _dCapture();
+				if (wParam == c_hotkeyInsert) _dInsert.a(); else _dCapture.a();
 			}
 			return default;
 		}
@@ -650,6 +650,25 @@ static class TUtil
 			}
 			return s;
 		}
+	}
+
+	/// <summary>
+	/// Adds link +hotkey that shows dialog "Hotkeys" and updates App.Settings.delm.hk_capture and optionally App.Settings.delm.hk_insert.
+	/// </summary>
+	public static void RegisterLink_DialogHotkey(KSciInfoBox sci, bool insertToo) {
+		sci.ZTags.AddLinkTag("+hotkey", _ => {
+			TextBox capture, insert = null;
+			var b = new wpfBuilder("Hotkey");
+			b.R.Add("Capture", out capture, App.Settings.delm.hk_capture).xValidateHotkey(errorIfEmpty: true).Focus();
+			if (insertToo) b.R.Add("Insert", out insert, App.Settings.delm.hk_insert).xValidateHotkey();
+			b.R.Add<Label>("After changing hotkeys please restart the tool window.");
+			b.R.AddOkCancel();
+			b.End();
+			if (b.ShowDialog(Window.GetWindow(sci))) {
+				App.Settings.delm.hk_capture = capture.Text;
+				if (insertToo) App.Settings.delm.hk_insert = insert.Text.NullIfEmpty_();
+			}
+		});
 	}
 
 	#endregion

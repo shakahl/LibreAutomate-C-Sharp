@@ -222,7 +222,7 @@ class PanelOutput : DockPanel
 				if (h.Count > 50) h.Dequeue();
 			}
 
-			(_iPanel ??= Panels.PanelManager["Output"]).Visible = true; //SHOULDDO: if(App.Win.IsVisible) ?
+			(_iPanel ??= Panels.PanelManager["Output"]).Visible = true; //SHOULDDO: if(App.Hwnd.IsVisible) ?
 		}
 		static regexp s_rx1, s_rx2;
 		KPanels.ILeaf _iPanel;

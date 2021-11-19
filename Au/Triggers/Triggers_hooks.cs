@@ -60,7 +60,7 @@ namespace Au.Triggers
 
 			WindowsHook hookK = null, hookM = null;
 			if (_usedEvents.Has(UsedEvents.Keyboard)) {
-				hookK = WindowsHook.Keyboard(_KeyboardHookProc); //note: don't use lambda, because then very slow JIT on first hook event
+				hookK = WindowsHook.Keyboard(_KeyboardHookProc); //note: if lambda, very slow JIT on first hook event
 			}
 			if (_usedEvents.Has(UsedEvents.Mouse)) {
 				hookM = WindowsHook.MouseRaw_(_MouseHookProc);
@@ -70,9 +70,18 @@ namespace Au.Triggers
 			}
 			//tested: don't need JIT-compiling.
 
+			nint idTimer = (hookK != null || hookM != null) ? Api.SetTimer(default, 0, 10_000, null) : 0;
+
 			Api.SetEvent(_eventStartStop);
 
-			while (Api.GetMessage(out var m) > 0) Api.DispatchMessage(m);
+			while (Api.GetMessage(out var m) > 0) {
+				if (m.message == Api.WM_TIMER && m.wParam == idTimer) {
+					hookK?.Restore();
+					hookM?.Restore();
+					continue;
+				}
+				Api.DispatchMessage(m);
+			}
 
 			//print.it("hooks thread ended");
 			hookK?.Dispose();

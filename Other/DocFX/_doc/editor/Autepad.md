@@ -74,8 +74,8 @@ The program writes various info here. For example script compilation errors. Scr
 
 Right-click - context menu. Middle-click - clear.
 
-#### Info
-Quick info about object from mouse. In code editor - function, class etc. In other windows - mouse x y, window name/class/program, control id/class, menu item id.
+#### Mouse
+Mouse x y, window name/class/program, control id/class/name, menu item id.
 
 ### Menus
 
@@ -86,7 +86,7 @@ File and workspace management.
 Code editing.
 
 #### Code
-Code creation tools.
+Tools that help to create code.
 
 #### Run
 Execute current script.
@@ -103,4 +103,4 @@ Program help and library reference.
 ### Tray icon
 Click - show and activate editor window. Right-click - show context menu. Middle-click - disable/enable triggers.
 
-Color gray if triggers are disabled.
+No color if triggers are disabled.

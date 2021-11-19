@@ -27,7 +27,7 @@ global using System.Text; //[+~ Encoding Rune StringBuilder]
 global using System.Text.RegularExpressions; //[+ Regex*]
 global using System.Threading; //threads, synchronization [-~]
 global using System.Threading.Tasks; //thread pool
-global using Microsoft.Win32; //[+~ OpenFileDialog Registry* SaveFileDialog SystemEvents]
+global using Microsoft.Win32; //[+~ Registry* SystemEvents]
 global using Au.More; //rarely used in automation scripts [-~]
 
 //The //[comments] are completion list filters. Filters are used to hide or descend some types in completion lists that contain all types.

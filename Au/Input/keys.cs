@@ -51,6 +51,7 @@
 		{
 			KeyEvent, //send key down or up event, depending on _KFlags.Up. In _KEvent used vk and scan.
 			KeyPair, //send key down and up events. In _KEvent used vk and scan.
+			Char, //send character using keys. In _KEvent used ch.
 			Text, //send text. In _KEvent used data, it is _data or _data element index.
 			Callback, //call callback function. In _KEvent used data, it is _data or _data element index.
 			Repeat, //repeat previous key. In _KEvent used repeat.
@@ -66,6 +67,7 @@
 			[FieldOffset(2)] internal ushort data; //_data or _data index if IsText or IsCallback
 			[FieldOffset(2)] internal ushort repeat; //repeat count if IsRepeat
 			[FieldOffset(2)] internal ushort sleep; //milliseconds if IsSleep
+			[FieldOffset(2)] internal ushort ch; //character if IsChar
 
 			//Event type KeyEvent or KeyPair.
 			internal _KEvent(bool pair, KKey vk, _KFlags siFlags, ushort scan = 0) : this() {
@@ -82,10 +84,11 @@
 			}
 
 			internal _KType Type => (_KType)(_flags >> 4);
-			internal bool IsPair => Type == _KType.KeyPair;
+			internal bool IsPair => Type is _KType.KeyPair;
 			internal bool IsKey => Type <= _KType.KeyPair;
+			internal bool IsChar => Type == _KType.Char;
+			internal bool IsKeyOrChar => Type <= _KType.Char;
 			internal bool IsText => Type == _KType.Text;
-			internal bool IsKeyOrText => Type <= _KType.Text;
 			internal bool IsCallback => Type == _KType.Callback;
 			internal bool IsRepeat => Type == _KType.Repeat;
 			internal bool IsSleep => Type == _KType.Sleep;
@@ -100,6 +103,7 @@
 				if (IsCallback) { Debug.Assert(SIFlags == 0); return $"callback " + data; }
 				if (IsSleep) { Debug.Assert(SIFlags == 0); return "sleep " + sleep; }
 				if (IsRepeat) { Debug.Assert(SIFlags == 0); return "repeat " + repeat; }
+				if (IsChar) { Debug.Assert(SIFlags == 0); return "char " + ch; }
 				return $"{vk,-12} scan={scan,-4} flags={_flags}";
 			}
 #endif
@@ -124,7 +128,7 @@
 			}
 		}
 
-		List<_KEvent> _a = new List<_KEvent>(); //all key events and elements for each text/callback/repeat/sleep
+		readonly List<_KEvent> _a = new(); //all key events and elements for each text/callback/repeat/sleep
 		object _data; //text and callback parts. If there is 1 such part, it is string or Action; else it is List<object>.
 		_KParsingState _pstate; //parsing state
 		_KSendingState _sstate; //sending state
@@ -132,29 +136,30 @@
 
 		/// <summary>
 		/// Adds keystrokes to the internal collection. They will be sent by <see cref="SendIt"/>.
-		/// Returns this.
 		/// </summary>
+		/// <returns>This.</returns>
 		/// <param name="keys_">
 		/// Key names and operators, like with <see cref="send"/>. Can be null or "".
-		/// Example: <c>"Tab Ctrl+V Alt+(E P) Left*3 Space a , 5 #5 $abc"</c>.
-		/// If has prefix "!" or "%", calls <see cref="AddText"/>; "!" for text, "%" for HTML.
+		/// Example: <c>"Tab Ctrl+V Alt+(E P) Left*3 Space a , 5 #5"</c>.
+		/// If has prefix "!" or "%", calls <see cref="AddText"/>; use "!" for text, "%" for HTML.
 		/// </param>
 		/// <exception cref="ArgumentException">Error in <i>keys_</i> string, for example an unknown key name.</exception>
 		public keys AddKeys([ParamString(PSFormat.keys)] string keys_) {
 			_ThrowIfSending();
-			if (keys_.Starts('!')) return AddText(keys_[1..]);
-			if (keys_.Starts('%')) return AddText(null, keys_[1..]);
-			if (keys_.NE()) return this;
+			var k = keys_;
+			if (k.NE()) return this;
+			if (k[0] == '!') return AddText(k[1..]);
+			if (k[0] == '%') return AddText(null, k[1..]);
 			int i = 0, len = 0;
-			foreach (var g in _SplitKeysString(keys_)) {
+			foreach (var g in _SplitKeysString(k)) {
 				//print.it($"<><c 0xC000>{g.Value}</c>"); //continue;
 				i = g.Start; len = g.Length;
-				char c = keys_[i]; _KEvent e;
+				char c = k[i]; _KEvent e;
 				switch (c) {
 				case '*':
 					if (len == 1 || _a.Count == 0) goto ge;
 					e = _a[^1];
-					char cLast = keys_[i + len - 1];
+					char cLast = k[i + len - 1];
 					switch (cLast) {
 					case 'n': //down
 					case 'p': //up
@@ -162,22 +167,18 @@
 							//make the last key down-only or up-only
 							if (cLast == 'p') e.MakeUp(); else e.MakeDown();
 							_a[^1] = e;
-						} else if (cLast == 'p' && _FindLastKey(out e, canBeText: false)) {
+						} else if (cLast == 'p' && _FindLastKey(out e)) {
 							//allow eg Key("A*down*3*up") or Key("A*down", 500, "*up")
 							e.MakeUp();
 							_a.Add(e);
 						} else goto ge;
 						break;
 					default: //repeat
-						if (!e.IsKey) goto ge;
-						AddRepeat(keys_.ToInt(i + 1));
+						if (!e.IsKeyOrChar) goto ge;
+						AddRepeat(k.ToInt(i + 1));
 						break;
 					}
 					break;
-				//rejected. Rarely used and not easy to read.
-				//case '$': //Shift+ //note: don't add the same for other modifiers. It just makes not easy to remember and read.
-				//	AddKey(KKey.Shift);
-				//	goto case '+';
 				case '+':
 					if (_pstate.paren || _a.Count == 0) goto ge;
 					e = _a[^1];
@@ -195,21 +196,25 @@
 					_pstate.paren = false;
 					_AddModUp();
 					break;
+				case '_' when len == 2:
+					AddChar(k[i + 1]);
+					break;
 				default:
-					var k = _KeynameToKey(keys_, i, len);
-					if (k == 0) goto ge;
-					AddKey(k);
-					//print.it(k);
+					//rejected: if non-ASCII, use AddChar. Why to add yet another rule for something rarely used.
+					var vk = _KeynameToKey(k, i, len);
+					if (vk == 0) goto ge;
+					AddKey(vk);
+					//print.it(vk);
 					break;
 				}
 			}
 			return this;
-			ge: throw _ArgumentException_ErrorInKeysString(keys_, i, len);
+			ge: throw _ArgumentException_ErrorInKeysString(k, i, len);
 
-			bool _FindLastKey(out _KEvent e, bool canBeText) {
+			bool _FindLastKey(out _KEvent e) {
 				for (int j = _a.Count - 1; j >= 0; j--) {
 					var t = _a[j];
-					if (canBeText ? t.IsKeyOrText : t.IsKey) { e = t; return true; }
+					if (t.IsKey) { e = t; return true; }
 				}
 				e = default; return false;
 			}
@@ -223,7 +228,7 @@
 		}
 
 		//Adds key or other event. Calls _ModUp(). Not used fo sleep and repeat.
-		keys _AddKey(_KEvent e) {
+		keys _AddKEvent(_KEvent e) {
 			_AddModUp();
 			_pstate.plus = false;
 			_a.Add(e);
@@ -232,8 +237,8 @@
 
 		/// <summary>
 		/// Adds single key, specified as <see cref="KKey"/>, to the internal collection. It will be sent by <see cref="SendIt"/>.
-		/// Returns this.
 		/// </summary>
+		/// <returns>This.</returns>
 		/// <param name="key">Virtual-key code, as <see cref="KKey"/> or int like <c>(KKey)200</c>. Valid values are 1-255.</param>
 		/// <param name="down">true - key down; false - key up; null (default) - key down-up.</param>
 		/// <exception cref="ArgumentException">Invalid <i>key</i> (0).</exception>
@@ -245,13 +250,13 @@
 			if (!(isPair = (down == null)) && !down.GetValueOrDefault()) f |= _KFlags.Up;
 			if (KeyTypes_.IsExtended(key)) f |= _KFlags.Extended;
 
-			return _AddKey(new _KEvent(isPair, key, f));
+			return _AddKEvent(new _KEvent(isPair, key, f));
 		}
 
 		/// <summary>
 		/// Adds single key to the internal collection. Allows to specify scan code and whether it is an extended key. It will be sent by <see cref="SendIt"/>.
-		/// Returns this.
 		/// </summary>
+		/// <returns>This.</returns>
 		/// <param name="key">Virtual-key code, as <see cref="KKey"/> or int like <c>(KKey)200</c>. Valid values are 1-255. Can be 0.</param>
 		/// <param name="scanCode">Scan code of the physical key. Scan code values are 1-127, but this function allows 1-0xffff. Can be 0.</param>
 		/// <param name="extendedKey">true if the key is an extended key.</param>
@@ -268,8 +273,18 @@
 			if (!(isPair = (down == null)) && !down.GetValueOrDefault()) f |= _KFlags.Up;
 			if (extendedKey) f |= _KFlags.Extended;
 
-			return _AddKey(new _KEvent(isPair, key, f, scanCode));
+			return _AddKEvent(new _KEvent(isPair, key, f, scanCode));
 		}
+
+		/// <summary>
+		/// Adds single character to the internal collection. It will be sent like text with option <see cref="OKeyText.KeysOrChar"/>.
+		/// </summary>
+		/// <returns>This.</returns>
+		public keys AddChar(char c) {
+			_ThrowIfSending();
+			return _AddKEvent(new _KEvent(_KType.Char, c));
+		}
+
 
 		/// <summary>
 		/// Adds key down or up event.
@@ -279,7 +294,7 @@
 		/// <param name="siFlags">SendInput flags.</param>
 		internal keys AddRaw_(KKey vk, ushort scan, byte siFlags) {
 			_ThrowIfSending();
-			return _AddKey(new _KEvent(false, vk, (_KFlags)(siFlags & 0xf), scan));
+			return _AddKEvent(new _KEvent(false, vk, (_KFlags)(siFlags & 0xf), scan));
 		}
 
 		/// <summary>
@@ -306,8 +321,8 @@
 
 		/// <summary>
 		/// Adds text or HTML. It will be sent by <see cref="SendIt"/>.
-		/// Returns this.
 		/// </summary>
+		/// <returns>This.</returns>
 		/// <param name="text">Text. Can be null.</param>
 		/// <param name="html">
 		/// HTML. Can be full HTML or fragment. See <see cref="clipboardData.AddHtml"/>.
@@ -321,38 +336,38 @@
 			if (!html.NE()) {
 				var data = new clipboardData().AddHtml(html).AddText(text ?? html);
 				var ke = new _KEvent(_KType.Text, _SetData(data));
-				_AddKey(ke);
+				_AddKEvent(ke);
 			} else if (!text.NE()) {
 				var ke = new _KEvent(_KType.Text, _SetData(text));
-				_AddKey(ke);
+				_AddKEvent(ke);
 			}
 			return this;
 		}
 
 		/// <summary>
 		/// Adds text with explicitly specified sending method (keys, characters or paste).
-		/// Returns this.
 		/// </summary>
+		/// <returns>This.</returns>
 		/// <param name="text">Text. Can be null.</param>
 		/// <param name="how">Overrides <see cref="OKey.TextHow"/>.</param>
 		public keys AddText(string text, OKeyText how) {
 			_ThrowIfSending();
 			if (!text.NE()) {
 				var ke = new _KEvent(_KType.Text, _SetData(text)) { vk = (KKey)((byte)how | 0x80) };
-				_AddKey(ke);
+				_AddKEvent(ke);
 			}
 			return this;
 		}
 
 		/// <summary>
 		/// Adds clipboard data, for example several formats. It will be pasted by <see cref="SendIt"/>.
-		/// Returns this.
 		/// </summary>
+		/// <returns>This.</returns>
 		/// <param name="cd">Clipboard data.</param>
 		public keys AddClipboardData(clipboardData cd) {
 			_ThrowIfSending();
 			if (cd == null) throw new ArgumentNullException();
-			_AddKey(new _KEvent(_KType.Text, _SetData(cd)));
+			_AddKEvent(new _KEvent(_KType.Text, _SetData(cd)));
 			return this;
 		}
 
@@ -380,8 +395,8 @@
 
 		/// <summary>
 		/// Adds a callback function.
-		/// Returns this.
 		/// </summary>
+		/// <returns>This.</returns>
 		/// <param name="a"></param>
 		/// <remarks>
 		/// The callback function will be called by <see cref="SendIt"/> and can do anything except sending keys and copy/paste.
@@ -389,28 +404,28 @@
 		public keys AddAction(Action a) {
 			_ThrowIfSending();
 			if (a == null) throw new ArgumentNullException();
-			return _AddKey(new _KEvent(_KType.Callback, _SetData(a)));
+			return _AddKEvent(new _KEvent(_KType.Callback, _SetData(a)));
 		}
 
 		/// <summary>
 		/// Adds the repeat-key operator. Then <see cref="SendIt"/> will send the last added key the specified number of times.
-		/// Returns this.
 		/// </summary>
+		/// <returns>This.</returns>
 		/// <param name="count">Repeat count.</param>
 		/// <exception cref="ArgumentOutOfRangeException"><i>count</i> &gt;10000 or &lt;0.</exception>
 		/// <exception cref="ArgumentException">The last added item is not key. Can repeat only single key; cannot repeat text etc.</exception>
 		public keys AddRepeat(int count) {
 			_ThrowIfSending();
 			if ((uint)count > 10000) throw new ArgumentOutOfRangeException(nameof(count), "Max repeat count is 10000.");
-			int i = _a.Count; if (i == 0 || !_a[i - 1].IsKey) throw new ArgumentException("No key to repeat.");
+			int i = _a.Count; if (i == 0 || !_a[i - 1].IsKeyOrChar) throw new ArgumentException("No key to repeat.");
 			_a.Add(new _KEvent(_KType.Repeat, (ushort)count));
 			return this;
 		}
 
 		/// <summary>
 		/// Adds a short pause. Then <see cref="SendIt"/> will sleep (wait).
-		/// Returns this.
 		/// </summary>
+		/// <returns>This.</returns>
 		/// <param name="timeMS">Time to sleep, milliseconds.</param>
 		/// <exception cref="ArgumentOutOfRangeException"><i>timeMS</i> &gt;10000 (1 minute) or &lt;0.</exception>
 		public keys AddSleep(int timeMS) {
@@ -422,8 +437,8 @@
 
 		/// <summary>
 		/// Adds keystrokes, text, sleep and other events to the internal collection. They will be sent/executed by <see cref="SendIt"/>.
-		/// Returns this.
 		/// </summary>
+		/// <returns>This.</returns>
 		/// <param name="keysEtc">The same as with <see cref="send"/>.</param>
 		public keys Add([ParamString(PSFormat.keys)] params KKeysEtc[] keysEtc) {
 			_ThrowIfSending();
@@ -439,6 +454,9 @@
 						break;
 					case KKey k:
 						AddKey(k);
+						break;
+					case char c:
+						AddChar(c);
 						break;
 					case int ms:
 						AddSleep(ms);
@@ -494,10 +512,13 @@
 						else Internal_.Sleep(k.sleep);
 						break;
 					case _KType.Repeat:
-						Debug.Assert(i > 0 && _a[i - 1].IsKey);
+						Debug.Assert(i > 0 && _a[i - 1].IsKeyOrChar);
 						break;
 					case _KType.Callback:
 						(_GetData(k.data) as Action)();
+						break;
+					case _KType.Char:
+						_SendChar(k, i);
 						break;
 					case _KType.Text:
 						_SendText(k);
@@ -508,7 +529,7 @@
 					}
 				}
 				//perf.next();
-				sleepFinally += GetOptionsAndWndFocused_(out _, false).SleepFinally;
+				sleepFinally += GetOptionsAndWndFocused_(getWndAlways: false).optk.SleepFinally;
 			}
 			finally {
 				if (restoreCapsLock) Internal_.SendKey(KKey.CapsLock);
@@ -540,7 +561,7 @@
 
 		unsafe void _SendKey(_KEvent k, int i) {
 			bool needScanCode = k.scan == 0 && !k.SIFlags.HasAny(_KFlags.Scancode | _KFlags.Unicode);
-			var optk = GetOptionsAndWndFocused_(out var wFocus, needScanCode);
+			var (optk, wFocus) = GetOptionsAndWndFocused_(getWndAlways: needScanCode);
 			if (needScanCode) {
 				var hkl = Api.GetKeyboardLayout(wFocus.ThreadId); //most layouts have the same standard scancodes, but eg dvorak different
 				k.scan = Internal_.VkToSc(k.vk, hkl);
@@ -596,15 +617,91 @@
 					ki.dwFlags |= Api.KEYEVENTF_KEYUP;
 					Api.SendInput(&ki);
 					ki.dwFlags &= ~Api.KEYEVENTF_KEYUP;
-
 				}
 				//perf.nw();
 				//speed: min 400 mcs for each event. Often > 1000. Does not depend on whether all events sent by single SendInput call.
 			}
 		}
 
+		unsafe void _SendChar(_KEvent ke, int i) {
+			var (optk, wFocus) = GetOptionsAndWndFocused_(getWndAlways: true, requireFocus: true);
+			nint hkl = Api.GetKeyboardLayout(wFocus.ThreadId);
+			int count = 1;
+			if (i < _a.Count - 1 && _a[i + 1].IsRepeat) count = _a[i + 1].repeat;
+			int speed = optk.KeySpeed; if (count > 4) speed = Math.Min(speed, optk.TextSpeed + 2);
+			KMod prevMod = 0;
+			try {
+				_SendChar2((char)ke.ch, OKeyText.KeysOrChar, speed, count, hkl, ref prevMod);
+			}
+			finally {
+				Internal_.ModPressRelease(false, prevMod);
+			}
+		}
+
+		static unsafe void _SendChar2(char c, OKeyText textHow, int sleep, int count, nint hkl, ref KMod prevMod) {
+			KKey vk = 0; KMod mod = 0;
+			if (c is '\n' or '\r') { //many apps don't support these as VK_PACKET
+				vk = KKey.Enter;
+			} else if (c is ' ' or '\t') { //some don't support these as VK_PACKET
+				vk = (KKey)c;
+			} else if (textHow != OKeyText.Characters) {
+				(vk, mod) = _CharToKey(c, hkl);
+				//print.it(c, vk, mod, (ushort)km);
+			}
+
+			if (vk == 0) { //use vk_packet
+				if (prevMod != 0) { Internal_.ModPressRelease(false, prevMod); prevMod = 0; }
+
+				//note: need key-up event for VK_PACKET too.
+				//	Known controls that need it: Qt edit controls; Office 2003 'type question' field.
+			} else if (mod != prevMod) {
+				var md = mod ^ prevMod;
+				if (0 != (md & KMod.Ctrl)) Internal_.SendCtrl(0 != (mod & KMod.Ctrl));
+				if (0 != (md & KMod.Alt)) Internal_.SendAlt(0 != (mod & KMod.Alt));
+				if (0 != (md & KMod.Shift)) Internal_.SendShift(0 != (mod & KMod.Shift));
+				prevMod = mod;
+				if (sleep > 0) Internal_.Sleep(Internal_.LimitSleepTime(sleep)); //need for apps that process mod-nonmod keys async
+			}
+
+			var ki = new _INPUTKEY2(vk, vk == 0 ? c : Internal_.VkToSc(vk, hkl), vk == 0 ? Api.KEYEVENTF_UNICODE : 0);
+			for (int r = 0; r < count; r++) {
+				Api.SendInput(&ki.k0, sleep > 0 ? 1 : 2);
+				if (sleep > 0) {
+					Internal_.Sleep(sleep);
+					Api.SendInput(&ki.k1, 1);
+				}
+			}
+			//rejected: try to synchronize somehow. To work better with slow and badly synchronized apps.
+			//1. SendTimeout(WM_NULL). Although makes slower, usually does not make sync.
+			//2. Sleep if the process uses CPU eg >50% of time. Tooo slow, even with Notepad. Tried GetProcessTimes and QueryProcessCycleTime (precise).
+			//Eg UWP input processing is so slow and chaotic, impossible to sync.
+			//rejected: option to sleep 1 ms every n-th char (eg use float 0...1 or negative value). Nothing good.
+
+			//using var ph = Handle_.OpenProcess(wFocus.ProcessId);
+			//static int _CpuPercent(IntPtr ph) {
+			//	Api.QueryProcessCycleTime(ph, out long ctime1);
+			//	long t1 = perf.mcs;
+			//	1.ms();
+			//	long time = perf.mcs - t1;
+			//	Api.QueryProcessCycleTime(ph, out long ctime2);
+			//	long speedCyclesMS = 2600; //to get this can be used QueryThreadCycleTime(thisThread)->_Spin(1000)->QueryThreadCycleTime(thisThread)->/1000
+			//	long cycles = ctime2 - ctime1;
+			//	return (int)(cycles * 100 / time / speedCyclesMS);
+			//}
+
+			//static void _Spin(long mcs) {
+			//	for (long t = perf.mcs; perf.mcs - t < mcs;) { }
+			//}
+		}
+
+		static (KKey vk, KMod mod) _CharToKey(char c, nint hkl) {
+			short km = Api.VkKeyScanEx(c, hkl); //note: call for non-ASCII char too; depending on keyboard layout it can succeed
+			if (0 != (km & 0xf800)) return default; //-1 if failed, mod flag 8 Hankaku key, 16/32 reserved for driver
+			return ((KKey)(km & 0xff), (KMod)(km >> 8));
+		}
+
 		unsafe void _SendText(_KEvent ke) {
-			var optk = GetOptionsAndWndFocused_(out var wFocus, true, requireFocus: true);
+			var (optk, wFocus) = GetOptionsAndWndFocused_(getWndAlways: true, requireFocus: true);
 			object data = _GetData(ke.data); //string or clipboardData
 			string s = data as string;
 
@@ -628,7 +725,7 @@
 				hkl = Api.GetKeyboardLayout(wFocus.ThreadId);
 				if (textHow == OKeyText.KeysOrPaste) {
 					foreach (char c in s) {
-						if (c == '\r' || c == '\n') continue;
+						if (c is '\r' or '\n') continue;
 						if (_CharToKey(c, hkl).vk == default) { textHow = OKeyText.Paste; break; }
 					}
 				}
@@ -641,78 +738,16 @@
 				return;
 			}
 
-			static (KKey vk, KMod mod) _CharToKey(char c, nint hkl) {
-				short km = Api.VkKeyScanEx(c, hkl); //note: call for non-ASCII char too; depending on keyboard layout it can succeed
-				if (0 != (km & 0xf800)) return default; //-1 if failed, mod flag 8 Hankaku key, 16/32 reserved for driver
-				return ((KKey)(km & 0xff), (KMod)(km >> 8));
-			}
-
 			KMod prevMod = 0;
 			int sleep = optk.TextSpeed;
 
 			try {
 				for (int i = 0; i < s.Length; i++) {
 					char c = s[i];
-					bool lastChar = i == s.Length - 1;
 
-					//replace \r, \n and \r\n with key Enter.
-					//	Cannot use WM_PACKET. Eg Word ignores \n, WordPad both. Edit control adds newline for both.
-					if (c == '\r') {
-						if (!lastChar && s[i + 1] == '\n') continue;
-						c = '\n';
-					}
+					if (c == '\r' && s.Eq(i + 1, '\n')) continue; //\r\n -> \n -> key Enter
 
-					KKey vk = 0; KMod mod = 0;
-					if (c == '\n') {
-						vk = KKey.Enter;
-					} else if (c == ' ' || c == '\t') {
-						vk = (KKey)c; //eg AbiWord ignores VK_PACKET. Tested: all other chars OK.
-					} else if (textHow == OKeyText.KeysOrChar || textHow == OKeyText.KeysOrPaste) {
-						(vk, mod) = _CharToKey(c, hkl);
-						//print.it(c, vk, mod, (ushort)km);
-					}
-
-					if (vk == 0) { //use vk_packet
-						if (prevMod != 0) { Internal_.ModPressRelease(false, prevMod); prevMod = 0; }
-
-						//note: need key-up event for VK_PACKET too.
-						//	Known controls that need it: Qt edit controls; Office 2003 'type question' field.
-					} else if (mod != prevMod) {
-						var pm = prevMod; prevMod |= mod; //to release in case of exception between here and 'prevMod = mod'
-						if (0 != (mod ^ pm & KMod.Ctrl)) Internal_.SendCtrl(0 != (mod & KMod.Ctrl));
-						if (0 != (mod ^ pm & KMod.Alt)) Internal_.SendAlt(0 != (mod & KMod.Alt));
-						if (0 != (mod ^ pm & KMod.Shift)) Internal_.SendShift(0 != (mod & KMod.Shift));
-						prevMod = mod;
-						if (sleep > 0) Internal_.Sleep(Internal_.LimitSleepTime(sleep)); //need for apps that process mod-nonmod keys async
-					}
-
-					var ki = new _INPUTKEY2(vk, vk == 0 ? c : Internal_.VkToSc(vk, hkl), vk == 0 ? Api.KEYEVENTF_UNICODE : 0);
-					Api.SendInput(&ki.k0, sleep > 0 ? 1 : 2);
-					if (sleep > 0) {
-						Internal_.Sleep(sleep);
-						Api.SendInput(&ki.k1, 1);
-					}
-					//rejected: try to synchronize somehow. To work better with slow and badly synchronized apps.
-					//1. SendTimeout(WM_NULL). Although makes slower, usually does not make sync.
-					//2. Sleep if the process uses CPU eg >50% of time. Tooo slow, even with Notepad. Tried GetProcessTimes and QueryProcessCycleTime (precise).
-					//Eg UWP input processing is so slow and chaotic, impossible to sync.
-					//rejected: option to sleep 1 ms every n-th char (eg use float 0...1 or negative value). Nothing good.
-
-					//using var ph = Handle_.OpenProcess(wFocus.ProcessId);
-					//static int _CpuPercent(IntPtr ph) {
-					//	Api.QueryProcessCycleTime(ph, out long ctime1);
-					//	long t1 = perf.mcs;
-					//	1.ms();
-					//	long time = perf.mcs - t1;
-					//	Api.QueryProcessCycleTime(ph, out long ctime2);
-					//	long speedCyclesMS = 2600; //to get this can be used QueryThreadCycleTime(thisThread)->_Spin(1000)->QueryThreadCycleTime(thisThread)->/1000
-					//	long cycles = ctime2 - ctime1;
-					//	return (int)(cycles * 100 / time / speedCyclesMS);
-					//}
-
-					//static void _Spin(long mcs) {
-					//	for (long t = perf.mcs; perf.mcs - t < mcs;) { }
-					//}
+					_SendChar2(c, textHow, sleep, 1, hkl, ref prevMod);
 				}
 			}
 			finally {

@@ -49,7 +49,7 @@ active - tab.
 			</tab>-->
 			<tab z="160">
 				<panel name="Output" />
-				<panel name="Info" />
+				<panel name="Mouse" />
 				<panel name="Found" />
 			</tab>
 		</stack>

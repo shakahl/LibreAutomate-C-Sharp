@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using Au.Controls;
 using Microsoft.Win32;
 using System.Windows.Controls.Primitives;
+using Au.Tools;
 
 class DOptions : KDialogWindow
 {
@@ -417,11 +418,9 @@ To apply changes after deleting etc, restart this application.
 
 	void _Hotkeys() {
 		var b = _Page("Hotkeys");
-		b.R.Add("Capture wnd and show menu", out TextBox captureMenu, App.Settings.hotkeys.tool_quick).Validation(_Validate);
-		b.R.Add("Capture wnd and show tool", out TextBox captureDwnd, App.Settings.hotkeys.tool_wnd).Validation(_Validate);
-		b.R.Add("Capture elm and show tool", out TextBox captureDelm, App.Settings.hotkeys.tool_elm).Validation(_Validate);
-		b.R.Add("Capture from a tool", out TextBox capture, App.Settings.hotkeys.capture).Validation(_Validate);
-		b.R.Add("Insert captured code", out TextBox insert, App.Settings.hotkeys.insert).Validation(_Validate);
+		b.R.Add("Capture wnd and show menu", out TextBox captureMenu, App.Settings.hotkeys.tool_quick).xValidateHotkey();
+		b.R.Add("Capture wnd and show tool", out TextBox captureDwnd, App.Settings.hotkeys.tool_wnd).xValidateHotkey();
+		b.R.Add("Capture elm and show tool", out TextBox captureDelm, App.Settings.hotkeys.tool_elm).xValidateHotkey();
 		b.End();
 
 		_b.OkApply += e => {
@@ -429,20 +428,13 @@ To apply changes after deleting etc, restart this application.
 				tool_quick = captureMenu.Text,
 				tool_wnd = captureDwnd.Text,
 				tool_elm = captureDelm.Text,
-				capture = capture.Text,
-				insert = insert.Text
 			};
 			if (v != App.Settings.hotkeys) {
 				App.Settings.hotkeys = v;
-				Au.Tools.QuickCapture.UnregisterHotkeys();
-				Au.Tools.QuickCapture.RegisterHotkeys();
+				QuickCapture.UnregisterHotkeys();
+				QuickCapture.RegisterHotkeys();
 			}
 		};
-
-		string _Validate(FrameworkElement e) {
-			if (keys.more.parseHotkeyString((e as TextBox).Text, out _, out _)) return null;
-			return "Invalid hotkey";
-		}
 	}
 
 	static class api

@@ -212,7 +212,7 @@ namespace Au
 		//problem: fails to paste in VMware player. Could add an option to not sync, but fails anyway because VMware gets clipboard with a big delay.
 
 		/// <summary>
-		/// Pastes data added to an <see cref="clipboardData"/> variable into the focused app using the clipboard.
+		/// Pastes data added to a <see cref="clipboardData"/> variable into the focused app using the clipboard.
 		/// More info: <see cref="paste"/>.
 		/// </summary>
 		/// <exception cref="AuException">Failed. Fails if there is no focused window or if it does not get clipboard data. Fails if other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc).</exception>

@@ -1,3 +1,5 @@
+//SHOULDDO: winevents EEvent.SYSTEM_MENUSTART, EEvent.SYSTEM_MENUEND, EEvent.SYSTEM_MENUPOPUPSTART, EEvent.SYSTEM_MENUPOPUPEND
+
 namespace Au
 {
 	/// <summary>

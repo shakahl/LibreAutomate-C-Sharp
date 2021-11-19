@@ -60,9 +60,11 @@ partial class MainWindow : Window
 			App.Model.Save.AllNowIfNeed();
 			Panels.PanelManager.Save();
 
-			Hide();
-			if (App.Settings.runHidden && IsVisible) {
-				e.Cancel = true;
+			if (IsVisible) {
+				if (App.Settings.runHidden) e.Cancel = true;
+				Hide();
+			}
+			if (e.Cancel) {
 				process.ThisProcessMinimizePhysicalMemory_(1000);
 			} else {
 				Au.Tools.TUtil.CloseDialogsInNonmainThreads(); //let they save rects etc

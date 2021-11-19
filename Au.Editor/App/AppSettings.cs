@@ -18,7 +18,7 @@ record AppSettings : JSettings
 
 	public bool runHidden, files_multiSelect;
 
-	public string wndPos, Dwnd_wndPos, Delm_wndPos, Duiimage_wndPos;
+	public string wndPos, Dwnd_wndPos, Duiimage_wndPos;
 
 	//When need a nested type, use record class. Everything works well; can add/remove members like in main type.
 	//	Somehow .NET does not support struct and record struct, InvalidCastException.
@@ -28,9 +28,7 @@ record AppSettings : JSettings
 		public string
 			tool_quick = "Ctrl+Shift+Q",
 			tool_wnd = "Ctrl+Shift+W",
-			tool_elm = "Ctrl+Shift+E",
-			capture = "F3",
-			insert = "F4"
+			tool_elm = "Ctrl+Shift+E"
 			;
 	}
 	public hotkeys_t hotkeys = new();
@@ -45,8 +43,13 @@ record AppSettings : JSettings
 	public bool ci_complGroup = true, ci_unexpandPath = true;
 	public int ci_complParen; //0 spacebar, 1 always, 2 never
 
-	public int Delm_action, Delm_flags;
-	public string Delm_wait;
+	public record delm_t
+	{
+		public string hk_capture = "F3", hk_insert = "F4"; //for all tools
+		public string wndPos, wait;
+		public int action, flags;
+	}
+	public delm_t delm = new();
 
 	public string db_copy_ref, db_copy_doc, db_copy_winapi;
 

@@ -939,7 +939,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Waits while some buttons are pressed, except those pressed by an <see cref="mouse"/> class function in this thread.
+		/// Waits while some buttons are pressed, except those pressed by a <see cref="mouse"/> class function in this thread.
 		/// Does nothing option <b>Relaxed</b> is true.
 		/// </summary>
 		internal static void WaitForNoButtonsPressed_() {

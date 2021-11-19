@@ -115,13 +115,13 @@ class Delm : KDialogWindow
 		b.R.StartGrid().Columns(76, 76, 110, 0, 80, -1);
 		//row 1
 		b.R.StartStack();
-		_cCapture = b.xAddCheckIcon("*Unicons.Capture #FF4040", $"Enable capturing (hotkey {App.Settings.hotkeys.capture}, also {App.Settings.hotkeys.insert} to insert) and show UI element rectangles");
-		_cAutoTestAction = b.xAddCheckIcon("*Material.CursorDefaultClickOutline #0000FF", "Auto test action when captured.\r\nIf no action selected, will show menu.");
+		_cCapture = b.xAddCheckIcon("*Unicons.Capture #FF4040", $"Enable capturing (hotkey {App.Settings.delm.hk_capture}, also {App.Settings.delm.hk_insert} to insert) and show UI element rectangles");
+		_cAutoTestAction = b.xAddCheckIcon("*Material.CursorDefaultClickOutline #FF4040", "Auto test action when captured.\r\nIf no action selected, will show menu.");
 		_cAutoInsert = b.xAddCheckIcon("*VaadinIcons.Insert #9F5300", "Auto insert code when captured");
 		b.AddSeparator(true);
 		b.xAddButtonIcon("*Ionicons.UndoiOS #9F5300", _ => App.Wmain.Dispatcher.InvokeAsync(() => Menus.Edit.Undo()), "Undo in editor");
-		b.xAddButtonIcon("*Codicons.Window #99BF00", _ => _ActivateWindow(App.Hwnd), "Activate editor window");
-		b.xAddButtonIcon("*Codicons.Window #FF4040", _ => _ActivateWindow(_wnd), "Activate captured window");
+		b.xAddButtonIcon("*Material.SquareEditOutline #0080FF", _ => _ActivateWindow(App.Hwnd), "Activate editor window");
+		b.xAddButtonIcon("*FontAwesome.WindowMaximizeRegular #0080FF", _ => _ActivateWindow(_wnd), "Activate captured window");
 		static void _ActivateWindow(wnd w) { if (!w.Is0) try { w.Activate(); } catch { } }
 		b.AddSeparator(true);
 		_bSettings = b.xAddButtonIcon("*EvaIcons.Options2 #99BF00", _ => _ToolSettings(), "Tool settings");
@@ -129,14 +129,14 @@ class Delm : KDialogWindow
 		//row 2
 		b.R.AddButton(out _bTest, "Test", _ => _Test()).Tooltip("Executes the 'find' part of the code now and shows the rectangle.\r\nRight-click to test action etc.");
 		_bTest.ContextMenuOpening += _bTest_ContextMenuOpening;
-		b.AddButton(out _bInsert, "Insert", _ => _Insert(hotkey: false)).Tooltip($"Insert code in editor.\nHotkey {App.Settings.hotkeys.insert} (while capturing).");
+		b.AddButton(out _bInsert, "Insert", _ => _Insert(hotkey: false)).Tooltip($"Insert code in editor.\nHotkey {App.Settings.delm.hk_insert} (while capturing).");
 		b.Add(out _cbAction).Tooltip("Action. Call this function when found.");
 		_xy = b.xAddCheckText("x, y", noR: true, check: _Opt.Has(_EOptions.MouseXY)); b.Span(1).Height(18); _xy.t.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
 		//row 3
 		b.R.StartStack(); _topRow3 = b.Panel;
 		b.AddButton(out _bWindow, "Window...", _bWnd_Click).Width(70);
 		b.xAddCheck(out _cControl, "Control").Margin("R30");
-		_wait = b.xAddCheckText("Wait", App.Settings.Delm_wait ?? "1", check: !_Opt.Has(_EOptions.NoWait)); b.Width(48);
+		_wait = b.xAddCheckText("Wait", App.Settings.delm.wait ?? "1", check: !_Opt.Has(_EOptions.NoWait)); b.Width(48);
 		b.xAddCheck(out _cException, "Fail if not found").Checked();
 		b.End();
 
@@ -169,7 +169,7 @@ class Delm : KDialogWindow
 			showActivated: _elm != null ? false : null //eg if captured a popup menu item, activating this window closes the menu and we cannot get properties
 			);
 
-		WndSavedRect.Restore(this, App.Settings.Delm_wndPos, o => App.Settings.Delm_wndPos = o);
+		WndSavedRect.Restore(this, App.Settings.delm.wndPos, o => App.Settings.delm.wndPos = o);
 	}
 
 	static Delm() {
@@ -565,7 +565,10 @@ class Delm : KDialogWindow
 
 					return (r, s);
 				});
-			}, _Capture, () => _Insert(hotkey: true));
+			},
+			(App.Settings.delm.hk_capture, _Capture),
+			(App.Settings.delm.hk_insert, () => _Insert(hotkey: true))
+			);
 
 		_cCapture.IsChecked = true;
 	}
@@ -1206,7 +1209,7 @@ class Delm : KDialogWindow
 
 	void _ActionInit() {
 		_cbAction.ItemsSource = s_actions.Select(o => o.name);
-		_cbAction.SelectedIndex = _iAction = Math.Clamp(App.Settings.Delm_action, 0, s_actions.Length - 1);
+		_cbAction.SelectedIndex = _iAction = Math.Clamp(App.Settings.delm.action, 0, s_actions.Length - 1);
 		_ActionSetControlsVisibility();
 		_cbAction.SelectionChanged += (o, _) => {
 			_iAction = _cbAction.SelectedIndex;
@@ -1292,11 +1295,11 @@ class Delm : KDialogWindow
 		var cCC = m.AddCheck("Compact code", _Opt.Has(_EOptions.Compact)); cCC.Tooltip = "Insert code without { } and don't use elm e with action";
 		m.Separator();
 		m["Set default action"] = _ => {
-			App.Settings.Delm_action = _iAction;
+			App.Settings.delm.action = _iAction;
 			_SetOpt(_EOptions.MouseXY, _xy.c.IsChecked);
 		}; m.Last.Tooltip = "Let the tool start with current action and x y checkbox state";
 		m["Set default wait"] = _ => {
-			App.Settings.Delm_wait = _wait.t.Text;
+			App.Settings.delm.wait = _wait.t.Text;
 			_SetOpt(_EOptions.NoWait, !_wait.c.IsChecked);
 		}; m.Last.Tooltip = "Let the tool start with current Wait value and checkbox state";
 		m.Show(owner: this);
@@ -1316,8 +1319,8 @@ class Delm : KDialogWindow
 	}
 
 	static _EOptions _Opt {
-		get => (_EOptions)App.Settings.Delm_flags;
-		set => App.Settings.Delm_flags = (int)value;
+		get => (_EOptions)App.Settings.delm.flags;
+		set => App.Settings.delm.flags = (int)value;
 	}
 
 	static bool _SetOpt(_EOptions opt, bool on) {
@@ -1640,6 +1643,7 @@ class Delm : KDialogWindow
 		_info.ZTags.AddLinkTag("+jab", _ => Java.EnableDisableJabUI(this));
 		_info.ZTags.AddLinkTag("+actTest", _ => { if (_wnd.ActivateL()) _Test(); });
 		_info.ZTags.AddLinkTag("+uiaReset", _ => _uiaUserChecked = null);
+		TUtil.RegisterLink_DialogHotkey(_info, insertToo: true);
 
 		//note: for Test button etc it's better to use tooltip, not _info.
 
@@ -1668,7 +1672,7 @@ If unchecked, returns null.");
 	}
 
 	string _dialogInfo = $@"This tool creates code to find <help elm>UI element<> in <help wnd.find>window<>.
-1. Move the mouse to a UI element. Press hotkey <b>{App.Settings.hotkeys.capture}<>.
+1. Move the mouse to a UI element. Press <+hotkey>hotkey<> <b>{App.Settings.delm.hk_capture}<>.
 2. Click the Test button to see how the 'find' code works.
 3. If need, change some fields or select another element.
 4. Click Insert. Click Close, or capture/insert again.
@@ -1720,7 +1724,8 @@ For example, if 1, gets the second matching element.
 See <help>elm.Navigate<>. Tool: in the tree view right click that element...
 One or several words: <u><i>parent<> <i>child<> <i>first<> <i>last<> <i>next<> <i>previous<><>. Or 2 letters, like <i>ne<>.
 Example: pa ne2 ch3. The 2 means 2 times (ne ne). The 3 means 3-rd child; -3 would be 3-rd from end.
-Note: ne/pr may skip invisible siblings.");
+Note: ne/pr may skip invisible siblings.
+Some elements also support <u><i>up<> <i>down<> <i>left<> <i>right<><>.");
 
 			_info.InfoC(hiddenTooA, "Flag <help>Au.Types.EFFlags<>.HiddenToo.");
 			_info.InfoC(reverseA, "Flag <help>Au.Types.EFFlags<>.Reverse (search bottom to top).");

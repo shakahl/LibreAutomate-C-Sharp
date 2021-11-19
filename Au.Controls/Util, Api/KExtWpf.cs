@@ -362,5 +362,17 @@ namespace Au.Tools
 		public static void xAddSplitterH(this wpfBuilder b, int span = 1, double thickness = 4) {
 			b.R.Add<GridSplitter2>().Splitter(false, span, thickness);
 		}
+
+		/// <summary>
+		/// Can be used like <see cref="wpfBuilder.Validation"/> with hotkey <b>TextBox</b> controls.
+		/// </summary>
+		public static wpfBuilder xValidateHotkey(this wpfBuilder b, bool errorIfEmpty = false) {
+			return b.Validation(e => {
+				var s = (e as TextBox).Text;
+				if (!errorIfEmpty && s.NE()) return null;
+				if (keys.more.parseHotkeyString(s, out _, out _)) return null;
+				return "Invalid hotkey";
+			});
+		}
 	}
 }

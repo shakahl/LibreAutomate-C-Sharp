@@ -658,6 +658,8 @@ class CiAutocorrect
 					case AttributeListSyntax:
 					case NamespaceDeclarationSyntax or FileScopedNamespaceDeclarationSyntax: //don't indent namespaces
 					case IfStatementSyntax k3 when k3.Parent is ElseClauseSyntax:
+					case UsingStatementSyntax k4 when k4.Parent is UsingStatementSyntax: //don't indent multiple using()
+					case FixedStatementSyntax k5 when k5.Parent is FixedStatementSyntax: //don't indent multiple fixed()
 						//print.it("-" + v.GetType().Name, v.Span, pos);
 						continue;
 					case ExpressionSyntax:

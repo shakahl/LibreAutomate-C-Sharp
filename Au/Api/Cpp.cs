@@ -9,7 +9,7 @@ namespace Au.Types
 #if TRACE //remind to rebuild the 32-bit dll when the 64-bit dll updated
 			if (filesystem.getProperties(folders.ThisAppBS + @"64\AuCpp.dll", out var p64) && filesystem.getProperties(folders.ThisAppBS + @"32\AuCpp.dll", out var p32)) {
 				var v = p64.LastWriteTimeUtc - p32.LastWriteTimeUtc;
-				if (v > TimeSpan.FromMinutes(1)) print.it("Note: the 32-bit AuCpp.dll is older by more than 1 minute.");
+				if (v > TimeSpan.FromMinutes(2)) print.it($"Note: the 32-bit AuCpp.dll is older by {v.TotalMinutes.ToInt()} minutes.");
 			}
 #endif
 		}

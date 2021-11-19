@@ -255,7 +255,7 @@ namespace Au.Types
 
 	/// <summary>
 	/// Parameter type of <see cref="keys.send"/> and similar functions.
-	/// Has implicit conversions from string, clipboardData, KKey, KKeyScan, int (sleep time) and Action.
+	/// Has implicit conversions from string, clipboardData, KKey, KKeyScan, char, int (sleep time) and Action.
 	/// </summary>
 	public struct KKeysEtc
 	{
@@ -271,6 +271,7 @@ namespace Au.Types
 		public static implicit operator KKeysEtc(clipboardData cd) => new(cd);
 		public static implicit operator KKeysEtc(KKey k) => new(k);
 		public static implicit operator KKeysEtc(KKeyScan t) => new(t);
+		public static implicit operator KKeysEtc(char c) => new(c);
 		public static implicit operator KKeysEtc(int ms) => new(ms);
 		public static implicit operator KKeysEtc(Action a) => new(a);
 	}

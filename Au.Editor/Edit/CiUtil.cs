@@ -377,19 +377,6 @@ static class CiUtil
 		return default;
 	}
 
-	public static string FormatSignatureXmlDoc(BaseMethodDeclarationSyntax m, string code) {
-		var b = new StringBuilder();
-		foreach (var p in m.ParameterList.Parameters) {
-			b.Append("\r\n/// <param name=\"").Append(p.Identifier.Text).Append("\"></param>");
-		}
-		if (m is MethodDeclarationSyntax mm) {
-			var rt = mm.ReturnType;
-			if (!code.Eq(rt.Span, "void")) b.Append("\r\n/// <returns></returns>");
-		}
-		return b.ToString();
-		//rejected: <typeparam name="TT"></typeparam>. Rarely used.
-	}
-
 #if DEBUG
 	public static void PrintNode(SyntaxNode x, int pos = 0, bool printNode = true, bool printErrors = false) {
 		if (x == null) { print.it("null"); return; }

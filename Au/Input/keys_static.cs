@@ -503,7 +503,7 @@ namespace Au
 		/// </td>
 		/// <td>Spaces between keys are optional, except for uppercase A-Z. For example, can be <c>"A B"</c>, <c>"a b"</c>, <c>"A b"</c> or <c>"ab"</c>, but not <c>"AB"</c> or <c>"Ab"</c>.
 		/// <br/>
-		/// <br/>For <c>`</c> <c>-</c> <c>[</c> <c>]</c> <c>\</c> <c>;</c> <c>'</c> <c>,</c> <c>.</c> <c>/</c> also can be used <c>~</c> <c>_</c> <c>{</c> <c>}</c> <c>|</c> <c>:</c> <c>"</c> <c>&lt;</c> <c>&gt;</c> <c>?</c>.
+		/// <br/>For <c>`</c> <c>[</c> <c>]</c> <c>\</c> <c>;</c> <c>'</c> <c>,</c> <c>.</c> <c>/</c> also can be used <c>~</c> <c>{</c> <c>}</c> <c>|</c> <c>:</c> <c>"</c> <c>&lt;</c> <c>&gt;</c> <c>?</c>.
 		/// </td>
 		/// </tr>
 		/// <tr>
@@ -527,12 +527,12 @@ namespace Au
 		/// <tr>
 		/// <td>Special characters</td>
 		/// <td>
-		/// <b>Operator:</b> + * ( )
+		/// <b>Operator:</b> + * ( ) _
 		/// <br/><b>Numpad key prefix:</b> #
 		/// <br/><b>Text/HTML argument prefix:</b> ! %
 		/// <br/><b>Reserved:</b> @ $ ^ &amp;
 		/// </td>
-		/// <td>These characters cannot be used as keys. Instead use = 8 9 0 4 3 1 2 5 6 7.</td>
+		/// <td>These characters cannot be used as keys. Instead use = 8 9 0 - 3 1 5 2 4 6 7.</td>
 		/// </tr>
 		/// </table>
 		/// 
@@ -570,6 +570,14 @@ namespace Au
 		/// <td><c>"Alt+(E P)"</c></td>
 		/// <td>The same as <c>"Alt*down E P Alt*up"</c>.
 		/// <br/>Inside () cannot be used + and +().
+		/// </td>
+		/// </tr>
+		/// <tr>
+		/// <td><c>_</c></td>
+		/// <td><c>"Tab _A_b Tab"</c><br/><c>"Alt+_e_a"</c><br/><c>"_**20"</c></td>
+		/// <td>Send next character like text with option <see cref="OKeyText.KeysOrChar"/>.
+		/// <br/>Can be used to Alt-select items in menus, ribbons and dialogs regardless of current keyboard layout.
+		/// <br/>Next character can be any 16-bit character, including operators and whitespace.
 		/// </td>
 		/// </tr>
 		/// </table>
@@ -611,13 +619,13 @@ namespace Au
 		/// <td><see cref="OKey.TextSpeed"/></td>
 		/// <td>0 ms.</td>
 		/// <td>0 - 1000.
-		/// Changes the speed for "text" arguments (makes slower).</td>
+		/// Changes the speed for "text" arguments.</td>
 		/// </tr>
 		/// <tr>
 		/// <td><see cref="OKey.KeySpeed"/></td>
-		/// <td>1 ms.</td>
+		/// <td>5 ms.</td>
 		/// <td>0 - 1000.
-		/// Changes the speed for "keys" arguments (makes slower if &gt;1).</td>
+		/// Changes the speed for "keys" arguments.</td>
 		/// </tr>
 		/// <tr>
 		/// <td><see cref="OKey.KeySpeedClipboard"/></td>
@@ -672,9 +680,9 @@ namespace Au
 		/// 
 		/// Mouse button codes/names (eg <see cref="KKey.MouseLeft"/>) cannot be used to click. Instead use callback, like in the "Ctrl+click" example.
 		/// 
-		/// You can use an <see cref="keys"/> variable instead of this function. Example: <c>new keys(null).Add("keys", "!text").Send();</c>. More examples in <see cref="keys(OKey)"/> topic.
+		/// You can use a <see cref="keys"/> variable instead of this function. Example: <c>new keys(null).Add("keys", "!text").Send();</c>. More examples in <see cref="keys(OKey)"/> topic.
 		/// 
-		/// This function calls <see cref="Add(KKeysEtc[])"/>, which calls these functions depending on argument type: <see cref="AddKeys"/>, <see cref="AddText"/>, <see cref="AddClipboardData"/>, <see cref="AddKey(KKey, bool?)"/>, <see cref="AddKey(KKey, ushort, bool, bool?)"/>, <see cref="AddSleep"/>, <see cref="AddAction"/>. Then calls <see cref="SendIt"/>.
+		/// This function calls <see cref="Add(KKeysEtc[])"/>, which calls these functions depending on argument type: <see cref="AddKeys"/>, <see cref="AddText"/>, <see cref="AddChar"/>, <see cref="AddClipboardData"/>, <see cref="AddKey(KKey, bool?)"/>, <see cref="AddKey(KKey, ushort, bool, bool?)"/>, <see cref="AddSleep"/>, <see cref="AddAction"/>. Then calls <see cref="SendIt"/>.
 		/// 
 		/// Uses API <msdn>SendInput</msdn>.
 		/// </remarks>
@@ -695,6 +703,10 @@ namespace Au
 		/// //Alt down, E, P, Alt up.
 		/// keys.send("Alt*down E P Alt*up");
 		/// 
+		/// //Send text "Example".
+		/// keys.send("!Example");
+		/// keys.sendt("Example"); //same
+		/// 
 		/// //Press key End, key Backspace 3 times, send text "Text".
 		/// keys.send("End Back*3", "!Text");
 		/// 
@@ -702,14 +714,11 @@ namespace Au
 		/// int n = 5; string pw = "password";
 		/// keys.send($"Tab*{n}", "!user", "Tab", "!" + pw, "Enter");
 		/// 
-		/// //Send text "Example".
-		/// keys.sendt("Example");
-		/// 
 		/// //Press Ctrl+V, wait 500 ms, press Enter.
 		/// keys.send("Ctrl+V", 500, "Enter");
 		/// 
-		/// //F2, Ctrl+K, Left 3 times, Space, A, comma, 5, numpad 5, Shift+A, B, C, BrowserBack.
-		/// keys.send("F2 Ctrl+K Left*3 Space a , 5 #5 $abc", KKey.BrowserBack);
+		/// //F2, Ctrl+K, Left 3 times, Space, A, comma, 5, numpad 5, BrowserBack.
+		/// keys.send("F2 Ctrl+K Left*3 Space a , 5 #5", KKey.BrowserBack);
 		/// 
 		/// //Shift down, A 3 times, Shift up.
 		/// keys.send("Shift+A*3");
@@ -747,8 +756,7 @@ namespace Au
 		/// f.Controls.Add(t);
 		/// f.Controls.Add(c); f.CancelButton = c;
 		/// 
-		/// b.Click += async (_, _) =>
-		/// {
+		/// b.Click += async (_, _) => {
 		/// 	//keys.send("Tab", "!text", 2000, "Esc"); //no
 		/// 	await Task.Run(() => { keys.send("Tab", "!text", 2000, "Esc"); }); //use other thread
 		/// };

@@ -884,17 +884,19 @@ namespace Au
 		/// - <c>"parent"</c> - parent (container) UI element.
 		/// - <c>"child"</c> - child UI element by 1-based index. Example: <c>"child3"</c> (3-th child). Negative index means from end, for example -1 is the last child.
 		/// - <c>"#N"</c> - custom. More info in Remarks.
+		/// 
+		/// Some elements also support <c>"up"</c>, <c>"down"</c>, <c>"left"</c>, <c>"right"</c>.
 		/// </param>
 		/// <param name="waitS">Wait for the wanted UI element max this number of seconds. If negative, waits forever.</param>
 		/// <exception cref="ArgumentException">Invalid <i>navig</i> string.</exception>
 		/// <remarks>
 		/// Can be only 2 letters, like <c>"pr"</c> for <c>"previous"</c>.
 		/// A string like <c>"next3"</c> or <c>"next,3"</c> is the same as <c>"next next next"</c>. Except for <c>"child"</c>.
-		/// Use string like <c>"#1000"</c> to specify a custom <i>navDir</i> value to pass to <msdn>IAccessible.accNavigate</msdn>. Can be any standard or custom value supported by the UI element.
+		/// Use string like <c>"#1000"</c> to specify a custom <i>navDir</i> value to pass to <msdn>IAccessible.accNavigate</msdn>.
 		/// 
-		/// For <c>"next"</c>, <c>"previous"</c>, <c>"firstchild"</c>, <c>"lastchild"</c> and <c>"#N"</c> the function calls <msdn>IAccessible.accNavigate</msdn>. Not all UI elements support it. Some UI elements skip invisible siblings. Instead you can use <c>"parent childN"</c> or <c>"childN"</c>.
-		/// For <c>"parent"</c> the function calls <msdn>IAccessible.get_accParent</msdn>. Few UI elements don't support. Some UI elements return a different parent than in the tree of UI elements.
 		/// For <c>"child"</c> the function calls API <msdn>AccessibleChildren</msdn>.
+		/// For <c>"parent"</c> the function calls <msdn>IAccessible.get_accParent</msdn>. Few UI elements don't support. Some UI elements return a different parent than in the tree of UI elements.
+		/// For others the function calls <msdn>IAccessible.accNavigate</msdn>. Not all UI elements support it. Some UI elements skip invisible siblings. Instead you can use <c>"parent childN"</c> or <c>"childN"</c>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -982,14 +984,34 @@ namespace Au
 		/// <remarks>
 		/// This function works with these UI elements:
 		/// - Web page elements in Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, Edge, web browser controls...). With Find use role prefix "web:", "firefox:" or "chrome:", and don't use flag <see cref="EFFlags.NotInProc"/>.
-		/// - Standard treeview and listview controls, some other. With <b>Find</b> use flag <see cref="EFFlags.UIA"/>.
+		/// - Standard treeview, listview and listbox controls.
+		/// - Some other controls if found with flag <see cref="EFFlags.UIA"/>.
 		/// </remarks>
 		public void ScrollTo() {
 			ThrowIfDisposed_();
 
-			int hr;
-			if (_misc.flags.Has(EMiscFlags.UIA)) hr = Cpp.Cpp_AccAction(this, 's');
-			else hr = Cpp.Cpp_AccWeb(this, "'s", out _);
+			int hr = 1;
+			if (_misc.flags.Has(EMiscFlags.UIA)) {
+				hr = Cpp.Cpp_AccAction(this, 's');
+			} else if (Item == 0) {
+				hr = Cpp.Cpp_AccWeb(this, "'s", out _);
+			} else if (RoleInt is ERole.LISTITEM or ERole.TREEITEM) { //try messages of some standard controls
+				var w = WndContainer;
+				switch (w.Send(Api.WM_GETOBJECT, 0, (nint)EObjid.QUERYCLASSNAMEIDX)) {
+				case 65536 + 19 when RoleInt is ERole.LISTITEM: //Listview
+					if (0 != w.Send(0x1013, Item - 1, 1)) hr = 0; //LVM_ENSUREVISIBLE
+					break;
+				case 65536 + 0 when RoleInt is ERole.LISTITEM: //Listbox
+					if (-1 != w.Send(0x0197, Item - 1)) hr = 0; //LB_SETTOPINDEX
+					break;
+				case 65536 + 25 when RoleInt is ERole.TREEITEM: //Treeview
+					if (osVersion.is32BitProcessAnd64BitOS && !w.Is32Bit) break; //cannot get 64-bit HTREEITEM
+					var htvi = w.Send(0x112A, Item); if (htvi == 0) break; //TVM_MAPACCIDTOHTREEITEM
+					w.Send(0x1114, 0, htvi); //TVM_ENSUREVISIBLE
+					hr = 0; //the API returns nonzero only if actually scrolls, not if already visible
+					break;
+				}
+			}
 			GC.KeepAlive(this);
 
 			AuException.ThrowIfHresultNot0(hr, "*scroll");

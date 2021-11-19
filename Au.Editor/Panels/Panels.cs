@@ -14,7 +14,7 @@ static class Panels
 	public static PanelOutput Output;
 	public static PanelFind Find;
 	public static PanelFound Found;
-	public static PanelInfo Info;
+	public static PanelMouse Mouse;
 	//menu and toolbars
 	public static Menu Menu;
 	//public static ToolBar[] Toolbars;
@@ -77,7 +77,7 @@ static class Panels
 		pm["Tasks"].Content = Tasks = new PanelTasks();
 		pm["Find"].Content = Find = new PanelFind();
 		pm["Output"].Content = Output = new PanelOutput();
-		pm["Info"].Content = Info = new PanelInfo();
+		pm["Mouse"].Content = Mouse = new PanelMouse();
 		pm["Found"].Content = Found = new PanelFound();
 
 		pm["documents"].Content = Editor = new PanelEdit();

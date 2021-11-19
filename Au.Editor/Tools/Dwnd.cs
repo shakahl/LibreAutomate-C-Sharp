@@ -35,7 +35,7 @@ class Dwnd : KDialogWindow
 		var b = new wpfBuilder(this).WinSize((500, 440..), (600, 430..)).Columns(-1);
 		b.R.Add(out _info).Height(60);
 		b.R.StartGrid().Columns(0, 76, 76, 0, 0, -1);
-		_cCapture = b.xAddCheckIcon("*Unicons.Capture #FF4040", $"Enable capturing ({App.Settings.hotkeys.capture}) and show window/control rectangles");
+		_cCapture = b.xAddCheckIcon("*Unicons.Capture #FF4040", $"Enable capturing ({App.Settings.delm.hk_capture}) and show window/control rectangles");
 		b.AddButton(out _bTest, "Test", _bTest_Click).Disabled().Tooltip("Executes the 'find' part of the code now and shows the rectangle");
 		b.AddButton(out _bInsert, dontInsert ? "OK" : "Insert", _Insert).Disabled(); if (!dontInsert) b.Tooltip("Insert code in editor");
 		b.Add(out _cActivate, "Activate").Tooltip("Activate the found window");
@@ -331,7 +331,7 @@ class Dwnd : KDialogWindow
 	TUtil.CapturingWithHotkey _capt;
 
 	void _cCapture_CheckedChanged() {
-		_capt ??= new TUtil.CapturingWithHotkey(_cCapture, p => (wnd.fromXY(p).Rect, null), _Capture);
+		_capt ??= new TUtil.CapturingWithHotkey(_cCapture, p => (wnd.fromXY(p).Rect, null), (App.Settings.delm.hk_capture, _Capture));
 		_capt.Capturing = _cCapture.IsChecked;
 	}
 
@@ -659,6 +659,7 @@ class Dwnd : KDialogWindow
 
 		_info.zText = _dialogInfo;
 		_info.ZAddElem(this, _dialogInfo);
+		TUtil.RegisterLink_DialogHotkey(_info, insertToo: !true);
 
 		_info.InfoCT(nameW, "Window name.", true);
 		_info.InfoCT(classW, "Window class name.", true);
@@ -699,7 +700,7 @@ For example, if 1, gets the second matching control.");
 
 	string _dialogInfo =
 $@"This tool creates code to find <help wnd.find>window<> or <help wnd.Child>control<>.
-1. Move the mouse to a window or control. Press hotkey <b>{App.Settings.hotkeys.capture}<>.
+1. Move the mouse to a window or control. Press <+hotkey>hotkey<> <b>{App.Settings.delm.hk_capture}<>.
 2. Click the Test button to see how the 'find' code works.
 3. If need, change some fields or select another window/control.
 4. Click Insert. Click Close, or capture/insert again.

@@ -165,7 +165,7 @@
 		<Compile Update="Edit\SciCode.cs" />
 		<Compile Update="Files\PanelFiles.cs" />
 		<Compile Update="Panels\PanelFound.cs" />
-		<Compile Update="Panels\PanelInfo.cs">
+		<Compile Update="Panels\PanelMouse.cs">
 			<SubType>UserControl</SubType>
 		</Compile>
 		<Compile Update="Panels\PanelOutput.cs" />

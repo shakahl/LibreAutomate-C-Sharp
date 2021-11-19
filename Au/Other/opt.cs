@@ -531,8 +531,8 @@ namespace Au.Types
 				NoBlockInput = o.NoBlockInput;
 				Hook = o.Hook;
 			} else {
-				_textSpeed = default;
-				_keySpeed = 1;
+				_textSpeed = 0;
+				_keySpeed = 5;
 				_clipboardKeySpeed = 5;
 				_sleepFinally = 10;
 				_pasteLength = 200;
@@ -577,29 +577,29 @@ namespace Au.Types
 		/// How long to wait (milliseconds) between pressing and releasing each character key. Used by <see cref="keys.sendt"/>. Also by <see cref="keys.send"/> and similar functions for <c>"!text"</c> arguments.
 		/// Default: 0.
 		/// </summary>
-		/// <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="opt.init.key"/>: 0 - 10.</value>
+		/// <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="opt.init.key"/>: 0 - 100.</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
 		/// Used only for 'text' arguments, not for 'keys' arguments. See <see cref="KeySpeed"/>.
 		/// </remarks>
 		public int TextSpeed {
 			get => _textSpeed;
-			set => _textSpeed = _SetValue(value, 1000, 10);
+			set => _textSpeed = _SetValue(value, 1000, 100);
 		}
 		int _textSpeed;
 
 		/// <summary>
 		/// How long to wait (milliseconds) between pressing and releasing each key. Used by <see cref="keys.send"/> and similar functions, except for <c>"!text"</c> arguments.
-		/// Default: 1.
+		/// Default: 5.
 		/// </summary>
-		/// <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="opt.init.key"/>: 0 - 10.</value>
+		/// <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="opt.init.key"/>: 0 - 100.</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
 		/// Used only for 'keys' arguments, not for 'text' arguments. See <see cref="TextSpeed"/>.
 		/// </remarks>
 		public int KeySpeed {
 			get => _keySpeed;
-			set => _keySpeed = _SetValue(value, 1000, 10);
+			set => _keySpeed = _SetValue(value, 1000, 100);
 		}
 		int _keySpeed;
 
@@ -607,14 +607,14 @@ namespace Au.Types
 		/// How long to wait (milliseconds) between sending Ctrl+V and Ctrl+C keys of clipboard functions (paste, copy).
 		/// Default: 5.
 		/// </summary>
-		/// <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="opt.init.key"/>: 0 - 50.</value>
+		/// <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="opt.init.key"/>: 0 - 100.</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
 		/// In most apps copy/paste works without this delay. Known apps that need it: Internet Explorer's address bar, BlueStacks.
 		/// </remarks>
 		public int KeySpeedClipboard {
 			get => _clipboardKeySpeed;
-			set => _clipboardKeySpeed = _SetValue(value, 1000, 50);
+			set => _clipboardKeySpeed = _SetValue(value, 1000, 100);
 		}
 		int _clipboardKeySpeed;
 
@@ -805,17 +805,16 @@ namespace Au.Types
 	public enum OKeyText
 	{
 		/// <summary>
-		/// Send text characters using special key code VK_PACKET.
+		/// Send most text characters using special key code VK_PACKET.
 		/// This option is default. Few apps don't support it.
-		/// For newlines sends key Enter, because VK_PACKET often does not work well.
+		/// For newlines, tab and space sends keys (Enter, Tab, Space), because VK_PACKET often does not work well.
 		/// If text contains Unicode characters with Unicode code above 0xffff, clipboard-pastes whole text, because many apps don't support Unicode surrogates sent as WM_PACKET pairs.
 		/// </summary>
 		Characters,
-		//info:
-		//	Tested many apps/controls/frameworks. Works almost everywhere.
-		//	Does not work with Pidgin (thanks PhraseExpress for this info), but works eg with Inkscape that has the same window class name.
-		//	I guess does not work with many games.
-		//	In PhraseExpress this is default. Its alternative methods are SendKeys (does not send Unicode chars) and clipboard. It uses clipboard if text is long, default 100. Allows to choose different for specified apps. Does not add any delays between chars; for some apps too fast, eg VirtualBox edit fields when text contains Unicode surrogates.
+		//Tested many apps/controls/frameworks. Works almost everywhere.
+		//Does not work with Pidgin (GTK), but works eg with Inkscape (GTK too).
+		//I guess does not work with many games.
+		//In PhraseExpress this is default. Its alternative methods are SendKeys (does not send Unicode chars) and clipboard. It uses clipboard if text is long, default 100. Allows to choose different for specified apps. Does not add any delays between chars; for some apps too fast, eg VirtualBox edit fields when text contains Unicode surrogates.
 
 		/// <summary>
 		/// Send virtual-key codes, with Shift etc where need.
@@ -842,6 +841,7 @@ namespace Au.Types
 		Paste,
 
 		//rejected: WmPaste. Few windows support it.
+		//rejected: WM_CHAR. It isn't sync with keyboard/mouse input. It has sense only if window specified (send to inactive window). Maybe will add a function in the future.
 	}
 
 	/// <summary>

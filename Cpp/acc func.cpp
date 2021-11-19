@@ -33,8 +33,12 @@ NavdirAndCount* Navig_Parse(STR s, out int& n)
 				//find the end of the name part, because it can be followed by a number, like "child3" or ne,3"
 				s2 = start; while(s2 < s && *s2 >= 'a' && *s2 <= 'z') s2++;
 				navDir = str::Switch(start, s2 - start, { L"ne", L"pr", L"fi", L"la", L"pa", L"ch", L"next", L"previous", L"first", L"last", L"parent", L"child" });
-				if(navDir == 0) goto ge;
-				navDir += (navDir < 7) ? 4 : -2;
+				if(navDir > 0) navDir += (navDir < 7) ? 4 : -2;
+				else { //rarely supported/used
+					navDir = str::Switch(start, s2 - start, { L"up", L"do", L"le", L"ri", L"down", L"left", L"right" });
+					if(navDir == 0) goto ge;
+					if(navDir >= 5) navDir -= 3;
+				}
 			}
 			if(s2 < s) {
 				if(*s2 == ',') s2++;

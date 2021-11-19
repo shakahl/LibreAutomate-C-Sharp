@@ -252,9 +252,19 @@ static class InsertCode
 		string s = @" <summary>
 /// 
 /// </summary>";
-
-		if (node is BaseMethodDeclarationSyntax md) //method, ctor
-			s += CiUtil.FormatSignatureXmlDoc(md, code);
+		var pl = node switch { BaseMethodDeclarationSyntax met => met.ParameterList, RecordDeclarationSyntax rec => rec.ParameterList, _ => null };
+		if (pl != null) {
+			var b = new StringBuilder(s);
+			foreach (var p in pl.Parameters) {
+				b.Append("\r\n/// <param name=\"").Append(p.Identifier.Text).Append("\"></param>");
+			}
+			if (node is MethodDeclarationSyntax mm) {
+				var rt = mm.ReturnType;
+				if (!code.Eq(rt.Span, "void")) b.Append("\r\n/// <returns></returns>");
+			}
+			s = b.ToString();
+			//rejected: <typeparam name="TT"></typeparam>. Rarely used.
+		}
 
 		s = IndentStringForInsert(s, doc, pos);
 

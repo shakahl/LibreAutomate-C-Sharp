@@ -49,7 +49,7 @@ namespace Au.Controls
 	using static Sci;
 
 	/// <summary>
-	/// Adds links and text formatting to an <see cref="KScintilla"/> control.
+	/// Adds links and text formatting to a <see cref="KScintilla"/> control.
 	/// </summary>
 	/// <remarks>
 	/// Links and formatting is specified in text, using tags like in HTML. Depending on control style, may need prefix <c><![CDATA[<>]]></c>.

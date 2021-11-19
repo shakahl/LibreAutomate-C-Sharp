@@ -260,10 +260,9 @@ namespace Au.More
 			_hookType = hookType;
 			_hookTypeString = m_;
 			_ignoreAuInjected = ignoreAuInjected;
-			if (hookType == Api.WH_KEYBOARD_LL || hookType == Api.WH_MOUSE_LL) {
+			if (hookType is Api.WH_KEYBOARD_LL or Api.WH_MOUSE_LL) {
 				_proc1 = _HookProcLL;
-				//JIT-compile our hook proc and some functions it may call.
-				//	Premature optimization? But OS gives us only 300 ms by default.
+				//JIT-compile our hook proc and some functions it may call. OS gives us only 300 ms by default.
 				if (!s_jit1) {
 					s_jit1 = true;
 					Jit_.Compile(typeof(WindowsHook), nameof(_HookProcLL));
@@ -291,7 +290,7 @@ namespace Au.More
 		public void Hook(int threadId = 0) {
 			if (_proc2 == null) throw new ObjectDisposedException(nameof(WindowsHook));
 			if (_hh != default) throw new InvalidOperationException("The hook is already set.");
-			if (_hookType == Api.WH_KEYBOARD_LL || _hookType == Api.WH_MOUSE_LL) {
+			if (_hookType is Api.WH_KEYBOARD_LL or Api.WH_MOUSE_LL) {
 				if (threadId != 0) throw new ArgumentException("threadId must be 0");
 			} else if (threadId == 0) {
 				threadId = Api.GetCurrentThreadId();
@@ -310,9 +309,53 @@ namespace Au.More
 		/// </remarks>
 		public void Unhook() {
 			if (_hh != default) {
+				_Restore_UnhookOld();
 				bool ok = Api.UnhookWindowsHookEx(_hh);
 				if (!ok) print.warning($"WindowsHook.Unhook() failed ({_hookTypeString}). {lastError.message}");
 				_hh = default;
+			}
+		}
+
+		/// <summary>
+		/// Rehooks this low-level keyboard or mouse hook.
+		/// </summary>
+		/// <remarks>
+		/// Low level hooks may be occasionally disabled by the OS or other hooks. Workaround - call this function eg every 10 s in same thread. For example use <see cref="timer"/>. Don't call too frequently, eg every 1 s.
+		/// This function unhooks current hook and sets new hook. Ensures that no events are missed or duplicate during it.
+		/// </remarks>
+		/// <exception cref="InvalidOperationException">The hook type isn't low-level keyboard or mouse.</exception>
+		public void Restore() {
+			if (_hookType is not (Api.WH_KEYBOARD_LL or Api.WH_MOUSE_LL)) throw new InvalidOperationException();
+			if (_proc2 == null) throw new ObjectDisposedException(nameof(WindowsHook));
+
+			//If we simply unhook/hook here, some events are missed.
+			//	Restoring usually takes 0.2 - 0.5 ms. And it seems the new hook starts working with a delay.
+			//	If restoring every 10 s, could miss maybe 1/10000 triggers.
+			//	Tested: when restoring every 15 ms, missed 3/50 triggers.
+			//	Solution: unhook the old hook after several ms. To avoid duplicate events, unhook it in the hook proc too.
+#if false
+			if (_hh != default) Api.UnhookWindowsHookEx(_hh);
+			_hh = Api.SetWindowsHookEx(_hookType, _proc1, default, 0);
+			if (_hh == default) throw new AuException(0, "*set hook");
+#else
+			_Restore_UnhookOld();
+			var hh = Api.SetWindowsHookEx(_hookType, _proc1, default, 0);
+			if (hh != default) {
+				if (_hh != default) timer.after(10, _ => _Restore_UnhookOld());
+				_oldHook = _hh;
+				_hh = hh;
+			} else {
+				Debug_.Print("failed");
+			}
+#endif
+		}
+		IntPtr _oldHook;
+
+		void _Restore_UnhookOld() {
+			if (_oldHook != default) {
+				bool ok = Api.UnhookWindowsHookEx(_oldHook);
+				_oldHook = default;
+				Debug_.PrintIf(!ok, "failed to unhook old");
 			}
 		}
 
@@ -380,6 +423,7 @@ namespace Au.More
 		}
 
 		unsafe nint _HookProcLL(int code, nint wParam, nint lParam) {
+			_Restore_UnhookOld();
 			if (code >= 0) {
 				try {
 					//using var p1 = perf.local();
@@ -464,7 +508,7 @@ namespace Au.More
 						}
 						//FUTURE: print warning if t1 is >25 frequently. Unhook and don't rehook if >LowLevelHooksTimeout frequently.
 
-						Api.UnhookWindowsHookEx(_hh);
+						Unhook();
 						_hh = Api.SetWindowsHookEx(_hookType, _proc1, default, 0);
 					}
 

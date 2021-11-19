@@ -311,6 +311,7 @@ namespace Au.Triggers
 			}
 			_singlePK = false;
 
+			//TODO: use KeyToTextConverter.
 			if (k.IsAlt && 0 == (thc.Mod & (KMod.Ctrl | KMod.Shift))) goto gReset; //Alt+key without other modifiers. Info: AltGr can add Ctrl, therefore we process it. Info: still not menu mode. Tested: never types a character, except Alt+numpad numbers.
 
 			var vk = k.vkCode;
@@ -487,17 +488,19 @@ namespace Au.Triggers
 			var hkl = Api.GetKeyboardLayout(wFocus.ThreadId);
 			var ks = stackalloc byte[256];
 			_SetKS(mod);
-			int n = Api.ToUnicodeEx((uint)vk, sc, ks, c, 8, 0, hkl); //bad: resets dead key
-
-			//if need, set dead key again
-			var d = stackalloc char[8];
-			if (_deadKey.vk != 0 && _deadKey.hkl == hkl) {
-				_SetKS(_deadKey.mod);
-				Api.ToUnicodeEx((uint)_deadKey.vk, _deadKey.sc, ks, d, 8, 0, hkl);
-				_deadKey.vk = 0;
-			} else if (n < 0) {
-				_deadKey.vk = vk; _deadKey.sc = sc; _deadKey.mod = mod; _deadKey.hkl = hkl;
-				Api.ToUnicodeEx((uint)vk, sc, ks, d, 8, 0, hkl);
+			bool win10 = osVersion.minWin10_1607; //the API resets dead key etc, but on new OS flag 4 prevents it
+			int n = Api.ToUnicodeEx((uint)vk, sc, ks, c, 8, win10 ? 4u : 0u, hkl);
+			if (!win10) {
+				//if need, set dead key again
+				var d = stackalloc char[8];
+				if (_deadKey.vk != 0 && _deadKey.hkl == hkl) {
+					_SetKS(_deadKey.mod);
+					Api.ToUnicodeEx((uint)_deadKey.vk, _deadKey.sc, ks, d, 8, 0, hkl);
+					_deadKey.vk = 0;
+				} else if (n < 0) {
+					_deadKey = new(vk, mod, sc, hkl);
+					Api.ToUnicodeEx((uint)vk, sc, ks, d, 8, 0, hkl);
+				}
 			}
 
 			void _SetKS(KMod m) {
@@ -521,14 +524,7 @@ namespace Au.Triggers
 		}
 
 		_DeadKey _deadKey;
-
-		struct _DeadKey
-		{
-			public KKey vk;
-			public KMod mod;
-			public uint sc;
-			public nint hkl;
-		}
+		record struct _DeadKey(KKey vk, KMod mod, uint sc, nint hkl);
 
 		//User-typed characters. _len characters are valid.
 		_Char[] _text = new _Char[128];
