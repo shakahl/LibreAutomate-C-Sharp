@@ -106,14 +106,14 @@ static class Menus
 			[Command("Import .zip...", separator = true)]
 			public static void Import_zip() {
 				var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDA}") { Title = "Import .zip", FileTypes = "Zip files|*.zip" };
-				if (d.ShowOpen(out string s, App.Hwnd))
+				if (d.ShowOpen(out string s, App.HMain))
 					App.Model.ImportWorkspace(s);
 			}
 
 			[Command("...")]
 			public static void Import_workspace() {
 				var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDA}") { Title = "Import workspace" };
-				if (d.ShowOpen(out string s, App.Hwnd, selectFolder: true))
+				if (d.ShowOpen(out string s, App.HMain, selectFolder: true))
 					App.Model.ImportWorkspace(s);
 			}
 

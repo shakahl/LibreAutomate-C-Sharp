@@ -28,22 +28,16 @@ static class InsertCode
 		if (s == null) return;
 
 		if (Environment.CurrentManagedThreadId == 1) _Action(s, goToPercent, fold, activate);
-		else App.Wmain.Dispatcher.InvokeAsync(() => _Action(s, goToPercent, fold, activate));
+		else App.Dispatcher.InvokeAsync(() => _Action(s, goToPercent, fold, activate));
 
 		static void _Action(string s, bool goToPercent, bool fold, bool activate) {
-			if (!App.Hwnd.IsVisible) {
-				//probably the window exists (already was visible), else there is no code that could call this func
-				Debug.Assert(!App.Hwnd.Is0); if (App.Hwnd.Is0) return;
-				App.TrayIcon.ShowWindow_();
-				timer.after(500, _ => _Action(s, goToPercent, fold, activate)); //works without this, but safer with this
-				return;
-			}
+			if (!App.HMain.IsVisible) App.ShowWindow();
 			var d = Panels.Editor.ZActiveDoc;
 			if (d == null || d.zIsReadonly) {
 				print.it(s);
 			} else {
 				if (activate) d.Hwnd.Window.ActivateL();
-				if(d.Hwnd.Window.IsActive) d.Focus();
+				if (d.Hwnd.Window.IsActive) d.Focus();
 				int start = d.zLineStartFromPos(false, d.zCurrentPos8);
 				int indent = d.zLineIndentationFromPos(false, start);
 				if (indent == 0) {

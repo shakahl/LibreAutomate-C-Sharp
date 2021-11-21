@@ -79,21 +79,14 @@ static class CommandLine
 		}
 
 		//single instance
-		//SHOULDDO: Api.CreateMutex()
 		s_mutex = new Mutex(true, "Au.Editor.Mutex.m3gVxcTJN02pDrHiQ00aSQ", out bool createdNew);
 		if (createdNew) return false;
 
 		var w = wnd.findFast(null, script.c_msgWndClassName, true);
 		if (!w.Is0) {
-			wnd wMain = (wnd)w.Send(Api.WM_USER, 0, 1); //if main window is already created, shows/activates and returns hwnd, else creates/shows/activates async and returns 0
+			w.Send(Api.WM_USER, 0, 1); //auto-creates, shows and activates main window
 
 			if (cmd != 0) {
-				if (wMain.Is0) {
-					do {
-						Thread.Sleep(30);
-						wMain = (wnd)w.Send(Api.WM_USER); //just returns main window handle
-					} while (!wMain.IsVisible && w.IsAlive);
-				}
 				Thread.Sleep(100);
 
 				if (cmd == 3) s = string.Join("\0", args); //import files
@@ -130,7 +123,7 @@ static class CommandLine
 	/// </summary>
 	public static void UILoaded() {
 		if (_importWorkspace != null || _importFiles != null) {
-			App.Wmain.Dispatcher.InvokeAsync(() => {
+			App.Dispatcher.InvokeAsync(() => {
 				try {
 					if (_importWorkspace != null) App.Model.ImportWorkspace(_importWorkspace);
 					else App.Model.ImportFiles(_importFiles);
@@ -167,8 +160,8 @@ static class CommandLine
 			if (App.Loaded >= EProgramState.Unloading) return default;
 			switch (wparam) {
 			case 0:
-				if (lparam == 1) App.TrayIcon.ShowWindow_();
-				return App.Hwnd.Handle; //note: 0 if app started hidden. ShowWindow_ just breaks the message loop of the tray icon. Sender should wait.
+				if (lparam == 1) App.ShowWindow(); //else returns default(wnd) if never was visible
+				return App.HMain.Handle;
 			case 10:
 				UacDragDrop.AdminProcess.OnTransparentWindowCreated((wnd)lparam);
 				break;

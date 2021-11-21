@@ -119,10 +119,9 @@ class Delm : KDialogWindow
 		_cAutoTestAction = b.xAddCheckIcon("*Material.CursorDefaultClickOutline #FF4040", "Auto test action when captured.\r\nIf no action selected, will show menu.");
 		_cAutoInsert = b.xAddCheckIcon("*VaadinIcons.Insert #9F5300", "Auto insert code when captured");
 		b.AddSeparator(true);
-		b.xAddButtonIcon("*Ionicons.UndoiOS #9F5300", _ => App.Wmain.Dispatcher.InvokeAsync(() => Menus.Edit.Undo()), "Undo in editor");
-		b.xAddButtonIcon("*Material.SquareEditOutline #0080FF", _ => _ActivateWindow(App.Hwnd), "Activate editor window");
-		b.xAddButtonIcon("*FontAwesome.WindowMaximizeRegular #0080FF", _ => _ActivateWindow(_wnd), "Activate captured window");
-		static void _ActivateWindow(wnd w) { if (!w.Is0) try { w.Activate(); } catch { } }
+		b.xAddButtonIcon("*Ionicons.UndoiOS #9F5300", _ => App.Dispatcher.InvokeAsync(() => Menus.Edit.Undo()), "Undo in editor");
+		b.xAddButtonIcon("*Material.SquareEditOutline #0080FF", _ => App.HMain.ActivateL(true), "Activate editor window");
+		b.xAddButtonIcon("*FontAwesome.WindowMaximizeRegular #0080FF", _ => _wnd.ActivateL(true), "Activate captured window");
 		b.AddSeparator(true);
 		_bSettings = b.xAddButtonIcon("*EvaIcons.Options2 #99BF00", _ => _ToolSettings(), "Tool settings");
 		b.End();

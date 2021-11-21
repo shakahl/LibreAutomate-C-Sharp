@@ -8,7 +8,9 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System.Windows.Input;
 
-//SHOULDDO: don't show black/unfolded text before Roslyn is ready. Then user can't work anyway, and waits until colored/folded, and the black text is annoying.
+//TODO: don't show black/unfolded text before Roslyn is ready.
+//	Then user can't work anyway, and waits until colored/folded, and the black text is annoying.
+//	Bad things happen if user tries to edit while not ready.
 
 static class CodeInfo
 {
@@ -53,7 +55,7 @@ static class CodeInfo
 				//p1.Next();
 				Microsoft.CodeAnalysis.Classification.Classifier.GetClassifiedSpans(semo, new TextSpan(0, code.Length), ws);
 				//p1.Next();
-				App.Wmain.Dispatcher.InvokeAsync(() => {
+				App.Dispatcher.InvokeAsync(() => {
 					_isWarm = true;
 					ReadyForStyling?.Invoke();
 					Panels.Editor.ZActiveDocChanged += Stop;
@@ -492,7 +494,7 @@ static class CodeInfo
 
 	private static void _Timer025sWhenVisible() {
 		var doc = Panels.Editor.ZActiveDoc;
-		if (doc == null || !doc.ZFile.IsCodeFile) return;
+		if (!_CanWork(doc)) return;
 
 		//cancel if changed the screen rectangle of the document window
 		if (_compl.IsVisibleUI || _signature.IsVisibleUI || _tpVisible) {

@@ -23,7 +23,7 @@ namespace Au.Tools
 			void _Register(ref keys.more.Hotkey rk, ERegisteredHotkeyId id, string keys) { //ref, not in!
 				if (keys.NE()) return;
 				try {
-					if (!rk.Register((int)id, keys, App.Hwnd))
+					if (!rk.Register((int)id, keys, App.HMain))
 						print.warning($"Failed to register hotkey {keys}. Look in Options -> Hotkeys.", -1);
 				}
 				catch (Exception ex) { print.it(ex); }
@@ -47,7 +47,7 @@ namespace Au.Tools
 			uint color = uiimage.getPixel(p) & 0xFFFFFF;
 
 			const int sh = 30;
-			var screenshot = App.Settings.edit_noImages ? null : ColorQuantizer.MakeScreenshotComment(new(p.x - sh, p.y - sh / 2, sh * 2, sh), dpi: App.Hwnd);
+			var screenshot = App.Settings.edit_noImages ? null : ColorQuantizer.MakeScreenshotComment(new(p.x - sh, p.y - sh / 2, sh * 2, sh), dpi: App.HMain);
 
 			var m = new popupMenu();
 			m["Find window"] = _ => _Insert(_Wnd_Find(w, default));

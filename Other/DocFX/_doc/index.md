@@ -33,8 +33,9 @@ Also need .NET 6 Desktop Runtime x64. Need only Runtime, not SDK.
 Currently both editor and library are unfinished. The most important parts are finished and can be used, but some classes/functions/etc may be changed in the future.
 
 #### Links
-- [Download](https://www.quickmacros.com/au/AutepadSetup.exe) v0.1.0, 2021-11-12, 22 MB
+- [Download](https://www.quickmacros.com/au/AutepadSetup.exe) v0.2.2, 2021-11-21, 22 MB
 - [.NET 6 Runtime](https://dotnet.microsoft.com/download)
 - [Source code](https://github.com/qmgindi/Au)
+- [Changes](https://github.com/qmgindi/Au/blob/master/Other/DocFX/_doc/changes/)
 - [Forum](https://www.quickmacros.com/forum/forumdisplay.php?fid=19)
 - [Email](mailto:support@quickmacros.com)

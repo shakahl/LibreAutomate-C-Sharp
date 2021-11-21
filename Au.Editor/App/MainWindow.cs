@@ -6,10 +6,9 @@ using System.Windows.Input;
 
 partial class MainWindow : Window
 {
-	public MainWindow() {
+	public void Init() {
 		//_StartProfileOptimization();
 
-		App.Wmain = this;
 		Title = App.AppName; //don't append document name etc
 
 		WndSavedRect.Restore(this, App.Settings.wndPos, o => App.Settings.wndPos = o);
@@ -78,20 +77,19 @@ partial class MainWindow : Window
 		base.OnClosed(e);
 		UacDragDrop.AdminProcess.Enable(false);
 		CodeInfo.Stop();
-		FilesModel.UnloadOnWindowClosed();
-		App.Loaded = EProgramState.Unloaded;
+		App.Model.Save.AllNowIfNeed();
 	}
 
 	protected override void OnSourceInitialized(EventArgs e) {
 		base.OnSourceInitialized(e);
 		var hs = PresentationSource.FromVisual(this) as HwndSource;
-		App.Hwnd = (wnd)hs.Handle;
+		App.HMain = (wnd)hs.Handle;
 
 		//workaround for: sometimes OS does not set foreground window. Then we have a fake active/focused state (blinking caret, called OnActivated, etc).
-		//	1. When started hidden, and now clicked tray icon first time. Is it because of the "lock foreground window"? Or WPF shows window somehow incorrectly, as usual?
+		//	1. When started hidden, and now clicked tray icon first time. Is it because of the "lock foreground window"? Or WPF shows window somehow incorrectly?
 		//	2. When starting visible, if VMWare Player is active. Same with some other programs too (WPF, appstore, some other).
 		//this.Activate(); //does not work with VMWare, also if user clicks a window after starting this process
-		App.Hwnd.ActivateL(); //works always, possibly with workarounds
+		App.HMain.ActivateL(); //works always, possibly with workarounds
 
 		Panels.PanelManager["Output"].Visible = true;
 

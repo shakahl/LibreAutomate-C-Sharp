@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices.ComTypes;
+using System.Windows.Interop;
 
 class UacDragDrop
 {
@@ -127,7 +128,7 @@ class UacDragDrop
 				return 0;
 			}
 			var a = Serializer_.Deserialize(b);
-			int effect = a[0], keyState = a[1]; POINT pt = new POINT(a[2], a[3]);
+			int effect = a[0], keyState = a[1]; POINT pt = new(a[2], a[3]);
 			if (ev == DDEvent.Enter) {
 				_data = new System.Windows.DataObject();
 				var t = new DDData { files = a[4], shell = a[5], text = a[6], linkName = a[7] };
@@ -159,7 +160,8 @@ class UacDragDrop
 
 			int _InvokeDT(wnd w, DDEvent ev, int effect, int keyState, POINT pt) {
 				if (w.IsOfThisThread) return _InvokeDropTarget(w, ev, effect, keyState, pt);
-				return System.Windows.Application.Current.Dispatcher.Invoke(() => _InvokeDropTarget(w, ev, effect, keyState, pt));
+				var d = HwndSource.FromHwnd(w.Window.Handle)?.Dispatcher;
+				return d?.Invoke(() => _InvokeDropTarget(w, ev, effect, keyState, pt)) ?? 0;
 			}
 
 			return ef;
@@ -169,7 +171,7 @@ class UacDragDrop
 		System.Windows.DataObject _data;
 		wnd _wTargetControl; //control or window from mouse
 
-		int _InvokeDropTarget(wnd w, DDEvent ev, int effect, int keyState, POINT p) {
+		int _InvokeDropTarget(wnd w, DDEvent ev, int effect, int keyState, POINT pt) {
 			nint prop = w.Prop["OleDropTargetInterface"];
 			if (prop == 0 && w != _wWindow) { //if w is of a HwndHost that does not register drop target, use that of the main window
 				w = _wWindow;
@@ -178,7 +180,7 @@ class UacDragDrop
 			if (prop == 0) return 0;
 
 			var data = ev == DDEvent.Enter || ev == DDEvent.Drop ? _data : null;
-			int hr = Cpp.Cpp_CallIDroptarget(prop, (int)ev, data, keyState, p, ref effect);
+			int hr = Cpp.Cpp_CallIDroptarget(prop, (int)ev, data, keyState, pt, ref effect);
 			if (hr != 0) effect = 0;
 			return effect;
 			//working with COM in C# often is difficult. Cannot call IDropTarget methods.
@@ -292,7 +294,7 @@ struct DDData
 				else if (cf == ClipFormats.ShellIDListArray_) fShell = afe[0];
 				else if (cf == Api.CF_UNICODETEXT) fText = afe[0];
 				else if (cf == ClipFormats.FileGroupDescriptorW_) fDesc = afe[0];
-				else if(getFileNodes && cf >= 0xC000 && clipboard.GetFormatName_(cf) == "FileNode[]") return scripts = true;
+				else if (getFileNodes && cf >= 0xC000 && clipboard.GetFormatName_(cf) == "FileNode[]") return scripts = true;
 			}
 			if (fHdrop.cfFormat != 0) files = _GetFiles(ref fHdrop);
 			else if (fShell.cfFormat != 0) shell = _GetBytes(ref fShell);

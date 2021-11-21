@@ -1,5 +1,6 @@
 ﻿using Au.Controls;
 using System.Windows;
+using System.Windows.Threading;
 
 //TODO: need some learning stuff. Now users install the app, open the window first time, and don't know what to do.
 
@@ -8,16 +9,10 @@ static class App
 	public const string
 		AppName = "Autepad C#",
 		AppNameShort = "Autepad"; //must be without spaces etc
+
 	public static string UserGuid;
 	internal static print.Server PrintServer;
 	public static AppSettings Settings;
-
-	/// <summary>Main window</summary>
-	public static MainWindow Wmain;
-
-	/// <summary>Handle of main window (<b>Wmain</b>).</summary>
-	public static wnd Hwnd;
-
 	public static KMenuCommands Commands;
 	public static FilesModel Model;
 	public static RunningTasks Tasks;
@@ -43,34 +38,35 @@ static class App
 			if (_RestartAsAdmin(args)) return 0;
 		}
 
+		//Debug_.PrintLoadedAssemblies(true, !true);
 		_Main(args);
 		return 0;
 	}
 
 	static void _Main(string[] args) {
+		//Debug_.PrintLoadedAssemblies(true, !true);
+
+		AppDomain.CurrentDomain.UnhandledException += _UnhandledException;
 		process.ThisThreadSetComApartment_(ApartmentState.STA);
 		process.thisProcessCultureIsInvariant = true;
 		DebugTraceListener.Setup(usePrint: true);
 		folders.ThisAppDocuments = (FolderPath)(folders.Documents + AppNameShort);
-		Directory.SetCurrentDirectory(folders.ThisApp); //because it is c:\windows\system32 when restarted as admin
-
-#if true
-		AppDomain.CurrentDomain.UnhandledException += (ad, e) => print.it(e.ExceptionObject);
-		//Debug_.PrintLoadedAssemblies(true, true);
-#else
-		AppDomain.CurrentDomain.UnhandledException += (ad, e) => dialog.showError("Exception", e.ExceptionObject.ToString());
-#endif
+		Directory.SetCurrentDirectory(folders.ThisApp); //it is c:\windows\system32 when restarted as admin
+		Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
+		Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
 
 		if (CommandLine.ProgramStarted2(args)) return;
 
 		PrintServer = new print.Server(true) { NoNewline = true };
 		PrintServer.Start();
-
-		Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
-		Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
+#if TRACE
+		print.qm2.use = !true;
+		timer.after(1, _ => perf.nw());
+#endif
 
 		perf.next('o');
-		Settings = AppSettings.Load(); //the slowest part, >37 ms. Loads many dlls used in JSON deserialization.
+		Settings = AppSettings.Load(); //the slowest part, >50 ms. Loads many dlls used in JSON deserialization.
+		//Debug_.PrintLoadedAssemblies(true, !true);
 		perf.next('s');
 		UserGuid = Settings.user; if (UserGuid == null) Settings.user = UserGuid = Guid.NewGuid().ToString();
 
@@ -83,7 +79,6 @@ static class App
 		CommandLine.ProgramLoaded();
 		perf.next('c');
 		Loaded = EProgramState.LoadedWorkspace;
-		Model.RunStartupScripts();
 
 		timer.every(1000, t => _TimerProc(t));
 		//note: timer can make Process Hacker/Explorer show CPU usage, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, <0.01 if 1000.
@@ -92,49 +87,78 @@ static class App
 
 		TrayIcon.Update_();
 		perf.next('i');
-		//perf.write();
-		//return;
 
-		if (!App.Settings.runHidden || CommandLine.StartVisible || TrayIcon.WaitForShow_()) {
-			//print.it("-- loading UI --");
-#if TRACE
-			print.qm2.use = false;
-#endif
-			_LoadUI();
+		_app = new() {
+			ShutdownMode = ShutdownMode.OnExplicitShutdown //will set OnMainWindowClose when creating main window. If now, would exit if a startup script shows/closes a WPF window.
+		};
+		_app.Dispatcher.InvokeAsync(() => Model.RunStartupScripts());
+		if (!Settings.runHidden || CommandLine.StartVisible) _app.Dispatcher.Invoke(() => ShowWindow());
+		try {
+			_app.Run();
+			//Hidden app should start as fast as possible, because usually starts with Windows.
+			//Tested with native message loop. Faster by 70 ms (240 vs 310 without the .NET startup time).
+			//	But then problems. Eg cannot auto-create main window synchronously, because need to exit native loop and start WPF loop.
 		}
+		finally {
+			Loaded = EProgramState.Unloading;
+			var fm = Model; Model = null;
+			fm.Dispose(); //stops tasks etc
+			Loaded = EProgramState.Unloaded;
 
-		PrintServer.Stop();
-
-		//#if TRACE
-		//		//50 -> 36 -> 5 (5/40/9)
-		//		Wnd = null;
-		//		Commands = null;
-		//		Panels = null;
-		//		Toolbars = null;
-
-		//		Task.Delay(2000).ContinueWith(_ => {
-		//			GC.Collect();
-		//			GC.WaitForPendingFinalizers();
-		//			Api.SetProcessWorkingSetSize(Api.GetCurrentProcess(), -1, -1);
-		//		});
-		//		Api.MessageBox(default, "", "", 0);
-		//#endif
+			PrintServer.Stop();
+		}
 	}
 
-	[MethodImpl(MethodImplOptions.NoInlining)]
-	static void _LoadUI() {
-		//prevent tooltip on set focus
-		//SHOULDDO: broken in .NET 6.
-		//	This works: combo1.ToolTipOpening+=(o, e)=> { if(o is UIElement k && !k.IsMouseOver) e.Handled=true; };
-		AppContext.SetSwitch("Switch.UseLegacyToolTipDisplay", true); //must be before creating Application object
+	/// <summary>
+	/// WPF <b>Application</b> of main thread.
+	/// </summary>
+	public static Au.Editor.WpfApp WpfApp => _app;
+	static Au.Editor.WpfApp _app;
 
-		var app = new Au.Editor.WpfApp { ShutdownMode = ShutdownMode.OnMainWindowClose };
-		app.InitializeComponent(); //FUTURE: remove if not used. Adds 2 MB (10->12) when running hidden at startup.
-		new MainWindow();
-		app.DispatcherUnhandledException += (_, e) => {
-			e.Handled = 1 == dialog.showError("Exception", e.Exception.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, Wmain, e.Exception.ToString());
-		};
-		app.Run(Wmain);
+	/// <summary>
+	/// WpfApp.Dispatcher.
+	/// </summary>
+	public static Dispatcher Dispatcher => _app.Dispatcher;
+
+	/// <summary>
+	/// Main window.
+	/// Auto-creates if this property never was accessed or if the main window never was visible; but does not show and does not create hwnd.
+	/// Use only in main thread; if other threads need <b>Dispatcher</b> of main thread, use that of <see cref="WpfApp"/>.
+	/// </summary>
+	public static MainWindow Wmain {
+		get {
+			if (_wmain == null) {
+				AppDomain.CurrentDomain.UnhandledException -= _UnhandledException;
+				_app.DispatcherUnhandledException += (_, e) => {
+					e.Handled = 1 == dialog.showError("Exception", e.Exception.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, HMain, e.Exception.ToString());
+				};
+				_app.InitializeComponent();
+				_app.MainWindow = _wmain = new MainWindow();
+				_app.ShutdownMode = ShutdownMode.OnMainWindowClose;
+				_wmain.Init();
+			}
+			return _wmain;
+		}
+	}
+	static MainWindow _wmain;
+
+	/// <summary>
+	/// Handle of main window (<b>Wmain</b>).
+	/// defaul(wnd) if never was visible.
+	/// </summary>
+	public static wnd HMain;
+
+	public static void ShowWindow() {
+		Wmain.Show(); //auto-creates MainWindow if never was visible
+		HMain.ActivateL(true);
+	}
+
+	private static void _UnhandledException(object sender, UnhandledExceptionEventArgs e) {
+#if TRACE
+		print.qm2.write(e.ExceptionObject);
+#else
+		dialog.showError("Exception", e.ExceptionObject.ToString(), flags: DFlags.Wider);
+#endif
 	}
 
 	/// <summary>
@@ -160,7 +184,7 @@ static class App
 
 	static void _TimerProc(timer t) {
 		Timer1sOr025s?.Invoke();
-		bool needFast = Wmain?.IsVisible ?? false;
+		bool needFast = _wmain?.IsVisible ?? false;
 		if (needFast != (s_timerCounter > 0)) t.Every(needFast ? 250 : 1000);
 		if (needFast) {
 			Timer025sWhenVisible?.Invoke();
@@ -222,7 +246,6 @@ static class App
 		static bool _disabled;
 		static wnd _wNotify;
 
-		const int c_msgBreakMessageLoop = Api.WM_APP;
 		const int c_msgNotify = Api.WM_APP + 1;
 		static int s_msgTaskbarCreated;
 
@@ -282,7 +305,7 @@ static class App
 			//if (msg != Api.WM_MOUSEMOVE) WndUtil.PrintMsg(default, msg, 0, 0);
 			switch (msg) {
 			case Api.WM_LBUTTONUP:
-				ShowWindow_();
+				ShowWindow();
 				break;
 			case Api.WM_RBUTTONUP:
 				_ContextMenu();
@@ -305,15 +328,6 @@ static class App
 			return Api.DefWindowProc(w, m, wParam, lParam);
 		}
 
-		internal static bool WaitForShow_() {
-			while (Api.GetMessage(out var m) > 0) {
-				if (m.hwnd == default && m.message == c_msgBreakMessageLoop) return 0 != m.wParam;
-				Api.TranslateMessage(m);
-				Api.DispatchMessage(m);
-			}
-			return false;
-		}
-
 		static void _ContextMenu() {
 			var m = new popupMenu();
 			m.AddCheck("Disable triggers\tM-click", check: _disabled, _ => TriggersAndToolbars.DisableTriggers(null));
@@ -322,22 +336,8 @@ static class App
 			m.Show(MSFlags.AlignBottom | MSFlags.AlignCenterH);
 		}
 
-		internal static void ShowWindow_() {
-			var w = App.Wmain;
-			if (w != null) {
-				w.Show();
-				try { Hwnd.Activate(); } catch { }
-			} else {
-				Api.PostMessage(default, c_msgBreakMessageLoop, 1, 0);
-			}
-		}
-
 		static void _Exit() {
-			if (App.Wmain != null) {
-				Application.Current.Shutdown();
-			} else {
-				Api.PostMessage(default, c_msgBreakMessageLoop, 0, 0);
-			}
+			_app.Shutdown();
 		}
 
 		public static bool Disabled {
@@ -355,26 +355,22 @@ enum EProgramState
 	Loading,
 
 	/// <summary>
-	/// When fully loaded first workspace etc and created main form handle.
-	/// Main form invisible; control handles not created.
+	/// The first workspace is fully loaded etc, but the main window not.
 	/// </summary>
 	LoadedWorkspace,
 
 	/// <summary>
-	/// Control handles created.
-	/// Main form is either visible now or was visible and now hidden.
+	/// The main window is loaded and either visible now or was visible and now hidden.
 	/// </summary>
 	LoadedUI,
 
 	/// <summary>
-	/// Executing OnFormClosed of main form.
-	/// Unloading workspace; stopping everything.
+	/// Unloading workspace, stopping everything.
 	/// </summary>
 	Unloading,
 
 	/// <summary>
-	/// After OnFormClosed of main form.
-	/// Workspace unloaded; everything stopped.
+	/// Main window closed, workspace unloaded, everything stopped.
 	/// </summary>
 	Unloaded,
 }

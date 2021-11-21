@@ -643,7 +643,7 @@ static class TUtil
 				if (v2 = capt._ost.Visible) capt._ost.Hwnd.ShowL(false);
 			}
 			const int sh = 30;
-			var s = App.Settings.edit_noImages ? null : ColorQuantizer.MakeScreenshotComment(new(p.x - sh, p.y - sh / 2, sh * 2, sh), dpi: App.Hwnd);
+			var s = App.Settings.edit_noImages ? null : ColorQuantizer.MakeScreenshotComment(new(p.x - sh, p.y - sh / 2, sh * 2, sh), dpi: App.HMain);
 			if (capt != null) {
 				if (v1) capt._osr.Hwnd.ShowL(true);
 				if (v2) capt._ost.Hwnd.ShowL(true);

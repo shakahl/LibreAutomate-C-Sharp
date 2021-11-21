@@ -965,15 +965,20 @@
 		//	Would need an explicit function call before the action(s). Nobody would use it.
 
 		/// <summary>
-		/// Lightweight version of <see cref="Activate"/>.
+		/// Lightweight version of <see cref="Activate"/>. Does not throw exception if fails.
 		/// </summary>
+		/// <param name="full">
+		/// Call <see cref="Activate"/> and handle exceptions; on exception return false.
+		/// If false (default), just activates; does not show hidden, does not restore minimized, does not check whether it is a top-level window or control, does not check whether activated exactly this window, etc.
+		/// </param>
 		/// <returns>false if fails.</returns>
-		/// <remarks>
-		/// Just calls <see cref="WndUtil.EnableActivate"/>, API <msdn>SetForegroundWindow</msdn> and makes sure that it actually worked, but does not check whether it activated exactly this window.
-		/// No exceptions, does not unhide, does not restore minimized, does not check is it a top-level window or control, etc.
-		/// </remarks>
-		public bool ActivateL() {
-			return Internal_.ActivateL(this);
+		public bool ActivateL(bool full = false) {
+			if (!full) return Internal_.ActivateL(this);
+			try {
+				Activate();
+				return true;
+			}
+			catch { return false; }
 		}
 
 		//Too unreliable.

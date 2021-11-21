@@ -55,9 +55,11 @@ class PanelFind : UserControl
 			if (!_cName.IsChecked) Panels.Editor.ZActiveDoc?.InicatorsFind_(IsVisible ? _aEditor : null);
 		};
 
-		_tFind.TextChanged += (_, _) => {
-			ZUpdateQuickResults(false);
-		};
+		_tFind.TextChanged += (_, _) => ZUpdateQuickResults(false);
+
+		//prevent tooltip on set focus.
+		//	Broken in .NET 6:  AppContext.SetSwitch("Switch.UseLegacyToolTipDisplay", true); //must be before creating Application object
+		_tFind.ToolTipOpening += (o, e) => { if (o is UIElement k && !k.IsMouseOver) e.Handled = true; };
 
 		foreach (var v in new TextBox[] { _tFind, _tReplace }) {
 			v.AcceptsTab = true;
@@ -681,13 +683,13 @@ class PanelFind : UserControl
 		if (1 != dialog.show("Replace text in files",
 			"Before replacing you may want to backup the workspace <a href=\"backup\">folder</a>.",
 			"Replace|Cancel",
-			owner: App.Hwnd,
+			owner: App.HMain,
 			expandedText: @"Replaces text in all files displayed in find results.
 Uses the same options and 'find' text. Uses current 'replace' text.
 Opens files to enable Undo.",
 			onLinkClick: e => run.selectInExplorer(App.Model.WorkspaceDirectory))) return;
 
-		var d = dialog.showProgress(marquee: false, "Replacing", owner: App.Hwnd);
+		var d = dialog.showProgress(marquee: false, "Replacing", owner: App.HMain);
 		try {
 			App.Wmain.IsEnabled = false;
 			bool needWasOpen = _lastFindAll.wasOpen == null;

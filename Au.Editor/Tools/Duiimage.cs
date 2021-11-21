@@ -90,7 +90,7 @@ class Duiimage : KDialogWindow
 
 		base.OnClosed(e);
 
-		App.Hwnd.ActivateL();
+		App.HMain.ActivateL();
 	}
 
 	private void _bCapture_Click(WBButtonClickArgs e) {
