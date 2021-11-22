@@ -76,6 +76,7 @@ namespace Au.Triggers
 
 			while (Api.GetMessage(out var m) > 0) {
 				if (m.message == Api.WM_TIMER && m.wParam == idTimer) {
+					if (Debugger.IsAttached) continue;
 					hookK?.Restore();
 					hookM?.Restore();
 					continue;
@@ -106,7 +107,7 @@ namespace Au.Triggers
 					}
 				}
 			} else {
-				bool wheel = _mouseMessage == Api.WM_MOUSEWHEEL || _mouseMessage == Api.WM_MOUSEHWHEEL;
+				bool wheel = msg is Api.WM_MOUSEWHEEL or Api.WM_MOUSEHWHEEL;
 				if ((_usedEvents.Has(UsedEvents.MouseWheel) && wheel) || (_usedEvents.Has(UsedEvents.MouseClick) && !wheel)) {
 					_mouseMessage = (int)wParam;
 					_mouseData = *(Api.MSLLHOOKSTRUCT*)lParam;
@@ -123,7 +124,7 @@ namespace Au.Triggers
 		/// </summary>
 		bool _Send(UsedEvents eventType) {
 			//using var p1 = perf.local();
-			_wMsg.SendNotify(Api.WM_USER + 1, _messageId, (int)eventType);
+			bool ok=_wMsg.SendNotify(Api.WM_USER + 1, _messageId, (int)eventType);
 			bool timeout = Api.WaitForSingleObject(_eventSendData, 1100) == Api.WAIT_TIMEOUT;
 			lock (this) {
 				if (timeout) timeout = Api.WaitForSingleObject(_eventSendData, 0) == Api.WAIT_TIMEOUT; //other thread may SetEvent between WaitForSingleObject and lock
