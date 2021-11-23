@@ -532,7 +532,7 @@ namespace Au.Types
 				Hook = o.Hook;
 			} else {
 				_textSpeed = 0;
-				_keySpeed = 5;
+				_keySpeed = 2;
 				_clipboardKeySpeed = 5;
 				_sleepFinally = 10;
 				_pasteLength = 200;
@@ -590,7 +590,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// How long to wait (milliseconds) between pressing and releasing each key. Used by <see cref="keys.send"/> and similar functions, except for <c>"!text"</c> arguments.
-		/// Default: 5.
+		/// Default: 2.
 		/// </summary>
 		/// <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="opt.init.key"/>: 0 - 100.</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>

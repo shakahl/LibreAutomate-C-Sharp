@@ -603,8 +603,8 @@
 			if (sleep < 0) sleep = 0;
 
 			//var s = (k.vk).ToString();
-			//if(k.IsPair) print.it($"{s}<{sleep}>");
-			//else { var ud = k.IsUp ? '-' : '+'; if(sleep > 0) print.it($"{s}{ud} {sleep}"); else print.it($"{s}{ud}"); }
+			//if (k.IsPair) print.it($"{s}<{sleep}>");
+			//else { var ud = k.IsUp ? '-' : '+'; if (sleep > 0) print.it($"{s}{ud} {sleep}"); else print.it($"{s}{ud}"); }
 
 			for (int r = 0; r < count; r++) {
 				//perf.first();

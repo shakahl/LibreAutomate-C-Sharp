@@ -705,7 +705,7 @@ namespace Au.Triggers
 			var optk = k.Options;
 			bool uwp = 0 != this.Window.Window.IsUwpApp;
 			if (uwp) {
-				optk.KeySpeed = Math.Clamp(optk.KeySpeed * 2, 20, 100); //default 1
+				optk.KeySpeed = Math.Clamp(optk.KeySpeed * 2, 20, 100); //default 2
 				optk.KeySpeedClipboard = Math.Clamp(optk.KeySpeedClipboard * 2, 20, 100);
 				optk.TextSpeed = Math.Clamp(optk.TextSpeed * 2, 10, 50); //default 0
 				int n1 = optk.PasteLength - 100; if (n1 > 0) optk.PasteLength = 100 + n1 / 5; //default 200 -> 120

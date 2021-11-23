@@ -384,7 +384,7 @@
 			if (eventType == HooksThread.UsedEvents.Keyboard) {
 				//print.it("key");
 				if (!_ht.GetKeyData(messageId, out var data)) return;
-				var k = new HookData.Keyboard(null, (nint)(&data));
+				var k = new HookData.Keyboard(null, (nint)(&data)); //SHOULDDO: now probably can be simplified, because not using a server
 				_thc.InitMod(k);
 				if (this[TriggerType.Hotkey] is HotkeyTriggers tk) { //if not null
 					eat = tk.HookProc(k, _thc);
@@ -399,7 +399,7 @@
 					tm.HookProcEdgeMove(data, _thc);
 				}
 			} else {
-				//print.it(_ht.mouseMessage_);
+				//print.it("click/wheel");
 				if (this[TriggerType.Mouse] is MouseTriggers tm) {
 					if (!_ht.GetClickWheelData(messageId, out var data, out int message)) return;
 					var k = new HookData.Mouse(null, message, (nint)(&data));

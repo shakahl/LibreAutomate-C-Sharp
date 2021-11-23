@@ -31,7 +31,8 @@ class PanelFind : UserControl
 		b.Row((-1, 22..)).Add(out _tReplace).Margin(-1, 0, -1, 2).Multiline(wrap: TextWrapping.Wrap).Tooltip("Replacement text");
 		b.R.StartGrid().Columns((-1, ..80), (-1, ..80), (-1, ..80), 0);
 		b.R.AddButton("Find", _bFind_Click).Tooltip("Find next in editor");
-		b.AddButton("Replace", _bReplace_Click).Tooltip("Replace current found text in editor and find next.\nRight click - find next.");
+		b.AddButton(out var bReplace, "Replace", _bReplace_Click).Tooltip("Replace current found text in editor and find next.\nRight click - find next.");
+		bReplace.MouseRightButtonUp += (_, _) => _bFind_Click(null);
 		b.AddButton("Repl. all", _bReplaceAll_Click).Tooltip("Replace all in editor");
 
 		b.R.AddButton("In files", _bFindIF_Click).Tooltip("Find text in files");
@@ -408,10 +409,6 @@ class PanelFind : UserControl
 		} else {
 			doc.zSelect(false, i, to, true);
 		}
-	}
-
-	private void _bReplace_MouseUp(object sender, MouseEventArgs e) {
-		if (e.RightButton == MouseButtonState.Pressed) _bFind_Click(null);
 	}
 
 	private void _bReplaceAll_Click(WBButtonClickArgs e) {

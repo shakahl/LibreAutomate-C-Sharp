@@ -424,8 +424,8 @@ namespace Au.Triggers
 						}
 						if (0 != (mod & _eatMod)) {
 							//print.it(k);
-							k.BlockEvent();
 							if (k.IsUp) _eatMod &= ~mod;
+							else k.BlockEvent();
 						}
 						if (0 == (_upMod | _eatMod)) _UnhookTempKeybHook();
 					}

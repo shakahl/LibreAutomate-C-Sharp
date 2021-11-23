@@ -623,7 +623,7 @@ namespace Au
 		/// </tr>
 		/// <tr>
 		/// <td><see cref="OKey.KeySpeed"/></td>
-		/// <td>5 ms.</td>
+		/// <td>2 ms.</td>
 		/// <td>0 - 1000.
 		/// Changes the speed for "keys" arguments.</td>
 		/// </tr>

@@ -229,13 +229,13 @@ namespace Au.Triggers
 						if (0 != (x.flags & TKFlags.ShareEvent)) return false;
 
 						if (thc.trigger == null) { //KeyModUp or action==null
-							if (mod == KMod.Alt || mod == KMod.Win || mod == (KMod.Alt | KMod.Win)) {
+							if (mod is KMod.Alt or KMod.Win or (KMod.Alt | KMod.Win)) {
 								//print.it("need Ctrl");
 								ThreadPool.QueueUserWorkItem(o => keys.Internal_.SendKey(KKey.Ctrl)); //disable Alt/Win menu
 							}
 						} else if (mod != 0) {
 							if (0 == (x.flags & TKFlags.NoModOff)) thc.muteMod = TriggerActionThreads.c_modRelease;
-							else if (mod == KMod.Alt || mod == KMod.Win || mod == (KMod.Alt | KMod.Win)) thc.muteMod = TriggerActionThreads.c_modCtrl;
+							else if (mod is KMod.Alt or KMod.Win or (KMod.Alt | KMod.Win)) thc.muteMod = TriggerActionThreads.c_modCtrl;
 						}
 
 						_eatUp = key;

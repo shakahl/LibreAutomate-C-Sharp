@@ -376,8 +376,12 @@ class CiAutocorrect
 					break;
 				case SwitchStatementSyntax k:
 					token = k.CloseParenToken;
-					block = k;
-					canExitBlock = block != null;
+					if (canExitBlock = block != null) {
+						block = k;
+					} else if(token.IsMissing && k.OpenParenToken.IsMissing && k.Expression is CastExpressionSyntax ce) {
+						//switch (...) without block is interpreted as switch castexpression
+						token = ce.CloseParenToken;
+					}
 					dontIndent = true;
 					break;
 				case LocalFunctionStatementSyntax k:
