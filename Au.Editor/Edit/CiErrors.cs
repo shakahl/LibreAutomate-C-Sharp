@@ -120,6 +120,7 @@ class CiErrors
 			var format = CiUtil.GetParameterStringFormat(node, semo, false);
 			if (format == PSFormat.None || format == PSFormat.regexpReplacement) continue;
 			var s = node.GetFirstToken().ValueText; //replaced escape sequences
+			if (s.Length == 0) continue;
 			string es = null;
 			try {
 				switch (format) {
@@ -133,8 +134,11 @@ class CiErrors
 					if (s.Starts("***")) s = s[(s.IndexOf(' ') + 1)..]; //eg wnd.Child("***elmName ...")
 					new wildex(s);
 					break;
-				case PSFormat.keys:
-					new keys(null).AddKeys(s);
+				case PSFormat.keys when s[0] is not ('!' or '%'):
+					//TODO: warning if ")"
+					new keys(null)
+						.AddKey(KKey.A) //to avoid warning when eg "*5"
+						.AddKeys(s);
 					break;
 				}
 			}

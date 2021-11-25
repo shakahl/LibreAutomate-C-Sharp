@@ -422,7 +422,7 @@ unsafe class Program
 		Upload(docDir);
 	}
 
-#if SSH //extracting with ssh is much faster than than with php script, although it seems the host makes it much slower that should be (tested ssh in powershell, the same)
+#if SSH //extracting with ssh is much faster than with php script, although it seems the host makes it much slower that should be (tested ssh in powershell, the same)
 	static void Compress(string docDir) {
 		var sevenZip = @"C:\Program Files\7-Zip\7z.exe";
 

@@ -454,7 +454,7 @@ partial class SciCode : KScintilla
 			b.AppendLine(isCS ? "[/cs]" : "[/code]");
 			s = b.ToString();
 			new clipboardData().AddText(s).SetClipboard();
-		} else {
+		} else if (i2 != i1) {
 			if (!(isFragment || s_infoCopy)) {
 				s_infoCopy = true;
 				print.it("Info: To copy C# code for pasting in the forum, use menu Edit -> Forum Copy. Then simply paste there; don't use the Code button.");

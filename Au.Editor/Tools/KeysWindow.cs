@@ -1,4 +1,6 @@
 ﻿using Au.Controls;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Au.Tools
 {
@@ -23,37 +25,51 @@ namespace Au.Tools
 		}
 
 		void _Insert(string s) {
-			var sci = InsertInControl as KScintilla;
-			var pos8 = sci.zCurrentPos8;
+			Debug.Assert(InsertInControl == Panels.Editor.ZActiveDoc);
+			if (!CodeInfo.GetDocumentAndFindNode(out var cd, out var node)) return;
+			switch (node) {
+			case LiteralExpressionSyntax when node.Kind() == SyntaxKind.StringLiteralExpression: break;
+			case InterpolatedStringExpressionSyntax: break;
+			default: if ((node = node.Parent) is InterpolatedStringExpressionSyntax) break; return;
+			}
+			var code = cd.code;
+			var pos = cd.pos16;
+			var sci = cd.sciDoc;
+			var span = node.Span;
+			int from = span.Start, to = span.End;
+			while (code[from] is '@' or '$') from++; from++;
+			if (to > from && code[to - 1] == '\"') to--;
 
 			switch (s) {
-			case "text": _AddArg(sci, pos8, ", \"!\b\""); return;
-			case "html": _AddArg(sci, pos8, ", \"%\b\""); return;
-			case "sleepMs": _AddArg(sci, pos8, ", 100"); return;
-			case "keyCode": _AddArg(sci, pos8, ", KKey.Left"); return;
-			case "scanCode": _AddArg(sci, pos8, ", new KKeyScan(1, false)"); return;
-			case "action": _AddArg(sci, pos8, ", new Action(() => { mouse.rightClick(); })"); return;
+			case "text": _AddArg(", \"!\b\""); return;
+			case "html": _AddArg(", \"%\b\""); return;
+			case "sleepMs": _AddArg(", 100"); return;
+			case "keyCode": _AddArg(", KKey.Left"); return;
+			case "scanCode": _AddArg(", new KKeyScan(1, false)"); return;
+			case "action": _AddArg(", new Action(() => { mouse.rightClick(); })"); return;
 			}
 
-			static void _AddArg(KScintilla sci, int pos8, string s) {
-				pos8 = sci.zFindText(false, "\"", pos8) + 1; if (pos8 == 0) return;
-				sci.zGoToPos(false, pos8);
+			void _AddArg(string s) {
+				if (to == span.End) s = "\"" + s;
+				sci.zGoToPos(true, span.End);
 				InsertCode.TextSimplyInControl(sci, s);
 			}
 
+			bool addArg = code[from] is '!' or '%' || code[from..pos].Contains('^');
+
 			if (s.Length == 2 && s[0] != '#' && !s[0].IsAsciiAlpha()) s = s[0] == '\\' ? "|" : s[..1]; //eg 2@ or /? or \|
 
-			char _CharAt(int pos) => (char)sci.Call(Sci.SCI_GETCHARAT, pos);
-
 			string prefix = null, suffix = null;
-			char k = _CharAt(pos8 - 1), k2 = _CharAt(pos8);
-			if (s[0] == '*' || s[0] == '+') {
-				if (k == '*' || k == '+') sci.zSelect(false, pos8 - 1, pos8); //eg remove + from Alt+ if now selected *down
-			} else {
-				if (k > ' ' && k != '\"' && k != '(' && k != '$' && !(k == '+' && _CharAt(pos8 - 2) != '#')) prefix = " ";
+			char k1 = code[pos - 1], k2 = code[pos];
+			if (!addArg) {
+				if (s[0] is '*' or '+') {
+					if (k1 is '*' or '+') sci.zSelect(true, pos - 1, pos); //eg remove + from Alt+ if now selected *down
+				} else {
+					if (pos > from && k1 > ' ' && k1 != '(' && !(k1 == '+' && !code.Eq(pos - 2, '#'))) prefix = " ";
+				}
 			}
 			if (0 != s.Ends(false, "Alt", "Ctrl", "Shift", "Win")) suffix = "+";
-			else if (k2 > ' ' && k2 != '\"' && k2 != ')' && k2 != '+' && k2 != '*') suffix = " ";
+			else if (!addArg && pos < to && k2 > ' ' && k2 is not (')' or '+' or '*')) suffix = "\b ";
 
 			bool ok = true;
 			if (s.Starts("right")) ok = _Menu("RAlt", "RCtrl", "RShift", "RWin");
@@ -70,8 +86,12 @@ namespace Au.Tools
 			}
 
 			s = prefix + s + suffix;
-			InsertCode.TextSimplyInControl(sci, s);
-			if (suffix == " ") sci.Call(Sci.SCI_CHARLEFT);
+
+			if (addArg) {
+				_AddArg($", \"{s}\b\"");
+			} else {
+				InsertCode.TextSimplyInControl(sci, s);
+			}
 		}
 
 		static string[] s_rare = {

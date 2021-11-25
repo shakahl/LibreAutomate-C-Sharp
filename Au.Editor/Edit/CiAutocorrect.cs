@@ -538,7 +538,7 @@ class CiAutocorrect
 			return false;
 		}
 
-		if (canCorrect && keys.isPressed(KKey.Escape)) canCorrect = false;
+		if (canCorrect && keys.gui.isPressed(KKey.Escape)) canCorrect = false;
 		if (!(canCorrect | canAutoindent)) return false;
 
 		if (canCorrect) {

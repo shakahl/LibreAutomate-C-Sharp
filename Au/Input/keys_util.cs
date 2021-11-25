@@ -178,9 +178,9 @@ namespace Au
 		}
 
 		static IEnumerable<RXGroup> _SplitKeysString(string keys_) =>
-			(s_rxKeys ??= new regexp(@"(?s)[A-Z][[:alnum:]]*|#\S|\*\s*(?:\d+|down|up)\b|\+\s*\(|_.|\S"))
+			(s_rxKeys ??= new regexp(@"(?s)[A-Z][[:alnum:]]*|#\S|\*\s*(?:\d+|down|up)\b|\+\s*\(|_.|\^.+|\S"))
 			.FindAllG(keys_ ?? "", 0);
-		//KeyName | #n | *r | *down | *up | +( | _char | nonspace char
+		//KeyName | #n | *r | *down | *up | +( | _char | ^chars | nonspace char
 		static regexp s_rxKeys;
 
 		static System.Collections.Hashtable s_htEnum; //with Dictionary much slower JIT
@@ -358,26 +358,41 @@ namespace Au
 
 			/// <summary>
 			/// Releases modifier keys if pressed.
-			/// If pressed Alt or Win without Ctrl, presses-releases Ctrl to avoid menu mode.
+			/// May also press-release some other keys to avoid menu mode etc.
 			/// Does not use options, sleep, blockinput, etc.
 			/// </summary>
 			internal static void ReleaseModAndDisableModMenu() {
-				bool isLAlt = isPressed(KKey.LAlt);
-				bool isRAlt = isPressed(KKey.RAlt);
-				bool isLWin = isPressed(KKey.Win);
-				bool isRWin = isPressed(KKey.RWin);
-				bool isLCtrl = isPressed(KKey.LCtrl);
-				bool isRCtrl = isPressed(KKey.RCtrl);
-				bool menu = (isLAlt || isRAlt || isLWin || isRWin) && !(isLCtrl || isRCtrl);
-				if (menu) SendKey(KKey.Ctrl); //if Alt or Win pressed, send Ctrl to avoid menu mode or Start menu. For Alt works Ctrl-up, but maybe not everywhere. For Win need Ctrl-down-up.
-				if (isLCtrl) SendCtrl(false);
-				if (isRCtrl) SendRCtrlUp();
-				if (isPressed(KKey.LShift)) SendShift(false);
-				if (isPressed(KKey.RShift)) SendRShiftUp();
-				if (isLAlt) SendAlt(false);
-				if (isRAlt) SendRAltUp();
-				if (isLWin) SendKey(KKey.Win, 2);
-				if (isRWin) SendKey(KKey.RWin, 2);
+				int m = 0;
+				if (isPressed(KKey.LShift)) m |= 1;
+				if (isPressed(KKey.RShift)) m |= 0x10;
+				if (isPressed(KKey.LCtrl)) m |= 2;
+				if (isPressed(KKey.RCtrl)) m |= 0x20;
+				if (isPressed(KKey.LAlt)) m |= 4;
+				if (isPressed(KKey.RAlt)) m |= 0x40;
+				if (isPressed(KKey.Win)) m |= 8;
+				if (isPressed(KKey.RWin)) m |= 0x80;
+				if (m == 0) return;
+
+				//if Alt or Win pressed without Ctrl, send Ctrl to avoid menu mode or Start menu.
+				//	For Alt works Ctrl-up, but maybe not everywhere. For Win need Ctrl-down-up.
+				if (0 != (m & 0xCC) && 0 == (m & 0x22)) {
+					SendCtrl(true);
+					m |= 2;
+				}
+
+				//prevent invoking something when pressed-released only modifier keys.
+				//	Examples: switch keyboard layout on Ctrl+Alt or Ctrl+Shift; invoke QTranslate on two Ctrl; MS Office ad on Ctrl+Alt+Shift+Win.
+				//	The vk is unassigned. Tested: vk 0 does not work.
+				SendKeyEventRaw((KKey)0xD8, 0, Api.KEYEVENTF_KEYUP);
+
+				if (0 != (m & 2)) SendCtrl(false);
+				if (0 != (m & 0x20)) SendRCtrlUp();
+				if (0 != (m & 1)) SendShift(false);
+				if (0 != (m & 0x10)) SendRShiftUp();
+				if (0 != (m & 4)) SendAlt(false);
+				if (0 != (m & 0x40)) SendRAltUp();
+				if (0 != (m & 8)) SendKey(KKey.Win, 2);
+				if (0 != (m & 0x80)) SendKey(KKey.RWin, 2);
 			}
 
 			/// <summary>

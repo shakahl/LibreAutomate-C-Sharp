@@ -267,7 +267,7 @@ namespace Au.More
 					s_jit1 = true;
 					Jit_.Compile(typeof(WindowsHook), nameof(_HookProcLL));
 					_ = perf.ms;
-					_ = keys.KeyTypes_.IsMod(KKey.Shift) && _IgnoreMod;
+					_ = keys.KeyTypes_.IsMod(KKey.Shift) && _DontBlockMod;
 				}
 			} else {
 				_proc1 = _HookProc;
@@ -455,11 +455,14 @@ namespace Au.More
 							//	if(vk == KKey.LCtrl && kll->IsUp) { print.it("lost Ctrl up"); goto gr; }
 							//}
 						}
-						if (keys.KeyTypes_.IsMod(vk) && _IgnoreMod) goto gr;
+						//if (keys.KeyTypes_.IsMod(vk) && _DontBlockMod) goto gr; //old version, creates problems
 						t1 = perf.ms;
 						//p1.Next();
 						p(new HookData.Keyboard(this, lParam)); //info: wParam is message, but it is not useful, everything is in lParam
-						if (eat = kll->BlockEvent) kll->BlockEvent = false;
+						if (eat = kll->BlockEvent) {
+							kll->BlockEvent = false;
+							if (keys.KeyTypes_.IsMod(vk) && _DontBlockMod && kll->IsUp) eat = false;
+						}
 						break;
 					case Action<HookData.Mouse> p:
 						pm1 = p; pm2 = null;
@@ -558,18 +561,18 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Let other hooks (in all processes) ignore modifier keys for timeMS milliseconds. If 0 - restore.
-		/// Used by mouse triggers.
+		/// Let other hooks (in all processes) don't block modifier key up events for timeMS milliseconds. If 0 - restore.
+		/// Used by mouse triggers waiting for mod keys released, to prevent inputblockers blocking mod up events, eg when sending keys/text.
 		/// Returns the timeout time (Environment.TickCount64 + timeMS) or 0.
 		/// </summary>
-		internal unsafe long IgnoreModInOtherHooks_(long timeMS) {
+		internal unsafe long DontBlockModInOtherHooks_(long timeMS) {
 			_ignoreModExceptThisHook = timeMS > 0;
 			var r = _ignoreModExceptThisHook ? Environment.TickCount64 + timeMS : 0;
 			SharedMemory_.Ptr->winHook.dontBlockModUntil = r;
 			return r;
 		}
 
-		unsafe bool _IgnoreMod => SharedMemory_.Ptr->winHook.dontBlockModUntil > Environment.TickCount64 && !_ignoreModExceptThisHook;
+		unsafe bool _DontBlockMod => SharedMemory_.Ptr->winHook.dontBlockModUntil > Environment.TickCount64 && !_ignoreModExceptThisHook;
 		bool _ignoreModExceptThisHook;
 
 		/// <summary>

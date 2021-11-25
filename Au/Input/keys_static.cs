@@ -569,7 +569,7 @@ namespace Au
 		/// <td><c>+()</c></td>
 		/// <td><c>"Alt+(E P)"</c></td>
 		/// <td>The same as <c>"Alt*down E P Alt*up"</c>.
-		/// <br/>Inside () cannot be used + and +().
+		/// <br/>Inside () cannot be used operators +, +() and ^.
 		/// </td>
 		/// </tr>
 		/// <tr>
@@ -578,6 +578,15 @@ namespace Au
 		/// <td>Send next character like text with option <see cref="OKeyText.KeysOrChar"/>.
 		/// <br/>Can be used to Alt-select items in menus, ribbons and dialogs regardless of current keyboard layout.
 		/// <br/>Next character can be any 16-bit character, including operators and whitespace.
+		/// </td>
+		/// </tr>
+		/// <tr>
+		/// <td><c>^</c></td>
+		/// <td><c>"Alt+^ea"</c></td>
+		/// <td>Send all remaining characters and whitespace like text with option <see cref="OKeyText.KeysOrChar"/>.
+		/// <br/>For example <c>"Alt+^ed b"</c> is the same as <c>"Alt+_e_d Space _b"</c>.
+		/// <br/>Alt is applied only to the first character.
+		/// <br/>To repeat the last character use 2 arguments, like <c>"^-", "*20"</c>.
 		/// </td>
 		/// </tr>
 		/// </table>

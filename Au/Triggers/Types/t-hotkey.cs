@@ -1,3 +1,5 @@
+//TODO: ALtGr generates RAlt+LCtrl. Should then ignore Ctrl?
+
 namespace Au.Triggers
 {
 	/// <summary>

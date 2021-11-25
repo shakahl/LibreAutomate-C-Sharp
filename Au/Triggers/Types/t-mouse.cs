@@ -396,7 +396,7 @@ namespace Au.Triggers
 			if (_keyHook != null) {
 				//print.it(". unhook");
 				_keyHook.Unhook();
-				_keyHookTimeout = _keyHook.IgnoreModInOtherHooks_(0);
+				_keyHookTimeout = _keyHook.DontBlockModInOtherHooks_(0);
 			}
 		}
 
@@ -432,7 +432,7 @@ namespace Au.Triggers
 				}, setNow: false);
 			}
 			if (!_keyHook.IsSet) _keyHook.Hook();
-			_keyHookTimeout = _keyHook.IgnoreModInOtherHooks_(5000);
+			_keyHookTimeout = _keyHook.DontBlockModInOtherHooks_(5000);
 		}
 
 		internal static void JitCompile() {
