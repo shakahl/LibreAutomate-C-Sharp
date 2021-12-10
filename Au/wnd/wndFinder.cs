@@ -19,11 +19,11 @@ namespace Au
 		readonly wildex _name;
 		readonly wildex _cn;
 		readonly wildex _program;
-		readonly Func<wnd, bool> _also;
-		readonly WFlags _flags;
 		readonly int _processId;
 		readonly int _threadId;
 		readonly wnd _owner;
+		readonly Func<wnd, bool> _also;
+		readonly WFlags _flags;
 		readonly WContains _contains;
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
@@ -41,11 +41,11 @@ namespace Au
 			public wildex name => _f._name;
 			public wildex cn => _f._cn;
 			public wildex program => _f._program;
-			public Func<wnd, bool> also => _f._also;
-			public WFlags flags => _f._flags;
 			public int processId => _f._processId;
 			public int threadId => _f._threadId;
 			public wnd owner => _f._owner;
+			public WFlags flags => _f._flags;
+			public Func<wnd, bool> also => _f._also;
 			public WContains contains => _f._contains;
 
 			/// <summary>
@@ -87,14 +87,14 @@ namespace Au
 			[ParamString(PSFormat.wildex)] WOwner of = default,
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default) {
 			_name = name;
-			if (cn != null) _cn = cn.Length != 0 ? cn : throw new ArgumentException("Class name cannot be \"\". Use null.");
+			if (cn != null) _cn = cn.Length != 0 ? cn : throw new ArgumentException("cn cannot be \"\". Use null.");
 			of.GetValue(out _program, out _processId, out _threadId, out _owner);
 			_flags = flags;
 			_also = also;
 			_contains = contains;
 		}
 
-		//rejected. Better slightly longer code than unclear and possibly ambiguous code where you have to learn string parsing rules.
+		//rejected. Better slightly longer code than unclear and possibly ambiguous code where need to learn string parsing rules.
 		///// <summary>
 		///// Implicit conversion from string that can contain window name, class name, program and/or a <i>contains</i> object.
 		///// Examples: <c>"name,cn,program"</c>, <c>"name"</c>, <c>",cn"</c>, <c>"*,,program"</c>, <c>"name,cn"</c>, <c>"name,,program"</c>, <c>",cn,program"</c>, <c>"name,,,object"</c>.
@@ -245,24 +245,30 @@ namespace Au
 			bool ignoreVisibility = cache?.IgnoreVisibility ?? false;
 			bool mustBeVisible = inList && (_flags & WFlags.HiddenToo) == 0 && !ignoreVisibility;
 			bool isOwner = inList && !_owner.Is0;
+			int ownerTid = 0;
 			bool isTid = inList ? _threadId != 0 : false;
 			List<int> pids = null; bool programNamePlanB = false; //variables for faster getting/matching program name
 
-			for (int index = 0; a.Next(out wnd w); index++) {
+			int index = 0;
+			for (; a.Next(out wnd w); index++) {
 				if (w.Is0) continue;
 
-				//With warm CPU, speed of 1000 times getting:
-				//name 400, class 400, foreign pid/tid 400,
-				//owner 55, rect 55, style 50, exstyle 50, cloaked 280,
-				//GetProp(string) 1700, GetProp(atom) 300, GlobalFindAtom 650,
-				//program >=2500
+				//Speed of getting properties of 1000 windows with hot CPU:
+				//name 1000, class 1000
+				//foreign tid/pid 900/1800,
+				//visible 30, cloaked 1100,
+				//owner 40, style 40, exstyle 40,
+				//isOwned(2) 2000, isOwned(2, ref tid) 1000,
+				//rect 500,
+				//GetProp(randomString) 1700, GetProp(existingString) 3000, GetProp(atom) 1000, GlobalFindAtom 1700,
+				//program 6000
 
 				if (mustBeVisible) {
 					if (!w.IsVisible) { _stopProp = EProps.visible; continue; }
 				}
 
 				if (isOwner) {
-					if (_owner != w.Get.Owner) { _stopProp = EProps.of; continue; }
+					if (!w.IsOwnedBy2_(_owner, 2, ref ownerTid)) { _stopProp = EProps.of; continue; }
 				}
 
 				cache?.Begin(w);
@@ -381,6 +387,8 @@ namespace Au
 				Result = w;
 				return index;
 			}
+
+			if (index == 0 && !inList) if (!_owner.Is0 || _threadId != 0) _stopProp = EProps.of;
 
 			return -1;
 		}

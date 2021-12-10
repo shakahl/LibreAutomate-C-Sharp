@@ -2,6 +2,8 @@
 //#define PRINT
 //#endif
 
+//TODO: folding stops working after #if #else #endif. See InputRecorder.cs.
+
 using System.Linq;
 using static Au.Controls.Sci;
 

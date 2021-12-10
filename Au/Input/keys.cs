@@ -1,4 +1,6 @@
-﻿namespace Au
+﻿//SHOULDDO: on exception release modifiers.
+
+namespace Au
 {
 	/// <summary>
 	/// Keyboard functions: send virtual keystrokes and text to the active window, get key states.
@@ -199,23 +201,14 @@
 				case '_' when len == 2:
 					AddChar(k[i + 1]);
 					break;
-				//CONSIDER:
-				//	If "Alt+abc", abc are chars. Until space or end. If "Alt+A bc", Abc are keys. For non-alpha ASCII chars use prefix ^ if need key.
-				//	But too many rules.
-				//Or "Alt&abc". Then everything till end is chars. Operator & isn't valid after Ctrl/Shift/Win.
-				//CONSIDER: allow ! anywhere. Then text after it is text, send like "!text".
-				//	Easier to type "Keys !text" than "Keys", "!text"
-				//	But too many rules to learn.
-				//CONSIDER: "^text" is same as "!text" but without vk_packet.
-				//	Would not need to set the opt.
-				//	Also could always record like "^text" or "Alt+^text". Less options in the recording tool, and easy to edit later.
-				//	If single char, use AddChar. Then to repeat can use "_a", "*5".
-				//CONSIDER: let all single-char symbols interpreted as characters, not keys.
-				//	Operator ^ makes it a key as on Eng/US keyboard.
-				//	Examples: a - char a; A - Shift+a; ^A - key A.
 				case '^':
 					if (_pstate.paren) goto ge;
-					while (++i < g.End) AddChar(k[i]);
+					if (++i == g.End) break;
+					if (g.End - i == 1 || _pstate.plus) {
+						while (i < g.End) AddChar(k[i++]);
+					} else { //avoid eg Shift up/down between AB
+						AddText(k[i..], OKeyText.KeysOrChar);
+					}
 					break;
 				//case '!': //rejected. Too many rules. Better slightly longer code than 2 ways to do the same.
 				//	AddText(k[++i..]);
@@ -429,12 +422,12 @@
 		}
 
 		/// <summary>
-		/// Adds the repeat-key operator. Then <see cref="SendIt"/> will send the last added key the specified number of times.
+		/// Adds the repeat operator. Then <see cref="SendIt"/> will send the last added key or character <i>count</i> times.
 		/// </summary>
 		/// <returns>This.</returns>
-		/// <param name="count">Repeat count.</param>
+		/// <param name="count">The repeat count.</param>
 		/// <exception cref="ArgumentOutOfRangeException"><i>count</i> &gt;10000 or &lt;0.</exception>
-		/// <exception cref="ArgumentException">The last added item is not key. Can repeat only single key; cannot repeat text etc.</exception>
+		/// <exception cref="ArgumentException">The last added item is not a key or single character.</exception>
 		public keys AddRepeat(int count) {
 			_ThrowIfSending();
 			if ((uint)count > 10000) throw new ArgumentOutOfRangeException(nameof(count), "Max repeat count is 10000.");

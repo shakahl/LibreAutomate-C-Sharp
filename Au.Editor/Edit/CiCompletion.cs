@@ -16,6 +16,7 @@ using Microsoft.CodeAnalysis.Options;
 //PROBLEM: Roslyn bug: no popup list if first parameter of indexer setter is enum. Same in VS.
 //	Even on Ctrl+Space does not select the enum in list. And does not add enum members like "Enum.Member".
 
+//TODO: now no auto list when added { } like new TYPE {  }
 
 partial class CiCompletion
 {
@@ -589,13 +590,13 @@ partial class CiCompletion
 
 #if true
 					if (gs[0].Key.Name == "String") { //don't group Au extension methods
-						for (int i = 1; i < gs.Count; i++) {
+						for (int i = gs.Count; --i > 0;) {
 							if (d.items[gs[i].Value[0]].kind != CiItemKind.ExtensionMethod) continue;
 							var ns = gs[i].Key.ContainingNamespace;
 							if (ns.Name == "Types" && ns.ContainingNamespace.Name == "Au") {
 								gs[0].Value.AddRange(gs[i].Value);
 								gs.RemoveAt(i);
-								break;
+								//break; //no. If testInternal Au, we have 2 Au.Types.
 							}
 						}
 					}

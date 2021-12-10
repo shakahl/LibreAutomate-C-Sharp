@@ -31,7 +31,7 @@ static class InsertCode
 		else App.Dispatcher.InvokeAsync(() => _Action(s, goToPercent, fold, activate));
 
 		static void _Action(string s, bool goToPercent, bool fold, bool activate) {
-			if (!App.HMain.IsVisible) App.ShowWindow();
+			if (!App.Hmain.IsVisible) App.ShowWindow();
 			var d = Panels.Editor.ZActiveDoc;
 			if (d == null || d.zIsReadonly) {
 				print.it(s);
@@ -283,6 +283,7 @@ static class InsertCode
 		return s;
 	}
 
+	//TODO: does not work for abstract record, eg record _RecoKey : _Reco
 	public static void ImplementInterfaceOrAbstractClass(bool explicitly, int position = -1) {
 		if (!CodeInfo.GetContextAndDocument(out var cd, position)) return;
 		var semo = cd.document.GetSemanticModelAsync().Result;

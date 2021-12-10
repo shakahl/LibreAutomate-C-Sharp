@@ -680,13 +680,13 @@ class PanelFind : UserControl
 		if (1 != dialog.show("Replace text in files",
 			"Before replacing you may want to backup the workspace <a href=\"backup\">folder</a>.",
 			"Replace|Cancel",
-			owner: App.HMain,
+			owner: App.Hmain,
 			expandedText: @"Replaces text in all files displayed in find results.
 Uses the same options and 'find' text. Uses current 'replace' text.
 Opens files to enable Undo.",
 			onLinkClick: e => run.selectInExplorer(App.Model.WorkspaceDirectory))) return;
 
-		var d = dialog.showProgress(marquee: false, "Replacing", owner: App.HMain);
+		var d = dialog.showProgress(marquee: false, "Replacing", owner: App.Hmain);
 		try {
 			App.Wmain.IsEnabled = false;
 			bool needWasOpen = _lastFindAll.wasOpen == null;

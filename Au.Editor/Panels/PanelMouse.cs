@@ -6,6 +6,10 @@ using System.Windows.Automation;
 class PanelMouse : Grid
 {
 	KScintilla _sci;
+	POINT _prevXY;
+	wnd _prevWnd;
+	string _prevWndName;
+	int _prevCounter;
 
 	public PanelMouse() {
 		//this.UiaSetName("Mouse panel"); //no UIA element for Panel. Use this in the future if this panel will be : UserControl.
@@ -28,21 +32,25 @@ class PanelMouse : Grid
 		_sci.Call(Sci.SCI_SETVSCROLLBAR);
 		_sci.Call(Sci.SCI_SETWRAPMODE, Sci.SC_WRAP_WORD);
 
-		App.MousePosChangedWhenProgramVisible += _MouseInfo;
+		App.Timer025sWhenVisible += _MouseInfo;
 	}
 
-	//public void ZSetMouseInfoText(string text)
-	//{
-	//	if(Dispatcher.Thread == Thread.CurrentThread) _SetMouseInfoText(text);
-	//	else Dispatcher.InvokeAsync(() => _SetMouseInfoText(text));
-	//
-	//	void _SetMouseInfoText(string text) { _sci.zSetText(text); }
-	//}
-
-	void _MouseInfo(POINT p) {
+	void _MouseInfo() {
+		//using var p1 = perf.local();
 		if (!this.IsVisible) return;
+
+		var p = mouse.xy;
+		if (p == _prevXY && ++_prevCounter < 4) return; _prevCounter = 0; //use less CPU. c and wName rarely change when same p.
 		var c = wnd.fromXY(p);
+		//p1.Next();
 		var w = c.Window;
+		string wName = w.Name;
+		if (p == _prevXY && c == _prevWnd && wName == _prevWndName) return;
+		_prevXY = p;
+		_prevWnd = c;
+		_prevWndName = wName;
+
+		//p1.Next();
 		using (new StringBuilder_(out var b, 1000)) {
 			var cn = w.ClassName;
 			if (cn != null) {
@@ -51,7 +59,7 @@ class PanelMouse : Grid
 					p.x, p.y, pc.x, pc.y, w.ProgramName?.Escape());
 				if (c.UacAccessDenied) b.Append(" <c red>(admin)<>");
 				b.Append("\r\n<b>Window   ");
-				var name = w.Name?.Escape(200); if (!name.NE()) b.AppendFormat("name</b>  {0}  .  <b>", name);
+				var name = wName?.Escape(200); if (!name.NE()) b.AppendFormat("name</b>  {0}  .  <b>", name);
 				b.Append("cn</b>  ").Append(cn.Escape());
 				if (c != w) {
 					b.AppendFormat("\r\n<b>Control   id</b>  {0}  .  <b>cn</b>  {1}",
@@ -70,7 +78,17 @@ class PanelMouse : Grid
 				//rejected. Makes this func 5 times slower.
 				//var color = uiimage.getPixel(p);
 			}
-			_sci.zSetText(b.ToString());
+			var s = b.ToString();
+			//p1.Next();
+			_sci.zSetText(s);
 		}
 	}
+
+	//public void ZSetMouseInfoText(string text)
+	//{
+	//	if(Dispatcher.Thread == Thread.CurrentThread) _SetMouseInfoText(text);
+	//	else Dispatcher.InvokeAsync(() => _SetMouseInfoText(text));
+	//
+	//	void _SetMouseInfoText(string text) { _sci.zSetText(text); }
+	//}
 }

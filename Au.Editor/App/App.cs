@@ -17,18 +17,16 @@ static class App
 	public static FilesModel Model;
 	public static RunningTasks Tasks;
 
-#if TRACE
-	static App() {
+	//[STAThread] //no, makes command line etc slower. Will set STA later.
+	static int Main(string[] args) {
+#if TRACE //note: not static ctor. Eg Settings used in scripts while creating some new parts of the app, eg recorder. The ctor would run there.
 		perf.first();
 		//timer.after(1, _ => perf.nw());
 		print.qm2.use = true;
 		//print.clear();
 		//print.redirectConsoleOutput = true; //cannot be before the CommandLine.ProgramStarted1 call.
-	}
 #endif
 
-	//[STAThread] //no, makes command line etc slower. Will set STA later.
-	static int Main(string[] args) {
 		if (CommandLine.ProgramStarted1(args, out int exitCode)) return exitCode;
 
 		//restart as admin if started as non-admin on admin user account
@@ -130,7 +128,7 @@ static class App
 			if (_wmain == null) {
 				AppDomain.CurrentDomain.UnhandledException -= _UnhandledException;
 				_app.DispatcherUnhandledException += (_, e) => {
-					e.Handled = 1 == dialog.showError("Exception", e.Exception.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, HMain, e.Exception.ToString());
+					e.Handled = 1 == dialog.showError("Exception", e.Exception.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, Hmain, e.Exception.ToString());
 				};
 				_app.InitializeComponent();
 				_app.MainWindow = _wmain = new MainWindow();
@@ -143,14 +141,14 @@ static class App
 	static MainWindow _wmain;
 
 	/// <summary>
-	/// Handle of main window (<b>Wmain</b>).
+	/// Main window handle.
 	/// defaul(wnd) if never was visible.
 	/// </summary>
-	public static wnd HMain;
+	public static wnd Hmain;
 
 	public static void ShowWindow() {
 		Wmain.Show(); //auto-creates MainWindow if never was visible
-		HMain.ActivateL(true);
+		Hmain.ActivateL(true);
 	}
 
 	private static void _UnhandledException(object sender, UnhandledExceptionEventArgs e) {
@@ -189,25 +187,9 @@ static class App
 		if (needFast) {
 			Timer025sWhenVisible?.Invoke();
 			s_timerCounter++;
-			if (MousePosChangedWhenProgramVisible != null) {
-				var p = mouse.xy;
-				if (p != s_mousePos) {
-					s_mousePos = p;
-					MousePosChangedWhenProgramVisible(p);
-				}
-			}
 		} else s_timerCounter = 0;
 		if (0 == (s_timerCounter & 3)) Timer1s?.Invoke();
 	}
-	static POINT s_mousePos;
-
-	/// <summary>
-	/// When cursor position changed while the main window is visible.
-	/// Called at max 0.25 s rate, not for each change.
-	/// Cursor can be in any window. Does not depend on UAC.
-	/// Receives cursor position in screen.
-	/// </summary>
-	public static event Action<POINT> MousePosChangedWhenProgramVisible;
 
 	public static EProgramState Loaded;
 

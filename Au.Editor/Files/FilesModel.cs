@@ -136,7 +136,7 @@ partial class FilesModel
 			//print.it($"Failed to load '{wsDir}'. {ex.Message}");
 			switch (dialog.showError("Failed to load workspace", wsDir,
 				"1 Retry|2 Load another|3 Create new|0 Cancel",
-				owner: App.HMain, expandedText: ex.ToString())) {
+				owner: App.Hmain, expandedText: ex.ToString())) {
 			case 1: goto g1;
 			case 2: OpenWorkspaceUI(); break;
 			case 3: NewWorkspaceUI(); break;
@@ -188,7 +188,7 @@ partial class FilesModel
 	/// </summary>
 	public static void OpenWorkspaceUI() {
 		var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDA}") { Title = "Open workspace" };
-		if (!d.ShowOpen(out string s, App.HMain, selectFolder: true)) return;
+		if (!d.ShowOpen(out string s, App.Hmain, selectFolder: true)) return;
 		if (!filesystem.exists(s + @"\files.xml").isFile) dialog.showError("The folder must contain file files.xml");
 		else LoadWorkspace(s);
 	}
@@ -1300,7 +1300,7 @@ partial class FilesModel
 				InitFolderFirstTime = location ?? folders.ThisAppDocuments,
 				FileNameText = name + ".zip",
 			};
-			if (!d.ShowSave(out location, App.HMain, overwritePrompt: false)) return false;
+			if (!d.ShowSave(out location, App.Hmain, overwritePrompt: false)) return false;
 			wsDir = folders.ThisAppTemp + "Workspace zip";
 			filesystem.delete(wsDir);
 		} else {

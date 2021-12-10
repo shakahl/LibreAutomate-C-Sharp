@@ -1,3 +1,5 @@
+//TODO: warn if an elm function called when InSendMessageEx returns ISMEX_SEND.
+
 namespace Au
 {
 	/// <summary>

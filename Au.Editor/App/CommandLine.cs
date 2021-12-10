@@ -161,7 +161,7 @@ static class CommandLine
 			switch (wparam) {
 			case 0:
 				if (lparam == 1) App.ShowWindow(); //else returns default(wnd) if never was visible
-				return App.HMain.Handle;
+				return App.Hmain.Handle;
 			case 10:
 				UacDragDrop.AdminProcess.OnTransparentWindowCreated((wnd)lparam);
 				break;

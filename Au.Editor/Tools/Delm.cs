@@ -22,6 +22,15 @@ using System.Linq;
 //	If now WebInvoke, and role not web:, and after executing action does not change window title for eg 5 s, suggest to stop waiting and use Invoke.
 //	Or just add pseudo action Auto. If "web:", use WebInvoke, else if has action, use Invoke, else MouseClick.
 
+//TODO: add actions "check" and "uncheck".
+//	Code if has action: if(!e.IsChecked) e.Invoke();
+//	Code if no action: if(!e.IsChecked) e.MouseClick();
+//	Maybe add elm method Check(bool). Else cannot use compact code.
+
+//CONSIDER: remove option "Compact code".
+//	Often, after using it, next time I forget to uncheck it. Then inserts code without variable, but I need variable.
+//	Also then action method often is far.
+
 namespace Au.Tools;
 
 class Delm : KDialogWindow
@@ -120,7 +129,7 @@ class Delm : KDialogWindow
 		_cAutoInsert = b.xAddCheckIcon("*VaadinIcons.Insert #9F5300", "Auto insert code when captured");
 		b.AddSeparator(true);
 		b.xAddButtonIcon("*Ionicons.UndoiOS #9F5300", _ => App.Dispatcher.InvokeAsync(() => Menus.Edit.Undo()), "Undo in editor");
-		b.xAddButtonIcon("*Material.SquareEditOutline #0080FF", _ => App.HMain.ActivateL(true), "Activate editor window");
+		b.xAddButtonIcon("*Material.SquareEditOutline #0080FF", _ => App.Hmain.ActivateL(true), "Activate editor window");
 		b.xAddButtonIcon("*FontAwesome.WindowMaximizeRegular #0080FF", _ => _wnd.ActivateL(true), "Activate captured window");
 		b.AddSeparator(true);
 		_bSettings = b.xAddButtonIcon("*EvaIcons.Options2 #99BF00", _ => _ToolSettings(), "Tool settings");
@@ -632,7 +641,7 @@ class Delm : KDialogWindow
 			= _RunElmTask(2000, (p, flags, ctor, needRect), static m => _GetElm(m.p, m.flags, m.ctor, m.needRect));
 		if (e == null) return null;
 
-		_screenshot = App.Settings.edit_noImages ? null : TUtil.CapturingWithHotkey.MakeScreenshot(p, _capt);
+		_screenshot = TUtil.MakeScreenshot(p, _capt);
 
 		if (e2 != null && !role1.NE() && !role2.NE()) {
 			var m = new popupMenu();

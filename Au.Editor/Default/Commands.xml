@@ -55,9 +55,10 @@ All attributes are optional. The Example command contains all.
 	<Tools>
 		<Options />
 		<Icons />
+		<Input_recorder separator="" />
 	</Tools>
 	<Help>
-		<Context_help />
+		
 	</Help>
 	<Custom1>
 

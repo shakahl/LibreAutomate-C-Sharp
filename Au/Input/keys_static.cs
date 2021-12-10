@@ -484,13 +484,13 @@ namespace Au
 		/// <td>
 		/// <b>Modifier:</b> <c>Alt</c>, <c>Ctrl</c>, <c>Shift</c>, <c>Win</c>, <c>RAlt</c>, <c>RCtrl</c>, <c>RShift</c>, <c>RWin</c>
 		/// <br/><b>Navigate:</b> <c>Esc</c>, <c>End</c>, <c>Home</c>, <c>PgDn</c>, <c>PgUp</c>, <c>Down</c>, <c>Left</c>, <c>Right</c>, <c>Up</c>
-		/// <br/><b>Other:</b> <c>Back</c>, <c>Del</c>, <c>Enter</c>, <c>Menu</c>, <c>Pause</c>, <c>PrtSc</c>, <c>Space</c>, <c>Tab</c>
+		/// <br/><b>Other:</b> <c>Back</c>, <c>Del</c>, <c>Enter</c>, <c>Apps</c>, <c>Pause</c>, <c>PrtSc</c>, <c>Space</c>, <c>Tab</c>
 		/// <br/><b>Function:</b> <c>F1</c>-<c>F24</c>
 		/// <br/><b>Lock:</b> <c>CapsLock</c>, <c>NumLock</c>, <c>ScrollLock</c>, <c>Ins</c>
 		/// </td>
 		/// <td>Start with an uppercase character. Only the first 3 characters are significant; others can be any ASCII letters. For example, can be <c>"Back"</c>, <c>"Bac"</c>, <c>"Backspace"</c> or <c>"BACK"</c>, but not <c>"back"</c> or <c>"Ba"</c> or <c>"Back5"</c>.
 		/// <br/>
-		/// <br/>Alias: <c>AltGr</c> (RAlt), <c>App</c> (Menu), <c>PageDown</c> or <c>PD</c> (PgDn), <c>PageUp</c> or <c>PU</c> (PgUp), <c>PrintScreen</c> or <c>PS</c> (PrtSc), <c>BS</c> (Back), <c>PB</c> (Pause/Break), <c>CL</c> (CapsLock), <c>NL</c> (NumLock), <c>SL</c> (ScrollLock), <c>HM</c> (Home).
+		/// <br/>Alias: <c>AltGr</c> (RAlt), <c>Menu</c> (Apps), <c>PageDown</c> or <c>PD</c> (PgDn), <c>PageUp</c> or <c>PU</c> (PgUp), <c>PrintScreen</c> or <c>PS</c> (PrtSc), <c>BS</c> (Back), <c>PB</c> (Pause/Break), <c>CL</c> (CapsLock), <c>NL</c> (NumLock), <c>SL</c> (ScrollLock), <c>HM</c> (Home).
 		/// </td>
 		/// </tr>
 		/// <tr>
@@ -585,8 +585,7 @@ namespace Au
 		/// <td><c>"Alt+^ea"</c></td>
 		/// <td>Send all remaining characters and whitespace like text with option <see cref="OKeyText.KeysOrChar"/>.
 		/// <br/>For example <c>"Alt+^ed b"</c> is the same as <c>"Alt+_e_d Space _b"</c>.
-		/// <br/>Alt is applied only to the first character.
-		/// <br/>To repeat the last character use 2 arguments, like <c>"^-", "*20"</c>.
+		/// <br/>Alt is released after the first character. Don't use other modifiers.
 		/// </td>
 		/// </tr>
 		/// </table>
@@ -683,7 +682,7 @@ namespace Au
 		/// 
 		/// This function does not wait until the target app receives and processes sent keystrokes and text; there is no reliable way to know it. It just adds small delays depending on options (<see cref="OKey.SleepFinally"/> etc). If need, change options or add 'sleep' arguments or wait after calling this function. Sending text through the clipboard normally does not have these problems.
 		/// 
-		/// Don't use this function to automate windows of own thread. Call it from another thread. See the last example.
+		/// Don't use this function to automate windows of own thread. Call it from another thread. See example with async/await.
 		/// 
 		/// Administrator and uiAccess processes don't receive keystrokes sent by standard user processes. See [](xref:uac).
 		/// 
@@ -746,31 +745,29 @@ namespace Au
 		/// Action click = () => mouse.click();
 		/// keys.send("Ctrl+", click);
 		/// 
+		/// //Ctrl+click
+		/// keys.send("Ctrl+", new Action(() => mouse.click()));
+		/// 
 		/// //Ctrl+drag
 		/// Action drag = () => { using(mouse.leftDown()) mouse.moveRelative(0, 50); };
 		/// keys.send("Ctrl+", drag);
 		/// 
-		/// //Ctrl+drag, poor man's version
+		/// //Ctrl+drag
 		/// keys.send("Ctrl*down");
 		/// using(mouse.leftDown()) mouse.moveRelative(0, 50);
 		/// keys.send("Ctrl*up");
 		/// ]]></code>
-		/// Show form and send keys/text to it when button clicked.
+		/// Show window and send keys/text to it when button clicked.
 		/// <code><![CDATA[
-		/// var f = new Form();
-		/// var b = new Button { Text = "Key" };
-		/// var t = new TextBox { Top = 100 };
-		/// var c = new Button { Text = "Close", Left = 100 };
-		/// f.Controls.Add(b);
-		/// f.Controls.Add(t);
-		/// f.Controls.Add(c); f.CancelButton = c;
-		/// 
-		/// b.Click += async (_, _) => {
+		/// var b = new wpfBuilder("Window").WinSize(250);
+		/// b.R.AddButton("Keys", async _ => {
 		/// 	//keys.send("Tab", "!text", 2000, "Esc"); //no
 		/// 	await Task.Run(() => { keys.send("Tab", "!text", 2000, "Esc"); }); //use other thread
-		/// };
-		/// 
-		/// f.ShowDialog();
+		/// });
+		/// b.R.Add("Text", out TextBox text1);
+		/// b.R.AddOkCancel();
+		/// b.End();
+		/// if (!b.ShowDialog()) return;
 		/// ]]></code>
 		/// </example>
 		public static void send([ParamString(PSFormat.keys)] params KKeysEtc[] keysEtc) {

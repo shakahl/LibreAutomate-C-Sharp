@@ -167,7 +167,7 @@ static class TUtil
 	public record WindowFindCodeFormatter
 	{
 		public string nameW, classW, programW, containsW, alsoW, waitW, orRunW;
-		public bool hiddenTooW, cloakedTooW;
+		public bool hiddenTooW, cloakedTooW, programNotStringW;
 		public string idC, nameC, classC, alsoC, skipC, nameC_comments, classC_comments;
 		public bool hiddenTooC;
 		public bool NeedWindow = true, NeedControl, Throw, Activate, Test;
@@ -204,7 +204,7 @@ static class TUtil
 				if (programW != null) m |= 2;
 				if (m != 0) b.AppendStringArg(classW);
 				if (programW != null) {
-					if (!programW.Starts("WOwner.")) b.AppendStringArg(programW);
+					if (!(programNotStringW || programW.Starts("WOwner."))) b.AppendStringArg(programW);
 					else if (!Test) b.AppendOtherArg(programW);
 					else m &= ~2;
 				}
@@ -265,6 +265,67 @@ static class TUtil
 		/// </summary>
 		public void SetSkipC(wnd w, wnd c) {
 			skipC = GetControlSkip(w, c, nameC, classC, hiddenTooC);
+		}
+
+		/// <summary>
+		/// Fills top-level window fields.
+		/// Call once, because does not clear unused fields.
+		/// </summary>
+		public void RecordWindowFields(wnd w, int waitS, bool activate, string owner = null) {
+			NeedWindow = true;
+			Throw = true;
+			Activate = activate;
+			waitW = waitS.ToS();
+			string name = w.Name;
+			nameW = EscapeWindowName(name, true);
+			classW = StripWndClassName(w.ClassName, true);
+			if (programNotStringW = owner != null) programW = owner; else if (name.NE()) programW = w.ProgramName;
+		}
+
+		/// <summary>
+		/// Fills control fields.
+		/// Call once, because does not clear unused fields.
+		/// </summary>
+		/// <param name="w">Top-level window.</param>
+		/// <param name="c">Control.</param>
+		public void RecordControlFields(wnd w, wnd c) {
+			NeedControl = true;
+
+			string name = null, cn = StripWndClassName(c.ClassName, true);
+			if (cn == null) return;
+
+			bool _Name(string prefix, string value) {
+				if (value.NE()) return false;
+				name = prefix + EscapeWildex(value);
+				return true;
+			}
+
+			if (GetUsefulControlId(c, w, out int id)) {
+				idC = id.ToS();
+				classC_comments = cn;
+				_ = _Name(null, c.Name) || _Name(null, c.NameWinforms) || _Name(null, c.NameElm);
+				nameC_comments = name;
+			} else {
+				_ = _Name(null, c.Name) || _Name("***wfName ", c.NameWinforms);
+				nameC = name;
+				classC = cn;
+
+#if true
+				SetSkipC(w, c);
+				if (name == null && _Name("***elmName ", c.NameElm)) {
+					if (skipC == null) nameC = name;
+					else nameC_comments = name;
+					//SetSkipC(w, c); //can be too slow
+				}
+#else
+				bool setSkip = true;
+				if (name == null && _Name("***elmName ", c.NameElm)) {
+					nameC = name;
+					setSkip = false; //can be too slow
+				}
+				if (setSkip) SetSkipC(w, c);
+#endif
+			}
 		}
 	}
 
@@ -441,6 +502,29 @@ static class TUtil
 		}
 	}
 
+	/// <summary>
+	/// Takes screenshot of standard size to display in editor's margin.
+	/// Color-quantizes, compresses and converts to a comment string to embed in code.
+	/// Returns null if <b>App.Settings.edit_noImages</b>.
+	/// </summary>
+	/// <param name="p">Point in center of screenshot rectangle.</param>
+	/// <param name="capt">If used, temporarily hides its on-screen rect etc.</param>
+	public static string MakeScreenshot(POINT p, CapturingWithHotkey capt = null) {
+		if (App.Settings.edit_noImages) return null;
+		bool v1 = false, v2 = false;
+		if (capt != null) {
+			if (v1 = capt._osr.Visible) capt._osr.Hwnd.ShowL(false);
+			if (v2 = capt._ost.Visible) capt._ost.Hwnd.ShowL(false);
+		}
+		const int sh = 30;
+		var s = ColorQuantizer.MakeScreenshotComment(new(p.x - sh, p.y - sh / 2, sh * 2, sh), dpi: App.Hmain);
+		if (capt != null) {
+			if (v1) capt._osr.Hwnd.ShowL(true);
+			if (v2) capt._ost.Hwnd.ShowL(true);
+		}
+		return s;
+	}
+
 	#endregion
 
 	#region OnScreenRect
@@ -508,8 +592,8 @@ static class TUtil
 		readonly (string hotkey, Action a) _dCapture, _dInsert;
 		HwndSource _hs;
 		timer _timer;
-		osdRect _osr;
-		osdText _ost; //SHOULDDO: draw rect and text in same OsdWindow
+		internal osdRect _osr;
+		internal osdText _ost; //SHOULDDO: draw rect and text in same OsdWindow
 		bool _capturing;
 		const string c_propName = "Au.Capture";
 		readonly static int s_stopMessage = Api.RegisterWindowMessage(c_propName);
@@ -634,21 +718,6 @@ static class TUtil
 				if (wParam == c_hotkeyInsert) _dInsert.a(); else _dCapture.a();
 			}
 			return default;
-		}
-
-		public static string MakeScreenshot(POINT p, CapturingWithHotkey capt = null) {
-			bool v1 = false, v2 = false;
-			if (capt != null) {
-				if (v1 = capt._osr.Visible) capt._osr.Hwnd.ShowL(false);
-				if (v2 = capt._ost.Visible) capt._ost.Hwnd.ShowL(false);
-			}
-			const int sh = 30;
-			var s = App.Settings.edit_noImages ? null : ColorQuantizer.MakeScreenshotComment(new(p.x - sh, p.y - sh / 2, sh * 2, sh), dpi: App.HMain);
-			if (capt != null) {
-				if (v1) capt._osr.Hwnd.ShowL(true);
-				if (v2) capt._ost.Hwnd.ShowL(true);
-			}
-			return s;
 		}
 	}
 

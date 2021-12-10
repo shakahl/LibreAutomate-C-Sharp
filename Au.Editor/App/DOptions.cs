@@ -41,6 +41,7 @@ class DOptions : KDialogWindow
 		_Templates();
 		_Code();
 		_Hotkeys();
+		_OS();
 
 		//_tc.SelectedIndex = 2;
 
@@ -434,6 +435,25 @@ To apply changes after deleting etc, restart this application.
 				QuickCapture.UnregisterHotkeys();
 				QuickCapture.RegisterHotkeys();
 			}
+		};
+	}
+
+	unsafe void _OS() {
+		var b = _Page("OS");
+		b.R.Add("Key/mouse hook timeout, ms", out TextBox hooksTimeout, WindowsHook.LowLevelHooksTimeout.ToS()).Validation(o => ((o as TextBox).Text.ToInt() is >= 300 and <= 1000) ? null : "300-1000");
+		bool disableLAW = 0 == Api.SystemParametersInfo(Api.SPI_GETFOREGROUNDLOCKTIMEOUT, 0);
+		b.R.Add(out KCheckBox cDisableLAW, "Disable \"lock active window\"").Checked(disableLAW);
+		b.End();
+
+		_b.OkApply += e => {
+			int t = hooksTimeout.Text.ToInt();
+			if (t != WindowsHook.LowLevelHooksTimeout) {
+				WindowsHook.LowLevelHooksTimeout = t;
+				print.it("Info: The new hook timeout value will be used after restarting Windows.");
+			}
+
+			if (cDisableLAW.IsChecked != disableLAW)
+				Api.SystemParametersInfo(Api.SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (void*)(disableLAW ? 15000 : 0), save: true, notify: true);
 		};
 	}
 

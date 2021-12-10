@@ -6,7 +6,7 @@
 	public static partial class RecordingUtil
 	{
 		/// <summary>
-		/// Converts multiple recorded mouse movements to string for <see cref="mouse.moveRecorded(string, double)"/>.
+		/// Converts multiple recorded mouse movements to string for <see cref="mouse.moveRelative(string, double)"/>.
 		/// </summary>
 		/// <param name="recorded">
 		/// List of x y distances from previous.

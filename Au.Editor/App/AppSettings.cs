@@ -51,6 +51,14 @@ record AppSettings : JSettings
 	}
 	public delm_t delm = new();
 
+	public record recorder_t
+	{
+		public bool keys = true, text = true, text2 = true, mouse = true, wheel, drag, move, slow;
+		public int xyIn;
+		public string wndPos;
+	}
+	public recorder_t recorder = new();
+
 	public string db_copy_ref, db_copy_doc, db_copy_winapi;
 
 	public Dictionary<string, CiGoTo.AssemblySett> ci_gotoAsm;

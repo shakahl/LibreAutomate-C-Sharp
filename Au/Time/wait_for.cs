@@ -8,23 +8,23 @@ namespace Au
 	/// 
 	/// All 'wait for' functions have a <i>secondsTimeout</i> parameter. It is the maximal time to wait, seconds. If it is 0, waits infinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, then stops waiting and returns default value of that type (false, etc).
 	/// 
-	/// While waiting, most functions by default don't dispatch Windows messages, events, hooks, timers, COM/RPC, etc. For example, if used in a Form/Control event handler, the form would stop responding. Use another thread, for example async/await/Task, like in the example. Or option <see cref="OWait.DoEvents"/>.
+	/// While waiting, most functions by default don't dispatch Windows messages, events, hooks, timers, COM/RPC, etc. For example, if used in a Window/Form/Control event handler, the window would stop responding. Use another thread, for example async/await/Task, like in the example. Or option <see cref="OWait.DoEvents"/>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
 	/// wait.forCondition(0, () => keys.isScrollLock);
 	/// print.it("ScrollLock now is toggled");
 	/// ]]></code>
-	/// Using in a Form/Control event handler.
+	/// Using in a WPF window with async/await.
 	/// <code><![CDATA[
-	/// var f = new Form();
-	/// f.Click += async (_, _) =>
-	///   {
-	/// 	  print.it("waiting...");
+	/// using System.Windows;
+	/// var b = new wpfBuilder("Window").WinSize(250);
+	/// b.R.AddButton("Wait", async _ => {
+	/// 	  print.it("waiting for ScrollLock...");
 	/// 	  var result = await Task.Run(() => wait.forCondition(-10, () => keys.isScrollLock));
-	/// 	  if(w.Is0) print.it("timeout"); else print.it(result);
-	///   };
-	/// f.ShowDialog();
+	/// 	  print.it(result);
+	/// });
+	/// if (!b.ShowDialog()) return;
 	/// ]]></code>
 	/// </example>
 	public static partial class wait

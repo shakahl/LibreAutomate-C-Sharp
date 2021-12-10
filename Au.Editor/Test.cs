@@ -30,6 +30,8 @@ using Roslyn.Utilities;
 
 */
 
+//TODO: look in forum, maybe new users can't use links. Now it's safe to allow it.
+
 #if TRACE
 
 #pragma warning disable 169

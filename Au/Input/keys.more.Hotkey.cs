@@ -14,36 +14,45 @@
 			/// </remarks>
 			/// <example>
 			/// <code><![CDATA[
-			/// using System.Windows.Forms;
+			/// using System.Windows;
+			/// using System.Windows.Interop;
 			/// 
-			/// var f = new FormRegisterHotkey();
-			/// f.ShowDialog();
+			/// new DialogClass().ShowDialog();
 			/// 
-			/// class FormRegisterHotkey :Form
-			/// {
+			/// class DialogClass : Window {
 			/// 	keys.more.Hotkey _hk1, _hk2;
+			/// 	
+			/// 	public DialogClass() {
+			/// 		Title = "Hotkeys";
+			/// 		var b = new wpfBuilder(this).WinSize(250);
+			/// 		b.R.AddOkCancel();
+			/// 		b.End();
+			/// 	}
 			/// 
-			/// 	protected override void WndProc(ref Message m)
-			/// 	{
-			/// 		switch(m.Msg) {
-			/// 		case 1: //WM_CREATE
-			/// 			bool r1 = _hk1.Register(1, "Ctrl+Alt+F10", this);
-			/// 			bool r2 = _hk2.Register(2, (KMod.Ctrl | KMod.Shift, KKey.D), this); //Ctrl+Shift+D
-			/// 			print.it(r1, r2);
-			/// 			break;
-			/// 		case 2: //WM_DESTROY
-			/// 			_hk1.Unregister();
-			/// 			_hk2.Unregister();
-			/// 			break;
-			/// 		case keys.more.Hotkey.WM_HOTKEY:
-			/// 			print.it(m.WParam);
-			/// 			break;
-			/// 		}
-			/// 		base.WndProc(ref m);
+			/// 	protected override void OnSourceInitialized(EventArgs e) {
+			/// 		base.OnSourceInitialized(e);
+			/// 		var hs = PresentationSource.FromVisual(this) as HwndSource;
+			/// 		hs.AddHook(_WndProc);
+			/// 		bool r1 = _hk1.Register(1, "Ctrl+Alt+F10", this);
+			/// 		bool r2 = _hk2.Register(2, (KMod.Ctrl | KMod.Shift, KKey.D), this); //Ctrl+Shift+D
+			/// 		print.it(r1, r2);
+			/// 	}
+			/// 
+			/// 	protected override void OnClosed(EventArgs e) {
+			/// 		base.OnClosed(e);
+			/// 		_hk1.Unregister();
+			/// 		_hk2.Unregister();
+			/// 	}
+			/// 
+			/// 	IntPtr _WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
+			/// 		if (msg == keys.more.Hotkey.WM_HOTKEY) print.it(wParam);
+			/// 
+			/// 		return default;
 			/// 	}
 			/// }
 			/// ]]></code>
 			/// </example>
+			/// <seealso cref="keys.waitForHotkey(double, KHotkey, bool)"/>
 			public struct Hotkey : IDisposable
 			{
 				wnd _w;

@@ -1,5 +1,7 @@
 ﻿//CONSIDER: disable hotkeys when editor hidden.
 
+//TODO: when capturing a classic menu in QM2, this menu disappears on mouse button down. No command invoked. On up invoked QM2 menu item.
+
 namespace Au.Tools
 {
 	static class QuickCapture
@@ -23,7 +25,7 @@ namespace Au.Tools
 			void _Register(ref keys.more.Hotkey rk, ERegisteredHotkeyId id, string keys) { //ref, not in!
 				if (keys.NE()) return;
 				try {
-					if (!rk.Register((int)id, keys, App.HMain))
+					if (!rk.Register((int)id, keys, App.Hmain))
 						print.warning($"Failed to register hotkey {keys}. Look in Options -> Hotkeys.", -1);
 				}
 				catch (Exception ex) { print.it(ex); }
@@ -45,9 +47,7 @@ namespace Au.Tools
 			var p = mouse.xy;
 			wnd w0 = wnd.fromXY(p), w = w0.Window, c = w == w0 ? default : w0;
 			uint color = uiimage.getPixel(p) & 0xFFFFFF;
-
-			const int sh = 30;
-			var screenshot = App.Settings.edit_noImages ? null : ColorQuantizer.MakeScreenshotComment(new(p.x - sh, p.y - sh / 2, sh * 2, sh), dpi: App.HMain);
+			var screenshot = TUtil.MakeScreenshot(p);
 
 			var m = new popupMenu();
 			m["Find window"] = _ => _Insert(_Wnd_Find(w, default));
@@ -123,37 +123,9 @@ namespace Au.Tools
 		}
 
 		static string _Wnd_Find(wnd w, wnd c, bool activate = false) {
-			string wName = w.Name;
-			var f = new TUtil.WindowFindCodeFormatter {
-				Throw = true,
-				Activate = activate,
-				NeedWindow = true,
-				NeedControl = !c.Is0,
-				nameW = TUtil.EscapeWindowName(wName, true),
-				classW = TUtil.StripWndClassName(w.ClassName, true),
-				programW = wName.NE() ? w.ProgramName : null,
-				waitW = "1",
-			};
-			if (!c.Is0) {
-				string cName = null, cClass = TUtil.StripWndClassName(c.ClassName, true);
-				_ = _ConName("", c.Name) || _ConName("***wfName ", c.NameWinforms) || _ConName("***elmName ", c.NameElm);
-
-				bool _ConName(string prefix, string value) {
-					if (value.NE()) return false;
-					cName = prefix + TUtil.EscapeWildex(value);
-					return true;
-				}
-
-				if (TUtil.GetUsefulControlId(c, w, out int id)) {
-					f.idC = id.ToS();
-					f.nameC_comments = cName;
-					f.classC_comments = cClass;
-				} else {
-					f.nameC = cName;
-					f.classC = cClass;
-					f.SetSkipC(w, c);
-				}
-			}
+			var f = new TUtil.WindowFindCodeFormatter();
+			f.RecordWindowFields(w, 1, activate);
+			if (!c.Is0) f.RecordControlFields(w, c);
 			return f.Format();
 		}
 

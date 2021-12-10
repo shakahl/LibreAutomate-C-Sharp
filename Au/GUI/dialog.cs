@@ -644,7 +644,7 @@ namespace Au
 		/// The owner window will be disabled, and this dialog will be on top of it.
 		/// This window will be in owner's screen, if screen was not explicitly specified with the <see cref="Screen"/> property. <see cref="dialog.options.defaultScreen"/> is ignored.
 		/// </summary>
-		/// <param name="owner">Owner window, or one of its child/descendant controls. Can be Control (eg Form) or wnd (window handle). Can be null.</param>
+		/// <param name="owner">Owner window, or one of its child/descendant controls. Can be <b>wnd</b>, WPF window or element, winforms window or control. Can be null.</param>
 		/// <param name="ownerCenter">Show the dialog in the center of the owner window. <see cref="SetXY"/> and <see cref="Screen"/> are ignored.</param>
 		/// <param name="dontDisable">Don't disable the owner window. If false, disables if it belongs to this thread.</param>
 		/// <seealso cref="options.autoOwnerWindow"/>
@@ -856,7 +856,7 @@ namespace Au
 			//	Now our AppHost sets environment variable COMPlus_legacyCorruptedStateExceptionsPolicy=1 before loading runtime.
 			//	Or could move the API call to the C++ dll.
 
-			//CONSIDER: don't use the API. Reinvent wheel with Form. Because:
+			//CONSIDER: don't use the API. Because:
 			//	1. The API is so unreliable. Unexpected errors and even exceptions. Etc, etc.
 			//	2. Has not all we need, and modifying it is so dirty. Eg adding edit control.
 			//	3. Not everything is possible, eg cannot show window inactive.

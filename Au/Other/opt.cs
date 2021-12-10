@@ -151,7 +151,7 @@ namespace Au
 
 		/// <summary>
 		/// Creates temporary scopes for options.
-		/// Example: <c>using(opt.scope.Key()) { opt.key.KeySpeed=5; ... }</c>.
+		/// Example: <c>using(opt.scope.key()) { opt.key.KeySpeed=5; ... }</c>.
 		/// </summary>
 		public static class scope
 		{
@@ -162,7 +162,7 @@ namespace Au
 			/// <example>
 			/// <code><![CDATA[
 			/// print.it(opt.mouse.ClickSpeed);
-			/// using(opt.scope.Mouse()) {
+			/// using(opt.scope.mouse()) {
 			/// 	opt.mouse.ClickSpeed = 100;
 			/// 	print.it(opt.mouse.ClickSpeed);
 			/// } //here restored automatically
@@ -188,7 +188,7 @@ namespace Au
 			/// <example>
 			/// <code><![CDATA[
 			/// print.it(opt.key.KeySpeed);
-			/// using(opt.scope.Key()) {
+			/// using(opt.scope.key()) {
 			/// 	opt.key.KeySpeed = 5;
 			/// 	print.it(opt.key.KeySpeed);
 			/// } //here restored automatically
@@ -241,7 +241,7 @@ namespace Au
 			/// <code><![CDATA[
 			/// opt.warnings.Verbose = false;
 			/// print.it(opt.warnings.Verbose, opt.warnings.IsDisabled("Test*"));
-			/// using(opt.scope.Warnings()) {
+			/// using(opt.scope.warnings()) {
 			/// 	opt.warnings.Verbose = true;
 			/// 	opt.warnings.Disable("Test*");
 			/// 	print.it(opt.warnings.Verbose, opt.warnings.IsDisabled("Test*"));
@@ -268,7 +268,7 @@ namespace Au
 			/// <example>
 			/// <code><![CDATA[
 			/// print.it(opt.key.KeySpeed, opt.mouse.ClickSpeed);
-			/// using(opt.scope.All()) {
+			/// using(opt.scope.all()) {
 			/// 	opt.key.KeySpeed = 5;
 			/// 	opt.mouse.ClickSpeed = 50;
 			/// 	print.it(opt.key.KeySpeed, opt.mouse.ClickSpeed);
@@ -441,7 +441,7 @@ namespace Au.Types
 		/// <value>Valid values: 0 (instant) - 10000 (slowest). Valid values for <see cref="opt.init.mouse"/>: 0 - 100.</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
-		/// Used by <see cref="mouse.move"/>, <see cref="mouse.click"/> and other functions that generate mouse movement events, except <see cref="mouse.moveRecorded"/>.
+		/// Used by <see cref="mouse.move"/>, <see cref="mouse.click"/> and other functions that generate mouse movement events, except <see cref="mouse.moveRelative(string, double)"/>.
 		/// It is not milliseconds or some other unit. It adds intermediate mouse movements and small delays when moving the mouse cursor to the specified point. The speed also depends on the distance.
 		/// Value 0 (default) does not add intermediate mouse movements. Adds at least 1 if some mouse buttons are pressed. Value 1 adds at least 1 intermediate mouse movement. Values 10-50 are good for visually slow movements.
 		/// </remarks>

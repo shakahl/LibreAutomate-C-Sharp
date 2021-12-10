@@ -25,7 +25,7 @@ static class Menus
 		[Command("Delete...", separator = true, keysText = "Delete", image = "*Typicons.DocumentDelete #FF4040")]
 		public static void Delete() { App.Model.DeleteSelected(); }
 
-		[Command(keys = "F2", image = "*BoxIcons.RegularRename #505050")]
+		[Command(keys = "F2", image = "*BoxIcons.RegularRename #404040")]
 		public static void Rename() { App.Model.RenameSelected(); }
 
 		[Command(image = "*RemixIcon.ChatSettingsLine #99BF00")]
@@ -106,14 +106,14 @@ static class Menus
 			[Command("Import .zip...", separator = true)]
 			public static void Import_zip() {
 				var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDA}") { Title = "Import .zip", FileTypes = "Zip files|*.zip" };
-				if (d.ShowOpen(out string s, App.HMain))
+				if (d.ShowOpen(out string s, App.Hmain))
 					App.Model.ImportWorkspace(s);
 			}
 
 			[Command("...")]
 			public static void Import_workspace() {
 				var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDA}") { Title = "Import workspace" };
-				if (d.ShowOpen(out string s, App.HMain, selectFolder: true))
+				if (d.ShowOpen(out string s, App.Hmain, selectFolder: true))
 					App.Model.ImportWorkspace(s);
 			}
 
@@ -130,7 +130,7 @@ static class Menus
 			[Command("...")]
 			public static void New_workspace() { FilesModel.NewWorkspaceUI(); }
 
-			[Command(separator = true, keys = "Ctrl+S", image = "*BoxIcons.RegularSave #505050")]
+			[Command(separator = true, keys = "Ctrl+S", image = "*BoxIcons.RegularSave #404040")]
 			public static void Save_now() { App.Model?.Save.AllNowIfNeed(); }
 		}
 
@@ -218,6 +218,9 @@ static class Menus
 	[Command(target = "Edit")]
 	public static class Code
 	{
+		[Command(image = "*Material.RecordCircleOutline #FF6640")]
+		public static void Input_recorder() { InputRecorder.ShowRecorder(); }
+
 		[Command("wnd (find window)")]
 		public static void wnd() { Dwnd.Dialog(); }
 
@@ -252,7 +255,9 @@ static class Menus
 		[Command(keys = "F5", image = "*Codicons.DebugStart #40B000")]
 		public static void Run_script() { CompileRun.CompileAndRun(true, App.Model.CurrentFile, runFromEditor: true); }
 
-		[Command(image = "*PicolIcons.BadgeStop #505050")]
+		//[Command(image = "*PicolIcons.BadgeStop #404040")]
+		[Command(image = "*PicolIcons.BadgeCancel #404040")]
+		//[Command(image = "*JamIcons.CloseRectangle #404040")]
 		public static void End_task() {
 			var f = App.Model.CurrentFile;
 			if (f != null) {
@@ -366,13 +371,13 @@ static class Menus
 	[Command(target = "")]
 	public static class Help
 	{
-		[Command(image = "*RPGAwesome.Help #BB54FF")]
+		[Command(image = "*FontAwesome.QuestionCircleRegular #BB54FF")]
 		public static void Program_help() { HelpUtil.AuHelp(""); }
 
-		[Command(image = "*RPGAwesome.Help #EABB00")]
+		[Command(image = "*FontAwesome.QuestionCircleRegular #EABB00")]
 		public static void Library_help() { HelpUtil.AuHelp("api/"); }
 
-		[Command(keys = "F1", image = "*RPGAwesome.Help #70B0FF")]
+		[Command(keys = "F1", image = "*FontAwesome.QuestionCircleRegular #008EEE")]
 		public static void Context_help() {
 			var w = Api.GetFocus();
 			if (w.ClassNameIs("HwndWrapper*")) {

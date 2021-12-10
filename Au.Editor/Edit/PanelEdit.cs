@@ -182,7 +182,10 @@ class PanelEdit : Grid
 
 		App.Commands[nameof(Menus.Edit)].Enabled = enable;
 		App.Commands[nameof(Menus.Code)].Enabled = enable;
-		App.Commands[nameof(Menus.Run)].Enabled = enable;
+		//App.Commands[nameof(Menus.Run)].Enabled = enable; //no, should not disable eg End_task and Recent
+		App.Commands[nameof(Menus.Run.Run_script)].Enabled = enable;
+		App.Commands[nameof(Menus.Run.Compile)].Enabled = enable;
+		App.Commands[nameof(Menus.Run.Debug_break)].Enabled = enable;
 		//App.Commands[nameof(Menus.File.Properties)].Enabled = enable; //also Rename, Delete, More //don't disable because can right-click
 	}
 	bool _uiDisabled_IsOpen;

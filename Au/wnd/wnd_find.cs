@@ -17,12 +17,12 @@
 		/// null means 'can be any'. Cannot be "".
 		/// </param>
 		/// <param name="of">
-		/// Program file name, like <c>"notepad.exe"</c>.
-		/// String format: [](xref:wildcard_expression).
-		/// null means 'can be any'. Cannot be "". Cannot be path.
+		/// Owner window, program or thread. Depends on argument type:
+		/// - <b>wnd</b> - owner window. Will use <see cref="IsOwnedBy(wnd, int)"/> with level 2.
+		/// - <b>string</b> - program file name, like <c>"notepad.exe"</c>. String format: [](xref:wildcard_expression). Cannot be "" or path.
+		/// - <b>WOwner</b> - <see cref="WOwner.Process"/>(process id), <see cref="WOwner.Thread"/>(thread id).
 		/// 
-		/// Or <see cref="WOwner.Process"/>(process id), <see cref="WOwner.Thread"/>(thread id), <see cref="WOwner.Window"/>(owner window).
-		/// See <see cref="ProcessId"/>, <see cref="process.thisProcessId"/>, <see cref="ThreadId"/>, <see cref="process.thisThreadId"/>, <see cref="getwnd.Owner"/>.
+		/// See <see cref="getwnd.Owner"/>, <see cref="ProcessId"/>, <see cref="process.thisProcessId"/>, <see cref="ThreadId"/>, <see cref="process.thisThreadId"/>.
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="also">
@@ -414,7 +414,8 @@
 			/// </summary>
 			internal static ArrayBuilder_<wnd> EnumWindows2(EnumAPI api,
 				bool onlyVisible, bool sortFirstVisible = false, wnd wParent = default, bool directChild = false, int threadId = 0,
-				Func<wnd, object, bool> predicate = null, object predParam = default, List<wnd> list = null) {
+				Func<wnd, object, bool> predicate = null, object predParam = default, List<wnd> list = null
+				) {
 				if (directChild && wParent == getwnd.root) { api = EnumAPI.EnumWindows; wParent = default; }
 
 				ArrayBuilder_<wnd> ab = default;
@@ -486,13 +487,20 @@
 				public EnumAPI api;
 				public bool onlyVisible, directChild;
 				public wnd wParent;
+				int _ownerTid;
+				bool _ownerFound;
 
 				public int Proc(wnd w) {
-					if (onlyVisible && !_EnumIsVisible(w, api, wParent)) return 1;
 					if (api == EnumAPI.EnumChildWindows) {
+						if (onlyVisible && !w.IsVisibleIn_(wParent)) return 1;
 						if (directChild && w.ParentGWL_ != wParent) return 1;
+					} else if (wParent.Is0) {
+						if (onlyVisible && !w.IsVisible) return 1;
 					} else {
-						if (!wParent.Is0 && w.Get.Owner != wParent) return 1;
+						if (!_ownerFound && w == wParent) { _ownerFound = true; return 1; }
+						if (onlyVisible && !w.IsVisible) return 1;
+						if (!w.IsOwnedBy2_(wParent, _ownerFound ? 1 : 2, ref _ownerTid)) return 1;
+						//if _ownerFound, still call with level 1, in case of bug "owned window is behind owner"
 					}
 					if (a == null) a = MemoryUtil.Alloc<int>(_cap = onlyVisible ? 200 : 1000);
 					else if (len == _cap) MemoryUtil.ReAlloc(ref a, _cap *= 2);
@@ -540,32 +548,38 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Used with <see cref="wnd.find"/> and similar functions to specify an owner object of the window.
-	/// Can be program name (like <c>"notepad.exe"</c>), process id (<see cref="Process"/>), thread id (<see cref="Thread"/> or <see cref="ThisThread"/>) or owner window (<see cref="Window"/>).
+	/// Used with <see cref="wnd.find"/> and similar functions to specify an owner of the window.
+	/// Can be program name (like <c>"notepad.exe"</c>), process id (<see cref="Process"/>), thread id (<see cref="Thread"/> or <see cref="ThisThread"/>), owner window.
 	/// </summary>
 	public struct WOwner
 	{
-		readonly object _o;
-		WOwner(object o) => _o = o;
+		readonly string _s; //program
+		readonly int _i; //wnd, tid, pid
+		readonly byte _what; //0 _o, 1 owner, 2 tid, 3 pid
+
+		//readonly byte _ownerLevel; //rejected. Rarely used. Can use *also* instead.
+
+		WOwner(string s) : this() => _s = s;
+
+		WOwner(int i, byte what) : this() { _i = i; _what = what; }
 
 		/// <summary>Program name like "notepad.exe", or null. See <see cref="wnd.ProgramName"/>.</summary>
 		public static implicit operator WOwner([ParamString(PSFormat.wildex)] string program) => new(program);
 
-		//rejected. Cannot check whether it is default(WOwner) or 0 window handle. And less readable code.
-		///// <summary>Owner window. See <see cref="wnd.OwnerWindow"/>.</summary>
-		//public static implicit operator WOwner(wnd ownerWindow) => new(ownerWindow);
+		/// <summary>Owner window. See <see cref="wnd.getwnd.Owner"/>. Will use <see cref="wnd.IsOwnedBy(wnd, int)"/> with level 2.</summary>
+		public static implicit operator WOwner(wnd ownerWindow) => new((int)ownerWindow, 1);
+
+		///// <summary>Owner window. See <see cref="wnd.getwnd.Owner"/>. Will use <see cref="wnd.IsOwnedBy(wnd, int)"/> with level 2.</summary>
+		//public static implicit operator WOwner(System.Windows.DependencyObject ownerWindow) => new((int)ownerWindow.Hwnd(), 1);
 
 		/// <summary>Process id. See <see cref="wnd.ProcessId"/>.</summary>
-		public static WOwner Process(int processId) => new(processId);
+		public static WOwner Process(int processId) => new(processId, 3);
 
 		/// <summary>Thread id. See <see cref="wnd.ThreadId"/>.</summary>
-		public static WOwner Thread(int threadId) => new((uint)threadId);
+		public static WOwner Thread(int threadId) => new(threadId, 2);
 
 		/// <summary>Thread id of this thread.</summary>
-		public static WOwner ThisThread => new((uint)Api.GetCurrentThreadId());
-
-		/// <summary>Owner window. See <see cref="wnd.getwnd.Owner"/>.</summary>
-		public static WOwner Window(AnyWnd ownerWindow) => new(ownerWindow);
+		public static WOwner ThisThread => new(Api.GetCurrentThreadId(), 2);
 
 		/// <summary>
 		/// Gets program name or process id or thread id or owner window.
@@ -574,27 +588,24 @@ namespace Au.Types
 		/// <exception cref="ArgumentException">The value is "" or 0 or contains characters \ or /.</exception>
 		public void GetValue(out wildex program, out int pid, out int tid, out wnd owner) {
 			program = null; pid = 0; tid = 0; owner = default;
-			switch (_o) {
-			case string s:
-				if (s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null.");
-				if (!s.Starts("**")) { //can be regex
-					if (s.FindAny(@"\/") >= 0) throw new ArgumentException("Program name contains \\ or /.");
-					if (pathname.findExtension(s) < 0 && !wildex.hasWildcardChars(s)) print.warning("Program name without .exe.");
+			switch (_what) {
+			case 0 when _s != null:
+				if (_s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null.");
+				if (!_s.Starts("**")) { //can be regex
+					if (_s.FindAny(@"\/") >= 0) throw new ArgumentException("Program name contains \\ or /.");
+					if (pathname.findExtension(_s) < 0 && !wildex.hasWildcardChars(_s)) print.warning("Program name without .exe.");
 				}
-				program = s;
+				program = _s;
 				break;
-			case int i:
-				if (i == 0) throw new ArgumentException("0 process id");
-				pid = i;
+			case 1:
+				owner = (wnd)_i;
+				if (owner.Is0) throw new ArgumentException("owner window 0");
 				break;
-			case uint i:
-				if (i == 0) throw new ArgumentException("0 thread id");
-				tid = (int)i;
+			case 2:
+				if ((tid = _i) == 0) throw new ArgumentException("thread id 0");
 				break;
-			case AnyWnd aw:
-				var w = aw.Hwnd;
-				if (w.Is0) throw new ArgumentException("0 window handle");
-				owner = w;
+			case 3:
+				if ((pid = _i) == 0) throw new ArgumentException("process id 0");
 				break;
 			}
 		}
@@ -602,7 +613,7 @@ namespace Au.Types
 		/// <summary>
 		/// Returns true if nothing was assigned to this variable.
 		/// </summary>
-		public bool IsEmpty => _o == null;
+		public bool IsEmpty => _what == 0 && _s == null;
 	}
 
 	/// <summary>

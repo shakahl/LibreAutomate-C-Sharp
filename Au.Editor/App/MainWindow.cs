@@ -25,7 +25,7 @@ partial class MainWindow : Window
 		App.Commands.InitToolbarsAndCustomize(folders.ThisAppBS + @"Default\Commands.xml", AppSettings.DirBS + "Commands.xml", atb);
 
 		var bRun = App.Commands[nameof(Menus.Run.Run_script)].FindButtonInToolbar(Panels.TRun);
-		if (bRun != null) { bRun.Width = 40; bRun.Margin = new(10, 0, 10, 0); } //make Run button bigger //SHOULDDO: bad if vertical toolbar
+		if (bRun != null) { bRun.Width = 50; bRun.Margin = new(10, 0, 10, 0); } //make Run button bigger //SHOULDDO: bad if vertical toolbar
 
 		Panels.CreatePanels();
 
@@ -83,13 +83,13 @@ partial class MainWindow : Window
 	protected override void OnSourceInitialized(EventArgs e) {
 		base.OnSourceInitialized(e);
 		var hs = PresentationSource.FromVisual(this) as HwndSource;
-		App.HMain = (wnd)hs.Handle;
+		App.Hmain = (wnd)hs.Handle;
 
 		//workaround for: sometimes OS does not set foreground window. Then we have a fake active/focused state (blinking caret, called OnActivated, etc).
 		//	1. When started hidden, and now clicked tray icon first time. Is it because of the "lock foreground window"? Or WPF shows window somehow incorrectly?
 		//	2. When starting visible, if VMWare Player is active. Same with some other programs too (WPF, appstore, some other).
 		//this.Activate(); //does not work with VMWare, also if user clicks a window after starting this process
-		App.HMain.ActivateL(); //works always, possibly with workarounds
+		App.Hmain.ActivateL(); //works always, possibly with workarounds
 
 		Panels.PanelManager["Output"].Visible = true;
 

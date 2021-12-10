@@ -592,6 +592,7 @@ partial class CiStyling
 				//	1. In wrap mode draws as many lines as with big font. Even caret is large and spans all lines.
 				//		Plus other anomalies, eg when scrolling.
 				//		I could not find a workaround. Tried SCI_SETLAYOUTCACHE, SCI_SETPOSITIONCACHE, SCI_SETHOTSPOTSINGLELINE, etc.
+				//		//TODO: update scintilla. Fixed several bugs similar to this.
 				//	2. User cannot delete text containing hidden text.
 				//		Need to modify scintilla source; maybe just simply modify IsProtected() in Style.h.
 				//if (sty.hidden) sci.zStyleHidden((int)tok, true);

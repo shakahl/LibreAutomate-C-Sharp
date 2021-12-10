@@ -436,7 +436,7 @@ namespace Au.Types
 
 	/// <summary>
 	/// Window handle.
-	/// Used for function parameters where the function needs a window handle as <see cref="wnd"/> but also allows to pass a variable of any of these types: System.Windows.Forms.Control (Form or control), System.Windows.DependencyObject (WPF window or control), IntPtr (window handle).
+	/// Used for function parameters where the function needs a window handle as <see cref="wnd"/> but also allows to pass a variable of any of these types: <b>System.Windows.DependencyObject</b> (WPF window or control), <b>System.Windows.Forms.Control</b> (<b>Form</b> or control), <b>IntPtr</b> (window handle).
 	/// </summary>
 	public struct AnyWnd
 	{

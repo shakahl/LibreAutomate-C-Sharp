@@ -307,7 +307,7 @@ class RunningTasks
 
 	void _TimerUpdateUI() {
 		if (!_updateUI) return;
-		if (!App.HMain.IsVisible) return;
+		if (!App.Hmain.IsVisible) return;
 		_UpdatePanels();
 	}
 

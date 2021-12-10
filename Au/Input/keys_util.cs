@@ -15,23 +15,23 @@ namespace Au
 
 			//character keys, like K, 9, -
 			if (len == 1) {
-				if (c >= 'a' && c <= 'z') return (KKey)(c - 32);
-				if (c >= 'A' && c <= 'Z') return (KKey)c;
-				if (c >= '0' && c <= '9') return (KKey)c;
-				switch (c) {
-				case '-': return KKey.OemMinus;
-				case '=': return KKey.OemPlus;
-				case '`': case '~': return KKey.OemTilde;
-				case '[': case '{': return KKey.OemOpenBrackets;
-				case ']': case '}': return KKey.OemCloseBrackets;
-				case '\\': case '|': return KKey.OemPipe;
-				case ';': case ':': return KKey.OemSemicolon;
-				case '\'': case '\"': return KKey.OemQuotes;
-				case ',': case '<': return KKey.OemComma;
-				case '.': case '>': return KKey.OemPeriod;
-				case '/': case '?': return KKey.OemQuestion;
-				}
-				return 0;
+				return c switch {
+					>= 'a' and <= 'z' => (KKey)(c - 32),
+					>= 'A' and <= 'Z' => (KKey)c,
+					>= '0' and <= '9' => (KKey)c,
+					'-' => KKey.OemMinus,
+					'=' => KKey.OemPlus,
+					'`' or '~' => KKey.OemTilde,
+					'[' or '{' => KKey.OemOpenBrackets,
+					']' or '}' => KKey.OemCloseBrackets,
+					'\\' or '|' => KKey.OemPipe,
+					';' or ':' => KKey.OemSemicolon,
+					'\'' or '\"' => KKey.OemQuotes,
+					',' or '<' => KKey.OemComma,
+					'.' or '>' => KKey.OemPeriod,
+					'/' or '?' => KKey.OemQuestion,
+					_ => 0,
+				};
 
 				//special
 				//+ //eg Ctrl+A
@@ -40,33 +40,25 @@ namespace Au
 				//)
 				//# //numpad keys, eg #5, #*
 				//_ //character
+				//^ //characters
 
 				//reserved
-				//! @ $ % ^ &
+				//! @ $ % &
 			}
 
 			//numpad keys
 			if (c == '#') {
-				if (len == 2) {
-					switch (s[i + 1]) {
-					case '.': return KKey.Decimal;
-					case '+': return KKey.Add;
-					case '/': return KKey.Divide;
-					case '*': return KKey.Multiply;
-					case '-': return KKey.Subtract;
-					case '0': return KKey.NumPad0;
-					case '1': return KKey.NumPad1;
-					case '2': return KKey.NumPad2;
-					case '3': return KKey.NumPad3;
-					case '4': return KKey.NumPad4;
-					case '5': return KKey.NumPad5;
-					case '6': return KKey.NumPad6;
-					case '7': return KKey.NumPad7;
-					case '8': return KKey.NumPad8;
-					case '9': return KKey.NumPad9;
-					}
-				}
-				return 0;
+				if (len != 2) return 0;
+				c = s[i + 1];
+				return c switch {
+					>= '0' and <= '9' => (KKey)(c - '0' + (int)KKey.NumPad0),
+					'.' => KKey.Decimal,
+					'+' => KKey.Add,
+					'/' => KKey.Divide,
+					'*' => KKey.Multiply,
+					'-' => KKey.Subtract,
+					_ => 0,
+				};
 			}
 
 			//F keys
@@ -78,10 +70,10 @@ namespace Au
 			//named keys
 			//names start with an uppercase letter and must have at least 2 other anycase letters, except: Up, AltG (RAl), PageU (PgU), PageD (PgD), some alternative names (PU, PD, PB, PS, HM, SL, CL, NL, BS).
 			KKey k = 0;
-			char c1 = Char.ToLowerInvariant(s[i + 1]), //note: Tables_.LowerCase would make startup slow
-				c2 = len > 2 ? Char.ToLowerInvariant(s[i + 2]) : ' ',
-				c3 = len > 3 ? Char.ToLowerInvariant(s[i + 3]) : ' ',
-				c4 = len > 4 ? Char.ToLowerInvariant(s[i + 4]) : ' ';
+			char c1 = char.ToLowerInvariant(s[i + 1]), //note: Tables_.LowerCase would make startup slow
+				c2 = len > 2 ? char.ToLowerInvariant(s[i + 2]) : ' ',
+				c3 = len > 3 ? char.ToLowerInvariant(s[i + 3]) : ' ',
+				c4 = len > 4 ? char.ToLowerInvariant(s[i + 4]) : ' ';
 			uint u = (uint)c1 << 16 | c2;
 			switch (c) {
 			case 'A':

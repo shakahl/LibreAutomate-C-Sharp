@@ -11,7 +11,7 @@ Autepad cannot execute or convert QM scripts. If you have many QM scripts, proba
 
 Autepad is free and open-source. Its open-source automation library can be used in other programs too.
 
-Autepad can run on Windows 7-10 with .NET runtime 5. More info [here](xref:index).
+Autepad can run on Windows 7-11 with .NET runtime. More info [here](xref:index).
 
 The program and library are still unfinished. The most important parts are finished and can be used, but some classes and functions can be changed in the future, which can break your scripts, clear settings, etc.
 
@@ -51,9 +51,9 @@ Autepad has triggers to execute parts of a running script. Trigger types: hotkey
 
 Autepad does not have item types like "menu", "toolbar" and "autotext". Instead use classes popupMenu, floatingToolbar and AutotextTriggers.
 
-To create dialogs now can be used class wpfBuilder and snippet wpfSnippet. Editor in the future.
+To create dialogs now can be used class wpfBuilder and snippet wpfSnippet.
 
-Currently Autepad has only the most important tools for creating code. They are in the Code menu: keys, regex, find window/element/image, Windows API. More in the future.
+Currently Autepad has only the most important tools for creating code. They are in the Code menu: recorder, find window/element/image, keys, regex, Windows API. More in the future.
 
 In Autepad each script is a separate .cs file. [Read more](xref:Autepad).
 
@@ -68,15 +68,14 @@ In the main Autepad window you can resize and dock all panels and toolbars where
 Autepad saves all settings in files, not in the Registry.
 
 #### Some important features still missing
-- Recording.
 - Dialog editor.
-- Many Tools menu commands.
+- Some Tools menu commands.
 - Many options in the Options dialog.
 - Automatic backup.
 - Triggers of types other than hotkey, autotext, mouse and window.
 - UI to create Windows Task Scheduler tasks easier.
 - Debugger. To debug a script in step mode need Visual Studio.
-- Multiple visible code editor controls.
+- Multiple code editors.
 
 Most of these will be added in the future.
 

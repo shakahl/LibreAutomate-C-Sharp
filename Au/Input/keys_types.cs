@@ -318,5 +318,8 @@ namespace Au.Types
 
 		/// <summary>Allows to split a <b>KHotkey</b> variable like <c>var (mod, key) = hotkey;</c></summary>
 		public void Deconstruct(out KMod mod, out KKey key) { mod = Mod; key = Key; }
+
+		///
+		public override string ToString() => keys.more.hotkeyToString(Mod, Key);
 	}
 }

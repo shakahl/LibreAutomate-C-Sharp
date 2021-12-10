@@ -116,7 +116,7 @@ namespace Au
 		/// <summary>
 		/// Moves the cursor (mouse pointer) to the position x y relative to window w.
 		/// </summary>
-		/// <returns>Cursor position in primary screen coordinates.</returns>
+		/// <returns>Cursor position in screen coordinates.</returns>
 		/// <param name="w">Window or control.</param>
 		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
@@ -240,8 +240,8 @@ namespace Au
 
 		/// <summary>
 		/// Moves the cursor (mouse pointer) relative to <see cref="lastXY"/>.
-		/// Returns the final cursor position in primary screen coordinates.
 		/// </summary>
+		/// <returns>Final cursor position in screen.</returns>
 		/// <param name="dx">X offset from <b>LastXY.x</b>.</param>
 		/// <param name="dy">Y offset from <b>LastXY.y</b>.</param>
 		/// <exception cref="ArgumentOutOfRangeException">The calculated x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
@@ -258,10 +258,10 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Plays recorded mouse movements, relative to <see cref="lastXY"/>.
-		/// Returns the final cursor position in primary screen coordinates.
+		/// Moves the cursor (mouse pointer) relative to <see cref="lastXY"/>. Uses multiple x y offsets.
 		/// </summary>
-		/// <param name="recordedString">String containing mouse movement data recorded by a recorder tool that uses <see cref="RecordingUtil.MouseToString"/>.</param>
+		/// <returns>Final cursor position in screen.</returns>
+		/// <param name="recordedString">String containing multiple x y offsets. Created by a mouse recorder tool with <see cref="RecordingUtil.MouseToString"/>.</param>
 		/// <param name="speedFactor">Speed factor. For example, 0.5 makes 2 times faster.</param>
 		/// <exception cref="FormatException">Invalid Base64 string.</exception>
 		/// <exception cref="ArgumentException">The string is not compatible with this library version (recorded with a newer version and has additional options).</exception>
@@ -270,7 +270,7 @@ namespace Au
 		/// <remarks>
 		/// Uses <see cref="opt.mouse"/>: <see cref="OMouse.Relaxed"/> (only for the last movement; always relaxed in intermediate movements).
 		/// </remarks>
-		public static POINT moveRecorded(string recordedString, double speedFactor = 1.0) {
+		public static POINT moveRelative(string recordedString, double speedFactor = 1.0) {
 			WaitForNoButtonsPressed_();
 
 			var a = Convert.FromBase64String(recordedString);
@@ -363,11 +363,11 @@ namespace Au
 
 		/// <summary>
 		/// Calls Api.SendInput to send single mouse movement or/and button down or up or wheel event.
-		/// Converts x, y and wheelTicks as need for MOUSEINPUT.
+		/// Converts x, y as need for MOUSEINPUT.
 		/// For X buttons use Api.IMFlag.XDown|Api.IMFlag.X1 etc.
 		/// If Api.IMFlag.Move, adds Api.IMFlag.Absolute.
 		/// </summary>
-		static unsafe void _SendRaw(Api.IMFlags flags, int x = 0, int y = 0, int wheelTicks = 0) {
+		static unsafe void _SendRaw(Api.IMFlags flags, int x = 0, int y = 0, int wheel = 0) {
 			if (0 != (flags & Api.IMFlags.Move)) {
 				flags |= Api.IMFlags.Absolute;
 				var psr = screen.primary.Rect;
@@ -379,7 +379,7 @@ namespace Au
 			if (0 != (flags & (Api.IMFlags.XDown | Api.IMFlags.XUp))) {
 				mouseData = (int)((uint)flags >> 24);
 				flags &= (Api.IMFlags)0xffffff;
-			} else mouseData = wheelTicks * 120;
+			} else mouseData = wheel;
 
 			var k = new Api.INPUTM(flags, x, y, mouseData);
 			Api.SendInput(&k);
@@ -837,12 +837,51 @@ namespace Au
 		/// <remarks>
 		/// Uses <see cref="opt.mouse"/>: <see cref="OMouse.ClickSleepFinally"/>.
 		/// </remarks>
-		public static void wheel(int ticks, bool horizontal = false) {
-			_SendRaw(horizontal ? Api.IMFlags.HWheel : Api.IMFlags.Wheel, 0, 0, ticks);
+		public static void wheel(double ticks, bool horizontal = false) {
+			bool neg = ticks < 0; if (neg) ticks = -ticks;
+			ticks *= 120;
+			while (ticks > 0) {
+				short t = (short)(ticks < 30000 ? Math.Ceiling(ticks) : 30000); //max 250 full ticks
+				_SendRaw(horizontal ? Api.IMFlags.HWheel : Api.IMFlags.Wheel, 0, 0, neg ? -t : t);
+				ticks -= t;
+			}
 			_Sleep(opt.mouse.ClickSleepFinally);
 		}
 
-		//rejected: unclear etc. Instead let use mouse.leftUp(true) or using(mouse.leftDown(...).
+		//rejected. Not so often used. It's easy to move(); wheel().
+		///// <summary>
+		///// Mouse move and wheel.
+		///// </summary>
+		///// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		///// <param name="y">Y coordinate in the screen.</param>
+		///// <param name="ticks">Number of wheel ticks forward (positive) or backward (negative).</param>
+		///// <param name="horizontal">Horizontal wheel.</param>
+		///// <exception cref="Exception">Exceptions of <see cref="move(Coord, Coord)"/>.</exception>
+		///// <remarks>
+		///// Uses <see cref="opt.mouse"/>: <see cref="OMouse.ClickSleepFinally"/>.
+		///// </remarks>
+		//public static void wheel(Coord x, Coord y, double ticks, bool horizontal = false) {
+		//	move(x, y);
+		//	wheel(ticks, horizontal);
+		//}
+
+		///// <summary>
+		///// Mouse move and wheel.
+		///// </summary>
+		///// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		///// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
+		///// <param name="ticks">Number of wheel ticks forward (positive) or backward (negative).</param>
+		///// <param name="horizontal">Horizontal wheel.</param>
+		///// <exception cref="Exception">Exceptions of <see cref="move(wnd, Coord, Coord)"/>.</exception>
+		///// <remarks>
+		///// Uses <see cref="opt.mouse"/>: <see cref="OMouse.ClickSleepFinally"/>.
+		///// </remarks>
+		//public static void wheel(wnd w, Coord x, Coord y, double ticks, bool horizontal = false) {
+		//	move(w, x, y);
+		//	wheel(ticks, horizontal);
+		//}
+
+		//rejected. Unclear etc. Instead let use mouse.leftUp(true) or using(mouse.leftDown(...).
 		///// <summary>
 		///// Releases mouse buttons pressed by this thread.
 		///// </summary>
@@ -1280,7 +1319,7 @@ namespace Au.Types
 
 	/// <summary>
 	/// Flags for mouse buttons.
-	/// Used with functions that check mouse button states (down or up).
+	/// Used with functions that check mouse button states (pressed or not).
 	/// </summary>
 	/// <remarks>
 	/// The values are the same as <see cref="System.Windows.Forms.MouseButtons"/>, therefore can be cast to/from.

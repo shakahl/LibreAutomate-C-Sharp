@@ -4,8 +4,9 @@ using static Au.Controls.Sci;
 
 class PanelOutput : DockPanel
 {
-	_SciOutput _c;
-	Queue<PrintServerMessage> _history;
+	readonly _SciOutput _c;
+	readonly KPanels.ILeaf _leaf;
+	readonly Queue<PrintServerMessage> _history;
 
 	public KScintilla ZOutput => _c;
 
@@ -16,6 +17,7 @@ class PanelOutput : DockPanel
 		this.Children.Add(_c);
 		_history = new Queue<PrintServerMessage>();
 		App.Commands.BindKeysTarget(this, "Output");
+		_leaf = Panels.PanelManager["Output"];
 	}
 
 	public void ZClear() { _c.zClearText(); _c.Call(SCI_SETSCROLLWIDTH, 1); }
@@ -37,7 +39,7 @@ class PanelOutput : DockPanel
 		if (ZWhiteSpace) ZWhiteSpace = true;
 		if (ZTopmost) App.Commands[nameof(Menus.Tools.Output.Topmost_when_floating)].Checked = true; //see also OnParentChanged, below
 		_inInitSettings = false;
-		Panels.PanelManager["Output"].FloatingChanged += (_, floating) => { if (floating && ZTopmost) _SetTopmost(true); };
+		_leaf.FloatingChanged += (_, floating) => _SetTopmost(floating ? 1 : 0);
 	}
 	bool _inInitSettings;
 
@@ -67,24 +69,47 @@ class PanelOutput : DockPanel
 	public bool ZTopmost {
 		get => App.Settings.output_topmost;
 		set {
-			if (Panels.PanelManager["Output"].Floating) _SetTopmost(value);
 			App.Settings.output_topmost = value;
 			App.Commands[nameof(Menus.Tools.Output.Topmost_when_floating)].Checked = value;
+			if (_leaf.Floating) _SetTopmost(2);
 		}
 	}
 
-	void _SetTopmost(bool on) {
+	//action: 0 dock, 1 undock, 2 changed while floating
+	void _SetTopmost(int action) {
 		var w = this.Hwnd().Window;
-		if (on) {
-			WndUtil.SetOwnerWindow(w, default);
-			w.ZorderTopmost();
-			//w.SetExStyle(WSE.APPWINDOW, SetAddRemove.Add);
-			//wnd.getwnd.root.ActivateL(); w.ActivateL(); //let taskbar add button
-		} else {
-			w.ZorderNoTopmost();
-			WndUtil.SetOwnerWindow(w, App.Wmain.Hwnd());
+		if (action >= 1) {
+			if (ZTopmost) {
+				WndUtil.SetOwnerWindow(w, default);
+				w.ZorderTopmost();
+				//w.SetExStyle(WSE.APPWINDOW, SetAddRemove.Add);
+				//wnd.getwnd.root.ActivateL(); w.ActivateL(); //let taskbar add button
+			} else if (action == 2) {
+				w.ZorderNoTopmost();
+				WndUtil.SetOwnerWindow(w, App.Hmain);
+			}
+		}
+
+		//Windows bug: sometimes the floating/topmost output panel becomes behind normal windows, although has topmost style. Until clicked.
+		//	To reproduce: in a ribbon show a dropdown, eg a popup menu. If can't reproduce, try others.
+		bool needTimer = ZTopmost && action >= 1;
+		if (needTimer != _workaround1.isTimer) {
+			if (_workaround1.isTimer = needTimer) App.Timer1s += _WorkaroundTimer; else App.Timer1s -= _WorkaroundTimer;
+			if (needTimer) _workaround1.w = w;
+		}
+		void _WorkaroundTimer() {
+			//print.it("timer");
+			var wa = wnd.active;
+			if (!wa.Is0 && !wa.IsTopmost) {
+				var ww = _workaround1.w;
+				if (!ww.ZorderIsAbove(wa)) {
+					//print.it("workaround");
+					ww.ZorderTop();
+				}
+			}
 		}
 	}
+	(bool isTimer, wnd w) _workaround1;
 
 	class _SciOutput : KScintilla
 	{
@@ -222,15 +247,14 @@ class PanelOutput : DockPanel
 				if (h.Count > 50) h.Dequeue();
 			}
 
-			(_iPanel ??= Panels.PanelManager["Output"]).Visible = true; //SHOULDDO: if(App.Hwnd.IsVisible) ?
+			_p._leaf.Visible = true; //SHOULDDO: if(App.Hwnd.IsVisible) ?
 		}
 		static regexp s_rx1, s_rx2;
-		KPanels.ILeaf _iPanel;
 
 		static void _OpenLink(string s) {
 			//print.it(s);
 			var a = s.Split('|');
-			if(a.Length > 3) App.Model.OpenAndGoTo3(a[0], a[3]);
+			if (a.Length > 3) App.Model.OpenAndGoTo3(a[0], a[3]);
 			else App.Model.OpenAndGoTo2(a[0], a.Length > 1 ? a[1] : null, a.Length > 2 ? a[2] : null);
 		}
 

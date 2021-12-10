@@ -13,24 +13,24 @@ namespace Au
 		/// <exception cref="ArgumentException" />
 		/// <remarks>
 		/// Parameters etc are the same as <see cref="find"/>.
-		/// By default ignores invisible and cloaked windows. Use flags if need.
-		/// If you have a window's wnd variable, to wait until it is active/visible/etc use <see cref="WaitFor"/> instead.
+		/// By default ignores invisible and cloaked windows. Use <i>flags</i> if need.
+		/// If you have a window's <b>wnd</b> variable, to wait until it is active/visible/etc use <see cref="WaitFor"/> instead.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// wnd w = wnd.wait(10, false, "* Notepad");
 		/// print.it(w);
 		/// ]]></code>
-		/// Using in a Form/Control event handler.
+		/// Using in a WPF window with async/await.
 		/// <code><![CDATA[
-		/// var f = new Form();
-		/// f.Click += async (_, _) =>
-		///   {
+		/// using System.Windows;
+		/// var b = new wpfBuilder("Window").WinSize(250);
+		/// b.R.AddButton("Wait", async _ => {
 		/// 	  print.it("waiting for Notepad...");
 		/// 	  wnd w = await Task.Run(() => wnd.wait(-10, false, "* Notepad"));
 		/// 	  if(w.Is0) print.it("timeout"); else print.it(w);
-		///   };
-		/// f.ShowDialog();
+		/// });
+		/// if (!b.ShowDialog()) return;
 		/// ]]></code>
 		/// </example>
 		/// <inheritdoc cref="find"/>
