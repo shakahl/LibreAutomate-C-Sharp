@@ -747,15 +747,6 @@ namespace Au
 		/// 
 		/// //Ctrl+click
 		/// keys.send("Ctrl+", new Action(() => mouse.click()));
-		/// 
-		/// //Ctrl+drag
-		/// Action drag = () => { using(mouse.leftDown()) mouse.moveRelative(0, 50); };
-		/// keys.send("Ctrl+", drag);
-		/// 
-		/// //Ctrl+drag
-		/// keys.send("Ctrl*down");
-		/// using(mouse.leftDown()) mouse.moveRelative(0, 50);
-		/// keys.send("Ctrl*up");
 		/// ]]></code>
 		/// Show window and send keys/text to it when button clicked.
 		/// <code><![CDATA[
@@ -784,7 +775,7 @@ namespace Au
 		/// </param>
 		/// <exception cref="AuException">Failed. For example other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc). Also fails if there is no focused window.</exception>
 		/// <remarks>
-		/// Calls <see cref="AddText"/> and <see cref="SendIt"/>.
+		/// Calls <see cref="AddText(string, string)"/> and <see cref="SendIt"/>.
 		/// To send text can use keys, characters or clipboard, depending on <see cref="opt.key"/> and text. If <i>html</i> not null, uses clipboard.
 		/// </remarks>
 		/// <seealso cref="clipboard.paste"/>

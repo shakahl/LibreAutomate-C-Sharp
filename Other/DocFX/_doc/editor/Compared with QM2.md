@@ -68,9 +68,9 @@ In the main Autepad window you can resize and dock all panels and toolbars where
 Autepad saves all settings in files, not in the Registry.
 
 #### Some important features still missing
-- Dialog editor.
+- Dialog editor. Instead use class wpfBuilder.
 - Some Tools menu commands.
-- Many options in the Options dialog.
+- Some options in the Options dialog.
 - Automatic backup.
 - Triggers of types other than hotkey, autotext, mouse and window.
 - UI to create Windows Task Scheduler tasks easier.

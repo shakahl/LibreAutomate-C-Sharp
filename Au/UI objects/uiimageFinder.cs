@@ -117,7 +117,7 @@ public unsafe class uiimageFinder
 	}
 
 	/// <summary>
-	/// Finds the image displayed in the specified window or other area.
+	/// Finds the first image displayed in the specified window or other area.
 	/// See <see cref="uiimage.find"/>.
 	/// </summary>
 	/// <returns>If found, returns <see cref="Result"/>, else null.</returns>
@@ -131,7 +131,7 @@ public unsafe class uiimageFinder
 	public uiimage Find(IFArea area) => Exists(area) ? Result : null;
 
 	/// <summary>
-	/// Finds the image is displayed in the specified window or other area. Can wait and throw <b>NotFoundException</b>.
+	/// Finds the first image displayed in the specified window or other area. Can wait and throw <b>NotFoundException</b>.
 	/// </summary>
 	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns null (if <i>waitS</i> negative).</returns>
 	/// <param name="area">See <see cref="uiimage.find"/>.</param>

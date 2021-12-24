@@ -281,6 +281,8 @@ namespace Au.Compiler
 			if (needOutputFiles) {
 				cache.AddCompiled(f, outFile, m, r.flags);
 
+				if (m.Role == ERole.classLibrary) MetaReferences.UncacheOldFiles();
+
 				if (notInCache) print.it($"<>Output folder: <link>{m.OutputPath}<>");
 			}
 

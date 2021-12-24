@@ -49,7 +49,8 @@ class PanelEdit : Grid
 	/// <param name="f"></param>
 	/// <param name="newFile">Should be true if opening the file first time after creating.</param>
 	/// <param name="focusEditor">If null, focus later, when mouse enters editor. Ignored if editor was focused (sets focus). Also depends on <i>newFile</i>.</param>
-	public bool ZOpen(FileNode f, bool newFile, bool? focusEditor) {
+	/// <param name="noTemplate">New file was created with custom text (option 'replaceTemplate').</param>
+	public bool ZOpen(FileNode f, bool newFile, bool? focusEditor, bool noTemplate) {
 		Debug.Assert(!App.Model.IsAlien(f));
 
 		if (f == _activeDoc?.ZFile) return true;
@@ -88,7 +89,7 @@ class PanelEdit : Grid
 			_docs.Add(doc);
 			_activeDoc = doc;
 			Children.Add(doc);
-			doc._Init(text, newFile);
+			doc._Init(text, newFile, noTemplate);
 			_UpdateUI_IsOpen();
 			_UpdateUI_EditEnabled();
 			ZActiveDocChanged?.Invoke();

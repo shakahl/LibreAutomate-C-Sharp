@@ -418,8 +418,7 @@ public:
 	STDMETHODIMP get_accSelection(out VARIANT* pvarChildren)
 	{
 		Smart<IUIAutomationSelectionPattern> p;
-		HRESULT hr = _ae->GetCurrentPatternAs(UIA_SelectionPatternId, IID_PPV_ARGS(&p));
-		if(hr == 0 && !p) hr = 1;
+		HRESULT hr = _ae->GetCurrentPatternAs(UIA_SelectionPatternId, IID_PPV_ARGS(&p)); if(hr == 0 && !p) hr = 1;
 		if(hr == 0) {
 			Smart<IUIAutomationElementArray> a;
 			hr = p->GetCurrentSelection(&a);
@@ -454,8 +453,7 @@ public:
 		HRESULT hr = 0;
 		if(flagsSelect & (SELFLAG_TAKESELECTION | SELFLAG_ADDSELECTION | SELFLAG_REMOVESELECTION)) {
 			Smart<IUIAutomationSelectionItemPattern> p;
-			hr = _ae->GetCurrentPatternAs(UIA_SelectionItemPatternId, IID_PPV_ARGS(&p));
-			if(hr == 0 && !p) hr = 1;
+			hr = _ae->GetCurrentPatternAs(UIA_SelectionItemPatternId, IID_PPV_ARGS(&p)); if(hr == 0 && !p) hr = 1;
 			if(hr == 0) {
 				if(flagsSelect & SELFLAG_TAKESELECTION) hr = p->Select();
 				if(flagsSelect & SELFLAG_ADDSELECTION && hr == 0) hr = p->AddToSelection();
@@ -524,21 +522,87 @@ public:
 		//Rarely used.
 	}
 
+	//The _DDA_x functions try to get a pattern and call its method. They return true if pattern available, even if method failed.
+	bool _DDA_InvokeUIA(ref HRESULT& hr) {
+		Smart<IUIAutomationInvokePattern> p;
+		hr = _ae->GetCurrentPatternAs(UIA_InvokePatternId, IID_PPV_ARGS(&p)); if(hr == 0 && !p) hr = 1;
+		if(hr != 0) return false;
+		//Print("Invoke");/
+		hr = p->Invoke();
+		return true;
+	}
+
+	bool _DDA_Toggle(ref HRESULT& hr) {
+		Smart<IUIAutomationTogglePattern> p;
+		hr = _ae->GetCurrentPatternAs(UIA_TogglePatternId, IID_PPV_ARGS(&p)); if(hr == 0 && !p) hr = 1;
+		if(hr != 0) return false;
+		//Print("Toggle");
+		hr = p->Toggle();
+		return true;
+	}
+
+	//expand: 0 collapse, 1 expand, 2 toggle
+	bool _DDA_Expand(ref HRESULT& hr, int expand) {
+		Smart<IUIAutomationExpandCollapsePattern> p;
+		hr = _ae->GetCurrentPatternAs(UIA_ExpandCollapsePatternId, IID_PPV_ARGS(&p)); if(hr == 0 && !p) hr = 1;
+		if(hr != 0) return false;
+		//Print("Expand");
+		if(expand == 2) {
+			ExpandCollapseState ecs = ExpandCollapseState_LeafNode;
+			if(0 == p->get_CurrentExpandCollapseState(&ecs)) {
+				if(ecs == ExpandCollapseState_Expanded) expand = 0;
+				else if(ecs != ExpandCollapseState_LeafNode) expand = 1; //collapsed or partially expanded
+			} else hr = 1;
+		}
+		if(expand == 1) hr = p->Expand(); else if(expand == 0) hr = p->Collapse();
+		return true;
+	}
+
+	bool _DDA_Select(ref HRESULT& hr) {
+		Smart<IUIAutomationSelectionItemPattern> p;
+		hr = _ae->GetCurrentPatternAs(UIA_SelectionItemPatternId, IID_PPV_ARGS(&p)); if(hr == 0 && !p) hr = 1;
+		if(hr != 0) return false;
+		//Print("Select");
+		hr = p->Select();
+		return true;
+	}
+
+	bool _DDA_InvokeMSAA(ref HRESULT& hr) {
+		Smart<IUIAutomationLegacyIAccessiblePattern> p;
+		hr = _ae->GetCurrentPatternAs(UIA_LegacyIAccessiblePatternId, IID_PPV_ARGS(&p)); if(hr == 0 && !p) hr = 1;
+		if(hr != 0) return false;
+		//Print("DoDefaultAction");
+		hr = p->DoDefaultAction();
+		return true;
+	}
+
 	STDMETHODIMP accDoDefaultAction(VARIANT varChild)
 	{
-		HRESULT hr;
+		HRESULT hr = 1;
 
-		if(varChild.vt == VT_I1 && varChild.cVal == 's') { //scroll to
-			Smart<IUIAutomationScrollItemPattern> p;
-			hr = _ae->GetCurrentPatternAs(UIA_ScrollItemPatternId, IID_PPV_ARGS(&p));
-			if(hr == 0 && !p) hr = 1;
-			if(hr == 0) hr = p->ScrollIntoView();
-		} else {
+		if(varChild.vt == VT_I1) { //specified action
+			if(varChild.cVal == 's') { //ScrollTo
+				Smart<IUIAutomationScrollItemPattern> p;
+				hr = _ae->GetCurrentPatternAs(UIA_ScrollItemPatternId, IID_PPV_ARGS(&p)); if(hr == 0 && !p) hr = 1;
+				if(hr == 0) hr = p->ScrollIntoView();
+			} else if(varChild.cVal == 'c') { //Check(true/false)
+				bool ok = _DDA_Toggle(ref hr)
+					|| _DDA_InvokeUIA(ref hr);
+			} else if(varChild.cVal == 'E' || varChild.cVal == 'e') { //Expand(true/false)
+				bool ok = _DDA_Expand(ref hr, varChild.cVal == 'E' ? 1 : 0) //treeitem, combobox
+					|| _DDA_Toggle(ref hr); //some expanders
+			}
+		} else { //default action
 			if(_InvalidVarChildParam(ref varChild)) return E_INVALIDARG;
-			Smart<IUIAutomationInvokePattern> p;
-			hr = _ae->GetCurrentPatternAs(UIA_InvokePatternId, IID_PPV_ARGS(&p));
-			if(hr == 0 && !p) hr = 1;
-			if(hr == 0) hr = p->Invoke();
+			bool ok = _DDA_InvokeUIA(ref hr)
+				|| _DDA_Toggle(ref hr)
+				|| _DDA_Expand(ref hr, 2)
+				|| _DDA_Select(ref hr)
+				|| _DDA_InvokeMSAA(ref hr);
+			//Print((DWORD)hr);
+
+			//Many UIA elements don't have Invoke pattern but have some other pattern that can be used instead.
+			//Many have IAccessible pattern, but often its DoDefaultAction doesn't work.
 		}
 		return hr;
 	}
@@ -573,8 +637,7 @@ private:
 		if(_InvalidVarChildParam(ref varChild)) return E_INVALIDARG;
 		Smart<IUIAutomationLegacyIAccessiblePattern> p;
 		//Perf.First();
-		HRESULT hr = _ae->GetCurrentPatternAs(UIA_LegacyIAccessiblePatternId, IID_PPV_ARGS(&p));
-		if(hr == 0 && !p) hr = 1;
+		HRESULT hr = _ae->GetCurrentPatternAs(UIA_LegacyIAccessiblePatternId, IID_PPV_ARGS(&p)); if(hr == 0 && !p) hr = 1;
 		if(hr == 0) {
 			//Perf.Next();
 			switch(prop) {

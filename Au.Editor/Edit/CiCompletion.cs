@@ -818,7 +818,7 @@ partial class CiCompletion
 	public void SelectBestMatch(IEnumerable<CompletionItem> listItems) {
 		CiComplItem ci = null;
 		var filterText = _data.filterText;
-		if (!(_data.noAutoSelect || filterText == "_")) { //noAutoSelect when lambda argument
+		if (!(/*_data.noAutoSelect ||*/ filterText == "_")) { //noAutoSelect when lambda argument
 
 			//rejected. Need FilterItems anyway, eg to select enum type or 'new' type.
 			//if(filterText.NE()) {
@@ -834,7 +834,12 @@ partial class CiCompletion
 				//perf.next();
 				//print.it(fi);
 				//print.it(visible.Length, fi.Length);
-				if (!fi.IsDefaultOrEmpty) if (fi.Length < visible.Length || filterText.Length > 0 || visible.Length == 1) ci = _data.Map[fi[0]];
+				if (!fi.IsDefaultOrEmpty) {
+					if (fi.Length < visible.Length || filterText.Length > 0 || visible.Length == 1) {
+						ci = _data.Map[fi[0]];
+						if (_data.noAutoSelect && ci.kind != CiItemKind.Enum) ci = null;
+					}
+				}
 			}
 			//perf.nw('b');
 		}

@@ -1,3 +1,5 @@
+using System.Linq;
+
 //FUTURE: ChildFromXY. Like wnd.ChildFromXY. Use IAccessible.accHitTest.
 
 namespace Au
@@ -7,8 +9,8 @@ namespace Au
 		/// <summary>
 		/// Gets the container window or control of this UI element.
 		/// </summary>
+		/// <returns>default(wnd) if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
-		/// Returns default(wnd) if failed. Supports <see cref="lastError"/>.
 		/// All UI elements must support this property, but some have bugs and can fail or return a wrong window.
 		/// Uses API <msdn>WindowFromAccessibleObject</msdn>.
 		/// </remarks>
@@ -30,8 +32,8 @@ namespace Au
 		/// <summary>
 		/// Gets the top-level window that contains this UI element.
 		/// </summary>
+		/// <returns>default(wnd) if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
-		/// Returns default(wnd) if failed. Supports <see cref="lastError"/>.
 		/// All UI elements must support this property, but some have bugs and can return default(wnd).
 		/// Uses API <msdn>WindowFromAccessibleObject</msdn> and API <msdn>GetAncestor</msdn>.
 		/// </remarks>
@@ -41,9 +43,9 @@ namespace Au
 		/// <summary>
 		/// Gets location of this UI element in screen.
 		/// </summary>
+		/// <returns>Empty rectangle if failed or this property is unavailable. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
 		/// Calls <see cref="GetRect(out RECT, bool)"/>.
-		/// Returns empty rectangle if failed or this property is unavailable. Supports <see cref="lastError"/>.
 		/// Most but not all UI elements support this property.
 		/// </remarks>
 		public RECT Rect { get { GetRect(out var r); return r; } }
@@ -53,19 +55,19 @@ namespace Au
 		/// <summary>
 		/// Gets location of this UI element in screen.
 		/// </summary>
+		/// <returns>false if failed or this property is unavailable. Supports <see cref="lastError"/>.</returns>
 		/// <param name="r">Rectangle in screen coordinates.</param>
 		/// <param name="raw">
 		/// Don't DPI-scale. When the element is in a DPI-scaled/virtualized window (see <see cref="Dpi.IsWindowVirtualized"/>), the raw rectangle may not match the visible rectangle.
 		/// This parameter is ignored on Windows 7 and 8.0 or if this element was retrieved not in-process.
 		/// </param>
 		/// <remarks>
-		/// Returns false if failed or this property is unavailable. Supports <see cref="lastError"/>.
 		/// Most but not all UI elements support this property.
 		/// Uses <msdn>IAccessible.accLocation</msdn>.
 		/// </remarks>
 		public bool GetRect(out RECT r, bool raw = false) {
 			ThrowIfDisposed_();
-			if (!raw && _misc.flags.Has(EMiscFlags.InProc) && osVersion.minWin8_1) {
+			if (!raw && MiscFlags.Has(EMiscFlags.InProc) && osVersion.minWin8_1) {
 				if (!GetProperties("D", out var p)) { r = default; return false; }
 				r = p.Rect;
 			} else {
@@ -79,30 +81,36 @@ namespace Au
 		/// <summary>
 		/// Gets location of this UI element in the client area of window <i>w</i>.
 		/// </summary>
+		/// <returns>false if failed or this property is unavailable. Supports <see cref="lastError"/>.</returns>
 		/// <param name="r">Receives rectangle in <i>w</i> client area coordinates.</param>
 		/// <param name="w">Window or control.</param>
-		/// <param name="intersect">If part but not entire rectangle is in <i>w</i> client area, get only the part that is in the client area.</param>
+		/// <param name="intersect">Intersect the rectangle with the <i>w</i> client area, possibly making it smaller or empty.</param>
 		/// <remarks>
-		/// Returns false if failed or this property is unavailable. Supports <see cref="lastError"/>.
 		/// Most but not all UI elements support this property.
 		/// Uses <see cref="GetRect(out RECT, bool)"/> and <see cref="wnd.MapScreenToClient(ref RECT)"/>.
 		/// </remarks>
 		public bool GetRect(out RECT r, wnd w, bool intersect = false) {
-			//return GetRect(out r) && w.MapScreenToClient(ref r);
 			if (!(GetRect(out r) && w.MapScreenToClient(ref r))) return false;
-			if (intersect) {
-				var rr = r;
-				if (rr.Intersect(w.ClientRect)) r = rr;
-			}
+			if (intersect) r.Intersect(_GetContainerClientRect(w));
 			return true;
+
+			RECT _GetContainerClientRect(wnd w) {
+				var rc = w.ClientRect;
+				//if w is a classic listview in report view, exclude header
+				if (Item > 0 && RoleInt == ERole.LISTITEM) {
+					var h = w.ChildFast(null, "SysHeader32");
+					if (h.IsVisible) rc.top = h.Rect.Height;
+				}
+				return rc;
+			}
 		}
 
 		/// <summary>
 		/// Gets role as enum <see cref="ERole"/>.
 		/// </summary>
+		/// <returns>0 (<b>ERole.None</b>) if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
 		/// Most UI elements have a standard role, defined in enum <see cref="ERole"/> (except <b>None</b> and <b>Custom</b>). Some UI elements have a custom role, usually as string, for example in Firefox; then returns <b>ERole.Custom</b>.
-		/// Returns 0 (<b>ERole.None</b>) if failed. Supports <see cref="lastError"/>.
 		/// All UI elements must support this property. If failed, probably the <b>elm</b> is invalid, for example the window is closed.
 		/// Uses <msdn>IAccessible.get_accRole</msdn>.
 		/// </remarks>
@@ -119,10 +127,10 @@ namespace Au
 		/// <summary>
 		/// Gets standard or custom role, as string.
 		/// </summary>
+		/// <returns>"" if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
 		/// Most UI elements have a standard role, defined in enum <see cref="ERole"/> (except <b>None</b> and <b>Custom</b>). Some UI elements have a custom role, usually as string, for example in Firefox.
 		/// For standard roles this function returns enum <see cref="ERole"/> member name. For string roles - the string. For unknown non-string roles - the int value like "0" or "500".
-		/// Returns "" if failed. Supports <see cref="lastError"/>.
 		/// All UI elements must support this property. If failed, probably the <b>elm</b> is invalid, for example the window is closed.
 		/// Uses <msdn>IAccessible.get_accRole</msdn>.
 		/// </remarks>
@@ -166,8 +174,8 @@ namespace Au
 		/// <summary>
 		/// Gets UI element state (flags).
 		/// </summary>
+		/// <returns>0 if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
-		/// Returns 0 if failed. Supports <see cref="lastError"/>.
 		/// Uses <msdn>IAccessible.get_accState</msdn>.
 		/// </remarks>
 		/// <example>
@@ -186,6 +194,9 @@ namespace Au
 
 		/// <summary> Calls <see cref="State"/> and returns true if has state CHECKED. </summary>
 		public bool IsChecked => State.Has(EState.CHECKED);
+
+		/// <summary> Calls <see cref="State"/> and returns true if has state CHECKED, null if has state MIXED, else false. Use this function with 3-state checkboxes.</summary>
+		public bool? IsChecked2 => (State & (EState.CHECKED | EState.MIXED)) switch { EState.CHECKED => true, 0 => false, _ => null };
 
 		/// <summary> Calls <see cref="State"/> and returns true if has state UNAVAILABLE. </summary>
 		/// <remarks>Does not check whether this UI element is in a disabled parent/ancestor UI element.</remarks>
@@ -251,12 +262,17 @@ namespace Au
 			return s;
 		}
 
+		static string _GetStringPropL(Cpp.Cpp_Acc a, char prop) {
+			int hr = Cpp.Cpp_AccGetStringProp(a, prop, out var b);
+			return _BstrToString(hr, b);
+		}
+
 		/// <summary>
 		/// Gets name.
 		/// </summary>
+		/// <returns>"" if name is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
 		/// UI element name usually is its read-only text (eg button text, link text), or its adjacent read-only text (eg text label by this edit box). It usually does not change, therefore can be used to find or identify the UI element.
-		/// Returns "" if name is unavailable or if failed. Supports <see cref="lastError"/>.
 		/// Uses <msdn>IAccessible.get_accName</msdn>.
 		/// </remarks>
 		public string Name {
@@ -294,16 +310,15 @@ namespace Au
 			get => _GetStringProp('v');
 			set {
 				ThrowIfDisposed_();
-				AuException.ThrowIfHresultNot0(Cpp.Cpp_AccAction(this, 'v', value));
-				GC.KeepAlive(this);
+				AuException.ThrowIfHresultNot0(_InvokeL('v', value));
 			}
 		}
 
 		/// <summary>
 		/// Gets description.
 		/// </summary>
+		/// <returns>"" if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
-		/// Returns "" if this property is unavailable or if failed. Supports <see cref="lastError"/>.
 		/// Uses <msdn>IAccessible.get_accDescription</msdn>.
 		/// </remarks>
 		public string Description {
@@ -313,8 +328,8 @@ namespace Au
 		/// <summary>
 		/// Gets help text.
 		/// </summary>
+		/// <returns>"" if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
-		/// Returns "" if this property is unavailable or if failed. Supports <see cref="lastError"/>.
 		/// Uses <msdn>IAccessible.get_accHelp</msdn>.
 		/// </remarks>
 		public string Help {
@@ -324,9 +339,9 @@ namespace Au
 		/// <summary>
 		/// Gets UI Automation element AutomationId property.
 		/// </summary>
+		/// <returns>"" if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
 		/// Only UI elements found with flag <see cref="EFFlags.UIA"/> can have this property.
-		/// Returns "" if this property is unavailable or if failed. Supports <see cref="lastError"/>.
 		/// </remarks>
 		public string UiaId {
 			get => _GetStringProp('u');
@@ -335,8 +350,8 @@ namespace Au
 		/// <summary>
 		/// Gets keyboard shortcut.
 		/// </summary>
+		/// <returns>"" if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
-		/// Returns "" if this property is unavailable or if failed. Supports <see cref="lastError"/>.
 		/// Uses <msdn>IAccessible.get_accKeyboardShortcut</msdn>.
 		/// </remarks>
 		public string KeyboardShortcut {
@@ -344,13 +359,13 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets default action.
-		/// See <see cref="Invoke"/>.
+		/// Gets default action of <see cref="Invoke"/>.
 		/// </summary>
+		/// <returns>"" if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
-		/// Returns "" if this property is unavailable or if failed. Supports <see cref="lastError"/>.
 		/// If this is a Java UI element, returns all actions that can be used with <see cref="JavaInvoke"/>, like "action1, action2, action3", from which the first is considered default and is used by <see cref="Invoke"/>.
 		/// Uses <msdn>IAccessible.get_accDefaultAction</msdn>.
+		/// Note: the string is supposed to be localized, ie depends on UI language; except Java.
 		/// </remarks>
 		public string DefaultAction {
 			get => _GetStringProp('a');
@@ -367,16 +382,30 @@ namespace Au
 		/// </remarks>
 		public void Invoke() {
 			ThrowIfDisposed_();
+			_Invoke();
+		}
+
+		void _Invoke(char action = 'a', string param = null, string errMsg = null) {
 			int hr;
-			if (!MiscFlags.HasAny(EMiscFlags.UIA | EMiscFlags.Java) && RoleInt is ERole.BUTTON or ERole.SPLITBUTTON) { //don't need for check/radio
+			if (!MiscFlags.HasAny(EMiscFlags.UIA | EMiscFlags.Java) && RoleInt is ERole.BUTTON or ERole.SPLITBUTTON or ERole.CHECKBOX or ERole.RADIOBUTTON) {
 				using var workaround = new mouse.ButtonPostClickWorkaround_(WndContainer);
-				hr = Cpp.Cpp_AccAction(this, 'a');
+				hr = _InvokeL(action, param);
 			} else {
-				hr = Cpp.Cpp_AccAction(this, 'a');
+				hr = _InvokeL(action, param);
 			}
-			GC.KeepAlive(this);
-			AuException.ThrowIfHresultNot0(hr);
+			AuException.ThrowIfHresultNot0(hr, errMsg);
 			//_MinimalSleep(); //don't need. It does not make more reliable.
+		}
+
+		int _InvokeL(char action = 'a', string param = null) {
+			//UIA bug: if window inactive, in some cases tries to activate, and waits ~10 s if fails.
+			//	Eg ExpandCollapse pattern (always) and Invoke/Toggle patterns (buttons/checkboxes, not always).
+			//	Non-UIA servers also could try to activate, although now I don't remember such cases.
+			WndUtil.EnableActivate(-1); //usually quite fast, and often faster than WndContainer
+
+			int hr = Cpp.Cpp_AccAction(this, action, param);
+			GC.KeepAlive(this);
+			return hr;
 		}
 
 		//void _MinimalSleep()
@@ -384,92 +413,6 @@ namespace Au
 		//	Thread.Sleep(15);
 		//	//if(0 == _iacc.GetWnd(out var w)) w.MinimalSleepIfOtherThread_(); //better don't call getwnd
 		//}
-
-		/// <summary>
-		/// Moves the cursor (mouse pointer) to this UI element.
-		/// </summary>
-		/// <param name="x">X coordinate in the bounding rectangle of this UI element. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
-		/// <param name="y">Y coordinate in the bounding rectangle of this UI element. Default - center.</param>
-		/// <exception cref="AuException">Failed to get UI element rectangle or container window (<see cref="elm.WndContainer"/>).</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.</exception>
-		/// <remarks>
-		/// Calls <see cref="mouse.move(wnd, Coord, Coord, bool)"/>. To get rectangle in window, uses <see cref="GetRect(out RECT, wnd, bool)"/> with <i>intersect</i> true.
-		/// </remarks>
-		public void MouseMove(Coord x = default, Coord y = default) => _ElmMouseAction(false, x, y, default);
-
-		/// <summary>
-		/// Clicks this UI element.
-		/// </summary>
-		/// <param name="x">X coordinate in the bounding rectangle of this UI element. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
-		/// <param name="y">Y coordinate in the bounding rectangle of this UI element. Default - center.</param>
-		/// <param name="button">Which button and how to use it.</param>
-		/// <exception cref="AuException">Failed to get UI element rectangle or container window (<see cref="WndContainer"/>).</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.</exception>
-		/// <remarks>
-		/// Calls <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>. To get rectangle in window, uses <see cref="GetRect(out RECT, wnd, bool)"/> with <i>intersect</i> true.
-		/// </remarks>
-		public MRelease MouseClick(Coord x = default, Coord y = default, MButton button = MButton.Left) {
-			_ElmMouseAction(true, x, y, button);
-			return button;
-		}
-
-		/// <summary>
-		/// Double-clicks this UI element.
-		/// </summary>
-		/// <inheritdoc cref="MouseClick(Coord, Coord, MButton)"/>
-		public void MouseClickD(Coord x = default, Coord y = default) => MouseClick(x, y, MButton.DoubleClick);
-
-		/// <summary>
-		/// Right-clicks this UI element.
-		/// </summary>
-		/// <inheritdoc cref="MouseClick(Coord, Coord, MButton)"/>
-		public void MouseClickR(Coord x = default, Coord y = default) => MouseClick(x, y, MButton.Right);
-
-		void _ElmMouseAction(bool click, Coord x, Coord y, MButton button) {
-			var w = WndContainer; //with window the mouse functions are more reliable, eg will not click another window
-			if (!GetRect(out var r, w, intersect: true) || r.NoArea) throw new AuException(0, "*get rectangle");
-			var p = Coord.NormalizeInRect(x, y, r, centerIfEmpty: true);
-			if (button == 0) mouse.move(w, p.x, p.y);
-			else mouse.clickEx(button, w, p.x, p.y);
-		}
-
-		/// <summary>
-		/// Posts mouse-click messages to the container window, using coordinates in this UI element.
-		/// </summary>
-		/// <param name="x">X coordinate in the bounding rectangle of this UI element. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
-		/// <param name="y">Y coordinate in the bounding rectangle of this UI element. Default - center.</param>
-		/// <param name="button">Can specify the left (default), right or middle button. Also flag for double-click, press or release.</param>
-		/// <exception cref="AuException">
-		/// - Failed to get rectangle or container window.
-		/// - The element is invisible/offscreen.
-		/// </exception>
-		/// <exception cref="ArgumentException">Unsupported button specified.</exception>
-		/// <remarks>
-		/// Does not move the mouse.
-		/// Does not wait until the target application finishes processing the message.
-		/// Works not with all elements.
-		/// Try this function when <see cref="Invoke"/> does not work and you don't want to use <c>MouseClick</c>.
-		/// </remarks>
-		public void PostClick(Coord x = default, Coord y = default, MButton button = MButton.Left) {
-			var w = WndContainer;
-			if (!GetRect(out var r, w, intersect: true) || r.NoArea) throw new AuException(0, "*get rectangle");
-			if (r.NoArea || State.HasAny(EState.INVISIBLE | EState.OFFSCREEN)) throw new AuException(0, "Invisible or offscreen");
-			//FUTURE: Chrome bug: OFFSCREEN not updated after scrolling.
-
-			mouse.PostClick_(w, r, x, y, button);
-		}
-
-		/// <summary>
-		/// Posts mouse-double-click messages to the container window, using coordinates in this UI element.
-		/// </summary>
-		/// <inheritdoc cref="PostClick(Coord, Coord, MButton)"/>
-		public void PostClickD(Coord x = default, Coord y = default) => PostClick(x, y, MButton.DoubleClick);
-
-		/// <summary>
-		/// Posts mouse-right-click messages to the container window, using coordinates in this UI element.
-		/// </summary>
-		/// <inheritdoc cref="PostClick(Coord, Coord, MButton)"/>
-		public void PostClickR(Coord x = default, Coord y = default) => PostClick(x, y, MButton.Right);
 
 		/// <summary>
 		/// Performs one of actions supported by this Java UI element.
@@ -481,7 +424,7 @@ namespace Au
 		/// <remarks>
 		/// Read more about Java UI elements in <see cref="elm"/> topic.
 		/// 
-		/// Problem: if the action opens a dialog, Invoke/JavaInvoke do not return until the dialog is closed (or fail after some time). The caller then waits and cannot automate the dialog. Also then this process cannot exit until the dialog is closed. If the action parameter is null and the UI element is focusable, this function tries a workaround: it makes the UI element (button etc) focused and posts Space key message, which should press the button; then this function does not wait.
+		/// Problem: if the action opens a dialog, <b>Invoke</b>/<b>JavaInvoke</b> do not return until the dialog is closed (or fail after some time). The caller then waits and cannot automate the dialog. Also then this process cannot exit until the dialog is closed. If the action parameter is null and the UI element is focusable, this function tries a workaround: it makes the UI element (button etc) focused and posts Space key message, which should press the button; then this function does not wait.
 		/// </remarks>
 		public void JavaInvoke(string action = null) {
 			//problem: if the button click action opens a modal dialog, doAccessibleActions waits until closed.
@@ -507,10 +450,8 @@ namespace Au
 				return;
 			}
 
-			var hr = Cpp.Cpp_AccAction(this, 'a', action);
-			GC.KeepAlive(this);
-			AuException.ThrowIfHresultNot0(hr);
-			//_MinimalSleep(); //probably don't need, because JAB doAccessibleActions is sync, which is bad.
+			_Invoke('a', action);
+			//_MinimalSleep(); //don't need. JAB doAccessibleActions is sync, which is bad.
 		}
 
 		/// <summary>
@@ -693,6 +634,9 @@ namespace Au
 						w.Focus();
 				if (IsFocused) how &= ~ESelect.TAKEFOCUS;
 				if (how == 0) return;
+			} else {
+				//same as with Invoke
+				WndUtil.EnableActivate(-1);
 			}
 
 			for (int i = 0; i < 2; i++) {
@@ -709,7 +653,7 @@ namespace Au
 			//Workaround for Windows controls bugs, part 2.
 			if (focusingControl && w.IsActive) {
 				//Debug_.Print("activated control");
-				wTL.Activate();
+				wTL.ActivateL();
 			}
 
 			//tested: IAccessible.accSelect(TAKEFOCUS):
@@ -733,6 +677,8 @@ namespace Au
 		/// Makes this UI element focused for keyboard input.
 		/// </summary>
 		/// <param name="andSelect">Add flag TAKESELECTION. Note: it is for selecting a list item, not for selecting text in a text box.</param>
+		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="AuWndException">Failed to activate the window (<see cref="wnd.Activate"/>) or focus the control (<see cref="wnd.Focus"/>).</exception>
 		/// <remarks>
 		/// Calls <see cref="Select"/> with flag TAKEFOCUS and optionally TAKESELECTION.
 		/// Not all UI elements support this action and not all work correctly. More info in Select documentation.
@@ -745,8 +691,8 @@ namespace Au
 
 		/// <summary>
 		/// Gets selected direct child items.
-		/// Returns empty array if there are no selected items of if failed. Supports <see cref="lastError"/>.
 		/// </summary>
+		/// <returns>Empty array if there are no selected items of if failed. Supports <see cref="lastError"/>.</returns>
 		public elm[] SelectedChildren {
 			get {
 				ThrowIfDisposed_();
@@ -800,13 +746,12 @@ namespace Au
 		/// - @ - <see cref="HtmlAttributes"/>.
 		/// </param>
 		/// <param name="result">Receives results.</param>
+		/// <returns>false if fails, for example when the UI element's window is closed. Supports <see cref="lastError"/>.</returns>
 		/// <exception cref="ArgumentException">Unknown property character.</exception>
 		/// <remarks>
 		/// The returned variable contains values of properties specified in <i>props</i>. When a property is empty or failed to get, the member variable is "", empty dictionary or default value of that type; never null.
 		/// 
 		/// Normally this function is faster than calling multiple property functions, because it makes single remote procedure call. But not if this UI element was found with flag <see cref="EFFlags.NotInProc"/> etc.
-		/// 
-		/// Returns false if fails, for example when the UI element's window is closed. Supports <see cref="lastError"/>.
 		/// </remarks>
 		public bool GetProperties(string props, out EProperties result) {
 			//SHOULDDO: use cached role. Or not, because now can help to catch bugs where the cached role is incorrect.
@@ -873,8 +818,8 @@ namespace Au
 
 		/// <summary>
 		/// Gets an adjacent or related UI element - next, child, parent, etc.
-		/// Returns null if not found.
 		/// </summary>
+		/// <returns>null if not found.</returns>
 		/// <param name="navig">
 		/// String consisting of one or more navigation direction strings separated by space, like <c>"parent next child4 first"</c>.
 		/// - <c>"next"</c> - next sibling UI element in the same parent UI element.
@@ -924,17 +869,17 @@ namespace Au
 
 		/// <summary>
 		/// Gets parent element. Same as <see cref="Navigate"/> with argument "pa".
-		/// Returns null if fails.
 		/// </summary>
+		/// <returns>null if failed.</returns>
 		public elm Parent => Navigate("pa"); //info: Navigate("pa") is optimized in C++
 
 		/// <summary>
 		/// Gets HTML.
 		/// </summary>
+		/// <returns>"" if this is not a HTML element or if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="outer">If true, gets outer HTML (with tag and attributes), else inner HTML.</param>
 		/// <remarks>
-		/// Returns "" if this is not a HTML element or if failed. Supports <see cref="lastError"/>.
-		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This UI element must be found without flag NotInProc.
+		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Edge, Opera, Thunderbird, web browser controls...). This UI element must be found without flag NotInProc.
 		/// If this is the root of web page (role DOCUMENT or PANE), gets web page body HTML.
 		/// </remarks>
 		public string Html(bool outer) {
@@ -947,10 +892,10 @@ namespace Au
 		/// <summary>
 		/// Gets a HTML attribute.
 		/// </summary>
+		/// <returns>"" if this is not a HTML element or does not have the specified attribute or failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="name">Attribute name, for example <c>"href"</c>, <c>"id"</c>, <c>"class"</c>. Full, case-sensitive.</param>
 		/// <remarks>
-		/// Returns "" if this is not a HTML element or does not have the specified attribute or failed. Supports <see cref="lastError"/>.
-		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This UI element must be found without flag NotInProc.
+		/// Works with Chrome, Firefox, Internet Explorer and apps that use their code (Edge, Opera, Thunderbird, web browser controls...). This UI element must be found without flag NotInProc.
 		/// </remarks>
 		/// <exception cref="ArgumentException">name is null/""/invalid.</exception>
 		public string HtmlAttribute(string name) {
@@ -964,16 +909,16 @@ namespace Au
 		/// <summary>
 		/// Gets all HTML attributes.
 		/// </summary>
+		/// <returns>Empty dictionary if this is not a HTML element or does not have attributes or failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
-		/// Returns empty dictionary if this is not a HTML element or does not have attributes or failed. Supports <see cref="lastError"/>.
-		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This UI element must be found without flag NotInProc.
+		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Edge, Opera, Thunderbird, web browser controls...). This UI element must be found without flag NotInProc.
 		/// </remarks>
 		public Dictionary<string, string> HtmlAttributes() {
 			ThrowIfDisposed_();
 			int hr = Cpp.Cpp_AccWeb(this, "'a", out BSTR s);
 			GC.KeepAlive(this);
 			_Hresult(_FuncId.html, hr);
-			if (hr != 0) return new Dictionary<string, string>();
+			if (hr != 0) return new();
 			using (s) return AttributesToDictionary_(s.Ptr, s.Length);
 		}
 
@@ -983,40 +928,43 @@ namespace Au
 		/// <exception cref="AuException">Failed to scroll, or the UI element does not support scrolling.</exception>
 		/// <remarks>
 		/// This function works with these UI elements:
-		/// - Web page elements in Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, Edge, web browser controls...). With Find use role prefix "web:", "firefox:" or "chrome:", and don't use flag <see cref="EFFlags.NotInProc"/>.
+		/// - Web page elements in Chrome, Firefox, Internet Explorer and apps that use their code (Edge, Opera, Thunderbird, web browser controls...). With Find use role prefix "web:", "firefox:" or "chrome:", and don't use flag <see cref="EFFlags.NotInProc"/>.
 		/// - Standard treeview, listview and listbox controls.
 		/// - Some other controls if found with flag <see cref="EFFlags.UIA"/>.
+		/// 
+		/// Some apps after scrolling update <see cref="Rect"/> with a delay. Some apps (Firefox) never update it for existing <b>elm</b> variables. This function does not wait.
 		/// </remarks>
 		public void ScrollTo() {
 			ThrowIfDisposed_();
+			AuException.ThrowIfHresultNot0(_ScrollTo(), "*scroll");
+		}
 
+		int _ScrollTo() {
 			int hr = 1;
-			if (_misc.flags.Has(EMiscFlags.UIA)) {
-				hr = Cpp.Cpp_AccAction(this, 's');
+			if (MiscFlags.Has(EMiscFlags.UIA)) {
+				hr = _InvokeL('s');
 			} else if (Item == 0) {
 				hr = Cpp.Cpp_AccWeb(this, "'s", out _);
+				//tested: Chrome and Firefox don't support UI Automation scrolling (IUIAutomationScrollItemPattern).
 			} else if (RoleInt is ERole.LISTITEM or ERole.TREEITEM) { //try messages of some standard controls
 				var w = WndContainer;
-				switch (w.Send(Api.WM_GETOBJECT, 0, (nint)EObjid.QUERYCLASSNAMEIDX)) {
-				case 65536 + 19 when RoleInt is ERole.LISTITEM: //Listview
-					if (0 != w.Send(0x1013, Item - 1, 1)) hr = 0; //LVM_ENSUREVISIBLE
+				switch (w.CommonControlType) {
+				case WControlType.Listview when RoleInt is ERole.LISTITEM:
+					if (0 != w.Send(LVM_ENSUREVISIBLE, Item - 1, 1)) hr = 0;
 					break;
-				case 65536 + 0 when RoleInt is ERole.LISTITEM: //Listbox
-					if (-1 != w.Send(0x0197, Item - 1)) hr = 0; //LB_SETTOPINDEX
+				case WControlType.Listbox when RoleInt is ERole.LISTITEM:
+					if (-1 != w.Send(LB_SETTOPINDEX, Item - 1)) hr = 0;
 					break;
-				case 65536 + 25 when RoleInt is ERole.TREEITEM: //Treeview
+				case WControlType.Treeview when RoleInt is ERole.TREEITEM:
 					if (osVersion.is32BitProcessAnd64BitOS && !w.Is32Bit) break; //cannot get 64-bit HTREEITEM
-					var htvi = w.Send(0x112A, Item); if (htvi == 0) break; //TVM_MAPACCIDTOHTREEITEM
-					w.Send(0x1114, 0, htvi); //TVM_ENSUREVISIBLE
+					nint hi = w.Send(TVM_MAPACCIDTOHTREEITEM, Item); if (hi == 0) break;
+					w.Send(TVM_ENSUREVISIBLE, 0, hi);
 					hr = 0; //the API returns nonzero only if actually scrolls, not if already visible
 					break;
 				}
 			}
 			GC.KeepAlive(this);
-
-			AuException.ThrowIfHresultNot0(hr, "*scroll");
-
-			//tested: Chrome and Firefox don't support UI Automation scrolling (IUIAutomationScrollItemPattern).
+			return hr;
 		}
 
 		/// <summary>
@@ -1038,5 +986,489 @@ namespace Au
 				if (!to.Sleep()) return false;
 			}
 		}
+
+		/// <summary>
+		/// Moves the cursor (mouse pointer) to this UI element.
+		/// </summary>
+		/// <param name="x">X coordinate in the bounding rectangle of this UI element. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
+		/// <param name="y">Y coordinate in the bounding rectangle of this UI element. Default - center.</param>
+		/// <param name="scroll">If not 0, the function at first calls <see cref="ScrollTo"/>. If it succeeds, waits <i>scroll</i> number of milliseconds (let the target app update the UI element rectangle etc).</param>
+		/// <exception cref="AuException">Failed to get UI element rectangle in container window (<see cref="elm.WndContainer"/>).</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.</exception>
+		/// <remarks>
+		/// Calls <see cref="mouse.move(wnd, Coord, Coord, bool)"/>. To get rectangle in window, uses <see cref="GetRect(out RECT, wnd, bool)"/> with <i>intersect</i> true.
+		/// </remarks>
+		public void MouseMove(Coord x = default, Coord y = default, int scroll = 0)
+			=> _ElmMouseAction(false, x, y, default, scroll);
+
+		/// <summary>
+		/// Clicks this UI element.
+		/// </summary>
+		/// <param name="x">X coordinate in the bounding rectangle of this UI element. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
+		/// <param name="y">Y coordinate in the bounding rectangle of this UI element. Default - center.</param>
+		/// <param name="button">Which button and how to use it.</param>
+		/// <param name="scroll">If not 0, the function at first calls <see cref="ScrollTo"/>. If it succeeds, waits <i>scroll</i> number of milliseconds (let the target app update the UI element rectangle etc). Valid values are 0-5000. Tip: if does not scroll, try to find the UI element with flag <b>UIA</b>.</param>
+		/// <exception cref="AuException">Failed to get UI element rectangle in container window (<see cref="elm.WndContainer"/>).</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.</exception>
+		/// <remarks>
+		/// Calls <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>. To get rectangle in window, uses <see cref="GetRect(out RECT, wnd, bool)"/> with <i>intersect</i> true.
+		/// </remarks>
+		public MRelease MouseClick(Coord x = default, Coord y = default, MButton button = MButton.Left, int scroll = 0) {
+			_ElmMouseAction(true, x, y, button, scroll);
+			return button;
+		}
+
+		/// <summary>
+		/// Double-clicks this UI element.
+		/// </summary>
+		/// <inheritdoc cref="MouseClick(Coord, Coord, MButton, int)"/>
+		public void MouseClickD(Coord x = default, Coord y = default, int scroll = 0)
+			=> MouseClick(x, y, MButton.DoubleClick, scroll);
+
+		/// <summary>
+		/// Right-clicks this UI element.
+		/// </summary>
+		/// <inheritdoc cref="MouseClick(Coord, Coord, MButton, int)"/>
+		public void MouseClickR(Coord x = default, Coord y = default, int scroll = 0)
+			=> MouseClick(x, y, MButton.Right, scroll);
+
+		void _ElmMouseAction(bool click, Coord x, Coord y, MButton button, int scroll) {
+			var (w, r) = _GetWndAndRectForClick(scroll);
+			var p = Coord.NormalizeInRect(x, y, r, centerIfEmpty: true);
+			//if (!w.Is0) {
+			if (button == 0) mouse.move(w, p.x, p.y);
+			else mouse.clickEx(button, w, p.x, p.y);
+			//} else { //no. Unsafe, can click in another window.
+			//	if (button == 0) mouse.move(p);
+			//	else mouse.clickEx(button, p);
+			//}
+		}
+
+		(wnd w, RECT r) _GetWndAndRectForClick(int scroll) {
+			if (scroll != 0) {
+				if ((uint)scroll > 5000) throw new ArgumentException("Valid values 0-5000", nameof(scroll));
+				if (0 == _ScrollTo()) wait.ms(scroll);
+			}
+
+			if (!GetRect(out var r)) throw new AuException(0, "*get UI element rectangle");
+			if (r.NoArea) throw new AuException(IsOffscreen ? "The UI element is offscreen. Try scroll." : "The UI element rectangle is empty");
+			var w = WndContainer; //with window the mouse functions are more reliable, eg will not click another window
+			if (!w.GetRect(out var rw)) throw new AuException(0, "*get container window");
+			if (!r.Intersect(rw)) throw new AuException("The UI element rectangle is not in the container window. Try scroll.");
+			if (!w.MapScreenToClient(ref r)) throw new AuException(0);
+			return (w, r);
+
+		}
+
+		//rejected: automatically scroll if need.
+		//	Impossible to reliably detect whether need to scroll.
+		//	This was an attempt, but it does not work well. And can't click non-client elements.
+		//(wnd w, RECT r) _GetWndAndRectForClick() {
+		//	var w = WndContainer; //with window the mouse functions are more reliable, eg will not click another window
+		//	if (w.Is0) throw new AuException(0, "*get container window");
+		//	RECT r = _GetRect(), rr = r;
+		//	print.it(r);
+		//	bool retry = false;
+		//	gRetry:
+		//	bool bad = r.NoArea;
+		//	if (!bad) {
+		//		bad = (!retry && IsOffscreen) || !r.Intersect(_GetContainerClientRect(w));
+		//	}
+		//	print.it(bad);
+		//	if (bad) {
+		//		if (!retry) {
+		//			if (0 == _ScrollTo())
+		//				if (wait.forCondition(-2, () => (r = _GetRect()) != rr)) {
+		//					30.ms(); retry = true; goto gRetry;
+		//				}
+		//		}
+		//		throw new AuException(0, "The UI element rectangle is " + (rr.NoArea ? "empty." : "offscreen."));
+		//	}
+		//	return (w, r);
+
+		//	RECT _GetRect() => GetRect(out var r, w) ? r : throw new AuException(0, "*get UI element rectangle");
+
+		//	//todo: now cannot click in nonclient area.
+
+		//	//never mind: should intersect with all ancestor elements and windows.
+		//	//	Now no OFFSCREEN state if partially clipped by an ancestor rect.
+		//	//	Slow and unreliable, because visible children can be not in parent rect. Eg pagetab or treeitem.
+
+		//	//problem: Firefox never updates Rect after ScrollTo. Need to find again.
+		//	//	Chrome updates after several ms. Chrome does not update OFFSCREEN (or with a delay?).
+
+		//	//problem: some fake container windows may be zero-size etc, and the element is drawn on another window.
+		//	//	shoulddo: test more.
+		//}
+
+		/// <summary>
+		/// Posts mouse-click messages to the container window, using coordinates in this UI element.
+		/// </summary>
+		/// <param name="x">X coordinate in the bounding rectangle of this UI element. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
+		/// <param name="y">Y coordinate in the bounding rectangle of this UI element. Default - center.</param>
+		/// <param name="button">Can specify the left (default), right or middle button. Also flag for double-click, press or release.</param>
+		/// <param name="scroll">If not 0, the function calls <see cref="ScrollTo"/>. If it succeeds, waits <i>scroll</i> number of milliseconds (let the target app update the UI element rectangle etc). Valid values are 0-5000. Tip: if does not scroll, try to find the UI element with flag <b>UIA</b>.</param>
+		/// <exception cref="AuException">
+		/// - Failed to get rectangle or container window.
+		/// - The element is invisible/offscreen.
+		/// </exception>
+		/// <exception cref="ArgumentException">Unsupported button specified.</exception>
+		/// <remarks>
+		/// Does not move the mouse.
+		/// Does not wait until the target application finishes processing the message.
+		/// Works not with all elements.
+		/// Try this function when <see cref="Invoke"/> does not work and you don't want to use <c>MouseClick</c>.
+		/// </remarks>
+		public void PostClick(Coord x = default, Coord y = default, MButton button = MButton.Left, int scroll = 0) {
+			var (w, r) = _GetWndAndRectForClick(scroll);
+
+			mouse.PostClick_(w, r, x, y, button);
+		}
+
+		/// <summary>
+		/// Posts mouse-double-click messages to the container window, using coordinates in this UI element.
+		/// </summary>
+		/// <inheritdoc cref="PostClick(Coord, Coord, MButton, int)"/>
+		public void PostClickD(Coord x = default, Coord y = default) => PostClick(x, y, MButton.DoubleClick);
+
+		/// <summary>
+		/// Posts mouse-right-click messages to the container window, using coordinates in this UI element.
+		/// </summary>
+		/// <inheritdoc cref="PostClick(Coord, Coord, MButton, int)"/>
+		public void PostClickR(Coord x = default, Coord y = default) => PostClick(x, y, MButton.Right);
+
+		/// <summary>
+		/// Makes this UI element focused (<see cref="Focus"/>) and calls <see cref="keys.send"/>.
+		/// </summary>
+		/// <param name="keysEtc">See <see cref="keys.send"/>.</param>
+		/// <exception cref="Exception">Exceptions of <see cref="Focus"/> and <see cref="keys.send"/>.</exception>
+		public void SendKeys([ParamString(PSFormat.keys)] params KKeysEtc[] keysEtc) {
+			bool andSelect = RoleInt is ERole.TREEITEM or ERole.LISTITEM;
+			Focus(andSelect);
+			keys.send(keysEtc);
+		}
+
+		//rejected: too simple and limited. No x y, scroll, button.
+		///// <summary>
+		///// Clicks this UI element and calls <see cref="keys.send"/>.
+		///// </summary>
+		///// <param name="doubleClick">If true, calls <see cref="MouseClickD"/>, else <see cref="MouseClick"/>.</param>
+		///// <param name="keysEtc">See <see cref="keys.send"/>.</param>
+		///// <exception cref="Exception">Exceptions of <see cref="MouseClick"/> and <see cref="keys.send"/>.</exception>
+		//public void SendKeys(bool doubleClick, [ParamString(PSFormat.keys)] params KKeysEtc[] keysEtc) {
+		//	if (doubleClick) MouseClickD(); else MouseClick();
+		//	keys.send(keysEtc);
+		//}
+
+		//rejected. Use SendKeys, it allows to specify keys to replace (Ctrl+A), append (Ctrl+End), etc.
+		//public void SendText(string text, bool replace, [more options?]) {
+		//	Focus();
+		//	...
+		//	keys.sendt(text);
+		//}
+
+		bool _CheckNeedToggle(bool check) {
+			ThrowIfDisposed_();
+			var state = State;
+			//if (state.Has(EState.DISABLED)) throw new AuException("Disabled."); //can do more bad than good, eg if DISABLED state is when not actually disabled
+			bool isChecked = state.Has(EState.CHECKED);
+			if (!isChecked) isChecked = state.Has(EState.PRESSED) && !MiscFlags.HasAny(EMiscFlags.UIA | EMiscFlags.Java) && RoleInt == ERole.BUTTON /*&& WndContainer.ClassNameIs("Chrome*")*/; //eg the toggle buttons in Chrome settings have state PRESSED instead of CHECKED
+			return isChecked != check;
+		}
+
+		/// <summary>
+		/// Checks or unchecks this checkbox or toggle-button, or selects this radio button. Uses <see cref="Invoke"/> or <see cref="SendKeys"/>.
+		/// </summary>
+		/// <param name="check">true to check, false to uncheck.</param>
+		/// <param name="keys">Keys for <see cref="SendKeys"/>. If "", uses "Space". If null (default), uses <see cref="Invoke"/>.</param>
+		/// <exception cref="Exception">Exceptions of <see cref="Invoke"/> or <see cref="SendKeys"/>.</exception>
+		/// <remarks>
+		/// Does nothing if the UI element already has the requested checked/unchecked state. Else tries to change the state and does not verify whether it actually worked.
+		/// 
+		/// Does not work with 3-state checkboxes and with elements that never have CHECKED state.
+		/// </remarks>
+		public void Check(bool check, [ParamString(PSFormat.keys)] string keys = null) {
+			if (!_CheckNeedToggle(check)) return;
+			if (keys != null) {
+				SendKeys(keys.Length == 0 ? "Space" : keys);
+			} else {
+				_Invoke(MiscFlags.Has(EMiscFlags.UIA) ? 'c' : 'a');
+			}
+		}
+
+		/// <inheritdoc cref="Check(bool, string)"/>
+		/// <summary>
+		/// Checks or unchecks this checkbox or toggle-button, or selects this radio button. To check/uncheck calls callback function.
+		/// </summary>
+		/// <param name="check"></param>
+		/// <param name="action">Callback function that should check or uncheck this UI element. Its parameter is this variable.</param>
+		/// <exception cref="Exception">Exceptions of the callback function.</exception>
+		/// <remarks></remarks>
+		public void Check(bool check, Action<elm> action) {
+			if (!_CheckNeedToggle(check)) return;
+			action(this);
+		}
+
+		//rejected: Check and Expand overloads for mouse.
+		//	Script code like 'e.Check(true, false) looks not good.
+		//	Better 'e.Check(true, e => e.MouseClick())' or 'e.Check(true, e => e.PostClick())'.
+
+		/// <summary>
+		/// Expands or collapse this expandable UI element (tree item, combo box, expander, dropdown button).
+		/// </summary>
+		/// <param name="expand">true to expand, false to collapse.</param>
+		/// <param name="keys">If not null, makes this element focused and presses these keys. See <see cref="keys.send"/>. If "", uses keys commonly used for that UI element type, for example Right/Left for treeitem, Alt+Down for combobox. If null, uses <see cref="Invoke"/> or similar functions, which often are available only if the element was found with flag <b>UIA</b>; if unavailable or fails, works like with <i>keys</i> "".</param>
+		/// <param name="waitS">If not 0, waits for new expanded/collapsed state max this number of seconds; on timeout throws exception, unless negative.</param>
+		/// <exception cref="Exception">Exceptions of <see cref="SendKeys"/>.</exception>
+		/// <exception cref="TimeoutException">The state didn't change in <i>waitS</i> seconds (if &gt; 0).</exception>
+		/// <remarks>
+		/// Does nothing if the UI element already has the requested expanded/collapsed state.
+		/// 
+		/// Works with UI elements that have <see cref="State"/> EXPANDED when expanded and COLLAPSED when collapsed. Also with UI elements that have state CHECKED or PRESSED when expanded and don't have this state when collapsed.
+		/// </remarks>
+		public void Expand(bool expand, [ParamString(PSFormat.keys)] string keys = null, double waitS = 1) {
+			_Expand(expand, keys, null, waitS);
+		}
+
+		/// <inheritdoc cref="Expand(bool, string, double)"/>
+		/// <param name="expand"></param>
+		/// <param name="action">Callback function that should expand or collapse this UI element. Its parameter is this variable.</param>
+		/// <param name="waitS"></param>
+		/// <exception cref="Exception">Exceptions of the callback function.</exception>
+		/// <exception cref="TimeoutException"/>
+		/// <remarks></remarks>
+		public void Expand(bool expand, Action<elm> action, double waitS = 1) {
+			_Expand(expand, null, action, waitS);
+		}
+
+		void _Expand(bool expand, string keys, Action<elm> action, double waitS) {
+			ThrowIfDisposed_();
+
+			bool _NeedToggle(bool expand) {
+				var state = State;
+				//print.it(RoleInt, Role, state);
+				//note: ignore DISABLED state. Some non-disabled elements have it. Also probably would need to get state of parent TREEVIEW.
+				bool isExpanded = !state.Has(EState.COLLAPSED) && state.HasAny(EState.EXPANDED | EState.CHECKED | EState.PRESSED);
+				return isExpanded != expand;
+			}
+			if (!_NeedToggle(expand)) return;
+
+			int how = action != null ? 2 : keys != null ? 1 : 0;
+			if (how == 0) {
+				how = 1;
+				if (MiscFlags.Has(EMiscFlags.UIA)) {
+					if (0 == _InvokeL(expand ? 'E' : 'e')) how = 0;
+				} else if (_ClassicTreeview()) {
+					how = 0;
+				} else {
+					var da = DefaultAction;
+					if (!da.NE()) {
+						if (MiscFlags.Has(EMiscFlags.Java)) {
+							//usually treeitem's default action is "toggleexpand", and it works. Other ways (mouse, focus+keys) are unreliable.
+							//combobox action is "togglePopup", and requires active window. Does not wait until popup closed (good).
+							if (da != "toggleexpand") WndTopLevel.Activate();
+							if (0 == _InvokeL('a', da)) how = 0;
+						} else {
+							if (0 == _InvokeL()) how = 0;
+							//never mind: not all actions Expand/Collapse, even if TREEITEM. Eg in Thunderbird.
+							//	Could use keys etc if state didn't change eg in 0.5 s, but it can make less reliable.
+							//	Let users choose another overload.
+						}
+					} else if (RoleInt == ERole.COMBOBOX) { //classic combobox?
+						var w = WndContainer;
+						if (w.CommonControlType == WControlType.Combobox) {
+							w.SendNotify(0x014F, expand ? 1 : 0); //CB_SHOWDROPDOWN
+							how = 0;
+						}
+					}
+				}
+			}
+
+			if (how == 1) {
+				Focus(andSelect: RoleInt is ERole.TREEITEM or ERole.LISTITEM or ERole.Custom); //exception if fails
+				if (keys.NE()) {
+					var role = MiscFlags.Has(EMiscFlags.Java) && Role == "combo box" ? ERole.COMBOBOX : RoleInt;
+					keys = role switch {
+						ERole.TREEITEM or ERole.LISTITEM or ERole.Custom => expand ? "Right" : "Left", //LISTITEM for treeviews made from listviews (not tested); Custom because we prefer treeviews
+						ERole.COMBOBOX or ERole.DROPLIST => expand ? "Alt+Down" : "Esc", //DROPLIST used by the classic date/time picker, but does not work because state always 0
+						ERole.BUTTON or ERole.CHECKBOX => "Space", //eg expander
+						ERole.BUTTONDROPDOWN or ERole.BUTTONDROPDOWNGRID or ERole.BUTTONMENU => expand ? "Space" : "Esc",
+						_ => expand ? "Down" : "Esc", //eg classic toolbar's SPLITBUTTON's dropdown part (MENUITEM); also classic SPLITBUTTON
+					};
+				}
+				Au.keys.send(keys);
+			} else if (how == 2) {
+				action(this);
+			}
+
+			if (waitS != 0) {
+				//10.ms();
+				wait.forCondition(waitS, () => !_NeedToggle(expand));
+			}
+
+			bool _ClassicTreeview() {
+				if (Item == 0 || RoleInt != ERole.TREEITEM) return false;
+				var w = WndContainer;
+				if (w.CommonControlType != WControlType.Treeview) return false;
+				if (osVersion.is32BitProcessAnd64BitOS && !w.Is32Bit) return false; //cannot get 64-bit HTREEITEM
+				nint hi = w.Send(TVM_MAPACCIDTOHTREEITEM, Item); if (hi == 0) return false;
+				_Expand_ClassicTreeview(w, hi, expand);
+				return true;
+			}
+		}
+
+		static void _Expand_ClassicTreeview(wnd w, nint hi, bool expand) {
+#if false //like MSAA Invoke. Bad: no TVN_ITEMEXPANDED etc; eg does not change folder icon open/closed.
+			w.Send(0x1102, expand ? 2 : 1, hi); //TVM_EXPAND(TVE_EXPAND:TVE_COLLAPSE)
+			if (expand) w.Send(0x1114, 0, hi); //TVM_ENSUREVISIBLE
+#else //like UIA expand/collapse. Bad: dirty; selects, which may do more than expand/collapse; for TVSI_NOSINGLEEXPAND need manifest.
+			for (int i = 0; i < 5; i++) { //eg in old VS first time returns 0, although works. UIA sends 2 times.
+				if (0 != w.Send(TVM_SELECTITEM, TVGN_CARET | TVSI_NOSINGLEEXPAND, hi)) break;
+				Debug_.PrintIf(i > 0, "elm.Expand");
+				//if (i > 0) wait.ms(i * 10);
+			}
+			int k = (int)(expand ? KKey.Right : KKey.Left);
+			w.SendNotify(Api.WM_KEYDOWN, k);
+			w.SendNotify(Api.WM_KEYUP, k);
+			10.ms();
+			//UIA posts, but then eg in old VS does not work if the control wasn't focused. Maybe that is why UIA always sets real focus.
+			//CONSIDER: wnd.PostKey(), wnd.PostText().
+#endif
+		}
+
+		/// <summary>
+		/// Expands multiple treeview control items using a path string.
+		/// </summary>
+		/// <param name="path">
+		/// String or array consisting of names (<see cref="Name"/>) of treeitem elements, like <c>"One|Two|Three"</c> or <c>new string[] { "One", "Two", "Three" }</c>.
+		/// Name string format: [](xref:wildcard_expression).
+		/// </param>
+		/// <param name="keys">null or keys to use to expand each element specified in <i>path</i>. See <see cref="Expand(bool, string, double)"/>.</param>
+		/// <param name="waitS">If not 0, after expanding each element waits for expanded state max this number of seconds; on timeout throws exception, unless negative. Also waits for each element this number of seconds; always exception if not found.</param>
+		/// <returns><b>elm</b> of the last element specified in <i>path</i>.</returns>
+		/// <exception cref="ArgumentException"><i>path</i> contains an invalid wildcard expression (<c>"**options "</c> or regular expression).</exception>
+		/// <exception cref="NotFoundException">Failed to find an element specified in <i>path</i>.</exception>
+		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="TimeoutException">The state didn't change in <i>waitS</i> seconds (if &gt; 0).</exception>
+		/// <exception cref="NotSupportedException">The treeview control type is not supported when this is a 32-bit process running on 64-bit OS (unlikely).</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="SendKeys"/>.</exception>
+		/// <remarks>
+		/// This element can be a TREE or TREEITEM. If it is a collapsed TREEITEM, expands it. Then finds and expands elements specified in <i>path</i>.
+		/// 
+		/// Does not work if all TREEITEM elements in the TREE control are its direct children, unless it's the standard Windows treeview control.
+		/// </remarks>
+		public elm Expand(Strings path, [ParamString(PSFormat.keys)] string keys = null, double waitS = 5) {
+			return _Expand(path, keys, null, waitS);
+		}
+
+		/// <inheritdoc cref="Expand(Strings, string, double)"/>
+		/// <param name="path"></param>
+		/// <param name="action">Callback function that should expand UI elements.</param>
+		/// <param name="waitS"></param>
+		/// <exception cref="ArgumentException"/>
+		/// <exception cref="NotFoundException"/>
+		/// <exception cref="AuException"/>
+		/// <exception cref="TimeoutException"/>
+		/// <exception cref="NotSupportedException"/>
+		/// <exception cref="Exception">Exceptions of the callback function.</exception>
+		/// <remarks></remarks>
+		public elm Expand(Strings path, Action<elm> action, double waitS = 5) {
+			return _Expand(path, null, action, waitS);
+		}
+
+		elm _Expand(Strings path, string keys, Action<elm> action, double waitS) {
+			ThrowIfDisposed_();
+			var a = path.ToArray();
+			var e = this;
+			//for classic treeview controls need special code if not UIA, because the MSAA tree is flat
+			if (!MiscFlags.HasAny(EMiscFlags.UIA | EMiscFlags.Java) && WndContainer is wnd w && w.CommonControlType == WControlType.Treeview) {
+				if (osVersion.is32BitProcessAnd64BitOS && !w.Is32Bit) throw new NotSupportedException("32-bit process."); //cannot get 64-bit HTREEITEM
+
+				nint hi = 0;
+				if (Item > 0) {
+					hi = w.Send(TVM_MAPACCIDTOHTREEITEM, Item); if (hi == 0) throw new AuException();
+					_ExpandIfNeed(this, hi);
+				}
+
+				foreach (var name in a) {
+					bool ok = waitS == 0 ? _Find(name) : wait.forCondition(-Math.Abs(waitS), () => _Find(name));
+					if (!ok) throw new NotFoundException("Not found elm expand path part: " + name);
+					_ExpandIfNeed(e, hi);
+				}
+
+				bool _Find(wildex name) {
+					elm temp = null;
+					for (nint h = w.Send(TVM_GETNEXTITEM, hi == 0 ? TVGN_ROOT : TVGN_CHILD, hi); h != 0; h = w.Send(TVM_GETNEXTITEM, TVGN_NEXT, h)) {
+						int item = (int)w.Send(TVM_MAPHTREEITEMTOACCID, h); if (item == 0) throw new AuException();
+						var acc = new Cpp.Cpp_Acc(_iacc, item) { misc = _misc };
+						if (Item == 0) { acc.misc.level++; acc.misc.roleByte = (byte)ERole.TREEITEM; }
+						var s = _GetStringPropL(acc, 'n'); //the slowest part of this 'for'. FUTURE: if somewhere too slow, could make inproc.
+						GC.KeepAlive(this);
+						if (name.Match(s)) {
+							if (temp == null) temp = new(acc, addRef: true); else temp.Item = item;
+							e = temp;
+							hi = h;
+							return true;
+						}
+					}
+					return false;
+				}
+
+				void _ExpandIfNeed(elm e, nint hi) {
+					if (_IsExpanded(w, hi)) return;
+
+					if (keys != null) e.SendKeys(keys);
+					else if (action != null) action(e);
+					else _Expand_ClassicTreeview(w, hi, true);
+					//p1.Next();
+
+					if (waitS != 0) wait.forCondition(waitS, () => _IsExpanded(w, hi));
+					else _IsExpanded(w, hi); //usually waits
+				}
+
+				static bool _IsExpanded(wnd w, nint hi) => 0 != ((int)w.Send(TVM_GETITEMSTATE, hi, TVIS_EXPANDED) & TVIS_EXPANDED);
+			} else {
+				if (State.Has(EState.COLLAPSED))
+					_Expand(true, keys, action, waitS);
+
+				foreach (var name in a) {
+					int level = e.Level;
+					e = e.Elm[null, name, "level=0", also: o => o.State.HasAny(EState.EXPANDED | EState.COLLAPSED)].Find(-(Math.Abs(waitS) + .01));
+					if (e == null) throw new NotFoundException("Not found elm expand path part: " + name);
+					e.Level = level + 1;
+					e._Expand(true, keys, action, waitS);
+				}
+			}
+			return e;
+		}
+
+		const int TVM_MAPACCIDTOHTREEITEM = 0x112A;
+		const int TVM_GETNEXTITEM = 0x110A;
+		const int TVM_MAPHTREEITEMTOACCID = 0x112B;
+		const int TVM_GETITEMSTATE = 0x1127;
+		const int TVM_ENSUREVISIBLE = 0x1114;
+		const int TVM_SELECTITEM = 0x110B;
+
+		const int TVGN_ROOT = 0x0;
+		const int TVGN_CHILD = 0x4;
+		const int TVGN_NEXT = 0x1;
+		const int TVGN_CARET = 0x9;
+		const int TVSI_NOSINGLEEXPAND = 0x8000;
+
+		const int TVIS_EXPANDED = 0x20;
+
+		const int LVM_ENSUREVISIBLE = 0x1013;
+
+		const int LB_SETTOPINDEX = 0x197;
+
 	}
 }
+//TODO: add functions:
+//	SelectDropdownItem(string|int|array) - like QM2 CbSelect. Can select/unselect multiple, all. Option to use mouse.
+//		Always invoke dropdown at first. Maybe the app populates the list on dropdown, or maybe elms unavailable while collapsed.
+//		Maybe FindDropdownItem(string).
+//	SelectMenuItem(path) - click, wait for popup menu, find/click, wait for another popup, .... Can check/uncheck. But maybe better let use keys.
+//	ContextMenu.
+//TEST:
+//	IUIAutomationScrollPattern: Scroll, SetScrollPercent.
+//	IUIAutomationWindowPattern: Close, WaitForInputIdle, CurrentIsModal, CurrentWindowInteractionState.

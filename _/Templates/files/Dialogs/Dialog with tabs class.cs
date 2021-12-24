@@ -1,5 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Media;
 
 /*
 This class file can be used in scripts etc like any class file. One of:
@@ -82,5 +84,3 @@ public class DialogWithTabs : Window {
 	//...
 }
 }
-
-//See also: snippet wpfSnippet.

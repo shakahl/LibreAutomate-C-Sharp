@@ -63,7 +63,7 @@
 		/// Gets descendant control from point.
 		/// By default returns default(wnd) if the point is not in a child control; it depends on <i>flags</i>.
 		/// </summary>
-		/// <param name="x">X coordinate in client area or screen (if flag <b>ScreenXY</b>). Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate in client area or screen (if flag <b>ScreenXY</b>). Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>

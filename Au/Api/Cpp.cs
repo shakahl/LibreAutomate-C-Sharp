@@ -7,10 +7,11 @@ namespace Au.Types
 			filesystem.more.loadDll64or32Bit("AuCpp.dll");
 
 #if TRACE //remind to rebuild the 32-bit dll when the 64-bit dll updated
-			if (filesystem.getProperties(folders.ThisAppBS + @"64\AuCpp.dll", out var p64) && filesystem.getProperties(folders.ThisAppBS + @"32\AuCpp.dll", out var p32)) {
-				var v = p64.LastWriteTimeUtc - p32.LastWriteTimeUtc;
-				if (v > TimeSpan.FromMinutes(2)) print.it($"Note: the 32-bit AuCpp.dll is older by {v.TotalMinutes.ToInt()} minutes.");
-			}
+			if (script.role == SRole.EditorExtension)
+				if (filesystem.getProperties(folders.ThisAppBS + @"64\AuCpp.dll", out var p64) && filesystem.getProperties(folders.ThisAppBS + @"32\AuCpp.dll", out var p32)) {
+					var v = p64.LastWriteTimeUtc - p32.LastWriteTimeUtc;
+					if (v > TimeSpan.FromMinutes(2)) print.it($"Note: the 32-bit AuCpp.dll is older by {v.TotalMinutes.ToInt()} minutes.");
+				}
 #endif
 		}
 
@@ -107,7 +108,7 @@ namespace Au.Types
 		internal static extern int Cpp_AccGetInt(Cpp_Acc a, char what, out int R);
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int Cpp_AccAction(Cpp_Acc a, char action, [MarshalAs(UnmanagedType.BStr)] string param = null);
+		internal static extern int Cpp_AccAction(Cpp_Acc a, char action = 'a', [MarshalAs(UnmanagedType.BStr)] string param = null);
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int Cpp_AccSelect(Cpp_Acc a, ESelect flagsSelect);

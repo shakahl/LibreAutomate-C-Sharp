@@ -45,7 +45,7 @@ Folders are of these types:
 - folders named like <i>@Project</i> are [project](xref:class_project) folders.
 
 The collection of files and folders is a *workspace*. It is a folder on disk. In the folder:
-- the **files** folder contains all files and folders of the workspace.
+- the **files** folder contains files and folders of the workspace.
 - the **files.xml** file is the list of files and folders of the workspace.
 - the **settings.json** file contains workspace settings.
 - the **state.db** file contains code editor states for files, such as folding, markers and current position.
@@ -79,7 +79,7 @@ Mouse x y, window name/class/program, control id/class/name, menu item id.
 
 ### Menus
 
-#### File, New
+#### File
 File and workspace management.
 
 #### Edit
@@ -103,4 +103,4 @@ Program help and library reference.
 ### Tray icon
 Click - show and activate editor window. Right-click - show context menu. Middle-click - disable/enable triggers.
 
-No color if triggers are disabled.
+No color when triggers are disabled.

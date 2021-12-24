@@ -143,7 +143,7 @@ namespace Au
 		/// <param name="keys_">
 		/// Key names and operators, like with <see cref="send"/>. Can be null or "".
 		/// Example: <c>"Tab Ctrl+V Alt+(E P) Left*3 Space a , 5 #5"</c>.
-		/// If has prefix "!" or "%", calls <see cref="AddText"/>; use "!" for text, "%" for HTML.
+		/// If has prefix "!" or "%", calls <see cref="AddText(string, string)"/>; use "!" for text, "%" for HTML.
 		/// </param>
 		/// <exception cref="ArgumentException">Error in <i>keys_</i> string, for example an unknown key name.</exception>
 		public keys AddKeys([ParamString(PSFormat.keys)] string keys_) {
@@ -207,7 +207,7 @@ namespace Au
 					if (g.End - i == 1 || _pstate.plus) {
 						while (i < g.End) AddChar(k[i++]);
 					} else { //avoid eg Shift up/down between AB
-						AddText(k[i..], OKeyText.KeysOrChar);
+						_AddTextAndHow(k[i..], OKeyText.KeysOrChar, true);
 					}
 					break;
 				//case '!': //rejected. Too many rules. Better slightly longer code than 2 ways to do the same.
@@ -366,11 +366,16 @@ namespace Au
 		/// <param name="how">Overrides <see cref="OKey.TextHow"/>.</param>
 		public keys AddText(string text, OKeyText how) {
 			_ThrowIfSending();
+			_AddTextAndHow(text, how, false);
+			return this;
+		}
+
+		void _AddTextAndHow(string text, OKeyText how, bool keysArg) {
 			if (!text.NE()) {
-				var ke = new _KEvent(_KType.Text, _SetData(text)) { vk = (KKey)((byte)how | 0x80) };
+				int flags = (int)how | 0x80; if (keysArg) flags |= 0x40;
+				var ke = new _KEvent(_KType.Text, _SetData(text)) { vk = (KKey)flags };
 				_AddKEvent(ke);
 			}
-			return this;
 		}
 
 		/// <summary>
@@ -719,8 +724,8 @@ namespace Au
 			object data = _GetData(ke.data); //string or clipboardData
 			string s = data as string;
 
-			OKeyText textHow;
-			if (0 != ((byte)ke.vk & 0x80)) textHow = (OKeyText)((byte)ke.vk & 0xf);
+			OKeyText textHow; int flags = (byte)ke.vk;
+			if (0 != (flags & 0x80)) textHow = (OKeyText)(flags & 0xf); //textHow specified
 			else if (s != null && s.Length < optk.PasteLength) textHow = optk.TextHow;
 			else textHow = OKeyText.Paste;
 
@@ -735,7 +740,7 @@ namespace Au
 			}
 
 			nint hkl = 0;
-			if (textHow == OKeyText.KeysOrChar || textHow == OKeyText.KeysOrPaste) {
+			if (textHow is OKeyText.KeysOrChar or OKeyText.KeysOrPaste) {
 				hkl = Api.GetKeyboardLayout(wFocus.ThreadId);
 				if (textHow == OKeyText.KeysOrPaste) {
 					foreach (char c in s) {
@@ -753,7 +758,7 @@ namespace Au
 			}
 
 			KMod prevMod = 0;
-			int sleep = optk.TextSpeed;
+			int sleep = 0 != (flags & 0x40) ? optk.KeySpeed : optk.TextSpeed; //0x40 if ^text
 
 			try {
 				for (int i = 0; i < s.Length; i++) {

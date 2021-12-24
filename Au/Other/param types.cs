@@ -92,8 +92,8 @@ namespace Au.Types
 	/// <remarks>
 	/// To specify a normal coordinate (the origin is the left or top edge), assign an <b>int</b> value (implicit conversion from <b>int</b> to <b>Coord</b>).
 	/// To specify a reverse coordinate (the origin is the right or bottom edge), use <see cref="Reverse"/> or a "from end" index like <c>^1</c>. It is towards the left or top edge, unless negative. Or use <see cref="Max"/> or <see cref="MaxInside"/>.
-	/// To specify a "fraction of the rectangle" coordinate, use <see cref="Fraction"/> or a value of type float like <c>0.5f</c>. Or use <see cref="Center"/>.
-	/// The meaning of <c>default(Coord)</c> depends on function where used. Many functions interpret it as center (same as <c>Coord.Center</c> or <c>0.5f</c>).
+	/// To specify a "fraction of the rectangle" coordinate, use <see cref="Fraction"/> or a value of type float like <c>.5f</c>. Or use <see cref="Center"/>.
+	/// The meaning of <c>default(Coord)</c> depends on function where used. Many functions interpret it as center (same as <c>Coord.Center</c> or <c>.5f</c>).
 	/// Also there are functions to convert <b>Coord</b> to normal coodinates.
 	/// </remarks>
 	/// <example>
@@ -101,12 +101,12 @@ namespace Au.Types
 	/// mouse.move(100, 100); //left edge + 100, top edge + 100
 	/// mouse.move(Coord.Reverse(100), 100); //right edge - 100, top edge + 100
 	/// mouse.move(100, ^100); //left edge + 100, bottom edge - 100
-	/// mouse.move(Coord.Fraction(0.33), 0.9f); //left edge + 1/3 of the screen rectangle, top edge + 9/10
+	/// mouse.move(Coord.Fraction(.33), .9f); //left edge + 1/3 of the screen rectangle, top edge + 9/10
 	/// mouse.move(Coord.Center, Coord.MaxInside); //x in center (left edge + 1/2), y by the bottom edge inside (Coord.Max would be outside)
 	/// mouse.move(Coord.Reverse(-100), 1.1f); //right edge + 100, bottom edge + 0.1 of the rectangle
 	/// 
 	/// var w = wnd.find(1, "Untitled - Notepad", "Notepad");
-	/// w.Move(0.5f, 100, 0.5f, ^200); //x = center, y = 100, width = half of screen, height = screen height - 200
+	/// w.Move(.5f, 100, .5f, ^200); //x = center, y = 100, width = half of screen, height = screen height - 200
 	/// ]]></code>
 	/// </example>
 	public record struct Coord
@@ -177,8 +177,8 @@ namespace Au.Types
 
 		/// <summary>
 		/// Creates <b>Coord</b> of <b>Fraction</b> type.
-		/// Value 0.0 is the left or top of the rectangle. Value 1.0 is the right or bottom of the rectangle. Values &lt;0.0 and &gt;=1.0 are outside of the rectangle.
-		/// Instead can be used implicit conversion from float, for example argument <c>Coord.Fraction(0.5)</c> can be replaced with <c>0.5f</c>.
+		/// Value 0 is the left or top of the rectangle. Value 1.0 is the right or bottom of the rectangle. Values &lt;0 and &gt;=1.0 are outside of the rectangle.
+		/// Instead can be used implicit conversion from float, for example argument <c>Coord.Fraction(.5)</c> can be replaced with <c>.5f</c>.
 		/// </summary>
 		public static unsafe Coord Fraction(double v) {
 			float f = (float)v;

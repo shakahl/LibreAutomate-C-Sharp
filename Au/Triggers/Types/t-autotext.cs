@@ -703,7 +703,7 @@ namespace Au.Triggers
 
 			var k = new keys(opt.key);
 			var optk = k.Options;
-			bool uwp = 0 != this.Window.Window.IsUwpApp;
+			bool uwp = 0 != this.Window.Window.IsUwpApp;//TODO: test WinUI (cn "WinUIDesktopWin32WindowClass")
 			if (uwp) {
 				optk.KeySpeed = Math.Clamp(optk.KeySpeed * 2, 20, 100); //default 2
 				optk.KeySpeedClipboard = Math.Clamp(optk.KeySpeedClipboard * 2, 20, 100);
@@ -770,6 +770,7 @@ namespace Au.Triggers
 		/// </summary>
 		public void SendPostfix() {
 			if (this.HasPostfixChar) new keys(opt.key).AddText(this.Text[^1..], OKeyText.KeysOrChar).SendIt();
+			//CONSIDER: AddText -> AddChar. Also in other place. But the speed option is different.
 		}
 
 		/// <summary>

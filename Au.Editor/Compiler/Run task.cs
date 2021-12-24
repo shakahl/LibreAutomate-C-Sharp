@@ -74,7 +74,7 @@ static class CompileRun
 	}
 
 	static void _SciLink_RunClassFile(string s) {
-		int action = s.ToInt(); //1 add meta role miniProgram, 2 create Script project, 3 create new test script and set "run" attribute
+		int action = s.ToInt(); //1 change role, 2 create Script project, 3 create new test script and set "run" attribute
 		var f = App.Model.Find(s[2..]); if (f == null) return;
 		if (action == 1) { //change role
 			if (!App.Model.SetCurrentFile(f)) return;
@@ -95,12 +95,21 @@ static class CompileRun
 				bool isProject = f.FindProject(out var target, out _);
 				if (!isProject) target = f;
 
+				//extract code from /// <example>
+				string example = null;
+				var s = f.GetText();
+				if(s.RxMatch(@"(?m)^\h*/// *<example>\h*\R((\h*/// ?.*\R)+?)^\h*/// *</example>", 1, out RXGroup g)) {
+					if (s.RxMatch(@"(?m)^\h*/// *<code>(<!\[CDATA\[)?\s+((\h*/// ?.*\R)+?)^\h*/// *(?(1)\]\]>)</code>", 2, out g, range: g)) {
+						example = s[(Range)g].RxReplace(@"(?m)^\h*/// ?", "");
+					}
+				}
+
 				var text = new EdNewFileText();
 				if (action == 2) {
-					text.text = "//Class1.Function1();\r\n";
+					text.text = example ?? "//Class1.Function1();\r\n";
 				} else {
 					text.meta = $"{(isProject ? "pr" : "c")} {f.ItemPath};";
-					text.text = $"//{(isProject ? "Library." : "")}Class1.Function1();\r\n";
+					text.text = example ?? $"//{(isProject ? "Library." : "")}Class1.Function1();\r\n";
 				}
 
 				ni = App.Model.NewItem(template, (target, FNPosition.Before), name, text: text);

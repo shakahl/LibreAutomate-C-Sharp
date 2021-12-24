@@ -81,7 +81,30 @@ partial class SciCode
 			if (slashStar) {
 				s = "/*" + s + "*/";
 			} else {
-				s = com ? s.RxReplace(@"(?m)^", "//") : s.RxReplace(@"(?m)^([ \t]*)//", "$1");
+				if (com) {
+					s.RxFindAll(@"(?m)^[\t ]*(.*)\R?", out RXMatch[] a);
+					//find smallest common indent
+					int indent = 0; //tabs*4 or spaces*1
+					foreach (var m in a) {
+						if (m[1].Length == 0) continue;
+						int n = 0; for (int i = m.Start; i < m[1].Start; i++) if (s[i] == ' ') n++; else n = (n & ~3) + 4;
+						indent = indent == 0 ? n : Math.Min(indent, n);
+						if (indent == 0) break;
+					}
+					//insert // in lines containing code
+					var b = new StringBuilder();
+					foreach (var m in a) {
+						if (m[1].Length == 0) {
+							b.Append(s, m.Start, m.Length);
+						} else {
+							int i = m.Start; for (int n = 0; n < indent; i++) if (s[i] == ' ') n++; else n = (n & ~3) + 4;
+							b.Append(s, m.Start, i - m.Start).Append("//").Append(s, i, m.End - i);
+						}
+					}
+					s = b.ToString();
+				} else { //remove single // from all lines
+					s = s.RxReplace(@"(?m)^([ \t]*)//", "$1");
+				}
 			}
 		}
 

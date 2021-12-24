@@ -129,13 +129,14 @@ partial class SciCode : KScintilla
 	}
 
 	//Called by PanelEdit.ZOpen.
-	internal void _Init(byte[] text, bool newFile) {
+	internal void _Init(byte[] text, bool newFile, bool noTemplate) {
 		//if(Hwnd.Is0) CreateHandle();
 		Debug.Assert(!Hwnd.Is0);
 
 		bool editable = _fls.SetText(this, text);
 		_SetLineNumberMarginWidth();
-		if (newFile) _openState = _EOpenState.NewFile; else if (App.Model.OpenFiles.Contains(_fn)) _openState = _EOpenState.Reopen;
+		if (newFile) _openState = noTemplate ? _EOpenState.NewFileNoTemplate : _EOpenState.NewFileFromTemplate;
+		else if (App.Model.OpenFiles.Contains(_fn)) _openState = _EOpenState.Reopen;
 		if (_fn.IsCodeFile) CiStyling.DocTextAdded(this, newFile);
 
 		//detect \r without '\n', because it is not well supported
@@ -353,7 +354,7 @@ partial class SciCode : KScintilla
 		//	}
 		//	break;
 		case Api.WM_LBUTTONUP:
-			if (Keyboard.Modifiers == ModifierKeys.Control) {
+			if (Keyboard.Modifiers == ModifierKeys.Control && !zIsSelection) {
 				Dispatcher.InvokeAsync(() => CiGoTo.GoToSymbolFromPos());
 			}
 			break;

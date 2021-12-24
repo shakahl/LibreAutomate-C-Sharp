@@ -237,6 +237,9 @@ namespace Au
 		//	print.it(_iacc, Debug_.GetComObjRefCount_(_iacc));
 		//}
 
+		//not used in this library, but sometimes may need it for testing something in scripts.
+		internal IntPtr Iacc_ => _iacc;
+
 		/// <summary>
 		/// Gets or changes simple element id, also known as child id.
 		/// </summary>

@@ -658,7 +658,7 @@ namespace Au
 		/// <summary>
 		/// Sets dialog position in screen.
 		/// </summary>
-		/// <param name="x">X position in <see cref="Screen"/>. If default(Coord) - screen center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If default(Coord) - screen center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y position in <see cref="Screen"/>. If default(Coord) - screen center.</param>
 		/// <param name="rawXY">x y are relative to the primary screen (ignore <see cref="Screen"/> etc).</param>
 		public void SetXY(Coord x, Coord y, bool rawXY = false) {
@@ -1325,7 +1325,7 @@ namespace Au
 		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="options.defaultTitle"/>.</param>
 		/// <param name="controls">Can be used to add more controls and later get their values: checkbox, radio buttons, text input.</param>
 		/// <param name="defaultButton">id of button that responds to the Enter key.</param>
-		/// <param name="x">X position in <see cref="Screen"/>. If default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y position in <see cref="Screen"/>. If default - center.</param>
 		/// <param name="secondsTimeout">If not 0, after this time (seconds) auto-close the dialog and return <see cref="Timeout"/>.</param>
 		/// <param name="onLinkClick">
@@ -1465,7 +1465,7 @@ namespace Au
 		/// <param name="footer">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
 		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="options.defaultTitle"/>.</param>
 		/// <param name="controls">Can be used to add more controls and later get their values: checkbox, radio buttons.</param>
-		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y position in <see cref="Screen"/>. If default - screen center.</param>
 		/// <param name="secondsTimeout">If not 0, after this time (seconds) auto-close the dialog and return <see cref="Timeout"/>.</param>
 		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="show"/>.</param>
@@ -1587,7 +1587,7 @@ namespace Au
 		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="options.defaultTitle"/>.</param>
 		/// <param name="controls">Can be used to add more controls and later get their values: checkbox, radio buttons, text input.</param>
 		/// <param name="defaultButton">id (1-based index) of button that responds to the Enter key.</param>
-		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y position in <see cref="Screen"/>. If default - screen center.</param>
 		/// <param name="secondsTimeout">If not 0, after this time (seconds) auto-close the dialog and return <see cref="Timeout"/>.</param>
 		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="show"/>.</param>

@@ -420,19 +420,22 @@ partial class SciCode
 	internal void _RestoreEditorData() {
 		//print.it(_openState);
 		if (_openState == _EOpenState.FoldingDone) return;
-		bool newFile = _openState == _EOpenState.NewFile, reopened = _openState == _EOpenState.Reopen;
-		_openState = _EOpenState.FoldingDone;
-		if (newFile) {
+		var os = _openState; _openState = _EOpenState.FoldingDone;
+
+		if (os is _EOpenState.NewFileFromTemplate) {
 			if (_fn.IsScript) {
-				if (0 == (1 & App.Settings.templ_flags)) Call(SCI_FOLDALL, 0);
 				var code = zText;
-				if (!code.NE() && code.RxMatch(@"//\.\.+\R\R?(?=\z|\R)", 0, out RXGroup g)) {
-					zGoToPos(true, g.End);
+				if (!code.NE()) {
+					if (0 == (1 & App.Settings.templ_flags)) Call(SCI_FOLDALL, 0);
+					if (code.RxMatch(@"//\.\.+\R\R?(?=\z|\R)", 0, out RXGroup g)) {
+						zGoToPos(true, g.End);
+					}
+					//if (CodeInfo.GetContextAndDocument(out var cd, 0, true) && !cd.code.NE() && cd.document.GetSyntaxRootAsync().Result is CompilationUnitSyntax cu) {
+					//	print.it(cu);
+					//}
 				}
-				//if (CodeInfo.GetContextAndDocument(out var cd, 0, true) && !cd.code.NE() && cd.document.GetSyntaxRootAsync().Result is CompilationUnitSyntax cu) {
-				//	print.it(cu);
-				//}
 			}
+		} else if (os == _EOpenState.NewFileNoTemplate) {
 		} else {
 			//restore saved folding, markers, scroll position and caret position
 			var db = App.Model.DB; if (db == null) return;
@@ -454,7 +457,7 @@ partial class SciCode
 						if (cp > 0) Call(SCI_ENSUREVISIBLEENFORCEPOLICY, zLineFromPos(false, cp));
 					}
 					if (top + pos > 0) {
-						if (!reopened) {
+						if (os != _EOpenState.Reopen) {
 							db.Execute("REPLACE INTO _editor (id,top,pos,lines) VALUES (?,0,0,?)", p => p.Bind(1, _fn.Id).Bind(2, a));
 						} else if (cp == 0) {
 							if (top > 0) Call(SCI_SETFIRSTVISIBLELINE, _savedTop = top);
@@ -467,7 +470,7 @@ partial class SciCode
 		}
 	}
 
-	enum _EOpenState : byte { Open, Reopen, NewFile, FoldingDone }
+	enum _EOpenState : byte { Open, Reopen, NewFileFromTemplate, NewFileNoTemplate, FoldingDone }
 	_EOpenState _openState;
 
 	/// <summary>

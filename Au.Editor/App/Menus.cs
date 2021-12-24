@@ -25,7 +25,7 @@ static class Menus
 		[Command("Delete...", separator = true, keysText = "Delete", image = "*Typicons.DocumentDelete #FF4040")]
 		public static void Delete() { App.Model.DeleteSelected(); }
 
-		[Command(keys = "F2", image = "*BoxIcons.RegularRename #404040")]
+		[Command(keys = "F2", image = "*BoxIcons.RegularRename #008EEE")]
 		public static void Rename() { App.Model.RenameSelected(); }
 
 		[Command(image = "*RemixIcon.ChatSettingsLine #99BF00")]
@@ -218,34 +218,34 @@ static class Menus
 	[Command(target = "Edit")]
 	public static class Code
 	{
-		[Command(image = "*Material.RecordCircleOutline #FF6640")]
+		[Command(underlined: 'r', image = "*Material.RecordCircleOutline #FF6640")]
 		public static void Input_recorder() { InputRecorder.ShowRecorder(); }
 
-		[Command("wnd (find window)")]
+		[Command("Find _window", image = "*BoxIcons.SolidWindowAlt #4060C0")]
 		public static void wnd() { Dwnd.Dialog(); }
 
-		[Command("elm (find UI element)")]
+		[Command("Find UI _element", image = "*Material.CheckBoxOutline #4060C0")]
 		public static void elm() { Delm.Dialog(); }
 
-		[Command("u_iimage (find image)")]
+		[Command("Find _image", image = "*Material.ImageSearchOutline #4060C0")]
 		public static void uiimage() { Duiimage.Dialog(); }
 
 		[Command("Quick capturing info")]
 		public static void Quick_capture() { QuickCapture.Info(); }
 
-		[Command(separator = true, keysText = "Ctrl+Space in string")]
+		[Command(separator = true, keysText = "Ctrl+Space in string", image = "*Material.KeyboardOutline #4060C0")]
 		public static void Keys() { CiTools.CmdShowKeysWindow(); }
 
-		[Command(keysText = "Ctrl+Space in string")]
+		[Command(underlined: 'x', keysText = "Ctrl+Space in string")]
 		public static void Regex() { CiTools.CmdShowRegexWindow(); }
 
-		[Command]
+		[Command(underlined: 'A')]
 		public static void Windows_API() { new DWinapi().Show(); }
 
-		[Command(separator = true, image = "*Material.CommentEditOutline #B340FF")]
+		[Command(separator = true, image = "*Material.CommentEditOutline #9F5300")]
 		public static void Add_file_description() { InsertCode.AddFileDescription(); }
 
-		[Command(image = "*Codicons.SymbolClass #B340FF")]
+		[Command(image = "*Codicons.SymbolClass #9F5300")]
 		public static void Add_class_Program() { InsertCode.AddClassProgram(); }
 	}
 
@@ -255,9 +255,7 @@ static class Menus
 		[Command(keys = "F5", image = "*Codicons.DebugStart #40B000")]
 		public static void Run_script() { CompileRun.CompileAndRun(true, App.Model.CurrentFile, runFromEditor: true); }
 
-		//[Command(image = "*PicolIcons.BadgeStop #404040")]
 		[Command(image = "*PicolIcons.BadgeCancel #404040")]
-		//[Command(image = "*JamIcons.CloseRectangle #404040")]
 		public static void End_task() {
 			var f = App.Model.CurrentFile;
 			if (f != null) {

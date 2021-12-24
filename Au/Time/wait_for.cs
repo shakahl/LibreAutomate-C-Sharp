@@ -165,6 +165,7 @@ namespace Au
 				if (!to.Sleep()) return false;
 			}
 		}
+		//TODO: generic to return any type.
 
 		/// <summary>
 		/// Waits for a kernel object (event, mutex, etc).

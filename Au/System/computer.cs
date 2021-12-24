@@ -58,5 +58,9 @@ namespace Au
 
 		//	}
 		//}
+
+		public static void waitForDesktop(double secondsTimeout, bool normalDesktop) { //normal, UAC, lock, screensaver, etc
+			//using var hook = new WinEventHook(EEvent.SYSTEM_DESKTOPSWITCH);
+		}
 	}
 }

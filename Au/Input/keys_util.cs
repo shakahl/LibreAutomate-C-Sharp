@@ -236,13 +236,13 @@ namespace Au
 			/// Else returns 0.
 			/// </summary>
 			internal static KMod KeyToMod(KKey k) {
-				switch (k) {
-				case KKey.Shift: case KKey.LShift: case KKey.RShift: return KMod.Shift;
-				case KKey.Ctrl: case KKey.LCtrl: case KKey.RCtrl: return KMod.Ctrl;
-				case KKey.Alt: case KKey.LAlt: case KKey.RAlt: return KMod.Alt;
-				case KKey.Win: case KKey.RWin: return KMod.Win;
-				}
-				return 0;
+				return k switch {
+					KKey.Shift or KKey.LShift or KKey.RShift => KMod.Shift,
+					KKey.Ctrl or KKey.LCtrl or KKey.RCtrl => KMod.Ctrl,
+					KKey.Alt or KKey.LAlt or KKey.RAlt => KMod.Alt,
+					KKey.Win or KKey.RWin => KMod.Win,
+					_ => 0,
+				};
 			}
 
 			/// <summary>
@@ -286,6 +286,7 @@ namespace Au
 				if (0 == (downUp & 2)) SendKeyEventRaw(k, scan, f);
 				if (0 == (downUp & 1)) SendKeyEventRaw(k, scan, f | Api.KEYEVENTF_KEYUP);
 			}
+			//TODO: public: keys.more.SendKey(KKey k, bool? down=null, int? extra=null)
 
 			internal static void SendCtrl(bool down) => SendKeyEventRaw(KKey.Ctrl, 0x1D, down ? 0 : Api.KEYEVENTF_KEYUP);
 			internal static void SendAlt(bool down) => SendKeyEventRaw(KKey.Alt, 0x38, down ? 0 : Api.KEYEVENTF_KEYUP);
@@ -323,15 +324,16 @@ namespace Au
 				bool R = !optk.NoCapsOff && isCapsLock;
 				if (R) {
 					if (isPressed(KKey.CapsLock)) SendKey(KKey.CapsLock, 2); //never mind: in this case later may not restore CapsLock because of auto-repeat
-					SendKey(KKey.CapsLock);
-					if (isCapsLock) {
-						//Probably Shift is set to turn off CapsLock in CP dialog "Text Services and Input Languages".
-						//	Win10: Settings -> Time & Language -> Language -> Input method -> Hot keys.
+					SendKey(KKey.CapsLock, 1);
+					bool ok = isPressed(KKey.CapsLock); //the send can fail because of UAC or the Windows setting
+					SendKey(KKey.CapsLock, 2);
+					//note: don't call isCapsLock again here. It is unreliable because GetKeyState is sync.
+					//	Eg in some cases ignores the new key state until this UI thread removes all messages from queue.
+					if (!ok && Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Keyboard Layout", "Attributes", 0) is int r1 && 0 != (r1 & 0x10000)) {
+						//Shift is set to turn off CapsLock in Settings -> Time & Language -> Language -> Keyboard -> Input method -> Hot keys.
 						WindowsHook.IgnoreLShiftCaps_(2000);
 						SendKey(KKey.Shift);
 						WindowsHook.IgnoreLShiftCaps_(0);
-						R = !isCapsLock;
-						Debug.Assert(R);
 
 						//note: need IgnoreLShiftCaps_, because when we send Shift, the BlockInput hook receives these events:
 						//Left Shift down, not injected //!!
@@ -340,13 +342,26 @@ namespace Au
 						//Left Shift up, injected
 
 						//speed: often ~15 ms. Without Shift max 5 ms.
-
-						//never mind: don't need to turn off CapsLock if there is only text, unless OKeyText.KeysX.
 					}
+					//note: don't make R false if still isCapsLock true, because isCapsLock unreliable.
+					//	If SendKey(CapsLock) did not work now, it probably will not work afterwards.
+					
+					//TODO: CONSIDER: remove this feature, or set non-default. Now turns off even when don't need.
+					//	Instead, when sending alpha char keys, if CapsLock, invert Shift.
+					//CONSIDER: turn off CapsLock only if there is text as keys.
+					//	bool? CapsOff = null.
+					//	true - always, false - never, null - if need.
 				}
+
 				if (!optk.NoModOff) ReleaseModAndDisableModMenu();
+
 				return R;
 			}
+
+			/*
+			//TODO: if optk.NoCapsOff and is CapsLock and Shift is set to turn off CapsLock, on sent Shift key hangs for ~10 s.
+			//	Spy++ shows that after sending all keys [re]sends hundreds of WM_KEYUP(VK_CAPITAL).
+			*/
 
 			/// <summary>
 			/// Releases modifier keys if pressed.

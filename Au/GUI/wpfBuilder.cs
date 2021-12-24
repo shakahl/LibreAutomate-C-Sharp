@@ -967,7 +967,7 @@ namespace Au
 		public wpfBuilder AddButton(object text, int result/*, Action<WBButtonClickArgs> clickSplit = null*/) {
 			Add(out Button c, text);
 			c.Click += (_, _) => { _resultButton = result; _FindWindow(c).DialogResult = true; };
-			//		if(clickSplit!=null) c.ClickSplit+=clickSplit;
+			//if(clickSplit!=null) c.ClickSplit+=clickSplit;
 			return this;
 		}
 		//	/// <param name="clickSplit">
@@ -977,6 +977,7 @@ namespace Au
 
 		/// <summary>
 		/// If the window closed with an <see cref="AddButton(object, int)"/> button, returns its <i>result</i>. Else returns 0.
+		/// Note: if the button is in a tab page, use the <b>wpfBuilder</b> variable of that page.
 		/// </summary>
 		public int ResultButton => _resultButton;
 		int _resultButton;

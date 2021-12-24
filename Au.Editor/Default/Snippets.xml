@@ -356,53 +356,16 @@ default: return;
 			</list>
 		</snippet>
 
-		<snippet name="wpfSnippet" info="Create dialog window with controls." using="System.Windows;System.Windows.Controls;System.Windows.Controls.Primitives;System.Windows.Media" more="See also: dialogSnippet, menu File -> New -> Templates.">
-			<list item="Simple">
-				<![CDATA[var b = new wpfBuilder("Window").WinSize(400);
+		<snippet name="wpfSnippet" info="Create dialog window." using="System.Windows;System.Windows.Controls;System.Windows.Controls.Primitives;System.Windows.Media" more="See also: dialogSnippet, menu File -> New -> Dialogs.">
+			<![CDATA[var b = new wpfBuilder("Window").WinSize(400);
 b.R.Add("Text", out TextBox text1).Focus();
 b.R.Add("Combo", out ComboBox combo1).Items("Zero|One|Two");
 b.R.Add(out CheckBox c1, "Check");
+b.R.AddButton("Button", _ => { print.it("Button clicked"); });
 b.R.AddOkCancel();
 b.End();
 if (!b.ShowDialog()) return;
-//print.it(text1.Text, combo1.SelectedIndex, c1.True());
-
-//See also: menu File -> New -> Templates.]]>
-			</list>
-			<list item="Tabs">
-				<![CDATA[var b = new wpfBuilder("Window").WinSize(400);
-b.Row(-1).Add(out TabControl tc).Height(300..);
-b.R.AddOkCancel(apply: "_Apply");
-var bMain=b;
-
-wpfBuilder _Page(string name, WBPanelType panelType = WBPanelType.Grid) {
-	var tp = new TabItem { Header = name };
-	tc.Items.Add(tp);
-	return new wpfBuilder(tp, panelType);
-}
-
-//--------------------------------
-
-b = _Page("Page1");
-b.R.Add("Text", out TextBox _);
-b.End();
-
-//--------------------------------
-
-b = _Page("Page2");
-b.R.Add("Combo", out ComboBox _).Editable().Items("Zero|One|Two");
-b.R.Add(out CheckBox _, "Check");
-b.End();
-
-//--------------------------------
-
-//tc.SelectedIndex = 1;
-
-b = bMain.End();
-if (!b.ShowDialog()) return;
-
-//See also: menu File -> New -> Templates.]]>
-			</list>
+//print.it(text1.Text, combo1.SelectedIndex, c1.True());]]>
 		</snippet>
 
 	</group>

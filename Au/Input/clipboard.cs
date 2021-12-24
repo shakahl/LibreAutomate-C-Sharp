@@ -458,7 +458,7 @@ namespace Au
 					if (wOC == _wFocus) return true;
 					if (wOC.Is0) return true; //tested: none of tested apps calls OpenClipboard(0)
 					if (wOC.ProcessId == _wFocus.ProcessId) return true; //often classnamed "CLIPBRDWNDCLASS". Some clipboard managers too, eg Ditto.
-					if (osVersion.minWin10 && 0 != _wFocus.Window.IsUwpApp) {
+					if (osVersion.minWin10 && 0 != _wFocus.Window.IsUwpApp) {//TODO: test WinUI (cn "WinUIDesktopWin32WindowClass")
 						var prog = wOC.ProgramName;
 						if (prog.Eqi("svchost.exe")) return true;
 						//if (prog.Eqi("RuntimeBroker.exe")) return true; //used to be Store apps

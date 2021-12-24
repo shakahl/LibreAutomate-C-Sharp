@@ -84,41 +84,52 @@ namespace Au
 		}
 
 		static void _MoveSlowTo(POINT p) {
+			bool drag = t_pressedButtons != 0;
 			int speed = opt.mouse.MoveSpeed;
-			if (speed == 0 && isPressed()) speed = 1; //make one intermediate movement, else some programs don't select text
-			if (speed > 0) {
-				var p0 = xy;
-				int dxall = p.x - p0.x, dyall = p.y - p0.y;
-				double dist = Math.Sqrt(dxall * dxall + dyall * dyall);
-				if (dist > 1.5) {
-					double dtall = Math.Sqrt(dist) * speed + 9;
-					long t0 = perf.ms - 7, dt = 7;
-					int pdx = 0, pdy = 0;
-					for (; ; dt = perf.ms - t0) {
-						double dtfr = dt / dtall;
-						if (dtfr >= 1) break;
+			if (drag) speed++; else if (speed == 0) return; //need at least 1 intermediate point, else some apps don't drag or don't select text etc
+			var p1 = mouse.xy; //the start point; p is the end point
+			int x2 = p.x - p1.x, y2 = p.y - p1.y; //x and y distances
+			bool xNeg, yNeg; if (xNeg = x2 < 0) x2 = -x2; if (yNeg = y2 < 0) y2 = -y2; //make code easier
+			double dist = Math.Sqrt(x2 * x2 + y2 * y2); if (dist < 4) return;
+			double angle = Math.Atan2(y2, x2);
+			var (sin, cos) = Math.SinCos(angle);
+			double speed2 = speed / 10.0;
 
-						int dx = (int)(dtfr * dxall), dy = (int)(dtfr * dyall);
-						//print.it(dx, dy, dtfr);
+			for (double z = 0; ;) {
+				bool startDragSlowly = drag && z < Math.Min(20, dist); //some apps refuse to drag if too fast
+				double d = ((startDragSlowly ? z : dist - z) / 10 + 1) / speed2; //the speed depends on the distance, and is decreasing; increasing while startDragSlowly
+				if (d > dist / 2) d = dist / 2; else if (d < 2) d = 2; //need at least 1 intermediate point; don't need too many points
+				z += d;
+				int x = (z * cos).ToInt(), y = (z * sin).ToInt();
 
-						POINT pt = (p0.x + dx, p0.y + dy);
-						if (dx != pdx || dy != pdy) {
-							_SendMove(pt);
-							pdx = dx; pdy = dy;
-						}
-
-						_Sleep(7); //7-8 is WM_MOUSEMOVE period when user moves the mouse quite fast, even when the system timer period is 15.625 (default).
+				//make the line smoother. Converting double to int creates ugly bumps etc.
+				//	Usually don't need it, but in some cases it may be better.
+				//	Try to add 1 to x or/and y and use it if then the angle difference is smaller.
+				int xPlus = 0, yPlus = 0; double anDiff = 4;
+				for (int i = 0; i < 2; i++) {
+					for (int j = 0; j < 2; j++) {
+						double ad = Math.Abs(Math.Atan2(y + j, x + i) - angle);
+						if (ad < anDiff) { anDiff = ad; xPlus = i; yPlus = j; }
 					}
 				}
+				if (xPlus > 0 || yPlus > 0) {
+					x += xPlus; y += yPlus;
+					z = Math.Sqrt(x * x + y * y);
+				}
+
+				if (dist - z < .5) break;
+
+				_SendMove(new(p1.x + (xNeg ? -x : x), p1.y + (yNeg ? -y : y)));
+				_Sleep(7 + (speed - 1) / 10); //7-8 is the natural max WM_MOUSEMOVE period, even when the system timer period is 15.625 (default).
 			}
 		}
 
 		/// <summary>
-		/// Moves the cursor (mouse pointer) to the position x y relative to window w.
+		/// Moves the cursor (mouse pointer) to the position <i>x y</i> relative to window <i>w</i>.
 		/// </summary>
 		/// <returns>Cursor position in screen coordinates.</returns>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="AuWndException">
@@ -144,10 +155,55 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Moves the cursor (mouse pointer) to the position <i>x y</i> relative to object <i>obj</i>, which can be <b>wnd</b>, <b>elm</b>, <b>uiimage</b>, <b>screen</b>, <b>RECT</b> in screen, <b>RECT</b> in window, <see cref="lastXY"/> (<c>true</c>), <see cref="xy"/> (<c>false</c>).
+		/// </summary>
+		/// <returns></returns>
+		/// <inheritdoc cref="move(wnd, Coord, Coord, bool)"/>
+		public static void move(MObject obj, Coord x = default, Coord y = default) {
+			switch (obj.Value) {
+			case wnd w:
+				move(w, x, y);
+				break;
+			case elm e:
+				e.MouseMove(x, y);
+				break;
+			case uiimage u:
+				u.MouseMove(x, y);
+				break;
+			case RECT r:
+				move(Coord.NormalizeInRect(x, y, r, centerIfEmpty: true));
+				break;
+			case (wnd w, RECT r):
+				var p = Coord.NormalizeInRect(x, y, r, centerIfEmpty: true);
+				move(w, p.x, p.y);
+				break;
+			case (wnd w, bool nonClient):
+				move(w, x, y, nonClient);
+				break;
+			case (screen s, bool workArea):
+				move(Coord.Normalize(x, y, workArea, s, centerIfEmpty: true));
+				break;
+			case bool useLastXY:
+				move(_CoordToRelativeXY(x, y, useLastXY));
+				break;
+			case null: //default(MObject)
+				move(x, y);
+				break;
+			}
+		}
+
+		static POINT _CoordToRelativeXY(Coord x, Coord y, bool useLastXY) {
+			var p = useLastXY ? lastXY : xy;
+			if (x.Type is CoordType.Normal or CoordType.None) p.x += x.Value; else throw new ArgumentException(null, "x");
+			if (y.Type is CoordType.Normal or CoordType.None) p.y += y.Value; else throw new ArgumentException(null, "y");
+			return p;
+		}
+
+		/// <summary>
 		/// Moves the cursor (mouse pointer) to the specified position in screen.
 		/// </summary>
 		/// <returns>Normalized cursor position.</returns>
-		/// <param name="x">X coordinate. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate.</param>
 		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
 		/// <exception cref="AuException">Failed to move the cursor to the specified x y.</exception>
@@ -239,19 +295,20 @@ namespace Au
 		//}
 
 		/// <summary>
-		/// Moves the cursor (mouse pointer) relative to <see cref="lastXY"/>.
+		/// Moves the cursor (mouse pointer) relative to <see cref="lastXY"/> or <see cref="xy"/>.
 		/// </summary>
 		/// <returns>Final cursor position in screen.</returns>
-		/// <param name="dx">X offset from <b>LastXY.x</b>.</param>
-		/// <param name="dy">Y offset from <b>LastXY.y</b>.</param>
+		/// <param name="dx">X offset from <b>lastXY.x</b> or <b>xy.x</b>.</param>
+		/// <param name="dy">Y offset from <b>lastXY.y</b> or <b>xy.y</b>.</param>
+		/// <param name="useLastXY">If true (default), moves relative to <see cref="lastXY"/>, else relative to <see cref="xy"/>.</param>
 		/// <exception cref="ArgumentOutOfRangeException">The calculated x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
 		/// <exception cref="AuException">Failed to move the cursor to the calculated x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher [](xref:uac) integrity level; 3. Some application called API ClipCursor. No exception option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
 		/// <remarks>
 		/// Uses <see cref="opt.mouse"/>: <see cref="OMouse.MoveSpeed"/>, <see cref="OMouse.MoveSleepFinally"/>, <see cref="OMouse.Relaxed"/>.
 		/// </remarks>
-		public static POINT moveRelative(int dx, int dy) {
+		public static POINT moveBy(int dx, int dy, bool useLastXY = true) {
 			WaitForNoButtonsPressed_();
-			var p = lastXY;
+			var p = useLastXY ? lastXY : xy;
 			p.x += dx; p.y += dy;
 			_Move(p, fast: false);
 			return p;
@@ -261,7 +318,7 @@ namespace Au
 		/// Moves the cursor (mouse pointer) relative to <see cref="lastXY"/>. Uses multiple x y offsets.
 		/// </summary>
 		/// <returns>Final cursor position in screen.</returns>
-		/// <param name="recordedString">String containing multiple x y offsets. Created by a mouse recorder tool with <see cref="RecordingUtil.MouseToString"/>.</param>
+		/// <param name="offsets">String containing multiple x y offsets. Created by a mouse recorder tool with <see cref="RecordingUtil.MouseToString"/>.</param>
 		/// <param name="speedFactor">Speed factor. For example, 0.5 makes 2 times faster.</param>
 		/// <exception cref="FormatException">Invalid Base64 string.</exception>
 		/// <exception cref="ArgumentException">The string is not compatible with this library version (recorded with a newer version and has additional options).</exception>
@@ -270,10 +327,10 @@ namespace Au
 		/// <remarks>
 		/// Uses <see cref="opt.mouse"/>: <see cref="OMouse.Relaxed"/> (only for the last movement; always relaxed in intermediate movements).
 		/// </remarks>
-		public static POINT moveRelative(string recordedString, double speedFactor = 1.0) {
+		public static POINT moveBy(string offsets, double speedFactor = 1.0) {
 			WaitForNoButtonsPressed_();
 
-			var a = Convert.FromBase64String(recordedString);
+			var a = Convert.FromBase64String(offsets);
 
 			byte flags = a[0];
 			const int knownFlags = 1; if ((flags & knownFlags) != flags) throw new ArgumentException("Unknown string version");
@@ -371,8 +428,8 @@ namespace Au
 			if (0 != (flags & Api.IMFlags.Move)) {
 				flags |= Api.IMFlags.Absolute;
 				var psr = screen.primary.Rect;
-				x <<= 16; x += (x >= 0) ? 0x8000 : -0x8000; x /= psr.Width;
-				y <<= 16; y += (y >= 0) ? 0x8000 : -0x8000; y /= psr.Height;
+				x = (int)((((long)x << 16) + (x >= 0 ? 0x8000 : -0x8000)) / psr.Width);
+				y = (int)((((long)y << 16) + (y >= 0 ? 0x8000 : -0x8000)) / psr.Height);
 			}
 
 			int mouseData;
@@ -452,7 +509,7 @@ namespace Au
 		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="button">Button and action.</param>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
@@ -511,11 +568,40 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Clicks, double-clicks, presses or releases a mouse button at position <i>x y</i> relative to object <i>obj</i>, which can be <b>wnd</b>, <b>elm</b> (<see cref="elm.MouseClick"/>), <b>uiimage</b> (<see cref="uiimage.MouseClick"/>), <b>screen</b>, <b>RECT</b> in screen, <b>RECT</b> in window, <see cref="lastXY"/> (<c>true</c>), <see cref="xy"/> (<c>false</c>).
+		/// </summary>
+		/// <inheritdoc cref="clickEx(MButton, wnd, Coord, Coord, bool)"/>
+		public static MRelease clickEx(MButton button, MObject obj, Coord x = default, Coord y = default) {
+			switch (obj.Value) {
+			case wnd w:
+				return clickEx(button, w, x, y);
+			case elm e:
+				return e.MouseClick(x, y, button);
+			case uiimage u:
+				return u.MouseClick(x, y, button);
+			case RECT r:
+				return mouse.clickEx(button, Coord.NormalizeInRect(x, y, r, centerIfEmpty: true));
+			case (wnd w, RECT r):
+				var p = Coord.NormalizeInRect(x, y, r, centerIfEmpty: true);
+				return mouse.clickEx(button, w, p.x, p.y);
+			case (wnd w, bool nonClient):
+				return mouse.clickEx(button, w, x, y, nonClient);
+			case (screen s, bool workArea):
+				return mouse.clickEx(button, Coord.Normalize(x, y, workArea, s, centerIfEmpty: true));
+			case bool useLastXY:
+				return mouse.clickEx(button, _CoordToRelativeXY(x, y, useLastXY));
+			case null: //default(MObject)
+				return clickEx(button, x, y);
+			}
+			return default; //never
+		}
+
+		/// <summary>
 		/// Clicks, double-clicks, presses or releases a mouse button at the specified position in screen.
 		/// </summary>
 		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="button">Button and action.</param>
-		/// <param name="x">X coordinate. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate.</param>
 		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="move(Coord, Coord)"/>.</exception>
@@ -565,7 +651,7 @@ namespace Au
 		/// <param name="button">Button and action. Default: left click.</param>
 		/// <param name="useLastXY">
 		/// Use <see cref="lastXY"/>. It is the mouse cursor position set by the most recent 'mouse move' or 'mouse click' function called in this thread. Use this option for reliability.
-		/// Example: <c>mouse.move(100, 100); mouse.clickEx(..., true);</c>. The click is always at 100 100, even if somebody changes cursor position between <c>mouse.move</c> sets it and <c>mouse.clickEx</c> uses it. In such case this option atomically moves the cursor to <b>LastXY</b>. This movement is instant and does not use <see cref="opt"/>.
+		/// Example: <c>mouse.move(100, 100); mouse.clickEx(..., true);</c>. The click is always at 100 100, even if somebody changes cursor position between <c>mouse.move</c> sets it and <c>mouse.clickEx</c> uses it. In such case this option atomically moves the cursor to <b>lastXY</b>. This movement is instant and does not use <see cref="opt"/>.
 		/// If false (default), clicks at the current cursor position (does not move it).
 		/// </param>
 		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
@@ -582,7 +668,6 @@ namespace Au
 			}
 			_Click(button, p);
 			return button;
-			//CONSIDER: opt.mouse.ClickAtLastXY
 		}
 
 		/// <summary>
@@ -590,7 +675,7 @@ namespace Au
 		/// Calls <see cref="clickEx(MButton, wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(wnd, Coord, Coord, bool)"/>.</exception>
@@ -603,7 +688,7 @@ namespace Au
 		/// Left button click at position x y.
 		/// Calls <see cref="clickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
-		/// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the screen.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(Coord, Coord)"/>.</exception>
 		public static void click(Coord x, Coord y) {
@@ -626,7 +711,7 @@ namespace Au
 		/// Calls <see cref="clickEx(MButton, wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(wnd, Coord, Coord, bool)"/>.</exception>
@@ -639,7 +724,7 @@ namespace Au
 		/// Right button click at position x y.
 		/// Calls <see cref="clickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
-		/// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the screen.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(Coord, Coord)"/>.</exception>
 		public static void rightClick(Coord x, Coord y) {
@@ -660,7 +745,7 @@ namespace Au
 		/// Calls <see cref="clickEx(MButton, wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(wnd, Coord, Coord, bool)"/>.</exception>
@@ -673,7 +758,7 @@ namespace Au
 		/// Left button double click at position x y.
 		/// Calls <see cref="clickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
-		/// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the screen.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(Coord, Coord)"/>.</exception>
 		public static void doubleClick(Coord x, Coord y) {
@@ -695,7 +780,7 @@ namespace Au
 		/// </summary>
 		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(wnd, Coord, Coord, bool)"/>.</exception>
@@ -709,7 +794,7 @@ namespace Au
 		/// Calls <see cref="clickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
 		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
-		/// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the screen.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(Coord, Coord)"/>.</exception>
 		public static MRelease leftDown(Coord x, Coord y) {
@@ -731,7 +816,7 @@ namespace Au
 		/// Calls <see cref="clickEx(MButton, wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(wnd, Coord, Coord, bool)"/>.</exception>
@@ -743,7 +828,7 @@ namespace Au
 		/// Left button up (release pressed button) at position x y.
 		/// Calls <see cref="clickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
-		/// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the screen.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(Coord, Coord)"/>.</exception>
 		public static void leftUp(Coord x, Coord y) {
@@ -765,7 +850,7 @@ namespace Au
 		/// </summary>
 		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(wnd, Coord, Coord, bool)"/>.</exception>
@@ -779,7 +864,7 @@ namespace Au
 		/// Calls <see cref="clickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
 		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
-		/// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the screen.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(Coord, Coord)"/>.</exception>
 		public static MRelease rightDown(Coord x, Coord y) {
@@ -801,7 +886,7 @@ namespace Au
 		/// Calls <see cref="clickEx(MButton, wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(wnd, Coord, Coord, bool)"/>.</exception>
@@ -813,7 +898,7 @@ namespace Au
 		/// Right button up (release pressed button) at position x y.
 		/// Calls <see cref="clickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
-		/// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the screen.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="move(Coord, Coord)"/>.</exception>
 		public static void rightUp(Coord x, Coord y) {
@@ -852,7 +937,7 @@ namespace Au
 		///// <summary>
 		///// Mouse move and wheel.
 		///// </summary>
-		///// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		///// <param name="x">X coordinate in the screen. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		///// <param name="y">Y coordinate in the screen.</param>
 		///// <param name="ticks">Number of wheel ticks forward (positive) or backward (negative).</param>
 		///// <param name="horizontal">Horizontal wheel.</param>
@@ -868,7 +953,7 @@ namespace Au
 		///// <summary>
 		///// Mouse move and wheel.
 		///// </summary>
-		///// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		///// <param name="x">X coordinate relative to the client area of w. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		///// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		///// <param name="ticks">Number of wheel ticks forward (positive) or backward (negative).</param>
 		///// <param name="horizontal">Horizontal wheel.</param>
@@ -881,24 +966,92 @@ namespace Au
 		//	wheel(ticks, horizontal);
 		//}
 
-		//rejected. Unclear etc. Instead let use mouse.leftUp(true) or using(mouse.leftDown(...).
-		///// <summary>
-		///// Releases mouse buttons pressed by this thread.
-		///// </summary>
-		///// <param name="useLastXY">If true (default), ensures that the cursor is at <see cref="LastXY"/>, not at <see cref="XY"/> which may be different if eg the user or she's cat is moving the mouse.</param>
-		///// <example>
-		///// <code><![CDATA[
-		///// var w = wnd.find("* Notepad");
-		///// mouse.leftDown(w, 8, 8);
-		///// mouse.moveRelative(20, 0);
-		///// mouse.drop();
-		///// ]]></code>
-		///// </example>
-		//public static void drop(bool useLastXY=true)
-		//{
-		//	if(useLastXY) _ReleaseButtons(LastXY);
-		//	else _ReleaseButtons();
-		//}
+		/// <summary>
+		/// Presses a mouse button in object <i>o1</i>, moves the mouse cursor to object <i>o2</i> and releases the button.
+		/// </summary>
+		/// <param name="o1">UI object (window, UI element, etc) where to press the mouse button.</param>
+		/// <param name="o2">UI object where to relese the mouse button.</param>
+		/// <param name="x1">X offset in <i>o1</i> rectangle. Default: center.</param>
+		/// <param name="y1">Y offset in <i>o1</i> rectangle. Default: center.</param>
+		/// <param name="x2">X offset in <i>o2</i> rectangle. Default: center.</param>
+		/// <param name="y2">Y offset in <i>o2</i> rectangle. Default: center.</param>
+		/// <param name="button">Mouse button. Default: left.</param>
+		/// <param name="mod">Modifier keys (Ctrl etc).</param>
+		/// <param name="sleep">Wait this number of milliseconds after pressing the mouse button.</param>
+		/// <param name="speed">The drag speed. See <see cref="OMouse.MoveSpeed"/>.</param>
+		public static void drag(MObject o1, MObject o2, Coord x1 = default, Coord y1 = default, Coord x2 = default, Coord y2 = default, MButton button = MButton.Left, KMod mod = 0, int sleep = 0, int speed = 5) {
+			if (o2.Value is bool useLastXY) { //get mouse position before moving to o1
+				var p = _CoordToRelativeXY(x2, y2, useLastXY);
+				o2 = default; x2 = p.x; y2 = p.y;
+			}
+			_Drag(o1, x1, y1, button, mod, sleep, speed, () => move(o2, x2, y2));
+		}
+
+		/// <summary>
+		/// Presses a mouse button in object <i>obj</i>, moves the mouse cursor by offset <i>dx</i> <i>dy</i> and releases the button.
+		/// </summary>
+		/// <param name="obj">UI object (window, UI element, etc) where to press the mouse button.</param>
+		/// <param name="x">X offset in <i>obj</i> rectangle. Default: center.</param>
+		/// <param name="y">Y offset in <i>obj</i> rectangle. Default: center.</param>
+		/// <param name="dx">X offset from the start position.</param>
+		/// <param name="dy">Y offset from the start position.</param>
+		/// <param name="button">Mouse button. Default: left.</param>
+		/// <param name="mod">Modifier keys (Ctrl etc).</param>
+		/// <param name="sleep">Wait this number of milliseconds after pressing the mouse button.</param>
+		/// <param name="speed">The drag speed. See <see cref="OMouse.MoveSpeed"/>.</param>
+		public static void drag(MObject obj, Coord x, Coord y, int dx, int dy, MButton button = MButton.Left, KMod mod = 0, int sleep = 0, int speed = 5) {
+			_Drag(obj, x, y, button, mod, sleep, speed, () => moveBy(dx, dy));
+		}
+
+		/// <summary>
+		/// Presses a mouse button in object <i>obj</i>, moves the mouse cursor using multiple recorded offsets and releases the button.
+		/// </summary>
+		/// <param name="obj">UI object (window, UI element, etc) where to press the mouse button.</param>
+		/// <param name="x">X offset in <i>obj</i> rectangle. Default: center.</param>
+		/// <param name="y">Y offset in <i>obj</i> rectangle. Default: center.</param>
+		/// <param name="offsets">String containing multiple x y offsets from the start position. See <see cref="moveBy(string, double)"/>.</param>
+		/// <param name="button">Mouse button. Default: left.</param>
+		/// <param name="mod">Modifier keys (Ctrl etc).</param>
+		/// <param name="sleep">Wait this number of milliseconds after pressing the mouse button.</param>
+		public static void drag(MObject obj, Coord x, Coord y, string offsets, MButton button = MButton.Left, KMod mod = 0, int sleep = 0) {
+			_Drag(obj, x, y, button, mod, sleep, 0, () => moveBy(offsets));
+		}
+
+		static void _Drag(MObject from, Coord x1, Coord y1, MButton button, KMod mod, int sleep, int speed, Action action) {
+			if (button == 0) button = MButton.Left; else if (button != (button & (MButton.Left | MButton.Right | MButton.Middle | MButton.X1 | MButton.X2))) throw new ArgumentException(null, nameof(button));
+			if ((uint)sleep >= 10000) throw new ArgumentException(null, nameof(sleep));
+			if ((uint)speed >= 10000) throw new ArgumentException(null, nameof(speed));
+			int speed0 = opt.mouse.MoveSpeed;
+			bool isMod = false, isButton = false;
+			try {
+				clickEx(button | MButton.Down, from, x1, y1);
+				isButton = true;
+
+				if (sleep > 0) wait.ms(sleep);
+
+				_SendMod(true); //note: after button down. If before, it could eg Ctrl+select multiple objects instead of one.
+				isMod = true;
+
+				opt.mouse.MoveSpeed = speed;
+
+				action();
+			}
+			finally {
+				if (isButton) clickEx(button | MButton.Up, useLastXY: true);
+				opt.mouse.MoveSpeed = speed0;
+				if (isMod) _SendMod(false);
+			}
+
+			void _SendMod(bool down) {
+				if (mod == 0) return;
+				var k = new keys(opt.key);
+				if (mod.Has(KMod.Ctrl)) k.AddKey(KKey.Ctrl, down);
+				if (mod.Has(KMod.Shift)) k.AddKey(KKey.Shift, down);
+				if (mod.Has(KMod.Alt)) k.AddKey(KKey.Alt, down);
+				if (mod.Has(KMod.Win)) k.AddKey(KKey.Win, down);
+				k.SendIt(); //and sleeps opt.key.SleepFinally (default 10)
+			}
+		}
 
 		//not used
 		///// <summary>
@@ -979,7 +1132,7 @@ namespace Au
 
 		/// <summary>
 		/// Waits while some buttons are pressed, except those pressed by a <see cref="mouse"/> class function in this thread.
-		/// Does nothing option <b>Relaxed</b> is true.
+		/// Does nothing if option <b>Relaxed</b> is true.
 		/// </summary>
 		internal static void WaitForNoButtonsPressed_() {
 			//not public, because we have WaitForNoButtonsPressed, which is unaware about script-pressed buttons, and don't need this awareness because the script author knows what is pressed by that script
@@ -1101,7 +1254,7 @@ namespace Au
 		/// Posts mouse-click messages to the window.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate in <b>w</b> client area or <b>rect</b>. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate in <b>w</b> client area or <b>rect</b>. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in <b>w</b> client area or <b>rect</b>. Default - center.</param>
 		/// <param name="button">Can specify the left (default), right or middle button. Also flag for double-click, press or release.</param>
 		/// <param name="rect">A rectangle in <b>w</b> client area. If null (default), <i>x y</i> are relative to the client area.</param>
@@ -1174,12 +1327,9 @@ namespace Au
 				//this func is fast, but slower is elm.wndcontainer (to get c) and JIT
 				_w = default;
 				var w = c.Window; //not c.DirectParent. Eg in taskdialog it is not #32770. The postclick/invoke worked without this workaround in all tested top-level non-#32770 windows, with or without an intermediate #32770.
-				if (w != c && !w.IsActive && w.ClassNameIs("#32770")) {
-					//if (c.ClassNameIs("*Button*")) {
-					if (65538 == c.Send(Api.WM_GETOBJECT, 0, (nint)EObjid.QUERYCLASSNAMEIDX)) {
-						w.Post(Api.WM_ACTIVATE, 1);
-						_w = w;
-					}
+				if (w != c && !w.IsActive && w.ClassNameIs("#32770") && c.CommonControlType == WControlType.Button) {
+					w.Post(Api.WM_ACTIVATE, 1);
+					_w = w;
 				}
 			}
 
@@ -1349,7 +1499,7 @@ namespace Au.Types
 	/// <example>
 	/// Drag and drop: start at x=8 y=8, move 20 pixels down, drop.
 	/// <code><![CDATA[
-	/// using(mouse.leftDown(w, 8, 8)) mouse.moveRelative(0, 20); //the button is auto-released when the 'using' code block ends
+	/// using(mouse.leftDown(w, 8, 8)) mouse.moveBy(0, 20); //the button is auto-released when the 'using' code block ends
 	/// ]]></code>
 	/// </example>
 	public struct MRelease : IDisposable
@@ -1418,5 +1568,76 @@ namespace Au.Types
 
 		/// <summary>Arrow and question mark.</summary>
 		Help = 32651,
+	}
+
+	/// <summary>
+	/// This type is used for parameters of <see cref="mouse"/> functions that accept multiple types of UI objects (window, UI element, screen, etc).
+	/// Has implicit conversions from <b>wnd</b>, <b>elm</b>, <b>uiimage</b>, <b>screen</b>, <b>RECT</b> and <b>bool</b> (relative coordinates). Also has static functions to specify more parameters.
+	/// </summary>
+	public struct MObject
+	{
+		object _o;
+		MObject(object o) => _o = o;
+
+		///
+		public object Value => _o;
+
+		/// <summary>
+		/// Allows to specify coordinates in the client area of a window or control.
+		/// </summary>
+		/// <exception cref="AuWndException">The window handle is 0.</exception>
+		/// <seealso cref="Window(wnd, bool)"/>
+		public static implicit operator MObject(wnd w) { w.ThrowIf0(); return new(w); }
+
+		/// <summary>
+		/// Allows to specify coordinates in the rectangle of a UI element.
+		/// </summary>
+		/// <exception cref="ArgumentNullException"/>
+		public static implicit operator MObject(elm e) => new(e ?? throw new ArgumentNullException());
+
+		/// <summary>
+		/// Allows to specify coordinates in the rectangle of an image found in a window etc.
+		/// </summary>
+		/// <exception cref="ArgumentNullException"/>
+		public static implicit operator MObject(uiimage i) => new(i ?? throw new ArgumentNullException());
+
+		/// <summary>
+		/// Allows to specify coordinates in a rectangle anywhere on screen.
+		/// </summary>
+		/// <seealso cref="RectInWindow(wnd, RECT)"/>
+		public static implicit operator MObject(RECT r) => new(r);
+
+		/// <summary>
+		/// Allows to specify coordinates in a screen.
+		/// </summary>
+		/// <seealso cref="Screen(screen, bool)"/>
+		public static implicit operator MObject(screen s) => new((s, false));
+
+		/// <summary>
+		/// Allows to specify coordinates relative to <see cref="mouse.xy"/> or <see cref="mouse.lastXY"/>.
+		/// </summary>
+		public static implicit operator MObject(bool useLastXY) => new(useLastXY);
+
+		/// <summary>
+		/// Allows to specify coordinates in a screen, either in the work area or in entire rectangle.
+		/// </summary>
+		/// <example>
+		/// <code><![CDATA[
+		/// mouse.move(MObject.Screen(screen.primary, true), ^10, ^10); //near the bottom-right corner of the work area of the primary screen
+		/// ]]></code>
+		/// </example>
+		public static MObject Screen(screen s, bool workArea) => new((s, workArea));
+
+		/// <summary>
+		/// Allows to specify coordinates in a window or control, either in the client area or in entire rectangle.
+		/// </summary>
+		/// <exception cref="AuWndException">The window handle is 0.</exception>
+		public static MObject Window(wnd w, bool nonClient) { w.ThrowIf0(); return new((w, true)); }
+
+		/// <summary>
+		/// Allows to specify coordinates in a rectangle in the client area of a window or control.
+		/// </summary>
+		/// <exception cref="AuWndException">The window handle is 0.</exception>
+		public static MObject RectInWindow(wnd w, RECT r) { w.ThrowIf0(); return new((w, r)); }
 	}
 }

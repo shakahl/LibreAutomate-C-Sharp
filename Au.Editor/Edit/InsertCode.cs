@@ -283,7 +283,6 @@ static class InsertCode
 		return s;
 	}
 
-	//TODO: does not work for abstract record, eg record _RecoKey : _Reco
 	public static void ImplementInterfaceOrAbstractClass(bool explicitly, int position = -1) {
 		if (!CodeInfo.GetContextAndDocument(out var cd, position)) return;
 		var semo = cd.document.GetSemanticModelAsync().Result;
@@ -296,9 +295,9 @@ static class InsertCode
 			if (n is BaseTypeSyntax bts) {
 				node = bts.Type;
 				haveBaseType = true;
-			} else if (n is ClassDeclarationSyntax cds) {
-				if (!haveBaseType) try { node = cds.BaseList.Types[0].Type; } catch { return; }
-				position = cds.CloseBraceToken.Span.Start;
+			} else if (n is TypeDeclarationSyntax tds) {
+				if (!haveBaseType) try { node = tds.BaseList.Types[0].Type; } catch { return; }
+				position = tds.CloseBraceToken.Span.Start;
 				goto g1;
 			}
 		}

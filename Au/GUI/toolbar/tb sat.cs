@@ -176,7 +176,7 @@ namespace Au
 		/// Returns the new toolbar.
 		/// </summary>
 		/// <param name="mta">Mouse edge trigger arguments.</param>
-		/// <param name="rangeStart"><i>rangeStart</i> and <i>rangeEnd</i> can be used to specify a smaller range of the edge part. For example, you can create 2 toolbars there: one with 0, 0.5f, other with 0.5f, 1f.</param>
+		/// <param name="rangeStart"><i>rangeStart</i> and <i>rangeEnd</i> can be used to specify a smaller range of the edge part. For example, you can create 2 toolbars there: one with 0, .5f, other with .5f, 1f.</param>
 		/// <param name="rangeEnd"></param>
 		/// <param name="thickness">The visible thickness. Pixels.</param>
 		/// <param name="ctorFlags">See <see cref="toolbar(string, TBCtor, string, int)"/>.</param>
@@ -194,7 +194,7 @@ namespace Au
 		/// </summary>
 		/// <param name="edge">Screen edge/part.</param>
 		/// <param name="scrn">Screen index. Default: primary.</param>
-		/// <param name="rangeStart"><i>rangeStart</i> and <i>rangeEnd</i> can be used to specify a smaller range of the edge part. For example, you can create 2 toolbars there: one with 0, 0.5f, other with 0.5f, 1f.</param>
+		/// <param name="rangeStart"><i>rangeStart</i> and <i>rangeEnd</i> can be used to specify a smaller range of the edge part. For example, you can create 2 toolbars there: one with 0, .5f, other with .5f, 1f.</param>
 		/// <param name="rangeEnd"></param>
 		/// <param name="thickness">The visible thickness. Pixels.</param>
 		/// <param name="ctorFlags">See <see cref="toolbar(string, TBCtor, string, int)"/>.</param>

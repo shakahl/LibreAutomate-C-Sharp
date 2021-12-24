@@ -154,5 +154,45 @@ namespace Au
 				//could use IsImmersiveProcess, but this is better
 			}
 		}
+
+		/// <summary>
+		/// If this control is (or is based on) a standard control provided by Windows, such as button or treeview, returns the control type. Else returns <b>None</b>.
+		/// </summary>
+		/// <remarks>
+		/// Sends message WM_GETOBJECT <msdn>QUERYCLASSNAMEIDX</msdn>. Slower than <see cref="ClassName"/> or <see cref="ClassNameIs(string)"/>, but can detect the base type of controls based on standard Windows controls but with a different class name.
+		/// </remarks>
+		public WControlType CommonControlType => (WControlType)Send(Api.WM_GETOBJECT, 0, (nint)EObjid.QUERYCLASSNAMEIDX);
+	}
+}
+
+namespace Au.Types
+{
+	/// <summary>
+	/// <see cref="wnd.CommonControlType"/>
+	/// </summary>
+	public enum WControlType
+	{
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+		None,
+		Listbox = 65536,
+		Button = 65536 + 2,
+		Static,
+		Edit,
+		Combobox,
+		Scrollbar = 65536 + 10,
+		Status,
+		Toolbar,
+		Progress,
+		Animate,
+		Tab,
+		Hotkey,
+		Header,
+		Trackbar,
+		Listview,
+		Updown = 65536 + 22,
+		ToolTips = 65536 + 24,
+		Treeview,
+		RichEdit = 65536 + 28
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 	}
 }

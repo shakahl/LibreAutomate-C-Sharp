@@ -322,7 +322,7 @@ namespace Au
 								g.FillPolygon(brushTriangle, new Point[] { new(x, y), new(x + m.triangle, y), new(x + m.triangle / 2, y + m.triangle / 2) });
 							} else {
 								brushDot ??= new SolidBrush(Color.SkyBlue);
-								g.FillEllipse(brushDot, x - 0.5f, y, m.dot, m.dot);
+								g.FillEllipse(brushDot, x - .5f, y, m.dot, m.dot);
 							}
 							g.SmoothingMode = SmoothingMode.None;
 						} else if (b.image2 != null) {

@@ -441,6 +441,18 @@ static class CodeInfo
 		return true;
 	}
 
+	/// <summary>
+	/// Calls <see cref="GetContextAndDocument"/>, gets its syntax root and finds token and node.
+	/// </summary>
+	/// <param name="position">If -1, gets current position. If -2, gets selection start.</param>
+	/// <param name="metaToo">Don't return false if position is in meta comments.</param>
+	public static bool GetDocumentAndFindNode(out Context r, out SyntaxToken token, out SyntaxNode node, int position = -1, bool metaToo = false) {
+		if (!GetContextAndDocument(out r, position, metaToo)) { token = default; node = null; return false; }
+		token = r.document.GetSyntaxRootAsync().Result.FindToken(r.pos16);
+		node = token.Parent;
+		return true;
+	}
+
 	public static Workspace CurrentWorkspace { get; private set; }
 
 	public static MetaComments Meta => _meta;

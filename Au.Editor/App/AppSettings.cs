@@ -46,8 +46,8 @@ record AppSettings : JSettings
 	public record delm_t
 	{
 		public string hk_capture = "F3", hk_insert = "F4"; //for all tools
-		public string wndPos, wait;
-		public int action, flags;
+		public string wndPos, wait, actionn; //named actionn because once was int action
+		public int flags;
 	}
 	public delm_t delm = new();
 

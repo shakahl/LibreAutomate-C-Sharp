@@ -1,6 +1,9 @@
 //Show/hide code info tool windows such as Regex and Keys.
 
 using Au.Tools;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System.Windows.Controls;
 
@@ -16,8 +19,8 @@ class CiTools
 
 	public bool HideTempWindows() {
 		bool v1 = _regexWindow?.IsVisible ?? false, v2 = _keysWindow?.IsVisible ?? false;
-		if(v1) _regexWindow.Close();
-		if(v2) _keysWindow.Close();
+		if (v1) _regexWindow.Close();
+		if (v2) _keysWindow.Close();
 		return v1 || v2;
 	}
 
@@ -82,19 +85,37 @@ class CiTools
 	public static void CmdShowKeysWindow() => _ShowRegexOrKeysWindow(false);
 
 	static void _ShowRegexOrKeysWindow(bool isRegex) {
-		//bool retry = false;
-		//g1:
-		if (!CodeInfo.GetDocumentAndFindNode(out var cd, out var node)) return;
+		bool retry = false;
+		g1:
+		if (!CodeInfo.GetDocumentAndFindNode(out var cd, out var token, out var node)) return;
 		var pos16 = cd.pos16;
 		if (!CiUtil.IsInString(ref node, pos16)) {
-			//if(isRegex || retry) {
-			var s2 = isRegex ? null : "The fastest way to insert 'send keys' code: type kk and press Enter (or Tab, Space, double-click). It shows completion list and selects kkKeysSendSnippet.";
-			dialog.showInfo("The text cursor must be in a string.", s2);
-			return;
-			//}
-			//InsertCode.Statements("keys.send(\"%\");", goToPercent: true); //rejected. Eg could be keys.send("", here).
-			//retry = true;
-			//goto g1;
+			if (isRegex || retry) {
+				var s2 = isRegex ? null : "The fastest way to insert 'send keys' code: type kk and press Enter (or Tab, Space, double-click). It shows completion list and selects kkKeysSendSnippet.";
+				dialog.showInfo("The text cursor must be in a string.", s2);
+				return;
+			}
+
+			//is in keys.send argument list?
+			if (node is not ArgumentListSyntax && !node.Span.ContainsInside(pos16)) {
+				node = node.Parent;
+				if(node is ArgumentSyntax) node = node.Parent;
+			}
+			if (node is ArgumentListSyntax && node.Parent is InvocationExpressionSyntax ie && ie.Expression.ToString() == "keys.send") {
+				SyntaxToken t1, t2;
+				if (pos16 <= token.SpanStart) { t1 = token.GetPreviousToken(); t2 = token; } else { t1 = token; t2 = token.GetNextToken(); }
+				//CiUtil.PrintNode(t1);
+				//CiUtil.PrintNode(t2);
+				SyntaxKind k1 = t1.Kind(), k2 = t2.Kind();
+				bool good1 = k1 is SyntaxKind.OpenParenToken or SyntaxKind.CommaToken, good2 = k2 is SyntaxKind.CloseParenToken or SyntaxKind.CommaToken;
+				string s;
+				if (good1 && good2) s = "\"%\""; else if(good1) s = "\"%\", "; else if(good2) s = ", \"%\""; else s = ", \"%\", ";
+				InsertCode.TextSimply(s);
+			} else {
+				InsertCode.Statements("keys.send(\"%\");", goToPercent: true); //rejected. Eg could be keys.send("", here).
+			}
+			retry = true;
+			goto g1;
 		}
 		var doc = cd.sciDoc;
 		var stringSpan = node.Span;

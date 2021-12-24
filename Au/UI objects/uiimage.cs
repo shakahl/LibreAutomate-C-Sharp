@@ -96,7 +96,7 @@ namespace Au
 		/// <summary>
 		/// Moves the mouse to the found image.
 		/// </summary>
-		/// <param name="x">X coordinate in the found image. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate in the found image. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the found image. Default - center.</param>
 		/// <exception cref="InvalidOperationException"><i>area</i> is <b>Bitmap</b>.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.</exception>
@@ -108,7 +108,7 @@ namespace Au
 		/// <summary>
 		/// Clicks the found image.
 		/// </summary>
-		/// <param name="x">X coordinate in the found image. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate in the found image. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the found image. Default - center.</param>
 		/// <param name="button">Which button and how to use it.</param>
 		/// <exception cref="InvalidOperationException"><i>area</i> is <b>Bitmap</b>.</exception>
@@ -164,7 +164,7 @@ namespace Au
 		/// <summary>
 		/// Posts mouse-click messages to the window, using coordinates in the found image.
 		/// </summary>
-		/// <param name="x">X coordinate in the found image. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate in the found image. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the found image. Default - center.</param>
 		/// <param name="button">Can specify the left (default), right or middle button. Also flag for double-click, press or release.</param>
 		/// <exception cref="InvalidOperationException"><i>area</i> is <b>Bitmap</b> or <b>Screen</b>.</exception>
@@ -372,7 +372,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Specifies a window or control and a rectangle in its client area.
-		/// The parameters are of <see cref="Coord"/> type, therefore can be easily specified reverse and fractional coordinates, like <c>^10</c> and <c>0.5f</c>. Use <c>^0</c> for right or bottom edge.
+		/// The parameters are of <see cref="Coord"/> type, therefore can be easily specified reverse and fractional coordinates, like <c>^10</c> and <c>.5f</c>. Use <c>^0</c> for right or bottom edge.
 		/// </summary>
 		public IFArea(wnd w, Coord left, Coord top, Coord right, Coord bottom) {
 			Type = AreaType.Wnd;

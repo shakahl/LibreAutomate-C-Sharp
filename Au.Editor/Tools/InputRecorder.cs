@@ -6,6 +6,8 @@ using System.Windows.Media;
 using Au.Controls;
 using System.Windows.Threading;
 
+//FUTURE: record "wait for UAC consent and then for normal desktop".
+
 #if SCRIPT
 using Au.Tools;
 namespace Au.Tools2;
@@ -174,7 +176,7 @@ class InputRecorder : Window
 
 	protected override void OnActivated(EventArgs e) {
 		if (wnd.active == _wThis) {
-			if (_Last is _RecoMouseMoves) _Remove(^1);
+			if (_Last is _RecoMouseMoveBy) _Remove(^1);
 		}
 		base.OnActivated(e);
 	}
@@ -234,8 +236,8 @@ class InputRecorder : Window
 		}
 	}
 
-	record _RecoMouse : _Reco
-	{ //mouse.move(), and base of _RecoMouseButton/_RecoMouseWheel/_RecoMouseMoves
+	record _RecoMouse : _Reco //mouse.move() and base of _RecoMouseX
+	{
 		public POINT p, pw; //in screen and in window
 		public int varName; //0 if in screen, >0 if in window (_RecoWinFind with this varName), <0 if in control (_RecoWinChild with minus this varName)
 
@@ -285,6 +287,18 @@ class InputRecorder : Window
 			if (!noXY) _FormatMoveArgs(b);
 			b.Append(");");
 		}
+
+		public void FormatDrag(StringBuilder b, object dxy/*, KMod mod*/) {
+			b.Append("mouse.drag(");
+			_FormatMoveArgs(b);
+			switch (dxy) {
+			case (int dx, int dy): b.AppendFormat(", {0}, {1}", dx, dy); break;
+			case string s: b.AppendFormat(", \"{0}\"", s); break;
+			}
+			if (button != MButton.Left) b.Append(", MButton.").Append(button);
+			//never mind: could also format modifier keys, but it's quite difficult, eg can be pressed before or/and after the mouse button.
+			b.Append(");");
+		}
 	}
 
 	record _RecoMouseWheel : _RecoMouse
@@ -302,16 +316,19 @@ class InputRecorder : Window
 		}
 	}
 
-	record _RecoMouseMoves : _RecoMouse
-	{ //mouse.moveRelative(), not mouse.move()
-	  //p - the last move coord
-	  //a - all relative coords
+	record _RecoMouseMoveBy : _RecoMouse
+	{
+		//p - the last move coord
+		//a - all relative coords
 		public List<uint> a;
 		public bool drag;
+		string _ostring;
 
 		public override string ToString() => "Mouse " + (drag ? "drag" : "move");
 
-		public override void FormatCode(StringBuilder b) {
+		public string OffsetsString => _ostring ??= _GetOString();
+
+		string _GetOString() {
 			//remove some points to make shorter and faster
 			//in n1=a.Count;
 			double prevAngle = 400, dist = 0;
@@ -330,13 +347,16 @@ class InputRecorder : Window
 				}
 			}
 			//print.it(n1, a.Count);
+			return RecordingUtil.MouseToString(a, withSleepTimes: false);
+		}
 
-			b.AppendFormat("mouse.moveRelative(\"{0}\");", RecordingUtil.MouseToString(a, withSleepTimes: false));
+		public override void FormatCode(StringBuilder b) {
+			b.AppendFormat("mouse.moveBy(\"{0}\");", OffsetsString);
 		}
 	}
 
-	record _RecoWin : _Reco
-	{ //wnd.Activete, wnd.WaitForName, base of _RecoWinFind
+	record _RecoWin : _Reco //wnd.Activate, wnd.WaitForName, base of _RecoWinFind
+	{
 		public int varName;
 		public int waitS;
 		public bool activate;
@@ -373,7 +393,7 @@ class InputRecorder : Window
 
 		public void FormatCode(int ownerVar) {
 			var f = new TUtil.WindowFindCodeFormatter { VarWindow = "w" + varName };
-			f.RecordWindowFields(w, waitS, activate, ownerVar>0 ? "w"+ownerVar : null);
+			f.RecordWindowFields(w, waitS, activate, ownerVar > 0 ? "w" + ownerVar : null);
 			code = f.Format();
 			//print.it(code);
 		}
@@ -473,8 +493,8 @@ class InputRecorder : Window
 		wnd wChild = default;
 		bool activate = false;
 		if (r is _RecoMouse) { //button, wheel or move
-			if (_xyIn == c_xyScreen || (r is _RecoMouseMoves) || (r is _RecoMouseWheel mw && !mw.move)) return 0;
-			if (r is _RecoMouseButton mb && mb.down < 0 && _Last is _RecoMouseMoves mm && mm.drag && _a[_a.Count - 2] is _RecoMouseButton mb2 && mb2.down > 0 && mb2.w == w) { mb.noXY = true; return 0; } //if was drag, just release button (no window, x, y)
+			if (_xyIn == c_xyScreen || (r is _RecoMouseMoveBy) || (r is _RecoMouseWheel mw && !mw.move)) return 0;
+			if (r is _RecoMouseButton mb && mb.down < 0 && _Last is _RecoMouseMoveBy mm && mm.drag && _a[_a.Count - 2] is _RecoMouseButton mb2 && mb2.down > 0 && mb2.w == w) { mb.noXY = true; return 0; } //if was drag, just release button (no window, x, y)
 			if (wTL != w) { wChild = w; w = wTL; }
 			activate = (r is not _RecoMouseButton || !_a.Any()) && w.IsActive;
 		} else { //key or char
@@ -517,7 +537,7 @@ class InputRecorder : Window
 			if (!activate && onKey) return 0;
 			varName = (_LastOfType<_RecoWinFind>()?.varName ?? 0) + 1;
 			var z = new _RecoWinFind { w = w, name = name, varName = varName, activate = activate, waitS = _a.Any() ? 10 : 0 };
-			int owner=0; if(!w.Get.Owner.Is0 || w.IsTopmost) owner=_FindWinFind(o => w.IsOwnedBy(o, 2))?.varName ?? 0;
+			int owner = 0; if (!w.Get.Owner.Is0 || w.IsTopmost) owner = _FindWinFind(o => w.IsOwnedBy(o, 2))?.varName ?? 0;
 			z.FormatCode(owner);
 			g = z;
 		} else if (name.Trim('*') != rw.name.Trim('*')) { //wait for new name
@@ -798,27 +818,27 @@ class InputRecorder : Window
 					catch (Exception e1) { Debug_.Print(e1); }
 				}
 				//CONSIDER: also screenshot on button up, if not joined with down and not in same point in window.
-				//	But then usually records single line like 'using (mouse.leftDown(...)) mouse.moveRelative(...);
+				//	But then usually records single line (mouse.drag).
 			}
 		} else if (k.IsWheel) {
 			if (!_recordWheel) return;
 			if (!_WinFromXY(out wnd w, out wnd wTL)) return;
 
 			var rm = _LastOfType<_RecoMouse>();
-			bool move = rm == null || rm.p != k.pt || rm is _RecoMouseMoves;
+			bool move = rm == null || rm.p != k.pt || rm is _RecoMouseMoveBy;
 			_Add(new _RecoMouseWheel { ticks = k.WheelValue, p = k.pt, move = move }, k.time, w, wTL);
 		} else if (_canMove) { //IsMove
 			bool drag = mouse.isPressed(MButtons.Left | MButtons.Right | MButtons.Middle);
 			if (!(drag ? _recordDrag : _recordMove)) return;
 			if (_a.LastOrDefault(o => o is _RecoMouse) is _RecoMouse rm) {
 				if (rm.p == k.pt) return;
-				if (_Last is _RecoMouseMoves mm) { //add to the mouse.moveRelative
+				if (_Last is _RecoMouseMoveBy mm) { //add to the mouse.moveBy
 					mm.a.Add((uint)Math2.MakeLparam(k.pt.x - mm.p.x, k.pt.y - mm.p.y));
 					mm.p = k.pt;
-				} else { //start mouse.moveRelative
-					_Add(new _RecoMouseMoves { a = new() { (uint)Math2.MakeLparam(k.pt.x - rm.p.x, k.pt.y - rm.p.y) }, p = k.pt, drag = drag }, k.time, default);
+				} else { //start mouse.moveBy
+					_Add(new _RecoMouseMoveBy { a = new() { (uint)Math2.MakeLparam(k.pt.x - rm.p.x, k.pt.y - rm.p.y) }, p = k.pt, drag = drag }, k.time, default);
 				}
-			} else { //this is the first mouse event, therefore before mouse.moveRelative need mouse.move(x, y)
+			} else { //this is the first mouse event, therefore before mouse.moveBy need mouse.move(x, y)
 				if (!_WinFromXY(out wnd w, out wnd wTL)) return;
 				_Add(new _RecoMouse { p = k.pt }, k.time, w, wTL);
 			}
@@ -861,7 +881,7 @@ class InputRecorder : Window
 	//}
 
 	string _GetCode() {
-		if (_Last is _RecoMouseMoves) _a.RemoveAt(_a.Count - 1);
+		if (_Last is _RecoMouseMoveBy) _a.RemoveAt(_a.Count - 1);
 		if (!_a.Any()) return null;
 		var b = new StringBuilder();
 		bool slow = _cSlow.IsChecked;
@@ -877,20 +897,14 @@ class InputRecorder : Window
 				b.Append(r.code);
 				break;
 			case _RecoMouse r:
-				//if drag in same window, format code like 'using (mouse.left(...)) mouse.moveRelative(...);'
+				//if drag in same window, format mouse.drag relative
 				if (r is _RecoMouseButton mb && mb.down > 0 && i < n - 1) {
 					if (_a[i + 1] is _RecoMouseButton mb2 && mb2.down < 0 && !mb2.noXY && mb2.w == mb.w) {
-						b.Append("using (");
-						r.FormatCode(b);
-						b.Insert(b.Length - 1, $") mouse.moveRelative({mb2.p.x - mb.p.x}, {mb2.p.y - mb.p.y})");
+						mb.FormatDrag(b, (mb2.p.x - mb.p.x, mb2.p.y - mb.p.y));
 						i++;
 						goto g1;
-					} else if (_a[i + 1] is _RecoMouseMoves mm && _a[i + 2] is _RecoMouseButton mb3 && mb3.down < 0 && mb3.noXY) {
-						b.Append("using (");
-						r.FormatCode(b);
-						b.Remove(b.Length - 1, 1);
-						b.Append(") ");
-						mm.FormatCode(b);
+					} else if (_a[i + 1] is _RecoMouseMoveBy mm && _a[i + 2] is _RecoMouseButton mb3 && mb3.down < 0 && mb3.noXY) {
+						mb.FormatDrag(b, mm.OffsetsString);
 						i += 2;
 						goto g1;
 					}

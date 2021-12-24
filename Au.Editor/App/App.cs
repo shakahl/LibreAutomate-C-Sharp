@@ -4,6 +4,8 @@ using System.Windows.Threading;
 
 //TODO: need some learning stuff. Now users install the app, open the window first time, and don't know what to do.
 
+//TODO: task processes must exit when editor crashed.
+
 static class App
 {
 	public const string
@@ -175,6 +177,11 @@ static class App
 	public static event Action Timer025sWhenVisible;
 
 	/// <summary>
+	/// Timer with 1 s period, only when main window visible.
+	/// </summary>
+	public static event Action Timer1sWhenVisible;
+
+	/// <summary>
 	/// True if Timer1sOr025s period is 0.25 s (when main window visible), false if 1 s (when hidden).
 	/// </summary>
 	public static bool IsTimer025 => s_timerCounter > 0;
@@ -188,7 +195,10 @@ static class App
 			Timer025sWhenVisible?.Invoke();
 			s_timerCounter++;
 		} else s_timerCounter = 0;
-		if (0 == (s_timerCounter & 3)) Timer1s?.Invoke();
+		if (0 == (s_timerCounter & 3)) {
+			Timer1s?.Invoke();
+			if(needFast) Timer1sWhenVisible?.Invoke();
+		}
 	}
 
 	public static EProgramState Loaded;

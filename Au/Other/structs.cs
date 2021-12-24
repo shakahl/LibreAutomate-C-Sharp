@@ -306,7 +306,7 @@ namespace Au.Types
 		/// Moves this rectangle to the specified coordinates in the specified screen, and ensures that whole rectangle is in screen.
 		/// Final rectangle coordinates are relative to the primary screen.
 		/// </summary>
-		/// <param name="x">X coordinate in the specified screen. If default(Coord) - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate in the specified screen. If default(Coord) - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the specified screen. If default(Coord) - center.</param>
 		/// <param name="screen">Use this screen. If default, uses the primary screen. Example: <c>screen.index(1)</c>.</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
@@ -322,7 +322,7 @@ namespace Au.Types
 		/// Moves this rectangle to the specified coordinates in another rectangle <i>r</i>.
 		/// </summary>
 		/// <param name="r">Another rectangle.</param>
-		/// <param name="x">X coordinate relative to <i>r</i>. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate relative to <i>r</i>. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to <i>r</i>. Default - center.</param>
 		/// <param name="ensureInRect">If part of rectangle is not in <i>r</i>, move and/or resize it so that entire rectangle would be in <i>r</i>.</param>
 		public void MoveInRect(RECT r, Coord x = default, Coord y = default, bool ensureInRect = false) {

@@ -451,10 +451,10 @@ partial class FilesModel
 	/// Selects the node. If not folder, opens its file in the code editor.
 	/// Returns false if failed to open, for example if <i>f</i> is a folder.
 	/// </summary>
-	public bool SetCurrentFile(FileNode f, bool dontChangeTreeSelection = false, bool newFile = false, bool? focusEditor = true) {
+	public bool SetCurrentFile(FileNode f, bool dontChangeTreeSelection = false, bool newFile = false, bool? focusEditor = true, bool noTemplate = false) {
 		if (IsAlien(f)) return false;
 		if (!dontChangeTreeSelection) f.SelectSingle();
-		if (_currentFile != f) _SetCurrentFile(f, newFile, focusEditor);
+		if (_currentFile != f) _SetCurrentFile(f, newFile, focusEditor, noTemplate);
 		return _currentFile == f;
 	}
 
@@ -467,7 +467,7 @@ partial class FilesModel
 	/// <param name="f"></param>
 	/// <param name="newFile">Should be true if opening the file first time after creating.</param>
 	/// <param name="focusEditor">If null, focus later, when mouse enters editor. Ignored if editor was focused (sets focus). Also depends on <i>newFile</i>.</param>
-	bool _SetCurrentFile(FileNode f, bool newFile = false, bool? focusEditor = true) {
+	bool _SetCurrentFile(FileNode f, bool newFile = false, bool? focusEditor = true, bool noTemplate = false) {
 		Debug.Assert(!IsAlien(f));
 		if (f == _currentFile) return true;
 		//print.it(f);
@@ -478,7 +478,7 @@ partial class FilesModel
 		var fPrev = _currentFile;
 		_currentFile = f;
 
-		if (!Panels.Editor.ZOpen(f, newFile, focusEditor)) {
+		if (!Panels.Editor.ZOpen(f, newFile, focusEditor, noTemplate)) {
 			_currentFile = fPrev;
 			if (OpenFiles.Contains(f)) _UpdateOpenFiles(_currentFile); //?
 			return false;
@@ -876,7 +876,9 @@ partial class FilesModel
 		if (f.IsFolder) {
 			if (f.IsProjectFolder(out var main) && main != null) SetCurrentFile(f = main, newFile: true); //open the main file of the new project folder
 			else f.SelectSingle(); //select the new folder
-		} else SetCurrentFile(f, newFile: true); //open the new file
+		} else {
+			SetCurrentFile(f, newFile: true, noTemplate: text?.replaceTemplate ?? false); //open the new file
+		}
 
 		if (text != null && f == CurrentFile) {
 			string s;

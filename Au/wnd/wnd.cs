@@ -1415,19 +1415,19 @@
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the client area of window w.
 		/// </summary>
 		/// <remarks>Supports <see cref="lastError"/>.</remarks>
-		public bool MapClientToClientOf(wnd w, ref RECT r) => Api.MapWindowPoints(this, w, ref r, out _);
+		public bool MapClientToClientOf(wnd w, ref RECT r) => !Is0 && !w.Is0 && Api.MapWindowPoints(this, w, ref r, out _);
 
 		/// <summary>
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the client area of window w.
 		/// </summary>
 		/// <remarks>Supports <see cref="lastError"/>.</remarks>
-		public bool MapClientToClientOf(wnd w, ref POINT p) => Api.MapWindowPoints(this, w, ref p, out _);
+		public bool MapClientToClientOf(wnd w, ref POINT p) => !Is0 && !w.Is0 && Api.MapWindowPoints(this, w, ref p, out _);
 
 		/// <summary>
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the screen.
 		/// </summary>
 		/// <remarks>Supports <see cref="lastError"/>.</remarks>
-		public bool MapClientToScreen(ref RECT r) => Api.MapWindowPoints(this, default, ref r, out _);
+		public bool MapClientToScreen(ref RECT r) => !Is0 && Api.MapWindowPoints(this, default, ref r, out _);
 
 		/// <summary>
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the screen.
@@ -1439,7 +1439,7 @@
 		/// Converts coordinates relative to the screen to coordinates relative to the client area of this window.
 		/// </summary>
 		/// <remarks>Supports <see cref="lastError"/>.</remarks>
-		public bool MapScreenToClient(ref RECT r) => Api.MapWindowPoints(default, this, ref r, out _);
+		public bool MapScreenToClient(ref RECT r) => !Is0 && Api.MapWindowPoints(default, this, ref r, out _);
 
 		/// <summary>
 		/// Converts coordinates relative to the screen to coordinates relative to the client area of this window.
@@ -1563,7 +1563,7 @@
 		/// <summary>
 		/// Returns true if this window (its rectangle) contains the specified point.
 		/// </summary>
-		/// <param name="x">X coordinate in screen. Not used if default(Coord). Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate in screen. Not used if default(Coord). Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in screen. Not used if default(Coord).</param>
 		public bool ContainsScreenXY(Coord x, Coord y) {
 			POINT p = Coord.Normalize(x, y);
@@ -1581,7 +1581,7 @@
 		/// Direct or indirect parent window. The coordinates are relative to its client area.
 		/// Actually this and parent can be any windows or controls, the function does not check whether this is a child of parent.
 		/// </param>
-		/// <param name="x">X coordinate. Not used if default(Coord). Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate. Not used if default(Coord). Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate. Not used if default(Coord).</param>
 		public bool ContainsWindowXY(wnd parent, Coord x, Coord y) {
 			if (!parent.IsAlive) return false;
@@ -1675,7 +1675,7 @@
 		/// <summary>
 		/// Moves.
 		/// </summary>
-		/// <param name="x">Left. If default(Coord), does not move in X axis. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">Left. If default(Coord), does not move in X axis. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Top. If default(Coord), does not move in Y axis.</param>
 		/// <param name="workArea"><i>x y</i> are relative to the work area. Not used when this is a child window.</param>
 		/// <param name="screen"><i>x y</i> are relative to this screen or its work area. Default - primary. Not used when this is a child window. Example: <c>screen.index(1)</c>.</param>
@@ -1692,7 +1692,7 @@
 		/// <summary>
 		/// Moves and/or resizes.
 		/// </summary>
-		/// <param name="x">Left. If default(Coord), does not move in X axis. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">Left. If default(Coord), does not move in X axis. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Top. If default(Coord), does not move in Y axis.</param>
 		/// <param name="width">Width. If default(Coord), does not change width.</param>
 		/// <param name="height">Height. If default(Coord), does not change height.</param>
@@ -1849,7 +1849,7 @@
 		/// <summary>
 		/// Moves this window to coordinates x y in specified screen, and ensures that entire window is in screen.
 		/// </summary>
-		/// <param name="x">X coordinate in the specified screen. If default(Coord) - screen center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>0.5f</c> (fraction).</param>
+		/// <param name="x">X coordinate in the specified screen. If default(Coord) - screen center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the specified screen. If default(Coord) - screen center.</param>
 		/// <param name="screen">Move to this screen (see <see cref="screen"/>). If default, uses screen of this window. Example: <c>screen.index(1)</c>.</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>

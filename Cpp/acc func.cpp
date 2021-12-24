@@ -586,9 +586,12 @@ EXPORT HRESULT Cpp_AccAction(Cpp_Acc a, WCHAR action, BSTR param)
 	case 'v':
 		hr = a.acc->put_accValue(ve, param);
 		break;
-	case 's':
+	case 's': //ScrollTo
+	case 'c': //Check
+	case 'E': //Expand(true)
+	case 'e': //Expand(false)
 		assert(!!(a.misc.flags & eAccMiscFlags::UIA));
-		ve.vt = VT_I1; ve.cVal = 's';
+		ve.vt = VT_I1; ve.cVal = (char)action;
 		hr = a.acc->accDoDefaultAction(ve);
 		break;
 	default: assert(false); hr = (HRESULT)eError::InvalidParameter;

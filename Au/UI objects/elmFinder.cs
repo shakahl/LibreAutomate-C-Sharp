@@ -67,13 +67,7 @@ public unsafe class elmFinder
 	/// Stores the specified UI element properties in this object.
 	/// Parameters are like of <see cref="this"/>.
 	/// </summary>
-	/// <param name="role"><inheritdoc cref="this"/></param>
-	/// <param name="name"><inheritdoc cref="this"/></param>
-	/// <param name="prop"><inheritdoc cref="this"/></param>
-	/// <param name="flags"><inheritdoc cref="this"/></param>
-	/// <param name="also"><inheritdoc cref="this"/></param>
-	/// <param name="skip"><inheritdoc cref="this"/></param>
-	/// <param name="navig"><inheritdoc cref="this"/></param>
+	/// <inheritdoc cref="this" path="/param"/>
 	public elmFinder(string role = null,
 		[ParamString(PSFormat.wildex)] string name = null,
 		Strings prop = default, EFFlags flags = 0, Func<elm, bool> also = null,
@@ -97,9 +91,9 @@ public unsafe class elmFinder
 	const EFFlags _EFFlags_Empty = (EFFlags)0x10000000;
 
 	/// <summary>
-	/// Creates an <see cref="elmFinder"/> for finding a UI element. Or creates and appends for finding through intermediate elements, like <c>var e = w.Elm["ROLE1", "Name1"]["ROLE2", "Name2"].Find();</c>.
+	/// Creates an <see cref="elmFinder"/> for finding a UI element. Supports path like <c>var e = w.Elm["ROLE1", "Name1"]["ROLE2", "Name2"].Find();</c>.
 	/// </summary>
-	/// <returns>When appending, returns the first finder in the chain of linked finders. Else returns the new finder.</returns>
+	/// <returns>The new finder or the first finder in path.</returns>
 	/// <param name="role">
 	/// UI element role (<see cref="elm.Role"/>), like <c>"LINK"</c>.
 	/// Can have prefix <c>"web:"</c>, <c>"firefox:"</c> or <c>"chrome:"</c> which means "search only in web page" and enables Chrome UI elements.
@@ -123,16 +117,16 @@ public unsafe class elmFinder
 	/// </param>
 	/// <param name="skip">
 	/// 0-based index of matching UI element to use. Will skip this number of matching elements.
-	/// Value -1 means "any", and can be useful when this finder is intermediate in a path or when it has <i>navig</i>. If intermediate, will search for next element in all matching intermediate elements. If has <i>navig</i>, will retry with other matching elements if fails to navigate in the first found. It is slower and not so often useful, therefore the default value of this parameter is 0, not -1.
+	/// Value -1 means "any", and can be useful when this finder is intermediate (ie not the last) in a path or when it has <i>navig</i>. If intermediate, will search for next element in all matching intermediate elements. If has <i>navig</i>, will retry with other matching elements if fails to navigate in the first found. It is slower and not so often useful, therefore the default value of this parameter is 0, not -1.
 	/// </param>
 	/// <param name="navig">If not null, after finding the specified UI element will call <see cref="elm.Navigate"/> with this string and use its result instead of the found element.</param>
 	/// <exception cref="ArgumentException"><i>flags</i> contains <b>UIA</b> or <b>ClientArea</b> when appending (only the first finder can have these flags).</exception>
 	/// <remarks>
-	/// Modifies finders so that they will find UI element specified by the last appended finder.
-	/// 
 	/// To create code for this function, use dialog "Find UI element".
 	/// 
 	/// In wildcard expressions supports PCRE regular expressions (prefix <c>"**r "</c>) but not .NET regular expressions (prefix <c>"**R "</c>). They are similar.
+	/// 
+	/// When using path like <c>["ROLE1", "Name1"]["ROLE2", "Name2"]["ROLE3", "Name3"]</c>, multiple finders are linked like finder1 -> finder2 -> finder3, so that the chain of finders will find UI element specified by the last finder.
 	/// 
 	/// More info in <see cref="elm"/> topic.
 	/// 
@@ -163,7 +157,7 @@ public unsafe class elmFinder
 	/// - <c>"id"</c> - search only in child controls that have this id (see <see cref="wnd.ControlId"/>). If the value is not a number - Windows Forms control name (see <see cref="wnd.NameWinforms"/>); case-sensitive, not wildcard.\
 	///   Cannot be used when searching in a UI element.
 	/// - <c>"value"</c> - <see cref="elm.Value"/>.
-	/// - <c>desc</c> - <see cref="elm.Description"/>.
+	/// - <c>"desc"</c> - <see cref="elm.Description"/>.
 	/// - <c>"state"</c> - <see cref="elm.State"/>. List of states the UI element must have and/or not have.\
 	///   Example: <c>"state=CHECKED, FOCUSABLE, !DISABLED"</c>.\
 	///   Example: <c>"state=0x100010, !0x1"</c>.\
@@ -266,8 +260,6 @@ public unsafe class elmFinder
 	/// <remarks>
 	/// To create code for this function, use dialog "Find UI element".
 	/// 
-	/// Functions <b>Find</b> and <b>Exists</b> differ only in their return types.
-	/// 
 	/// More info in <see cref="elm"/> topic.
 	/// </remarks>
 	/// <example>
@@ -292,21 +284,25 @@ public unsafe class elmFinder
 	/// </summary>
 	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns null (if <i>waitS</i> negative).</returns>
 	/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
-	/// <exception cref="ArgumentException"><inheritdoc cref="Find()"/></exception>
-	/// <exception cref="AuWndException"><inheritdoc cref="Find()"/></exception>
-	/// <exception cref="AuException"><inheritdoc cref="Find()"/></exception>
+	/// <exception cref="ArgumentException"></exception>
+	/// <exception cref="AuWndException"></exception>
+	/// <exception cref="AuException"></exception>
 	/// <exception cref="NotFoundException" />
-	/// <remarks>
-	/// Functions <b>Find</b> and <b>Exists</b> differ only in their return types.
-	/// </remarks>
 	public elm Find(double waitS) => Exists(waitS) ? Result : null;
 
+	/// <summary>
+	/// Finds the first matching descendant UI element in the window or UI element. Like <see cref="Find"/>, just different return type.
+	/// </summary>
 	/// <returns>If found, sets <see cref="Result"/> and returns true, else false.</returns>
-	/// <inheritdoc cref="Find()"/>
+	/// <inheritdoc cref="Find()" path="/exception"/>
+	/// <remarks></remarks>
 	public bool Exists() => Find_(_elm != null, _wnd, _elm);
 
+	/// <summary>
+	/// Finds the first matching descendant UI element in the window or UI element. Can wait and throw <b>NotFoundException</b>. Like <see cref="Find(double)"/>, just different return type.
+	/// </summary>
 	/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>waitS</i> negative).</returns>
-	/// <inheritdoc cref="Find(double)"/>
+	/// <inheritdoc cref="Find(double)" path="//param|//exception"/>
 	public bool Exists(double waitS) {
 		if (Find_(_elm != null, _wnd, _elm, waitS == 0d ? null : waitS < 0 ? waitS : -waitS)) return true;
 		return double.IsNegative(waitS) ? false : throw new NotFoundException();
@@ -317,9 +313,9 @@ public unsafe class elmFinder
 	/// </summary>
 	/// <returns>If found, returns <see cref="Result"/>. On timeout returns null if <i>secondsTimeout</i> is negative; else exception.</returns>
 	/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-	/// <exception cref="ArgumentException"><inheritdoc cref="Find()"/></exception>
-	/// <exception cref="AuWndException"><inheritdoc cref="Find()"/></exception>
-	/// <exception cref="AuException"><inheritdoc cref="Find()"/></exception>
+	/// <exception cref="ArgumentException"></exception>
+	/// <exception cref="AuWndException"></exception>
+	/// <exception cref="AuException"></exception>
 	/// <exception cref="TimeoutException" />
 	/// <remarks>
 	/// Same as <see cref="Find(double)"/>, except:
@@ -342,7 +338,7 @@ public unsafe class elmFinder
 				if (eParent.Item != 0) throw new ArgumentException("Item not 0.");
 			}
 			aParent = new(eParent); pParent = &aParent;
-			if (!eParent._misc.flags.Has(EMiscFlags.InProc)) flags |= EFFlags.NotInProc;
+			if (!eParent.MiscFlags.Has(EMiscFlags.InProc)) flags |= EFFlags.NotInProc;
 		} else {
 			w.ThrowIfInvalid();
 			aParent = default;
@@ -458,9 +454,6 @@ public unsafe class elmFinder
 	/// Finds all matching descendant UI elements in the window or UI element.
 	/// </summary>
 	/// <returns>Array of 0 or more elements.</returns>
-	/// <exception cref="ArgumentException"><inheritdoc cref="Find()"/></exception>
-	/// <exception cref="AuWndException"><inheritdoc cref="Find()"/></exception>
-	/// <exception cref="AuException"><inheritdoc cref="Find()"/></exception>
 	/// <example>
 	/// <code><![CDATA[
 	/// var w = wnd.find(1, "", "Shell_TrayWnd");
@@ -475,6 +468,8 @@ public unsafe class elmFinder
 	/// print.it(e.Elm.FindAll());
 	/// ]]></code>
 	/// </example>
+	/// <remarks>See <see cref="Find"/>.</remarks>
+	/// <inheritdoc cref="Find" path="/exception"/>
 	public elm[] FindAll() {
 		var a = new List<elm>();
 		var f = new elmFinder(_role, _name, _prop, _flags & ~_EFFlags_Empty, o => { //need new finder because cannot change _also or this finder

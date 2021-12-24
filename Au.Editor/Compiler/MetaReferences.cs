@@ -14,7 +14,7 @@ namespace Au.Compiler
 	/// Single static cache is used by all MetaReferences variables.
 	/// Cache may require many MB of unmanaged memory, therefore PortableExecutableReference objects are removed and GC-collected when not used anywhere for some time. Reloading is quite fast.
 	///		A reference to a PortableExecutableReference variable prevents removing it from cache and GC-collecting.
-	///		A reference to a MetaReferences variable prevents removing/disposing is Refs items.
+	///		A reference to a MetaReferences variable prevents removing/disposing its Refs items.
 	///		CodeAnalysis Project etc objects also have references, therefore need to manage their lifetimes too.
 	/// MetaReferences variables can be created in different threads, but a variable must be used in a single thread.
 	/// </remarks>
@@ -28,9 +28,8 @@ namespace Au.Compiler
 			public readonly string name, path;
 			readonly WeakReference<PortableExecutableReference> _wr = new(null);
 			PortableExecutableReference _refKeeper;
-			long _timeout;
-
-			const int c_timerPeriod = 30_000;
+			long _rkTimeout;
+			DateTime _fileTime;
 
 			public _MR(string name, string path) {
 				//print.it(name);
@@ -44,45 +43,33 @@ namespace Au.Compiler
 						//for(int i=0;i<10;i++) //tested: process memory does not grow when loading same file several times
 						//perf.first();
 						r = MetadataReference.CreateFromFile(path, (this as _MR2)?.Prop ?? default, _DocumentationProvider.Create(path));
+						_fileTime = filesystem.getProperties(path, out var p, FAFlags.UseRawPath | FAFlags.DontThrow) ? p.LastWriteTimeUtc : default;
 						//perf.nw();
 
 						_wr.SetTarget(r);
 						//print.it("LOADED", name, this is _MR2);
-
-						//prevent GC too early, eg in the middle of compiling many files
-						if (s_timer == null) {
-							s_timer = new Timer(_ => {
-								int nKeep = 0;
-								lock (s_cache) {
-									long timeNow = Environment.TickCount64;
-									foreach (var v in s_cache) {
-										if (v._refKeeper == null) continue;
-										long t = v._timeout;
-										if (timeNow >= t) v._refKeeper = null;
-										else nKeep++;
-									}
-									//print.it("timer", nKeep);
-									s_isTimer = nKeep > 0 && s_timer.Change(c_timerPeriod, -1);
-								}
-								if (nKeep == 0) GC.Collect();
-							});
-						}
 					} //else print.it("cached", name, this is _MR2);
 
-					if (!s_isTimer) s_isTimer = s_timer.Change(c_timerPeriod, -1);
-					_timeout = Environment.TickCount64 + c_timerPeriod - 1000;
+					//prevent GC too early, eg while compiling many files
+					_rkTimeout = Environment.TickCount64 + 30_000;
 					_refKeeper = r;
+
 					return r;
 				}
 			}
 
-			//public static void CompactCache()
-			//{
-			//	lock(s_cache) {
-			//		foreach(var v in s_cache) v._refKeeper = null;
-			//		s_isTimer = s_timer.Change(1000, -1);
-			//	}
-			//}
+			public void UncacheIfNeed(long timeNow) {
+				if (_fileTime != default) {
+					filesystem.getProperties(path, out var p, FAFlags.UseRawPath | FAFlags.DontThrow);
+					if (p.LastWriteTimeUtc != _fileTime) {
+						_wr.SetTarget(null);
+						_refKeeper = null;
+						_fileTime = default;
+						return;
+					}
+				}
+				if (_refKeeper != null && timeNow > _rkTimeout) _refKeeper = null;
+			}
 
 #if DEBUG
 			public bool IsCached => _wr.TryGetTarget(out _);
@@ -105,8 +92,6 @@ namespace Au.Compiler
 		}
 
 		static readonly List<_MR> s_cache = new();
-		static Timer s_timer;
-		static bool s_isTimer;
 
 		/// <summary>
 		/// List containing <see cref="DefaultReferences"/> + references for which was called <see cref="Resolve"/> of this MetaReferences variable.
@@ -139,6 +124,16 @@ namespace Au.Compiler
 			var auPath = folders.ThisAppBS + "Au.dll";
 			DefaultReferences.Add("Au", MetadataReference.CreateFromFile(auPath, documentation: _DocumentationProvider.Create(auPath)));
 			//p1.NW('a');
+
+			App.Timer1sWhenVisible += UncacheOldFiles;
+		}
+
+		public static void UncacheOldFiles() {
+			//using var p1 = perf.local();
+			lock (s_cache) {
+				long timeNow = Environment.TickCount64;
+				foreach (var v in s_cache) v.UncacheIfNeed(timeNow);
+			}
 		}
 
 		public MetaReferences() {
@@ -280,7 +275,7 @@ namespace Au.Compiler
 									var name = e.Attr("name");
 
 									//remove <remarks> and <example>.
-									foreach(var v in e.Descendants("remarks").ToArray()) v.Remove();
+									foreach (var v in e.Descendants("remarks").ToArray()) v.Remove();
 									foreach (var v in e.Descendants("example").ToArray()) v.Remove();
 
 									using var reader = e.CreateReader();

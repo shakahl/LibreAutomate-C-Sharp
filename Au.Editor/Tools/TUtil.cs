@@ -653,14 +653,14 @@ static class TUtil
 
 					//set timer to show rectangles of UI element from mouse
 					if (_timer == null) {
-						_osr = TUtil.CreateOsdRect(2);
+						_osr = CreateOsdRect(2);
 						_timer = new timer(t => {
 							int t1 = Environment.TickCount;
 
 							POINT p = mouse.xy;
 							wnd w = wnd.fromXY(p, WXYFlags.NeedWindow);
 							RECT? r = default; string text = null;
-							if (!(w.Is0 || w == wDialog || w.Get.Owner == wDialog)) {
+							if (!(w.Is0 || w == wDialog || (w.ThreadId == wDialog.ThreadId && w.ZorderIsAbove(wDialog)))) {
 								(r, text) = _dGetRect(p);
 
 								//F3 does not work if this process has lower UAC IL than the foreground process.

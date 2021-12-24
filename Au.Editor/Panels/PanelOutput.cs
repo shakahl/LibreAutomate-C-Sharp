@@ -175,6 +175,10 @@ class PanelOutput : DockPanel
 			//create links in compilation errors/warnings or run-time stack trace
 			var s = m.Text; int i;
 			if (s.Length >= 22) {
+				//TODO: bad in some cases.
+				//	Sometimes stack trace is with a control char blob.
+				//	This error creates bad link: keys.more.parseKeysString("Ctrl+Shift");
+
 				if (s.Starts("<><Z #") && s.Eq(12, ">Compilation: ")) { //compilation
 					s_rx1 ??= new regexp(@"(?m)^\[(.+?)(\((\d+),(\d+)\))?\]: ");
 					m.Text = s_rx1.Replace(s, x => {

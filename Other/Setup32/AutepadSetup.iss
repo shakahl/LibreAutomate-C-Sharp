@@ -3,7 +3,7 @@
 
 #define MyAppName "Autepad C#"
 #define MyAppNameShort "Autepad"
-#define MyAppVersion "0.2.5 (2021-11-25)"
+#define MyAppVersion "0.3.0 (2021-12-24)"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.quickmacros.com/au/help/"
 #define MyAppExeName "Au.Editor.exe"

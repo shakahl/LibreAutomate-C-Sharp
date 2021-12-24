@@ -1,4 +1,4 @@
-﻿<files max-i="72">
+﻿<files max-i="78">
   <s n="Script.cs" i="1" />
   <c n="Class.cs" i="2" />
   <d n="New project" i="6">
@@ -23,8 +23,10 @@
     </d>
   </d>
   <d n="Dialogs" i="68">
-    <c n="DialogClass.cs" i="69" />
-    <c n="DialogWithTabs.cs" i="70" />
+    <s n="Simple dialog.cs" i="77" />
+    <s n="Dialog with tabs.cs" i="78" />
+    <c n="Dialog class.cs" i="73" />
+    <c n="Dialog with tabs class.cs" i="74" />
   </d>
   <d n="Default" i="71">
     <c n="global.cs" i="72" />

@@ -521,7 +521,7 @@ DWORD WINAPI _JabThread(LPVOID param)
 		if(nmsg == 0 && i > 0) break; //non-Java windows that use JAB (probably as client) don't post back the message
 		Sleep(1);
 	}
-	assert(i <= 2); //just to test reliability in stress conditions. When testing, was 1 almost always, once 2.
+	PRINTF_IF(i > 2, L"i=%i", i); //test reliability in stress conditions. When testing, was 1 almost always, rarely 2, once >2.
 
 	s_inited = 1;
 	SetEvent(param);

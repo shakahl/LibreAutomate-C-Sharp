@@ -83,19 +83,19 @@ public struct WndSavedRect
 		IsToolWindow = w.IsToolWindow;
 	}
 
-	///// <summary>
-	///// Gets window rectangle and state for saving. Usually called when closing the window.
-	///// See also <see cref="ToString"/>.
-	///// </summary>
-	///// <exception cref="AuWndException">Failed to get rectangle, probably invalid window handle.</exception>
-	//public WndSavedRect(System.Windows.Forms.Form form) : this(form.Hwnd()) { }
-
 	/// <summary>
 	/// Gets window rectangle and state for saving. Usually called when closing the window.
 	/// See also <see cref="ToString"/>.
 	/// </summary>
 	/// <exception cref="AuWndException">Failed to get rectangle, probably invalid window handle.</exception>
 	public WndSavedRect(System.Windows.Window w) : this(w.Hwnd()) { }
+
+	/// <summary>
+	/// Gets window rectangle and state for saving. Usually called when closing the window.
+	/// See also <see cref="ToString"/>.
+	/// </summary>
+	/// <exception cref="AuWndException">Failed to get rectangle, probably invalid window handle.</exception>
+	public WndSavedRect(System.Windows.Forms.Form form) : this(form.Hwnd()) { }
 
 	/// <summary>
 	/// Gets real rectangle for restoring saved window rectangle.
@@ -123,26 +123,6 @@ public struct WndSavedRect
 		return r;
 	}
 
-	///// <summary>
-	///// Calls <see cref="FromString"/>. If it returns true, sets <i>form</i> bounds = <see cref="NormalizeRect"/>, maximizes if need, StartPosition=Manual, and returns true.
-	///// Call this function before showing form, for example in constructor.
-	///// </summary>
-	///// <param name="form"></param>
-	///// <param name="saved">String created by <see cref="ToString"/>.</param>
-	///// <param name="save">If not null, called when closing the window. Receives string for saving. Can save it in registry, file, anywhere.</param>
-	//public static bool Restore(System.Windows.Forms.Form form, string saved, Action<string> save = null) {
-	//	bool ret = FromString(saved, out var v);
-	//	if (ret) {
-	//		form.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
-	//		form.Bounds = v.NormalizeRect();
-	//		if (v.Maximize) form.WindowState = System.Windows.Forms.FormWindowState.Maximized;
-	//	}
-	//	if (save != null) {
-	//		form.FormClosing += (o, _) => save(new WndSavedRect(o as System.Windows.Forms.Form).ToString());
-	//	}
-	//	return ret;
-	//}
-
 	/// <summary>
 	/// Calls <see cref="FromString"/>. If it returns true, calls <see cref="NormalizeRect"/>, <see cref="ExtWpf.SetRect"/>, maximizes if need and returns true.
 	/// Call this function before showing window.
@@ -161,6 +141,26 @@ public struct WndSavedRect
 		}
 		if (save != null) {
 			w.Closing += (o, _) => save(new WndSavedRect(o as System.Windows.Window).ToString());
+		}
+		return ret;
+	}
+
+	/// <summary>
+	/// Calls <see cref="FromString"/>. If it returns true, sets <i>form</i> bounds = <see cref="NormalizeRect"/>, maximizes if need, StartPosition=Manual, and returns true.
+	/// Call this function before showing window.
+	/// </summary>
+	/// <param name="form"></param>
+	/// <param name="saved">String created by <see cref="ToString"/>.</param>
+	/// <param name="save">If not null, called when closing the window. Receives string for saving. Can save it in registry, file, anywhere.</param>
+	public static bool Restore(System.Windows.Forms.Form form, string saved, Action<string> save = null) {
+		bool ret = FromString(saved, out var v);
+		if (ret) {
+			form.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
+			form.Bounds = v.NormalizeRect();
+			if (v.Maximize) form.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+		}
+		if (save != null) {
+			form.FormClosing += (o, _) => save(new WndSavedRect(o as System.Windows.Forms.Form).ToString());
 		}
 		return ret;
 	}

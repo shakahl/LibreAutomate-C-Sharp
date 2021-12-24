@@ -329,8 +329,9 @@ namespace Au.Types
 		/// Unlike <see cref="Value"/>, does not create new string.
 		/// </remarks>
 		public RStr Span => _len > 0 ? _subject.AsSpan(_index, _len) : (_index < 0 ? default : ""); //_len can be < 0
-																									///// 
-																									///// This function cannot be used with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>. Then use <see cref="GetSpan_"/>.
+
+		///// 
+		///// This function cannot be used with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>. Then use <see cref="GetSpan_"/>.
 
 		/// <summary>
 		/// Gets substring of the subject string from <see cref="Start"/> to <see cref="End"/>.
@@ -340,8 +341,9 @@ namespace Au.Types
 		/// Creates new string each time. See also <see cref="Span"/>.
 		/// </remarks>
 		public string Value => _len > 0 ? _subject[_index..End] : (_index < 0 ? null : ""); //_len can be < 0
-																							///// 
-																							///// This function cannot be used with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>. Then use <see cref="GetValue_"/>.
+
+		///// 
+		///// This function cannot be used with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>. Then use <see cref="GetValue_"/>.
 
 		/// <summary>
 		/// Returns <see cref="Value"/>.
@@ -368,6 +370,9 @@ namespace Au.Types
 		/// </remarks>
 		/// <param name="subject">Must be the same subject string as passed to the <b>regexp</b> function that returned this result.</param>
 		internal RStr GetSpan_(RStr subject) => _len > 0 ? subject.Slice(_index, _len) : (_index < 0 ? default : "");
+
+		///
+		public static implicit operator Range(RXGroup g) => g.Exists ? g.Start..g.End : default;
 	}
 
 
