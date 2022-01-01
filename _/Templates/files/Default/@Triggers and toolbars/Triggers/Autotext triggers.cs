@@ -16,7 +16,7 @@ void AutotextTriggers() {
 		tt["WIndows", TAFlags.MatchCase] = o => o.Replace("Windows (autotext example)");
 		
 		tt.DefaultPostfixType = TAPostfix.None; //set some options for triggers added afterwards
-		tt["<b>"] = o => o.Replace("<b>[[|]]</b>");
+		tt["<e>"] = o => o.Replace("<e>[[|]]</e>");
 		
 		Triggers.Options.BeforeAction = o => { opt.key.TextHow = OKeyText.Paste; }; //set opt options for trigger actions added afterwards
 		tt["#file", TAFlags.RemovePostfix] = o => {

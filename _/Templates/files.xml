@@ -23,7 +23,7 @@
     </d>
   </d>
   <d n="Dialogs" i="68">
-    <s n="Simple dialog.cs" i="77" />
+    <s n="Dialog.cs" i="77" />
     <s n="Dialog with tabs.cs" i="78" />
     <c n="Dialog class.cs" i="73" />
     <c n="Dialog with tabs class.cs" i="74" />
@@ -34,18 +34,18 @@
       <n n="Readme.txt" i="16" />
       <s n="Triggers and toolbars.cs" i="17" icon="*Material.ScriptOutline #008EEE" />
       <d n="Triggers" i="18">
-        <c n="Hotkey triggers.cs" i="19" icon="*Codicons.SymbolClass #73BF00" />
-        <c n="Autotext triggers.cs" i="20" icon="*Codicons.SymbolClass #73BF00" />
-        <c n="Mouse triggers.cs" i="21" icon="*Codicons.SymbolClass #73BF00" />
-        <c n="Window triggers.cs" i="22" icon="*Codicons.SymbolClass #73BF00" />
+        <c n="Hotkey triggers.cs" i="19" />
+        <c n="Autotext triggers.cs" i="20" />
+        <c n="Mouse triggers.cs" i="21" />
+        <c n="Window triggers.cs" i="22" />
       </d>
       <d n="Toolbars" i="23">
-        <c n="Common toolbars.cs" i="24" icon="*Codicons.SymbolClass #73BF00" />
-        <c n="Window toolbars.cs" i="25" icon="*Codicons.SymbolClass #73BF00" />
-        <c n="Window toolbars template.cs" i="26" icon="*Codicons.SymbolClass #73BF00" />
+        <c n="Common toolbars.cs" i="24" />
+        <c n="Window toolbars.cs" i="25" />
+        <c n="Window toolbars template.cs" i="26" />
       </d>
       <d n="Functions" i="27">
-        <c n="Partial1.cs" i="28" icon="*Codicons.SymbolClass #73BF00" />
+        <c n="Partial1.cs" i="28" />
         <c n="Class1.cs" i="29" />
       </d>
       <d n="Scripts" i="30">
