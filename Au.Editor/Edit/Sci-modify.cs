@@ -61,9 +61,12 @@ partial class SciCode
 		}
 
 		if (!slashStar) {
-			//get start and end of lines containing selection
+			//get the start and end of lines containing selection
 			while (replStart > 0 && code[replStart - 1] != '\n') replStart--;
-			if (!(replEnd > replStart && code[replEnd - 1] == '\n')) while (replEnd < code.Length && code[replEnd] != '\r' && code[replEnd] != '\n') replEnd++;
+			if (!(replEnd > replStart && code[replEnd - 1] == '\n')) {
+				while (replEnd < code.Length && code[replEnd] is not ('\r' or '\n')) replEnd++;
+				if (replEnd > replStart && code.Eq(replEnd, "\r\n")) replEnd += 2; //prevent on Undo moving the caret to the end of line and possibly hscrolling
+			}
 			if (replEnd == replStart) return;
 			//is the first line //comments ?
 			var trivia = root.FindTrivia(replStart);

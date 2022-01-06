@@ -8,14 +8,15 @@
 #ifndef PLATWIN_H
 #define PLATWIN_H
 
-namespace Scintilla {
+namespace Scintilla::Internal {
 
 #ifndef USER_DEFAULT_SCREEN_DPI
 #define USER_DEFAULT_SCREEN_DPI		96
 #endif
 
-extern void Platform_Initialise(void *hInstance);
-extern void Platform_Finalise(bool fromDllMain);
+extern void Platform_Initialise(void *hInstance) noexcept;
+
+extern void Platform_Finalise(bool fromDllMain) noexcept;
 
 constexpr RECT RectFromPRectangle(PRectangle prc) noexcept {
 	RECT rc = { static_cast<LONG>(prc.left), static_cast<LONG>(prc.top),
@@ -41,20 +42,6 @@ inline HWND HwndFromWindow(const Window &w) noexcept {
 
 void *PointerFromWindow(HWND hWnd) noexcept;
 void SetWindowPointer(HWND hWnd, void *ptr) noexcept;
-
-/// Find a function in a DLL and convert to a function pointer.
-/// This avoids undefined and conditionally defined behaviour.
-template<typename T>
-T DLLFunction(HMODULE hModule, LPCSTR lpProcName) noexcept {
-	if (!hModule) {
-		return nullptr;
-	}
-	FARPROC function = ::GetProcAddress(hModule, lpProcName);
-	static_assert(sizeof(T) == sizeof(function));
-	T fp;
-	memcpy(&fp, &function, sizeof(T));
-	return fp;
-}
 
 UINT DpiForWindow(WindowID wid) noexcept;
 

@@ -34,7 +34,7 @@ using Renci.SshNet;
 //	The Google site search does it much better, and often faster.
 //	info: To enable it, add "_enableSearch": true in "globalMetadata".
 
-//TODO: DocFX does not support inheritdoc path. Inherits almost everything.
+//SHOULDDO: DocFX does not support inheritdoc path. Inherits almost everything.
 //	Also, if eg 1 exception specified, does not inherits exceptions.
 
 unsafe class Program

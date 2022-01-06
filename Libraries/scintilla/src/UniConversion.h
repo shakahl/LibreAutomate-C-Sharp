@@ -8,7 +8,7 @@
 #ifndef UNICONVERSION_H
 #define UNICONVERSION_H
 
-namespace Scintilla {
+namespace Scintilla::Internal {
 
 constexpr int UTF8MaxBytes = 4;
 
@@ -16,7 +16,7 @@ constexpr int unicodeReplacementChar = 0xFFFD;
 
 size_t UTF8Length(std::wstring_view wsv) noexcept;
 size_t UTF8PositionFromUTF16Position(std::string_view u8Text, size_t positionUTF16) noexcept;
-void UTF8FromUTF16(std::wstring_view wsv, char *putf, size_t len);
+void UTF8FromUTF16(std::wstring_view wsv, char *putf, size_t len) noexcept;
 void UTF8FromUTF32Character(int uch, char *putf) noexcept;
 size_t UTF16Length(std::string_view svu8) noexcept;
 size_t UTF16FromUTF8(std::string_view svu8, wchar_t *tbuf, size_t tlen);
@@ -48,8 +48,13 @@ inline constexpr bool UTF8IsTrailByte(unsigned char ch) noexcept {
 	return (ch >= 0x80) && (ch < 0xc0);
 }
 
-inline constexpr bool UTF8IsAscii(int ch) noexcept {
+inline constexpr bool UTF8IsAscii(unsigned char ch) noexcept {
 	return ch < 0x80;
+}
+
+inline constexpr bool UTF8IsAscii(char ch) noexcept {
+	const unsigned char uch = ch;
+	return uch < 0x80;
 }
 
 enum { UTF8MaskWidth=0x7, UTF8MaskInvalid=0x8 };
@@ -75,7 +80,7 @@ inline bool UTF8IsNEL(const unsigned char *us) noexcept {
 	return (us[0] == 0xc2) && (us[1] == 0x85);
 }
 
-// Is the sequence of 3 char a UTF-8 line end? Only the last two char are tested for a NEL. 
+// Is the sequence of 3 char a UTF-8 line end? Only the last two char are tested for a NEL.
 constexpr bool UTF8IsMultibyteLineEnd(unsigned char ch0, unsigned char ch1, unsigned char ch2) noexcept {
 	return
 		((ch0 == 0xe2) && (ch1 == 0x80) && ((ch2 == 0xa8) || (ch2 == 0xa9))) ||

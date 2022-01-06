@@ -39,7 +39,7 @@ global using Au.More; //rarely used in automation scripts [-~]
 //	A directive can have single filter and it must be at the end of //comments in that line.
 
 //type aliases
-global using stringˈ = System.ReadOnlySpan<char>;
+//global using Strinĝ = System.ReadOnlySpan<char>;
 
 //usings for class examples
 //global using my;
