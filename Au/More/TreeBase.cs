@@ -143,6 +143,14 @@ namespace Au.More
 		}
 
 		/// <summary>
+		/// Returns true if this node is a descendant of nearest ancestor node for which <i>predicate</i> returns true.
+		/// </summary>
+		public bool IsDescendantOf(Func<T, bool> predicate) {
+			for (var p = _parent; p != null; p = p._parent) if (predicate(p)) return true;
+			return false;
+		}
+
+		/// <summary>
 		/// Returns true if this node is an ancestor of node n.
 		/// </summary>
 		/// <param name="n">Can be null.</param>

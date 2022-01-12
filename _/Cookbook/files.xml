@@ -1,0 +1,28 @@
+﻿<files max-i="24">
+  <c n="How to write the cookbook.cs" i="1" />
+  <d n="Introduction" i="2">
+    <s n="Intro.cs" i="3" />
+  </d>
+  <d n="C# language" i="4" />
+  <d n="Input, output" i="5">
+    <s n="Text output.cs" i="6" />
+    <s n="Message box.cs" i="7" />
+    <s n="Input box.cs" i="8" />
+    <s n="On-screen display, tooltip.cs" i="9" />
+    <s n="Popup menu.cs" i="10" />
+    <s n="Creating windows.cs" i="11" />
+  </d>
+  <d n="Keys, mouse, clipboard" i="12" />
+  <d n="Windows, UI elements" i="13" />
+  <d n="Filesystem" i="14" />
+  <d n="System" i="15" />
+  <d n="Internet" i="16" />
+  <d n="Triggers, toolbars" i="17" />
+  <d n="Text processing" i="18" />
+  <d n="XML, JSON, data" i="19" />
+  <d n="More" i="20">
+    <s n="Libraries.cs" i="21" />
+    <s n="Windows API.cs" i="22" />
+  </d>
+  <c n="global.cs" i="24" />
+</files>

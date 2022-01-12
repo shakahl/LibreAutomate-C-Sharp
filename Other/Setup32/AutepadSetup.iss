@@ -45,6 +45,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Source: "Q:\app\Au\_\Default\*"; DestDir: "{app}\Default"; Excludes: ".*"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "Q:\app\Au\_\Templates\files\*"; DestDir: "{app}\Templates\files"; Flags: ignoreversion recursesubdirs
 Source: "Q:\app\Au\_\Templates\files.xml"; DestDir: "{app}\Templates"; Flags: ignoreversion
+Source: "Q:\app\Au\_\Cookbook\files\*"; DestDir: "{app}\Cookbook\files"; Flags: ignoreversion recursesubdirs
+Source: "Q:\app\Au\_\Cookbook\files.xml"; DestDir: "{app}\Cookbook"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Editor.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Editor.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Task.exe"; DestDir: "{app}"; Flags: ignoreversion
