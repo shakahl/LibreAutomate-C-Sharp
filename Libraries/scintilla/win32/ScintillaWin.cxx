@@ -1504,8 +1504,8 @@ sptr_t ScintillaWin::MouseMessage(unsigned int iMessage, uptr_t wParam, sptr_t l
 			//	KeyboardIsKeyDown(VK_CONTROL),
 			//	KeyboardIsKeyDown(VK_MENU));
 
-			//Au: we need to not set focus in some cases. In other cases we set focus in WndProc of our superclass.
-			if((wParam & 0x10000) == 0) ::SetFocus(MainHWND()); //MK_SCI_NOFOCUS
+			//Au: KScintilla will set focus when need, and in a better way.
+			//::SetFocus(MainHWND());
 
 			ButtonDownWithModifiers(PointFromLParam(lParam), ::GetMessageTime(),
 						MouseModifiers(wParam));
@@ -1518,7 +1518,7 @@ sptr_t ScintillaWin::MouseMessage(unsigned int iMessage, uptr_t wParam, sptr_t l
 		break;
 
 	case WM_RBUTTONDOWN: {
-			if((wParam & 0x10000) == 0) ::SetFocus(MainHWND()); //Au //MK_SCI_NOFOCUS
+			//::SetFocus(MainHWND()); //Au
 			const Point pt = PointFromLParam(lParam);
 			if (!PointInSelection(pt)) {
 				CancelModes();

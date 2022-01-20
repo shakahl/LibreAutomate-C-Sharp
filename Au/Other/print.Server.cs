@@ -55,8 +55,7 @@ namespace Au
 		/// <code><![CDATA[
 		/// using System.Windows.Forms;
 		/// 
-		/// class OutputFormExample : Form
-		/// {
+		/// class OutputFormExample : Form {
 		/// 	TextBox _tb;
 		/// 
 		/// 	public OutputFormExample()

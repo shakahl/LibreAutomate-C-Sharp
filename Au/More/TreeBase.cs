@@ -15,8 +15,7 @@ namespace Au.More
 	/// <code><![CDATA[
 	/// using System.Xml;
 	/// 
-	/// class MyTree : Au.More.TreeBase<MyTree>
-	/// {
+	/// class MyTree : Au.More.TreeBase<MyTree> {
 	/// 	public string Name { get; set; }
 	/// 	public int Id { get; private set; }
 	/// 	public bool IsFolder { get; private set; }
@@ -71,8 +70,7 @@ namespace Au.More
 	/// 	public override string ToString() => $"{new string(' ', Level)}{(IsFolder ? 'f' : 'e')} {Name} ({Id})";
 	/// }
 	/// 
-	/// static void TNodeExample()
-	/// {
+	/// static void TNodeExample() {
 	/// 	/*
 	/// 	<example>
 	/// 	  <e name="one" id="1" />

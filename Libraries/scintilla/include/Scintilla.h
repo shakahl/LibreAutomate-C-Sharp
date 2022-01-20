@@ -1262,7 +1262,6 @@ typedef sptr_t (*SciFnDirectStatus)(sptr_t ptr, unsigned int iMessage, uptr_t wP
 #define SCI_ISXINMARGIN 9506
 #define SCI_DRAGDROP 9507
 //#define SCI_DOCUMENT_USERDATA_OFFSET 9509 //was used by QM2
-#define MK_SCI_NOFOCUS 0x10000
 
 //----------------------
 

@@ -36,6 +36,7 @@ using Au;
 using Au.Types;
 using System.Resources;
 using Au.More;
+using System.Windows.Forms;
 
 [module: System.Runtime.InteropServices.DefaultCharSet(System.Runtime.InteropServices.CharSet.Unicode)]
 
@@ -836,11 +837,33 @@ partial class TestScript
 //dialog.show("");
 //	}
 
+	void TestWER() {
+		var f = new Window();
+		f.MouseLeftButtonUp += (_, _) => {
+			print.it("click");
+			throw new Exception();
+		};
+		f.ShowDialog();
+
+		//WndUtil.RegisterWindowClass("fffttt", _WP);
+		//var w = WndUtil.CreateWindow("fffttt", "fffttt", WS.VISIBLE | WS.SYSMENU | WS.CAPTION, 0, 500, 400, 300, 300);
+		//print.it(w);
+		//while (Api.GetMessage(out var mm) > 0) Api.DispatchMessage(mm);
+
+		//static nint _WP(wnd w, int m, nint wp, nint lp) {
+		//	if (m == Api.WM_LBUTTONUP) {
+		//		print.it("click");
+		//		throw new Exception();
+		//	}
+		//	if (m == Api.WM_DESTROY) Api.PostQuitMessage(0);
+		//	return Api.DefWindowProc(w, m, wp, lp);
+		//}
+	}
+
 	unsafe void _Main() {
 		//Application.SetCompatibleTextRenderingDefault(false);
 		//print.it("before");
 		//Debug_.WriteLoadedAssemblies(true, true, true);
-
 
 		//TestWMI();
 		//new Script().Test();
@@ -856,6 +879,9 @@ partial class TestScript
 	TestScript(string[] args) {
 		print.qm2.use = true;
 		//print.clear();
+
+		//TestWER(); return;
+		//Console.WriteLine();
 
 		//perf.first();
 		try {
