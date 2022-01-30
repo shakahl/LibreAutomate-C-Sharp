@@ -1,8 +1,9 @@
-﻿<files max-i="73">
+﻿<files max-i="117">
   <c n="Test.cs" i="71" />
   <c n="How to write the cookbook.cs" i="1" />
   <d n="Introduction" i="2">
     <s n="Intro.cs" i="3" />
+    <s n="How to find everything.cs" i="114" />
   </d>
   <d n="C# language" i="4">
     <s n="C# introduction.cs" i="25" />
@@ -10,7 +11,7 @@
     <s n="Strings (text), numbers, characters, bool, null, default.cs" i="57" />
     <s n="Variables, fields, built-in types.cs" i="36" />
     <s n="Constants, enum.cs" i="60" />
-    <s n="Arrays, List, other collections.cs" i="59" />
+    <s n="Array, List, other collections.cs" i="59" />
     <s n="Types (class, struct, generic, nullable, tuple).cs" i="37" />
     <s n="Functions (methods, properties).cs" i="38" />
     <s n="Namespaces, using.cs" i="64" />
@@ -21,42 +22,77 @@
     <s n="Errors, exceptions, try-catch-finally, throw.cs" i="62" />
     <s n="Callback functions, lambda, delegate, event.cs" i="63" />
   </d>
-  <d n="Input, output" i="5">
-    <s n="Text output.cs" i="6" />
-    <s n="Message box.cs" i="7" />
-    <s n="Input box.cs" i="8" />
-    <s n="On-screen display, tooltip.cs" i="9" />
-    <s n="Popup menu.cs" i="10" />
-    <s n="Creating windows.cs" i="11" />
+  <d n="Input, output, dialog windows, sound" i="5">
+    <s n="Display text and variables.cs" i="6" />
+    <s n="Message box dialog, list.cs" i="7" />
+    <s n="Input box dialog.cs" i="8" />
+    <s n="File and folder dialogs.cs" i="74" />
+    <s n="Popup menu, check list.cs" i="10" />
+    <s n="Custom dialog window.cs" i="11" />
+    <s n="Play sound, speak.cs" i="100" />
   </d>
   <d n="Keys, mouse, clipboard" i="12">
-    <s n="Script1.cs" i="26" />
+    <s n="Send keys, text.cs" i="26" />
+    <s n="Select-click menu, control (keyboard shortcuts).cs" i="85" />
+    <s n="If key pressed, toggled.cs" i="75" />
+    <s n="Wait for key, hotkey.cs" i="76" />
+    <s n="Mouse click, move, drag, restore.cs" i="77" />
+    <s n="Mouse get position, wait, cursor, etc.cs" i="79" />
+    <s n="Clipboard copy, paste, set-get text etc.cs" i="80" />
   </d>
-  <d n="Windows, UI elements" i="13">
-    <s n="Script1.cs" i="27" />
+  <d n="Windows, UI automation" i="13">
+    <s n="Find window, controls, activate.cs" i="27" />
+    <s n="Window actions (close, move, resize, properties, etc).cs" i="81" />
+    <s n="Screens (display monitors).cs" i="82" />
+    <s n="UI elements (find, click, check, focus, select, expand, check menu item, wait for state, etc).cs" i="83" />
+    <s n="Web automation, navigate, HTML attributes.cs" i="89" />
+    <s n="Find UI image or color.cs" i="90" />
+    <s n="Take screenshot.cs" i="101" />
+    <s n="Game automation, run script in background.cs" i="91" />
+    <s n="UAC, security.cs" i="116" />
   </d>
-  <d n="Filesystem" i="14">
-    <s n="Script1.cs" i="28" />
+  <d n="Wait, time" i="78">
+    <s n="Simple wait (sleep, delay).cs" i="86" />
+    <s n="Wait for something.cs" i="87" />
+    <s n="Date and time.cs" i="96" />
+    <s n="Computer time, code execution time.cs" i="105" />
+    <s n="Timers.cs" i="111" />
   </d>
   <d n="System" i="15">
-    <s n="Script1.cs" i="33" />
+    <s n="Run program, open document, folder, URL.cs" i="33" />
+    <s n="Run console program and get its output text.cs" i="92" />
+    <s n="Processes.cs" i="93" />
+    <s n="Services.cs" i="88" />
+    <s n="Shutdown, restart, logoff, sleep, hibernate, lock computer.cs" i="94" />
+    <s n="Windows OS version, computer and user name.cs" i="109" />
+    <s n="Desktop (show etc).cs" i="97" />
+    <s n="Environment variables.cs" i="106" />
+    <s n="Registry, saving variables.cs" i="99" />
+    <s n="Threads.cs" i="112" />
+    <s n="Tray icon and notifications.cs" i="115" />
+  </d>
+  <d n="Filesystem" i="14">
+    <s n="TODO.cs" i="28" />
+    <s n="Recycle Bin (delete file, empty).cs" i="98" />
   </d>
   <d n="Internet" i="16">
-    <s n="Script1.cs" i="29" />
+    <s n="TODO.cs" i="29" />
   </d>
-  <d n="Triggers, toolbars" i="17">
-    <s n="Script1.cs" i="34" />
+  <d n="Triggers, toolbars, scripts" i="17">
+    <s n="TODO.cs" i="34" />
+    <s n="Run script, script run-time settings.cs" i="110" />
   </d>
-  <d n="Text processing" i="18">
-    <s n="Script1.cs" i="30" />
+  <d n="Text processing, math, conversions" i="18">
+    <s n="TODO.cs" i="30" />
   </d>
-  <d n="XML, JSON, data" i="19">
-    <s n="Script1.cs" i="31" />
+  <d n="XML, JSON, database" i="19">
+    <s n="TODO.cs" i="31" />
   </d>
   <d n="More" i="20">
-    <s n="Libraries.cs" i="21" />
-    <s n="Windows API.cs" i="22" />
-    <s n="Script1.cs" i="32" />
+    <s n=".NET and other libraries.cs" i="21" />
+    <s n="Windows API, native libraries, COM type libraries.cs" i="22" />
+    <s n="PowerShell, VBScript.cs" i="103" />
+    <s n="WMI.cs" i="102" />
   </d>
   <c n="global.cs" i="24" />
 </files>

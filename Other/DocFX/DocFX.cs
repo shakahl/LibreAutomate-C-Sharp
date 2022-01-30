@@ -21,7 +21,7 @@ using Renci.SshNet;
 [module: DefaultCharSet(CharSet.Unicode)]
 
 //NOTES
-//DocFX should use latest VS.
+//DocFX should use the latest VS.
 
 //When updating DocFX, also may need to update the "memberpage" NuGet package, and its name in docfx.json.
 
@@ -35,7 +35,7 @@ using Renci.SshNet;
 //	info: To enable it, add "_enableSearch": true in "globalMetadata".
 
 //SHOULDDO: DocFX does not support inheritdoc path. Inherits almost everything.
-//	Also, if eg 1 exception specified, does not inherits exceptions.
+//	Also, if eg 1 exception specified, does not inherit exceptions.
 
 unsafe class Program
 {
@@ -56,6 +56,8 @@ unsafe class Program
 		var docDir = @"Q:\app\Au\Other\DocFX\_doc";
 		var siteDir = docDir + @"\_site";
 		var apiDir = docDir + @"\api";
+
+		InitRegex();
 
 		//ProcessYamlFile(apiDir + @"\Au.AaaDocFX.yml", true); return;
 		//ProcessHtmlFiles(siteDir, true); return;
@@ -116,7 +118,7 @@ unsafe class Program
 
 		var t2 = perf.ms;
 
-		ProcessHtmlFiles(siteDir, false);
+		ProcessHtmlFiles(siteDir, test: !true);
 
 		var t3 = perf.ms; print.it("speed (s):", (t2 - t1) / 1000, (t3 - t2) / 1000);
 
@@ -265,6 +267,7 @@ unsafe class Program
 			files = @"\api\Au.elmFinder.this";
 			files = @"\api\Au.dialog.show";
 			files = @"\articles\Wildcard expression";
+			files = @"\api\Au.run.console";
 			files += ".html";
 		}
 		foreach (var f in filesystem.enumerate(siteDir, FEFlags.AndSubdirectories | FEFlags.NeedRelativePaths)) {
@@ -274,10 +277,14 @@ unsafe class Program
 			//if(test) print.it($"<><c 0xff>{file}</c>");
 			var s = File.ReadAllText(file);
 			bool modified = ProcessHtmlFile(ref s, name.Starts(@"\api"), siteDir);
-			if (modified) File.WriteAllText(!test ? file : file.Remove(file.Length - 1), s);
+			if (modified) File.WriteAllText(!test ? file : file[..^1], s);
 		}
 
 		ProcessJs(siteDir);
+	}
+
+	static void InitRegex() {
+		regexp.addReplaceFunc("Upper1", (m, g, v) => m[g].Value.Upper(SUpper.FirstChar));
 	}
 
 	static bool ProcessHtmlFile(ref string s, bool isApi, string siteDir) {
@@ -292,6 +299,8 @@ unsafe class Program
 			nr += s.RxReplace(@"(<a class=""xref"" href=""Au\.(?:Types\.|Triggers\.|More\.)?+([\w\.\-]+\.\w+)\.html)#\w+"">.+?</a>(?!\s*</td>\s*<td class=""markdown level1 summary"">)", @"$1"">$2</a>", out s);
 			//the same for enum
 			nr += s.RxReplace(@"(<a class=""xref"" href=""Au\.(?:Types\.|Triggers\.|More\.)?+(\w+)\.html)#\w+"">(\w+</a>)", @"$1"">$2.$3", out s); //note: enums must not be nested in types
+			//the same for .NET
+			nr += s.RxReplace(@"(<a class=""xref"" href=""https://docs\.microsoft\.com/dotnet/api/[\w\.]+\.(\w+\.)\w+)#[^""]+"">([\w\.]+).*?</a>", @"$1"">${+Upper1(2)}$3</a>", out s);
 
 			//In class member pages, in title insert a link to the type.
 			nr += s.RxReplace(@"<h1\b[^>]* data-uid=""(Au\.(?:Types\.|Triggers\.|More\.)?+([\w\.`]+))\.\w+\*?""[^>]*>(?:Method|Property|Field|Event|Operator|Constructor) (?=\w)",

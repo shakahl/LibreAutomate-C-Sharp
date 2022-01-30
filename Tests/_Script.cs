@@ -873,6 +873,7 @@ partial class TestScript
 		//TestMinusSign();
 		//TestStringInterpolationBoxing();
 		//TestNetCoreVersion();
+
 	}
 
 	[STAThread] static void Main(string[] args) { new TestScript(args); }

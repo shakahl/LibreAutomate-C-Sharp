@@ -1,1 +1,3 @@
 /// This cookbook contains recipes ...
+///
+/// Ctrl+wheel changes recipe font size.

@@ -21,9 +21,10 @@ print.it(dt, r.left); //call function it which is defined in type print. Pass dt
 
 /// Also C# supports arrays, <google C# generic types>generic types<>, <google C# nullable value types>nullable value types<>, <google C# value tuple types>tuples<>, <google C# anonymous types>anonymous types<> and <google C# unsafe pointers>pointers<>.
 ///
-/// Generic types have names like <b>List<T></b>. They can be used in two ways:
+/// Generic types have names like <b>List<T></b>. They can be used in several ways:
 /// - Replace <b>T</b> with a type name, like <mono><_>List<string></_><>. See examples in the Arrays recipe.
 /// - If a parameter is of type <b>T</b>, can be used argument of any supported type.
+/// - If an <.k>out<> parameter is of type <b>T</b>, also can be used code like <mono>out string s<>.
 ///
 /// If a value-type variable is declared like <mono>int? i<>, you can assign it <.k>null<>, which could mean "no value". Often used for optional parameters.
 

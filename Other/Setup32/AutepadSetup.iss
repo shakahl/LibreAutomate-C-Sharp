@@ -47,18 +47,19 @@ Source: "Q:\app\Au\_\Templates\files\*"; DestDir: "{app}\Templates\files"; Flags
 Source: "Q:\app\Au\_\Templates\files.xml"; DestDir: "{app}\Templates"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Cookbook\files\*"; DestDir: "{app}\Cookbook\files"; Flags: ignoreversion recursesubdirs
 Source: "Q:\app\Au\_\Cookbook\files.xml"; DestDir: "{app}\Cookbook"; Flags: ignoreversion
+
 Source: "Q:\app\Au\_\Au.Editor.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Editor.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Task.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Au.Controls.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Au.Net45.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Setup32.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Roslyn\*.dll"; DestDir: "{app}\Roslyn"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Au.Controls.xml"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Au.Net45.exe.config"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.xml"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\default.exe.manifest"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Q:\app\Au\_\Au.Controls.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Q:\app\Au\_\Au.Controls.xml"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Q:\app\Au\_\Au.Net45.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Q:\app\Au\_\Au.Net45.exe.config"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Q:\app\Au\_\Setup32.dll"; DestDir: "{app}"; Flags: ignoreversion
+
+Source: "Q:\app\Au\_\Roslyn\*.dll"; DestDir: "{app}\Roslyn"; Flags: ignoreversion
 Source: "Q:\app\Au\_\64\Au.AppHost.exe"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "Q:\app\Au\_\64\AuCpp.dll"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "Q:\app\Au\_\64\Scintilla.dll"; DestDir: "{app}\64"; Flags: ignoreversion
@@ -67,12 +68,17 @@ Source: "Q:\app\Au\_\64\sqlite3.dll"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "Q:\app\Au\_\32\Au.AppHost.exe"; DestDir: "{app}\32"; Flags: ignoreversion
 Source: "Q:\app\Au\_\32\AuCpp.dll"; DestDir: "{app}\32"; Flags: ignoreversion
 Source: "Q:\app\Au\_\32\sqlite3.dll"; DestDir: "{app}\32"; Flags: ignoreversion
+Source: "Q:\app\Au\_\System.ServiceProcess.ServiceController.*"; DestDir: "{app}";
+Source: "Q:\app\Au\_\System.Management.*"; DestDir: "{app}";
+
+; NOTE: Don't use "Flags: ignoreversion" on any shared system files
+
+Source: "Q:\app\Au\_\default.exe.manifest"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\Other\Data\doc.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\Other\Data\ref.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\Other\Data\winapi.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\icons.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\xrefmap.yml"; DestDir: "{app}"; Flags: ignoreversion
-; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [InstallDelete]
 ;Type: filesandordirs; Name: "{app}\Default"

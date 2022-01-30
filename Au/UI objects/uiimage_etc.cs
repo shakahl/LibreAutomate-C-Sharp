@@ -23,7 +23,8 @@ namespace Au
 		/// var file = folders.Temp + "notepad.png";
 		/// wnd w = wnd.find("* Notepad");
 		/// w.Activate();
-		/// using(var b = uiimage.capture(w.Rect)) { b.Save(file); }
+		/// wnd.active.GetRect(out var r, true);
+		/// using(var b = uiimage.capture(r)) { b.Save(file); }
 		/// run.it(file);
 		/// ]]></code>
 		/// </example>

@@ -84,4 +84,4 @@ class Example {
 /// Thread-static fields live until the thread exits. Each thread has its own variables. All class instance variables share them.
 /// When the script process ends, all variables are gone. Multiple processes don't share variables.
 
-/// Environment variables are not part of the language. They are similar to static string variables and can be accessed with functions like <see cref="Environment.GetEnvironmentVariable(string)"/> and sometimes can be used in strings like "%variable%...".
+/// See also the Environment variables recipe.

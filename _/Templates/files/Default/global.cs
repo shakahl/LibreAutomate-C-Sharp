@@ -20,7 +20,6 @@ global using System.Diagnostics; //debug [+~ ConditionalAttribute Debug Debugger
 global using System.Globalization; //[+~ CultureInfo Number* StringInfo UnicodeCategory]
 global using System.IO; //file, directory
 global using System.IO.Compression; //zip
-global using System.Media; //sound
 global using System.Runtime.CompilerServices; //[-~ Caller* ConditionalWeakTable InternalsVisibleToAttribute MethodImpl* ModuleInitializerAttribute Unsafe - *]
 global using System.Runtime.InteropServices; //types for Windows API etc [-~]
 global using System.Text; //[+~ Encoding Rune StringBuilder]
