@@ -340,7 +340,7 @@ unsafe class Program
 				var k = m[1].Value;
 				string href = null;
 				foreach (var ns in s_ns) {
-					if (filesystem.exists(siteDir + "/api/" + ns + k + ".html").isFile) {
+					if (filesystem.exists(siteDir + "/api/" + ns + k + ".html").File) {
 						href = "../api/" + ns + k + ".html";
 						break;
 					}

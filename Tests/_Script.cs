@@ -874,6 +874,17 @@ partial class TestScript
 		//TestStringInterpolationBoxing();
 		//TestNetCoreVersion();
 
+		//var v = new DirectoryInfo(@"C:\Test");
+		//var o = new EnumerationOptions { RecurseSubdirectories = true };
+		//var e = v.EnumerateFileSystemInfos("*", o);
+		//foreach(var f in e) {
+		//	print.it(e);
+		//}
+
+		Directory.CreateDirectory(@"C:\Test\A");
+		Directory.CreateSymbolicLink(@"C:\Test\A\SL", @"C:\Test\B");
+		Directory.Delete(@"C:\Test\A", true);
+
 	}
 
 	[STAThread] static void Main(string[] args) { new TestScript(args); }

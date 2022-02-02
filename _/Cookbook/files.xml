@@ -1,4 +1,5 @@
-﻿<files max-i="117">
+﻿<files max-i="121">
+  <s n="Script1.cs" i="121" />
   <c n="Test.cs" i="71" />
   <c n="How to write the cookbook.cs" i="1" />
   <d n="Introduction" i="2">
@@ -72,7 +73,10 @@
     <s n="Tray icon and notifications.cs" i="115" />
   </d>
   <d n="Filesystem" i="14">
-    <s n="TODO.cs" i="28" />
+    <s n="File paths, special folders.cs" i="28" />
+    <s n="File copy, move, rename, delete.cs" i="118" />
+    <s n="File read (load) and write (save).cs" i="119" />
+    <s n="Folder create, enumerate.cs" i="120" />
     <s n="Recycle Bin (delete file, empty).cs" i="98" />
   </d>
   <d n="Internet" i="16">

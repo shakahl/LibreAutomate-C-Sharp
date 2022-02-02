@@ -1,4 +1,4 @@
-/// A process is a running program. It can have visible windows or not. Also known as <i>task</i>. Use class <help>process<>.
+/// A process is a running program. It can have visible windows or not. Also known as <i>task</i>. Use class <see cref="process"/>.
 
 /// Print names of all processes of this user session.
 

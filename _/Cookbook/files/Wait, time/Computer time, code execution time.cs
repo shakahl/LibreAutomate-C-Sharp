@@ -3,12 +3,12 @@
 long t1 = Environment.TickCount64; //with the sleep time
 long t2 = computer.tickCountWithoutSleep; //without the sleep time
 
-/// The above functions have low precision (resolution). Usually 15-16 ms. When need high precision, use <help>perf<> functions.
+/// The above functions have low precision (resolution). Usually 15-16 ms. When need high precision, use <see cref="perf"/> functions.
 
 long t3 = perf.ms; //milliseconds
 long t4 = perf.mcs; //microseconds
 
-/// To measure code speed, use <help>perf<> functions.
+/// To measure code speed, use <see cref="perf"/> functions.
 
 perf.first();
 50.ms();

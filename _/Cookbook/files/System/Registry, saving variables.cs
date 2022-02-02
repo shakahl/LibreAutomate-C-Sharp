@@ -33,7 +33,7 @@ using (var k1 = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft")) {
 	}
 }
 
-/// Sometimes you want to save values of some variables used in a script or class, and next time use the saved values. For it you can use the registry, but it is a slow and awkward way. Usually it's better to use a file, and the fastest possible way is to put the variables in a record class derived from <help><.k>JSettings<><>. Run this script two times to see how it works.
+/// Sometimes you want to save values of some variables used in a script or class, and next time use the saved values. For it you can use the registry, but it is a slow and awkward way. Usually it's better to use a file, and the fastest possible way is to put the variables in a record class derived from <see cref="JSettings"/>. Run this script two times to see how it works.
 
 MySettings sett = MySettings.Load(); //in a class you would use a static field or property, but this example uses a local variable for simplicity
 

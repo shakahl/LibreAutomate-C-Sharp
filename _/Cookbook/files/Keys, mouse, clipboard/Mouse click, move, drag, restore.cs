@@ -1,4 +1,4 @@
-/// Most mouse functions are in class <help mouse><b>mouse</b><>. To create mouse-click code can be used:
+/// Most mouse functions are in class <see cref="mouse"/>. To create mouse-click code can be used:
 /// - menu -> Code -> Input recorder. It also can record other actions: wheel, drag, move.
 /// - menu -> Code -> Find UI element.
 /// - menu -> Code -> Find image.

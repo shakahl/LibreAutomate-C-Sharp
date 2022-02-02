@@ -530,8 +530,8 @@ namespace Au
 					_capturing = true;
 					try {
 						if (!WndUtil.DragLoop(_w, MButtons.Left, m => {
-							if (m.Msg.message != Api.WM_MOUSEMOVE) return;
-							POINT p = m.Msg.pt; _w.MapScreenToClient(ref p);
+							if (m.msg.message != Api.WM_MOUSEMOVE) return;
+							POINT p = m.msg.pt; _w.MapScreenToClient(ref p);
 							using var g = Graphics.FromHwnd(_w.Handle);
 							//if (isAnyShape) {
 							//	a.Add(p);

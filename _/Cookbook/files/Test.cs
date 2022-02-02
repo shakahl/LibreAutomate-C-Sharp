@@ -1,100 +1,64 @@
-/*/ role miniProgram; r System.Management.dll; r Libraries\YamlDotNet.dll; com WbemScripting 1.2 #55851133.dll; /*/
-//using System.Management;
-using YamlDotNet.RepresentationModel;
+/*/ role miniProgram; /*/
 
-//TODO: <help ...><b> -> <see.
+//filesystem.copy(@"C:\Test", @"C:\Test2", filter: k => k.Name.Ends(".png", true));
+//filesystem.copy(@"C:\Test", @"C:\Test2", filter: k => k.IsDirectory || k.Name.Ends(".png", true));
 
-var yaml = new YamlStream();
-print.it(yaml);
+print.clear();
+//print.it(filesystem.enumerate(@"C:\Test", FEFlags.AndSubdirectories, filter: k => k.Name.Ends(".png", true)));
+//print.it(filesystem.enumerate(@"C:\Test", FEFlags.AndSubdirectories, filter: k => k.Name.Ends(".png", true)));
+//print.it(filesystem.enumerate(@"C:\Test", FEFlags.AndSubdirectories | FEFlags.OnlyFiles));
+//print.it(filesystem.enumerate(@"C:\Test", FEFlags.AndSubdirectories | FEFlags.OnlyFiles, k => k.IsDirectory || k.Name.Ends(".png", true)));
+//print.it(filesystem.enumerate(@"C:\Test", FEFlags.AndSubdirectories, k => k.DirOnlyChildren() || k.Name.Ends(".png", true)));
+//print.it(filesystem.enumerate(@"C:\Test", "*.png", FEFlags.AndSubdirectories);
 
-//Thread.CurrentThread.CurrentCulture = null;
-//process.thisProcessCultureIsInvariant=false;
-//print.it(CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture, CultureInfo.InstalledUICulture);
-//process.thisProcessCultureIsInvariant=false;
-//print.it(Thread.CurrentThread.CurrentCulture);
-//process.thisProcessCultureIsInvariant=true;
-//print.it(Thread.CurrentThread.CurrentCulture);
-//process.thisProcessCultureIsInvariant=false;
-//print.it(Thread.CurrentThread.CurrentCulture);
+//print.it(Directory.EnumerateFiles(@"C:\Test", "*.png", new EnumerationOptions() { RecurseSubdirectories = true }));
+//print.it(Directory.EnumerateFiles(@"C:\Test", "*", new EnumerationOptions() { RecurseSubdirectories = true }));
+//print.it(Directory.EnumerateFiles(@"C:\Test", "*.png", new EnumerationOptions() {  }));
+//print.it(Directory.EnumerateFiles(@"C:\Test\123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_\123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_\123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_Z", "*", new EnumerationOptions() {  }));
+//print.it(Directory.EnumerateFiles(@"C:\Test", "*.png"));
+//print.it(Directory.EnumerateDirectories(@"C:\Test", "*", new EnumerationOptions() { RecurseSubdirectories = true }));
+//print.it(Directory.EnumerateFileSystemEntries(@"C:\Test", "*", new EnumerationOptions() { RecurseSubdirectories = true }));
+//print.it(Directory.GetFiles(@"C:\Test", "*", new EnumerationOptions() { RecurseSubdirectories = true }));
+//print.it(Directory.EnumerateFileSystemEntries(@"C:\", "*", new EnumerationOptions() {  }));
+//print.it(new DirectoryInfo(@"C:\Test").EnumerateFiles("*", SearchOption.AllDirectories));
 
-//print.it(CultureInfo.InstalledUICulture);
-
-//var d = DateTime.Now;
-
-//CultureInfo.CurrentCulture = CultureInfo.InstalledUICulture;
-//print.it(d.ToString());
-//print.it(d.ToLongDateString() + "; " + d.ToShortTimeString());
-//CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
-
-//print.it(d.ToString());
-//print.it(d.ToLongDateString() + "; " + d.ToShortTimeString());
-
-//print.it(d.ToString(CultureInfo.InstalledUICulture));
-
-//var c = CultureInfo.InstalledUICulture; //current user culture
-//print.it(d.ToString(c));
-//print.it(d.ToString("D", c) + "; " + d.ToString("t", c));
-
-//print.it(CultureInfo.GetCultures(CultureTypes.AllCultures));
-
-//var d1 = DateTime.Parse("2022-01-29");
-//var d2 = DateTime.Parse("29.01.2022", new CultureInfo("de-DE"));
-//print.it(d1, d2);
-
-//var d = DateTime.Now; //get date and time of day
-//var dd = d.Date; //get date without time of day
-//var t = d.TimeOfDay; //get time of day without date
-//print.it(d, dd, t);
-//d = DateTime.Today; //get date without time of day
-
-//var now = DateTime.Now;
-//var past = new DateTime(2022, 1, 10);
-//TimeSpan ts = now.Subtract(past);
-//print.it(ts, ts.Days);
-
-
-//dynamic wmi = Marshal.BindToMoniker("winmgmts:");
-//var col = wmi.ExecQuery("SELECT Name FROM Win32_Process", 0, 16|32);
-//foreach (var p2 in col) {
-//	print.it(p2.Name);
+//enum FEFilter {
+//	This,
+//	Children,
+	
 //}
 
-//using WbemScripting;
+//FEFilter f;
+//f = k => k.IsDirectory ? FEFilter.Children : k.Name.Ends(".png", true) ? FEFilter.This : 0;
 
-//var wmi = Marshal.BindToMoniker("winmgmts:") as SWbemServices;
-//var col = wmi.ExecQuery("SELECT Name FROM Win32_Process", iFlags: (int)(WbemFlagEnum.wbemFlagReturnImmediately|WbemFlagEnum.wbemFlagForwardOnly));
-//foreach (SWbemObject o in col) {
-//	print.it(o.Properties_.Item("Name").get_Value());
+//f = k => k.DirChildren() || k.Name.Ends(".png", true);
+
+//f = k => k.DirOnly() || k.Name.Ends(".png", true);
+
+//f = k => k.IsFile("*.png");
+
+var dir = @"C:\Windows\System32";
+//dir = @"C:\Program Files";
+
+1.s();
+perf.first();
+int n=0;
+foreach (var f in new DirectoryInfo(dir).EnumerateFileSystemInfos("*", new EnumerationOptions { RecurseSubdirectories = true, AttributesToSkip = 0 })) {
+	n++;
+}
+//foreach (var f in Directory.EnumerateFileSystemEntries(@"C:\Windows\System32", "*", new EnumerationOptions { RecurseSubdirectories = true, AttributesToSkip = 0 })) {
+//	n++;
 //}
-//foreach (dynamic p1 in col) {
-//	try { print.it(p1.Name); }
-//	catch {  }
+//foreach (var f in Directory.GetFiles(dir, "*", new EnumerationOptions { RecurseSubdirectories = true, AttributesToSkip = 0 })) {
+//	n++;
 //}
-
-//var scope = new ManagementScope();
-//scope.Connect();
-//var query = new ObjectQuery("SELECT * FROM Win32_OperatingSystem");
-//var searcher = new ManagementObjectSearcher(scope, query);
-//foreach (var m in searcher.Get()) {
-//	print.it(m["csname"]);
-//}
-
-//var pr = new ManagementClass("Win32_Process");
-//pr.InvokeMethod("Create", new[] { "Notepad.exe" });
-
-//print.clear();
-//var scope = new ManagementScope(); scope.Connect();
-//var query = new ObjectQuery("SELECT * FROM Win32_Process");
-//var searcher = new ManagementObjectSearcher(scope, query);
-//foreach (var m in searcher.Get()) {
-//	print.it(m["Name"]);
-//}
-
-//using var watcher = new ManagementEventWatcher("SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE TargetInstance isa \"Win32_Process\"");
-//watcher.Options.Timeout = TimeSpan.FromSeconds(30);
-//using var osd = osdText.showTransparentText("Open 2 applications to trigger events", -1);
-//for (int i = 0; i < 2; i++) {
-//	var e = watcher.WaitForNextEvent();
-//	print.it(((ManagementBaseObject)e["TargetInstance"])["Name"]);
-//}
-
+perf.nw();
+print.it(n);
+1.s();
+perf.first();
+int nn=0;
+foreach (var f in filesystem.enumerate(dir, FEFlags.AndSubdirectories | FEFlags.IgnoreInaccessible)) {
+	nn++;
+}
+perf.nw();
+print.it(nn);
