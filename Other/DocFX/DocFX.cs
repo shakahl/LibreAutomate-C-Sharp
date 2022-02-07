@@ -270,7 +270,7 @@ unsafe class Program
 			files = @"\api\Au.run.console";
 			files += ".html";
 		}
-		foreach (var f in filesystem.enumerate(siteDir, FEFlags.AndSubdirectories | FEFlags.NeedRelativePaths)) {
+		foreach (var f in filesystem.enumerate(siteDir, FEFlags.AllDescendants | FEFlags.NeedRelativePaths)) {
 			if (f.IsDirectory) continue;
 			var name = f.Name; if (!name.Like(files, true) || name.Ends(@"\toc.html")) continue;
 			var file = f.FullPath;

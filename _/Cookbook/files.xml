@@ -1,4 +1,4 @@
-﻿<files max-i="121">
+﻿<files max-i="136">
   <s n="Script1.cs" i="121" />
   <c n="Test.cs" i="71" />
   <c n="How to write the cookbook.cs" i="1" />
@@ -52,7 +52,7 @@
     <s n="Game automation, run script in background.cs" i="91" />
     <s n="UAC, security.cs" i="116" />
   </d>
-  <d n="Wait, time" i="78">
+  <d n="Wait, time, date" i="78">
     <s n="Simple wait (sleep, delay).cs" i="86" />
     <s n="Wait for something.cs" i="87" />
     <s n="Date and time.cs" i="96" />
@@ -74,23 +74,38 @@
   </d>
   <d n="Filesystem" i="14">
     <s n="File paths, special folders.cs" i="28" />
-    <s n="File copy, move, rename, delete.cs" i="118" />
-    <s n="File read (load) and write (save).cs" i="119" />
-    <s n="Folder create, enumerate.cs" i="120" />
-    <s n="Recycle Bin (delete file, empty).cs" i="98" />
+    <s n="File exists, size, time, attributes.cs" i="123" />
+    <s n="Enumerate files, folders.cs" i="122" />
+    <s n="Enumerate drives, get drive properties.cs" i="127" />
+    <s n="File move, rename.cs" i="118" />
+    <s n="File copy.cs" i="126" />
+    <s n="File delete, Recycle Bin.cs" i="125" />
+    <s n="File shortcuts.cs" i="124" />
+    <s n="Create folder.cs" i="120" />
+    <s n="File read (load), write (save).cs" i="119" />
+    <s n="Data compression, zip files.cs" i="136" />
   </d>
   <d n="Internet" i="16">
     <s n="TODO.cs" i="29" />
   </d>
+  <d n="Text processing" i="18">
+    <s n="TODO.cs" i="30" />
+  </d>
+  <d n="Text data formats, databases" i="19">
+    <s n="CSV table.cs" i="128" />
+    <s n="XML.cs" i="131" />
+    <s n="JSON.cs" i="132" />
+    <s n="HTML.cs" i="135" />
+    <s n="Markdown.cs" i="31" />
+    <s n="SQLite database.cs" i="133" />
+    <s n="Other databases.cs" i="134" />
+  </d>
+  <d n="Math, conversions" i="129">
+    <s n="TODO.cs" i="130" />
+  </d>
   <d n="Triggers, toolbars, scripts" i="17">
     <s n="TODO.cs" i="34" />
     <s n="Run script, script run-time settings.cs" i="110" />
-  </d>
-  <d n="Text processing, math, conversions" i="18">
-    <s n="TODO.cs" i="30" />
-  </d>
-  <d n="XML, JSON, database" i="19">
-    <s n="TODO.cs" i="31" />
   </d>
   <d n="More" i="20">
     <s n=".NET and other libraries.cs" i="21" />

@@ -881,9 +881,6 @@ partial class TestScript
 		//	print.it(e);
 		//}
 
-		Directory.CreateDirectory(@"C:\Test\A");
-		Directory.CreateSymbolicLink(@"C:\Test\A\SL", @"C:\Test\B");
-		Directory.Delete(@"C:\Test\A", true);
 
 	}
 
