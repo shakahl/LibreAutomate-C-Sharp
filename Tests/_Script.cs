@@ -38,6 +38,8 @@ using System.Resources;
 using Au.More;
 using System.Windows.Forms;
 
+//using Microsoft.CodeAnalysis.CSharp.Scripting;
+
 [module: System.Runtime.InteropServices.DefaultCharSet(System.Runtime.InteropServices.CharSet.Unicode)]
 
 #if TOPLEVEL
@@ -137,11 +139,9 @@ using System.Windows.Forms;
 
 #else
 
-partial class TestScript
-{
+partial class TestScript {
 
-	class TestGC
-	{
+	class TestGC {
 		~TestGC() {
 			if (Environment.HasShutdownStarted) return;
 			if (AppDomain.CurrentDomain.IsFinalizingForUnload()) return;
@@ -502,8 +502,7 @@ partial class TestScript
 		}
 	}
 
-	unsafe static class _Api
-	{
+	unsafe static class _Api {
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool VirtualLock(void* lpAddress, nint dwSize);
 		[DllImport("kernel32.dll", SetLastError = true)]
@@ -576,42 +575,53 @@ partial class TestScript
 	//	return a.Len_();
 	//}
 
-	/// <summary>
-	/// <para>List:</para>
-	/// <list type="bullet">
-	/// <item>ONE.</item>
-	/// <item>TWO.</item>
-	/// </list>
-	/// 
-	/// <p>List:</p>
-	/// <ul>
-	/// <li>one.</li>
-	/// <li>two.</li>
-	/// </ul>
-	/// </summary>
-	void TestMarkdownXmlDocComments() {
-		string markdown = @"List:
-- one.
-- two.
+//	void TestMarkdig() {
+//		string markdown = @"List:
+//- one.
+//- two.
 
-<para>List:</para>
-<list type=""bullet"">
-<item>ONE.</item>
-<item>TWO.</item>
-</list>
+//	";
 
-<p>List:</p>
-<ul>
-<li>one.</li>
-<li>two.</li>
-</ul>
+//		string html = Markdig.Markdown.ToHtml(markdown);
+//		print.it(html);
+//	}
 
-";
+//	/// <summary>
+//	/// <para>List:</para>
+//	/// <list type="bullet">
+//	/// <item>ONE.</item>
+//	/// <item>TWO.</item>
+//	/// </list>
+//	/// 
+//	/// <p>List:</p>
+//	/// <ul>
+//	/// <li>one.</li>
+//	/// <li>two.</li>
+//	/// </ul>
+//	/// </summary>
+//	void TestMarkdownXmlDocComments() {
+//		string markdown = @"List:
+//- one.
+//- two.
 
-		string html = Markdig.Markdown.ToHtml(markdown);
-		html = html.RxReplace(@"(?m)^", "/// ");
-		print.it(html);
-	}
+//<para>List:</para>
+//<list type=""bullet"">
+//<item>ONE.</item>
+//<item>TWO.</item>
+//</list>
+
+//<p>List:</p>
+//<ul>
+//<li>one.</li>
+//<li>two.</li>
+//</ul>
+
+//";
+
+//		string html = Markdig.Markdown.ToHtml(markdown);
+//		html = html.RxReplace(@"(?m)^", "/// ");
+//		print.it(html);
+//	}
 
 	//void TestMenuDropdownBug()
 	//{
@@ -699,25 +709,25 @@ partial class TestScript
 	//void One(bool two) { }
 	//bool Two() => false;
 
-//	void TestFirefoxElm() {
-//		try {
-//			//var w = +wnd.find("*- Mozilla Firefox", "MozillaWindowClass");
-//			//var a = elm.fromWindow(w);
+	//	void TestFirefoxElm() {
+	//		try {
+	//			//var w = +wnd.find("*- Mozilla Firefox", "MozillaWindowClass");
+	//			//var a = elm.fromWindow(w);
 
 
-//			print.it(a.MiscFlags, a);
+	//			print.it(a.MiscFlags, a);
 
-//			if (a.GetProperties("@", out var p)) {
-//				print.it(p.HtmlAttributes);
-//			}
+	//			if (a.GetProperties("@", out var p)) {
+	//				print.it(p.HtmlAttributes);
+	//			}
 
-//		}
-//		finally {
-//#if DEBUG
-//			Cpp.DebugUnload();
-//#endif
-//		}
-//	}
+	//		}
+	//		finally {
+	//#if DEBUG
+	//			Cpp.DebugUnload();
+	//#endif
+	//		}
+	//	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	void TestUnsafe() {
@@ -813,29 +823,29 @@ partial class TestScript
 	}
 
 	//System.PlatformNotSupportedException: System.Management currently is only supported for Windows desktop applications.
-//	void TestWMI() {
-//print.clear();
+	//	void TestWMI() {
+	//print.clear();
 
-//var interval = new TimeSpan( 0, 0, 1 );
-//const string isWin32Process = "TargetInstance isa \"Win32_Process\"";
+	//var interval = new TimeSpan( 0, 0, 1 );
+	//const string isWin32Process = "TargetInstance isa \"Win32_Process\"";
 
-//// Listen for started processes.
-//WqlEventQuery startQuery
-//    = new WqlEventQuery( "__InstanceCreationEvent", interval, isWin32Process );
-//var _startWatcher = new ManagementEventWatcher( startQuery );
-//_startWatcher.Start();
-//_startWatcher.EventArrived += (_,e)=> { print.it("start", e.Context, e.NewEvent); };
+	//// Listen for started processes.
+	//WqlEventQuery startQuery
+	//    = new WqlEventQuery( "__InstanceCreationEvent", interval, isWin32Process );
+	//var _startWatcher = new ManagementEventWatcher( startQuery );
+	//_startWatcher.Start();
+	//_startWatcher.EventArrived += (_,e)=> { print.it("start", e.Context, e.NewEvent); };
 
-//// Listen for closed processes.
-//WqlEventQuery stopQuery
-//    = new WqlEventQuery( "__InstanceDeletionEvent", interval, isWin32Process );
-//var _stopWatcher = new ManagementEventWatcher( stopQuery );
-//_stopWatcher.Start();
-//_stopWatcher.EventArrived += (_,e)=> { print.it("end", e.Context, e.NewEvent); };
+	//// Listen for closed processes.
+	//WqlEventQuery stopQuery
+	//    = new WqlEventQuery( "__InstanceDeletionEvent", interval, isWin32Process );
+	//var _stopWatcher = new ManagementEventWatcher( stopQuery );
+	//_stopWatcher.Start();
+	//_stopWatcher.EventArrived += (_,e)=> { print.it("end", e.Context, e.NewEvent); };
 
 
-//dialog.show("");
-//	}
+	//dialog.show("");
+	//	}
 
 	void TestWER() {
 		var f = new Window();
@@ -860,7 +870,21 @@ partial class TestScript
 		//}
 	}
 
+	//void TestScripting() {
+	//	object result = CSharpScript.EvaluateAsync("1 + 2").Result;
+	//	print.it(result);
+	//}
+
 	unsafe void _Main() {
+		//dialog.show("");
+		//print.it(AppContext.BaseDirectory, AppContext.GetData("NATIVE_DLL_SEARCH_DIRECTORIES"));
+
+//var t = FreeImageAPI.FreeImage.CreateTag();
+//print.it(t);
+
+		//TestMarkdig();
+		//TestScripting();
+
 		//Application.SetCompatibleTextRenderingDefault(false);
 		//print.it("before");
 		//Debug_.WriteLoadedAssemblies(true, true, true);

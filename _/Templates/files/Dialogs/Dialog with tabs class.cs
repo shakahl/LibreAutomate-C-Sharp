@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
 
 /*
@@ -48,16 +49,13 @@ public class DialogWithTabs : Window {
 		b.R.Add("Text", out TextBox text1).Validation(_ => string.IsNullOrWhiteSpace(text1.Text) ? "Text cannot be empty" : null);
 		b.End();
 		
-		//if need, set initial control values here or in Loaded event handler below
+		//if need, add initialization code (set control properties, events, etc) here or/and in Loaded event handler below
 		
-//		bool loaded = false;
-//		b.Loaded += ()=> {
-//			loaded = true;
-//		};
+		//b.Loaded += () => {
+			
+		//};
 
 		_b.OkApply += e => {
-//			if (!loaded) return;
-			
 			print.it($"Text: \"{text1.Text.Trim()}\"");
 		};
 	}
@@ -68,13 +66,13 @@ public class DialogWithTabs : Window {
 		b.R.Add(out CheckBox c1, "Check");
 		b.End();
 	
-//		bool loaded = false;
-//		b.Loaded += ()=> {
-//			loaded = true;
-//		};
+		//bool loaded = false;
+		//b.Loaded += () => { //note: this code runs when this page selected first time, which may never happen
+		//	loaded = true;
+		//};
 
 		_b.OkApply += e => {
-//			if (!loaded) return;
+			//if (!loaded) return;
 			
 			print.it($"Combo index: {combo1.SelectedIndex}");
 			print.it($"Check: {c1.True()}");

@@ -156,11 +156,6 @@ HRESULT DeleteSchedulerTask()
 #pragma comment(lib, "wer.lib")
 
 void InstallMisc(LPCWSTR dir) {
-	std::wstring s = dir;
-	s += L"Au.Task.exe";
-	WerAddExcludedApplication(s.c_str(), true);
-	//s.insert(s.length() - 4, L"32");
-	//WerAddExcludedApplication(s.c_str(), true);
 }
 
 ////////////

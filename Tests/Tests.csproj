@@ -35,10 +35,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Markdig" Version="0.18.3" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Au.Controls\Au.Controls.csproj" />
     <ProjectReference Include="..\Au\Au.csproj" />
   </ItemGroup>

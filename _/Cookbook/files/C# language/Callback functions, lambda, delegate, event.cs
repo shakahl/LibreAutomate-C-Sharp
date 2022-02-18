@@ -1,7 +1,9 @@
+/// Note: callback functions and events are widely used. Without this knowledge you can't write or read many scripts and other codes.
+/// 
 /// The second argument in the first example is a callback function, also known as <google C# lambda>lambda<>. It is passed to <b>Func1</b>, and then <b>Func1</b> calls it.
 
 Func1(5, i => { print.it(i); });
-Func1(5, i => print.it(i)); //this shorter version without { } can be used when there is single statement
+Func1(5, i => print.it(i)); //the same. Don't need { } if there is single statement.
 
 //or the callback function can be defined elsewhere; then it can be used in multiple places.
 Func1(2, Func2);

@@ -1,6 +1,7 @@
-/*/ role miniProgram; /*/
+/*/ r HtmlAgilityPack.dll; /*/
+using HtmlAgilityPack;
+using System.Net.Http;
+using System.Net.Http.Json;
 
 print.clear();
 
-//string zipFile = @"Q:\Test\Z.zip";
-//filesystem.delete(zipFile);

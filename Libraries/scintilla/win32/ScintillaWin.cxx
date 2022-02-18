@@ -2085,11 +2085,12 @@ sptr_t ScintillaWin::WndProc(Message iMessage, uptr_t wParam, sptr_t lParam) {
 		case WM_WINDOWPOSCHANGED:
 			return ::DefWindowProc(MainHWND(), msg, wParam, lParam);
 
-		case WM_GETTEXTLENGTH:
-			return GetTextLength();
+		//Au: MSAA (or WPF?) uses wm_gettext for Name property
+		//case WM_GETTEXTLENGTH:
+		//	return GetTextLength();
 
-		case WM_GETTEXT:
-			return GetText(wParam, lParam);
+		//case WM_GETTEXT:
+		//	return GetText(wParam, lParam);
 
 		case WM_INPUTLANGCHANGE:
 		case WM_INPUTLANGCHANGEREQUEST:

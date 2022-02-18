@@ -4,7 +4,7 @@ using System.Xml.Linq;
 
 var x = XElement.Load(@"C:\Test\file.xml");
 
-/// Many other managed libraries can be downloaded, for example from <google>NuGet</google> or <google>GitHub</google>. Currently this program does not have a NuGet package manager, therefore need to manually download and extract packages and their dependencies. NuGet packages are .zip files with file extension .nupkg. Usually need just the .dll file, and .xml if exists. Often they are in /runtimes/win/lib/netX or /lib/netX or /lib/netstandardX. Extract them to the Libraries subfolder of the editor's folder. Then in Properties add assembly reference. Then add <.k>using<> directive.
+/// Many other managed libraries can be downloaded, for example from <google>NuGet</google> or <google>GitHub</google>. Currently this program does not have a NuGet package manager, therefore need to manually download and extract packages and their dependencies. NuGet packages are .zip files with file extension .nupkg. Usually need just the .dll file, and .xml if exists. Often they are in /lib/netX or /lib/netstandardX or /runtimes/win/lib/netX. Extract them to the Libraries subfolder of the editor's folder. Then in Properties add assembly reference. Then add <.k>using<> directive.
 
 /*/ r Libraries\Humanizer.dll; /*/
 using Humanizer;

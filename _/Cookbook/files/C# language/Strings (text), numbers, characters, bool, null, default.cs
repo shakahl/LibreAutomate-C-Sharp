@@ -6,25 +6,34 @@ string s3 = null; //no string. Not the same as "".
 print.it("this is a \"string\"\r\n\twith \\ escape sequences");
 
 /// Frequently used escape sequences:
-/// \" - "
-/// \\ - \
-/// \t - tab
-/// \n - newline
-/// \r\n - Windows newline (2 characters)
-/// \0 - character code 0
+/// \"		"
+/// \\		\
+/// \t		tab
+/// \n		newline
+/// \r\n	Windows newline (2 characters)
+/// \0		character code 0
 
-/// To avoid many escape sequences, use verbatim strings. Useful in file paths, regular expressions and multiline strings.
+/// To avoid many escape sequences, use verbatim strings or raw strings.
 
 string path = @"C:\folder\file"; //instead of "C:\\folder\\file"
-string s5 = @"multiline
+string verbatim1 = @"multiline
 string";
-string s6 = @"abc ""def"" gh"; //for " use ""
+string verbatim2 = @"abc ""def"" gh"; //for " use ""
+
+string raw1 = """raw single-line string without any escape sequences""";
+string raw2 = """
+raw multi-line string
+without any escape sequences
+""";
+string raw3 = """"another """raw""" string """";
 
 /// To easily create strings with variables, use <+lang interpolated strings>interpolated strings<>.
 
-string s7 = $"ab {s1} cd {path} ef";
-string s8 = @$"ab {s1}
+string s4 = $"ab {s1} cd {path} ef";
+string s5 = @$"ab {s1}
 cd {path} ef";
+string s6 = $"""ab {s1} cd""";
+string s7 = $$"""ab {{s1}} {cd}""";
 
 /// There are many ways to create and format strings. Operator +, string constructor, StringBuilder, string.Format, string.Join and other functions.
 

@@ -2,14 +2,14 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
-
-script.setup(trayIcon: true);
 //..
 
 var bMain = new wpfBuilder("Window").WinSize(400);
-bMain.Row(-1).Add(out TabControl tc).Height(300..);
-bMain.R.AddOkCancel(apply: "_Apply");
+var b = bMain;
+b.Row(-1).Add(out TabControl tc).Height(300..);
+b.R.AddOkCancel(apply: "_Apply");
 
 wpfBuilder _Page(string name, WBPanelType panelType = WBPanelType.Grid) {
 	var tp = new TabItem { Header = name };
@@ -19,22 +19,22 @@ wpfBuilder _Page(string name, WBPanelType panelType = WBPanelType.Grid) {
 
 //--------------------------------
 
-var b1 = _Page("Page1");
-b1.R.Add("Text", out TextBox _);
-b1.AddButton("Close 5", 5);
-b1.End();
+var b1 = b = _Page("Page1");
+b.R.Add("Text", out TextBox _);
+b.AddButton("Close 5", 5);
+b.End();
 
 //--------------------------------
 
-var b2 = _Page("Page2");
-b2.R.Add("Combo", out ComboBox _).Editable().Items("Zero|One|Two");
-b2.R.Add(out CheckBox _, "Check");
-b2.End();
+var b2 = b = _Page("Page2");
+b.R.Add("Combo", out ComboBox _).Editable().Items("Zero|One|Two");
+b.R.Add(out CheckBox _, "Check");
+b.End();
 
 //--------------------------------
 
 //tc.SelectedIndex = 1;
 
-bMain.End();
-if (!bMain.ShowDialog()) return;
+b = bMain.End();
+if (!b.ShowDialog()) return;
 //print.it(b1.ResultButton);

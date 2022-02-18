@@ -68,8 +68,6 @@ Source: "Q:\app\Au\_\64\sqlite3.dll"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "Q:\app\Au\_\32\Au.AppHost.exe"; DestDir: "{app}\32"; Flags: ignoreversion
 Source: "Q:\app\Au\_\32\AuCpp.dll"; DestDir: "{app}\32"; Flags: ignoreversion
 Source: "Q:\app\Au\_\32\sqlite3.dll"; DestDir: "{app}\32"; Flags: ignoreversion
-Source: "Q:\app\Au\_\System.ServiceProcess.ServiceController.*"; DestDir: "{app}";
-Source: "Q:\app\Au\_\System.Management.*"; DestDir: "{app}";
 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 

@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
 
 /*
@@ -31,16 +32,13 @@ public class DialogClass : Window {
 		b.R.AddOkCancel();
 		b.End();
 		
-		//if need, set initial control values here or in Loaded event handler below
+		//if need, add initialization code (set control properties, events, etc) here or/and in Loaded event handler below
 		
-//		bool loaded = false;
-//		b.Loaded += ()=> {
-//			loaded = true;
-//		};
+		//b.Loaded += () => {
+			
+		//};
 
 		b.OkApply += e => {
-//			if (!loaded) return;
-			
 			print.it($"Text: \"{text1.Text.Trim()}\"");
 			print.it($"Combo index: {combo1.SelectedIndex}");
 			print.it($"Check: {c1.True()}");
