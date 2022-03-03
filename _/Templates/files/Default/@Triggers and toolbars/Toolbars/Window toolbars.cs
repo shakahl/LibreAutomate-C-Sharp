@@ -16,6 +16,7 @@ void WindowToolbars() {
 
 //Add here your window-specific toolbars. Add their triggers in the above function.
 //To create toolbars and add buttons can be used snippets. Start typing "tool" and you will see snippets in the completion list.
+//Click the Run button to apply changes after editing.
 
 
 

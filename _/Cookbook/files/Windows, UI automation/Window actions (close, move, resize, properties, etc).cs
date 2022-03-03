@@ -2,7 +2,7 @@
 
 var w = wnd.find(1, "*- Notepad", "Notepad");
 
-/// Then in the code editor type the variable name and dot (.), and select a function from the list. If need help, click the function name in the code editor and press F1.
+/// Then type the variable name and dot (.), and select a function from the list. If need help, click the function name in the code editor and press F1.
 
 /// Close the found window.
 

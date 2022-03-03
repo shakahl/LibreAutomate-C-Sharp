@@ -75,7 +75,7 @@ public class DialogWithTabs : Window {
 			//if (!loaded) return;
 			
 			print.it($"Combo index: {combo1.SelectedIndex}");
-			print.it($"Check: {c1.True()}");
+			print.it($"Check: {c1.IsChecked == true}");
 		};
 	}
 	

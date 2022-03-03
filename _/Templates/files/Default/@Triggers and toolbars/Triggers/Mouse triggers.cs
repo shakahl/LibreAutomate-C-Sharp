@@ -6,6 +6,7 @@ void MouseTriggers() {
 	
 	//Add mouse triggers here.
 	//To add triggers can be used snippets. Start typing "trig" and you will see snippets in the completion list.
+	//Click the Run button to apply changes after editing.
 	
 	
 	

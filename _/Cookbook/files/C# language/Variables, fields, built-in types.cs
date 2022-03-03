@@ -83,5 +83,3 @@ class Example {
 /// Static fields live until the script process exits. All class instance variables share them.
 /// Thread-static fields live until the thread exits. Each thread has its own variables. All class instance variables share them.
 /// When the script process ends, all variables are gone. Multiple processes don't share variables.
-
-/// See also the Environment variables recipe.

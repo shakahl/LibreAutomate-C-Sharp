@@ -71,4 +71,10 @@ using (var z = ZipFile.OpenRead(zipFile)) {
 	}
 }
 
-/// If need other compression formats or more features, look for a zip library on the internet. More info in recipe ".NET and other libraries".
+/// If need other compression formats or more features, look for a zip library on the internet, for example in <google>NuGet</google>. More info in recipe <+recipe>.NET, NuGet, other libraries<>.
+/// 
+/// Also you can find command line programs on the internet, or even already have them installed.
+
+string file1 = @"Q:\Test\icons.db";
+var file2 = @"Q:\Test\icons.7z";
+run.console(folders.ProgramFiles + @"7-Zip\7z.exe", $@"a ""{file2}"" ""{file1}""");

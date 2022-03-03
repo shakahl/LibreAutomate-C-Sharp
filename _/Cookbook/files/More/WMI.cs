@@ -1,6 +1,6 @@
-/// Use assembly System.Management.dll. It's in the editor's folder. <google C# System.Management Namespace>More info</google>.
+/// Use NuGet package <+nuget>System.Management<>. See also <google>System.Management namespace</google>.
 
-/*/ r System.Management.dll; /*/
+/*/ nuget -\System.Management; /*/
 using System.Management;
 
 /// Create process.

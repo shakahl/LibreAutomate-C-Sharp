@@ -1,0 +1,1 @@
+/// You can create custom toolbars, and attach them to certain windows or screen edges. Toolbar buttons can execute any code, for example run scripts and programs. To create a toolbar, use menu TT -> Common toolbars or Window toolbars. It opens a script where you can add and edit toolbars. You'll find more info and examples there; also in file Readme.txt.

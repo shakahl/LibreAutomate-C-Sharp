@@ -67,3 +67,5 @@ class Class1 {
 		Event1?.Invoke(x); //? means "do nothing if the event is null, ie there are no subscribers"
 	}
 }
+
+/// Events are very useful in custom dialog windows. Examples in recipe <+recipe>Custom dialog window<>.

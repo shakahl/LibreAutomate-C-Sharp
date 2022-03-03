@@ -16,6 +16,7 @@ void CommonToolbars() {
 //Add here your toolbars that are common to all windows.
 //In the above function call toolbar functions, either directlty (to show at startup) or from a trigger.
 //To create toolbars and add buttons can be used snippets. Start typing "tool" and you will see snippets in the completion list.
+//Click the Run button to apply changes after editing.
 
 
 

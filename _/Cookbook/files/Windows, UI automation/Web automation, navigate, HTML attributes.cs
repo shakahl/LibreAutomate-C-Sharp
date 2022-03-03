@@ -1,4 +1,4 @@
-/// To automate web page elements in Chrome, Firefox and other web browser windows, use UI element functions and tools. See the UI elements recipe.
+/// To automate web page elements in Chrome, Firefox and other web browser windows, can be used UI element functions and tools. See recipe <+recipe>UI elements<>.
 
 var w = wnd.find(1, "*- Google Chrome", "Chrome_WidgetWin_1").Activate();
 
@@ -49,13 +49,11 @@ print.it(body);
 
 run.it("https://www.example.com/");
 
-/// There is no function "wait until the web page is fully loaded". Instead let the script search for an element that should be in the new page; make the wait time longer if need (by default the tool creates code with 1 second timeout). Also use function <b>WebInvoke</b> when appropriate.
+/// There is no function "wait until the web page is fully loaded". Instead let the script search for an element that should be in the new page; make the timeout longer if need (by default the tool creates code with 1 s timeout). Also use function <b>WebInvoke</b> when appropriate.
 
-var w1 = wnd.find(10, "*- Google Chrome", "Chrome_WidgetWin_1"); //finds web browser window; waits max 10 s
-var e1 = w1.Elm["web:LINK", "Search"].Find(10); //finds a link; waits max 10 s
-e1.WebInvoke(); //clicks the link and waits until the window name changes
-var e2 = w.Elm["web:TEXT", prop: "@name=keywords"].Find(10); //waits max 10 s for an element in the new web page
+var w1 = wnd.find(10, "*- Google Chrome", "Chrome_WidgetWin_1"); //find web browser window; wait max 10 s
+var e1 = w1.Elm["web:LINK", "Search"].Find(10); //find a link; wait max 10 s
+e1.WebInvoke(); //click the link and wait until window name changes
+var e2 = w.Elm["web:TEXT", prop: "@name=keywords"].Find(10); //wait max 10 s for an element in the new web page
 
-/// There are no functions:
-/// - Execute JavaSript.
-/// - Web data extraction (web scraping).
+/// See also <+recipe>Selenium<>.

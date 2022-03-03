@@ -2,7 +2,7 @@
 
 using System.Net.Http;
 
-/// Download web page. See also recipe "Parse HTML".
+/// Download web page. See also recipe <+recipe>Parse HTML<>.
 
 using var c1 = new HttpClient();
 var html = c1.GetStringAsync("https://www.example.com").Result;

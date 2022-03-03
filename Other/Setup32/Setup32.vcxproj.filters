@@ -31,6 +31,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="AutepadSetup.iss" />
+    <None Include="Automaticode.iss" />
   </ItemGroup>
 </Project>

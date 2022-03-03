@@ -19,6 +19,6 @@ b.R.StartStack() //horizontal stack
 
 b.R.AddOkCancel();
 if (!b.ShowDialog()) return;
-//print.it(b.ResultButton, text1.Text, combo1.SelectedIndex, c1.True());
+//print.it(b.ResultButton, text1.Text, combo1.SelectedIndex, c1.IsChecked == true);
 
 //See also: snippet wpfSnippet.

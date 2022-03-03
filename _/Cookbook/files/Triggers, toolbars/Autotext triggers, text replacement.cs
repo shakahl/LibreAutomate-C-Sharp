@@ -1,0 +1,1 @@
+/// To execute some code or auto-replace text when you type some text can be used autotext <help Au.Triggers.ActionTriggers>triggers<>. To add a trigger, use menu TT -> Autotext triggers. It opens a script where you can add and edit triggers. You'll find more info and examples there; also in file Readme.txt.

@@ -1,0 +1,1 @@
+/// To execute some code or run a script can be used window <help Au.Triggers.ActionTriggers>triggers<>. For example auto-close popup window X whenever it appears. To add a trigger, use menu TT -> Window triggers. It opens a script where you can add and edit triggers. You'll find more info and examples there; also in file Readme.txt.

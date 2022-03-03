@@ -1,10 +1,12 @@
-﻿<files max-i="176">
-  <s n="Test2.cs" i="138" />
-  <s n="Test.cs" i="121" />
-  <c n="How to write the cookbook.cs" i="1" />
+﻿<files max-i="248">
+  <d n="-" i="244">
+    <s n="Test.cs" i="121" />
+    <c n="How to write the cookbook.cs" i="1" />
+    <c n="global.cs" i="24" />
+  </d>
   <d n="Introduction" i="2">
-    <s n="Intro.cs" i="3" />
-    <s n="How to find everything.cs" i="114" />
+    <s n="Where to find info.cs" i="3" />
+    <s n="Frequently asked questions.cs" i="91" />
   </d>
   <d n="C# language" i="4">
     <s n="C# introduction.cs" i="25" />
@@ -21,17 +23,17 @@
     <s n="for, foreach (repeat, loop, iterate).cs" i="66" />
     <s n="return, goto (exit, end, stop, jump).cs" i="67" />
     <s n="Errors, exceptions, try-catch-finally, throw.cs" i="62" />
-    <s n="Testing and debugging.cs" i="173" />
     <s n="Callback functions, lambda, delegate, event.cs" i="63" />
-    <s n="Manipulate lists and other collections.cs" i="150" />
+    <s n="-Manipulate lists and other collections.cs" i="150" />
   </d>
-  <d n="Input, output, dialog windows, sound" i="5">
+  <d n="Input, output, dialog" i="5">
     <s n="Display text and variables.cs" i="6" />
     <s n="Message box dialog, list.cs" i="7" />
     <s n="Input box dialog.cs" i="8" />
     <s n="File and folder dialogs.cs" i="74" />
     <s n="Popup menu, check list.cs" i="10" />
     <s n="Custom dialog window.cs" i="11" />
+    <s n="-Custom dialog TODO.cs" i="248" />
     <s n="Play sound, speak.cs" i="100" />
   </d>
   <d n="Keys, mouse, clipboard" i="12">
@@ -49,23 +51,21 @@
     <s n="Screens (display monitors).cs" i="82" />
     <s n="UI elements (find, click, check, focus, select, expand, check menu item, wait for state, etc).cs" i="83" />
     <s n="Web automation, navigate, HTML attributes.cs" i="89" />
+    <s n="Web browser automation with Selenium.cs" i="141" />
     <s n="Find UI image or color.cs" i="90" />
     <s n="Take screenshot.cs" i="101" />
-    <s n="OCR, extract text.cs" i="168" />
-    <s n="Game automation, run script in background.cs" i="91" />
-    <s n="UAC, security.cs" i="116" />
+    <s n="-OCR, extract text.cs" i="168" />
   </d>
-  <d n="Wait, time, date" i="78">
+  <d n="Wait, time" i="78">
     <s n="Simple wait (sleep, delay).cs" i="86" />
     <s n="Wait for something.cs" i="87" />
     <s n="Date and time.cs" i="96" />
-    <s n="Computer time, code execution time.cs" i="105" />
+    <s n="Computer time, code speed.cs" i="105" />
     <s n="Timers.cs" i="111" />
   </d>
   <d n="System" i="15">
     <s n="Run program, open document, folder, URL.cs" i="33" />
     <s n="Run console program and get its output text.cs" i="92" />
-    <s n="Windows command line programs.cs" i="167" />
     <s n="Processes.cs" i="93" />
     <s n="Services.cs" i="88" />
     <s n="Shutdown, restart, logoff, sleep, hibernate, lock computer.cs" i="94" />
@@ -75,7 +75,6 @@
     <s n="Saving variables.cs" i="140" />
     <s n="Environment variables.cs" i="106" />
     <s n="Threads.cs" i="112" />
-    <s n="Tray icon and notifications.cs" i="115" />
   </d>
   <d n="Filesystem" i="14">
     <s n="File paths, special folders.cs" i="28" />
@@ -89,8 +88,39 @@
     <s n="Create folder.cs" i="120" />
     <s n="File read (load), write (save).cs" i="119" />
     <s n="Zip files (compress, extract).cs" i="136" />
+    <s n="-Backup files.cs" i="247" />
   </d>
-  <d n="Math, convert, encrypt, compress" i="129">
+  <d n="Internet" i="16">
+    <s n="Download web page or file.cs" i="137" />
+    <s n="Http POST web form data, use JSON.cs" i="139" />
+    <s n="Parse HTML.cs" i="135" />
+    <s n="SFTP (upload, download, etc).cs" i="142" />
+    <s n="SSH (manage website).cs" i="191" />
+    <s n="Send email message (SMTP).cs" i="143" />
+    <s n="Send and receive email (SMTP, POP3, IMAP).cs" i="144" />
+    <s n="-Check internet connection, ping.cs" i="152" />
+  </d>
+  <d n="Script" i="186">
+    <s n="Run script from script.cs" i="185" />
+    <s n="Run script command line, shortcut, schedule.cs" i="165" />
+    <s n="Run script at startup, output link.cs" i="187" />
+    <s n="Script run-time settings.cs" i="110" />
+    <s n="Tray icon and notifications.cs" i="115" />
+    <s n="Script testing and debugging.cs" i="173" />
+    <s n="Create .exe program.cs" i="188" />
+  </d>
+  <d n="Triggers, toolbars" i="17">
+    <s n="Keyboard triggers (hotkeys).cs" i="160" />
+    <s n="Autotext triggers, text replacement.cs" i="162" />
+    <s n="Mouse triggers.cs" i="161" />
+    <s n="Window triggers, auto-close popup windows.cs" i="163" />
+    <s n="Floating toolbars.cs" i="164" />
+    <s n="Run code when script ends.cs" i="170" />
+    <s n="-Hooks.cs" i="172" />
+    <s n="-System events.cs" i="171" />
+    <s n="-CONSIDER.cs" i="243" />
+  </d>
+  <d n="Math, convert" i="129">
     <s n="Math functions.cs" i="145" />
     <s n="Convert to-from string.cs" i="148" />
     <s n="Convert Base64, hex, UTF-8, encoding.cs" i="147" />
@@ -98,52 +128,30 @@
     <s n="Random numbers and strings, GUID.cs" i="149" />
     <s n="Encrypt, hash.cs" i="157" />
     <s n="Compress data.cs" i="130" />
-    <s n="Color.cs" i="169" />
+    <s n="-Color.cs" i="169" />
   </d>
-  <d n="Text processing" i="18">
+  <d n="Text" i="18">
     <s n="Strings and characters.cs" i="174" />
     <s n="Simple string functions.cs" i="154" />
-    <s n="String formatting, variables in string.cs" i="158" />
-    <s n="Wildcard expressions.cs" i="159" />
-    <s n="Regular expressions.cs" i="155" />
+    <s n="String formatting with variables.cs" i="158" />
+    <s n="Wildcard expressions (compare text).cs" i="159" />
+    <s n="Regular expressions (parse text, replace).cs" i="155" />
   </d>
-  <d n="Text data formats, databases, Excel" i="19">
+  <d n="Data" i="19">
     <s n="CSV table.cs" i="128" />
     <s n="XML.cs" i="131" />
     <s n="JSON.cs" i="132" />
     <s n="SQLite database.cs" i="133" />
-    <s n="Other databases.cs" i="134" />
-    <s n="Excel automation.cs" i="153" />
-  </d>
-  <d n="Internet" i="16">
-    <s n="Download web page or file.cs" i="137" />
-    <s n="Http POST web form data, use JSON.cs" i="139" />
-    <s n="Parse HTML.cs" i="135" />
-    <s n="Web browser automation with Selenium.cs" i="141" />
-    <s n="FTP upload file.cs" i="142" />
-    <s n="Other FTP functions.cs" i="29" />
-    <s n="Send email message.cs" i="143" />
-    <s n="Get email messages.cs" i="144" />
-    <s n="Check internet connection, ping.cs" i="152" />
-  </d>
-  <d n="Triggers, toolbars, run script" i="17">
-    <s n="Keyboard triggers.cs" i="160" />
-    <s n="Autotext triggers, text replacement.cs" i="162" />
-    <s n="Mouse triggers.cs" i="161" />
-    <s n="Window triggers, auto-close popup windows.cs" i="163" />
-    <s n="Floating toolbars.cs" i="164" />
-    <s n="Run script, script run-time settings.cs" i="110" />
-    <s n="Run script from command line.cs" i="165" />
-    <s n="Task scheduler.cs" i="166" />
-    <s n="Run function when script ends.cs" i="170" />
-    <s n="Hooks.cs" i="172" />
-    <s n="System events.cs" i="171" />
+    <s n="Databases.cs" i="134" />
+    <s n="Read Excel files.cs" i="245" />
+    <s n="Read-write Excel files.cs" i="246" />
+    <s n="-Excel automation.cs" i="153" />
   </d>
   <d n="More" i="20">
-    <s n=".NET and other libraries.cs" i="21" />
+    <s n=".NET, NuGet, other libraries.cs" i="21" />
     <s n="Windows API, native libraries, COM type libraries.cs" i="22" />
+    <s n="Command line programs.cs" i="167" />
     <s n="PowerShell, VBScript.cs" i="103" />
     <s n="WMI.cs" i="102" />
   </d>
-  <c n="global.cs" i="24" />
 </files>

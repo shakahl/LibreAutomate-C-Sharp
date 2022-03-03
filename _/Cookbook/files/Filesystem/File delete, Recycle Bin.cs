@@ -17,9 +17,9 @@ foreach (var f in filesystem.enumFiles(@"C:\Test", "*.txt"))
 
 /// Empty the Recycle Bin.
 
-computer.emptyRecycleBin(); //all drives
-computer.emptyRecycleBin("C:"); //single drive
-computer.emptyRecycleBin(progressUI: true); //with progress UI
+filesystem.more.emptyRecycleBin(); //all drives
+filesystem.more.emptyRecycleBin("C:"); //single drive
+filesystem.more.emptyRecycleBin(progressUI: true); //with progress UI
 
 /// Open the Recycle Bin folder.
 

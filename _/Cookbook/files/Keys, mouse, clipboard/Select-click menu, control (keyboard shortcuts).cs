@@ -21,6 +21,6 @@ wnd.find(1, "* Properties", "#32770").Activate();
 keys.send("Alt+^r");
 keys.send("Tab*3 Space");
 
-/// When keys can't be used, try UI element functions. See the UI elements recipe. Or mouse functions, but scripts with mouse functions may stop working after changing window size, layout or DPI.
+/// When keys can't be used, try UI element functions. See the <+recipe>UI elements<> recipe. Or mouse functions, but scripts with mouse functions may stop working after changing window size, layout or DPI.
 
 /// See also <google>keyboard shortcuts and hotkeys in Windows and applications</google>.

@@ -1,4 +1,10 @@
-﻿//#define TOPLEVEL
+﻿/*
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="cd &quot;$(TargetDir)&quot;&#xD;&#xA;&quot;$(SolutionDir)Other\Programs\ResourceHacker.exe&quot; -script &quot;$(ProjectDir)Resources\ResourceHacker.txt&quot;&#xD;&#xA;del &quot;$(TargetDir)$(TargetName).*.json&quot;&#xD;&#xA;" />
+  </Target>
+*/
+
+//#define TOPLEVEL
 
 using System;
 using System.Collections.Generic;
@@ -847,28 +853,28 @@ partial class TestScript {
 	//dialog.show("");
 	//	}
 
-	void TestWER() {
-		var f = new Window();
-		f.MouseLeftButtonUp += (_, _) => {
-			print.it("click");
-			throw new Exception();
-		};
-		f.ShowDialog();
+	//void TestWER() {
+	//	var f = new Window();
+	//	f.MouseLeftButtonUp += (_, _) => {
+	//		print.it("click");
+	//		throw new Exception();
+	//	};
+	//	f.ShowDialog();
 
-		//WndUtil.RegisterWindowClass("fffttt", _WP);
-		//var w = WndUtil.CreateWindow("fffttt", "fffttt", WS.VISIBLE | WS.SYSMENU | WS.CAPTION, 0, 500, 400, 300, 300);
-		//print.it(w);
-		//while (Api.GetMessage(out var mm) > 0) Api.DispatchMessage(mm);
+	//	//WndUtil.RegisterWindowClass("fffttt", _WP);
+	//	//var w = WndUtil.CreateWindow("fffttt", "fffttt", WS.VISIBLE | WS.SYSMENU | WS.CAPTION, 0, 500, 400, 300, 300);
+	//	//print.it(w);
+	//	//while (Api.GetMessage(out var mm) > 0) Api.DispatchMessage(mm);
 
-		//static nint _WP(wnd w, int m, nint wp, nint lp) {
-		//	if (m == Api.WM_LBUTTONUP) {
-		//		print.it("click");
-		//		throw new Exception();
-		//	}
-		//	if (m == Api.WM_DESTROY) Api.PostQuitMessage(0);
-		//	return Api.DefWindowProc(w, m, wp, lp);
-		//}
-	}
+	//	//static nint _WP(wnd w, int m, nint wp, nint lp) {
+	//	//	if (m == Api.WM_LBUTTONUP) {
+	//	//		print.it("click");
+	//	//		throw new Exception();
+	//	//	}
+	//	//	if (m == Api.WM_DESTROY) Api.PostQuitMessage(0);
+	//	//	return Api.DefWindowProc(w, m, wp, lp);
+	//	//}
+	//}
 
 	//void TestScripting() {
 	//	object result = CSharpScript.EvaluateAsync("1 + 2").Result;

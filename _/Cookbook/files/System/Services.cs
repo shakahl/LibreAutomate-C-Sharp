@@ -1,6 +1,6 @@
-/// Use assembly System.ServiceProcess.ServiceController.dll. It's in the editor's folder.
+/// Use NuGet package <+nuget>System.ServiceProcess.ServiceController<>.
 
-/*/ r System.ServiceProcess.ServiceController.dll; /*/
+/*/ nuget -\System.ServiceProcess.ServiceController; /*/
 using System.ServiceProcess;
 
 //Get all non-driver services and print names if running.

@@ -41,7 +41,7 @@ public class DialogClass : Window {
 		b.OkApply += e => {
 			print.it($"Text: \"{text1.Text.Trim()}\"");
 			print.it($"Combo index: {combo1.SelectedIndex}");
-			print.it($"Check: {c1.True()}");
+			print.it($"Check: {c1.IsChecked == true}");
 		};
 	}
 }

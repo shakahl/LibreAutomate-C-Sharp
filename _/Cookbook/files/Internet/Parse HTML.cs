@@ -1,6 +1,6 @@
-/// To parse HTML can be used <link https://html-agility-pack.net/>HtmlAgilityPack<>. It's included with this program.
+/// To parse HTML can be used <link https://html-agility-pack.net/>HtmlAgilityPack<>. Use NuGet package <+nuget>HtmlAgilityPack<>.
 
-/*/ r HtmlAgilityPack.dll; /*/
+/*/ nuget -\HtmlAgilityPack; /*/
 using HtmlAgilityPack;
 
 print.clear();
@@ -63,7 +63,8 @@ var html2 = e.Html(true);
 var doc3 = new HtmlDocument();
 doc3.LoadHtml(html2);
 var body = doc3.DocumentNode;
-//print.it(body.InnerText); //does not extract text well; works better with Firefox
 foreach (var link in body.Descendants("a")) {
 	print.it(link.InnerText, link.GetAttributeValue("href", null));
 }
+
+/// See also recipe <+recipe>Web browser automation with Selenium<>.
