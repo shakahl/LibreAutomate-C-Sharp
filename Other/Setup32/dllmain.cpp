@@ -3,7 +3,30 @@
 
 #include <string>
 #include <vector>
-#include <werapi.h>
+
+#if 0
+template<typename ... Args>
+void Print(LPCSTR frm, Args ... args)
+{
+	HWND w = FindWindowW(L"QM_Editor", nullptr); if(w == 0) return;
+	size_t size = sizeof...(Args) > 0 ? snprintf(nullptr, 0, frm, args ...) : 0;
+	char* buf = size > 0 ? (char*)malloc(++size) : nullptr;
+	if(buf != nullptr) {
+		snprintf(buf, size, frm, args ...);
+		frm = (LPCSTR)buf;
+	} else {
+		if(frm == nullptr) frm = "";
+		size = strlen(frm) + 1;
+	}
+	auto u = (wchar_t*)malloc(size * 2);
+	MultiByteToWideChar(CP_UTF8, 0, frm, (int)size, u, (int)size);
+	SendMessage(w, WM_SETTEXT, -1, (LPARAM)u);
+	free(u);
+	if(buf != nullptr) free(buf);
+}
+#else
+#define Print __noop
+#endif
 
 HMODULE s_hModule;
 
@@ -211,4 +234,55 @@ EXPORT HRESULT Cpp_Uninstall(int step)
 	}
 
 	return 1;
+}
+
+HRESULT RunConsole(LPCWSTR cl, std::string& sout, DWORD& exitCode) {
+	sout.clear();
+	exitCode = 0;
+	SECURITY_ATTRIBUTES sa = { };
+	sa.nLength = sizeof(SECURITY_ATTRIBUTES); 
+	sa.bInheritHandle = TRUE;
+	HANDLE hOutRead, hOutWrite;
+	if (!CreatePipe(&hOutRead, &hOutWrite, &sa, 0)) return 2;
+	SetHandleInformation(hOutRead, 1, 0); //remove HANDLE_FLAG_INHERIT
+
+	STARTUPINFO si = { sizeof(STARTUPINFO) };
+	si.dwFlags |= STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+	si.hStdOutput = hOutWrite;
+	si.hStdError = hOutWrite;
+	PROCESS_INFORMATION pi = { };
+	if(!CreateProcess(nullptr, _wcsdup(cl), nullptr, nullptr, true, 0, nullptr, nullptr, &si, &pi)) {
+		CloseHandle(hOutWrite);
+		CloseHandle(hOutRead);
+		return 1;
+	}
+	CloseHandle(hOutWrite);
+	CloseHandle(pi.hThread);
+
+	const int bSize = 8000;
+	auto b = new char[bSize];
+	for(DWORD nr;;) {
+		if(ReadFile(hOutRead, b, bSize, &nr, nullptr)) {
+			if (nr != 0) sout.append(b, nr);
+		} else {
+			if(GetLastError() != ERROR_BROKEN_PIPE) return 3;
+			break;
+		}
+	}
+
+	if(!GetExitCodeProcess(pi.hProcess, &exitCode)) exitCode = 0x80000000;
+
+	delete[] b;
+	CloseHandle(pi.hProcess);
+	CloseHandle(hOutRead);
+	return 0;
+}
+
+EXPORT BOOL Cpp_NeedDotnet() {
+	std::string s; DWORD ec;
+	HRESULT hr = RunConsole(L"dotnet --list-runtimes", s, ec);
+	//Print("%i 0x%X %s", hr, ec, s.c_str());
+	if(hr == 1) return 1; //no dotnet.exe
+	if(hr != 0 || ec != 0) return 0; //something failed. Don't install.
+	return (int)s.find("Microsoft.WindowsDesktop.App 6.") < 0;
 }

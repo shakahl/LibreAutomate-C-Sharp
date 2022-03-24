@@ -16,16 +16,9 @@
     <c n="Partial.cs" i="3" icon="*Codicons.SymbolClass #73BF00" />
     <n n="File.txt" i="67" />
   </d>
-  <d n="Examples" i="11">
-    <d n="!Script examples" i="12">
-      <s n="Automation script example.cs" i="13" />
-      <s n="Script syntax, functions.cs" i="14" />
-    </d>
-  </d>
   <d n="Dialogs" i="68">
     <s n="Dialog.cs" i="77" />
     <s n="Dialog with tabs.cs" i="78" />
-    <s n="Dialog with menu.cs" i="79" />
     <c n="Dialog class.cs" i="73" />
     <c n="Dialog with tabs class.cs" i="74" />
   </d>

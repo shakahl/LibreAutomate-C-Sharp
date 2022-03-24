@@ -18,3 +18,7 @@ run.console("cmd.exe", $@"/u /c ""{commands}""", encoding: Encoding.Unicode);
 string file1 = @"Q:\Test\icons.db";
 var file2 = @"Q:\Test\icons.7z";
 run.console(folders.ProgramFiles + @"7-Zip\7z.exe", $@"a ""{file2}"" ""{file1}""");
+
+/// Some links:
+/// - <link https://docs.microsoft.com/en-us/sysinternals/downloads/>Sysinternals<>
+/// - <link https://www.nirsoft.net/utils/>NirSoft<>

@@ -164,6 +164,8 @@ unsafe class Program
 
 			s = s.RxReplace(@"\brecord (struct|class)\b", "$1");
 
+			s = s.Replace("[ComVisible(true)]", "");
+
 			s = usings + s;
 
 			filesystem.saveText(fileTo, s);

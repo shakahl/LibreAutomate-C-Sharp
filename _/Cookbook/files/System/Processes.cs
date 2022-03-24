@@ -20,9 +20,9 @@ if (0 == process.getProcessId("notepad.exe")) {
 	print.it("does not exist");
 }
 
-/// Wait for a "notepad.exe" process.
+/// Wait for a "notepad.exe" process. See also <+recipe>Process triggers<>.
 
-wait.forCondition(0, () => 0 != process.getProcessId("notepad.exe"), new OWait(1));
+wait.forCondition(0, () => 0 != process.getProcessId("notepad.exe"));
 
 /// Wait until there are no "notepad.exe" processes.
 
@@ -47,4 +47,4 @@ print.it(process.thisExeName, process.thisExePath);
 
 print.it(script.name);
 
-/// When need to get more process properties, use class <google C# class Process>Process</google>.
+/// When need to get more process properties, use class <google C# class Process>Process</google> or <+recipe>WMI<>.

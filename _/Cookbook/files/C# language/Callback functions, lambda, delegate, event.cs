@@ -68,4 +68,4 @@ class Class1 {
 	}
 }
 
-/// Events are very useful in custom dialog windows. Examples in recipe <+recipe>Custom dialog window<>.
+/// Events are very useful in custom dialog windows. Examples in recipe <+recipe>Dialog - events<>.

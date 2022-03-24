@@ -1,13 +1,11 @@
-﻿<files max-i="248">
+﻿<files max-i="298">
   <d n="-" i="244">
     <s n="Test.cs" i="121" />
+    <s n="TODO.cs" i="292" />
     <c n="How to write the cookbook.cs" i="1" />
     <c n="global.cs" i="24" />
   </d>
-  <d n="Introduction" i="2">
-    <s n="Where to find info.cs" i="3" />
-    <s n="Frequently asked questions.cs" i="91" />
-  </d>
+  <s n="Where to find info.cs" i="3" />
   <d n="C# language" i="4">
     <s n="C# introduction.cs" i="25" />
     <s n="Comments, disabled code.cs" i="35" />
@@ -26,14 +24,12 @@
     <s n="Callback functions, lambda, delegate, event.cs" i="63" />
     <s n="-Manipulate lists and other collections.cs" i="150" />
   </d>
-  <d n="Input, output, dialog" i="5">
+  <d n="Input, output" i="5">
     <s n="Display text and variables.cs" i="6" />
     <s n="Message box dialog, list.cs" i="7" />
     <s n="Input box dialog.cs" i="8" />
     <s n="File and folder dialogs.cs" i="74" />
     <s n="Popup menu, check list.cs" i="10" />
-    <s n="Custom dialog window.cs" i="11" />
-    <s n="-Custom dialog TODO.cs" i="248" />
     <s n="Play sound, speak.cs" i="100" />
   </d>
   <d n="Keys, mouse, clipboard" i="12">
@@ -55,6 +51,7 @@
     <s n="Find UI image or color.cs" i="90" />
     <s n="Take screenshot.cs" i="101" />
     <s n="-OCR, extract text.cs" i="168" />
+    <s n="-Computer vision.cs" i="257" />
   </d>
   <d n="Wait, time" i="78">
     <s n="Simple wait (sleep, delay).cs" i="86" />
@@ -72,7 +69,6 @@
     <s n="Windows OS version, computer and user name.cs" i="109" />
     <s n="Desktop (show etc).cs" i="97" />
     <s n="Registry.cs" i="99" />
-    <s n="Saving variables.cs" i="140" />
     <s n="Environment variables.cs" i="106" />
     <s n="Threads.cs" i="112" />
   </d>
@@ -89,6 +85,7 @@
     <s n="File read (load), write (save).cs" i="119" />
     <s n="Zip files (compress, extract).cs" i="136" />
     <s n="-Backup files.cs" i="247" />
+    <s n="Wait for file.cs" i="250" />
   </d>
   <d n="Internet" i="16">
     <s n="Download web page or file.cs" i="137" />
@@ -107,6 +104,10 @@
     <s n="Script run-time settings.cs" i="110" />
     <s n="Tray icon and notifications.cs" i="115" />
     <s n="Script testing and debugging.cs" i="173" />
+    <s n="Saving variables, settings.cs" i="140" />
+    <s n="Script class with Main().cs" i="261" />
+    <s n="Multi-file scripts, projects.cs" i="259" />
+    <s n="Shared classes and functions, libraries.cs" i="258" />
     <s n="Create .exe program.cs" i="188" />
   </d>
   <d n="Triggers, toolbars" i="17">
@@ -114,11 +115,42 @@
     <s n="Autotext triggers, text replacement.cs" i="162" />
     <s n="Mouse triggers.cs" i="161" />
     <s n="Window triggers, auto-close popup windows.cs" i="163" />
+    <s n="Process triggers (start, end).cs" i="252" />
+    <s n="File change triggers (events).cs" i="251" />
     <s n="Floating toolbars.cs" i="164" />
     <s n="Run code when script ends.cs" i="170" />
     <s n="-Hooks.cs" i="172" />
     <s n="-System events.cs" i="171" />
     <s n="-CONSIDER.cs" i="243" />
+  </d>
+  <d n="Custom dialog windows" i="264">
+    <s n="Dialog - add elements, show, get values.cs" i="265" />
+    <s n="Dialog - set element properties and values.cs" i="291" />
+    <s n="Dialog - columns, rows.cs" i="266" />
+    <s n="Dialog - panels, group box.cs" i="268" />
+    <s n="Dialog - element size, position, margin.cs" i="281" />
+    <s n="Dialog - validation.cs" i="267" />
+    <s n="Dialog - events.cs" i="270" />
+    <s n="Dialog - splitters.cs" i="278" />
+    <s n="Dialog - links, formatted text.cs" i="273" />
+    <s n="Dialog - element color, font, border.cs" i="282" />
+    <s n="Dialog - button icon, toolbar.cs" i="285" />
+    <s n="Dialog - textbox watermark, adorner.cs" i="283" />
+    <s n="Dialog - icons, images, shapes.cs" i="288" />
+    <s n="Dialog - context menu, dropdown list.cs" i="294" />
+    <s n="Dialog - enum check-list, select.cs" i="298" />
+    <s n="Dialog - select date.cs" i="269" />
+    <s n="-Dialog - data grid.cs" i="280" />
+    <s n="Dialog - web browser control.cs" i="293" />
+    <s n="Dialog - menu bar.cs" i="271" />
+    <s n="Dialog - multiple tabs.cs" i="272" />
+    <s n="Dialog - Window-based class.cs" i="276" />
+    <s n="Dialog - owned, non-modal (don't wait).cs" i="286" />
+    <s n="Dialog - window size, position, other properties.cs" i="290" />
+    <s n="Dialog - save window placement, control values.cs" i="289" />
+    <s n="Dialog - load XAML.cs" i="295" />
+    <s n="Dialog - libraries of controls and themes.cs" i="296" />
+    <s n="-Dialog - rejected or future.cs" i="297" />
   </d>
   <d n="Math, convert" i="129">
     <s n="Math functions.cs" i="145" />
@@ -149,9 +181,11 @@
   </d>
   <d n="More" i="20">
     <s n=".NET, NuGet, other libraries.cs" i="21" />
-    <s n="Windows API, native libraries, COM type libraries.cs" i="22" />
+    <s n="Windows API, native libraries.cs" i="22" />
+    <s n="COM components and type libraries.cs" i="249" />
     <s n="Command line programs.cs" i="167" />
     <s n="PowerShell, VBScript.cs" i="103" />
     <s n="WMI.cs" i="102" />
   </d>
+  <s n="Frequently asked questions.cs" i="91" />
 </files>

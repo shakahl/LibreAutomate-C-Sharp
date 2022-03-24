@@ -44,3 +44,10 @@ File.AppendAllLines(file, a); //append a list or array
 
 byte[] b = File.ReadAllBytes(file);
 File.WriteAllBytes(file, b);
+
+/// All above functions immediately fail if the file is locked at that time (eg an app is writing the file). Also the write functions can corrupt the file in some cases. To read and write in a safer way, use <see cref="filesystem"/> functions.
+
+text = filesystem.loadText(file); //waits max 2 s if locked
+text = filesystem.waitIfLocked(() => File.ReadAllText(file), 10_000); //waits max 10 s if locked
+
+/// See also <see cref="filesystem.saveText"/> and similar functions. They write in a safer way and can create a backup file.

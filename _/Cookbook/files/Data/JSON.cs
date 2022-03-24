@@ -40,7 +40,7 @@ print.it(y);
 
 /// To get values from a JSON string without converting it to an object, use class <see cref="JsonNode"/>. See recipe <+recipe>Http POST<>. The class also can be used to create a JSON string. Look for more info on the internet.
 
-/// JSON is a good format for various settings. The <see cref="JSettings"/> class uses it. See recipe <+recipe>Saving variables<>.
+/// JSON is a good format for various settings. The <see cref="JSettings"/> class uses it. See recipe <+recipe>saving variables<>.
 
 /// An example class.
 

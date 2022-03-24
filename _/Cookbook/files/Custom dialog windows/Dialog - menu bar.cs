@@ -1,13 +1,8 @@
-//.
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Input;
-using System.Windows.Media;
-//..
 
 var b = new wpfBuilder("Window").WinSize(400);
-b.R.Add(out Menu menu);
+b.R.Add(out Menu menu).Margin("T-2 B0");
 b.R.Add(out TextBox text1).Multiline(200);
 b.R.AddOkCancel();
 b.End();

@@ -1,4 +1,4 @@
-/// In scripts can be used <google>Windows API</google> (functions, structs, constants, interfaces, etc). They must be declared somewhere in the script or in class files it uses.
+/// In scripts can be used <google>Windows API</google> (functions, structs, constants, COM interfaces, etc). They must be declared somewhere in the script or in class files it uses.
 ///
 /// The editor program has a database containing many declarations. There are several ways to get declarations from it.
 /// - Menu Code -> Windows API. For more info, click the [?] button in the dialog.
@@ -18,6 +18,4 @@ internal const uint MB_TOPMOST = 0x40000;
 
 /// The declarations in the database are not perfect. Often need to edit them.
 
-/// Also can be used API from many other native (aka unmanaged) libraries, but will need to write declarations manually (or find somewhere). Better try to find a .NET library that wraps the library.
-
-/// COM component API often are declared in type libraries. In C# they can't be used directly, but the editor can convert a type library to a .NET assembly, and scripts can use the assembly instead. To convert, in Properties click [COM] or [...] and select a type library.
+/// You can find, downloaded and use other native (aka unmanaged) libraries too, but will need to write declarations of methods/types/etc manually (or find somewhere). Better try to find a .NET library that wraps the native library. Note: use 64-bit dlls; or in script Properties select role exeProgram and check bit32.

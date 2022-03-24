@@ -1,4 +1,5 @@
 /// Use class <google C# class Registry>Registry</google>.
+/// See also <+recipe>saving variables<>.
 /// 
 /// Set a string value.
 
