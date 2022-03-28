@@ -1,4 +1,4 @@
-/// Strings and characters in C# are Unicode UTF-16. String characters are read-only. <google C# strings>More info<>.
+/// Strings contain text. More info: <google>C# strings<>, recipe <+recipe>strings and characters<>.
 
 string s1 = "text";
 string s2 = ""; //empty string
@@ -27,7 +27,7 @@ without any escape sequences
 """;
 string raw3 = """"another """raw""" string """";
 
-/// To easily create strings with variables, use <+lang interpolated strings>interpolated strings<>.
+/// To easily create strings with variables, can be used <+lang interpolated strings>interpolated strings<>, operator + and other ways. More info in recipe <+recipe>string formatting<>.
 
 string s4 = $"ab {s1} cd {path} ef";
 string s5 = @$"ab {s1}
@@ -35,16 +35,13 @@ cd {path} ef";
 string s6 = $"""ab {s1} cd""";
 string s7 = $$"""ab {{s1}} {cd}""";
 
-/// There are many ways to create and format strings. Operator +, string constructor, StringBuilder, string.Format, string.Join and other functions.
+string s8 = "ab " + s1 + " cd";
 
-string s9 = "ab " + s1 + " cd";
-string s10 = new string('-', 10); //"----------"
-
-/// Strings consist of characters. But characters also can be used alone.
+/// Strings consist of characters. Characters also can be used alone.
 
 char c1 = 'A';
 char c2 = ' '; //space
-char[] a1 = { '\t', '\r', '\n', '\"', '\'', '\\', '\0' }; //can be used escape sequences like in strings
+char[] a1 = { '\t', '\r', '\n', '\"', '\'', '\\', '\0' }; //escape sequences like in strings
 
 /// <+lang integral numeric types>Integer numbers<> are whole numbers like 10 but not like 1.5.
 

@@ -1,18 +1,17 @@
-﻿<files max-i="298">
+﻿<files max-i="302">
   <d n="-" i="244">
     <s n="Test.cs" i="121" />
     <s n="TODO.cs" i="292" />
     <c n="How to write the cookbook.cs" i="1" />
     <c n="global.cs" i="24" />
   </d>
-  <s n="Where to find info.cs" i="3" />
+  <s n="Introduction, finding info.cs" i="3" />
   <d n="C# language" i="4">
     <s n="C# introduction.cs" i="25" />
     <s n="Comments, disabled code.cs" i="35" />
     <s n="Strings (text), numbers, characters, bool, null, default.cs" i="57" />
     <s n="Variables, fields, built-in types.cs" i="36" />
     <s n="Constants, enum.cs" i="60" />
-    <s n="Array, List, other collections.cs" i="59" />
     <s n="Types (class, struct, generic, nullable, tuple).cs" i="37" />
     <s n="Functions (methods, properties).cs" i="38" />
     <s n="Namespaces, using.cs" i="64" />
@@ -22,7 +21,11 @@
     <s n="return, goto (exit, end, stop, jump).cs" i="67" />
     <s n="Errors, exceptions, try-catch-finally, throw.cs" i="62" />
     <s n="Callback functions, lambda, delegate, event.cs" i="63" />
-    <s n="-Manipulate lists and other collections.cs" i="150" />
+    <d n="Collections" i="299">
+      <s n="Collections - array, List, Stack, Queue.cs" i="300" />
+      <s n="Collections - Dictionary, HashSet.cs" i="301" />
+      <s n="Collections - LINQ functions.cs" i="150" />
+    </d>
   </d>
   <d n="Input, output" i="5">
     <s n="Display text and variables.cs" i="6" />
@@ -80,7 +83,7 @@
     <s n="File move, rename.cs" i="118" />
     <s n="File copy.cs" i="126" />
     <s n="File delete, Recycle Bin.cs" i="125" />
-    <s n="File shortcuts.cs" i="124" />
+    <s n="File shortcuts, symbolic links.cs" i="124" />
     <s n="Create folder.cs" i="120" />
     <s n="File read (load), write (save).cs" i="119" />
     <s n="Zip files (compress, extract).cs" i="136" />
@@ -89,7 +92,7 @@
   </d>
   <d n="Internet" i="16">
     <s n="Download web page or file.cs" i="137" />
-    <s n="Http POST web form data, use JSON.cs" i="139" />
+    <s n="Http POST web form data, JSON.cs" i="139" />
     <s n="Parse HTML.cs" i="135" />
     <s n="SFTP (upload, download, etc).cs" i="142" />
     <s n="SSH (manage website).cs" i="191" />
@@ -167,7 +170,8 @@
     <s n="Simple string functions.cs" i="154" />
     <s n="String formatting with variables.cs" i="158" />
     <s n="Wildcard expressions (compare text).cs" i="159" />
-    <s n="Regular expressions (parse text, replace).cs" i="155" />
+    <s n="Regular expressions (parse text, find-replace).cs" i="155" />
+    <s n="Fuzzy string matching, word stemming.cs" i="302" />
   </d>
   <d n="Data" i="19">
     <s n="CSV table.cs" i="128" />

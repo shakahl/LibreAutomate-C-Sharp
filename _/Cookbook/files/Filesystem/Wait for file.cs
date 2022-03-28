@@ -1,6 +1,6 @@
 /// Use class <see cref="FileSystemWatcher"/>.
 
-/// Wait for a new file in a directory. Then reads its text.
+/// Wait for a new file in a directory. Then get its text.
 
 string dir = @"C:\Test";
 using (var fw = new FileSystemWatcher(dir)) {

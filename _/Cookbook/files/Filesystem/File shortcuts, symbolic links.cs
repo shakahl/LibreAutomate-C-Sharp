@@ -23,3 +23,9 @@ using (var x = shortcutFile.open(@"C:\Test\Notepad.lnk")) {
 /// Delete shortcut (if exists) and unregister its hotkey.
 
 shortcutFile.delete(@"C:\Test\Notepad.lnk");
+
+/// Shortcuts also are known as <i>shell links</i>. Also there are <i>symbolic links</i> and other types of filesystem links.
+
+var symlink = folders.Desktop + "Test";
+if (filesystem.exists(symlink).IsNtfsLink) filesystem.delete(symlink); //deletes the symbolic link but not its target
+Directory.CreateSymbolicLink(symlink, @"C:\Test");

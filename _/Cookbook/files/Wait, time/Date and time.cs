@@ -1,4 +1,4 @@
-/// For date-time use <google C# struct DateTime><b>DateTime</b></google>. For time interval use <google C# struct TimeSpan><b>TimeSpan</b><>.
+/// For date-time use <google C# struct DateTime>DateTime</google>. For time interval use <google C# struct TimeSpan>TimeSpan<>.
 
 /// Get current date and time-of-day.
 

@@ -37,7 +37,7 @@ var e = w.Elm["COMBOBOX", "Script:"].Find(1);
 e.ComboSelect("Baltic");
 }
 
-/// To select a menu item, need to find and click each intermediate menu item. However usually it's better to use hokeys and Alt+keys.
+/// To select a menu item, need to find and click each intermediate menu item. However usually it's better to use hotkeys and Alt+keys.
 
 //hotkey and Alt+keys
 wnd.find(0, "*- Notepad", "Notepad").Activate();
@@ -52,7 +52,7 @@ var wMenu = wnd.find(1, "", "#32768", wNotepad);
 var ePaste = wMenu.Elm["MENUITEM", "Paste\tCtrl+V"].Find(1);
 ePaste.Invoke();
 
-/// However to get menu item state (checked, disabled) need to use <b>elm</b> functions. This code checks menu Format -> Word Wrap. 
+/// Use <b>elm</b> functions to get menu item state (checked, disabled). This code checks menu Format -> Word Wrap. 
 
 var wNotepad2 = wnd.find(0, "*- Notepad", "Notepad").Activate();
 keys.send("Alt+O"); //Format

@@ -45,7 +45,7 @@ void Func5(Func<int, bool> a) {
 ///
 /// In the above examples we pass lambdas etc as function parameters. Actually we pass <i>delegates</i> - auto-created objects that can call the function.
 ///
-/// Another way is <i>events</i>. An event can have multiple subscribed functions. When raised, it calls all them. Subscribe with operator +-. Unsubscribe (if need) with operator -=. <google C# event>More info<>.
+/// Another way is <i>events</i>. An event can have multiple subscribed functions. When raised, it calls all them. Subscribe with operator +=. Unsubscribe (if need) with operator -=. <google C# event>More info<>.
 
 var c = new Class1();
 c.Event1 += i => print.it("event handler lambda", i);
