@@ -1,50 +1,50 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0-windows</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
-    <UseWpf>true</UseWpf>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <AssemblyName>Au.Tests</AssemblyName>
-    <RootNamespace>Au.Tests</RootNamespace>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\Au.snk</AssemblyOriginatorKeyFile>
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <OutDir>$(SolutionDir)_</OutDir>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NoWin32Manifest>true</NoWin32Manifest>
-	<LangVersion>preview</LangVersion>
-	<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
-	<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net6.0-windows</TargetFramework>
+		<UseWindowsForms>true</UseWindowsForms>
+		<UseWpf>true</UseWpf>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<AssemblyName>Au.Tests</AssemblyName>
+		<RootNamespace>Au.Tests</RootNamespace>
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>..\Au.snk</AssemblyOriginatorKeyFile>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<OutDir>$(SolutionDir)_</OutDir>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<NoWin32Manifest>true</NoWin32Manifest>
+		<LangVersion>preview</LangVersion>
+		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
+		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <Prefer32Bit>false</Prefer32Bit>
-    <Deterministic>False</Deterministic>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DefineConstants>DEBUG;TRACE</DefineConstants>
+		<Prefer32Bit>false</Prefer32Bit>
+		<Deterministic>False</Deterministic>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <Prefer32Bit>false</Prefer32Bit>
-    <Deterministic>False</Deterministic>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<Prefer32Bit>false</Prefer32Bit>
+		<Deterministic>False</Deterministic>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Page Remove="resources\Property_16x.xaml" />
-  </ItemGroup>
+	<ItemGroup>
+		<Page Remove="resources\Property_16x.xaml" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Au.Controls\Au.Controls.csproj" />
-    <ProjectReference Include="..\Au\Au.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Au.Controls\Au.Controls.csproj" />
+		<ProjectReference Include="..\Au\Au.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Resource Include="resources\Property_16x.xaml" />
-  </ItemGroup>
+	<ItemGroup>
+		<Resource Include="resources\Property_16x.xaml" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="excluded\" />
-  </ItemGroup>
+	<ItemGroup>
+		<Folder Include="excluded\" />
+	</ItemGroup>
 
 </Project>

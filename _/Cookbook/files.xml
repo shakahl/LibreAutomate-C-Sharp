@@ -1,4 +1,4 @@
-﻿<files max-i="302">
+﻿<files max-i="304">
   <d n="-" i="244">
     <s n="Test.cs" i="121" />
     <s n="TODO.cs" i="292" />
@@ -14,9 +14,9 @@
     <s n="Constants, enum.cs" i="60" />
     <s n="Types (class, struct, generic, nullable, tuple).cs" i="37" />
     <s n="Functions (methods, properties).cs" i="38" />
-    <s n="Namespaces, using.cs" i="64" />
     <s n="Operators, expressions.cs" i="39" />
-    <s n="if-else, switch (select).cs" i="65" />
+    <s n="Namespaces, using.cs" i="64" />
+    <s n="if-else, switch.cs" i="65" />
     <s n="for, foreach (repeat, loop, iterate).cs" i="66" />
     <s n="return, goto (exit, end, stop, jump).cs" i="67" />
     <s n="Errors, exceptions, try-catch-finally, throw.cs" i="62" />
@@ -44,7 +44,7 @@
     <s n="Mouse get position, wait, cursor, etc.cs" i="79" />
     <s n="Clipboard copy, paste, set-get text etc.cs" i="80" />
   </d>
-  <d n="Windows, UI automation" i="13">
+  <d n="Window, UI automation" i="13">
     <s n="Find window, controls, activate.cs" i="27" />
     <s n="Window actions (close, move, resize, properties, etc).cs" i="81" />
     <s n="Screens (display monitors).cs" i="82" />

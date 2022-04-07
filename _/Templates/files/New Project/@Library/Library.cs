@@ -17,6 +17,7 @@ using System.Reflection;
 When you compile this, .dll and other required files are created in the output directory (outputPath).
 Before deploying the files, in Properties set optimize true and compile.
 The library can be used on computers with installed .NET Runtime (version: menu Help -> About).
+See also: Cookbook -> Script -> Shared classes and functions, libraries.
 */
 
 namespace Library {

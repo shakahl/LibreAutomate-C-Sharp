@@ -885,8 +885,8 @@ partial class TestScript {
 		//dialog.show("");
 		//print.it(AppContext.BaseDirectory, AppContext.GetData("NATIVE_DLL_SEARCH_DIRECTORIES"));
 
-//var t = FreeImageAPI.FreeImage.CreateTag();
-//print.it(t);
+		//var t = FreeImageAPI.FreeImage.CreateTag();
+		//print.it(t);
 
 		//TestMarkdig();
 		//TestScripting();
@@ -911,7 +911,9 @@ partial class TestScript {
 		//	print.it(e);
 		//}
 
-		
+		//dialog.show();
+		var b = new wpfBuilder("Window");
+		b.ShowDialog();
 	}
 
 	[STAThread] static void Main(string[] args) { new TestScript(args); }

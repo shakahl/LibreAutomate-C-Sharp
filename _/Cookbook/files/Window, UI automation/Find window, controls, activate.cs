@@ -3,19 +3,19 @@
 /// - Hotkey Ctrl+Shift+Q.
 /// - Snippets winFindSnippet, actWinSnippet. You can see window properties in panel "Mouse".
 
-/// Find window and create variable w1 that contains window handle. Window name must end with "- Notepad"; class name must be "Notepad". Can wait/retry for max 1 s; exception if not found. When found, activate.
+/// Find window and create variable w1 that contains window handle. Window name must end with "- Notepad"; class name must be "Notepad". Can wait/retry max 1 s; exception if not found. Activate when found.
 
 var w1 = wnd.find(1, "*- Notepad", "Notepad");
 w1.Activate();
 
-/// Find window with no name, class name "Shell_TrayWnd", program "explorer.exe". If not found, exit.
+/// Find window with no name, class name "Shell_TrayWnd", program "explorer.exe". Exit if not found.
 
 var w2 = wnd.find("", "Shell_TrayWnd", "explorer.exe");
 if (w2.Is0) return;
 
 /// Function <see cref="wnd.findOrRun"/> opens window if does not exist. Also activates.
 
-wnd w3 = wnd.findOrRun("* Notepad", run: () => run.it("notepad.exe")); //if not found, run "notepad.exe"
+var w3 = wnd.findOrRun("* Notepad", run: () => run.it("notepad.exe")); //if not found, run "notepad.exe"
 print.it(w3);
 
 /// Get the active window.

@@ -35,16 +35,19 @@ catch (Exception e) when (e is not ArgumentException) { //handle all other excep
 }
 print.it(text ?? "file not found");
 
-/// Can use <.k>try-finally<> and <.k>try-catch-finally<>. <+lang try finally>More info<>. The finally code is executed regardless of whether an exception occured (handled or unhandled), unless on exception is called <google C# Environment.Exit>Environment.Exit<> or a similar function that terminates the process.
+/// Can use <.k>try-finally<> and <.k>try-catch-finally<>. <+lang try finally>More info<>. The <.k>finally<> code runs when the <.k>try<> code is leaved in any way (finished, exception, <.k>return<>, <.k>goto<>, etc).
 
 print.it(1);
 try {
 	run.it("notepad22.exe");
 	print.it(2);
+	if (keys.isCapsLock) return;
 }
 //catch { print.it("exception"); } //optional. Try to uncomment this and observe the difference.
 finally { print.it("finally"); }
 print.it(3);
+
+/// Note: The <.k>finally<> code does not run if <google C# Environment.Exit>Environment.Exit<> and other function terminates the process.
 
 /// With disposable objects instead of try-finally-Dispose can be used the <+lang using statement><.k>using<><> statement.
 

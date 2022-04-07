@@ -1,7 +1,6 @@
 using Au.Triggers;
 
 partial class Program {
-
 [Toolbars]
 void CommonToolbars() {
 	
@@ -13,11 +12,19 @@ void CommonToolbars() {
 	}
 }
 
-//Add here your toolbars that are common to all windows.
+//Add here your toolbars that will not be attached to windows. They can be attached to screen edges.
 //In the above function call toolbar functions, either directlty (to show at startup) or from a trigger.
-//To create toolbars and add buttons can be used snippets. Start typing "tool" and you will see snippets in the completion list.
+//To create new toolbar can be used snippet. Start typing "tool" and select toolbarSnippet in the completion list.
 //Click the Run button to apply changes after editing.
 
+//Add buttons in the toolbar function. See examples below.
+//Button syntax: t["Name|Tooltip"] = o => { code; };
+//Quick ways to add a button:
+//	Clone an existing button.
+//	Snippet: start typing "tool" and select toolbarButtonSnippet in the completion list.
+//	To run a script, drag and drop it here from the Files panel. Then in the popup menu select "t[name] = ...".
+//	To run/open a file or folder, drag and drop it here from a folder window. Then in the popup menu select "t[name] = ...".
+//	To open a web page, drag and drop a link here from a web browser. Then in the popup menu select "t[name] = ...".
 
 
 #region toolbar examples
@@ -69,7 +76,7 @@ void Toolbar_ScreenEdge_TopCenter(MouseTriggerArgs ta) {
 	t[""] = o => {  };
 	
 	//auto-hide at the screen edge of the mouse trigger. Above is the auto-hide part. Below is the always-visible part.
-	t = t.AutoHideScreenEdge(ta, 5, Coord.Reverse(5), 2);
+	t = t.AutoHideScreenEdge(ta, 5, ^5, 2);
 	t.BorderColor = System.Drawing.Color.Orange;
 	
 	t.Show();

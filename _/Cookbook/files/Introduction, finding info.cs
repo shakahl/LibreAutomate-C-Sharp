@@ -1,5 +1,5 @@
-/// This <help editor/Automaticode>program<> automates repetitive tedious actions. You create automation <help editor/Scripts>scripts<>, and this program executes them.
-/// 
+/// With this <help editor/Uiscripter>program<> you can create, manage and run automation <help editor/Scripts>scripts<>. 
+
 /// Where to find info, code examples and classes/functions:
 /// - This cookbook is a collection of code examples and info.
 /// - Press Ctrl+Space in the <help editor/Code editor>code editor<> and select from the list.
@@ -11,6 +11,6 @@
 /// - Programming libraries: <+recipe>NuGet</b>, <google>GitHub</google>, etc.
 /// - <+recipe>Windows API<>.
 
-/// Simple automations can be recorded. The input recorder records mouse clicks and keystrokes in any window and adds the code to the script. Click the "Run script" button and see how it works. Edit some code if need: insert <+recipe Simple wait>wait<>, edit <+recipe Find window>window names<>, etc.
+/// Simple automations can be recorded. The input recorder records keys and mouse clicks in any window. You can edit the recorded code: insert <+recipe Simple wait>wait<>, edit <+recipe Find window>window names<>, etc.
 
-/// Almost all kinds of automations are possible and often quite easy. However this cookbook can't contain recipes for everything. You can ask to add more recipes: use forum or email (menu Help).
+/// This cookbook contains recipes for many commonly used automations. You can ask to add more recipes: use forum or email (menu Help).

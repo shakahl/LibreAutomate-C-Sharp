@@ -13,27 +13,8 @@ using System.Reflection;
 //[assembly: AssemblyCopyright("Copyright © 2021")]
 //[assembly: AssemblyTrademark("Legal trademarks")]
 
-class Program { static void Main(string[] a) => new Program(a); Program(string[] args) { //...
-script.setup(trayIcon: true);
+script.setup(trayIcon: true, sleepExit: true);
 //..
 
-/*
-To create .exe program from a script: in Properties select role exeProgram. This script is an example.
-When you compile or run the script, .exe and other required files are created in the output directory (outputPath).
-To run the .exe program, you can click the Run button. Or run it like any other program.
-If antivirus blocks new .exe files or makes compiling slow, add the output directory to its list of exclusions.
-Before deploying the files, in Properties set optimize true and compile. It creates 64-bit and 32-bit files.
-The program can run on computers with installed .NET 5 Runtime. Download: https://dotnet.microsoft.com/download
-*/
+// Info: Cookbook -> Script -> Create .exe program.
 
-
-
-
-
-
-
-
-
-
-}
-}

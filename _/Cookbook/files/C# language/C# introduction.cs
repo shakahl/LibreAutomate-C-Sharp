@@ -27,11 +27,22 @@ for (int i = 0; i < 3; i++) {
 
 /// Another way to execute code more than once - user-defined functions.
 
-//call function Example 2 times
+//call function Example 3 times
 Example("one", 1);
-Example("two", 2);
+Example("two",2);Example("three",
+							3);
+
 
 //this is the function
 void Example(string s, int i) {
-	print.it(s + " " + i);
+	print.it(s.Upper() + " " + i);
 }
+
+/// In the above examples you also can see:
+/// - The blue words are <google>C# keywords</google>.
+/// - Other words are <google C# identifiers>identifiers</google> (names of types, functions, variables, etc).
+/// - Keywords and identifiers are case-sensitive.
+/// - Every statement ends with a semicolon (;). Unless it starts a block of code enclosed in { }.
+/// - Function arguments are enclosed in ( ) and separated with comma (,).
+/// - Blocks of related code are enclosed in {  }.
+/// - C# does not care about the type and amount of whitespace (spaces, tabs, newlines), except in //comment, "string" and #directive.

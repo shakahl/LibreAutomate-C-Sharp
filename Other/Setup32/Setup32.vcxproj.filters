@@ -31,6 +31,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Automaticode.iss" />
+    <None Include="Uiscripter.iss" />
   </ItemGroup>
 </Project>

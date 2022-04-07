@@ -1,16 +1,19 @@
 /// Use fuzzy string matching to compare or find approximately matching words, for example misspelled. We'll use library <link https://github.com/JakeBayer/FuzzySharp>FuzzySharp<>. NuGet package <+nuget>FuzzySharp<>.
 ///
-/// Use word stemming (removing suffix) to find all word forms (with/without any suffix). We'll use library <link https://github.com/nemec/porter2-stemmer>porter2-stemmer<>. NuGet package <+nuget>Porter2Stemmer<>. English only.
+/// Use word stemming (remove suffix) to find all word forms (with/without any suffix). We'll use library <link https://github.com/nemec/porter2-stemmer>porter2-stemmer<>. NuGet package <+nuget>Porter2Stemmer<>. English only.
 
 /*/ nuget -\FuzzySharp; nuget -\Porter2Stemmer; /*/
 
 /// Get % of similarity.
 
-string text = "National Geographic";
-string word1 = "nation", word2 = "geografy";
+string s1 = "National Geographic";
+string s2 = "nationl geografik";
 
-print.it(FuzzySharp.Fuzz.PartialRatio(text, word1, FuzzySharp.PreProcess.PreprocessMode.Full));
-print.it(FuzzySharp.Fuzz.PartialRatio(text, word2, FuzzySharp.PreProcess.PreprocessMode.Full));
+print.it(FuzzySharp.Fuzz.PartialRatio(s1, s2, FuzzySharp.PreProcess.PreprocessMode.Full));
+
+/// Get Levenshtein distance.
+
+print.it(FuzzySharp.Levenshtein.EditDistance(s1.Lower(), s2.Lower()));
 
 /// The FuzzySharp web page gives code examples for most functions.
 

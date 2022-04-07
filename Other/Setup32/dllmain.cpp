@@ -285,4 +285,6 @@ EXPORT BOOL Cpp_NeedDotnet() {
 	if(hr == 1) return 1; //no dotnet.exe
 	if(hr != 0 || ec != 0) return 0; //something failed. Don't install.
 	return (int)s.find("Microsoft.WindowsDesktop.App 6.") < 0;
+
+	//never mind: .NET 6 must be at least 6.0.2. It's a .NET bug. More info in AppHost.cpp; it will catch the old version.
 }

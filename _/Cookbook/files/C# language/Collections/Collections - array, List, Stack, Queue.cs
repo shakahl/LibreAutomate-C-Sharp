@@ -32,19 +32,23 @@ int[] a10 = k2.ToArray(); //create new array and copy elements
 
 for (int i = 0; i < k1.Count; i++) print.it(k1[i]); //get values
 
-/// If need a stack (add/get/remove the last element), can be used <google C# 'Stack T class'>Stack<>.
+/// <google C# 'Stack T class'>Stack<> is a list where you get/remove the last item.
 
 var k = new Stack<int>();
 k.Push(4); //append 1 element with value 4
 while (k.TryPop(out var v)) print.it(v); //get and remove elements starting from the last
 
-/// If need a queue (add last, get/remove first), can be used <google C# 'Queue T class'>Queue<>.
+/// <google C# 'Queue T class'>Queue<> is a list where you get/remove the first item.
 
 var q = new Queue<int>();
 q.Enqueue(4); //append 1 element with value 4
 while (q.TryDequeue(out var v)) print.it(v); //get and remove elements starting from the first
 
-/// If need to use a collection in multiple threads, use <+lang lock statement><.k>lock<><> or classes from the <b>System.Collections.Concurrent</b> namespace, such as <b>ConcurrentDictionary</b>.
+/// If need to use a collection in multiple threads simultaneously, use <+lang lock statement><.k>lock<><>.
+
+lock (k1) {
+	k1.Add(10);
+}
 
 /// If need a variable that holds multiple values of different types, use one of:
 /// - <+lang value tuple types>Tuple<>.
