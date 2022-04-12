@@ -11,7 +11,8 @@ This class file can be used in scripts etc like any class file. One of:
 - Or add this file to a library project and use the library anywhere.
 */
 
-namespace Dialogs {
+namespace Dialogs;
+
 /// <summary>
 /// 
 /// </summary>
@@ -44,5 +45,4 @@ public class DialogClass : Window {
 			print.it($"Check: {c1.IsChecked == true}");
 		};
 	}
-}
 }

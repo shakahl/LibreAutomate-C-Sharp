@@ -20,7 +20,7 @@ The library can be used on computers with installed .NET Runtime (version: menu 
 See also: Cookbook -> Script -> Shared classes and functions, libraries.
 */
 
-namespace Library {
+namespace Library;
 
 public class Class1 {
 	
@@ -29,6 +29,4 @@ public class Class1 {
 	}
 	
 	
-}
-
 }

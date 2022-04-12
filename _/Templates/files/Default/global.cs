@@ -54,7 +54,7 @@ global using Au.More; //rarely used in automation scripts [-~]
 //class examples
 
 //#if !NO_GLOBAL
-//namespace my {
+//namespace my;
 ///// <summary>
 ///// Example.
 ///// </summary>
@@ -74,6 +74,5 @@ global using Au.More; //rarely used in automation scripts [-~]
 //	public static int Add(int a, int b) {
 //		return a + b;
 //	}
-//}
 //}
 //#endif

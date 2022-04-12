@@ -3409,7 +3409,8 @@ void ScintillaWin::AuDragDrop(int action, Sci_DragDropData* r) {
 		break;
 	case 2: //drop
 		SetDragPosition(SelectionPosition(Sci::invalidPosition));
-		DropAt(pos, r->text, r->len, !r->copy, false);
+		if (r->len > 0) DropAt(pos, r->text, r->len, !r->copy, false);
+		else SetEmptySelection(pos);
 		break;
 	case 3: //leave
 		SetDragPosition(SelectionPosition(Sci::invalidPosition));
