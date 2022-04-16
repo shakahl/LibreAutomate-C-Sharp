@@ -1,4 +1,4 @@
-/// To execute some code when current script ends, use event <see cref="process.thisProcessExit"/>.
+/// Event <see cref="process.thisProcessExit"/> can be used to execute some code when current script ends, either normally or on unhandles exception.
 
 process.thisProcessExit += e => {
 	if (e != null) print.it("FAILED. " + e.ToStringWithoutStack());

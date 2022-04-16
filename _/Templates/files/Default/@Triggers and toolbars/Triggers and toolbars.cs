@@ -6,7 +6,7 @@ script.setup();
 //..
 
 //Here you can add code that runs at startup. Set variables, etc.
-//Add triggers and toolbars in other files of this project. More info in "Readme.txt".
+//Add triggers and toolbars in other files of this folder. More info in Cookbook.
 
 
 

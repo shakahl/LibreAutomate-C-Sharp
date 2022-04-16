@@ -7,7 +7,6 @@ void HotkeyTriggers() {
 	
 	//Add hotkey triggers here.
 	//To add triggers can be used snippets. Start typing "trig" and you will see snippets in the completion list.
-	//Finally click the Run button to make all triggers alive or apply changes.
 	//Click the Run button to apply changes after editing.
 	
 	

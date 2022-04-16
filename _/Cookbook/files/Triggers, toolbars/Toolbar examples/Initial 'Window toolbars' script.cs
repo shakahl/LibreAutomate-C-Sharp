@@ -1,3 +1,5 @@
+/// The "Window toolbars" script initially is like this:
+
 using Au.Triggers;
 
 partial class Program {
@@ -15,7 +17,6 @@ void WindowToolbars() {
 
 //Add here toolbars that will be attached to windows.
 //To create new toolbar can be used snippet toolbarSnippet.
-//Click the Run button to apply changes after editing.
 //More info in Cookbook.
 
 

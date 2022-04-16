@@ -54,3 +54,5 @@ var d = new dialog("Example") {
 	Width = 900,
 };
 d.ShowDialog();
+
+/// See also <+recipe Dialog ->custom dialogs<>.

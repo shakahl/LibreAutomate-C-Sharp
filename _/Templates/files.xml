@@ -25,7 +25,6 @@
   <d n="Default" i="71">
     <c n="global.cs" i="72" />
     <d n="@Triggers and toolbars" i="15">
-      <n n="Readme.txt" i="16" />
       <s n="Triggers and toolbars.cs" i="17" icon="*Material.ScriptOutline #008EEE" />
       <d n="Triggers" i="18">
         <c n="Hotkey triggers.cs" i="19" />
@@ -36,7 +35,6 @@
       <d n="Toolbars" i="23">
         <c n="Common toolbars.cs" i="24" />
         <c n="Window toolbars.cs" i="25" />
-        <c n="Window toolbars template.cs" i="26" />
       </d>
       <d n="Functions" i="27">
         <c n="Partial1.cs" i="28" />

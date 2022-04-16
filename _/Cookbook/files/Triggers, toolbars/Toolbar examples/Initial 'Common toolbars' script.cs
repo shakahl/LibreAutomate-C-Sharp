@@ -1,3 +1,5 @@
+/// The "Common toolbars" script initially is like this:
+
 using Au.Triggers;
 
 partial class Program {
@@ -14,7 +16,6 @@ void CommonToolbars() {
 
 //Add here toolbars that will not be attached to windows. They can be attached to screen edges.
 //To create new toolbar can be used snippet toolbarSnippet.
-//Click the Run button to apply changes after editing.
 //More info in Cookbook.
 
 

@@ -1,5 +1,30 @@
-/// To quickly insert <see cref="popupMenu"/> code, use snippet menuSnippet: type menu and select from the list. To insert items can be used menuItemSnippet.
-///
+/// To quickly insert <see cref="popupMenu"/> code, use snippet menuSnippet: type "menu" and select from the list.
+
+var m = new popupMenu("4f14a87a-58e5-4bb6-96db-bbc5e6988e21");
+m["A"] = o => { print.it(o); }; //executes code { print.it(o); } when clicked
+m["B|Tooltip"] = o => {  };
+m.Last.BackgroundColor = System.Drawing.Color.Lavender;
+m.Submenu("Submenu", m => {
+	m["C"] = o => {  };
+	m["D"] = o => {  };
+});
+m.Separator();
+m["Run program"] = o => run.it(folders.System + @"notepad.exe");
+m["Run script"] = o => script.run("Script123456789.cs");
+m["Copy-paste"] = o => {
+	string s = clipboard.copy();
+	s = s.Upper();
+	clipboard.paste(s);
+};
+m.Show();
+
+/// Quick ways to add a menu item:
+/// - Clone an existing item.
+/// - Snippet: start typing "menu" and select menuItemSnippet in the completion list.
+/// - Drag and drop a script, file, folder or link. Then select "t[name] = ..." and edit t.
+
+/// To set menu item icon: click the item in the code editor, and double-click an icon in the Icons dialog.
+
 /// Simple menu. Function <see cref="popupMenu.showSimple"/> returns id of the selected item, or 0 if cancelled.
 
 int i = popupMenu.showSimple("1 One|2 Two|3 Three||0 Cancel");
@@ -9,26 +34,6 @@ case 2: print.it(2); break;
 case 3: print.it(3); break;
 default: return;
 }
-
-/// Advanced menu.
-
-var m = new popupMenu("4f14a87a-58e5-4bb6-96db-bbc5e6988e21");
-m["A"] = o => { print.it(o); }; //executes code { print.it(o); } when clicked
-m["B"] = o => {  };
-m.Last.Tooltip = "Tooltip";
-m.Submenu("", m => {
-	m["C"] = o => {  };
-	m["D"] = o => {  };
-});
-m.Separator();
-m["Run program example"] = o => run.it(folders.System + @"notepad.exe");
-m["Run script example"] = o => script.run("Script123456789.cs");
-m["Copy-paste example"] = o => {
-	string s = clipboard.copy();
-	s = s.Upper();
-	clipboard.paste(s);
-};
-m.Show();
 
 /// Menu with checkbox items and radiobutton items.
 
