@@ -1,8 +1,8 @@
-/// It is recommended to keep toolbars and keyboard/autotext/mouse/window triggers in folder "@Triggers and toolbars". It contains script "Triggers and toolbars", split into multiple files, one for each type of triggers and toolbars. Click a TT menu item to open a file; it creates the folder/file if need.
+/// It is recommended to keep toolbars and keyboard/autotext/mouse/window triggers in folder "@Triggers and toolbars". It contains script "Triggers and toolbars", split into multiple files. Click a TT menu item to open a file; it creates the folder/file if need.
 /// 
 /// Each file in the folder contain several examples, initially disabled. You can enable them and run the script to see how it works.
 /// Add your triggers near the example triggers. Delete or comment out unused examples.
-/// Add/remove toolbars in a similar way. Create more "partial" files for toolbars if need.
+/// To add toolbars, use menu TT -> New toolbar.
 ///
 /// Triggers and toolbars are active only when the script is running. When the program creates the folder, it also sets to run the script at program startup (Options -> General -> Run scripts...). Need to restart it (click the Run button) to apply changes after editing triggers or toolbars.
 /// 

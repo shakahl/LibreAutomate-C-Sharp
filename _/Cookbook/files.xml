@@ -119,10 +119,6 @@
     <s n="Mouse triggers.cs" i="161" />
     <s n="Window triggers, auto-close popup windows.cs" i="163" />
     <s n="Floating toolbars.cs" i="164" />
-    <d n="Toolbar examples" i="339">
-      <s n="Initial 'Common toolbars' script.cs" i="340" />
-      <s n="Initial 'Window toolbars' script.cs" i="341" />
-    </d>
     <s n="Script 'Triggers and toolbars'.cs" i="342" />
     <s n="Process triggers (start, end).cs" i="252" />
     <s n="File change triggers (events).cs" i="251" />

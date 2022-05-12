@@ -55,7 +55,7 @@ public class DialogWithTabs : Window {
 		//b.Loaded += () => {
 			
 		//};
-
+		
 		_b.OkApply += e => {
 			print.it($"Text: \"{text1.Text.Trim()}\"");
 		};
@@ -71,7 +71,7 @@ public class DialogWithTabs : Window {
 		//b.Loaded += () => { //note: this code runs when this page selected first time, which may never happen
 		//	loaded = true;
 		//};
-
+		
 		_b.OkApply += e => {
 			//if (!loaded) return;
 			

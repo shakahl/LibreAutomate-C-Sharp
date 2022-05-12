@@ -3,7 +3,7 @@
 
 #define MyAppName "C# Uiscripter"
 #define MyAppNameShort "Uiscripter"
-#define MyAppVersion "0.5.0"
+#define MyAppVersion "0.6.0"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.quickmacros.com/au/help/"
 #define MyAppExeName "Au.Editor.exe"

@@ -1,4 +1,4 @@
-﻿<files max-i="79">
+﻿<files max-i="108">
   <s n="Script.cs" i="1" />
   <c n="Class.cs" i="2" />
   <d n="New project" i="6">
@@ -33,8 +33,7 @@
         <c n="Window triggers.cs" i="22" />
       </d>
       <d n="Toolbars" i="23">
-        <c n="Common toolbars.cs" i="24" />
-        <c n="Window toolbars.cs" i="25" />
+        <c n="Toolbar examples.cs" i="24" />
       </d>
       <d n="Functions" i="27">
         <c n="Partial1.cs" i="28" />

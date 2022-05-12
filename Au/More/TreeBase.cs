@@ -422,8 +422,7 @@ namespace Au.More
 		/// <exception cref="XmlException">An error occurred while parsing the XML.</exception>
 		/// <remarks>More info: <see cref="XmlLoad(string, XmlNodeReader)"/>.</remarks>
 		/// <example><see cref="TreeBase{T}"/></example>
-		protected static T XmlLoad(XmlReader x, XmlNodeReader nodeReader) {
-			if (x == null || nodeReader == null) throw new ArgumentNullException();
+		protected static T XmlLoad(XmlReader x!!, XmlNodeReader nodeReader!!) {
 			T root = null, parent = null;
 			while (x.Read()) {
 				var nodeType = x.NodeType;
@@ -473,8 +472,7 @@ namespace Au.More
 		/// <remarks>More info: <see cref="XmlSave(string, XmlNodeWriter, XmlWriterSettings, IEnumerable{T})"/>.</remarks>
 		/// <exception cref="Exception">Exceptions of <b>XmlWriter</b> methods.</exception>
 		/// <example><see cref="TreeBase{T}"/></example>
-		protected void XmlSave(XmlWriter x, XmlNodeWriter nodeWriter, IEnumerable<T> children = null) {
-			if (x == null || nodeWriter == null) throw new ArgumentNullException();
+		protected void XmlSave(XmlWriter x!!, XmlNodeWriter nodeWriter!!, IEnumerable<T> children = null) {
 			x.WriteStartDocument();
 			if (children == null) {
 				_XmlWrite(x, nodeWriter);

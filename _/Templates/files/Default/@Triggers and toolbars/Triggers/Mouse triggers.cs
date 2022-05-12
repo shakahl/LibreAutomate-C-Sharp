@@ -5,12 +5,12 @@ partial class Program {
 void MouseTriggers() {
 	
 	//Add mouse triggers here.
-	//To add triggers can be used snippets. Start typing "trig" and you will see snippets in the completion list.
+	//To add triggers can be used triggerSnippet or menu TT -> New trigger. More info in Cookbook.
 	//Click the Run button to apply changes after editing.
 	
 	
 	
-	if (!true) { //examples. To enable, replace (!true) with (true) and run this script.
+	if (!true) { //examples. To enable and test it, replace (!true) with (true) and run this script.
 		Triggers.Mouse[TMClick.Right, "Ctrl+Shift", TMFlags.ButtonModUp] = o => print.it("mouse trigger example", o.Trigger); //Ctrl+Shift+RightClick
 		Triggers.Mouse[TMEdge.RightInCenter50] = o => { //the right edge of the primary screen, center 50%
 			var m = new popupMenu("example");
