@@ -881,7 +881,14 @@ partial class TestScript {
 	//	print.it(result);
 	//}
 
-	unsafe void _Main() {
+	async void _Main() {
+
+	//print.it(Thread.CurrentThread.ManagedThreadId); //6
+	//var isOnline = await Task.Run(() => true);
+	////var isOnline = await Task.Run(() => true).ConfigureAwait(true);
+	////var isOnline = Task.Run(() => true).Result;
+	//print.it(Thread.CurrentThread.ManagedThreadId, isOnline); //8
+
 		//dialog.show("");
 		//print.it(AppContext.BaseDirectory, AppContext.GetData("NATIVE_DLL_SEARCH_DIRECTORIES"));
 
@@ -912,8 +919,8 @@ partial class TestScript {
 		//}
 
 		//dialog.show();
-		var b = new wpfBuilder("Window");
-		b.ShowDialog();
+		//var b = new wpfBuilder("Window");
+		//b.ShowDialog();
 	}
 
 	[STAThread] static void Main(string[] args) { new TestScript(args); }

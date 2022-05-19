@@ -98,7 +98,7 @@
     <s n="SSH (manage website).cs" i="191" />
     <s n="Send email message (SMTP).cs" i="143" />
     <s n="Send and receive email (SMTP, POP3, IMAP).cs" i="144" />
-    <s n="-Check internet connection, ping.cs" i="152" />
+    <s n="Check internet connection, ping.cs" i="152" />
   </d>
   <d n="Script" i="186">
     <s n="Run script from script.cs" i="185" />
