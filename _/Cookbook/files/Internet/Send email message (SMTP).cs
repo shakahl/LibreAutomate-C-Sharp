@@ -25,4 +25,4 @@ var m = new MailMessage(from, to, "Test2", "message <b>text</b>") { IsBodyHtml =
 m.Attachments.Add(new(@"C:\Test\test.txt"));
 client.Send(m);
 
-/// See also recipe <+recipe>Send and receive email<>.
+/// Look for more info/examples on the Internet. See also recipe <+recipe>Send and receive email<>.

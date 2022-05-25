@@ -1,4 +1,4 @@
-﻿<files max-i="342">
+﻿<files max-i="343">
   <d n="-" i="244">
     <s n="Test.cs" i="121" />
     <s n="TODO.cs" i="292" />
@@ -91,14 +91,14 @@
     <s n="Wait for file.cs" i="250" />
   </d>
   <d n="Internet" i="16">
-    <s n="Download web page or file.cs" i="137" />
-    <s n="Http POST web form data, JSON.cs" i="139" />
+    <s n="Check internet connection, ping.cs" i="152" />
+    <s n="Http get web page, download file.cs" i="137" />
+    <s n="Http post web form, JSON.cs" i="139" />
     <s n="Parse HTML.cs" i="135" />
     <s n="SFTP (upload, download, etc).cs" i="142" />
     <s n="SSH (manage website).cs" i="191" />
     <s n="Send email message (SMTP).cs" i="143" />
     <s n="Send and receive email (SMTP, POP3, IMAP).cs" i="144" />
-    <s n="Check internet connection, ping.cs" i="152" />
   </d>
   <d n="Script" i="186">
     <s n="Run script from script.cs" i="185" />

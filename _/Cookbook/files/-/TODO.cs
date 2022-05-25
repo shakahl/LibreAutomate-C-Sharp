@@ -17,8 +17,6 @@ Log.
 
 PDF.
 
-REST.
-
 Disposing, using statement.
 
 Test Excel libraries more. Maybe use ClosedXML (free) instead of EPPlus (free for non-commercial).
