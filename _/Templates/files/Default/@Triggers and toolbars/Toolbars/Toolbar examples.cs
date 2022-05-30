@@ -1,5 +1,5 @@
 /// To create initial toolbar code easily, use menu TT -> New toolbar.
-/// To add buttons quickly, use snippet toolbarButtonSnippet or drag-drop scripts/files/links.
+/// To add buttons quickly: snippet tbToolbarButtonSnippet; drag-drop scripts/files/links; hotkey Ctrl+Shift+Q.
 /// Click the Run button to apply changes after editing.
 /// More info in Cookbook.
 

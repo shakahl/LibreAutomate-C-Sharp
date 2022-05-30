@@ -1,4 +1,4 @@
-/// To quickly insert <see cref="popupMenu"/> code, use snippet menuSnippet: type "menu" and select from the list.
+/// To quickly insert <see cref="popupMenu"/> code, use snippet popupMenuSnippet: type "popup" or "menu" and select from the list.
 
 var m = new popupMenu("4f14a87a-58e5-4bb6-96db-bbc5e6988e21");
 m["A"] = o => { print.it(o); }; //executes code { print.it(o); } when clicked
@@ -20,8 +20,9 @@ m.Show();
 
 /// Quick ways to add a menu item:
 /// - Clone an existing item.
-/// - Snippet: start typing "menu" and select menuItemSnippet in the completion list.
-/// - Drag and drop a script, file, folder or link. Then select "t[name] = ..." and edit t.
+/// - Snippet: start typing "menu" and select menuItemSnippet.
+/// - Drag and drop a script, file, folder or link. Then select "t[name] = ...".
+/// - Use the quick capturing hotkey (default Ctrl+Shift+Q) to add a "run program" button.
 
 /// To set menu item icon: click the item in the code editor, and double-click an icon in the Icons dialog.
 

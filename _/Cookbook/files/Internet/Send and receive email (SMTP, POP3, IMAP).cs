@@ -36,11 +36,16 @@ using (var client = new ImapClient()) {
 	var inbox = client.Inbox;
 	inbox.Open(FolderAccess.ReadOnly);
 
-	print.it($"Count {inbox.Count}, recent {inbox.Recent}");
+	print.it($"Count {inbox.Count}");
 
-	for (int i = 0, n = Math.Min(inbox.Count, 5); i < n; i++) {
-		var m = inbox.GetMessage(i);
-		print.it(m.Subject);
+	foreach (var m in inbox.Fetch(0, -1, MessageSummaryItems.Envelope | MessageSummaryItems.Flags | MessageSummaryItems.UniqueId | MessageSummaryItems.PreviewText)) {
+		//if(m.Flags.Value.Has(MessageFlags.Seen)) continue;
+		print.it($"<><Z #C0C0ff>{m.Index}. {m.Envelope.Subject}   {m.Envelope.From}<>");
+		print.it(m.PreviewText);
+		//if (!m.Flags.Value.Has(MessageFlags.Seen)) {
+		//	var M = inbox.GetMessage(m.UniqueId);
+		//	print.it(M.TextBody);
+		//}
 	}
 
 	client.Disconnect(true);

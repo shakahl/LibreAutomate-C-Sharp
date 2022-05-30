@@ -459,7 +459,7 @@ namespace Au
 
 				var font = NativeFont_.RegularCached(_dpi);
 				int magnWH = Dpi.Scale(200, _dpi) / 10 * 10; //width and height of the magnified image without borders etc
-				if (_textSize == default) using (var tr = new FontDC_(font)) _textSize = tr.Measure(text, TFFlags.NOPREFIX);
+				if (_textSize == default) using (var tr = new FontDC_(font)) _textSize = tr.MeasureDT(text, TFFlags.NOPREFIX);
 				int width = Math.Max(magnWH, _textSize.width) + 2, height = magnWH + 4 + _textSize.height;
 				using var mb = new MemoryBitmap(width, height);
 				var dc = mb.Hdc;
@@ -484,7 +484,7 @@ namespace Au
 				Api.SetTextColor(dc, 0x32CD9A); //Color.YellowGreen
 				Api.SetBkMode(dc, 1);
 				var oldFont = Api.SelectObject(dc, font);
-				Api.DrawText(dc, text, text.Length, ref rc, TFFlags.NOPREFIX);
+				Api.DrawText(dc, text, ref rc, TFFlags.NOPREFIX);
 				Api.SelectObject(dc, oldFont);
 
 				//set magninifier position far from cursor

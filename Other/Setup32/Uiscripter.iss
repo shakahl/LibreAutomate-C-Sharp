@@ -51,7 +51,6 @@ Source: "Q:\app\Au\_\Roslyn\*.dll"; DestDir: "{app}\Roslyn"; Flags: ignoreversio
 Source: "Q:\app\Au\_\64\Au.AppHost.exe"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "Q:\app\Au\_\64\AuCpp.dll"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "Q:\app\Au\_\64\Scintilla.dll"; DestDir: "{app}\64"; Flags: ignoreversion
-Source: "Q:\app\Au\_\64\Lexilla.dll"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "Q:\app\Au\_\64\sqlite3.dll"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "Q:\app\Au\_\32\Au.AppHost.exe"; DestDir: "{app}\32"; Flags: ignoreversion
 Source: "Q:\app\Au\_\32\AuCpp.dll"; DestDir: "{app}\32"; Flags: ignoreversion
