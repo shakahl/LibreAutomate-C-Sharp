@@ -883,11 +883,11 @@ partial class TestScript {
 
 	async void _Main() {
 
-	//print.it(Thread.CurrentThread.ManagedThreadId); //6
+	//print.it(Environment.CurrentManagedThreadId); //6
 	//var isOnline = await Task.Run(() => true);
 	////var isOnline = await Task.Run(() => true).ConfigureAwait(true);
 	////var isOnline = Task.Run(() => true).Result;
-	//print.it(Thread.CurrentThread.ManagedThreadId, isOnline); //8
+	//print.it(Environment.CurrentManagedThreadId, isOnline); //8
 
 		//dialog.show("");
 		//print.it(AppContext.BaseDirectory, AppContext.GetData("NATIVE_DLL_SEARCH_DIRECTORIES"));

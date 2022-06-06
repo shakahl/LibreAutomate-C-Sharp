@@ -34,7 +34,7 @@ public class DialogWithTabs : Window {
 		_b.R.AddOkCancel(apply: "_Apply");
 		_Page1();
 		_Page2();
-		//...
+		// ...
 		_b.End();
 		//_tc.SelectedIndex = 1;
 	}
@@ -80,5 +80,5 @@ public class DialogWithTabs : Window {
 		};
 	}
 	
-	//...
+	// ...
 }

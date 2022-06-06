@@ -16,11 +16,13 @@ class Class1 {
 
 /// Script example (note the <.k>partial<>):
 
-partial class Program { static void Main(string[] a) => new Program(a); Program(string[] args) { //...
-
-Function2("example");
-
-}
+partial class Program {
+	static void Main(string[] a) => new Program(a);
+	Program(string[] args) {
+		
+		Function2("example");
+		
+	}
 }
 
 /// Partial class file example:

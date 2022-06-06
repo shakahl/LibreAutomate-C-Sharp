@@ -1,24 +1,24 @@
-/// The default script syntax is known as <google>C# top-level statements</google>. You can instead use the classic C# syntax with class Program and function Main. To insert code can be used menu Edit -> Insert -> Add class Program.
+/// The default script syntax is known as <google>C# top-level statements</google>. You can instead use the classic C# syntax with class Program and function Main. To insert code can be used menu Edit -> Document -> Add class Program.
 
-//.
-class Program { static void Main(string[] a) => new Program(a); Program(string[] args) { //...
-script.setup(trayIcon: true, sleepExit: true);
-//..
-
-print.it("script code");
-_field1 = 1;
-Function1();
-
-}
-
-int _field1; //this is a field, not a local variable
-void Function1() {  } //this is a class function, not a local function
-
+class Program {
+	static void Main(string[] a) => new Program(a);
+	Program(string[] args) {
+		script.setup(trayIcon: true, sleepExit: true);
+		
+		print.it("script code");
+		_field1 = 1;
+		Function1();
+		
+	}
+	
+	int _field1; //this is a field, not a local variable
+	void Function1() { } //this is a class function, not a local function
+	
 }
 
 /// Why to use such code? Because the default syntax has some limitations. The classic syntax allows to:
 /// - Add fields (class-level variables) and class-level functions to the main class.
-/// - Add class/method-level modifiers and attributes, such as <.k>partial<>, <.k>unsafe<>, [MTAThread].
+/// - Add class/method-level modifiers and attributes, for example <.k>partial<>, <.k>unsafe<>.
 /// - Split the main class into partial files. See recipe <+recipe>Multi-file scripts<>.
 /// - Avoid <google>intellisense</google> failures that sometimes happen when typing code not in a { } block.
 

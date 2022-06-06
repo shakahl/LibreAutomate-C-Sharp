@@ -27,5 +27,5 @@ print.it(3);
 /// See also classes in namespace <see cref="System.Diagnostics"/> and its child namespaces.
 
 script.setup(debug: true);
-//...
+// ...
 Debug.Assert(false);

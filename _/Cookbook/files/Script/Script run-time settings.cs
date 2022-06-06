@@ -30,5 +30,5 @@ keys.sendt("Slow text");
 /// Class <see cref="print"/> has several options.
 
 print.redirectDebugOutput = true;
-//...
+// ...
 Debug.Print("debug");
