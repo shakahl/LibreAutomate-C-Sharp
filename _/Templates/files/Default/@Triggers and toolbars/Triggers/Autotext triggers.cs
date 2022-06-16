@@ -48,6 +48,15 @@ partial class Program {
 			tr["#th"] = "Thursday (autotext example)";
 			tr["#fr", postfixType: TAPostfix.None] = "Friday (autotext example)";
 			tt.DefaultFlags &= ~TAFlags.Confirm; //remove flag
+			
+			//menu
+			
+			tt["m1"] = o => o.Menu(
+				"https://www.example.com",
+				"<tag>[[|]]</tag>",
+				new("Label example", "TEXT"),
+				new("HTML example", "TEXT", "<b>TEXT</b>")
+				);
 		}
 	}
 	

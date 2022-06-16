@@ -51,6 +51,6 @@ foreach (var v in process.triggers(true, "**m winword.exe||*pad.exe")) {
 	}
 }
 
-/// Wait for a "notepad.exe" process (new or existing).
+/// Wait for a "notepad.exe" process if not already running.
 
-wait.forCondition(0, () => 0 != process.getProcessId("notepad.exe"));
+wait.forCondition(0, () => process.exists("notepad.exe"));

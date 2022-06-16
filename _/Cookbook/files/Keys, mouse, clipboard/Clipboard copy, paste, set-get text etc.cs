@@ -24,3 +24,9 @@ if (a != null) {
 /// Clear clipboard contents.
 
 clipboard.clear();
+
+/// Wait until the clipboard contains text, and get it.
+
+clipboard.clear();
+var text = wait.forCondition(0, () => clipboard.text);
+print.it(text);

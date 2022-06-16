@@ -44,7 +44,7 @@ static unsafe class RunAssembly
 				//tested: .NET unloads dlls, but later than Assembly objects, maybe after 1-2 minutes, randomly.
 
 				if (loaded) {
-					var s = asmFile.Insert(asmFile.Length - 4, "'" + perf.mcs.ToString()); //info: compiler will delete all files with "'" on first run after editor restart
+					var s = asmFile.Insert(^4, "'" + perf.mcs.ToString()); //info: compiler will delete all files with "'" on first run after editor restart
 #if true //copy file
 					if (!Api.CopyFileEx(asmFile, s, null, default, null, 0)) throw new AuException(0, "failed to copy assembly file");
 					//p1.Next('C');

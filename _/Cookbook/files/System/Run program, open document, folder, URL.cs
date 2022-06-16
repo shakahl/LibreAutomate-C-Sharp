@@ -79,7 +79,7 @@ print.it(w3);
 
 /// Run if the process does not exist.
 
-if (0 == process.getProcessId("notepad.exe")) run.it(@"notepad.exe");
+if (!process.exists("notepad.exe")) run.it(@"notepad.exe");
 
 /// Select a file in File Explorer (folder window). Opens the folder window if need.
 

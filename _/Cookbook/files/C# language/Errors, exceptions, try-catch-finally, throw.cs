@@ -1,7 +1,7 @@
 /// A script with errors can't run. Errors must be fixed.
 
 print.it(1) //error, no semicolon
-print.it(u); //error, name u does not exist
+print.it(u); //error, u does not exist
 
 /// Exceptions occur when something fails at run time. Then the script ends or jumps to a <.k>catch<> part of the nearest <.k>try-catch<> statement that embraces that code. <+lang try catch>More info<>.
 
@@ -35,7 +35,7 @@ catch (Exception e) when (e is not ArgumentException) { //handle all other excep
 }
 print.it(text ?? "file not found");
 
-/// Can use <.k>try-finally<> and <.k>try-catch-finally<>. <+lang try finally>More info<>. The <.k>finally<> code runs when the <.k>try<> code is leaved in any way (finished, exception, <.k>return<>, <.k>goto<>, etc).
+/// Can use <.k>try-finally<> and <.k>try-catch-finally<>. <+lang try finally>More info<>. The <.k>finally<> code runs when the <.k>try<> code is leaved in whatever way (finished, exception, <.k>return<>, <.k>goto<>, etc).
 
 print.it(1);
 try {
@@ -47,7 +47,7 @@ try {
 finally { print.it("finally"); }
 print.it(3);
 
-/// Note: The <.k>finally<> code does not run if <google C# Environment.Exit>Environment.Exit<> and other function terminates the process.
+/// Note: The <.k>finally<> code does not run if <google C# Environment.Exit>Environment.Exit<> or some other function terminates the process.
 
 /// With disposable objects instead of try-finally-Dispose can be used the <+lang using statement><.k>using<><> statement.
 
@@ -61,3 +61,7 @@ void Func1(int i) {
 	if (keys.isCapsLock) throw new InvalidOperationException("CapsLock");
 	print.it(i);
 }
+
+/// Two ways to insert <.k>try<> code quickly:
+/// - Type tryc and select tryCatchFinallySnippet.
+/// - Click or select code, and use menu Edit -> Surround.

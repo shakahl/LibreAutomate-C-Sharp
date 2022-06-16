@@ -15,14 +15,26 @@ print.it("deleted");
 
 /// Wait max 5 s for process; on timeout exit. Then wait until does not exist.
 
-if (!wait.forCondition(-5, () => 0 != process.getProcessId("notepad.exe"))) return;
+if (!wait.forCondition(-5, () => process.exists("notepad.exe"))) return;
 print.it("started");
-wait.forCondition(0, () => 0 == process.getProcessId("notepad.exe"));
+wait.forCondition(0, () => !process.exists("notepad.exe"));
 print.it("ended");
 
 /// Wait for variable.
 
 bool m = false;
 Task.Run(() => { 2.s(); m = true; }); //an example that executes a task in another thread and sets the variable when finished
-wait.forVariable(0, m);
+wait.forCondition(0, () => m);
 print.it("continue");
+
+/// Wait until the clipboard contains text, and get it.
+
+clipboard.clear();
+var text = wait.forCondition(0, () => clipboard.text);
+print.it(text);
+
+/// Wait until the clipboard contains file paths, and get them.
+
+clipboard.clear();
+var af = wait.forCondition(0, () => clipboardData.getFiles());
+print.it(af);

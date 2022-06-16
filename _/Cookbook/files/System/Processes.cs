@@ -16,17 +16,17 @@ process.suspend(false, "notepad.exe");
 
 /// If process does not exist.
 
-if (0 == process.getProcessId("notepad.exe")) {
+if (!process.exists("notepad.exe")) {
 	print.it("does not exist");
 }
 
 /// Wait for a "notepad.exe" process. See also <+recipe>Process triggers<>.
 
-wait.forCondition(0, () => 0 != process.getProcessId("notepad.exe"));
+wait.forCondition(0, () => process.exists("notepad.exe"));
 
 /// Wait until there are no "notepad.exe" processes.
 
-wait.forCondition(0, () => 0 == process.getProcessId("notepad.exe"));
+wait.forCondition(0, () => !process.exists("notepad.exe"));
 
 /// Get window process id and terminate its process.
 
