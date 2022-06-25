@@ -11,14 +11,12 @@ This class file can be used in scripts etc like any class file. One of:
 - Or add this file to a library project and use the library anywhere.
 */
 
-namespace Dialogs;
-
 /// <summary>
 /// 
 /// </summary>
 /// <example>
 /// <code><![CDATA[
-/// var d = new Dialogs.DialogClass();
+/// var d = new DialogClass();
 /// d.ShowDialog();
 /// ]]></code>
 /// </example>
@@ -30,7 +28,8 @@ public class DialogClass : Window {
 	public DialogClass() {
 		Title = "Dialog";
 		var b = new wpfBuilder(this).WinSize(400);
-		b.R.Add("Text", out TextBox text1).Focus().Validation(_ => string.IsNullOrWhiteSpace(text1.Text) ? "Text cannot be empty" : null);
+		b.R.Add("Text", out TextBox text1).Focus()
+			.Validation(_ => string.IsNullOrWhiteSpace(text1.Text) ? "Text cannot be empty" : null);
 		b.R.Add("Combo", out _combo1).Items("Zero|One|Two");
 		b.R.Add(out _c1, "Check");
 		b.R.AddOkCancel();
