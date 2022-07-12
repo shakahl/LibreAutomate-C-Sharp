@@ -1,4 +1,4 @@
-﻿/*/ role exeProgram; outputPath %folders.Workspace%\bin\RenameMe; /*/ //.
+﻿/*/ role exeProgram; /*/ //.
 using System.Reflection;
 
 [assembly: AssemblyVersion("1.0.0.0")]
