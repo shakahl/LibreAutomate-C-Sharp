@@ -24,10 +24,10 @@ partial class Program {
 				
 				//To create menus can be used snippets. Start typing "menu" and you will see snippets in the completion list.
 			};
-			Triggers.Mouse[TMMove.LeftRightInCenter50, screen: TMScreen.Any] = o => wnd.switchActiveWindow(); //move the mouse quickly to the left and back in center 50% of any screen
-			Triggers.Mouse[TMMove.RightLeftInCenter50, screen: TMScreen.Any] = o => keys.send("Ctrl+Tab"); //to the right and back. Ctrl+Tab should switch the active document.
+			Triggers.Mouse[TMMove.LeftRightInCenter50, screen: screen.ofMouse] = o => wnd.switchActiveWindow(); //move the mouse quickly to the left and back in center 50% of any screen
+			Triggers.Mouse[TMMove.RightLeftInCenter50, screen: screen.ofMouse] = o => keys.send("Ctrl+Tab"); //to the right and back. Ctrl+Tab should switch the active document.
 			
-			Triggers.FuncOf.NextTrigger = o => keys.isScrollLock; //example of a custom scope (aka context, condition)
+			Triggers.FuncOf.NextTrigger = o => keys.isScrollLock; //example of a custom scope (context, condition)
 			Triggers.Mouse[TMWheel.Forward] = o => print.it($"mouse trigger example: {o.Trigger} while ScrollLock is on");
 		}
 	}
