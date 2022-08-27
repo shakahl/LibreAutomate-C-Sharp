@@ -19,3 +19,7 @@ run.console("shutdown.exe", "/h"); //hibernate
 /// On Windows 10 can use the Win+X menu.
 
 keys.send("Win+X ^u"); //show popup menu with shutdown options
+
+/// Is the computer running on battery?
+
+if (computer.isOnBattery) print.it("on battery");

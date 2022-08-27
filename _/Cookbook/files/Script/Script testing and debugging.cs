@@ -29,3 +29,62 @@ print.it(3);
 script.setup(debug: true);
 // ...
 Debug.Assert(false);
+
+/// Function <see cref="script.debug"/> can launch a script to automate attaching a debugger. Set it in Options -> General -> Debugger script. Example script:
+
+// Attaches Visual Studio or VSCode debugger to the process id = args[0].
+// If args is empty, attaches to this process for testing this script.
+
+bool test = args.Length == 0; //test this script
+if (test) print.clear();
+int id = test ? process.thisProcessId : args[0].ToInt();
+
+int debugger = 0; //1 VS, 2 VSCode
+var w = wnd.find("*Visual Studio*", "HwndWrapper[DefaultDomain;*");
+if (!w.Is0) debugger = 1;
+else {
+	w = wnd.find("*Visual Studio Code*", "Chrome_WidgetWin_1");
+	if (!w.Is0) debugger = 2;
+}
+if (debugger == 0) {
+	dialog.showInfo("Debugger window not found", "Supported debuggers: Visual Studio, VSCode.");
+} else if (uacInfo.ofProcess(id).Elevation == UacElevation.Full && uacInfo.ofProcess(w.ProcessId).Elevation != UacElevation.Full) {
+	dialog.showInfo("Debugger isn't admin", "The debugger process must be running as administrator.");
+	debugger = 0;
+}
+if (debugger == 0) {
+	if (!test) process.terminate(id); //because it's waiting in script.debug
+	return;
+}
+
+w.Activate();
+100.ms();
+if (debugger == 1) {
+	keys.send("Ctrl+Alt+P");
+	var w2 = wnd.find(5, "Attach to Process", "#32770");
+	500.ms();
+	var e = w2.Elm["LISTITEM", null, new("id=4102", $"desc=ID: {id}? *")].Find(3); //note: use '?' because can be ',' or ';' etc depending on regional settings
+	200.ms();
+	e.Focus(true);
+	keys.send("Alt+a");
+} else {
+	keys.send("Ctrl+Shift+D");
+	g1:
+	var e1 = w.Elm["web:COMBOBOX", "Debug Launch Configurations"].Find(3);
+	if (e1.Value != ".NET Core Attach") {
+		//e1.ComboSelect(".NET Core Attach", "100k"); //crashes with how = default or "i". "s" and "m" don't work
+		//keys.send(100, "Esc"); //somehow the first Enter does not close. Need Esc or second Enter. But State not EXPANDED.
+		if (!dialog.showOkCancel("Select debug configuration", "In the combo box please select \".NET Core Attach\". Then click OK here.")) return;
+		goto g1;
+	}
+	keys.send("F5");
+	var e = w.Elm["web:COMBOBOX", "Select the process to attach to"].Find(15);
+	clipboard.paste($"{id}");
+	keys.send("Enter");
+}
+
+if (test) {
+	wait.forCondition(0, () => Debugger.IsAttached);
+	Debugger.Break();
+	print.it("Debugger script.");
+}

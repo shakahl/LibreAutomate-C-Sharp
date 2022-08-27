@@ -1,6 +1,7 @@
 /// Class <see cref="FileSystemWatcher"/> detects filesystem changes in a directory, when a file or subdirectory created, deleted, renamed, modified, changed attributes/times/size.
 /// 
 /// See also recipe <+recipe>wait for file<>. It contains an example of how to load a created or modified file.
+/// See also recipe <+recipe>Other triggers<>.
 
 /// Watch for changes in a directory.
 

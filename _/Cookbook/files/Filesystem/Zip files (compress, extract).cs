@@ -1,34 +1,34 @@
 /// Use class <see cref="ZipFile"/>.
 
-string zipFile = @"Q:\Test\Z.zip";
+string zipFile = @"C:\Test\Z.zip";
 //filesystem.delete(zipFile);
 
 /// Create .zip file from folder.
 
-ZipFile.CreateFromDirectory(@"Q:\Test\Folder", zipFile);
-ZipFile.CreateFromDirectory(@"Q:\Test\Folder", zipFile, CompressionLevel.Fastest, includeBaseDirectory: true);
+ZipFile.CreateFromDirectory(@"C:\Test\Folder", zipFile);
+ZipFile.CreateFromDirectory(@"C:\Test\Folder", zipFile, CompressionLevel.Fastest, includeBaseDirectory: true);
 
 /// Extract .zip file.
 
-ZipFile.ExtractToDirectory(zipFile, @"Q:\Test\Folder2");
+ZipFile.ExtractToDirectory(zipFile, @"C:\Test\Folder2");
 
 /// Create .zip file from single file.
 
-string file = @"Q:\Test\sqlite.db";
+string file = @"C:\Test\sqlite.db";
 using (var z = ZipFile.Open(zipFile, ZipArchiveMode.Create))
 	z.CreateEntryFromFile(file, pathname.getName(file));
 
 /// Create .zip file and add .db files from folder.
 
 using (var z = ZipFile.Open(zipFile, ZipArchiveMode.Create)) {
-	foreach (var f in filesystem.enumFiles(@"Q:\Test", "*.db"))
+	foreach (var f in filesystem.enumFiles(@"C:\Test", "*.db"))
 		z.CreateEntryFromFile(f.FullPath, f.Name);
 }
 
 /// Create .zip file from folder. Don't include subfolders named "protected" or "ico".
 
 using (var z = ZipFile.Open(zipFile, ZipArchiveMode.Create)) {
-	foreach (var f in filesystem.enumerate(@"Q:\Test\Folder", FEFlags.NeedRelativePaths, dirFilter: d => d.Name.Ends(true, @"\protected", @"\ico") > 0 ? 0 : 2)) {
+	foreach (var f in filesystem.enumerate(@"C:\Test\Folder", FEFlags.NeedRelativePaths, dirFilter: d => d.Name.Ends(true, @"\protected", @"\ico") > 0 ? 0 : 2)) {
 		//print.it(f.Name);
 		z.CreateEntryFromFile(f.FullPath, f.Name[1..].Replace('\\', '/'));
 	}
@@ -37,8 +37,8 @@ using (var z = ZipFile.Open(zipFile, ZipArchiveMode.Create)) {
 /// Create .zip file and add files/folders specified in a list or array.
 
 string list = @"
-Q:\Test\sqlite.db
-Q:\Test\Folder";
+C:\Test\sqlite.db
+C:\Test\Folder";
 string[] a = list.Lines(noEmpty: true);
 using (var z = ZipFile.Open(zipFile, ZipArchiveMode.Create)) {
 	foreach (var f in a) {
@@ -63,8 +63,8 @@ using (var z = ZipFile.OpenRead(zipFile)) {
 	foreach (var e in z.Entries) {
 		print.it(e.Name, e.FullName, e.Length, e.CompressedLength);
 		if(e.Name.Eqi("m.txt")) {
-			//var s = @"Q:\Test\Extracted\" + e.Name; //extract all to the same folder
-			var s = @"Q:\Test\Extracted\" + e.FullName; //create subfolders if need
+			//var s = @"C:\Test\Extracted\" + e.Name; //extract all to the same folder
+			var s = @"C:\Test\Extracted\" + e.FullName; //create subfolders if need
 			filesystem.createDirectoryFor(s);
 			e.ExtractToFile(s, overwrite: true);
 		}
@@ -75,6 +75,6 @@ using (var z = ZipFile.OpenRead(zipFile)) {
 /// 
 /// Also you can find command line programs on the internet, or even already have them installed.
 
-string file1 = @"Q:\Test\icons.db";
-var file2 = @"Q:\Test\icons.7z";
+string file1 = @"C:\Test\icons.db";
+var file2 = @"C:\Test\icons.7z";
 run.console(folders.ProgramFiles + @"7-Zip\7z.exe", $@"a ""{file2}"" ""{file1}""");

@@ -7,6 +7,13 @@ using System.Net.Http;
 string html = internet.http.Get("https://www.example.com").Text();
 print.it(html);
 
+/// To urlencode URL parameters can be used <see cref="internet.urlAppend"/> or <see cref="System.Net.WebUtility.UrlEncode"/>.
+
+string p1 = "one, two", p2 = "three, four";
+var url1 = internet.urlAppend("https://httpbin.org/get", "p1=" + p1, "p2=" + p2);
+print.it(url1);
+print.it(internet.http.Get(url1).Text());
+
 /// Download and print all response info.
 
 var r = internet.http.Get("https://httpbin.org/anything");

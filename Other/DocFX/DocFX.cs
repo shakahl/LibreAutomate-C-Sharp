@@ -51,9 +51,9 @@ unsafe class Program
 			print.clear();
 		}
 
-		var docfx = @"Q:\Programs\DocFx\docfx.exe";
-		var objDir = @"Q:\Temp\Au\DocFX\obj";
-		var docDir = @"Q:\app\Au\Other\DocFX\_doc";
+		var docfx = @"C:\Program Filess\DocFx\docfx.exe";
+		var objDir = @"C:\Temp\Au\DocFX\obj";
+		var docDir = @"C:\code\au\Other\DocFX\_doc";
 		var siteDir = docDir + @"\_site";
 		var apiDir = docDir + @"\api";
 
@@ -136,8 +136,8 @@ unsafe class Program
 	//preprocess and copy source files, because DocFX does not support latest C# features.
 	//note: if using this, in docfx.json change src: "src": "Q:/Temp/Au/DocFX/source/"
 	static void PreprocessSource() {
-		var sourceDir1 = @"Q:\app\Au\Au";
-		var sourceDir2 = @"Q:\Temp\Au\DocFX\source";
+		var sourceDir1 = @"C:\code\au\Au";
+		var sourceDir2 = @"C:\Temp\Au\DocFX\source";
 		filesystem.delete(sourceDir2);
 		filesystem.createDirectory(sourceDir2);
 
@@ -147,7 +147,7 @@ unsafe class Program
 
 		foreach (var v in Directory.EnumerateFiles(sourceDir1, "*", SearchOption.AllDirectories)) {
 			if (0 == v.Ends(true, ".cs", ".csproj")) continue;
-			if (0 != v.Starts(true, @"Q:\app\Au\Au\bin\", @"Q:\app\Au\Au\obj\")) continue;
+			if (0 != v.Starts(true, @"C:\code\au\Au\bin\", @"C:\code\au\Au\obj\")) continue;
 			if (v.Ends(@"\global.cs", true)) continue;
 
 			var v2 = sourceDir2 + v[sourceDir1.Length..];
@@ -550,7 +550,7 @@ unsafe class Program
 
 }
 
-#if Extract // Q:\Programs\eclipse\workspace\test\extract_help.php:
+#if Extract // Eclipse: extract_help.php:
 
 <?php
 
@@ -607,7 +607,7 @@ this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your pag
 */
 (function() { // DON'T EDIT BELOW THIS LINE
 var d = document, s = d.createElement('script');
-s.src = 'https://uiscripter.disqus.com/embed.js';
+s.src = 'https://autoandcs.disqus.com/embed.js';
 s.setAttribute('data-timestamp', +new Date());
 (d.head || d.body).appendChild(s);
 })();

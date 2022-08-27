@@ -21,6 +21,6 @@ var ellipse = new Ellipse { Stroke = Brushes.BlueViolet, StrokeThickness = 4, Fi
 b.R.Add(ellipse).Size(100, 50);
 
 //window icon
-b.WinProperties(icon: BitmapFrame.Create(new Uri(@"Q:\Test\find.ico")));
+b.WinProperties(icon: BitmapFrame.Create(new Uri(@"C:\Test\find.ico")));
 
 if (!b.ShowDialog()) return;

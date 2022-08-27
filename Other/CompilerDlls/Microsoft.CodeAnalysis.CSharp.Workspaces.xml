@@ -19,6 +19,12 @@
             and constructed via provided factory.
             </summary>
         </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.CodeGeneration.CSharpCodeGenerationHelpers.GetReuseableSyntaxNodeForSymbol``1(Microsoft.CodeAnalysis.ISymbol,Microsoft.CodeAnalysis.CSharp.CodeGeneration.CSharpCodeGenerationContextInfo)">
+            <summary>
+            Try use the existing syntax node and generate a new syntax node for the given <param name="symbol"/>.
+            Note: the returned syntax node might be modified, which means its parent information might be missing.
+            </summary>
+        </member>
         <member name="M:Microsoft.CodeAnalysis.CSharp.CodeGeneration.CSharpSyntaxGenerator.ShiftTrivia(Microsoft.CodeAnalysis.SyntaxNode,Microsoft.CodeAnalysis.SyntaxNode)">
             <summary>
             Moves the trailing trivia from the node's previous token to the end of the node
@@ -121,14 +127,14 @@
             <param name="name">The name of the expression.</param>
             <param name="arity">The number of generic type parameters.</param>
         </member>
-        <member name="M:Microsoft.CodeAnalysis.CSharp.Extensions.ArgumentSyntaxExtensions.DetermineParameter(Microsoft.CodeAnalysis.CSharp.Syntax.ArgumentSyntax,Microsoft.CodeAnalysis.SemanticModel,System.Boolean,System.Threading.CancellationToken)">
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Extensions.ArgumentSyntaxExtensions.DetermineParameter(Microsoft.CodeAnalysis.CSharp.Syntax.ArgumentSyntax,Microsoft.CodeAnalysis.SemanticModel,System.Boolean,System.Boolean,System.Threading.CancellationToken)">
             <summary>
             Returns the parameter to which this argument is passed. If <paramref name="allowParams"/>
             is true, the last parameter will be returned if it is params parameter and the index of
             the specified argument is greater than the number of parameters.
             </summary>
         </member>
-        <member name="M:Microsoft.CodeAnalysis.CSharp.Extensions.AttributeArgumentSyntaxExtensions.DetermineParameter(Microsoft.CodeAnalysis.CSharp.Syntax.AttributeArgumentSyntax,Microsoft.CodeAnalysis.SemanticModel,System.Boolean,System.Threading.CancellationToken)">
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Extensions.AttributeArgumentSyntaxExtensions.DetermineParameter(Microsoft.CodeAnalysis.CSharp.Syntax.AttributeArgumentSyntax,Microsoft.CodeAnalysis.SemanticModel,System.Boolean,System.Boolean,System.Threading.CancellationToken)">
             <summary>
             Returns the parameter to which this argument is passed. If <paramref name="allowParams"/>
             is true, the last parameter will be returned if it is params parameter and the index of
@@ -161,6 +167,17 @@
             Is this a possible position for an await statement (`await using` or `await foreach`)?
             </summary>
         </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery.CSharpSyntaxContext.ComputeIsAwaitKeywordContext(System.Int32,Microsoft.CodeAnalysis.SyntaxToken,Microsoft.CodeAnalysis.SyntaxToken,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Determines whether await should be suggested in a given position.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Extensions.ExpressionSyntaxExtensions.IsInRefContext(Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax,Microsoft.CodeAnalysis.SyntaxNode@)">
+            <summary>
+            Returns true if this expression is in some <c>ref</c> keyword context.  If <see langword="true"/> then
+            <paramref name="refParent"/> will be the node containing the <see langword="ref"/> keyword.
+            </summary>
+        </member>
         <member name="M:Microsoft.CodeAnalysis.CSharp.Extensions.ExpressionSyntaxExtensions.IsExpressionOfArgumentInDeconstruction(Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax)">
              <summary>
              If this declaration or identifier is part of a deconstruction, find the deconstruction.
@@ -174,6 +191,32 @@
             <summary>
             Adds to <paramref name="targetType"/> if it does not contain an anonymous
             type and binds to the same type at the given <paramref name="position"/>.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Extensions.ExpressionSyntaxExtensions.ShouldNameExpressionBeTreatedAsExpressionInsteadOfType(Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax,Microsoft.CodeAnalysis.SemanticModel,Microsoft.CodeAnalysis.SymbolInfo@,Microsoft.CodeAnalysis.ITypeSymbol@)">
+            <summary>
+            DeterminesCheck if we're in an interesting situation like this:
+            <code>
+                int i = 5;
+                i.          // -- here
+                List ml = new List();
+            </code>
+            The problem is that "i.List" gets parsed as a type.  In this case we need to try binding again as if "i" is
+            an expression and not a type.  In order to do that, we need to speculate as to what 'i' meant if it wasn't
+            part of a local declaration's type.
+            <para/>
+            Another interesting case is something like:
+            <code>
+                 stringList.
+                 await Test2();
+            </code>
+            Here "stringList.await" is thought of as the return type of a local function.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Extensions.ITypeSymbolExtensions.TypeSyntaxGeneratorVisitor.AddGlobalAlias(Microsoft.CodeAnalysis.INamespaceOrTypeSymbol,Microsoft.CodeAnalysis.CSharp.Syntax.SimpleNameSyntax)">
+            <summary>
+            We always unilaterally add "global::" to all named types/namespaces.  This
+            will then be trimmed off if possible by the simplifier.
             </summary>
         </member>
         <member name="T:Microsoft.CodeAnalysis.CSharp.Extensions.OperatorPrecedence">
@@ -320,13 +363,6 @@
         <member name="M:Microsoft.CodeAnalysis.CSharp.Extensions.BasePropertyDeclarationSyntaxExtensions.TryWithExpressionBody(Microsoft.CodeAnalysis.CSharp.Syntax.BasePropertyDeclarationSyntax,Microsoft.CodeAnalysis.CSharp.Syntax.ArrowExpressionClauseSyntax)">
             <summary>
             Available if <paramref name="node"/> is <see cref="T:Microsoft.CodeAnalysis.CSharp.Syntax.PropertyDeclarationSyntax"/> or <see cref="T:Microsoft.CodeAnalysis.CSharp.Syntax.IndexerDeclarationSyntax"/>.
-            </summary>
-        </member>
-        <member name="M:Microsoft.CodeAnalysis.CSharp.Extensions.ITypeSymbolExtensions.TypeSyntaxGeneratorVisitor.AddGlobalAlias(Microsoft.CodeAnalysis.INamespaceOrTypeSymbol,Microsoft.CodeAnalysis.CSharp.Syntax.SimpleNameSyntax)">
-            <summary>
-            We always unilaterally add "global::" to all named types/namespaces.  This
-            will then be trimmed off if possible by calls to 
-            <see cref="M:Microsoft.CodeAnalysis.Simplification.Simplifier.ReduceAsync(Microsoft.CodeAnalysis.Document,Microsoft.CodeAnalysis.Options.OptionSet,System.Threading.CancellationToken)"/>
             </summary>
         </member>
         <member name="M:Microsoft.CodeAnalysis.CSharp.FindSymbols.CSharpDeclaredSymbolInfoFactoryService.GetSuffix(System.Char,System.Char,Microsoft.CodeAnalysis.SeparatedSyntaxList{Microsoft.CodeAnalysis.CSharp.Syntax.ParameterSyntax})">
@@ -511,6 +547,12 @@
             this holds onto changes made by formatting engine.
             </summary>
         </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Formatting.CSharpTriviaFormatter.IsVisualBasicComment(Microsoft.CodeAnalysis.SyntaxTrivia)">
+            <summary>
+            C# never passes a VB Comment
+            </summary>
+            <param name="trivia"></param>
+        </member>
         <member name="T:Microsoft.CodeAnalysis.CSharp.Formatting.TriviaDataFactory">
             <summary>
             trivia factory.
@@ -534,32 +576,12 @@
             Check whether the currentToken is a comma and is a delimiter between arguments inside a tuple expression.
             </summary>
         </member>
-        <member name="T:Microsoft.CodeAnalysis.CSharp.Recommendations.CSharpRecommendationServiceRunner">
+        <member name="T:Microsoft.CodeAnalysis.CSharp.Recommendations.CSharpRecommendationService.CSharpRecommendationServiceRunner">
             <summary>
             Adds user defined and predefined conversions to the unnamed recommendation set.
             </summary>
             <summary>
             Adds user defined operators to the unnamed recommendation set.
-            </summary>
-        </member>
-        <member name="M:Microsoft.CodeAnalysis.CSharp.Recommendations.CSharpRecommendationServiceRunner.ShouldBeTreatedAsTypeInsteadOfExpression(Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax,Microsoft.CodeAnalysis.SymbolInfo@,Microsoft.CodeAnalysis.ITypeSymbol@)">
-            <summary>
-            DeterminesCheck if we're in an interesting situation like this:
-            <code>
-                int i = 5;
-                i.          // -- here
-                List ml = new List();
-            </code>
-            The problem is that "i.List" gets parsed as a type.  In this case we need to try binding again as if "i" is
-            an expression and not a type.  In order to do that, we need to speculate as to what 'i' meant if it wasn't
-            part of a local declaration's type.
-            <para/>
-            Another interesting case is something like:
-            <code>
-                 stringList.
-                 await Test2();
-            </code>
-            Here "stringList.await" is thought of as the return type of a local function.
             </summary>
         </member>
         <member name="F:Microsoft.CodeAnalysis.CSharp.Rename.CSharpRenameConflictLanguageService.RenameRewriter._isRenamingInStrings">
@@ -624,15 +646,15 @@
             <param name="specialType">The <see cref="T:Microsoft.CodeAnalysis.SpecialType"/> of this type.</param>
             <returns>The keyword kind for a given special type, or SyntaxKind.None if the type name is not a predefined type.</returns>
         </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.Simplification.Simplifiers.ExpressionSimplifier.CandidateSymbolEqualityComparer">
+            <summary>
+            Compares symbols by their original definition.
+            </summary>
+        </member>
         <member name="M:Microsoft.CodeAnalysis.CSharp.Simplification.Simplifiers.ExpressionSimplifier.IsReplacementCandidate(Microsoft.CodeAnalysis.ISymbol,System.Collections.Immutable.ImmutableArray{Microsoft.CodeAnalysis.ISymbol},System.Collections.Immutable.ImmutableArray{Microsoft.CodeAnalysis.ISymbol})">
             <summary>
             Determines if <paramref name="speculativeSymbols"/> and <paramref name="speculativeNamespacesAndTypes"/>
             together contain a superset of the symbols in <paramref name="actualSymbol"/>.
-            </summary>
-        </member>
-        <member name="T:Microsoft.CodeAnalysis.CSharp.Simplification.Simplifiers.ExpressionSimplifier.CandidateSymbolEqualityComparer">
-            <summary>
-            Compares symbols by their original definition.
             </summary>
         </member>
         <member name="M:Microsoft.CodeAnalysis.CSharp.Simplification.Simplifiers.ExpressionSimplifier.IsNonRemovablePartOfDynamicMethodInvocation(Microsoft.CodeAnalysis.SemanticModel,Microsoft.CodeAnalysis.CSharp.Syntax.MemberAccessExpressionSyntax,System.Threading.CancellationToken)">
@@ -651,6 +673,30 @@
             </summary>
             <param name="node"></param>
             <returns></returns>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.Simplification.Simplifiers.CastSimplifier">
+            <summary>
+            By default the cast simplifier operates under several main principles:
+            <list type="number">
+            <item>The final type that a cast-expression was converted to should be the same as the final
+            type that the underlying expression should convert to without the cast.  This tells us that 
+            the compiler thinks that value should convert to that type implicitly, not just explicitly.</item>
+            <item>Static semantics of the code should remain the same.  This means that things like overload
+            resolution of the invocations the casted expression is contained within should not change.</item>
+            <item>Runtime types and values should not observably change.  This means that if casting the 
+            value would cause a different type to be seen in a <see cref="M:System.Object.GetType"/> call, 
+            or a different value could be observed at runtime, then it must remain.</item>
+            </list>
+            
+            These rules serve as a good foundational intuition about when casts should be kept and when 
+            they should be removable.  However, they are not entirely complete.  There are cases when we
+            can weaken some of the above rules if it would not be observable at runtime.  For example,
+            if it can be proven that calling through an interface method would lead to the exact same
+            call at runtime to a specific implementation of that interface method, then it can be legal to
+            remove such a cast as at runtime this would not be observable.  This does in effect mean that
+            the emitted IL will be different, but this matches the user expectation that the *end* behavior
+            of their code remains the same.
+            </summary>
         </member>
         <member name="T:Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTreeFactoryServiceFactory.CSharpSyntaxTreeFactoryService.PathSyntaxReference">
             <summary>
@@ -681,6 +727,22 @@
             the underlying full tree to stay alive.  Think of it more as a 
             key that can be used to identify a tree rather than the tree itself.
             </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EmbeddedLanguages.VirtualChars.CSharpVirtualCharService.TryConvertMultiLineRawStringToVirtualChars(Microsoft.CodeAnalysis.SyntaxToken,Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax,System.Boolean)">
+            <summary>
+            Creates the sequence for the <b>content</b> characters in this <paramref name="token"/>.  This will not
+            include indentation whitespace that the language specifies is not part of the content.
+            </summary>
+            <param name="parentExpression">The containing expression for this token.  This is needed so that we can
+            determine the indentation whitespace based on the last line of the containing multiline literal.</param>
+            <param name="tokenIncludeDelimiters">If this token includes the quote (<c>"</c>) characters for the
+            delimiters inside of it or not.  If so, then those quotes will need to be skipped when determining the
+            content</param>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.Shared.Extensions.LanguageVersionExtensions.CSharpNext">
+            <remarks>
+            Corresponds to Microsoft.CodeAnalysis.CSharp.LanguageVersionFacts.CSharpNext.
+            </remarks>
         </member>
         <member name="T:Microsoft.CodeAnalysis.CSharp.Utilities.FormattingRangeHelper">
             <summary>
@@ -764,7 +826,7 @@
             Returns true for type that are arrays/nullable/pointer types of special types
             </summary>
         </member>
-        <member name="M:Microsoft.CodeAnalysis.CSharp.Utilities.CSharpUseExplicitTypeHelper.AssignmentSupportsStylePreference(Microsoft.CodeAnalysis.SyntaxToken,Microsoft.CodeAnalysis.CSharp.Syntax.TypeSyntax,Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax,Microsoft.CodeAnalysis.SemanticModel,Microsoft.CodeAnalysis.Options.OptionSet,System.Threading.CancellationToken)">
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Utilities.CSharpUseExplicitTypeHelper.AssignmentSupportsStylePreference(Microsoft.CodeAnalysis.SyntaxToken,Microsoft.CodeAnalysis.CSharp.Syntax.TypeSyntax,Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax,Microsoft.CodeAnalysis.SemanticModel,Microsoft.CodeAnalysis.CSharp.Simplification.CSharpSimplifierOptions,System.Threading.CancellationToken)">
             <summary>
             Analyzes the assignment expression and rejects a given declaration if it is unsuitable for explicit typing.
             </summary>
@@ -773,7 +835,7 @@
             true, otherwise.
             </returns>
         </member>
-        <member name="M:Microsoft.CodeAnalysis.CSharp.Utilities.CSharpUseImplicitTypeHelper.AssignmentSupportsStylePreference(Microsoft.CodeAnalysis.SyntaxToken,Microsoft.CodeAnalysis.CSharp.Syntax.TypeSyntax,Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax,Microsoft.CodeAnalysis.SemanticModel,Microsoft.CodeAnalysis.Options.OptionSet,System.Threading.CancellationToken)">
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Utilities.CSharpUseImplicitTypeHelper.AssignmentSupportsStylePreference(Microsoft.CodeAnalysis.SyntaxToken,Microsoft.CodeAnalysis.CSharp.Syntax.TypeSyntax,Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax,Microsoft.CodeAnalysis.SemanticModel,Microsoft.CodeAnalysis.CSharp.Simplification.CSharpSimplifierOptions,System.Threading.CancellationToken)">
             <summary>
             Analyzes the assignment expression and rejects a given declaration if it is unsuitable for implicit typing.
             </summary>
@@ -896,6 +958,43 @@
              children of the parent statement of the <c>else</c> keyword.</description></item>
              </list>
              </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CodeActions.CSharpCodeFixOptionsProvider._options">
+            <summary>
+            Document editorconfig options.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CodeActions.CSharpCodeFixOptionsProvider._languageServices">
+            <summary>
+            C# language services.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CodeActions.CSharpCodeFixOptionsProvider._fallbackOptions">
+            <summary>
+            Fallback options provider - default options provider in Code Style layer.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.NullableHelpers.IsDeclaredSymbolAssignedPossiblyNullValue(Microsoft.CodeAnalysis.SemanticModel,Microsoft.CodeAnalysis.SyntaxNode,System.Threading.CancellationToken)">
+            <summary>
+            Gets the declared symbol and root operation from the passed in declarationSyntax and calls
+            <see cref="M:Microsoft.CodeAnalysis.NullableHelpers.IsSymbolAssignedPossiblyNullValue(Microsoft.CodeAnalysis.SemanticModel,Microsoft.CodeAnalysis.IOperation,Microsoft.CodeAnalysis.ISymbol)"/>. Note
+            that this is bool and not bool? because we know that the symbol is at the very least declared, 
+            so there's no need to return a null value. 
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.NullableHelpers.IsSymbolAssignedPossiblyNullValue(Microsoft.CodeAnalysis.SemanticModel,Microsoft.CodeAnalysis.IOperation,Microsoft.CodeAnalysis.ISymbol)">
+            <summary>
+            Given an operation, goes through all decendent operations and returns true if the symbol passed in
+            is ever assigned a possibly null value as determined by nullable flow state. Returns
+            null if no references are found, letting the caller determine what to do with that information
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.NullableHelpers.IsSymbolReferencedByOperation(Microsoft.CodeAnalysis.IOperation,Microsoft.CodeAnalysis.ISymbol)">
+            <summary>
+            Determines if an operations references a specific symbol. Note that this will recurse in some
+            cases to work for operations like IAssignmentOperation, which logically references a symbol even if it
+            is the Target operation that actually does. 
+            </summary>
         </member>
     </members>
 </doc>

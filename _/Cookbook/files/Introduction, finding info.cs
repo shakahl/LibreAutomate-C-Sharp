@@ -1,4 +1,4 @@
-/// With this <help editor/Uiscripter>program<> you can create, manage and run automation <help editor/Scripts>scripts<>. 
+/// With this <help editor/Program>program<> you can create, manage and run automation <help editor/Scripts>scripts<>. 
 
 /// Where to find info, code examples and classes/functions:
 /// - This cookbook is a collection of code examples and info.

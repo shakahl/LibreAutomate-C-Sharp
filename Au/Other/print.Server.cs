@@ -153,7 +153,7 @@ namespace Au
 
 						_mailslot = m;
 						_CreateTimerAndThread();
-						SM_->IsServer = 1;
+						SM_->isServer = 1;
 					} else {
 						_CreateTimerAndThread();
 					}
@@ -187,7 +187,7 @@ namespace Au
 					_isStarted = false;
 					if (_isGlobal) {
 						_mailslot.Dispose();
-						SM_->IsServer = 0;
+						SM_->isServer = 0;
 					}
 					s_localServer = null;
 					_timer?.Set(0); //break thread loop; use minimal time. //info: the thread will dispose _timer and set=null
@@ -217,7 +217,7 @@ namespace Au
 					for (int period = 1000; ;) {
 						bool isTimerEvent = _timer.WaitOne(period); //true if timer event, false if timeout
 						if (isTimerEvent) {
-							if (_isGlobal) SM_->IsTimer = 0;
+							if (_isGlobal) SM_->isTimer = 0;
 							_isLocalTimer = false;
 						}
 
@@ -244,7 +244,7 @@ namespace Au
 							_notifWnd.Send(_notifMsg);
 						}
 
-						if (isTimerEvent) period = 50; //check after 50 ms, to avoid 1000 ms delay in case a client did not set timer because SM_->IsTimer was still 1 although the timer was already signaled
+						if (isTimerEvent) period = 50; //check after 50 ms, to avoid 1000 ms delay in case a client did not set timer because SM_->isTimer was still 1 although the timer was already signaled
 						else period = 1000; //check every 1000 ms, for full reliability
 
 						//Console.WriteLine($"{period}");
@@ -351,14 +351,14 @@ namespace Au
 			/// </summary>
 			public bool NeedCallerMethod
 			{
-				get => _isGlobal ? (SM_->NeedCaller != 0) : _localNeedCaller;
-				set { if(_isGlobal) SM_->NeedCaller = (byte)(value ? 1 : 0); else _localNeedCaller = value; }
+				get => _isGlobal ? (SM_->needCaller != 0) : _localNeedCaller;
+				set { if(_isGlobal) SM_->needCaller = (byte)(value ? 1 : 0); else _localNeedCaller = value; }
 			}
 			bool _localNeedCaller;
 
 			internal static bool NeedCallerMethod_
 			{
-				get { var t = s_localServer; return (t != null) ? t.NeedCallerMethod : SM_->NeedCaller != 0; }
+				get { var t = s_localServer; return (t != null) ? t.NeedCallerMethod : SM_->needCaller != 0; }
 			}
 #endif
 
@@ -386,9 +386,9 @@ namespace Au
 			[StructLayout(LayoutKind.Sequential, Size = 16)] //note: this struct is in shared memory. Size must be same in all library versions.
 			internal struct SharedMemoryData_
 			{
-				public byte IsServer, IsTimer;
+				public byte isServer, isTimer;
 #if NEED_CALLER
-				public byte NeedCaller;
+				public byte needCaller;
 #endif
 			}
 			internal static SharedMemoryData_* SM_ => &SharedMemory_.Ptr->outp;
@@ -532,8 +532,8 @@ namespace Au
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			void _SetTimer() {
-				if (Server.SM_->IsTimer == 0) {
-					if (_timer.Set(10)) Server.SM_->IsTimer = 1;
+				if (Server.SM_->isTimer == 0) {
+					if (_timer.Set(10)) Server.SM_->isTimer = 1;
 				}
 			}
 
@@ -545,7 +545,7 @@ namespace Au
 			}
 
 			bool _Connect() {
-				if (Server.SM_->IsServer == 0) {
+				if (Server.SM_->isServer == 0) {
 					_Close();
 					return false;
 				}

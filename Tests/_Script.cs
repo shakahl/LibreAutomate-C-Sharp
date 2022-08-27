@@ -46,6 +46,8 @@ using System.Windows.Forms;
 
 //using Microsoft.CodeAnalysis.CSharp.Scripting;
 
+//using System.Management.Automation;
+
 [module: System.Runtime.InteropServices.DefaultCharSet(System.Runtime.InteropServices.CharSet.Unicode)]
 
 #if TOPLEVEL
@@ -188,8 +190,8 @@ partial class TestScript {
 
 	//void TestJson()
 	//{
-	//	var file = @"Q:\test\sett.json";
-	//	var file2 = @"Q:\test\sett.xml";
+	//	var file = @"C:\test\sett.json";
+	//	var file2 = @"C:\test\sett.xml";
 
 	//	var v = new _Settings { OneTwo = "text ąčę", ThreeFour = 100 };
 
@@ -254,24 +256,24 @@ partial class TestScript {
 			//t.Border= TBBorder.Sizable3;t.Control.Text = "Toolbar";
 			//t.Border = TBBorder.SizableWithCaptionX;
 
-			//t["Find", @"Q:\app\find.ico"] = o => print.it(o);
-			//t["Copy", @"Q:\app\copy.ico"] = o => print.it(o);
+			//t["Find", @"C:\code\qm\find.ico"] = o => print.it(o);
+			//t["Copy", @"C:\code\qm\copy.ico"] = o => print.it(o);
 			//t.Separator("Tpi group");
-			//t["Delete", @"Q:\app\delete.ico"] = o => print.it(o);
+			//t["Delete", @"C:\code\qm\delete.ico"] = o => print.it(o);
 			//t["No image"] = o => print.it(o);
 			//t["TT", tooltip: "WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW WWWWWWWWWWWW "] = o => print.it(o);
 			////t.LastButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
 			////t.LastButton.AutoToolTip = false;
 			////t.LastButton.ToolTipText = "ggg";
 			//t.Separator();
-			//t["Run", @"Q:\app\run.ico"] = o => print.it(o);
+			//t["Run", @"C:\code\qm\run.ico"] = o => print.it(o);
 			//t.Separator("");
-			//t["Paste text", @"Q:\app\paste.ico"] = o => print.it(o);
+			//t["Paste text", @"C:\code\qm\paste.ico"] = o => print.it(o);
 			//t.LastButton.ToolTipText = "Toooooltip";
 
 			//t.ExtractIconPathFromCode = true;
 			//t["Auto icon"] = o => print.it("notepad.exe");
-			//t["Failed icon", @"Q:\app\-.ico"] = o => print.it(o);
+			//t["Failed icon", @"C:\code\qm\-.ico"] = o => print.it(o);
 			////t.LastButton.DisplayStyle = ToolStripItemDisplayStyle.ImageAndText;
 			////t.Separator("");
 			////t.Add(new ToolStripTextBox { ToolTipText= "ToolStripTextBox", AutoSize=false, Width=50 });
@@ -296,7 +298,7 @@ partial class TestScript {
 
 #if false
 			var dd = new ToolStripDropDownButton("DD");
-			t.Add(dd, @"Q:\app\find.ico");
+			t.Add(dd, @"C:\code\qm\find.ico");
 			dd.DropDownOpening += (_, _) => {
 				var m = new popupMenu(dd);
 				m["one"] = o => print.it(o);
@@ -305,7 +307,7 @@ partial class TestScript {
 				}
 			};
 			var sb = new ToolStripSplitButton("SB");
-			t.Add(sb, @"Q:\app\copy.ico", o => print.it(o));
+			t.Add(sb, @"C:\code\qm\copy.ico", o => print.it(o));
 #elif true
 			//t.Control.Font = new Font("Courier New", 16);
 			//t.Control.RightToLeft = RightToLeft.Yes;
@@ -316,7 +318,7 @@ partial class TestScript {
 				using(m.Submenu("Sub")) {
 					m["si"] = o => print.it(o);
 				}
-			}, @"Q:\app\find.ico", "MenuButton");
+			}, @"C:\code\qm\find.ico", "MenuButton");
 			t.SplitButton("SB", m => {
 				m["one"] = o => print.it(o);
 				//var sb = m.Control.OwnerItem as ToolStripSplitButton;
@@ -325,9 +327,9 @@ partial class TestScript {
 				using(m.Submenu("Sub")) {
 					m["si"] = o => print.it(o);
 				}
-			}, @"Q:\app\copy.ico", "SplitButton", o => print.it(o));
+			}, @"C:\code\qm\copy.ico", "SplitButton", o => print.it(o));
 			t.Separator("");
-			t[true, "DD2", @"Q:\app\delete.ico"] = m => {
+			t[true, "DD2", @"C:\code\qm\delete.ico"] = m => {
 				print.it("create menu");
 				//m.MultiShow = false;
 				m["one"] = o => print.it(o);
@@ -342,16 +344,16 @@ partial class TestScript {
 			//	using(m.Submenu("Sub")) {
 			//		m["si"] = o => print.it(o);
 			//	}
-			//}, @"Q:\app\copy.ico", "SplitButton");
+			//}, @"C:\code\qm\copy.ico", "SplitButton");
 			//Action<popupMenu> menu1 = m => {
 			//	m["one"] = o => print.it(o);
 			//	using(m.Submenu("Sub")) {
 			//		m["si"] = o => print.it(o);
 			//	}
 			//};
-			//t.MenuButton("DD", menu1, @"Q:\app\find.ico", "MenuButton");
+			//t.MenuButton("DD", menu1, @"C:\code\qm\find.ico", "MenuButton");
 #elif false
-			t.MenuButton("DD", @"Q:\app\find.ico");
+			t.MenuButton("DD", @"C:\code\qm\find.ico");
 			t.Menu = m => {
 				m["one"] = o => print.it(o);
 				using(m.Submenu("Sub")) {
@@ -359,7 +361,7 @@ partial class TestScript {
 				}
 			};
 #else
-			t.MenuButton("DD", @"Q:\app\find.ico").Menu = m => {
+			t.MenuButton("DD", @"C:\code\qm\find.ico").Menu = m => {
 				print.it("dd");
 				//m.MultiShow = false;
 				m["one"] = o => print.it(o);
@@ -367,7 +369,7 @@ partial class TestScript {
 					m["two"] = o => print.it(o);
 				}
 			};
-			t.SplitButton("SB", o => print.it(o), @"Q:\app\copy.ico").Menu = m => {
+			t.SplitButton("SB", o => print.it(o), @"C:\code\qm\copy.ico").Menu = m => {
 				print.it("dd");
 				m["one"] = o => print.it(o);
 				using(m.Submenu("Sub")) {
@@ -379,7 +381,7 @@ partial class TestScript {
 			////t["GC"] = o => GC.Collect();
 
 			//var dd = new ToolStripSplitButton("SB2", null, (_, _)=>print.it("click"));
-			//t.Add(dd, @"Q:\app\delete.ico");
+			//t.Add(dd, @"C:\code\qm\delete.ico");
 			//dd.DropDownOpening += (_, _) => {
 			//	var m = new popupMenu();
 			//	dd.DropDown = m.Control;
@@ -444,12 +446,12 @@ partial class TestScript {
 	//}
 
 	//void TestBitmapLockBitsDispose() {
-	//	//Bitmap.FromFile(@"Q:\Test\qm small icon.png").Dispose();
+	//	//Bitmap.FromFile(@"C:\Test\qm small icon.png").Dispose();
 	//	//print.it("start");
 	//	//3.s();
 	//	//Debug_.MemorySetAnchor_();
 	//	//for(int i = 0; i < 1000; i++) {
-	//	//	var b = Bitmap.FromFile(@"Q:\Test\qm small icon.png") as Bitmap;
+	//	//	var b = Bitmap.FromFile(@"C:\Test\qm small icon.png") as Bitmap;
 	//	//	//var d=b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
 	//	//	var d = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadOnly, PixelFormat.Format64bppArgb);
 	//	//	b.Dispose();
@@ -461,7 +463,7 @@ partial class TestScript {
 
 	//	var w = +wnd.find("Au - Microsoft Visual Studio", "HwndWrapper[DefaultDomain;*");
 	//	string image = @"image:iVBORw0KGgoAAAANSUhEUgAAAA0AAAAQCAYAAADNo/U5AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAC2SURBVDhPYzhz9cN/DHzlw/+Hp1b8v7osHisGazoNVISOr6/N+39rZ+f/k6efY2C4Jmwm4sJDRdPNjSVgGobvH56BVQMIwzX1rz36nzd40n8Grx4w3bfh3P8Hxxfg1wRSuHzvZXCQgmgQ/+Hj8/g1gWxAjgvpmGlgcYKa0G0CiWPDDCDCo2krWBMMgzTM3XkZnJxAhqJjBpgGEI1sGjbFMAzWBNOATQE2DHYeKRpAGBwQpOEP/wF46o8knB4kYgAAAABJRU5ErkJggg==";
-	//	//string image = @"Q:\Test\find.bmp";
+	//	//string image = @"C:\Test\find.bmp";
 
 	//	//for(int i = 0; i < 10; i++) {
 	//	//	var im = +uiimage.find(w, image, IFFlags.WindowDC);
@@ -581,53 +583,53 @@ partial class TestScript {
 	//	return a.Len_();
 	//}
 
-//	void TestMarkdig() {
-//		string markdown = @"List:
-//- one.
-//- two.
+	//	void TestMarkdig() {
+	//		string markdown = @"List:
+	//- one.
+	//- two.
 
-//	";
+	//	";
 
-//		string html = Markdig.Markdown.ToHtml(markdown);
-//		print.it(html);
-//	}
+	//		string html = Markdig.Markdown.ToHtml(markdown);
+	//		print.it(html);
+	//	}
 
-//	/// <summary>
-//	/// <para>List:</para>
-//	/// <list type="bullet">
-//	/// <item>ONE.</item>
-//	/// <item>TWO.</item>
-//	/// </list>
-//	/// 
-//	/// <p>List:</p>
-//	/// <ul>
-//	/// <li>one.</li>
-//	/// <li>two.</li>
-//	/// </ul>
-//	/// </summary>
-//	void TestMarkdownXmlDocComments() {
-//		string markdown = @"List:
-//- one.
-//- two.
+	//	/// <summary>
+	//	/// <para>List:</para>
+	//	/// <list type="bullet">
+	//	/// <item>ONE.</item>
+	//	/// <item>TWO.</item>
+	//	/// </list>
+	//	/// 
+	//	/// <p>List:</p>
+	//	/// <ul>
+	//	/// <li>one.</li>
+	//	/// <li>two.</li>
+	//	/// </ul>
+	//	/// </summary>
+	//	void TestMarkdownXmlDocComments() {
+	//		string markdown = @"List:
+	//- one.
+	//- two.
 
-//<para>List:</para>
-//<list type=""bullet"">
-//<item>ONE.</item>
-//<item>TWO.</item>
-//</list>
+	//<para>List:</para>
+	//<list type=""bullet"">
+	//<item>ONE.</item>
+	//<item>TWO.</item>
+	//</list>
 
-//<p>List:</p>
-//<ul>
-//<li>one.</li>
-//<li>two.</li>
-//</ul>
+	//<p>List:</p>
+	//<ul>
+	//<li>one.</li>
+	//<li>two.</li>
+	//</ul>
 
-//";
+	//";
 
-//		string html = Markdig.Markdown.ToHtml(markdown);
-//		html = html.RxReplace(@"(?m)^", "/// ");
-//		print.it(html);
-//	}
+	//		string html = Markdig.Markdown.ToHtml(markdown);
+	//		html = html.RxReplace(@"(?m)^", "/// ");
+	//		print.it(html);
+	//	}
 
 	//void TestMenuDropdownBug()
 	//{
@@ -881,13 +883,65 @@ partial class TestScript {
 	//	print.it(result);
 	//}
 
-	async void _Main() {
+HashSet<string> _GetDotnetAssemblies() {
+	var s = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string;
+	var a = s.Split(';');
+	var h = new HashSet<string>(a.Length);
+	foreach (var v in a) {
+		int i = v.LastIndexOfAny(new[] { '\\', '/' }) + 1;
+		var s1 = pathname.getNameNoExt(v);
+		//if (s1.Starts("Au.")) break;
+		h.Add(s1);
+	}
+	return h;
+}
 
-	//print.it(Environment.CurrentManagedThreadId); //6
-	//var isOnline = await Task.Run(() => true);
-	////var isOnline = await Task.Run(() => true).ConfigureAwait(true);
-	////var isOnline = Task.Run(() => true).Result;
-	//print.it(Environment.CurrentManagedThreadId, isOnline); //8
+	void _Main() {
+		//print.clear();
+		//var h = _GetDotnetAssemblies();
+		////print.it(h.OrderBy(o => o));
+		//print.it(h);
+
+		//var s = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string;
+		//var a = s.Split(';');
+		//print.it(a);
+
+		//_=Microsoft.PowerShell.Commands.Utility.JoinStringCommand.CommonParameters;
+
+		//var k=new System.Runtime.Loader.AssemblyDependencyResolver(@"C:\code\au\Tests\bin\Debug\net6.0-windows10.0.18362.0\Au.Tests.dll");
+		//string s;
+		//s = @"C:\code\au\Tests\bin\Debug\net6.0-windows10.0.18362.0\Markdig.Signed.dll";
+		//s = @"C:\code\au\Tests\bin\Debug\net6.0-windows10.0.18362.0\runtimes\win10-x64\lib\netstandard1.6\Microsoft.Management.Infrastructure.dll";
+		//print.it("path", k.ResolveAssemblyToPath(AssemblyName.GetAssemblyName(s)));
+
+		//dialog.show("tests");
+		//run.it("notepad.exe");
+
+		//using var db = new sqlite(":memory:");
+		//var rx = new regexp("d");
+		//dialog.show("tests", $"{db}, {rx}");
+
+
+		//		var psCode = """
+		//& 'C:\Program Files\Windows NT\Accessories\wordpad.exe'
+		//""";
+
+		//		using var ps = PowerShell.Create();
+
+		//		ps.AddScript(psCode);
+
+		//		//ps.AddArgument(a1);
+		//		//ps.AddArgument(a2);
+
+		//		ps.Invoke();
+		//		print.it("ok");
+
+
+		//print.it(Environment.CurrentManagedThreadId); //6
+		//var isOnline = await Task.Run(() => true);
+		////var isOnline = await Task.Run(() => true).ConfigureAwait(true);
+		////var isOnline = Task.Run(() => true).Result;
+		//print.it(Environment.CurrentManagedThreadId, isOnline); //8
 
 		//dialog.show("");
 		//print.it(AppContext.BaseDirectory, AppContext.GetData("NATIVE_DLL_SEARCH_DIRECTORIES"));
@@ -925,7 +979,8 @@ partial class TestScript {
 
 	[STAThread] static void Main(string[] args) { new TestScript(args); }
 	TestScript(string[] args) {
-		print.qm2.use = true;
+		process.thisProcessCultureIsInvariant = true;
+		//print.qm2.use = true;
 		//print.clear();
 
 		//TestWER(); return;

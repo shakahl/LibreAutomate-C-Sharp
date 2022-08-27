@@ -1,4 +1,11 @@
-/// To encrypt/decrypt data can be used classes from namespace <see cref="System.Security.Cryptography"/>. However it isn't simple to use. Look for examples on the internet.
+/// To encrypt/decrypt data can be used functions of class <see cref="Convert2"/>. If that is too simple, try <see cref="System.Security.Cryptography"/> (<b>Convert2</b> uses it internally) or cryptography libraries from NuGet.
+
+var data = "Encryption example.";
+var key = "password";
+var enc = Convert2.AesEncryptS(data, key);
+print.it(enc);
+var dec = Convert2.AesDecryptS(enc, key);
+print.it(dec);
 
 /// Class <see cref="Hash"/> contains simple-to-use and fast functions to hash data.
 

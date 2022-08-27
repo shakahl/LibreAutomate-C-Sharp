@@ -35,6 +35,7 @@ using (var client = new ImapClient()) {
 
 	var inbox = client.Inbox;
 	inbox.Open(FolderAccess.ReadOnly);
+	//inbox.Open(FolderAccess.ReadWrite);
 
 	print.it($"Count {inbox.Count}");
 
@@ -45,6 +46,13 @@ using (var client = new ImapClient()) {
 		//if (!m.Flags.Value.Has(MessageFlags.Seen)) {
 		//	var M = inbox.GetMessage(m.UniqueId);
 		//	print.it(M.TextBody);
+			
+		//	//switch (m.Envelope.Subject) {
+		//	//case "Spam845209394645200026":
+		//	//	print.it("spam");
+		//	//	inbox.MoveTo(m.UniqueId, client.GetFolder(SpecialFolder.Junk));
+		//	//	continue;
+		//	//}
 		//}
 	}
 

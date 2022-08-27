@@ -275,7 +275,7 @@ namespace Au
 			try {
 				if (!owner.IsEmpty) {
 					wTool = owner.Hwnd;
-					wTool.ShowMinimized(noAnimation: true);
+					wTool.ShowMinimized(1);
 					using (new inputBlocker(BIEvents.MouseClicks)) Au.wait.doEvents(300); //time for animations
 				}
 

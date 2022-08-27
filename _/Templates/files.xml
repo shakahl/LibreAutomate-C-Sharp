@@ -1,4 +1,4 @@
-﻿<files max-i="109">
+﻿<files max-i="110">
   <s n="Script.cs" i="1" />
   <c n="Class.cs" i="2" />
   <d n="New project" i="6">
@@ -13,7 +13,7 @@
     </d>
   </d>
   <d n="More" i="66">
-    <c n="Partial.cs" i="3" icon="*Codicons.SymbolClass #73BF00" />
+    <c n="Partial.cs" i="3" />
     <n n="File.txt" i="67" />
   </d>
   <d n="Dialogs" i="68">
@@ -31,6 +31,7 @@
         <c n="Autotext triggers.cs" i="20" />
         <c n="Mouse triggers.cs" i="21" />
         <c n="Window triggers.cs" i="22" />
+        <c n="Other triggers.cs" i="110" />
       </d>
       <d n="Toolbars" i="23">
         <c n="Toolbar examples.cs" i="24" />

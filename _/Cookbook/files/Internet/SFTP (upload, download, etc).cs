@@ -9,8 +9,8 @@ var user = "abcdefgh";
 var password = "ijklmnop";
 var ftpDir = "public_html/test";
 
-var file = @"Q:\Test\Z.zip";
-var file2 = @"Q:\Test\Z2.zip";
+var file = @"C:\Test\Z.zip";
+var file2 = @"C:\Test\Z2.zip";
 
 using (var client = new SftpClient(host, port, user, password)) {
 	client.Connect();

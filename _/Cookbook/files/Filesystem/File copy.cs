@@ -41,3 +41,12 @@ foreach (var f in filesystem.enumFiles(@"C:\Test").Where(o => o.LastWriteTimeUtc
 	filesystem.copyTo(f.FullPath, @"C:\Test2", FIfExists.Delete);
 
 /// The functions automatically create missing destination folders.
+
+/// Or use <google>robocopy</google>.
+
+print.clear();
+int rc = run.console(out string rs, "robocopy.exe", """
+"C:\Test" "C:\Test2" /e /sl
+""");
+if (rc > 8) throw new Exception($"robocopy failed:\r\n{rs}");
+print.it("done", rc);

@@ -6,8 +6,9 @@ partial class Program {
 		Triggers.Options.ThreadNew();
 		
 		//Add window triggers here.
-		//To add triggers can be used triggerSnippet or Ctrl+Shift+Q or menu TT -> New trigger. More info in Cookbook.
+		//To add triggers can be used triggerSnippet or Ctrl+Shift+Q or menu TT -> New trigger.
 		//Click the Run button to apply changes after editing.
+		//More info in Cookbook.
 		
 		
 		

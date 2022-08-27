@@ -1,4 +1,5 @@
 /// Use <see cref="process.triggers"/>.
+/// See also recipe <+recipe>Other triggers<>.
 
 /// Print all started and ended processes.
 

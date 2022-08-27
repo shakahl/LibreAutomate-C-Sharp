@@ -34,7 +34,7 @@ public class DialogWithTabs : Window {
 		_Page2();
 		// ...
 		_b.End();
-#if WPF_PREVIEW
+#if WPF_PREVIEW //menu Edit -> View -> WPF preview
 		_tc.SelectedIndex = 0;
 #endif
 	}

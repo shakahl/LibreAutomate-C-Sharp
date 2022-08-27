@@ -24,3 +24,12 @@ print.it("utf8", utf8);
 /// Convert UTF-8 to C# string (UTF-16).
 
 print.it("utf16", Encoding.UTF8.GetString(utf8));
+
+/// Use <see cref="System.Net.WebUtility"/> functions to encode/decode URL parameters or HTML. See also <see cref="internet.urlAppend"/>.
+
+var ue = System.Net.WebUtility.UrlEncode("one, two");
+print.it(ue);
+
+string p1 = "one, two", p2 = "three, four";
+var url1 = internet.urlAppend("https://httpbin.org/get", "p1=" + p1, "p2=" + p2);
+print.it(url1);

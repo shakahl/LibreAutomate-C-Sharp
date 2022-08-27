@@ -1,9 +1,10 @@
-﻿<files max-i="343">
+﻿<files max-i="347">
   <d n="-" i="244">
     <s n="Test.cs" i="121" />
     <s n="TODO.cs" i="292" />
     <c n="How to write the cookbook.cs" i="1" />
     <c n="global.cs" i="24" />
+    <s n="init.cs" i="344" />
   </d>
   <s n="Introduction, finding info.cs" i="3" />
   <d n="C# language" i="4">
@@ -21,17 +22,15 @@
     <s n="return, goto (exit, end, stop, jump).cs" i="67" />
     <s n="Errors, exceptions, try-catch-finally, throw.cs" i="62" />
     <s n="Callback functions, lambda, delegate, event.cs" i="63" />
-    <d n="Collections" i="299">
-      <s n="Collections - array, List, Stack, Queue.cs" i="300" />
-      <s n="Collections - Dictionary, HashSet.cs" i="301" />
-      <s n="Collections - LINQ functions.cs" i="150" />
-    </d>
+    <s n="Collections - array, List, Stack, Queue.cs" i="300" />
+    <s n="Collections - Dictionary, HashSet.cs" i="301" />
+    <s n="Collections - LINQ functions.cs" i="150" />
   </d>
   <d n="Input, output" i="5">
     <s n="Display text and variables.cs" i="6" />
     <s n="Message box dialog, list.cs" i="7" />
     <s n="Input box dialog.cs" i="8" />
-    <s n="File and folder dialogs.cs" i="74" />
+    <s n="File and folder dialogs, color dialog.cs" i="74" />
     <s n="Popup menu, check list.cs" i="10" />
     <s n="Play sound, speak.cs" i="100" />
   </d>
@@ -68,7 +67,7 @@
     <s n="Run console program and get its output text.cs" i="92" />
     <s n="Processes.cs" i="93" />
     <s n="Services.cs" i="88" />
-    <s n="Shutdown, restart, logoff, sleep, hibernate, lock computer.cs" i="94" />
+    <s n="Shutdown, restart, logoff, sleep, hibernate, lock computer, battery power.cs" i="94" />
     <s n="Windows OS version, computer and user name.cs" i="109" />
     <s n="Desktop (show etc).cs" i="97" />
     <s n="Registry.cs" i="99" />
@@ -122,9 +121,9 @@
     <s n="Script 'Triggers and toolbars'.cs" i="342" />
     <s n="Process triggers (start, end).cs" i="252" />
     <s n="File change triggers (events).cs" i="251" />
-    <s n="Run code when script ends.cs" i="170" />
+    <s n="Other triggers.cs" i="171" />
     <s n="-Hooks.cs" i="172" />
-    <s n="-System events.cs" i="171" />
+    <s n="Run code when script ends.cs" i="170" />
   </d>
   <d n="Custom dialog windows" i="264">
     <s n="Dialog - add elements, show, get values.cs" i="265" />
@@ -144,7 +143,8 @@
     <s n="Dialog - enum check-list, select.cs" i="298" />
     <s n="Dialog - select date.cs" i="269" />
     <s n="-Dialog - data grid.cs" i="280" />
-    <s n="Dialog - web browser control.cs" i="293" />
+    <s n="Dialog - WebView2 control.cs" i="345" />
+    <s n="Dialog - IE web browser control.cs" i="293" />
     <s n="Dialog - menu bar.cs" i="271" />
     <s n="Dialog - multiple tabs.cs" i="272" />
     <s n="Dialog - Window-based class.cs" i="276" />
@@ -158,7 +158,7 @@
   <d n="Math, convert" i="129">
     <s n="Math functions.cs" i="145" />
     <s n="Convert to-from string.cs" i="148" />
-    <s n="Convert Base64, hex, UTF-8, encoding.cs" i="147" />
+    <s n="Convert Base64, hex, UTF-8, encoding, urlencode.cs" i="147" />
     <s n="Other conversions.cs" i="146" />
     <s n="Random numbers and strings, GUID.cs" i="149" />
     <s n="Encrypt, hash.cs" i="157" />
@@ -188,8 +188,9 @@
     <s n="Windows API, native libraries.cs" i="22" />
     <s n="COM components and type libraries.cs" i="249" />
     <s n="Command line programs.cs" i="167" />
-    <s n="PowerShell, VBScript.cs" i="103" />
     <s n="WMI.cs" i="102" />
+    <s n="PowerShell, VBScript.cs" i="103" />
+    <s n="Use C# compiler at run time.cs" i="346" />
   </d>
   <s n="Frequently asked questions.cs" i="91" />
 </files>

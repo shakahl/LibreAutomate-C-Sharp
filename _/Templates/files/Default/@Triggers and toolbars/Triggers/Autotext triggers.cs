@@ -7,8 +7,10 @@ partial class Program {
 		var tr = Triggers.Autotext.SimpleReplace;
 		
 		//Add autotext triggers here.
-		//To add triggers can be used triggerSnippet or menu TT -> New trigger. More info in Cookbook.
+		//To add triggers can be used triggerSnippet or menu TT -> New trigger.
+		//To add trigger scopes (window, program) can be used Ctrl+Shift+Q.
 		//Click the Run button to apply changes after editing.
+		//More info in Cookbook.
 		
 		
 		
@@ -22,9 +24,9 @@ partial class Program {
 			Triggers.Options.BeforeAction = o => { opt.key.TextHow = OKeyText.Paste; }; //set opt options for trigger actions added afterwards
 			tt["#file", TAFlags.RemovePostfix] = o => {
 				o.Replace("");
-				using var fd = new System.Windows.Forms.OpenFileDialog { Title = "Autotext example" };
-				if (fd.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
-				keys.sendt(fd.FileName);
+				var fd = new FileOpenSaveDialog { Title = "Autotext example" };
+				if (!fd.ShowOpen(out string name)) return;
+				keys.sendt(name);
 				o.SendPostfix();
 			};
 			
@@ -54,8 +56,9 @@ partial class Program {
 			tt["m1"] = o => o.Menu(
 				"https://www.example.com",
 				"<tag>[[|]]</tag>",
-				new("Label example", "TEXT"),
-				new("HTML example", "TEXT", "<b>TEXT</b>")
+				new("Label example", "TEXT1"),
+				new("HTML example", "TEXT2", "<b>TEXT2</b>"),
+				new(null, "TEXT3")
 				);
 		}
 	}

@@ -41,7 +41,7 @@ run.it("notepad.exe", dirEtc: new() { WindowState = ProcessWindowStyle.Maximized
 
 /// Use a verb (context menu command).
 
-run.it(@"q:\test\test.txt", dirEtc: new() { Verb = "print" });
+run.it(@"C:\Test\test.txt", dirEtc: new() { Verb = "print" });
 
 /// Run as administrator.
 

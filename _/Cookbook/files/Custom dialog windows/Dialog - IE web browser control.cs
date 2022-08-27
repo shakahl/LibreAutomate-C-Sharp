@@ -1,4 +1,6 @@
-/// The WPF <b>WebBrowser</b> control uses the same code as the legacy Internet Explorer (IE). Many websites don't support it. Use only to display web files that are tested and work well with IE. Also need to disable IE7 emulation.
+/// The WPF <b>WebBrowser</b> control is based on Internet Explorer (IE).
+/// Note: Many websites don't support IE. Use the control to display web files that are tested and work well with IE.
+/// See also recipe <+recipe>WebView2<>.
 
 using System.Windows;
 using System.Windows.Controls;
