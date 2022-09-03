@@ -1,6 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
 
+process.thisProcessCultureIsInvariant = false;
+
 var b = new wpfBuilder("Window").WinSize(400);
 b.R.Add("Text", out DatePicker d1);
 d1.SelectedDate = DateTime.Now;

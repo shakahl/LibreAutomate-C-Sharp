@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-//using System.Linq;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,12 +21,16 @@ using Renci.SshNet;
 [module: DefaultCharSet(CharSet.Unicode)]
 
 //NOTES
+
 //DocFX should use the latest VS.
 
-//When updating DocFX, also may need to update the "memberpage" NuGet package, and its name in docfx.json.
+//When updating DocFX, also may need to update the memberpage NuGet package.
+//May need to update memberpage version in docfx.json.
 
 //DocFX does not replace/modify the yml files if the source code of the C# project not changed. Then ProcessYamlFile not called.
 //	To apply changes of this script, change something in C# XML comments, save, then run this script.
+
+//Sometimes need to rebuild the DocFX cache. Temporarily uncomment the + " --force".
 
 //info: we don't use the full text search feature.
 //	Uses CPU 10-20 s after each page [re]load.
@@ -34,11 +38,14 @@ using Renci.SshNet;
 //	The Google site search does it much better, and often faster.
 //	info: To enable it, add "_enableSearch": true in "globalMetadata".
 
+//With some VS versions fails. Error "... Method not found: 'System.ReadOnlySpan1<Char> Microsoft.IO.Path.GetFileName(System.ReadOnlySpan1)'".
+//Workaround: https://github.com/dotnet/docfx/issues/8136#issuecomment-1219512721
+//Apply the same workaround to the memberpage package in C:\Users\G\.nuget\packages\memberpage\
+
 //SHOULDDO: DocFX does not support inheritdoc path. Inherits almost everything.
 //	Also, if eg 1 exception specified, does not inherit exceptions.
 
-unsafe class Program
-{
+unsafe class Program {
 	static void Main(string[] args) {
 		try { _Main(); }
 		catch (Exception e) { print.it(e); }
@@ -51,7 +58,7 @@ unsafe class Program
 			print.clear();
 		}
 
-		var docfx = @"C:\Program Filess\DocFx\docfx.exe";
+		var docfx = @"C:\Downloads\DocFx\docfx.exe";
 		var objDir = @"C:\Temp\Au\DocFX\obj";
 		var docDir = @"C:\code\au\Other\DocFX\_doc";
 		var siteDir = docDir + @"\_site";
@@ -70,6 +77,8 @@ unsafe class Program
 
 		PreprocessSource();
 		//return;
+
+		using var sdkwa = new SdkWorkaround();
 
 		foreach (var v in Process.GetProcessesByName("docfx")) v.Kill();
 		if (isConsole) {
@@ -134,7 +143,7 @@ unsafe class Program
 	}
 
 	//preprocess and copy source files, because DocFX does not support latest C# features.
-	//note: if using this, in docfx.json change src: "src": "Q:/Temp/Au/DocFX/source/"
+	//note: if using this, in docfx.json change src: "src": "C:/Temp/Au/DocFX/source/"
 	static void PreprocessSource() {
 		var sourceDir1 = @"C:\code\au\Au";
 		var sourceDir2 = @"C:\Temp\Au\DocFX\source";
@@ -143,7 +152,7 @@ unsafe class Program
 
 		var usings = File.ReadAllText(sourceDir1 + @"\resources\global.cs");
 		if (0 == usings.RxReplace(@"(?s)^.*#if !NO_GLOBAL\R(.+?)#else\R.+", "$1", out usings, 1)) throw new Exception("bad regex");
-		usings = usings.RxReplace(@"(?m)^global ", "");
+		usings = usings.RxReplace(@"\Rglobal ", "");
 
 		foreach (var v in Directory.EnumerateFiles(sourceDir1, "*", SearchOption.AllDirectories)) {
 			if (0 == v.Ends(true, ".cs", ".csproj")) continue;
@@ -159,9 +168,6 @@ unsafe class Program
 		void _PreprocessFile(string fileFrom, string fileTo) {
 			var s = File.ReadAllText(fileFrom);
 
-			//namespace X; -> namespace X { ... }
-			//s = s.RxReplace(@"(?ms)^(namespace Au(?:\.\w+)?);(.+)", "$1{$2\r\n}", 1);
-
 			s = s.RxReplace(@"\brecord (struct|class)\b", "$1");
 
 			s = s.Replace("[ComVisible(true)]", "");
@@ -169,6 +175,25 @@ unsafe class Program
 			s = usings + s;
 
 			filesystem.saveText(fileTo, s);
+		}
+	}
+
+	/// <summary>
+	/// Workaround for: if Au uses .NET 6 and is installed a .NET 7 SDK, cannot resolve cref of .NET types etc. Prints many warnings.
+	/// </summary>
+	class SdkWorkaround : IDisposable {
+		FEFile[] _a;
+		public SdkWorkaround() {
+			_a = filesystem.enumDirectories(folders.NetRuntimeBS + @"..\..\..\sdk").Where(o => o.Name.ToInt() > 6).ToArray();
+			foreach (var v in _a) {
+				filesystem.rename(v.FullPath, "@" + v.Name);
+			}
+		}
+
+		public void Dispose() {
+			foreach (var v in _a) {
+				filesystem.rename(v.FullPath.RxReplace(@"\\([^\\]+)$", @"\@$1"), v.Name);
+			}
 		}
 	}
 
@@ -301,7 +326,7 @@ unsafe class Program
 			nr += s.RxReplace(@"(<a class=""xref"" href=""Au\.(?:Types\.|Triggers\.|More\.)?+([\w\.\-]+\.\w+)\.html)#\w+"">.+?</a>(?!\s*</td>\s*<td class=""markdown level1 summary"">)", @"$1"">$2</a>", out s);
 			//the same for enum
 			nr += s.RxReplace(@"(<a class=""xref"" href=""Au\.(?:Types\.|Triggers\.|More\.)?+(\w+)\.html)#\w+"">(\w+</a>)", @"$1"">$2.$3", out s); //note: enums must not be nested in types
-			//the same for .NET
+																																				   //the same for .NET
 			nr += s.RxReplace(@"(<a class=""xref"" href=""https://docs\.microsoft\.com/dotnet/api/[\w\.]+\.(\w+\.)\w+)#[^""]+"">([\w\.]+).*?</a>", @"$1"">${+Upper1(2)}$3</a>", out s);
 
 			//In class member pages, in title insert a link to the type.

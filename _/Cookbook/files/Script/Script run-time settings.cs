@@ -8,7 +8,7 @@ script.setup(trayIcon: true, sleepExit: true);
 
 script.single("mutex7654329");
 
-/// Use localized string parsing, formatting, comparing, etc.
+/// Use localized string and date parsing, formatting, comparing, display, etc.
 
 process.thisProcessCultureIsInvariant = false;
 

@@ -20,8 +20,7 @@ global using System.Diagnostics; //debug [+~ ConditionalAttribute Debug Debugger
 global using System.Globalization; //[+~ CultureInfo Number* StringInfo UnicodeCategory]
 global using System.IO; //file, directory
 global using System.IO.Compression; //zip
-global using System.Media; //sound
-global using System.Runtime.CompilerServices; //[-~ Caller* ConditionalWeakTable InternalsVisibleToAttribute MethodImpl* ModuleInitializerAttribute Unsafe - *]
+global using System.Runtime.CompilerServices; //[-~ Caller* ConditionalWeakTable InternalsVisibleToAttribute MethodImpl* ModuleInitializerAttribute SkipLocalsInitAttribute Unsafe - *]
 global using System.Runtime.InteropServices; //types for Windows API etc [-~]
 global using System.Text; //[+~ Encoding Rune StringBuilder]
 global using System.Text.RegularExpressions; //[+ Regex*]
@@ -39,7 +38,7 @@ global using Au.More; //rarely used in automation scripts [-~]
 //	A directive can have single filter and it must be at the end of //comments in that line.
 
 //type aliases
-//global using Strinĝ = System.ReadOnlySpan<char>;
+global using SystemInformation = System.Windows.Forms.SystemInformation;
 
 //usings for class examples
 //global using my;
@@ -55,7 +54,7 @@ global using Au.More; //rarely used in automation scripts [-~]
 //class examples
 
 //#if !NO_GLOBAL
-//namespace my {
+//namespace my;
 ///// <summary>
 ///// Example.
 ///// </summary>
@@ -75,6 +74,5 @@ global using Au.More; //rarely used in automation scripts [-~]
 //	public static int Add(int a, int b) {
 //		return a + b;
 //	}
-//}
 //}
 //#endif

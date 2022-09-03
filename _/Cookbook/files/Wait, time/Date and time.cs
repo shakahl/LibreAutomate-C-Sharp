@@ -30,6 +30,10 @@ var c = CultureInfo.InstalledUICulture; //current user culture
 print.it(d.ToString(c));
 print.it(d.ToString("D", c) + "; " + d.ToString("t", c));
 
+/// To use localized text everywhere in the script by default, add this at the start of the script.
+
+process.thisProcessCultureIsInvariant = false;
+
 /// Convert string to DateTime.
 
 var d3 = DateTime.Parse("2022-01-29");

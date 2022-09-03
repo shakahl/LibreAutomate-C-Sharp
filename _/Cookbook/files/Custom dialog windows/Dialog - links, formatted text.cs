@@ -14,7 +14,8 @@ b.R.Add(out TextBlock _).Text(
 	"<a>link", () => print.it("click"), " ",
 	new Run("color") { Foreground = Brushes.Blue, Background = Brushes.Cornsilk }, " ",
 	new Run("font") { FontFamily = new("Consolas"), FontSize = 16 }, ". ",
-	ImageUtil.LoadWpfImageElement("*EvaIcons.ImageOutline #73BF00")
+	ImageUtil.LoadWpfImageElement("*EvaIcons.ImageOutline #73BF00"), "\n",
+	"controls", new TextBox() { MinWidth = 100, Height = 20, Margin = new(3) }, new CheckBox() { Content = "Check" }
 	);
 b.R.AddOkCancel();
 b.End();
