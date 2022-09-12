@@ -43,12 +43,22 @@ using Renci.SshNet;
 //Apply the same workaround to the memberpage package in C:\Users\G\.nuget\packages\memberpage\
 
 //SHOULDDO: DocFX does not support inheritdoc path. Inherits almost everything.
-//	Also, if eg 1 exception specified, does not inherit exceptions.
+//	If eg 1 exception specified, does not inherit exceptions.
+//	If eg 1 parameter specified, may not inherit other params (for some functions, randomly).
 
 unsafe class Program {
 	static void Main(string[] args) {
-		try { _Main(); }
-		catch (Exception e) { print.it(e); }
+		try {
+			if(args.Length == 0) {
+				_Main();
+			} else if (args[0] == "/upload") {
+				CompressAndUpload(@"C:\code\au\Other\DocFX\_doc");
+			}
+		}
+		catch (Exception e) {
+			print.it(e);
+			foreach (var v in Process.GetProcessesByName("docfx")) v.Kill();
+		}
 	}
 
 	static void _Main() {
@@ -78,8 +88,6 @@ unsafe class Program {
 		PreprocessSource();
 		//return;
 
-		using var sdkwa = new SdkWorkaround();
-
 		foreach (var v in Process.GetProcessesByName("docfx")) v.Kill();
 		if (isConsole) {
 			int k = 0;
@@ -88,6 +96,8 @@ unsafe class Program {
 
 		filesystem.delete(siteDir);
 		Directory.SetCurrentDirectory(docDir);
+
+		using var sdkwa = new SdkWorkaround();
 
 		var t1 = perf.ms;
 
@@ -135,10 +145,14 @@ unsafe class Program {
 		//keys.send("F5");
 
 		1.s();
-		if (1 == dialog.show("Upload?", null, "1 Yes|2 No"/*, secondsTimeout: 5*/)) CompressAndUpload(docDir);
+		//if (1 == dialog.show("Upload?", null, "1 Yes|2 No"/*, secondsTimeout: 5*/)) CompressAndUpload(docDir);
+		print.it($"<><link {process.thisExePath}|/upload>Upload Au docs...<>");
 
 		//Delete obj folder if big. Each time it grows by 10 MB, and after a day or two can be > 1 GB. After deleting builds slower by ~50%.
-		if (filesystem.more.calculateDirectorySize(objDir) / 1024 / 1024 > 500) { print.it("Deleting obj folder."); filesystem.delete(objDir); }
+		if (filesystem.more.calculateDirectorySize(objDir) / 1024 / 1024 > 500) {
+			print.it("Deleting obj folder.");
+			filesystem.delete(objDir);
+		}
 		//info: if DocFX starts throwing stack overflow exception, delete the obj folder manually. It is likely to happen after many refactorings in the project.
 	}
 
@@ -457,6 +471,7 @@ unsafe class Program {
 	}
 
 	static void CompressAndUpload(string docDir) {
+		if (1 != dialog.show("Upload?", null, "1 Yes|2 No"/*, secondsTimeout: 5*/)) return;
 		Compress(docDir);
 		Upload(docDir);
 	}

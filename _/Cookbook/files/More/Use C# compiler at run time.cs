@@ -1,4 +1,4 @@
-/// Use NuGet package <+Microsoft.CodeAnalysis.CSharp<>. It contains many files, therefore it's better to install it in a separate folder, for example folder "Roslyn".
+/// Use NuGet package <+nuget>Microsoft.CodeAnalysis.CSharp<>. It contains many files, therefore it's better to install it in a separate folder, for example folder "Roslyn".
 
 /*/ nuget Roslyn\Microsoft.CodeAnalysis.CSharp; /*/
 using Microsoft.CodeAnalysis.CSharp;

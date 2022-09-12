@@ -14,7 +14,7 @@ namespace Au
 		/// </summary>
 		/// <param name="r">Rectangle in screen.</param>
 		/// <exception cref="ArgumentException">Empty rectangle.</exception>
-		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (width*height*4 bytes).</exception>
+		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (<c>width*height*4</c> bytes).</exception>
 		/// <remarks>
 		/// PixelFormat is always Format32bppRgb.
 		/// </remarks>
@@ -38,7 +38,7 @@ namespace Au
 		/// <param name="printWindow">Get pixels like with flag <see cref="IFFlags.PrintWindow"/>.</param>
 		/// <exception cref="AuWndException">Invalid <i>w</i>.</exception>
 		/// <exception cref="ArgumentException">Empty rectangle.</exception>
-		/// <exception cref="AuException">Failed. For example there is not enough memory for bitmap of this size (width*height*4 bytes).</exception>
+		/// <exception cref="AuException">Failed. For example there is not enough memory for bitmap of this size (<c>width*height*4</c> bytes).</exception>
 		/// <remarks>
 		/// Unlike <see cref="capture(RECT)"/>, this overload gets pixels directly from window, not from screen. Like with flag <see cref="IFFlags.WindowDC"/> or <see cref="IFFlags.PrintWindow"/>. The window can be under other windows. The captured image can be different than displayed on screen.
 		/// If the window is partially or completely transparent, captures its non-transparent view.
@@ -185,7 +185,7 @@ namespace Au
 		/// <returns>2-dimensional array [row, column] containing pixel colors in 0xAARRGGBB format. Alpha 0xFF.</returns>
 		/// <param name="r">Rectangle in screen.</param>
 		/// <exception cref="ArgumentException">Empty rectangle.</exception>
-		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (width*height*4 bytes).</exception>
+		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (<c>width*height*4</c> bytes).</exception>
 		/// <remarks>
 		/// Getting pixels from screen usually is slow. If need faster, try <see cref="getPixels(wnd, RECT, bool)"/> (get pixels from window client area).
 		/// </remarks>
@@ -207,7 +207,7 @@ namespace Au
 		/// <param name="printWindow">Get pixels like with flag <see cref="IFFlags.PrintWindow"/>.</param>
 		/// <exception cref="AuWndException">Invalid <i>w</i>.</exception>
 		/// <exception cref="ArgumentException">Empty rectangle.</exception>
-		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (width*height*4 bytes).</exception>
+		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (<c>width*height*4</c> bytes).</exception>
 		/// <remarks>
 		/// Unlike <see cref="getPixels(RECT)"/>, this overload gets pixels directly from window, not from screen. Like with flag <see cref="IFFlags.WindowDC"/> or <see cref="IFFlags.PrintWindow"/>. The window can be under other windows. The captured image can be different than displayed on screen.
 		/// If the window is partially or completely transparent, captures its non-transparent view.

@@ -1,4 +1,4 @@
-﻿<files max-i="347">
+﻿<files max-i="348">
   <d n="-" i="244">
     <s n="Test.cs" i="121" />
     <s n="TODO.cs" i="292" />
@@ -158,7 +158,7 @@
   <d n="Math, convert" i="129">
     <s n="Math functions.cs" i="145" />
     <s n="Convert to-from string.cs" i="148" />
-    <s n="Convert Base64, hex, UTF-8, encoding, urlencode.cs" i="147" />
+    <s n="Convert Base64, hex, UTF-8, encoding, urlencode, htmlencode.cs" i="147" />
     <s n="Other conversions.cs" i="146" />
     <s n="Random numbers and strings, GUID.cs" i="149" />
     <s n="Encrypt, hash.cs" i="157" />
@@ -173,10 +173,11 @@
     <s n="Regular expressions (parse text, find-replace).cs" i="155" />
     <s n="Fuzzy string matching, word stemming.cs" i="302" />
   </d>
-  <d n="Data" i="19">
+  <d n="Data, document" i="19">
     <s n="CSV table.cs" i="128" />
     <s n="XML.cs" i="131" />
     <s n="JSON.cs" i="132" />
+    <s n="Markdown.cs" i="348" />
     <s n="SQLite database.cs" i="133" />
     <s n="Databases.cs" i="134" />
     <s n="Read Excel files.cs" i="245" />
