@@ -3,7 +3,7 @@
 
 #define MyAppName "LibreAutomate C#"
 #define MyAppNameShort "LibreAutomate"
-#define MyAppVersion "0.8.0"
+#define MyAppVersion "0.8.1"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.quickmacros.com/au/help/"
 #define MyAppExeName "Au.Editor.exe"
@@ -69,6 +69,7 @@ Source: "C:\code\au\Other\Data\ref.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\code\au\Other\Data\winapi.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\code\au\_\icons.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\code\au\_\xrefmap.yml"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\code\au\_\dotnet_ref.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [InstallDelete]
 ;Type: files; Name: "{app}\file.ext"
