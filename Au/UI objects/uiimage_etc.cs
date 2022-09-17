@@ -169,11 +169,10 @@ namespace Au
 		/// </summary>
 		/// <param name="w">Window or control.</param>
 		/// <param name="outline">The outline (shape) of the area in w client area coordinates. If single element, captures single pixel.</param>
-		/// <param name="printWindow"></param>
+		/// <param name="printWindow">Get pixels like with flag <see cref="IFFlags.PrintWindow"/>.</param>
 		/// <exception cref="AuWndException">Invalid <i>w</i>.</exception>
 		/// <exception cref="ArgumentException"><i>outline</i> is null or has 0 elements.</exception>
 		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size.</exception>
-		/// <remarks>More info: <see cref="capture(wnd, RECT, bool)"/>.</remarks>
 		public static Bitmap capture(wnd w, List<POINT> outline, bool printWindow = false) {
 			w.ThrowIfInvalid();
 			return _Capture(outline, w, printWindow);
@@ -234,11 +233,11 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// //print.clear();
-		/// //for (;;) {
-		/// //	1.s();
-		/// //	print.it(uiimage.getPixel(mouse.xy));
-		/// //}
+		/// print.clear();
+		/// for (;;) {
+		/// 	1.s();
+		/// 	print.it(uiimage.getPixel(mouse.xy));
+		/// }
 		/// ]]></code>
 		/// </example>
 		public static unsafe uint getPixel(POINT p) {
@@ -255,8 +254,8 @@ namespace Au
 
 		/// <summary>
 		/// Creates image from a user-selected area of screen pixels. Or gets single pixel color, or just rectangle.
-		/// Returns false if cancelled.
 		/// </summary>
+		/// <returns>false if cancelled.</returns>
 		/// <param name="result">Receives results.</param>
 		/// <param name="flags"></param>
 		/// <param name="owner">Owner window. Temporarily minimizes it.</param>
