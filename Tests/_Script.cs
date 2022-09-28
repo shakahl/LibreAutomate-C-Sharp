@@ -1,4 +1,4 @@
-﻿/*
+/*
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="cd &quot;$(TargetDir)&quot;&#xD;&#xA;&quot;$(SolutionDir)Other\Programs\ResourceHacker.exe&quot; -script &quot;$(ProjectDir)Resources\ResourceHacker.txt&quot;&#xD;&#xA;del &quot;$(TargetDir)$(TargetName).*.json&quot;&#xD;&#xA;" />
   </Target>
@@ -897,6 +897,8 @@ HashSet<string> _GetDotnetAssemblies() {
 }
 
 	void _Main() {
+		TestScript ts = null;
+
 		//print.clear();
 		//var h = _GetDotnetAssemblies();
 		////print.it(h.OrderBy(o => o));

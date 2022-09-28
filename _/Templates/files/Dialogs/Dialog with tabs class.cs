@@ -8,7 +8,7 @@ using System.Windows.Media;
 This class file can be used in scripts etc like any class file. One of:
 - Add this file to the same project folder.
 - Or in script Properties dialog click button "Class file", select this file, OK.
-- Or add this file to a library project and use the library anywhere.
+- Or add this file to a library project and use the library anywhere. To use the library in a script, in its Properties click Project and select the library project.
 */
 
 /// <summary>
@@ -17,7 +17,7 @@ This class file can be used in scripts etc like any class file. One of:
 /// <example>
 /// <code><![CDATA[
 /// var d = new DialogWithTabs();
-/// d.ShowDialog();
+/// if (d.ShowDialog() != true) return;
 /// ]]></code>
 /// </example>
 public class DialogWithTabs : Window {

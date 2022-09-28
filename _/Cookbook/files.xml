@@ -1,4 +1,4 @@
-﻿<files max-i="348">
+﻿<files max-i="350">
   <d n="-" i="244">
     <s n="Test.cs" i="121" />
     <s n="TODO.cs" i="292" />
@@ -142,7 +142,8 @@
     <s n="Dialog - context menu, dropdown list.cs" i="294" />
     <s n="Dialog - enum check-list, select.cs" i="298" />
     <s n="Dialog - select date.cs" i="269" />
-    <s n="-Dialog - data grid.cs" i="280" />
+    <s n="Dialog - ListView.cs" i="349" />
+    <s n="Dialog - DataGrid.cs" i="350" />
     <s n="Dialog - WebView2 control.cs" i="345" />
     <s n="Dialog - IE web browser control.cs" i="293" />
     <s n="Dialog - menu bar.cs" i="271" />

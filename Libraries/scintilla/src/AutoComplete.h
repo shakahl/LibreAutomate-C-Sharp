@@ -29,7 +29,7 @@ public:
 	std::unique_ptr<ListBox> lb;
 	Sci::Position posStart;
 	Sci::Position startLen;
-	/// Should autocompletion be cancelled if editor's currentPos <= startPos?
+	/// Should autocompletion be canceled if editor's currentPos <= startPos?
 	bool cancelAtStartPos;
 	bool autoHide;
 	bool dropRestOfWord;

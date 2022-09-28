@@ -1,4 +1,4 @@
-/// The <link https://docs.microsoft.com/en-us/dotnet/csharp/>C# programming language<> is used to create scripts in this program. It is one of the <google programming language popularity>most popular<> languages.
+/// The <link https://learn.microsoft.com/en-us/dotnet/csharp/>C# programming language<> is used to create scripts in this program. It is one of the <google programming language popularity>most popular<> languages.
 /// 
 /// Don't need to learn C# to start creating automation scripts. Use the input recorder and other tools in the Code menu. But with some C# knowledge you can do much more.
 /// 

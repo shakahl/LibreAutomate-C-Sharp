@@ -16,7 +16,7 @@ namespace Au
 		/// <exception cref="ArgumentException">Empty rectangle.</exception>
 		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (<c>width*height*4</c> bytes).</exception>
 		/// <remarks>
-		/// PixelFormat is always Format32bppRgb.
+		/// <b>PixelFormat</b> is always <b>PixelFormat.Format32bppRgb</b>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -40,7 +40,7 @@ namespace Au
 		/// <exception cref="ArgumentException">Empty rectangle.</exception>
 		/// <exception cref="AuException">Failed. For example there is not enough memory for bitmap of this size (<c>width*height*4</c> bytes).</exception>
 		/// <remarks>
-		/// Unlike <see cref="capture(RECT)"/>, this overload gets pixels directly from window, not from screen. Like with flag <see cref="IFFlags.WindowDC"/> or <see cref="IFFlags.PrintWindow"/>. The window can be under other windows. The captured image can be different than displayed on screen.
+		/// This overload gets pixels directly from window, not from screen. Like with flag <see cref="IFFlags.WindowDC"/> or <see cref="IFFlags.PrintWindow"/>. The window can be under other windows. The captured image can be different than displayed on screen.
 		/// If the window is partially or completely transparent, captures its non-transparent view.
 		/// If the window is DPI-scaled, captures its non-scaled view. And <i>r</i> must contain non-scaled coordinates.
 		/// </remarks>
@@ -158,7 +158,7 @@ namespace Au
 		/// <exception cref="ArgumentException"><i>outline</i> is null or has 0 elements.</exception>
 		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size.</exception>
 		/// <remarks>
-		/// PixelFormat is always Format32bppRgb.
+		/// <b>PixelFormat</b> is always <b>PixelFormat.Format32bppRgb</b>.
 		/// </remarks>
 		public static Bitmap capture(List<POINT> outline) {
 			return _Capture(outline);
@@ -168,7 +168,7 @@ namespace Au
 		/// Creates image from a non-rectangular area of window client area pixels.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="outline">The outline (shape) of the area in w client area coordinates. If single element, captures single pixel.</param>
+		/// <param name="outline">The outline (shape) of the area in <i>w</i> client area coordinates. If single element, captures single pixel.</param>
 		/// <param name="printWindow">Get pixels like with flag <see cref="IFFlags.PrintWindow"/>.</param>
 		/// <exception cref="AuWndException">Invalid <i>w</i>.</exception>
 		/// <exception cref="ArgumentException"><i>outline</i> is null or has 0 elements.</exception>
@@ -255,7 +255,7 @@ namespace Au
 		/// <summary>
 		/// Creates image from a user-selected area of screen pixels. Or gets single pixel color, or just rectangle.
 		/// </summary>
-		/// <returns>false if cancelled.</returns>
+		/// <returns>false if canceled.</returns>
 		/// <param name="result">Receives results.</param>
 		/// <param name="flags"></param>
 		/// <param name="owner">Owner window. Temporarily minimizes it.</param>

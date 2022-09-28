@@ -1,14 +1,13 @@
 /// To start creating a <b>Window</b>-based class that uses a <see cref="wpfBuilder"/> to add elements etc, use menu File -> New -> Dialogs.
 
 var d = new Dialogs.DialogClass();
-d.ShowDialog();
+if (d.ShowDialog() != true) return;		
 
 namespace Dialogs {
 using System.Windows;
 using System.Windows.Controls;
 
-public class DialogClass : Window {
-	///
+class DialogClass : Window {
 	public DialogClass() {
 		Title = "Dialog";
 		var b = new wpfBuilder(this).WinSize(400);

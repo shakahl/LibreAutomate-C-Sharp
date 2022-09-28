@@ -7,7 +7,7 @@
 ///
 /// If need something more, try:
 /// - <link https://www.quickmacros.com/forum/forumdisplay.php?fid=19>Forum<> (menu Help -> Forum).
-/// - Internet: <google>stackoverflow</google>, <link https://docs.microsoft.com>Microsoft docs<>, etc.
+/// - Internet: <google>stackoverflow</google>, <google>Microsoft technical documentation<>, etc.
 /// - Programming libraries: <+recipe>NuGet</b>, <google>GitHub</google>, etc.
 /// - <+recipe>Windows API<>.
 
